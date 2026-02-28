@@ -1159,7 +1159,8 @@ export default function Dashboard() {
   const [health, setHealth]       = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
-  const [expanded, setExpanded]   = useState({});
+  const [expanded, setExpanded]         = useState({});
+  const [collapsedSections, setCollapsedSections] = useState({});
   const [lastRefresh, setLast]    = useState(null);
   const [resetting, setResetting] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -1493,8 +1494,31 @@ export default function Dashboard() {
           )}
         </div>
       ) : (
-        <div className="space-y-px">
-          {filtered.map((lead, i) => {
+        <div className="space-y-8">
+          {INDUSTRIES.filter(ind => ind !== 'All').map(ind => {
+            const group = filtered.filter(l => (l.industry || 'Unknown') === ind);
+            if (group.length === 0) return null;
+            const hotCount  = group.filter(l => l.priority_tier === 'HOT').length;
+            const warmCount = group.filter(l => l.priority_tier === 'WARM').length;
+            const isCollapsed = !!collapsedSections[ind];
+            return (
+              <div key={ind}>
+                {/* industry section header */}
+                <button
+                  onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isCollapsed }))}
+                  className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left">
+                  <span className="text-[11px] font-semibold tracking-widest uppercase text-neutral-400 group-hover:text-white transition-colors">
+                    {ind}
+                  </span>
+                  {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
+                  {warmCount > 0 && <span className="label text-yellow-500 tabular-nums">{warmCount} warm</span>}
+                  <span className="label text-neutral-700 ml-auto tabular-nums">
+                    {group.length} {group.length === 1 ? 'lead' : 'leads'} &nbsp; {isCollapsed ? '\u25b6' : '\u25bc'}
+                  </span>
+                </button>
+                {!isCollapsed && (
+                  <div className="space-y-px">
+                    {group.map((lead, i) => {
             const sc     = lead.score || {};
             const isOpen = expanded[lead.id];
             const tm     = TIER_META[lead.priority_tier] || TIER_META.COLD;
@@ -1517,7 +1541,6 @@ export default function Dashboard() {
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span className="text-sm font-medium text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
-                      {lead.industry && <span className="label">{lead.industry}</span>}
                       {lead.location_city && (
                         <span className="label">
                           {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
@@ -1640,6 +1663,11 @@ export default function Dashboard() {
                         </table>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            );
+                    })}
                   </div>
                 )}
               </div>
