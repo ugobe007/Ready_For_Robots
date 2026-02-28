@@ -1555,11 +1555,11 @@ export default function Dashboard() {
       {/* header */}
       <header className="mb-8 flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Ready for Robots</h1>
-            <span className="label border border-neutral-700 rounded px-2 py-0.5 text-neutral-300">RICHTECH ROBOTICS</span>
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+            <span className="label border border-neutral-600 rounded px-2 py-0.5 text-neutral-200">RICHTECH ROBOTICS</span>
           </div>
-          <p className="text-sm text-neutral-400">Lead Intelligence &middot; Automation Signal Platform</p>
+          <p className="text-base text-neutral-200">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>
         <div className="flex items-center flex-wrap gap-2">
           {lastRefresh && <span className="label text-neutral-600 hidden sm:inline">{lastRefresh}</span>}
@@ -1581,27 +1581,27 @@ export default function Dashboard() {
       {/* platform descriptor */}
       <div className="mb-8 pb-7 border-b border-neutral-800 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
         <div>
-          <p className="label mb-1.5 text-emerald-600">What is Ready for Robots</p>
-          <p className="text-xs text-neutral-500 leading-relaxed">
-            An <span className="text-cyan-400">AI-powered lead intelligence platform</span> built for Richtech Robotics sales teams.
+          <p className="label mb-2 text-emerald-400">What is Ready for Robots</p>
+          <p className="text-sm text-neutral-300 leading-relaxed">
+            An <span className="text-cyan-300">AI-powered lead intelligence platform</span> built for Richtech Robotics sales teams.
             Continuously monitors companies across hospitality, logistics, healthcare, and other labor-intensive industries
             — surfacing organizations most likely to be evaluating{' '}
-            <span className="text-cyan-400">automation investments right now</span>, so reps focus only on the right accounts at the right time.
+            <span className="text-cyan-300">automation investments right now</span>, so reps focus only on the right accounts at the right time.
           </p>
         </div>
         <div>
-          <p className="label mb-1.5 text-emerald-600">What are Signals</p>
-          <p className="text-xs text-neutral-500 leading-relaxed">
+          <p className="label mb-2 text-emerald-400">What are Signals</p>
+          <p className="text-sm text-neutral-300 leading-relaxed">
             Real-time behavioral and event indicators that a company is ready to buy.
-            Includes <span className="text-cyan-400">funding rounds</span>,{' '}
-            <span className="text-cyan-400">strategic executive hires</span>,{' '}
-            <span className="text-cyan-400">CapEx announcements</span>,{' '}
-            <span className="text-cyan-400">labor shortages</span>,{' '}
-            <span className="text-cyan-400">facility expansions</span>, and{' '}
-            <span className="text-cyan-400">M&amp;A activity</span>. Each company is scored and tiered —{' '}
+            Includes <span className="text-cyan-300">funding rounds</span>,{' '}
+            <span className="text-cyan-300">strategic executive hires</span>,{' '}
+            <span className="text-cyan-300">CapEx announcements</span>,{' '}
+            <span className="text-cyan-300">labor shortages</span>,{' '}
+            <span className="text-cyan-300">facility expansions</span>, and{' '}
+            <span className="text-cyan-300">M&amp;A activity</span>. Each company is scored and tiered —{' '}
             <span className="text-red-400">Hot</span>,{' '}
-            <span className="text-yellow-500">Warm</span>, or{' '}
-            <span className="text-cyan-600">Cold</span>{' '}
+            <span className="text-yellow-400">Warm</span>, or{' '}
+            <span className="text-cyan-500">Cold</span>{' '}
             — by the volume, recency, and strength of its detected signals.
           </p>
         </div>
@@ -1783,7 +1783,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isCollapsed }))}
                   className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left">
-                  <span className="text-[11px] font-semibold tracking-widest uppercase text-neutral-400 group-hover:text-white transition-colors">
+                  <span className="text-xs font-semibold tracking-widest uppercase text-neutral-200 group-hover:text-white transition-colors">
                     {ind}
                   </span>
                   {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
@@ -1815,7 +1815,7 @@ export default function Dashboard() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-sm font-medium text-neutral-100">{lead.company_name}</span>
+                      <span className="text-base font-semibold text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {lead.location_city && (
                         <span className="label">
@@ -1857,7 +1857,7 @@ export default function Dashboard() {
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-6 sm:pl-10 text-xs text-neutral-500">
+                  <p className="mt-2 pl-6 sm:pl-10 text-xs text-neutral-400">
                     {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
