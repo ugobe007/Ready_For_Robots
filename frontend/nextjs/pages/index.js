@@ -275,7 +275,7 @@ function matchDescription(lead) {
 }
 
 function Top3Matches({ leads, onSelect }) {
-  const [open, setOpen]         = useState(false);
+  const [open, setOpen]               = useState(false);
   const [expandedPlan, setExpandedPlan] = useState({});
 
   const top3 = useMemo(() => {
@@ -287,93 +287,113 @@ function Top3Matches({ leads, onSelect }) {
 
   if (!top3.length) return null;
 
+  const CARD_CLASS  = ['top3-card-1', 'top3-card-2', 'top3-card-3'];
+  const RANK_GLOW   = ['rank-glow-em', 'rank-glow-cy', 'rank-glow-nt'];
   const RANK_COLOR  = ['text-emerald-400', 'text-cyan-400', 'text-neutral-400'];
-  const RANK_BORDER = ['border-emerald-900', 'border-cyan-900', 'border-neutral-800'];
+  const NAME_HOVER  = ['hover:text-emerald-400', 'hover:text-cyan-400', 'hover:text-neutral-200'];
+  const CTA_COLOR   = ['text-emerald-600 hover:text-emerald-300', 'text-cyan-700 hover:text-cyan-300', 'text-neutral-600 hover:text-neutral-300'];
+  const hasHot      = top3.some(l => l.priority_tier === 'HOT');
 
   return (
-    <div className="mb-6 border border-neutral-800 rounded">
+    <div className="top3-container mb-6">
       {/* collapsed header — always visible */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-neutral-900/40 transition-colors">
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="label text-emerald-600 shrink-0">Top 3 Matches</span>
-          <div className="hidden sm:flex items-center gap-2 min-w-0 overflow-hidden">
+          {hasHot && <span className="hot-pulse shrink-0" />}
+          <span className="label text-emerald-500 shrink-0 tracking-widest">Top 3 Matches</span>
+          <div className="hidden sm:flex items-center gap-3 min-w-0 overflow-hidden">
             {top3.map((lead, i) => (
               <span key={lead.id} className="flex items-center gap-1.5 shrink-0">
                 {i > 0 && <span className="text-neutral-800">·</span>}
-                <span className={`text-[10px] font-medium ${RANK_COLOR[i]}`}>{i + 1}</span>
-                <span className="text-[10px] text-neutral-500 truncate max-w-[12rem]">{lead.company_name}</span>
-                <ScoreNum value={lead.score?.overall_score ?? 0} />
+                <span className={`text-xs font-bold tabular-nums ${RANK_COLOR[i]}`}>{i + 1}</span>
+                <span className="text-[11px] text-neutral-300 font-medium truncate max-w-[14rem]">{lead.company_name}</span>
+                <span className={`text-[10px] font-semibold tabular-nums ${RANK_COLOR[i]}`}>
+                  {Math.round(lead.score?.overall_score ?? 0)}
+                </span>
               </span>
             ))}
           </div>
         </div>
-        <span className="text-neutral-700 text-[10px] shrink-0 ml-3">{open ? '▲ collapse' : '▼ expand'}</span>
+        <span className={`text-[10px] shrink-0 ml-3 transition-colors ${open ? 'text-neutral-400' : 'text-neutral-600'}`}>
+          {open ? '▲ collapse' : '▼ expand'}
+        </span>
       </button>
 
       {/* expanded panel */}
       {open && (
-        <div className="border-t border-neutral-800 p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="border-t border-neutral-800/80 p-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
           {top3.map((lead, i) => {
-            const sig   = topSignal(lead);
-            const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
-            const plan  = actionPlan(lead);
-            const desc  = matchDescription(lead);
+            const sig      = topSignal(lead);
+            const sigM     = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
+            const plan     = actionPlan(lead);
+            const desc     = matchDescription(lead);
             const planOpen = !!expandedPlan[lead.id];
+            const score    = Math.round(lead.score?.overall_score ?? 0);
 
             return (
-              <div key={lead.id}
-                className={`border ${RANK_BORDER[i]} rounded p-3 flex flex-col gap-2`}>
+              <div key={lead.id} className={`${CARD_CLASS[i]} p-4 flex flex-col gap-3`}>
 
-                {/* rank + company */}
+                {/* rank + score hero */}
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`text-lg font-bold tabular-nums leading-none shrink-0 ${RANK_COLOR[i]}`}>{i + 1}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`text-3xl font-black tabular-nums leading-none shrink-0 ${RANK_COLOR[i]} ${RANK_GLOW[i]}`}>
+                      {i + 1}
+                    </span>
                     <div className="min-w-0">
                       <button onClick={() => onSelect(lead)}
-                        className="text-xs font-semibold leading-tight text-left text-neutral-100 hover:text-emerald-400 transition-colors block truncate">
+                        className={`text-sm font-semibold leading-tight text-left text-neutral-100 ${NAME_HOVER[i]} transition-colors block truncate`}>
                         {lead.company_name}
                       </button>
-                      <span className="text-[10px] text-neutral-700">
+                      <span className="text-[10px] text-neutral-600">
                         {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <TierBadge tier={lead.priority_tier} />
-                    <ScoreNum value={lead.score?.overall_score ?? 0} />
+                  {/* large score */}
+                  <div className="shrink-0 text-right">
+                    <span className={`text-2xl font-black tabular-nums leading-none ${RANK_COLOR[i]} ${RANK_GLOW[i]}`}>
+                      {score}
+                    </span>
+                    <span className="label block mt-0.5 text-neutral-700">score</span>
                   </div>
                 </div>
 
-                {/* why + signal inline */}
-                <p className="text-[10px] text-neutral-500 leading-relaxed">{desc}</p>
-                {sigM && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
-                    {sig?.raw_text && (
-                      <span className="text-[10px] text-neutral-700 truncate max-w-[10rem]" title={sig.raw_text}>
-                        {sig.raw_text.substring(0, 36)}{sig.raw_text.length > 36 ? '…' : ''}
-                      </span>
-                    )}
-                  </div>
+                {/* tier + signal badges */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <TierBadge tier={lead.priority_tier} />
+                  {sigM && <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>}
+                  <span className="label text-neutral-700">{lead.signal_count || 0} signals</span>
+                </div>
+
+                {/* why they match */}
+                <p className="text-[10px] text-neutral-500 leading-relaxed border-t border-neutral-800/50 pt-2">
+                  {desc}
+                </p>
+
+                {/* signal excerpt */}
+                {sig?.raw_text && (
+                  <p className="text-[10px] text-neutral-700 italic truncate" title={sig.raw_text}>
+                    "{sig.raw_text.substring(0, 60)}{sig.raw_text.length > 60 ? '…' : ''}"
+                  </p>
                 )}
 
                 {/* plan toggle */}
                 <button
                   onClick={() => setExpandedPlan(p => ({ ...p, [lead.id]: !p[lead.id] }))}
-                  className="text-left text-[10px] text-emerald-800 hover:text-emerald-500 transition-colors mt-0.5">
+                  className={`text-left text-[10px] font-medium transition-colors ${planOpen ? RANK_COLOR[i] : 'text-neutral-700 hover:text-neutral-400'}`}>
                   {planOpen ? '▲ hide plan' : '▼ plan of action'}
                 </button>
 
                 {planOpen && (
-                  <div className="border-t border-neutral-800/60 pt-2 space-y-2">
+                  <div className="border-t border-neutral-800/60 pt-2.5 space-y-2.5">
                     <div>
-                      <span className="label text-neutral-700 block mb-0.5">contact</span>
+                      <span className="label text-neutral-700 block mb-0.5">who to contact</span>
                       <span className="text-[10px] text-cyan-400">{plan.contact}</span>
                     </div>
                     <div>
-                      <span className="label text-neutral-700 block mb-0.5">pitch</span>
+                      <span className="label text-neutral-700 block mb-0.5">pitch angle</span>
                       <span className="text-[10px] text-neutral-300 leading-relaxed">{plan.pitch}</span>
                     </div>
                     <div>
@@ -383,15 +403,16 @@ function Top3Matches({ leads, onSelect }) {
                     <ul className="space-y-1">
                       {plan.points.map((pt, pi) => (
                         <li key={pi} className="flex gap-1.5 text-[10px] text-neutral-600 leading-relaxed">
-                          <span className="text-emerald-800 shrink-0">›</span>{pt}
+                          <span className={`shrink-0 ${RANK_COLOR[i]}`}>›</span>{pt}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
+                {/* CTA */}
                 <button onClick={() => onSelect(lead)}
-                  className="mt-auto pt-1 text-[10px] font-medium text-emerald-800 hover:text-emerald-400 transition-colors text-left">
+                  className={`mt-auto pt-2 text-[11px] font-semibold transition-colors text-left ${CTA_COLOR[i]}`}>
                   Full analysis →
                 </button>
               </div>
