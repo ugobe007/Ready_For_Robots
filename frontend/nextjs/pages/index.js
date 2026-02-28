@@ -3,6 +3,7 @@
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -169,6 +170,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           {lastRefresh && <span className="label text-neutral-700">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
+          <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
         </div>
       </header>
 
