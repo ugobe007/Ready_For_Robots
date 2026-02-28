@@ -82,6 +82,19 @@ const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Serv
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
+const SEARCH_CATEGORIES = [
+  { key: 'automation_investment', label: 'Automation Investments' },
+  { key: 'acquisitions',          label: 'Acquisitions & M&A'    },
+  { key: 'labor_downsizing',      label: 'Labor Downsizing'      },
+  { key: 'intra_logistics',       label: 'Intra-Logistics'       },
+  { key: 'pack_work',             label: 'Pack In / Pack Out'    },
+  { key: 'kitting',               label: 'Kitting & Assembly'    },
+  { key: 'restocking',            label: 'Restocking'            },
+  { key: 'inventory_management',  label: 'Inventory Mgmt'        },
+  { key: 'healthcare_automation', label: 'Healthcare Automation' },
+  { key: 'retail_automation',     label: 'Retail Automation'     },
+];
+
 function uniqueSignalTypes(signals = []) {
   const seen = new Set();
   return signals.filter(s => { if (seen.has(s.signal_type)) return false; seen.add(s.signal_type); return true; });
@@ -270,7 +283,7 @@ function AgentInsightsPanel() {
               {/* learning notes */}
               <div className="py-3 border-b border-neutral-800/60 space-y-1">
                 {data.learning_notes.map((n, i) => (
-                  <p key={i} className="text-xs text-neutral-500">{n}</p>
+                  <p key={i} className="text-xs text-neutral-300">{n}</p>
                 ))}
               </div>
 
@@ -393,7 +406,7 @@ function AgentInsightsPanel() {
                         ))}
                         <span className="ml-auto label">{p.occurrence_count}x &middot; avg <ScoreNum value={p.avg_score} /></span>
                       </div>
-                      <p className="text-xs text-neutral-500">{p.insight}</p>
+                      <p className="text-xs text-neutral-300">{p.insight}</p>
                     </div>
                   ))}
                 </div>
@@ -574,6 +587,173 @@ function CompanyStrategyModal({ lead, onClose }) {
   );
 }
 
+// -- Intelligence search panel -----------------------------------------------
+function IntelSearchPanel({ onOpenLead }) {
+  const [open,     setOpen]     = useState(true);
+  const [query,    setQuery]    = useState('');
+  const [category, setCategory] = useState(null);
+  const [results,  setResults]  = useState(null);
+  const [loading,  setLoading]  = useState(false);
+
+  async function runSearch(q, cat) {
+    setLoading(true);
+    setResults(null);
+    try {
+      const params = new URLSearchParams();
+      if (q && q.trim())  params.set('q', q.trim());
+      if (cat)            params.set('category', cat);
+      params.set('limit', '30');
+      const r = await fetch(`${API}/api/search?${params}`);
+      if (r.ok) setResults(await r.json());
+    } catch {}
+    setLoading(false);
+  }
+
+  function selectCategory(key) {
+    const next = category === key ? null : key;
+    setCategory(next);
+    if (next || query.trim()) runSearch(query, next || null);
+    else setResults(null);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (query.trim() || category) runSearch(query, category);
+  }
+
+  function clearAll() {
+    setQuery('');
+    setCategory(null);
+    setResults(null);
+  }
+
+  return (
+    <div className="mb-6 border border-neutral-800 rounded">
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs hover:bg-neutral-900/40 transition-colors">
+        <span className="flex items-center gap-2">
+          <span className="text-cyan-400">&#8855; Intelligence Search</span>
+          <span className="text-neutral-400">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
+        </span>
+        <span className="text-neutral-600">{open ? '&#9650;' : '&#9660;'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-neutral-800 px-4 pb-5 pt-4 space-y-4">
+          {/* category grid */}
+          <div>
+            <p className="label mb-2.5">quick search by category</p>
+            <div className="flex flex-wrap gap-1.5">
+              {SEARCH_CATEGORIES.map(cat => (
+                <button key={cat.key} onClick={() => selectCategory(cat.key)}
+                  className={`tab ${
+                    category === cat.key
+                      ? 'border-cyan-600 text-cyan-300'
+                      : 'border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200'
+                  }`}>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* free-text input */}
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <input type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="e.g. 'autonomous forklift', 'government grant', 'Series B robotics'..."
+              className="flex-1 bg-transparent border border-neutral-800 rounded px-3 py-1.5 text-sm
+                         text-neutral-200 placeholder-neutral-600
+                         focus:outline-none focus:border-cyan-800 focus:text-white transition-colors" />
+            <button type="submit"
+              className="btn border-cyan-800 text-cyan-400 hover:border-cyan-600 hover:text-cyan-300 shrink-0">
+              &#8853; search
+            </button>
+            {(query || category || results) && (
+              <button type="button" onClick={clearAll}
+                className="btn border-neutral-800 text-neutral-500 hover:text-neutral-300 shrink-0">
+                clear
+              </button>
+            )}
+          </form>
+
+          {/* loading */}
+          {loading && (
+            <p className="text-xs text-neutral-500 animate-pulse">searching signals&hellip;</p>
+          )}
+
+          {/* results */}
+          {!loading && results && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="label">
+                  {results.total} result{results.total !== 1 ? 's' : ''}
+                </span>
+                {results.category_label && (
+                  <span className="badge border-cyan-800 text-cyan-400">{results.category_label}</span>
+                )}
+                {results.query && (
+                  <span className="text-xs text-neutral-500">matching &ldquo;{results.query}&rdquo;</span>
+                )}
+              </div>
+
+              {results.total === 0 ? (
+                <p className="text-xs text-neutral-500 border border-neutral-800 rounded px-3 py-3">
+                  No signals found. Try a different category or keyword &mdash; signals are sourced from seed data and scrapers.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {results.results.map(r => (
+                    <div key={r.id}
+                      className="border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                            {r.company_name}
+                          </span>
+                          {r.industry && (
+                            <span className="label text-neutral-400">{r.industry}</span>
+                          )}
+                          {r.location_city && (
+                            <span className="label text-neutral-500">
+                              {r.location_city}{r.location_state ? `, ${r.location_state}` : ''}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <ScoreNum value={r.overall_score} />
+                          <button onClick={() => onOpenLead && onOpenLead(r)}
+                            className="text-xs text-cyan-500 hover:text-cyan-300 transition-colors">
+                            view &#8594;
+                          </button>
+                        </div>
+                      </div>
+                      {r.matched_signals?.length > 0 && (
+                        <div className="space-y-1.5 mt-1">
+                          {r.matched_signals.map((s, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <SignalBadge type={s.signal_type} />
+                              <span className="text-xs text-neutral-300 flex-1 leading-relaxed">{s.signal_text}</span>
+                              <span className={`shrink-0 text-xs font-mono tabular-nums ${
+                                s.strength >= 0.7 ? 'text-emerald-400'
+                                : s.strength >= 0.4 ? 'text-cyan-500'
+                                : 'text-neutral-600'
+                              }`}>{(s.strength * 100).toFixed(0)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -- main page --------------------------------------------------------------
 export default function Dashboard() {
   const [leads, setLeads]         = useState([]);
@@ -642,6 +822,36 @@ export default function Dashboard() {
     setResetting(false);
   }
 
+  function handleOpenFromSearch(searchResult) {
+    // Try to find the full cached lead first
+    const found = leads.find(l => l.id === searchResult.id);
+    if (found) {
+      setSelectedLead(found);
+    } else {
+      // Construct minimal lead for the modal from search result
+      const tier = searchResult.overall_score >= 75 ? 'HOT'
+                 : searchResult.overall_score >= 45 ? 'WARM' : 'COLD';
+      setSelectedLead({
+        ...searchResult,
+        priority_tier: tier,
+        score: {
+          overall_score:    searchResult.overall_score,
+          automation_score: 0,
+          labor_pain_score: 0,
+          expansion_score:  0,
+          market_fit_score: 0,
+        },
+        signals: (searchResult.matched_signals || []).map(s => ({
+          signal_type: s.signal_type,
+          strength:    s.strength,
+          raw_text:    s.signal_text,
+          source_url:  '',
+        })),
+        signal_count: searchResult.matched_signals?.length || 0,
+      });
+    }
+  }
+
   const openCircuits = health?.circuit_open_urls?.length ?? 0;
 
   return (
@@ -659,7 +869,7 @@ export default function Dashboard() {
             <h1 className="text-base font-semibold tracking-tight text-neutral-100">Ready for Robots</h1>
             <span className="label border border-neutral-800 rounded px-1.5 py-0.5">RICHTECH ROBOTICS</span>
           </div>
-          <p className="text-xs text-neutral-600 pl-7">Lead Intelligence &middot; Automation Signal Platform</p>
+          <p className="text-sm text-neutral-300 pl-7">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>
         <div className="flex items-center gap-3">
           {lastRefresh && <span className="label text-neutral-700">{lastRefresh}</span>}
@@ -725,6 +935,9 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      {/* intelligence search */}
+      <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
 
       {/* agent insights */}
       <AgentInsightsPanel />
@@ -872,8 +1085,8 @@ export default function Dashboard() {
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-10 text-[11px] text-neutral-700">
-                    {lead.priority_reasons.join('  ')}
+                  <p className="mt-2 pl-10 text-xs text-neutral-500">
+                    {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
 
@@ -888,7 +1101,7 @@ export default function Dashboard() {
                         </a>
                       )}
                       {lead.employee_estimate && (
-                        <span className="text-neutral-600">
+                        <span className="text-neutral-400">
                           {lead.employee_estimate.toLocaleString()} employees
                         </span>
                       )}
@@ -928,8 +1141,8 @@ export default function Dashboard() {
                                         className="text-cyan-700 hover:text-cyan-500">&#8599;</a>
                                     : <span className="text-neutral-800">&mdash;</span>}
                                 </td>
-                                <td className="py-1.5 text-neutral-600 max-w-xs truncate">
-                                  {s.raw_text || '&mdash;'}
+                                <td className="py-1.5 text-neutral-400 max-w-xs truncate">
+                                  {s.raw_text || '—'}
                                 </td>
                               </tr>
                             ))}

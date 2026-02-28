@@ -80,6 +80,6 @@
 
   /* inline label */
   .label {
-    @apply text-[11px] uppercase tracking-widest text-neutral-600;
+    @apply text-xs uppercase tracking-widest text-neutral-400;
   }
 }
