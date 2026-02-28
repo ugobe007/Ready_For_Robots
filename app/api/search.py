@@ -70,11 +70,12 @@ CATEGORY_KEYWORDS: dict = {
         "inventory visibility", "perpetual inventory",
     ],
     "healthcare_automation": [
-        "hospital", "healthcare", "health system", "pharmacy",
-        "medical center", "EVS", "environmental services", "clinical",
-        "patient transport", "surgical", "ICU", "sterile processing",
-        "CSSD", "medication", "specimen", "nursing shortage",
-        "linen", "food delivery robot", "delivery bot",
+        "health system", "healthcare", "hospital ", "hospitals ",
+        "pharmacy", "medical center", "EVS", "environmental services",
+        "clinical", "patient transport", "surgical", "ICU",
+        "sterile processing", "CSSD", "medication", "specimen",
+        "nursing shortage", "linen", "care facility",
+        "delivery bot", "health care",
     ],
     "retail_automation": [
         "retail", "grocery", "supermarket", "convenience store",
