@@ -83,7 +83,7 @@ function ScoreNum({ value }) {
   );
 }
 
-const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service'];
+const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation'];
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
@@ -148,56 +148,168 @@ function uniqueSignalTypes(signals = []) {
   return signals.filter(s => { if (seen.has(s.signal_type)) return false; seen.add(s.signal_type); return true; });
 }
 
-// -- Top-5 per tier table -------------------------------------------------------
-const TIER_TABLE_META = {
-  HOT:  { label: 'HOT',  text: 'text-red-400',    border: 'border-red-900',    head: 'border-b border-red-900/40' },
-  WARM: { label: 'WARM', text: 'text-yellow-400', border: 'border-yellow-900',  head: 'border-b border-yellow-900/40' },
-  COLD: { label: 'COLD', text: 'text-cyan-400',   border: 'border-cyan-900',   head: 'border-b border-cyan-900/40' },
+// -- Strategic Snapshot (replaces HOT/WARM/COLD boxes) ----------------------
+const INDUSTRY_ROBOT_FIT = {
+  'Hospitality':               'Service & Delivery',
+  'Logistics':                 'Warehouse AMR Fleet',
+  'Healthcare':                'Clinical Logistics',
+  'Food Service':              'BOH Automation',
+  'Airports & Transportation': 'Ground Ops Robots',
+  'Retail':                    'Picking & Restocking',
 };
 
-function TopFiveTable({ tier, leads, onFilterTier, onSelect }) {
-  const m     = TIER_TABLE_META[tier];
-  const items = leads.filter(l => l.priority_tier === tier).slice(0, 5);
+const READINESS = {
+  HOT:  { label: 'Active Buyer',  color: 'text-red-400',     dot: 'bg-red-500'     },
+  WARM: { label: 'Evaluating',    color: 'text-yellow-400',  dot: 'bg-yellow-500'  },
+  COLD: { label: 'Monitoring',    color: 'text-neutral-500', dot: 'bg-neutral-600' },
+};
+
+function dealLabel(emp) {
+  if (!emp) return { tier: '—', est: null };
+  if (emp >= 100000) return { tier: 'Enterprise',  est: Math.round(emp / 400) };
+  if (emp >= 20000)  return { tier: 'Large',       est: Math.round(emp / 500) };
+  if (emp >= 5000)   return { tier: 'Mid-Market',  est: Math.round(emp / 600) };
+  if (emp >= 1000)   return { tier: 'Regional',    est: Math.round(emp / 700) };
+  return                    { tier: 'SMB',         est: Math.round(emp / 800) };
+}
+
+function topSignal(lead) {
+  const sigs = lead.signals || [];
+  if (!sigs.length) return null;
+  return [...sigs].sort((a, b) => (b.strength || 0) - (a.strength || 0))[0];
+}
+
+function strategicFit(lead) {
+  const base = INDUSTRY_ROBOT_FIT[lead.industry] || 'Automation Suite';
+  const sig  = topSignal(lead);
+  if (sig?.signal_type === 'labor_shortage') return `${base} · Labor Crisis`;
+  if (sig?.signal_type === 'capex')          return `${base} · CapEx Window`;
+  if (sig?.signal_type === 'expansion')      return `${base} · Growth Phase`;
+  if (sig?.signal_type === 'strategic_hire') return `${base} · New Exec`;
+  if (sig?.signal_type === 'funding_round')  return `${base} · Funded`;
+  if (sig?.signal_type === 'ma_activity')    return `${base} · M&A`;
+  return base;
+}
+
+function StrategicSnapshot({ leads, onSelect }) {
+  const top10 = [...leads]
+    .filter(l => l.score?.overall_score != null)
+    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
+    .slice(0, 10);
+
+  if (!top10.length) return null;
+
   return (
-    <div className={`border ${m.border} rounded p-4`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className={`text-xs font-bold tracking-widest ${m.text}`}>{tier}</span>
-        <button onClick={() => onFilterTier(tier)}
-          className={`text-[10px] ${m.text} opacity-60 hover:opacity-100 transition-opacity`}>
-          view all &rarr;
-        </button>
+    <div className="mb-8">
+      {/* header row */}
+      <div className="flex items-end justify-between mb-3">
+        <div>
+          <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Strategic Snapshot</p>
+          <p className="text-[10px] text-neutral-700 mt-0.5">Top 10 opportunities by intent score — click AI Analysis to build your pitch</p>
+        </div>
+        <div className="hidden md:flex items-center gap-4 text-[10px]">
+          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />Active Buyer</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />Evaluating</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />Monitoring</span>
+        </div>
       </div>
-      {items.length === 0 ? (
-        <p className="text-xs text-neutral-800 py-2">no {tier.toLowerCase()} leads yet</p>
-      ) : (
-        <table className="w-full">
-          <thead>
-            <tr className={`${m.head} text-left`}>
-              <th className="pb-1.5 pr-3 label font-normal">#</th>
-              <th className="pb-1.5 pr-3 label font-normal">company</th>
-              <th className="pb-1.5 pr-2 label font-normal">ind.</th>
-              <th className="pb-1.5 label font-normal text-right">score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((l, i) => (
-              <tr key={l.id} className="border-b border-neutral-900 cursor-pointer hover:bg-neutral-900/40 group"
-                onClick={() => onSelect ? onSelect(l) : onFilterTier(tier)}>
-                <td className="py-1.5 pr-3 label">{i + 1}</td>
-                <td className="py-1.5 pr-3 text-xs text-neutral-200 max-w-[9rem] truncate group-hover:text-emerald-400 transition-colors" title={l.company_name}>
-                  {l.company_name}
-                </td>
-                <td className="py-1.5 pr-2 label truncate max-w-[5rem]" title={l.industry}>
-                  {(l.industry || '').split(' ')[0]}
-                </td>
-                <td className="py-1.5 text-right">
-                  <ScoreNum value={l.score?.overall_score ?? 0} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+
+      <div className="border border-neutral-800 rounded overflow-hidden">
+        {/* legend row */}
+        <div className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[2rem_1fr_9rem_7rem_7rem_1fr_5rem_7rem] gap-0 border-b border-neutral-800 bg-neutral-950 px-4 py-2">
+          <span className="label">#</span>
+          <span className="label">company</span>
+          <span className="label hidden md:block">top signal</span>
+          <span className="label hidden md:block">readiness</span>
+          <span className="label hidden md:block">deal size</span>
+          <span className="label hidden md:block">strategic fit</span>
+          <span className="label text-right">score</span>
+          <span />
+        </div>
+
+        {top10.map((lead, i) => {
+          const sig    = topSignal(lead);
+          const ready  = READINESS[lead.priority_tier] || READINESS.COLD;
+          const deal   = dealLabel(lead.employee_estimate);
+          const fit    = strategicFit(lead);
+          const sigM   = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
+          const rawTxt = sig ? (sig.raw_text || '').substring(0, 72) : '';
+
+          return (
+            <div key={lead.id}
+              className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[2rem_1fr_9rem_7rem_7rem_1fr_5rem_7rem] gap-0
+                         border-b border-neutral-900 px-4 py-3
+                         hover:bg-neutral-900/40 transition-colors group items-start">
+
+              {/* rank */}
+              <span className="label text-neutral-700 mt-0.5">{i + 1}</span>
+
+              {/* company + industry */}
+              <div>
+                <span className="text-sm font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors">
+                  {lead.company_name}
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                  {lead.industry && (
+                    <span className="text-[10px] text-neutral-600">{lead.industry}</span>
+                  )}
+                  {lead.location_city && (
+                    <span className="text-[10px] text-neutral-700">
+                      {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* top signal */}
+              <div className="hidden md:block">
+                {sigM ? (
+                  <>
+                    <span className={`badge ${sigM.border} ${sigM.text} mb-1`}>{sigM.label}</span>
+                    {rawTxt && (
+                      <p className="text-[10px] text-neutral-600 leading-snug max-w-[8rem] truncate" title={rawTxt}>{rawTxt}</p>
+                    )}
+                  </>
+                ) : <span className="text-neutral-800">—</span>}
+              </div>
+
+              {/* readiness */}
+              <div className="hidden md:flex items-center gap-1.5">
+                <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${ready.dot}`} />
+                <span className={`text-xs font-medium ${ready.color}`}>{ready.label}</span>
+              </div>
+
+              {/* deal size */}
+              <div className="hidden md:block">
+                <span className="text-xs text-neutral-300">{deal.tier}</span>
+                {deal.est && (
+                  <p className="text-[10px] text-neutral-700">~{deal.est} robots</p>
+                )}
+              </div>
+
+              {/* strategic fit */}
+              <div className="hidden md:block">
+                <span className="text-xs text-neutral-400 leading-snug">{fit}</span>
+              </div>
+
+              {/* score */}
+              <div className="text-right">
+                <ScoreNum value={lead.score?.overall_score ?? 0} />
+              </div>
+
+              {/* AI Analysis CTA */}
+              <div>
+                <button
+                  onClick={() => onSelect(lead)}
+                  className="btn-ghost text-[10px] border-emerald-900 text-emerald-600 hover:text-emerald-300
+                             hover:border-emerald-600 whitespace-nowrap transition-colors">
+                  AI Analysis →
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1207,7 +1319,13 @@ export default function Dashboard() {
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
             ? <span className="label text-neutral-600 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
-            : <Link href="/login" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">→ login</Link>}
+            : (
+              <Link href="/login"
+                className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600"
+                title="Browse freely — sign in only to save companies and reports">
+                → sign in to save
+              </Link>
+            )}
           <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
         </div>
       </header>
@@ -1259,15 +1377,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* top-5 per tier */}
+      {/* strategic snapshot */}
       {!loading && leads.length > 0 && (
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {['HOT','WARM','COLD'].map(t => (
-            <TopFiveTable key={t} tier={t} leads={leads}
-              onSelect={setSelectedLead}
-              onFilterTier={t => { setTier(t); setIndustry('All'); setSearch(''); }} />
-          ))}
-        </div>
+        <StrategicSnapshot leads={leads} onSelect={setSelectedLead} />
       )}
 
       {/* intelligence search */}
@@ -1377,7 +1489,9 @@ export default function Dashboard() {
 
                 {/* row header */}
                 <div className="flex cursor-pointer items-start gap-4"
-                  onClick={() => setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] }))}>
+                  onClick={() => setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] }))}
+                  role="button" tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && setExpanded(p => ({...p, [lead.id]: !p[lead.id]}))  }>
 
         <span className="label w-6 text-right shrink-0 mt-0.5">#{i+1}</span>
 
@@ -1391,6 +1505,13 @@ export default function Dashboard() {
                           {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
                         </span>
                       )}
+                      {/* AI Analysis button — always visible */}
+                      <button
+                        className="btn-ghost text-[10px] border-emerald-900 text-emerald-700
+                                   hover:text-emerald-300 hover:border-emerald-600 transition-colors"
+                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
+                        AI Analysis
+                      </button>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {uniqueSignalTypes(lead.signals || []).map(s => (
