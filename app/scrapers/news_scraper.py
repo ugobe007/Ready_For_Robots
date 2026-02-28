@@ -23,6 +23,7 @@ Usage:
     scraper.run_intent_queries()
 """
 import logging
+import re
 import time
 import urllib.request
 import urllib.parse
@@ -49,6 +50,116 @@ RELEVANCE_KEYWORDS = [
     "supply chain", "distribution center", "hospitality", "hotel",
 ]
 
+# ── Known company → (canonical name, industry) for entity extraction ──────────
+KNOWN_COMPANIES: dict = {
+    # Logistics
+    "xpo logistics": ("XPO Logistics", "Logistics"),
+    "xpo": ("XPO Logistics", "Logistics"),
+    "dhl supply chain": ("DHL Supply Chain", "Logistics"),
+    "dhl": ("DHL Supply Chain", "Logistics"),
+    "prologis": ("Prologis", "Logistics"),
+    "amazon fulfillment": ("Amazon Fulfillment", "Logistics"),
+    "amazon logistics": ("Amazon Fulfillment", "Logistics"),
+    "amazon": ("Amazon Fulfillment", "Logistics"),
+    "ryder": ("Ryder System", "Logistics"),
+    "ryder system": ("Ryder System", "Logistics"),
+    "fedex ground": ("FedEx Ground", "Logistics"),
+    "fedex": ("FedEx Ground", "Logistics"),
+    "ups supply chain": ("UPS Supply Chain Solutions", "Logistics"),
+    "ups": ("UPS Supply Chain Solutions", "Logistics"),
+    "gxo logistics": ("GXO Logistics", "Logistics"),
+    "gxo": ("GXO Logistics", "Logistics"),
+    "c.h. robinson": ("C.H. Robinson Worldwide", "Logistics"),
+    "ch robinson": ("C.H. Robinson Worldwide", "Logistics"),
+    "j.b. hunt": ("J.B. Hunt Transport Services", "Logistics"),
+    "jb hunt": ("J.B. Hunt Transport Services", "Logistics"),
+    "lineage logistics": ("Lineage Logistics", "Logistics"),
+    "americold": ("Americold Realty Trust", "Logistics"),
+    "performance food group": ("Performance Food Group", "Logistics"),
+    "pfg": ("Performance Food Group", "Logistics"),
+    "sysco": ("Sysco Corporation", "Logistics"),
+    "us foods": ("US Foods", "Logistics"),
+    "nfi industries": ("NFI Industries", "Logistics"),
+    "saddle creek": ("Saddle Creek Logistics", "Logistics"),
+    "kenco": ("Kenco Logistics", "Logistics"),
+    "ceva logistics": ("CEVA Logistics", "Logistics"),
+    "target": ("Target Corporation", "Logistics"),
+    "kroger": ("Kroger Company", "Logistics"),
+    "walmart": ("Walmart", "Logistics"),
+    "costco": ("Costco Wholesale", "Logistics"),
+    # Hospitality
+    "marriott": ("Marriott International", "Hospitality"),
+    "hilton": ("Hilton Worldwide Holdings", "Hospitality"),
+    "ihg": ("IHG Hotels & Resorts", "Hospitality"),
+    "intercontinental": ("IHG Hotels & Resorts", "Hospitality"),
+    "wyndham": ("Wyndham Hotels & Resorts", "Hospitality"),
+    "choice hotels": ("Choice Hotels International", "Hospitality"),
+    "hyatt": ("Hyatt Hotels Corporation", "Hospitality"),
+    "mgm resorts": ("MGM Resorts International", "Hospitality"),
+    "mgm": ("MGM Resorts International", "Hospitality"),
+    "omni hotels": ("Omni Hotels & Resorts", "Hospitality"),
+    "loews hotels": ("Loews Hotels & Co", "Hospitality"),
+    "aimbridge": ("Aimbridge Hospitality", "Hospitality"),
+    "sage hospitality": ("Sage Hospitality Group", "Hospitality"),
+    "extended stay america": ("Extended Stay America", "Hospitality"),
+    "best western": ("Best Western Hotels & Resorts", "Hospitality"),
+    "accor": ("Accor Hotels", "Hospitality"),
+    "four seasons": ("Four Seasons Hotels & Resorts", "Hospitality"),
+    "radisson": ("Radisson Hotel Group", "Hospitality"),
+    # Food Service
+    "mcdonald": ("McDonald's Corporation", "Food Service"),
+    "starbucks": ("Starbucks Corporation", "Food Service"),
+    "yum brands": ("Yum! Brands", "Food Service"),
+    "yum!": ("Yum! Brands", "Food Service"),
+    "restaurant brands": ("Restaurant Brands International", "Food Service"),
+    "rbi": ("Restaurant Brands International", "Food Service"),
+    "burger king": ("Restaurant Brands International", "Food Service"),
+    "tim hortons": ("Restaurant Brands International", "Food Service"),
+    "darden": ("Darden Restaurants", "Food Service"),
+    "olive garden": ("Darden Restaurants", "Food Service"),
+    "longhorn steakhouse": ("Darden Restaurants", "Food Service"),
+    "compass group": ("Compass Group USA", "Food Service"),
+    "aramark": ("Aramark Corporation", "Food Service"),
+    "sodexo": ("Sodexo USA", "Food Service"),
+    "delaware north": ("Delaware North Companies", "Food Service"),
+    "shake shack": ("Shake Shack", "Food Service"),
+    "sweetgreen": ("Sweetgreen", "Food Service"),
+    "wingstop": ("Wingstop Restaurants", "Food Service"),
+    "panera": ("Panera Bread", "Food Service"),
+    "brinker": ("Brinker International", "Food Service"),
+    "chili's": ("Brinker International", "Food Service"),
+    "texas roadhouse": ("Texas Roadhouse", "Food Service"),
+    "jack in the box": ("Jack in the Box", "Food Service"),
+    "taco bell": ("Yum! Brands", "Food Service"),
+    "kfc": ("Yum! Brands", "Food Service"),
+    "pizza hut": ("Yum! Brands", "Food Service"),
+    # Healthcare
+    "hca healthcare": ("HCA Healthcare", "Healthcare"),
+    "hca": ("HCA Healthcare", "Healthcare"),
+    "brookdale": ("Brookdale Senior Living", "Healthcare"),
+    "commonspirit": ("CommonSpirit Health", "Healthcare"),
+    "ascension": ("Ascension Health", "Healthcare"),
+    "advocate aurora": ("Advocate Aurora Health", "Healthcare"),
+    "kaiser permanente": ("Kaiser Permanente", "Healthcare"),
+    "kaiser": ("Kaiser Permanente", "Healthcare"),
+    "mayo clinic": ("Mayo Clinic", "Healthcare"),
+    "tenet healthcare": ("Tenet Healthcare", "Healthcare"),
+    "tenet": ("Tenet Healthcare", "Healthcare"),
+    "lifepoint": ("LifePoint Health", "Healthcare"),
+    "genesis healthcare": ("Genesis Healthcare", "Healthcare"),
+    "banner health": ("Banner Health", "Healthcare"),
+    "providence": ("Providence Health & Services", "Healthcare"),
+    "sunrise senior living": ("Sunrise Senior Living", "Healthcare"),
+    "sunrise": ("Sunrise Senior Living", "Healthcare"),
+    "atria senior living": ("Atria Senior Living", "Healthcare"),
+    "atria": ("Atria Senior Living", "Healthcare"),
+}
+
+# Regex to find "Company X announces/says/reports/invests/opens" patterns
+_COMPANY_ANNOUNCE_RE = re.compile(
+    r'\b([A-Z][A-Za-z0-9&\.\' ]{2,40}?)\s+(?:announces?|says?|reports?|invests?|opens?|launches?|deploys?|hires?|appoints?|raises?|acquires?|pilots?)\b'
+)
+
 # ── Open market intent queries (no specific company) ─────────────────────────
 INTENT_QUERIES = [
     "warehouse automation funding round 2025",
@@ -61,6 +172,11 @@ INTENT_QUERIES = [
     "autonomous mobile robot AMR logistics deal",
     "hotel staffing crisis service robot pilot",
     "distribution center new construction opening",
+    "restaurant labor shortage automation kitchen 2025",
+    "hospital staffing shortage disinfection robot 2025",
+    "senior living caregiver shortage robot companion 2025",
+    "food service delivery robot deployment chain 2025",
+    "grocery distribution center automation investment 2025",
 ]
 
 # ── Per-company query templates ───────────────────────────────────────────────
@@ -108,14 +224,18 @@ class NewsScraper:
     def run_intent_queries(self, max_per_query: int = 8):
         """
         Run INTENT_QUERIES to discover new companies showing buying intent.
-        Creates company records for mentioned companies when possible.
+        Extracts company names from article text using KNOWN_COMPANIES dict + regex.
         """
         for query in INTENT_QUERIES:
             logger.info("Intent query: %s", query)
             articles = self._fetch_rss(query)
             for article in articles[:max_per_query]:
-                if self._is_relevant(article["text"]):
-                    self._save_article_as_signal(article, company_name=None, query=query)
+                if not self._is_relevant(article["text"]):
+                    continue
+                company_name, industry = self._extract_company_from_text(article["text"])
+                if company_name:
+                    self._save_article_as_signal(article, company_name=company_name,
+                                                  query=query, inferred_industry=industry)
             time.sleep(self.DELAY_BETWEEN_REQUESTS)
 
     def run(self, company_names: List[str] = None, intent_queries: bool = True):
@@ -196,18 +316,56 @@ class NewsScraper:
             return "labor_signal"
         return "news"
 
+    # ── Entity extraction ─────────────────────────────────────────────────────
+
+    def _extract_company_from_text(self, text: str) -> tuple[Optional[str], Optional[str]]:
+        """
+        Try to identify a known company in the article text.
+        Returns (canonical_name, industry) or (None, None).
+        Priority: longer matches first (so 'dhl supply chain' beats 'dhl').
+        """
+        lower = text.lower()
+        # Sort keys longest-first to prefer specific names over abbreviations
+        for key in sorted(KNOWN_COMPANIES.keys(), key=len, reverse=True):
+            if key in lower:
+                return KNOWN_COMPANIES[key]
+        # Regex fallback: look for "Company Name announces/invests/opens ..."
+        match = _COMPANY_ANNOUNCE_RE.search(text)
+        if match:
+            extracted = match.group(1).strip()
+            if len(extracted) > 2 and not extracted.lower() in ("the", "a", "an", "this"):
+                industry = self._infer_industry_from_text(text)
+                return extracted, industry
+        return None, None
+
+    def _infer_industry_from_text(self, text: str) -> str:
+        """Infer industry from article keywords."""
+        lower = text.lower()
+        if any(w in lower for w in ["hotel", "resort", "hospitality", "housekeep", "lodging", "motel", "inn"]):
+            return "Hospitality"
+        if any(w in lower for w in ["restaurant", "food service", "kitchen", "dining", "qsr", "fast food", "cafe"]):
+            return "Food Service"
+        if any(w in lower for w in ["hospital", "health system", "healthcare", "clinic", "patient", "senior living", "nursing"]):
+            return "Healthcare"
+        if any(w in lower for w in ["warehouse", "logistics", "fulfillment", "distribution", "supply chain", "cold storage", "3pl"]):
+            return "Logistics"
+        return "Unknown"
+
     # ── DB persistence ────────────────────────────────────────────────────────
 
-    def _get_or_create_company(self, name: str) -> Optional[Company]:
+    def _get_or_create_company(self, name: str, industry: str = "Unknown") -> Optional[Company]:
         """Look up or create a company record by name."""
         if not name:
             return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
+            if existing.industry == "Unknown" and industry != "Unknown":
+                existing.industry = industry
+                self.db.commit()
             return existing
         company = Company(
             name=name,
-            industry="Unknown",
+            industry=industry,
             source="news_scraper",
         )
         self.db.add(company)
@@ -215,9 +373,11 @@ class NewsScraper:
         self.db.refresh(company)
         return company
 
-    def _save_article_as_signal(self, article: dict, company_name: Optional[str], query: str):
+    def _save_article_as_signal(self, article: dict, company_name: Optional[str],
+                                  query: str, inferred_industry: Optional[str] = None):
         """Save one RSS article as a Signal row."""
-        company = self._get_or_create_company(company_name) if company_name else None
+        industry = inferred_industry or "Unknown"
+        company = self._get_or_create_company(company_name, industry) if company_name else None
         if company is None:
             return  # skip articles with no identifiable company
 

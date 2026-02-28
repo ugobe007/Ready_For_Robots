@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 16px;
+  }
   body {
     background-color: #080808;
     color: rgb(212 212 212);
@@ -22,7 +25,7 @@
 
   /* badges — stroke + text, no fill */
   .badge {
-    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium
            border tracking-wide uppercase;
   }
 
@@ -51,7 +54,7 @@
 
   /* pill filter tabs — active = colored border+text, inactive = dim */
   .tab {
-    @apply cursor-pointer rounded-sm border px-2.5 py-0.5 text-[11px] font-medium
+    @apply cursor-pointer rounded-sm border px-2.5 py-1 text-xs font-medium
            transition-all tracking-wide;
   }
   .tab-active {
@@ -64,10 +67,10 @@
 
   /* score bar */
   .bar-track {
-    @apply h-[3px] w-full rounded-full bg-neutral-800;
+    @apply h-[4px] w-full rounded-full bg-neutral-800;
   }
   .bar-fill {
-    @apply h-[3px] rounded-full transition-all duration-500;
+    @apply h-[4px] rounded-full transition-all duration-500;
   }
 
   /* divider */
@@ -77,6 +80,6 @@
 
   /* inline label */
   .label {
-    @apply text-[10px] uppercase tracking-widest text-neutral-600;
+    @apply text-[11px] uppercase tracking-widest text-neutral-600;
   }
 }

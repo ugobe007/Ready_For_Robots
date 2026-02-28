@@ -94,7 +94,7 @@ const TIER_TABLE_META = {
   COLD: { label: 'COLD', text: 'text-cyan-400',   border: 'border-cyan-900',   head: 'border-b border-cyan-900/40' },
 };
 
-function TopFiveTable({ tier, leads, onFilterTier }) {
+function TopFiveTable({ tier, leads, onFilterTier, onSelect }) {
   const m     = TIER_TABLE_META[tier];
   const items = leads.filter(l => l.priority_tier === tier).slice(0, 5);
   return (
@@ -120,10 +120,10 @@ function TopFiveTable({ tier, leads, onFilterTier }) {
           </thead>
           <tbody>
             {items.map((l, i) => (
-              <tr key={l.id} className="border-b border-neutral-900 cursor-pointer hover:bg-neutral-900/40"
-                onClick={() => onFilterTier(tier)}>
+              <tr key={l.id} className="border-b border-neutral-900 cursor-pointer hover:bg-neutral-900/40 group"
+                onClick={() => onSelect ? onSelect(l) : onFilterTier(tier)}>
                 <td className="py-1.5 pr-3 label">{i + 1}</td>
-                <td className="py-1.5 pr-3 text-xs text-neutral-200 max-w-[9rem] truncate" title={l.company_name}>
+                <td className="py-1.5 pr-3 text-xs text-neutral-200 max-w-[9rem] truncate group-hover:text-emerald-400 transition-colors" title={l.company_name}>
                   {l.company_name}
                 </td>
                 <td className="py-1.5 pr-2 label truncate max-w-[5rem]" title={l.industry}>
@@ -428,6 +428,152 @@ function AgentInsightsPanel() {
   );
 }
 
+// -- Company strategy modal -------------------------------------------------
+function CompanyStrategyModal({ lead, onClose }) {
+  const [strategy, setStrategy] = useState(null);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/api/agent/strategy/${lead.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setStrategy(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [lead.id]);
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const sc = lead.score || {};
+  const tm = TIER_META[lead.priority_tier] || TIER_META.COLD;
+  const um = strategy ? (URGENCY_META[strategy.urgency] || URGENCY_META.MONITOR) : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh]"
+      onClick={onClose}>
+      <div className="absolute inset-0 bg-black/75" />
+      <div
+        className="relative w-full max-w-2xl max-h-[88vh] overflow-y-auto bg-[#0c0c0c] border border-neutral-700 rounded-lg shadow-2xl"
+        onClick={e => e.stopPropagation()}>
+
+        {/* header */}
+        <div className={`flex items-start justify-between px-6 py-4 border-b ${tm.border}`}>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h2 className="text-lg font-semibold text-neutral-100">{lead.company_name}</h2>
+              <TierBadge tier={lead.priority_tier} />
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-500">
+              {lead.industry && <span>{lead.industry}</span>}
+              {lead.location_city && (
+                <span>{lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}</span>
+              )}
+              {lead.employee_estimate && (
+                <span>{lead.employee_estimate.toLocaleString()} employees</span>
+              )}
+              {lead.website && (
+                <a href={lead.website} target="_blank" rel="noreferrer"
+                  className="text-cyan-600 hover:text-cyan-400 transition-colors"
+                  onClick={e => e.stopPropagation()}>{lead.website}</a>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="ml-4 shrink-0 text-neutral-600 hover:text-neutral-200 text-sm transition-colors px-2 py-1">
+            &#10005;
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-6">
+          {/* intent scores */}
+          <div>
+            <p className="label mb-3">intent scores</p>
+            <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+              <ScoreBar value={sc.overall_score     ?? 0} label="overall" />
+              <ScoreBar value={sc.automation_score  ?? 0} label="automation" />
+              <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
+              <ScoreBar value={sc.expansion_score   ?? 0} label="expansion" />
+              <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
+            </div>
+          </div>
+
+          {/* approach strategy */}
+          <div>
+            <p className="label mb-3">approach strategy</p>
+            {loading && (
+              <p className="text-sm text-neutral-700 animate-pulse py-3">generating strategy&hellip;</p>
+            )}
+            {!loading && strategy && um && (
+              <div className={`border ${um.border} rounded p-5 space-y-4`}>
+                <div className="flex items-center justify-between">
+                  <span className={`badge ${um.border} ${um.text}`}>{um.label}</span>
+                  <span className="text-xs text-neutral-600">{Math.round(strategy.confidence * 100)}% confidence</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="label block mb-1">who to contact</span>
+                    <span className="text-sm text-neutral-200">{strategy.contact_role}</span>
+                  </div>
+                  <div>
+                    <span className="label block mb-1">best channel</span>
+                    <span className="text-sm text-neutral-200">{strategy.best_channel}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="label block mb-1">lead with</span>
+                  <p className="text-sm text-neutral-200 leading-relaxed">{strategy.pitch_angle}</p>
+                </div>
+                <div>
+                  <span className="label block mb-2">talking points</span>
+                  <ul className="space-y-2">
+                    {(strategy.talking_points || []).map((tp, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-neutral-400">
+                        <span className="text-emerald-700 shrink-0 mt-0.5">&#8227;</span>
+                        {tp}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className={`border-t ${um.border} pt-4`}>
+                  <span className="label block mb-1.5">next steps &amp; timing</span>
+                  <p className={`text-sm ${um.text} leading-relaxed`}>&#9201; {strategy.timing_note}</p>
+                </div>
+              </div>
+            )}
+            {!loading && !strategy && (
+              <p className="text-sm text-neutral-700 border border-neutral-800 rounded px-4 py-3">
+                No strategy available &mdash; open the ML Agent panel to run analysis first.
+              </p>
+            )}
+          </div>
+
+          {/* signals */}
+          {(lead.signals || []).length > 0 && (
+            <div>
+              <p className="label mb-3">signals &middot; {lead.signal_count}</p>
+              <div className="space-y-2">
+                {(lead.signals || []).map((s, i) => (
+                  <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
+                    <SignalBadge type={s.signal_type} />
+                    <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.raw_text}</span>
+                    <span className={`shrink-0 text-xs font-mono tabular-nums ${
+                      s.strength >= 0.7 ? 'text-emerald-500'
+                      : s.strength >= 0.4 ? 'text-cyan-500'
+                      : 'text-neutral-600'
+                    }`}>{(s.strength * 100).toFixed(0)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // -- main page --------------------------------------------------------------
 export default function Dashboard() {
   const [leads, setLeads]         = useState([]);
@@ -438,6 +584,7 @@ export default function Dashboard() {
   const [expanded, setExpanded]   = useState({});
   const [lastRefresh, setLast]    = useState(null);
   const [resetting, setResetting] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
 
   // filter state
   const [search, setSearch]           = useState('');
@@ -500,6 +647,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
+      {selectedLead && (
+        <CompanyStrategyModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      )}
+
       {/* header */}
       <header className="mb-8 flex items-start justify-between">
         <div>
@@ -531,27 +682,27 @@ export default function Dashboard() {
       <div className="mb-8 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-6">
         <div>
           <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-xl font-semibold text-neutral-200 tabular-nums">
+          <span className="text-2xl font-semibold text-neutral-200 tabular-nums">
             {summary.total ?? leads.length}
           </span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Hot</span>
-          <span className="text-xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
+          <span className="text-2xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Warm</span>
-          <span className="text-xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
+          <span className="text-2xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Cold</span>
-          <span className="text-xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
+          <span className="text-2xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+          <span className="text-2xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
         </div>
         {openCircuits > 0 && (
           <>
@@ -569,6 +720,7 @@ export default function Dashboard() {
         <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           {['HOT','WARM','COLD'].map(t => (
             <TopFiveTable key={t} tier={t} leads={leads}
+              onSelect={setSelectedLead}
               onFilterTier={t => { setTier(t); setIndustry('All'); setSearch(''); }} />
           ))}
         </div>
@@ -684,7 +836,7 @@ export default function Dashboard() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="font-medium text-neutral-100">{lead.company_name}</span>
+                      <span className="text-base font-medium text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {lead.industry && <span className="label">{lead.industry}</span>}
                       {lead.location_city && (
