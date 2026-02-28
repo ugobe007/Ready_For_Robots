@@ -2,7 +2,7 @@
  * Ready for Robots -- Lead Intelligence Dashboard
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
@@ -192,118 +192,107 @@ function strategicFit(lead) {
 }
 
 function StrategicSnapshot({ leads, onSelect }) {
-  const top10 = [...leads]
+  const [showAll, setShowAll] = useState(false);
+  const sorted = [...leads]
     .filter(l => l.score?.overall_score != null)
-    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
-    .slice(0, 10);
+    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
+  const visible = showAll ? sorted.slice(0, 10) : sorted.slice(0, 5);
 
-  if (!top10.length) return null;
+  if (!sorted.length) return null;
 
   return (
-    <div className="mb-8">
-      {/* header row */}
-      <div className="flex items-end justify-between mb-3">
-        <div>
-          <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Strategic Snapshot</p>
-          <p className="text-[10px] text-neutral-700 mt-0.5">Top 10 opportunities by intent score — click AI Analysis to build your pitch</p>
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <span className="label">Strategic Snapshot</span>
+          <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-700">
+            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />buyer</span>
+            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />eval</span>
+            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />watch</span>
+          </div>
         </div>
-        <div className="hidden md:flex items-center gap-4 text-[10px]">
-          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />Active Buyer</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />Evaluating</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />Monitoring</span>
-        </div>
+        <button onClick={() => setShowAll(s => !s)}
+          className="text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors">
+          {showAll ? 'show less ↑' : `show all 10 ↓`}
+        </button>
       </div>
 
       <div className="border border-neutral-800 rounded overflow-hidden">
-        {/* legend row */}
-        <div className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[2rem_1fr_9rem_7rem_7rem_1fr_5rem_7rem] gap-0 border-b border-neutral-800 bg-neutral-950 px-4 py-2">
-          <span className="label">#</span>
-          <span className="label">company</span>
-          <span className="label hidden md:block">top signal</span>
-          <span className="label hidden md:block">readiness</span>
-          <span className="label hidden md:block">deal size</span>
-          <span className="label hidden md:block">strategic fit</span>
-          <span className="label text-right">score</span>
+        {/* col headers */}
+        <div className="hidden md:grid border-b border-neutral-800/60 bg-neutral-950"
+          style={{gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem'}}>
+          <span />
+          <span className="label px-3 py-2">company</span>
+          <span className="label px-2 py-2">signal</span>
+          <span className="label px-2 py-2">readiness</span>
+          <span className="label px-2 py-2">deal</span>
+          <span className="label px-2 py-2 text-right">score</span>
           <span />
         </div>
 
-        {top10.map((lead, i) => {
-          const sig    = topSignal(lead);
-          const ready  = READINESS[lead.priority_tier] || READINESS.COLD;
-          const deal   = dealLabel(lead.employee_estimate);
-          const fit    = strategicFit(lead);
-          const sigM   = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
-          const rawTxt = sig ? (sig.raw_text || '').substring(0, 72) : '';
+        {visible.map((lead, i) => {
+          const sig   = topSignal(lead);
+          const ready = READINESS[lead.priority_tier] || READINESS.COLD;
+          const deal  = dealLabel(lead.employee_estimate);
+          const fit   = strategicFit(lead);
+          const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
+          const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
 
           return (
             <div key={lead.id}
-              className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[2rem_1fr_9rem_7rem_7rem_1fr_5rem_7rem] gap-0
-                         border-b border-neutral-900 px-4 py-3
-                         hover:bg-neutral-900/40 transition-colors group items-start">
+              className="grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-neutral-900 last:border-0
+                         hover:bg-neutral-900/40 transition-colors group items-center"
+              style={{gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem'}}>
 
               {/* rank */}
-              <span className="label text-neutral-700 mt-0.5">{i + 1}</span>
+              <span className="text-[10px] text-neutral-800 pl-3 group-hover:text-neutral-600 transition-colors tabular-nums">{i + 1}</span>
 
-              {/* company + industry */}
-              <div>
-                <span className="text-sm font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors">
-                  {lead.company_name}
-                </span>
-                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                  {lead.industry && (
-                    <span className="text-[10px] text-neutral-600">{lead.industry}</span>
-                  )}
-                  {lead.location_city && (
-                    <span className="text-[10px] text-neutral-700">
-                      {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
-                    </span>
-                  )}
+              {/* company — name + dim metadata inline */}
+              <div className="px-3 py-2 min-w-0">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-[11px] font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors leading-tight">
+                    {lead.company_name}
+                  </span>
+                  <span className="text-[10px] text-neutral-700 truncate hidden sm:inline">
+                    {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
+                  </span>
                 </div>
-              </div>
-
-              {/* top signal */}
-              <div className="hidden md:block">
-                {sigM ? (
-                  <>
-                    <span className={`badge ${sigM.border} ${sigM.text} mb-1`}>{sigM.label}</span>
-                    {rawTxt && (
-                      <p className="text-[10px] text-neutral-600 leading-snug max-w-[8rem] truncate" title={rawTxt}>{rawTxt}</p>
-                    )}
-                  </>
-                ) : <span className="text-neutral-800">—</span>}
-              </div>
-
-              {/* readiness */}
-              <div className="hidden md:flex items-center gap-1.5">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${ready.dot}`} />
-                <span className={`text-xs font-medium ${ready.color}`}>{ready.label}</span>
-              </div>
-
-              {/* deal size */}
-              <div className="hidden md:block">
-                <span className="text-xs text-neutral-300">{deal.tier}</span>
-                {deal.est && (
-                  <p className="text-[10px] text-neutral-700">~{deal.est} robots</p>
+                {excerpt && (
+                  <p className="text-[10px] text-neutral-700 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
+                    {excerpt}{excerpt.length === 55 ? '…' : ''}
+                  </p>
                 )}
               </div>
 
-              {/* strategic fit */}
-              <div className="hidden md:block">
-                <span className="text-xs text-neutral-400 leading-snug">{fit}</span>
+              {/* signal badge only */}
+              <div className="hidden md:flex items-center px-2 py-2">
+                {sigM
+                  ? <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
+                  : <span className="text-[10px] text-neutral-800">—</span>}
+              </div>
+
+              {/* readiness */}
+              <div className="hidden md:flex items-center gap-1.5 px-2 py-2">
+                <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${ready.dot}`} />
+                <span className={`text-[11px] ${ready.color}`}>{ready.label}</span>
+              </div>
+
+              {/* deal tier only */}
+              <div className="hidden md:flex items-center px-2 py-2">
+                <span className="text-[11px] text-neutral-400">{deal.tier}</span>
               </div>
 
               {/* score */}
-              <div className="text-right">
+              <div className="flex items-center justify-end px-2 py-2">
                 <ScoreNum value={lead.score?.overall_score ?? 0} />
               </div>
 
-              {/* AI Analysis CTA */}
-              <div>
+              {/* CTA */}
+              <div className="flex items-center justify-end pr-3 py-2">
                 <button
                   onClick={() => onSelect(lead)}
-                  className="btn-ghost text-[10px] border-emerald-900 text-emerald-600 hover:text-emerald-300
-                             hover:border-emerald-600 whitespace-nowrap transition-colors">
-                  AI Analysis →
+                  className="text-[10px] text-emerald-800 hover:text-emerald-400 transition-colors whitespace-nowrap font-medium">
+                  Analyze →
                 </button>
               </div>
             </div>
@@ -975,11 +964,25 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
 
 // -- Intelligence search panel -----------------------------------------------
 function IntelSearchPanel({ onOpenLead }) {
+  const searchRef = useRef(null);
   const [open,     setOpen]     = useState(true);
   const [query,    setQuery]    = useState('');
   const [category, setCategory] = useState(null);
   const [results,  setResults]  = useState(null);
   const [loading,  setLoading]  = useState(false);
+
+  // '/' keyboard shortcut to focus search
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        if (!open) setOpen(true);
+        setTimeout(() => searchRef.current?.focus(), 50);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   async function runSearch(q, cat) {
     setLoading(true);
@@ -1019,7 +1022,8 @@ function IntelSearchPanel({ onOpenLead }) {
         className="w-full flex items-center justify-between px-4 py-2.5 text-xs hover:bg-neutral-900/40 transition-colors">
         <span className="flex items-center gap-2">
           <span className="text-cyan-400">&#8855; Intelligence Search</span>
-          <span className="text-neutral-400">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
+          <span className="text-neutral-600 hidden sm:inline">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
+          <span className="text-neutral-800 text-[10px] hidden md:inline">press / to focus</span>
         </span>
         <span className="text-neutral-600">{open ? '&#9650;' : '&#9660;'}</span>
       </button>
@@ -1045,8 +1049,8 @@ function IntelSearchPanel({ onOpenLead }) {
 
           {/* free-text input */}
           <form onSubmit={handleSubmit} className="flex gap-2">
-            <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Company name or keyword — e.g. 'Amazon', 'autonomous forklift', 'Series B', 'government grant'..."
+            <input ref={searchRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="/ search — company name or keyword..."
               className="flex-1 bg-transparent border border-neutral-800 rounded px-3 py-2 text-sm
                          text-neutral-200 placeholder-neutral-600
                          focus:outline-none focus:border-cyan-800 focus:text-white transition-colors" />
@@ -1340,50 +1344,60 @@ export default function Dashboard() {
       {/* quick scrape */}
       <QuickScrape onDone={fetchData} />
 
-      {/* stat row -- inline text, no cards */}
-      <div className="mb-8 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-6">
+      {/* stat row — numbers are clickable tier filters */}
+      <div className="mb-6 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-5">
         <div>
           <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-xl font-semibold text-neutral-200 tabular-nums">
+          <span className="text-2xl font-semibold text-neutral-200 tabular-nums">
             {summary.total ?? leads.length}
           </span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
-        <div>
-          <span className="label block mb-0.5">Hot</span>
-          <span className="text-xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
-        </div>
-        <div>
-          <span className="label block mb-0.5">Warm</span>
-          <span className="text-xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
-        </div>
-        <div>
-          <span className="label block mb-0.5">Cold</span>
-          <span className="text-xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
-        </div>
+        <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
+          className="text-left hover:opacity-80 transition-opacity group">
+          <span className="label block mb-0.5 group-hover:text-red-500 transition-colors">Hot</span>
+          <span className="text-2xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
+        </button>
+        <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
+          className="text-left hover:opacity-80 transition-opacity group">
+          <span className="label block mb-0.5 group-hover:text-yellow-500 transition-colors">Warm</span>
+          <span className="text-2xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
+        </button>
+        <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
+          className="text-left hover:opacity-80 transition-opacity group">
+          <span className="label block mb-0.5 group-hover:text-cyan-400 transition-colors">Cold</span>
+          <span className="text-2xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
+        </button>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+          <span className="text-2xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
         </div>
         {openCircuits > 0 && (
           <>
             <div className="w-px h-6 bg-neutral-800" />
             <div>
               <span className="label block mb-0.5">Open circuits</span>
-              <span className="text-xl font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
+              <span className="text-2xl font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
             </div>
           </>
         )}
+        {/* tier active indicator */}
+        {tier !== 'ALL' && (
+          <button onClick={() => setTier('ALL')}
+            className="ml-auto text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors">
+            ✕ clear filter
+          </button>
+        )}
       </div>
+
+      {/* intelligence search — primary tool, above the fold */}
+      <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
 
       {/* strategic snapshot */}
       {!loading && leads.length > 0 && (
         <StrategicSnapshot leads={leads} onSelect={setSelectedLead} />
       )}
-
-      {/* intelligence search */}
-      <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
 
       {/* agent insights */}
       <AgentInsightsPanel />
@@ -1613,7 +1627,7 @@ export default function Dashboard() {
                                         className="text-cyan-700 hover:text-cyan-500">&#8599;</a>
                                     : <span className="text-neutral-800">&mdash;</span>}
                                 </td>
-                                <td className="py-1.5 text-neutral-400 max-w-xs truncate">
+                                <td className="py-1.5 text-[11px] text-neutral-500 max-w-xs truncate">
                                   {s.raw_text || '—'}
                                 </td>
                               </tr>
