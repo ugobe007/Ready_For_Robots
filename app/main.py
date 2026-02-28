@@ -29,3 +29,8 @@ app.include_router(scraper_health_router, prefix="/api", tags=["scraper-health"]
 @app.get("/")
 def root():
     return {"message": "Ready for Robots API is running"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
