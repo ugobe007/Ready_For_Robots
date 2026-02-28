@@ -12,6 +12,10 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Load .env so DATABASE_URL points to Supabase
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+
 from app.database import SessionLocal, Base, engine
 import app.models  # ensure all tables are registered
 Base.metadata.create_all(bind=engine)
@@ -394,10 +398,18 @@ if all_mode:
 
 if clear_mode:
     print("Clearing existing data...")
-    db.query(Score).delete()
-    db.query(Signal).delete()
-    db.query(Company).delete()
-    db.commit()
+    try:
+        from sqlalchemy import text
+        db.execute(text("TRUNCATE TABLE scores RESTART IDENTITY CASCADE"))
+        db.execute(text("TRUNCATE TABLE signals RESTART IDENTITY CASCADE"))
+        db.execute(text("TRUNCATE TABLE companies RESTART IDENTITY CASCADE"))
+        db.commit()
+    except Exception:
+        # Fallback for SQLite
+        db.query(Score).delete()
+        db.query(Signal).delete()
+        db.query(Company).delete()
+        db.commit()
 
 if live_mode:
     from app.scrapers.job_board_scraper import JobBoardScraper

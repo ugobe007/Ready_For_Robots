@@ -5,7 +5,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// In production (Fly.io) frontend + API share the same origin — use relative URLs.
+// For local dev, point to the local uvicorn server.
+const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
 // -- helpers ----------------------------------------------------------------
 
