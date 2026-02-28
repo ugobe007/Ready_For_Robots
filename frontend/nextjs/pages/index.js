@@ -87,6 +87,347 @@ function uniqueSignalTypes(signals = []) {
   return signals.filter(s => { if (seen.has(s.signal_type)) return false; seen.add(s.signal_type); return true; });
 }
 
+// -- Top-5 per tier table -------------------------------------------------------
+const TIER_TABLE_META = {
+  HOT:  { label: 'HOT',  text: 'text-red-400',    border: 'border-red-900',    head: 'border-b border-red-900/40' },
+  WARM: { label: 'WARM', text: 'text-yellow-400', border: 'border-yellow-900',  head: 'border-b border-yellow-900/40' },
+  COLD: { label: 'COLD', text: 'text-cyan-400',   border: 'border-cyan-900',   head: 'border-b border-cyan-900/40' },
+};
+
+function TopFiveTable({ tier, leads, onFilterTier }) {
+  const m     = TIER_TABLE_META[tier];
+  const items = leads.filter(l => l.priority_tier === tier).slice(0, 5);
+  return (
+    <div className={`border ${m.border} rounded p-4`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className={`text-xs font-bold tracking-widest ${m.text}`}>{tier}</span>
+        <button onClick={() => onFilterTier(tier)}
+          className={`text-[10px] ${m.text} opacity-60 hover:opacity-100 transition-opacity`}>
+          view all &rarr;
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-neutral-800 py-2">no {tier.toLowerCase()} leads yet</p>
+      ) : (
+        <table className="w-full">
+          <thead>
+            <tr className={`${m.head} text-left`}>
+              <th className="pb-1.5 pr-3 label font-normal">#</th>
+              <th className="pb-1.5 pr-3 label font-normal">company</th>
+              <th className="pb-1.5 pr-2 label font-normal">ind.</th>
+              <th className="pb-1.5 label font-normal text-right">score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((l, i) => (
+              <tr key={l.id} className="border-b border-neutral-900 cursor-pointer hover:bg-neutral-900/40"
+                onClick={() => onFilterTier(tier)}>
+                <td className="py-1.5 pr-3 label">{i + 1}</td>
+                <td className="py-1.5 pr-3 text-xs text-neutral-200 max-w-[9rem] truncate" title={l.company_name}>
+                  {l.company_name}
+                </td>
+                <td className="py-1.5 pr-2 label truncate max-w-[5rem]" title={l.industry}>
+                  {(l.industry || '').split(' ')[0]}
+                </td>
+                <td className="py-1.5 text-right">
+                  <ScoreNum value={l.score?.overall_score ?? 0} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+// -- Quick scrape widget -------------------------------------------------------
+function QuickScrape({ onDone }) {
+  const [open,   setOpen]   = useState(false);
+  const [urls,   setUrls]   = useState('');
+  const [ind,    setInd]    = useState('');
+  const [now,    setNow]    = useState(false);
+  const [status, setStatus] = useState(null);  // null | 'loading' | 'done' | 'error'
+  const [result, setResult] = useState(null);
+
+  async function submit() {
+    if (!urls.trim()) return;
+    setStatus('loading');
+    try {
+      const r = await fetch(`${API}/api/agent/scrape/quick`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls, industry: ind || null, scrape_now: now }),
+      });
+      const data = await r.json();
+      setResult(data);
+      setStatus('done');
+      setUrls('');
+      if (onDone) onDone();
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  return (
+    <div className="mb-6 border border-neutral-800 rounded">
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
+        <span>&#43; quick scrape &mdash; paste URLs to add as lead sources</span>
+        <span className="text-neutral-700">{open ? '&#9650;' : '&#9660;'}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-3 border-t border-neutral-800">
+          <textarea value={urls} onChange={e => setUrls(e.target.value)}
+            rows={4} placeholder="https://www.simplyhired.com/search?q=hotel+manager&l=las+vegas&#10;https://www.linkedin.com/jobs/search/?keywords=warehouse+automation"
+            className="w-full mt-3 bg-transparent border border-neutral-800 rounded px-3 py-2 text-xs
+                       text-neutral-300 placeholder-neutral-700 font-mono
+                       focus:outline-none focus:border-emerald-800 transition-colors resize-y" />
+          <div className="flex flex-wrap items-center gap-4">
+            <div>
+              <label className="label block mb-1">industry hint</label>
+              <select value={ind} onChange={e => setInd(e.target.value)}
+                className="bg-transparent border border-neutral-800 rounded px-2 py-1 text-xs text-neutral-400
+                           focus:outline-none focus:border-neutral-600">
+                <option value="">auto-detect</option>
+                {INDUSTRIES.filter(i => i !== 'All').map(i => (
+                  <option key={i} value={i}>{i}</option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" checked={now} onChange={e => setNow(e.target.checked)}
+                className="accent-emerald-500" />
+              <span className={now ? 'text-emerald-400' : 'text-neutral-600'}>scrape now</span>
+            </label>
+            <button onClick={submit} disabled={status === 'loading'}
+              className="ml-auto btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-600">
+              {status === 'loading' ? 'adding...' : '&#8599; add sources'}
+            </button>
+          </div>
+          {status === 'done' && result && (
+            <div className="text-xs text-emerald-500 border border-emerald-900 rounded px-3 py-2">
+              &#10003; Added {result.added} source(s). {result.skipped > 0 ? `${result.skipped} already existed.` : ''}
+              {result.tasks_queued > 0 ? ` ${result.tasks_queued} scrape task(s) queued.` : ''}
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="text-xs text-red-500">&#9888; Failed to add sources — check API connection.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -- Agent insights panel ------------------------------------------------------
+const URGENCY_META = {
+  NOW:     { text: 'text-red-400',    border: 'border-red-900',    label: 'ACT NOW'  },
+  SOON:    { text: 'text-yellow-400', border: 'border-yellow-900', label: 'SOON'     },
+  MONITOR: { text: 'text-neutral-500',border: 'border-neutral-800',label: 'MONITOR'  },
+};
+
+function AgentInsightsPanel() {
+  const [open,     setOpen]     = useState(false);
+  const [data,     setData]     = useState(null);
+  const [loading,  setLoading]  = useState(false);
+  const [tab,      setTab]      = useState('strategies');
+
+  async function load() {
+    if (data) return;
+    setLoading(true);
+    try {
+      const r = await fetch(`${API}/api/agent/insights`);
+      if (r.ok) setData(await r.json());
+    } catch {}
+    setLoading(false);
+  }
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next) load();
+  }
+
+  const tabs = ['strategies', 'sources', 'patterns', 'targets'];
+
+  return (
+    <div className="mb-6 border border-neutral-800 rounded">
+      <button onClick={toggle}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-xs hover:bg-neutral-900/40 transition-colors">
+        <span className="flex items-center gap-2">
+          <span className="text-emerald-400">&#9650; ML Agent</span>
+          <span className="text-neutral-600">&mdash; lead source rankings, signal patterns &amp; approach strategies</span>
+        </span>
+        <span className="text-neutral-700">{open ? '&#9650;' : '&#9660;'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-neutral-800">
+          {loading && <p className="px-4 py-6 text-xs text-neutral-700 animate-pulse">running analysis&hellip;</p>}
+          {!loading && data && (
+            <div className="px-4 pb-4">
+              {/* learning notes */}
+              <div className="py-3 border-b border-neutral-800/60 space-y-1">
+                {data.learning_notes.map((n, i) => (
+                  <p key={i} className="text-xs text-neutral-500">{n}</p>
+                ))}
+              </div>
+
+              {/* coverage gaps */}
+              {data.coverage_gaps?.length > 0 && (
+                <div className="py-3 border-b border-neutral-800/60">
+                  <p className="label mb-2">coverage gaps</p>
+                  <div className="space-y-1">
+                    {data.coverage_gaps.map((g, i) => (
+                      <p key={i} className="text-xs text-yellow-700">&#9651; {g}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* tab bar */}
+              <div className="flex gap-1 mt-3 mb-4">
+                {tabs.map(t => (
+                  <button key={t} onClick={() => setTab(t)}
+                    className={tab === t ? 'tab-active' : 'tab-inactive'}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* strategies tab */}
+              {tab === 'strategies' && (
+                <div className="space-y-3">
+                  {data.top_strategies.length === 0 && <p className="text-xs text-neutral-700">No strategies yet — need more lead data.</p>}
+                  {data.top_strategies.map((s, i) => {
+                    const um = URGENCY_META[s.urgency] || URGENCY_META.MONITOR;
+                    return (
+                      <div key={i} className={`border ${um.border} rounded p-4`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <span className="text-sm font-medium text-neutral-100">{s.company_name}</span>
+                            <span className={`ml-2 badge ${um.border} ${um.text}`}>{um.label}</span>
+                          </div>
+                          <span className="label">{Math.round(s.confidence * 100)}% confidence</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="label block mb-0.5">contact</span>
+                            <span className="text-neutral-300">{s.contact_role}</span>
+                          </div>
+                          <div>
+                            <span className="label block mb-0.5">channel</span>
+                            <span className="text-neutral-300">{s.best_channel}</span>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <span className="label block mb-0.5">lead with</span>
+                            <span className="text-neutral-300">{s.pitch_angle}</span>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <span className="label block mb-1">talking points</span>
+                            <ul className="space-y-1">
+                              {s.talking_points.map((tp, ti) => (
+                                <li key={ti} className="text-neutral-500 flex gap-2">
+                                  <span className="text-emerald-800 shrink-0">&#8227;</span>{tp}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <span className={`text-[11px] ${um.text}`}>&#9201; {s.timing_note}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* sources tab */}
+              {tab === 'sources' && (
+                <div>
+                  {data.source_rankings.length === 0 && <p className="text-xs text-neutral-700">No source data yet.</p>}
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-800">
+                        {['tier','source','leads','avg score','industries','signals'].map(h => (
+                          <th key={h} className="pb-2 pr-4 label font-normal text-left">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.source_rankings.map((r, i) => (
+                        <tr key={i} className="border-b border-neutral-900">
+                          <td className="py-1.5 pr-4">
+                            <span className={`badge ${
+                              r.quality_tier === 'GOLD'   ? 'border-yellow-700 text-yellow-400' :
+                              r.quality_tier === 'SILVER' ? 'border-neutral-600 text-neutral-300' :
+                              r.quality_tier === 'BRONZE' ? 'border-amber-900 text-amber-600' :
+                              'border-neutral-800 text-neutral-600'
+                            }`}>{r.quality_tier}</span>
+                          </td>
+                          <td className="py-1.5 pr-4 text-neutral-300 font-mono">{r.domain}</td>
+                          <td className="py-1.5 pr-4 tabular-nums text-neutral-400">{r.lead_count}</td>
+                          <td className="py-1.5 pr-4">
+                            <ScoreNum value={r.avg_score} />
+                          </td>
+                          <td className="py-1.5 pr-4 text-neutral-600 max-w-[8rem] truncate">{r.top_industries.join(', ')}</td>
+                          <td className="py-1.5 text-neutral-600">{r.top_signal_types.join(', ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* patterns tab */}
+              {tab === 'patterns' && (
+                <div className="space-y-2">
+                  {data.signal_patterns.length === 0 && <p className="text-xs text-neutral-700">No patterns detected yet.</p>}
+                  {data.signal_patterns.map((p, i) => (
+                    <div key={i} className="border border-neutral-800 rounded px-3 py-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        {p.signals.map(s => (
+                          <span key={s} className="badge border-emerald-800 text-emerald-400">{s}</span>
+                        ))}
+                        <span className="ml-auto label">{p.occurrence_count}x &middot; avg <ScoreNum value={p.avg_score} /></span>
+                      </div>
+                      <p className="text-xs text-neutral-500">{p.insight}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* targets tab */}
+              {tab === 'targets' && (
+                <div className="space-y-2">
+                  <p className="text-xs text-neutral-600 mb-3">Agent-recommended scrape sources based on coverage gaps.</p>
+                  {data.recommended_targets.map((t, i) => (
+                    <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-3 py-2.5">
+                      <div className="flex-1 min-w-0">
+                        <a href={t.url} target="_blank" rel="noreferrer"
+                          className="text-xs text-cyan-600 hover:text-cyan-400 font-mono truncate block">{t.url}</a>
+                        <p className="text-xs text-neutral-500 mt-0.5">{t.reason}</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <span className="badge border-emerald-900 text-emerald-600">{t.expected_industry}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button onClick={() => setData(null) || load()}
+                className="mt-4 btn-ghost text-neutral-600 text-[10px]">&#8635; rerun analysis</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -- main page --------------------------------------------------------------
 export default function Dashboard() {
   const [leads, setLeads]         = useState([]);
@@ -183,6 +524,9 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* quick scrape */}
+      <QuickScrape onDone={fetchData} />
+
       {/* stat row -- inline text, no cards */}
       <div className="mb-8 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-6">
         <div>
@@ -219,6 +563,19 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {/* top-5 per tier */}
+      {!loading && leads.length > 0 && (
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {['HOT','WARM','COLD'].map(t => (
+            <TopFiveTable key={t} tier={t} leads={leads}
+              onFilterTier={t => { setTier(t); setIndustry('All'); setSearch(''); }} />
+          ))}
+        </div>
+      )}
+
+      {/* agent insights */}
+      <AgentInsightsPanel />
 
       {/* filter bar */}
       <div className="mb-6 space-y-3">
