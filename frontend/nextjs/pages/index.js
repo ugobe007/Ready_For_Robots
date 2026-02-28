@@ -597,6 +597,16 @@ function AgentInsightsPanel() {
 // -- AI Analysis modal (tabbed: Strategy | Robots | Decision Makers | Intel | Signals) --
 const AI_TABS = ['strategy', 'robot match', 'decision makers', 'intel', 'signals'];
 
+// Classify a talking-point string → emerald (important) | cyan (time-sensitive) | grey
+function tpColor(text) {
+  const t = (text || '').toLowerCase();
+  if (/\b(now|urgent|immediately|deadline|this quarter|q[1-4]|actively|currently|recent|just announced|underway|hiring now|this month|this week|window|right now|breaking|open role)\b/.test(t))
+    return 'text-cyan-400';
+  if (/\b(roi|cost|saving|labor shortage|vacancy|capex|budget|million|billion|vp |director|chief|automation|robot|replace|reduce|solve|address|critical|workforce|staffing|efficiency|pain)\b/.test(t))
+    return 'text-emerald-400';
+  return 'text-neutral-400';
+}
+
 function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
   const { session } = useAuth();
   const [activeTab,    setActiveTab]    = useState('strategy');
@@ -786,23 +796,23 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <span className="label block mb-1">who to contact</span>
-                      <span className="text-sm text-neutral-200">{strat.contact_role}</span>
+                      <span className="text-sm font-medium text-emerald-400">{strat.contact_role}</span>
                     </div>
                     <div>
                       <span className="label block mb-1">best channel</span>
-                      <span className="text-sm text-neutral-200">{strat.best_channel}</span>
+                      <span className="text-sm text-neutral-400">{strat.best_channel}</span>
                     </div>
                   </div>
                   <div>
                     <span className="label block mb-1">lead with</span>
-                    <p className="text-sm text-neutral-200 leading-relaxed">{strat.pitch_angle}</p>
+                    <p className="text-sm text-emerald-300 leading-relaxed font-medium">{strat.pitch_angle}</p>
                   </div>
                   <div>
                     <span className="label block mb-2">talking points</span>
                     <ul className="space-y-2">
                       {(strat.talking_points || []).map((tp, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-neutral-300">
-                          <span className="text-emerald-700 shrink-0 mt-0.5">▸</span>
+                        <li key={i} className={`flex gap-2 text-sm ${tpColor(tp)}`}>
+                          <span className="text-neutral-700 shrink-0 mt-0.5">▸</span>
                           {tp}
                         </li>
                       ))}
@@ -810,7 +820,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   </div>
                   <div className={`border-t ${um.border} pt-4`}>
                     <span className="label block mb-1.5">timing &amp; next steps</span>
-                    <p className={`text-sm ${um.text} leading-relaxed`}>⏱ {strat.timing_note}</p>
+                    <p className="text-sm text-cyan-400 leading-relaxed">⏱ {strat.timing_note}</p>
                   </div>
                 </div>
               )}
