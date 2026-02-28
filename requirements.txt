@@ -1,0 +1,17 @@
+FastAPI
+SQLAlchemy
+psycopg2-binary
+playwright
+celery
+redis
+beautifulsoup4
+requests
+pydantic
+python-dotenv
+spaCy
+openai
+numpy
+pytest
+alembic
+uvicorn
+tailwindcss

@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #080808;
+    color: rgb(212 212 212);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* panels — border only, no fill */
+  .card {
+    @apply rounded-lg border border-neutral-800 bg-transparent p-4;
+  }
+  .card-inset {
+    @apply rounded-md border border-neutral-800 bg-transparent px-3 py-2;
+  }
+
+  /* badges — stroke + text, no fill */
+  .badge {
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium
+           border tracking-wide uppercase;
+  }
+
+  /* buttons — border only */
+  .btn {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded border
+           px-3 py-1 text-xs font-medium transition-all
+           disabled:pointer-events-none disabled:opacity-30;
+  }
+  .btn-em {
+    @apply btn border-emerald-600 text-emerald-400
+           hover:border-emerald-400 hover:text-emerald-300;
+  }
+  .btn-cy {
+    @apply btn border-cyan-700 text-cyan-400
+           hover:border-cyan-500 hover:text-cyan-300;
+  }
+  .btn-ghost {
+    @apply btn border-neutral-700 text-neutral-400
+           hover:border-neutral-500 hover:text-neutral-200;
+  }
+  .btn-danger {
+    @apply btn border-red-800 text-red-400
+           hover:border-red-600 hover:text-red-300;
+  }
+
+  /* pill filter tabs — active = colored border+text, inactive = dim */
+  .tab {
+    @apply cursor-pointer rounded-sm border px-2.5 py-0.5 text-[11px] font-medium
+           transition-all tracking-wide;
+  }
+  .tab-active {
+    @apply tab border-emerald-600 text-emerald-400;
+  }
+  .tab-inactive {
+    @apply tab border-neutral-800 text-neutral-600
+           hover:border-neutral-600 hover:text-neutral-400;
+  }
+
+  /* score bar */
+  .bar-track {
+    @apply h-[3px] w-full rounded-full bg-neutral-800;
+  }
+  .bar-fill {
+    @apply h-[3px] rounded-full transition-all duration-500;
+  }
+
+  /* divider */
+  .divider {
+    @apply border-t border-neutral-800;
+  }
+
+  /* inline label */
+  .label {
+    @apply text-[10px] uppercase tracking-widest text-neutral-600;
+  }
+}

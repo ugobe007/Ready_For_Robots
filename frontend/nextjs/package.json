@@ -1,0 +1,23 @@
+{
+  "name": "ready-for-robots",
+  "version": "1.0.0",
+  "description": "Ready for Robots lead intelligence dashboard",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3"
+  }
+}

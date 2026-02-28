@@ -1,0 +1,29 @@
+[tool]
+name = "ready-for-robots"
+version = "0.1.0"
+description = "A lead intelligence engine for robotics integration in various industries."
+authors = ["Your Name <youremail@example.com>"]
+license = "MIT"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependencies]
+fastapi = "^0.68.0"
+sqlalchemy = "^1.4.22"
+uvicorn = "^0.15.0"
+pydantic = "^1.8.2"
+beautifulsoup4 = "^4.10.0"
+playwright = "^1.16.3"
+celery = "^5.1.2"
+redis = "^3.5.3"
+spacy = "^3.1.1"
+requests = "^2.26.0"
+
+[dev-dependencies]
+pytest = "^6.2.4"
+black = "^21.7b0"
+isort = "^5.9.3"
+mypy = "^0.910"
+flake8 = "^3.9.2"
