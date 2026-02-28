@@ -83,7 +83,7 @@ function ScoreNum({ value }) {
   );
 }
 
-const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation'];
+const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities'];
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
@@ -156,6 +156,10 @@ const INDUSTRY_ROBOT_FIT = {
   'Food Service':              'BOH Automation',
   'Airports & Transportation': 'Ground Ops Robots',
   'Retail':                    'Picking & Restocking',
+  'Casinos & Gaming':          'Floor & F&B Delivery',
+  'Cruise Lines':              'Onboard Delivery',
+  'Theme Parks & Entertainment': 'F&B & Custodial',
+  'Real Estate & Facilities':  'Cleaning & Concierge',
 };
 
 const READINESS = {

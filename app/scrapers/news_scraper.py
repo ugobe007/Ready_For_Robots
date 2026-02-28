@@ -153,6 +153,59 @@ KNOWN_COMPANIES: dict = {
     "sunrise": ("Sunrise Senior Living", "Healthcare"),
     "atria senior living": ("Atria Senior Living", "Healthcare"),
     "atria": ("Atria Senior Living", "Healthcare"),
+    # Casinos & Gaming
+    "caesars": ("Caesars Entertainment", "Casinos & Gaming"),
+    "caesars entertainment": ("Caesars Entertainment", "Casinos & Gaming"),
+    "las vegas sands": ("Las Vegas Sands Corp", "Casinos & Gaming"),
+    "sands": ("Las Vegas Sands Corp", "Casinos & Gaming"),
+    "wynn resorts": ("Wynn Resorts", "Casinos & Gaming"),
+    "wynn": ("Wynn Resorts", "Casinos & Gaming"),
+    "hard rock": ("Hard Rock International", "Casinos & Gaming"),
+    "penn entertainment": ("Penn Entertainment", "Casinos & Gaming"),
+    "penn national": ("Penn Entertainment", "Casinos & Gaming"),
+    "boyd gaming": ("Boyd Gaming Corporation", "Casinos & Gaming"),
+    "boyd": ("Boyd Gaming Corporation", "Casinos & Gaming"),
+    "melco resorts": ("Melco Resorts & Entertainment", "Casinos & Gaming"),
+    "melco": ("Melco Resorts & Entertainment", "Casinos & Gaming"),
+    "galaxy entertainment": ("Galaxy Entertainment Group", "Casinos & Gaming"),
+    "galaxy macau": ("Galaxy Entertainment Group", "Casinos & Gaming"),
+    # Cruise Lines
+    "carnival corporation": ("Carnival Corporation", "Cruise Lines"),
+    "carnival cruise": ("Carnival Corporation", "Cruise Lines"),
+    "carnival": ("Carnival Corporation", "Cruise Lines"),
+    "royal caribbean": ("Royal Caribbean Group", "Cruise Lines"),
+    "norwegian cruise": ("Norwegian Cruise Line Holdings", "Cruise Lines"),
+    "ncl": ("Norwegian Cruise Line Holdings", "Cruise Lines"),
+    "msc cruises": ("MSC Cruises", "Cruise Lines"),
+    "msc": ("MSC Cruises", "Cruise Lines"),
+    "viking cruises": ("Viking Cruises", "Cruise Lines"),
+    "viking": ("Viking Cruises", "Cruise Lines"),
+    "virgin voyages": ("Virgin Voyages", "Cruise Lines"),
+    # Theme Parks & Entertainment
+    "disney parks": ("Walt Disney Parks & Resorts", "Theme Parks & Entertainment"),
+    "walt disney world": ("Walt Disney Parks & Resorts", "Theme Parks & Entertainment"),
+    "disneyland": ("Walt Disney Parks & Resorts", "Theme Parks & Entertainment"),
+    "universal parks": ("Universal Parks & Resorts", "Theme Parks & Entertainment"),
+    "universal studios": ("Universal Parks & Resorts", "Theme Parks & Entertainment"),
+    "seaworld": ("SeaWorld Entertainment", "Theme Parks & Entertainment"),
+    "sea world": ("SeaWorld Entertainment", "Theme Parks & Entertainment"),
+    "six flags": ("Six Flags Entertainment", "Theme Parks & Entertainment"),
+    "cedar fair": ("Cedar Fair", "Theme Parks & Entertainment"),
+    "merlin entertainments": ("Merlin Entertainments", "Theme Parks & Entertainment"),
+    "legoland": ("Merlin Entertainments", "Theme Parks & Entertainment"),
+    "vail resorts": ("Vail Resorts", "Theme Parks & Entertainment"),
+    "vail": ("Vail Resorts", "Theme Parks & Entertainment"),
+    "dollywood": ("Herschend Family Entertainment", "Theme Parks & Entertainment"),
+    "herschend": ("Herschend Family Entertainment", "Theme Parks & Entertainment"),
+    # Real Estate & Facilities
+    "cbre": ("CBRE Group", "Real Estate & Facilities"),
+    "jll": ("Jones Lang LaSalle (JLL)", "Real Estate & Facilities"),
+    "jones lang lasalle": ("Jones Lang LaSalle (JLL)", "Real Estate & Facilities"),
+    "cushman wakefield": ("Cushman & Wakefield", "Real Estate & Facilities"),
+    "cushman & wakefield": ("Cushman & Wakefield", "Real Estate & Facilities"),
+    "greystar": ("Greystar Real Estate Partners", "Real Estate & Facilities"),
+    "abm industries": ("ABM Industries", "Real Estate & Facilities"),
+    "abm": ("ABM Industries", "Real Estate & Facilities"),
 }
 
 # Regex to find "Company X announces/says/reports/invests/opens" patterns
@@ -182,6 +235,15 @@ INTENT_QUERIES = [
     "healthcare EVS housekeeping staffing shortage robot",
     "3PL logistics new distribution center expansion 2026",
     "restaurant chain automation pilot program technology 2026",
+    # New verticals
+    "casino robotics automation beverage delivery 2026",
+    "casino labor shortage staffing F&B robot pilot",
+    "cruise ship robotic delivery onboard automation 2026",
+    "cruise line crew shortage autonomous service 2026",
+    "theme park food service robot automation 2026",
+    "theme park labor shortage custodial operations 2026",
+    "facilities management robotic cleaning autonomous building 2026",
+    "commercial real estate robot cleaning janitorial automation 2026",
 ]
 
 # ── Per-company query templates ───────────────────────────────────────────────
@@ -418,6 +480,14 @@ class NewsScraper:
             return "Healthcare"
         if any(w in lower for w in ["warehouse", "logistics", "fulfillment", "distribution", "supply chain", "cold storage", "3pl"]):
             return "Logistics"
+        if any(w in lower for w in ["casino", "gaming", "resort casino", "slot", "table game", "integrated resort"]):
+            return "Casinos & Gaming"
+        if any(w in lower for w in ["cruise", "cruise ship", "cruise line", "onboard", "vessel"]):
+            return "Cruise Lines"
+        if any(w in lower for w in ["theme park", "amusement park", "theme park", "roller coaster", "disney", "universal studios", "sea world"]):
+            return "Theme Parks & Entertainment"
+        if any(w in lower for w in ["facilities management", "property management", "commercial real estate", "building services", "janitorial"]):
+            return "Real Estate & Facilities"
         return "Unknown"
 
     # ── DB persistence ────────────────────────────────────────────────────────
