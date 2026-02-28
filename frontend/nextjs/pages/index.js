@@ -24,7 +24,7 @@ function ScoreBar({ value = 0, label }) {
     <div className="flex flex-col gap-1">
       <div className="flex justify-between">
         <span className="label">{label}</span>
-        <span className="text-xs tabular-nums text-neutral-400">{pct}</span>
+        <span className="text-[9px] tabular-nums text-neutral-500">{pct}</span>
       </div>
       <div className="bar-track">
         <div className={`bar-fill ${barColor(pct)}`} style={{ width: `${pct}%` }} />
@@ -75,7 +75,7 @@ function HealthDot({ open }) {
 function ScoreNum({ value }) {
   const v = Math.round(value ?? 0);
   const cls = v >= 75 ? 'text-emerald-400' : v >= 50 ? 'text-cyan-400' : v >= 30 ? 'text-yellow-500' : 'text-neutral-500';
-  return <span className={`tabular-nums font-mono font-semibold text-base ${cls}`}>{v}</span>;
+  return <span className={`tabular-nums font-mono font-semibold text-xs ${cls}`}>{v}</span>;
 }
 
 const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service'];
@@ -94,6 +94,49 @@ const SEARCH_CATEGORIES = [
   { key: 'healthcare_automation', label: 'Healthcare Automation' },
   { key: 'retail_automation',     label: 'Retail Automation'     },
 ];
+
+function TrendingTicker() {
+  const [items, setItems] = useState([]);
+  useEffect(() => {
+    fetch(`${API}/api/trending`)
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then(d => setItems(d.items || []))
+      .catch(() => {});
+  }, []);
+  if (!items.length) return null;
+
+  const TYPE_COLOR = {
+    strategic_hire: 'text-blue-400',
+    capex:          'text-cyan-400',
+    labor_shortage: 'text-red-400',
+    expansion:      'text-emerald-400',
+    funding_round:  'text-violet-400',
+    job_posting:    'text-amber-400',
+    ma_activity:    'text-pink-400',
+    news:           'text-neutral-400',
+  };
+
+  const doubled = [...items, ...items];
+
+  return (
+    <div className="ticker-wrap border-b border-neutral-800 bg-neutral-950 py-1.5 w-screen relative left-1/2 -translate-x-1/2">
+      <div className="ticker-inner flex items-center">
+        {doubled.map((item, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5 px-5 shrink-0">
+            <span className={`text-[10px] font-semibold uppercase tracking-wide ${TYPE_COLOR[item.signal_type] || 'text-neutral-400'}`}>
+              {SIGNAL_META[item.signal_type]?.label || item.signal_type}
+            </span>
+            <span className="text-[10px] font-semibold text-white">{item.company_name}</span>
+            <span className="text-[10px] text-neutral-400 max-w-[24rem] truncate">
+              {item.signal_text}
+            </span>
+            <span className="text-[10px] text-neutral-700 mx-2">&bull;</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function uniqueSignalTypes(signals = []) {
   const seen = new Set();
@@ -858,7 +901,9 @@ export default function Dashboard() {
   const openCircuits = health?.circuit_open_urls?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
+    <>
+      <TrendingTicker />
+      <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
       {selectedLead && (
         <CompanyStrategyModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
@@ -894,27 +939,27 @@ export default function Dashboard() {
       <div className="mb-8 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-6">
         <div>
           <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-3xl font-semibold text-neutral-200 tabular-nums">
+          <span className="text-xl font-semibold text-neutral-200 tabular-nums">
             {summary.total ?? leads.length}
           </span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Hot</span>
-          <span className="text-3xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
+          <span className="text-xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Warm</span>
-          <span className="text-3xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
+          <span className="text-xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Cold</span>
-          <span className="text-3xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
+          <span className="text-xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-3xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+          <span className="text-xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
         </div>
         {openCircuits > 0 && (
           <>
@@ -1051,7 +1096,7 @@ export default function Dashboard() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-lg font-semibold text-neutral-100">{lead.company_name}</span>
+                      <span className="text-sm font-medium text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {lead.industry && <span className="label">{lead.industry}</span>}
                       {lead.location_city && (
@@ -1222,5 +1267,6 @@ export default function Dashboard() {
         ready for robots &middot; richtech robotics &middot; refreshes every 30s
       </footer>
     </div>
+    </>
   );
 }

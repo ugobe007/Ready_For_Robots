@@ -20,6 +20,7 @@ from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, is_junk
+from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
 
@@ -53,10 +54,11 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "signal_count": len(sigs),
         "signals": [
             {
-                "signal_type": sig.signal_type,
-                "strength":    sig.signal_strength,
-                "raw_text":    sig.signal_text,
-                "source_url":  sig.source_url,
+                "signal_type":     sig.signal_type,
+                "strength":        sig.signal_strength,
+                "weighted_score":  compute_weighted_score(sig),
+                "raw_text":        sig.signal_text,
+                "source_url":      sig.source_url,
             }
             for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
         ],

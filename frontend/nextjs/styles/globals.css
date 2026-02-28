@@ -1,16 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   html {
-    font-size: 18px;
+    font-size: 13px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   body {
     background-color: #080808;
     color: rgb(212 212 212);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'ss01' 1, 'cv01' 1;
   }
 }
 
@@ -25,14 +33,14 @@
 
   /* badges — stroke + text, no fill */
   .badge {
-    @apply inline-flex items-center rounded px-1.5 py-0.5 text-sm font-medium
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium
            border tracking-wide uppercase;
   }
 
   /* buttons — border only */
   .btn {
     @apply inline-flex cursor-pointer items-center gap-1.5 rounded border
-           px-3 py-1.5 text-sm font-medium transition-all
+           px-2.5 py-1 text-xs font-medium transition-all
            disabled:pointer-events-none disabled:opacity-30;
   }
   .btn-em {
@@ -54,7 +62,7 @@
 
   /* pill filter tabs — active = colored border+text, inactive = dim */
   .tab {
-    @apply cursor-pointer rounded-sm border px-3 py-1.5 text-sm font-medium
+    @apply cursor-pointer rounded-sm border px-2 py-0.5 text-[11px] font-medium
            transition-all tracking-wide;
   }
   .tab-active {
@@ -80,6 +88,23 @@
 
   /* inline label */
   .label {
-    @apply text-sm uppercase tracking-widest text-neutral-400;
+    @apply text-[10px] uppercase tracking-widest text-neutral-500;
+  }
+
+  /* trending ticker */
+  .ticker-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker-scroll 60s linear infinite;
+  }
+  .ticker-inner:hover {
+    animation-play-state: paused;
+  }
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
 }
