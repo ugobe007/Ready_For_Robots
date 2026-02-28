@@ -4,7 +4,7 @@
 
 @layer base {
   html {
-    font-size: 16px;
+    font-size: 18px;
   }
   body {
     background-color: #080808;
@@ -25,14 +25,14 @@
 
   /* badges — stroke + text, no fill */
   .badge {
-    @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-sm font-medium
            border tracking-wide uppercase;
   }
 
   /* buttons — border only */
   .btn {
     @apply inline-flex cursor-pointer items-center gap-1.5 rounded border
-           px-3 py-1 text-xs font-medium transition-all
+           px-3 py-1.5 text-sm font-medium transition-all
            disabled:pointer-events-none disabled:opacity-30;
   }
   .btn-em {
@@ -54,7 +54,7 @@
 
   /* pill filter tabs — active = colored border+text, inactive = dim */
   .tab {
-    @apply cursor-pointer rounded-sm border px-2.5 py-1 text-xs font-medium
+    @apply cursor-pointer rounded-sm border px-3 py-1.5 text-sm font-medium
            transition-all tracking-wide;
   }
   .tab-active {
@@ -80,6 +80,6 @@
 
   /* inline label */
   .label {
-    @apply text-xs uppercase tracking-widest text-neutral-400;
+    @apply text-sm uppercase tracking-widest text-neutral-400;
   }
 }

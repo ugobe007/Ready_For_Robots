@@ -24,7 +24,7 @@ function ScoreBar({ value = 0, label }) {
     <div className="flex flex-col gap-1">
       <div className="flex justify-between">
         <span className="label">{label}</span>
-        <span className="text-[10px] tabular-nums text-neutral-500">{pct}</span>
+        <span className="text-xs tabular-nums text-neutral-400">{pct}</span>
       </div>
       <div className="bar-track">
         <div className={`bar-fill ${barColor(pct)}`} style={{ width: `${pct}%` }} />
@@ -75,7 +75,7 @@ function HealthDot({ open }) {
 function ScoreNum({ value }) {
   const v = Math.round(value ?? 0);
   const cls = v >= 75 ? 'text-emerald-400' : v >= 50 ? 'text-cyan-400' : v >= 30 ? 'text-yellow-500' : 'text-neutral-500';
-  return <span className={`tabular-nums font-mono font-semibold text-sm ${cls}`}>{v}</span>;
+  return <span className={`tabular-nums font-mono font-semibold text-base ${cls}`}>{v}</span>;
 }
 
 const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service'];
@@ -542,7 +542,7 @@ function CompanyStrategyModal({ lead, onClose }) {
                   <span className="label block mb-2">talking points</span>
                   <ul className="space-y-2">
                     {(strategy.talking_points || []).map((tp, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-neutral-400">
+                      <li key={i} className="flex gap-2 text-sm text-neutral-300">
                         <span className="text-emerald-700 shrink-0 mt-0.5">&#8227;</span>
                         {tp}
                       </li>
@@ -660,8 +660,8 @@ function IntelSearchPanel({ onOpenLead }) {
           {/* free-text input */}
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="e.g. 'autonomous forklift', 'government grant', 'Series B robotics'..."
-              className="flex-1 bg-transparent border border-neutral-800 rounded px-3 py-1.5 text-sm
+              placeholder="Company name or keyword — e.g. 'Amazon', 'autonomous forklift', 'Series B', 'government grant'..."
+              className="flex-1 bg-transparent border border-neutral-800 rounded px-3 py-2 text-sm
                          text-neutral-200 placeholder-neutral-600
                          focus:outline-none focus:border-cyan-800 focus:text-white transition-colors" />
             <button type="submit"
@@ -678,27 +678,27 @@ function IntelSearchPanel({ onOpenLead }) {
 
           {/* loading */}
           {loading && (
-            <p className="text-xs text-neutral-500 animate-pulse">searching signals&hellip;</p>
+            <p className="text-sm text-neutral-400 animate-pulse">searching signals&hellip;</p>
           )}
 
           {/* results */}
           {!loading && results && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="label">
+                <span className="text-sm font-medium text-neutral-300">
                   {results.total} result{results.total !== 1 ? 's' : ''}
                 </span>
                 {results.category_label && (
                   <span className="badge border-cyan-800 text-cyan-400">{results.category_label}</span>
                 )}
                 {results.query && (
-                  <span className="text-xs text-neutral-500">matching &ldquo;{results.query}&rdquo;</span>
+                  <span className="text-sm text-neutral-400">matching &ldquo;{results.query}&rdquo;</span>
                 )}
               </div>
 
               {results.total === 0 ? (
-                <p className="text-xs text-neutral-500 border border-neutral-800 rounded px-3 py-3">
-                  No signals found. Try a different category or keyword &mdash; signals are sourced from seed data and scrapers.
+                <p className="text-sm text-neutral-400 border border-neutral-800 rounded px-3 py-3">
+                  No results found. Try a different category, or type a company name like &ldquo;Marriott&rdquo; or a keyword like &ldquo;AMR&rdquo;.
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -707,7 +707,7 @@ function IntelSearchPanel({ onOpenLead }) {
                       className="border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                          <span className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
                             {r.company_name}
                           </span>
                           {r.industry && (
@@ -717,6 +717,9 @@ function IntelSearchPanel({ onOpenLead }) {
                             <span className="label text-neutral-500">
                               {r.location_city}{r.location_state ? `, ${r.location_state}` : ''}
                             </span>
+                          )}
+                          {r.match_source === 'name' && !r.matched_signals?.length && (
+                            <span className="badge border-neutral-700 text-neutral-400">name match</span>
                           )}
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
@@ -862,17 +865,16 @@ export default function Dashboard() {
       )}
 
       {/* header */}
-      <header className="mb-8 flex items-start justify-between">
+      <header className="mb-10 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-emerald-400 text-lg font-bold">&diams;</span>
-            <h1 className="text-base font-semibold tracking-tight text-neutral-100">Ready for Robots</h1>
-            <span className="label border border-neutral-800 rounded px-1.5 py-0.5">RICHTECH ROBOTICS</span>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+            <span className="label border border-neutral-700 rounded px-2 py-0.5 text-neutral-300">RICHTECH ROBOTICS</span>
           </div>
-          <p className="text-sm text-neutral-300 pl-7">Lead Intelligence &middot; Automation Signal Platform</p>
+          <p className="text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>
         <div className="flex items-center gap-3">
-          {lastRefresh && <span className="label text-neutral-700">{lastRefresh}</span>}
+          {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
           <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
         </div>
@@ -892,27 +894,27 @@ export default function Dashboard() {
       <div className="mb-8 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-6">
         <div>
           <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-2xl font-semibold text-neutral-200 tabular-nums">
+          <span className="text-3xl font-semibold text-neutral-200 tabular-nums">
             {summary.total ?? leads.length}
           </span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Hot</span>
-          <span className="text-2xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
+          <span className="text-3xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Warm</span>
-          <span className="text-2xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
+          <span className="text-3xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
         </div>
         <div>
           <span className="label block mb-0.5">Cold</span>
-          <span className="text-2xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
+          <span className="text-3xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
         </div>
         <div className="w-px h-6 bg-neutral-800" />
         <div>
           <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-2xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+          <span className="text-3xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
         </div>
         {openCircuits > 0 && (
           <>
@@ -1045,11 +1047,11 @@ export default function Dashboard() {
                 <div className="flex cursor-pointer items-start gap-4"
                   onClick={() => setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] }))}>
 
-                  <span className="label w-6 text-right shrink-0 mt-0.5">#{i+1}</span>
+        <span className="label w-6 text-right shrink-0 mt-0.5">#{i+1}</span>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-base font-medium text-neutral-100">{lead.company_name}</span>
+                      <span className="text-lg font-semibold text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {lead.industry && <span className="label">{lead.industry}</span>}
                       {lead.location_city && (

@@ -25,64 +25,174 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 CATEGORY_KEYWORDS: dict = {
     "automation_investment": [
-        "invest", "fund", "raise", "capital", "round", "grant", "pilot",
-        "robotic", "automat", "startup", "university", "government",
-        "DoD", "NSF", "SBIR", "Series A", "Series B", "strategic partner",
-        "joint venture", "venture", "seed round",
+        # funding events & deal types
+        "Series A", "Series B", "Series C", "Series D", "seed round",
+        "funding round", "raise capital", "venture capital", "VC-backed",
+        "private equity", "PE investment", "growth equity", "strategic investment",
+        "joint venture", "technology partnership", "R&D investment",
+        # government & institutional
+        "government grant", "DoD contract", "DARPA", "NSF award", "SBIR",
+        "STTR", "federal grant", "IRA incentive", "DOE grant", "stimulus",
+        "state grant", "workforce development grant",
+        # corporate commitment signals
+        "capex automation", "automation budget", "capital allocation",
+        "capex approval", "technology roadmap", "digital transformation",
+        "innovation hub", "center of excellence", "proof of concept",
+        "pilot program", "automation initiative", "robotics program",
+        "smart factory", "Industry 4.0", "warehouse of the future",
+        # academic & startup ecosystem
+        "university spin-out", "research commercialize", "startup partner",
+        "accelerator", "incubator", "deep tech", "autonomous systems",
     ],
     "acquisitions": [
-        "acqui", "merger", "buyout", "M&A", "acquired", "takes over",
-        "strategic purchase", "divestiture", "fold into", "absorb",
-        "carve-out", "spin-off",
+        # deal language
+        "acqui", "merger", "buyout", "M&A", "acquired by", "acquires",
+        "merger agreement", "definitive agreement", "letter of intent",
+        "stock purchase", "asset purchase", "all-cash deal", "enterprise value",
+        # strategic buyer language
+        "strategic buyer", "bolt-on", "tuck-in", "synergies", "integration",
+        "post-merger", "due diligence", "deal close", "close the transaction",
+        # divestitures & exits
+        "divestiture", "spin-off", "carve-out", "divests", "sells off",
+        "strategic alternatives", "explore options",
+        # industry-specific
+        "takes over", "fold into", "absorb", "roll-up", "platform company",
+        "consolidation", "vertical integration",
     ],
     "labor_downsizing": [
+        # workforce reduction
         "layoff", "lay-off", "downsize", "reduction in force", "RIF",
-        "furlough", "job cut", "workforce reduction", "headcount reduction",
-        "restructur", "labor shortage", "can't find workers", "labor cost",
-        "overtime", "turnover", "absenteeism", "attrition", "staffing crisis",
+        "job cuts", "headcount reduction", "workforce reduction", "furlough",
+        "restructuring charge", "headcount freeze", "hiring freeze",
+        # labor cost & shortage signals — strongest automation buyers
+        "labor shortage", "can't find enough workers", "chronically understaffed",
+        "high turnover", "vacancy rate", "open positions unfilled",
+        "wage inflation", "labor cost rising", "overtime costs",
+        "absenteeism", "attrition", "staffing crisis", "temp agency",
+        "gig workers", "shift coverage", "scheduling gaps",
+        "labor arbitrage", "reduce dependency on labor",
     ],
     "intra_logistics": [
-        "intralogistic", "intra-logistic", "warehouse automation",
-        "distribution center", "AGV", "AMR", "autonomous mobile robot",
-        "conveyor", "sortation", "goods-to-person", "pick-to-light",
-        "fulfillment center", "cross-dock", "pallet", "depalletiz",
-        "robot arm", "collaborative robot", "cobot",
+        # core automation technologies
+        "AGV", "AMR", "autonomous mobile robot", "autonomous guided vehicle",
+        "goods-to-person", "goods to person", "person-to-goods",
+        "conveyor system", "sortation", "pick-to-light", "put-to-light",
+        "automated storage retrieval", "ASRS", "cube storage", "shuttle system",
+        "vertical carousel", "horizontal carousel", "unit load",
+        # operations & facility
+        "intralogistic", "warehouse automation", "fulfillment center",
+        "distribution center", "DC operations", "cross-dock", "cross-docking",
+        "pallet", "depalletiz", "palletizing", "truck unload",
+        "order picking", "each picking", "case picking", "batch picking",
+        "zone routing", "put wall", "pick and place", "dock scheduling",
+        "shipping dock", "loading dock", "tote conveyance", "bin management",
+        # collaborative & mobile robotics
+        "collaborative robot", "cobot", "robot arm", "floor bot",
+        "fleet management", "autonomous forklift", "tugger", "cart",
     ],
     "pack_work": [
-        "pack out", "pack-out", "packing", "packout", "co-pack",
-        "pick and pack", "pick & pack", "pack station", "end-of-line",
-        "case packing", "secondary packaging", "tray packing",
+        # packaging operations
+        "pack out", "pack-out", "packout", "packing line", "packaging line",
+        "case packing", "end-of-line packaging", "secondary packaging",
+        "tray packing", "blister pack", "shrink wrap", "flow wrap",
+        "box erection", "case erect", "bundle packaging",
+        # co-packing and contract
+        "co-pack", "co-packer", "contract packaging", "toll packaging",
+        "pick and pack", "pick & pack", "pack station", "pack bench",
+        # retail-ready
+        "display build", "club pack", "multi-pack", "gift pack",
+        "retail ready packaging", "shelf-ready packaging",
+        "flexible packaging", "pouch fill seal", "form fill seal",
     ],
     "kitting": [
+        # kitting operations
         "kitting", "kit assembly", "kit fulfillment", "kit build",
-        "sub-assembly", "subassembly", "light assembly", "value-added",
-        "postponement", "build to order", "BOM", "bill of materials",
+        "parts kitting", "component kitting", "kit consolidation",
+        "kit verification", "kit build to order", "kit room",
+        # assembly
+        "sub-assembly", "subassembly", "light assembly", "value-added assembly",
+        "production kitting", "manufacturing kitting", "work in process",
+        # medical & surgical
+        "surgical kit", "medical kit", "procedure tray", "instrument tray",
+        "case cart", "sterile kit", "OR kit",
+        # materials management
+        "bill of materials", "BOM", "postponement", "build to order",
+        "configure to order", "materials management", "line-side delivery",
     ],
     "restocking": [
-        "restock", "re-stock", "replenish", "shelf repl", "auto-replen",
-        "cycle count", "inventory refresh", "auto-fill", "kanban",
-        "continuous replenishment", "VMI", "vendor managed inventory",
+        # shelf & store replenishment
+        "restock", "shelf replenishment", "shelf management", "facing",
+        "store replenishment", "auto-replenishment", "auto-fill",
+        "floor replenishment", "dc replenishment",
+        # lean & pull systems
+        "kanban", "min/max", "safety stock", "reorder point",
+        "continuous replenishment", "flow-through", "milk run",
+        "pull system", "two-bin system", "bin refill",
+        # vendor-managed
+        "VMI", "vendor managed inventory", "supplier-managed inventory",
+        "consignment", "slotting", "put-away", "slot optimization",
+        "cycle count", "inventory refresh",
     ],
     "inventory_management": [
-        "inventory", "WMS", "warehouse management system", "stock count",
-        "SKU", "asset tracking", "RFID", "real-time tracking", "ERP",
-        "supply chain visibility", "serialization", "lot tracking",
-        "inventory visibility", "perpetual inventory",
+        # systems & platforms
+        "WMS", "warehouse management system", "ERP integration",
+        "inventory platform", "stock management", "supply chain visibility",
+        "inventory visibility", "real-time tracking", "asset tracking",
+        "RFID", "barcode scan", "serialization", "lot tracking",
+        # accuracy & audit
+        "stock accuracy", "inventory accuracy", "cycle counting",
+        "physical inventory", "blind count", "warehouse audit",
+        "shrinkage", "inventory variance", "stock-out", "out-of-stock",
+        "fill rate", "order fulfillment rate", "dead stock", "overstock",
+        # data & analytics
+        "SKU proliferation", "SKU rationalization", "demand sensing",
+        "inventory optimization", "ABC analysis", "velocity slotting",
+        "returns processing", "reverse logistics", "disposition",
     ],
     "healthcare_automation": [
-        "health system", "healthcare", "hospital ", "hospitals ",
-        "pharmacy", "medical center", "EVS", "environmental services",
-        "clinical", "patient transport", "surgical", "ICU",
-        "sterile processing", "CSSD", "medication", "specimen",
-        "nursing shortage", "linen", "care facility",
-        "delivery bot", "health care",
+        # hospital & health system
+        "health system", "health care", "hospital operations",
+        "medical center", "integrated delivery network",
+        # pharmacy & medication
+        "pharmacy automation", "automated dispensing cabinet", "ADC",
+        "medication dispensing", "pharmacy robot", "unit-dose packaging",
+        "pyxis", "omnicell", "340B",
+        # supply chain & logistics
+        "hospital supply chain", "OR supply", "procedural supply",
+        "central supply", "floor stock", "medical-surgical supply",
+        "SPD", "sterile processing", "instrument reprocessing", "CSSD",
+        "case cart", "OR scheduling",
+        # patient & room services
+        "patient transport", "room service model", "dietary deliveries",
+        "tray delivery", "room tray", "nurse call",
+        # environmental services
+        "EVS", "environmental services", "housekeeping robot",
+        "floor cleaning", "disinfection robot", "UV disinfection",
+        "linen management", "soiled linen",
+        # workforce
+        "nursing shortage", "clinical staffing", "care delivery",
+        "patient-to-nurse ratio", "caregiver burnout",
     ],
     "retail_automation": [
-        "retail", "grocery", "supermarket", "convenience store",
-        "store fulfillment", "last mile", "click and collect",
-        "micro-fulfillment", "dark store", "front-of-store",
-        "back-of-store", "planogram", "scan-and-go",
-        "autonomous checkout", "inventory drone",
+        # grocery & food retail
+        "grocery automation", "supermarket", "convenience store",
+        "food retail", "grocery chain", "hypermarket",
+        # fulfillment models
+        "micro-fulfillment", "dark store", "store fulfillment",
+        "BOPIS", "buy online pickup in store", "curbside pickup",
+        "click and collect", "last-mile fulfillment", "endless aisle",
+        "ship from store", "omnichannel fulfillment",
+        # in-store automation
+        "in-store robot", "store robot", "shelf scanning robot",
+        "autonomous checkout", "scan-and-go", "frictionless checkout",
+        "store associate reduction", "labor model store",
+        # compliance & planogram
+        "planogram compliance", "out-of-stock detection",
+        "price verification", "inventory drone", "shelf audit",
+        "store automation", "front-end automation",
+        # supply chain for retail
+        "store replenishment", "back-of-store", "backroom",
+        "store-level inventory", "retail distribution",
     ],
 }
 
@@ -106,38 +216,38 @@ def _run_keyword_search(
     free_text: Optional[str],
     limit: int,
 ) -> list:
-    """ILIKE match signals (and optionally company names) for given keywords."""
+    """ILIKE match signals (and company names) for given keywords / free-text."""
 
+    # --- signal-text matching ---
     conditions = [Signal.signal_text.ilike(f"%{kw}%") for kw in keywords]
     if free_text and free_text.strip():
         conditions.append(Signal.signal_text.ilike(f"%{free_text.strip()}%"))
 
-    if not conditions:
-        return []
+    company_signals: dict = {}  # company_id → list of matched signal dicts
+    company_match_source: dict = {}  # company_id → "signal" | "name"
 
-    rows = (
-        db.query(
-            Signal.company_id,
-            Signal.signal_text,
-            Signal.signal_type,
-            Signal.signal_strength,
+    if conditions:
+        rows = (
+            db.query(
+                Signal.company_id,
+                Signal.signal_text,
+                Signal.signal_type,
+                Signal.signal_strength,
+            )
+            .filter(or_(*conditions))
+            .all()
         )
-        .filter(or_(*conditions))
-        .all()
-    )
+        for row in rows:
+            company_signals.setdefault(row.company_id, []).append(
+                {
+                    "signal_type": row.signal_type,
+                    "signal_text": row.signal_text,
+                    "strength": round(float(row.signal_strength), 3),
+                }
+            )
+            company_match_source[row.company_id] = "signal"
 
-    # group matched signals by company_id
-    company_signals: dict = {}
-    for row in rows:
-        company_signals.setdefault(row.company_id, []).append(
-            {
-                "signal_type": row.signal_type,
-                "signal_text": row.signal_text,
-                "strength": round(float(row.signal_strength), 3),
-            }
-        )
-
-    # also match company names if free_text provided
+    # --- company-name matching (always, for any input) ---
     if free_text and free_text.strip():
         name_rows = (
             db.query(Company.id)
@@ -146,6 +256,22 @@ def _run_keyword_search(
         )
         for (cid,) in name_rows:
             company_signals.setdefault(cid, [])
+            if cid not in company_match_source:
+                company_match_source[cid] = "name"
+
+    # also match company names against free keywords (non-trivial terms only)
+    long_kw = [kw for kw in keywords if len(kw) > 4]
+    if long_kw:
+        for kw in long_kw:
+            kw_rows = (
+                db.query(Company.id)
+                .filter(Company.name.ilike(f"%{kw}%"))
+                .all()
+            )
+            for (cid,) in kw_rows:
+                company_signals.setdefault(cid, [])
+                if cid not in company_match_source:
+                    company_match_source[cid] = "name"
 
     if not company_signals:
         return []
@@ -175,7 +301,8 @@ def _run_keyword_search(
                 "website": c.website,
                 "employee_estimate": c.employee_estimate,
                 "overall_score": score,
-                "matched_signals": matched[:4],
+                "matched_signals": matched[:5],
+                "match_source": company_match_source.get(c.id, "signal"),
             }
         )
 
