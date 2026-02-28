@@ -6,6 +6,11 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 
 [build]
   dockerfile = "Dockerfile"
+  # Supabase public keys (anon key is safe to commit — it is not a secret)
+  # Replace the placeholder values with your Supabase project URL and anon key
+  [build.args]
+    NEXT_PUBLIC_SUPABASE_URL      = "REPLACE_WITH_YOUR_SUPABASE_URL"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY"
 
 [env]
   PORT = "8080"

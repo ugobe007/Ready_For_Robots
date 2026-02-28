@@ -4,6 +4,8 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useAuth } from './_app';
+import { authHeader } from '../lib/supabase';
 
 // In production (Fly.io) frontend + API share the same origin — use relative URLs.
 // For local dev, point to the local uvicorn server.
@@ -491,10 +493,13 @@ function AgentInsightsPanel() {
 const AI_TABS = ['strategy', 'robot match', 'decision makers', 'intel', 'signals'];
 
 function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
-  const [activeTab, setActiveTab] = useState('strategy');
-  const [profile,   setProfile]   = useState(null);
-  const [loading,   setLoading]   = useState(true);
-  const [saved,     setSaved]     = useState(false);
+  const { session } = useAuth();
+  const [activeTab,    setActiveTab]    = useState('strategy');
+  const [profile,      setProfile]      = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [saved,        setSaved]        = useState(false);
+  const [reportSaved,  setReportSaved]  = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
 
   // load profile + check saved state
   useEffect(() => {
@@ -516,6 +521,35 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  async function saveReport() {
+    if (!session) { window.location.href = '/login'; return; }
+    setSavingReport(true);
+    try {
+      const reportData = {
+        company_id:    lead.id,
+        company_name:  lead.company_name,
+        title:         `AI Report — ${lead.company_name}`,
+        report_data:   {
+          company:       profile?.company || {},
+          scores:        lead.score || profile?.scores || {},
+          strategy:      profile?.strategy || {},
+          robot_match:   profile?.robot_match || [],
+          decision_makers: profile?.decision_makers || [],
+          intel_links:   profile?.intel_links || [],
+          signals:       lead.signals || [],
+        },
+      };
+      const res = await fetch(`${API}/api/user/reports`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+        body:    JSON.stringify(reportData),
+      });
+      if (res.ok) setReportSaved(true);
+      else throw new Error(await res.text());
+    } catch (e) { alert('Save failed: ' + e.message); }
+    setSavingReport(false);
+  }
 
   function toggleSave() {
     try {
@@ -584,6 +618,14 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                 ? 'border-emerald-700 text-emerald-400 hover:border-emerald-500'
                 : 'border-neutral-700 text-neutral-500 hover:border-neutral-500'}`}>
               {saved ? '★ saved' : '☆ save'}
+            </button>
+            <button
+              onClick={saveReport}
+              disabled={savingReport || reportSaved}
+              className={`btn-ghost text-xs ${reportSaved
+                ? 'border-emerald-800 text-emerald-500'
+                : 'border-neutral-800 text-neutral-600 hover:border-neutral-600'}`}>
+              {reportSaved ? '◆ report saved' : savingReport ? '…' : '◇ save report'}
             </button>
             <a href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">profile</a>
             <button onClick={onClose}
@@ -991,6 +1033,7 @@ function IntelSearchPanel({ onOpenLead }) {
 
 // -- main page --------------------------------------------------------------
 export default function Dashboard() {
+  const { session } = useAuth();
   const [leads, setLeads]         = useState([]);
   const [summary, setSummary]     = useState({});
   const [health, setHealth]       = useState(null);
@@ -1162,6 +1205,9 @@ export default function Dashboard() {
           {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
+          {session
+            ? <span className="label text-neutral-600 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
+            : <Link href="/login" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">→ login</Link>}
           <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
         </div>
       </header>

@@ -2,6 +2,14 @@
 # Stage 1: Build Next.js frontend → static HTML/CSS/JS
 FROM node:20-slim AS frontend
 WORKDIR /frontend
+
+# Supabase public keys — set via: flyctl deploy --build-arg NEXT_PUBLIC_SUPABASE_URL=... etc
+# OR set them in fly.toml [build.args] (safe to commit — these are anon/public keys)
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 COPY frontend/nextjs/package*.json ./
 RUN npm ci
 COPY frontend/nextjs/ ./
