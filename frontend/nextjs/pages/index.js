@@ -487,146 +487,332 @@ function AgentInsightsPanel() {
   );
 }
 
-// -- Company strategy modal -------------------------------------------------
-function CompanyStrategyModal({ lead, onClose }) {
-  const [strategy, setStrategy] = useState(null);
-  const [loading,  setLoading]  = useState(true);
+// -- AI Analysis modal (tabbed: Strategy | Robots | Decision Makers | Intel | Signals) --
+const AI_TABS = ['strategy', 'robot match', 'decision makers', 'intel', 'signals'];
 
+function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
+  const [activeTab, setActiveTab] = useState('strategy');
+  const [profile,   setProfile]   = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [saved,     setSaved]     = useState(false);
+
+  // load profile + check saved state
   useEffect(() => {
-    fetch(`${API}/api/agent/strategy/${lead.id}`)
+    // check localStorage saved state
+    try {
+      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[]}');
+      setSaved(!!(store.companies || []).find(c => c.id === lead.id));
+    } catch {}
+
+    fetch(`${API}/api/agent/profile/${lead.id}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setStrategy(d); setLoading(false); })
+      .then(d => { setProfile(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [lead.id]);
 
+  // close on Escape
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const sc = lead.score || {};
-  const tm = TIER_META[lead.priority_tier] || TIER_META.COLD;
-  const um = strategy ? (URGENCY_META[strategy.urgency] || URGENCY_META.MONITOR) : null;
+  function toggleSave() {
+    try {
+      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],"lists":[]}');
+      if (!store.companies) store.companies = [];
+      if (saved) {
+        store.companies = store.companies.filter(c => c.id !== lead.id);
+      } else {
+        store.companies.push({
+          id:        lead.id,
+          name:      lead.company_name,
+          industry:  lead.industry,
+          score:     lead.score?.overall_score ?? profile?.scores?.overall_score ?? 0,
+          tier:      lead.priority_tier,
+          saved_at:  new Date().toISOString(),
+          website:   lead.website || profile?.company?.website,
+        });
+      }
+      localStorage.setItem('rfr_saved', JSON.stringify(store));
+      setSaved(!saved);
+      if (onSaveToggle) onSaveToggle();
+    } catch {}
+  }
+
+  const tm     = TIER_META[lead.priority_tier] || TIER_META.COLD;
+  const sc     = lead.score || profile?.scores || {};
+  const strat  = profile?.strategy;
+  const um     = strat ? (URGENCY_META[strat.urgency] || URGENCY_META.MONITOR) : null;
+  const comp   = profile?.company || {};
+  const city   = comp.location_city || lead.location_city || '';
+  const state  = comp.location_state || lead.location_state || '';
+  const emp    = comp.employee_estimate || lead.employee_estimate;
+  const site   = comp.website || lead.website;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh]"
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[4vh]"
       onClick={onClose}>
-      <div className="absolute inset-0 bg-black/75" />
+      <div className="absolute inset-0 bg-black/80" />
       <div
-        className="relative w-full max-w-2xl max-h-[88vh] overflow-y-auto bg-[#0c0c0c] border border-neutral-700 rounded-lg shadow-2xl"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0c0c0c] border border-neutral-700 rounded-lg shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}>
 
-        {/* header */}
-        <div className={`flex items-start justify-between px-6 py-4 border-b ${tm.border}`}>
-          <div>
+        {/* ── HEADER ── */}
+        <div className={`flex items-start justify-between px-6 py-4 border-b ${tm.border} shrink-0`}>
+          <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h2 className="text-lg font-semibold text-neutral-100">{lead.company_name}</h2>
+              <h2 className="text-lg font-semibold text-neutral-100 truncate">{lead.company_name}</h2>
               <TierBadge tier={lead.priority_tier} />
+              {sc.overall_score != null && <ScoreNum value={sc.overall_score} />}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-              {lead.industry && <span>{lead.industry}</span>}
-              {lead.location_city && (
-                <span>{lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}</span>
-              )}
-              {lead.employee_estimate && (
-                <span>{lead.employee_estimate.toLocaleString()} employees</span>
-              )}
-              {lead.website && (
-                <a href={lead.website} target="_blank" rel="noreferrer"
-                  className="text-cyan-600 hover:text-cyan-400 transition-colors"
-                  onClick={e => e.stopPropagation()}>{lead.website}</a>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+              {lead.industry && <span className="text-neutral-400">{lead.industry}</span>}
+              {city && <span>{city}{state ? `, ${state}` : ''}</span>}
+              {emp && <span>{emp.toLocaleString()} employees</span>}
+              {site && (
+                <a href={site} target="_blank" rel="noreferrer"
+                  className="text-cyan-700 hover:text-cyan-400 transition-colors truncate max-w-[12rem]"
+                  onClick={e => e.stopPropagation()}>{site.replace(/^https?:\/\//, '')}</a>
               )}
             </div>
           </div>
-          <button onClick={onClose}
-            className="ml-4 shrink-0 text-neutral-600 hover:text-neutral-200 text-sm transition-colors px-2 py-1">
-            &#10005;
-          </button>
+          <div className="flex items-center gap-2 ml-4 shrink-0">
+            <button
+              onClick={toggleSave}
+              className={`btn-ghost text-xs ${saved
+                ? 'border-emerald-700 text-emerald-400 hover:border-emerald-500'
+                : 'border-neutral-700 text-neutral-500 hover:border-neutral-500'}`}>
+              {saved ? '★ saved' : '☆ save'}
+            </button>
+            <a href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">profile</a>
+            <button onClick={onClose}
+              className="text-neutral-600 hover:text-neutral-200 transition-colors px-2 py-1 text-sm">
+              ✕
+            </button>
+          </div>
         </div>
 
-        <div className="px-6 py-5 space-y-6">
-          {/* intent scores */}
-          <div>
-            <p className="label mb-3">intent scores</p>
-            <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-              <ScoreBar value={sc.overall_score     ?? 0} label="overall" />
-              <ScoreBar value={sc.automation_score  ?? 0} label="automation" />
-              <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
-              <ScoreBar value={sc.expansion_score   ?? 0} label="expansion" />
-              <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
-            </div>
-          </div>
+        {/* ── TAB BAR ── */}
+        <div className="flex items-center gap-0 border-b border-neutral-800 px-4 shrink-0 overflow-x-auto">
+          {AI_TABS.map(tab => (
+            <button key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-2.5 text-xs font-medium transition-colors border-b-2 whitespace-nowrap -mb-px ${
+                activeTab === tab
+                  ? 'border-emerald-600 text-emerald-400'
+                  : 'border-transparent text-neutral-600 hover:text-neutral-400'
+              }`}>
+              {tab}
+            </button>
+          ))}
+        </div>
 
-          {/* approach strategy */}
-          <div>
-            <p className="label mb-3">approach strategy</p>
-            {loading && (
-              <p className="text-sm text-neutral-700 animate-pulse py-3">generating strategy&hellip;</p>
-            )}
-            {!loading && strategy && um && (
-              <div className={`border ${um.border} rounded p-5 space-y-4`}>
-                <div className="flex items-center justify-between">
-                  <span className={`badge ${um.border} ${um.text}`}>{um.label}</span>
-                  <span className="text-xs text-neutral-600">{Math.round(strategy.confidence * 100)}% confidence</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="label block mb-1">who to contact</span>
-                    <span className="text-sm text-neutral-200">{strategy.contact_role}</span>
-                  </div>
-                  <div>
-                    <span className="label block mb-1">best channel</span>
-                    <span className="text-sm text-neutral-200">{strategy.best_channel}</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="label block mb-1">lead with</span>
-                  <p className="text-sm text-neutral-200 leading-relaxed">{strategy.pitch_angle}</p>
-                </div>
-                <div>
-                  <span className="label block mb-2">talking points</span>
-                  <ul className="space-y-2">
-                    {(strategy.talking_points || []).map((tp, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-neutral-300">
-                        <span className="text-emerald-700 shrink-0 mt-0.5">&#8227;</span>
-                        {tp}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className={`border-t ${um.border} pt-4`}>
-                  <span className="label block mb-1.5">next steps &amp; timing</span>
-                  <p className={`text-sm ${um.text} leading-relaxed`}>&#9201; {strategy.timing_note}</p>
+        {/* ── TAB CONTENT ── */}
+        <div className="px-6 py-5 overflow-y-auto flex-1">
+
+          {/* ── STRATEGY tab ── */}
+          {activeTab === 'strategy' && (
+            <div className="space-y-5">
+              {/* intent scores */}
+              <div>
+                <p className="label mb-3">intent scores</p>
+                <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+                  <ScoreBar value={sc.overall_score     ?? 0} label="overall" />
+                  <ScoreBar value={sc.automation_score  ?? 0} label="automation" />
+                  <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
+                  <ScoreBar value={sc.expansion_score   ?? 0} label="expansion" />
+                  <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
                 </div>
               </div>
-            )}
-            {!loading && !strategy && (
-              <p className="text-sm text-neutral-700 border border-neutral-800 rounded px-4 py-3">
-                No strategy available &mdash; open the ML Agent panel to run analysis first.
-              </p>
-            )}
-          </div>
 
-          {/* signals */}
-          {(lead.signals || []).length > 0 && (
-            <div>
-              <p className="label mb-3">signals &middot; {lead.signal_count}</p>
-              <div className="space-y-2">
-                {(lead.signals || []).map((s, i) => (
-                  <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
-                    <SignalBadge type={s.signal_type} />
-                    <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.raw_text}</span>
-                    <span className={`shrink-0 text-xs font-mono tabular-nums ${
-                      s.strength >= 0.7 ? 'text-emerald-500'
-                      : s.strength >= 0.4 ? 'text-cyan-500'
-                      : 'text-neutral-600'
-                    }`}>{(s.strength * 100).toFixed(0)}%</span>
+              {loading && (
+                <p className="text-sm text-neutral-700 animate-pulse py-3">generating AI analysis&hellip;</p>
+              )}
+
+              {!loading && strat && um && (
+                <div className={`border ${um.border} rounded p-5 space-y-4`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`badge ${um.border} ${um.text}`}>{um.label}</span>
+                    <span className="text-xs text-neutral-600">{Math.round(strat.confidence * 100)}% confidence</span>
                   </div>
-                ))}
-              </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="label block mb-1">who to contact</span>
+                      <span className="text-sm text-neutral-200">{strat.contact_role}</span>
+                    </div>
+                    <div>
+                      <span className="label block mb-1">best channel</span>
+                      <span className="text-sm text-neutral-200">{strat.best_channel}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="label block mb-1">lead with</span>
+                    <p className="text-sm text-neutral-200 leading-relaxed">{strat.pitch_angle}</p>
+                  </div>
+                  <div>
+                    <span className="label block mb-2">talking points</span>
+                    <ul className="space-y-2">
+                      {(strat.talking_points || []).map((tp, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-neutral-300">
+                          <span className="text-emerald-700 shrink-0 mt-0.5">▸</span>
+                          {tp}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className={`border-t ${um.border} pt-4`}>
+                    <span className="label block mb-1.5">timing &amp; next steps</span>
+                    <p className={`text-sm ${um.text} leading-relaxed`}>⏱ {strat.timing_note}</p>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !strat && (
+                <p className="text-sm text-neutral-700 border border-neutral-800 rounded px-4 py-3">
+                  No strategy available — run the ML Agent first.
+                </p>
+              )}
             </div>
           )}
+
+          {/* ── ROBOT MATCH tab ── */}
+          {activeTab === 'robot match' && (
+            <div className="space-y-4">
+              {loading && <p className="text-sm text-neutral-700 animate-pulse py-3">matching robots&hellip;</p>}
+              {!loading && (profile?.robot_match || []).length === 0 && (
+                <p className="text-sm text-neutral-700">No robot recommendations available.</p>
+              )}
+              {(profile?.robot_match || []).map((robot, i) => (
+                <div key={i} className={`border ${i === 0 ? 'border-emerald-900' : 'border-neutral-800'} rounded p-5 space-y-3`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <a href={robot.url} target="_blank" rel="noreferrer"
+                        className="text-base font-semibold text-neutral-100 hover:text-emerald-400 transition-colors">
+                        {robot.name} ↗
+                      </a>
+                      {i === 0 && <span className="badge border-emerald-800 text-emerald-400">best match</span>}
+                    </div>
+                    <span className="label">{robot.tagline}</span>
+                  </div>
+                  <p className="text-sm text-neutral-300 leading-relaxed">{robot.use_cases?.[0]}</p>
+                  {robot.use_cases?.slice(1).map((uc, j) => (
+                    <p key={j} className="text-xs text-neutral-500 leading-relaxed">▸ {uc}</p>
+                  ))}
+                  {robot.roi_stat && (
+                    <div className="border border-cyan-900 rounded px-3 py-2">
+                      <span className="label block mb-0.5">ROI insight</span>
+                      <p className="text-xs text-cyan-400">{robot.roi_stat}</p>
+                    </div>
+                  )}
+                  {(robot.why_now || []).length > 0 && (
+                    <div className="space-y-1">
+                      <span className="label block">why now</span>
+                      {robot.why_now.map((w, j) => (
+                        <p key={j} className="text-xs text-amber-500/80">▸ {w}</p>
+                      ))}
+                    </div>
+                  )}
+                  <a href={robot.url} target="_blank" rel="noreferrer"
+                    className="inline-block text-xs text-emerald-600 hover:text-emerald-400 border border-emerald-900 hover:border-emerald-700 rounded px-3 py-1.5 transition-colors">
+                    view {robot.name} product page ↗
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── DECISION MAKERS tab ── */}
+          {activeTab === 'decision makers' && (
+            <div className="space-y-3">
+              <p className="text-xs text-neutral-600 mb-4">
+                Click any role to search LinkedIn for people at {lead.company_name} with that title.
+                These are the typical decision-makers and economic buyers for Richtech Robotics deployments.
+              </p>
+              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading&hellip;</p>}
+              {(profile?.decision_makers || []).map((dm, i) => (
+                <div key={i} className="flex items-center justify-between border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200">{dm.title}</p>
+                    <p className="text-xs text-neutral-600">{dm.dept} department</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href={dm.linkedin_search} target="_blank" rel="noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="badge border-blue-900 text-blue-400 hover:border-blue-700 transition-colors">
+                      Find on LinkedIn ↗
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {!loading && (profile?.intel_links || []).length > 0 && (
+                <div className="mt-5 pt-5 border-t border-neutral-800">
+                  <p className="label mb-3">company LinkedIn pages</p>
+                  {(profile.intel_links || [])
+                    .filter(l => l.icon === 'li')
+                    .map((l, i) => (
+                      <a key={i} href={l.url} target="_blank" rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="inline-block mr-2 mb-2 badge border-blue-900 text-blue-400 hover:border-blue-700 transition-colors">
+                        {l.label} ↗
+                      </a>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── INTEL tab ── */}
+          {activeTab === 'intel' && (
+            <div className="space-y-3">
+              <p className="text-xs text-neutral-600 mb-4">
+                Research links for {lead.company_name} — use these to build your pre-call briefing.
+              </p>
+              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading&hellip;</p>}
+              {(profile?.intel_links || []).map((link, i) => (
+                <a key={i} href={link.url} target="_blank" rel="noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="flex items-center justify-between border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{link.label}</p>
+                    <p className="text-xs text-neutral-700 truncate max-w-sm">{link.url}</p>
+                  </div>
+                  <span className="text-neutral-700 group-hover:text-neutral-400 text-xs">↗</span>
+                </a>
+              ))}
+              {!loading && (profile?.intel_links || []).length === 0 && (
+                <p className="text-sm text-neutral-700">No links available.</p>
+              )}
+            </div>
+          )}
+
+          {/* ── SIGNALS tab ── */}
+          {activeTab === 'signals' && (
+            <div className="space-y-2">
+              <p className="label mb-3">signals &middot; {lead.signal_count || profile?.signal_count || 0}</p>
+              {((profile?.signals?.length ? profile.signals : lead.signals) || []).map((s, i) => (
+                <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
+                  <SignalBadge type={s.signal_type} />
+                  <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.text || s.raw_text}</span>
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    <span className={`text-xs font-mono tabular-nums ${
+                      (s.strength || 0) >= 0.7 ? 'text-emerald-500'
+                      : (s.strength || 0) >= 0.4 ? 'text-cyan-500'
+                      : 'text-neutral-600'
+                    }`}>{((s.strength || 0) * 100).toFixed(0)}%</span>
+                    {s.source_url && (
+                      <a href={s.source_url} target="_blank" rel="noreferrer"
+                        className="text-[10px] text-cyan-800 hover:text-cyan-600">src ↗</a>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {(profile?.signals?.length === 0 && (lead.signals || []).length === 0) && (
+                <p className="text-sm text-neutral-700">No signals recorded yet.</p>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
     </div>
@@ -814,6 +1000,34 @@ export default function Dashboard() {
   const [lastRefresh, setLast]    = useState(null);
   const [resetting, setResetting] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+  const [savedIds, setSavedIds] = useState(new Set());
+
+  // load saved company IDs from localStorage on mount
+  useEffect(() => {
+    try {
+      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[]}');
+      setSavedIds(new Set((store.companies || []).map(c => c.id)));
+    } catch {}
+  }, []);
+
+  function quickSave(lead) {
+    try {
+      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],' + '"lists":[]}');
+      if (!store.companies) store.companies = [];
+      const alreadySaved = !!store.companies.find(c => c.id === lead.id);
+      if (alreadySaved) {
+        store.companies = store.companies.filter(c => c.id !== lead.id);
+      } else {
+        store.companies.push({
+          id: lead.id, name: lead.company_name, industry: lead.industry,
+          score: lead.score?.overall_score ?? 0, tier: lead.priority_tier,
+          saved_at: new Date().toISOString(), website: lead.website,
+        });
+      }
+      localStorage.setItem('rfr_saved', JSON.stringify(store));
+      setSavedIds(new Set(store.companies.map(c => c.id)));
+    } catch {}
+  }
 
   // filter state
   const [search, setSearch]           = useState('');
@@ -859,6 +1073,20 @@ export default function Dashboard() {
     const t = setInterval(fetchData, 30_000);
     return () => clearInterval(t);
   }, [fetchData]);
+
+  // Auto-open AI Analysis modal when coming from profile page (?analyze=ID)
+  useEffect(() => {
+    if (typeof window === 'undefined' || leads.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const analyzeId = params.get('analyze');
+    if (!analyzeId) return;
+    const found = leads.find(l => l.id === parseInt(analyzeId, 10));
+    if (found) {
+      setSelectedLead(found);
+      // Clean the URL without navigation
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [leads]);
 
   const filtered = leads.filter(l =>
     !search || (l.company_name || '').toLowerCase().includes(search.toLowerCase())
@@ -909,7 +1137,16 @@ export default function Dashboard() {
       <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
       {selectedLead && (
-        <CompanyStrategyModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
+        <AIAnalysisModal
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onSaveToggle={() => {
+            try {
+              const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[]}');
+              setSavedIds(new Set((store.companies || []).map(c => c.id)));
+            } catch {}
+          }}
+        />
       )}
 
       {/* header */}
@@ -924,6 +1161,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
+          <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
         </div>
       </header>
@@ -1143,6 +1381,23 @@ export default function Dashboard() {
                 {/* expanded drawer */}
                 {isOpen && (
                   <div className="mt-4 pl-10 space-y-4">
+                    {/* AI Analysis + Save actions */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-700 text-xs"
+                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
+                        ▲ AI Analysis
+                      </button>
+                      <button
+                        className={`btn-ghost text-xs ${
+                          savedIds.has(lead.id)
+                            ? 'border-emerald-800 text-emerald-400 hover:border-emerald-600'
+                            : 'border-neutral-800 text-neutral-600 hover:border-neutral-600'
+                        }`}
+                        onClick={e => { e.stopPropagation(); quickSave(lead); }}>
+                        {savedIds.has(lead.id) ? '★ saved' : '☆ save'}
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                       {lead.website && (
                         <a href={lead.website} target="_blank" rel="noreferrer"
