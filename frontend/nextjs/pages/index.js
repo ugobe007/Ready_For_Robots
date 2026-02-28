@@ -2,7 +2,7 @@
  * Ready for Robots -- Lead Intelligence Dashboard
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
@@ -193,6 +193,205 @@ function strategicFit(lead) {
   if (sig?.signal_type === 'funding_round')  return `${base} · Funded`;
   if (sig?.signal_type === 'ma_activity')    return `${base} · M&A`;
   return base;
+}
+
+// -- Top 3 Matches ------------------------------------------------------------
+const CONTACT_BY_INDUSTRY = {
+  'Hospitality':               'Director of F&B or Hotel GM',
+  'Logistics':                 'VP of Operations or Warehouse Director',
+  'Healthcare':                'Director of Supply Chain or COO',
+  'Food Service':              'Director of Operations',
+  'Airports & Transportation': 'VP of Ground Operations',
+  'Casinos & Gaming':          'VP of F&B or Facilities Director',
+  'Cruise Lines':              'Director of Onboard Services',
+  'Theme Parks & Entertainment': 'Director of Operations',
+  'Real Estate & Facilities':  'Director of Facilities',
+};
+
+function actionPlan(lead) {
+  const sig  = topSignal(lead);
+  const fit  = INDUSTRY_ROBOT_FIT[lead.industry] || 'Automation Suite';
+  const deal = dealLabel(lead.employee_estimate);
+  const contactBase = CONTACT_BY_INDUSTRY[lead.industry] || 'VP of Operations';
+
+  // contact role — upgrade if we see a strategic hire signal
+  const contact = sig?.signal_type === 'strategic_hire'
+    ? 'Incoming Director / New Automation Executive'
+    : contactBase;
+
+  // timing
+  const timing = {
+    strategic_hire: 'Reach out within 30 days — new execs reshape vendor lists in their first quarter.',
+    capex:          'Move now — CapEx windows are time-limited and budget is actively allocated.',
+    labor_shortage: 'Urgency is live. Labor pain is the number-one driver of robot ROI conversations.',
+    expansion:      'Align proposal with facility opening timeline; position robots as day-one infrastructure.',
+    funding_round:  'Strike within 2 weeks of funding close before budget is committed elsewhere.',
+    ma_activity:    'Integration disruption creates openings — offer stability and continuity.',
+    job_posting:    'Ongoing hiring pressure signals chronic need. Request a discovery call.',
+    news:           'Use news mention as an outreach hook — reference it directly.',
+  }[sig?.signal_type] || 'Follow up with an industry case study and ROI calculator.';
+
+  // pitch angle
+  const pitch = {
+    strategic_hire: `Connect with the new exec before they finalize vendor relationships. Lead with ${fit} ROI data.`,
+    capex:          `Align ${fit} with their active capital spend. Position now while budget is open.`,
+    labor_shortage: `Show how ${fit} directly eliminates the documented staffing gap. Use cost-per-worker math.`,
+    expansion:      `Propose ${fit} as the automation layer for their growth initiative — scale from day one.`,
+    funding_round:  `New capital means new spending mandates. Position ${fit} as a growth-phase multiplier.`,
+    ma_activity:    `Use M&A disruption as the entry point — ${fit} reduces integration complexity and cost.`,
+    job_posting:    `Reframe open headcount as automation budget. ${fit} pays back in under 18 months.`,
+    news:           `Reference their press coverage to open the door, then pivot to ${fit} ROI.`,
+  }[sig?.signal_type] || `Lead with ${fit} ROI benchmarks for the ${lead.industry || 'industry'} vertical.`;
+
+  // talking points: seed from priority_reasons, fill with defaults
+  const reasons = (lead.priority_reasons || []).slice(0, 2);
+  const defaults = [
+    `${deal.tier} account — ${deal.est ? `est. ${deal.est} units` : 'strong deployment potential'}`,
+    `${lead.signal_count || 0} active signal${(lead.signal_count || 0) !== 1 ? 's' : ''} confirm buying readiness`,
+    `${fit} maps directly to their operational profile`,
+  ];
+  const points = [...reasons, ...defaults].slice(0, 3);
+
+  return { contact, timing, pitch, points };
+}
+
+function matchDescription(lead) {
+  const sig  = topSignal(lead);
+  const fit  = INDUSTRY_ROBOT_FIT[lead.industry] || 'Automation Suite';
+  const loc  = [lead.location_city, lead.location_state].filter(Boolean).join(', ');
+
+  const why = {
+    strategic_hire: 'recently hired automation leadership, signaling an active vendor evaluation',
+    capex:          'has active capital expenditure underway — budget is open for equipment',
+    labor_shortage: 'is experiencing documented labor shortages — the primary pain Richtech solves',
+    expansion:      'is actively expanding facilities and needs automation infrastructure from day one',
+    funding_round:  'completed a funding round and is in a capital-deployment phase',
+    ma_activity:    'is navigating M&A activity that creates operational gaps automation can fill',
+    job_posting:    'is posting roles that indicate chronic labor dependency and staffing pressure',
+    news:           'is in the news cycle with developments that signal operational investment',
+  }[sig?.signal_type] || 'shows multiple indicators of automation readiness';
+
+  return `${lead.industry || 'Company'}${loc ? ` based in ${loc}` : ''} that ${why}. A strong fit for Richtech's ${fit} product line.`;
+}
+
+function Top3Matches({ leads, onSelect }) {
+  const top3 = useMemo(() => {
+    const score = l => l.priority_score ?? l.score?.overall_score ?? 0;
+    const hot  = leads.filter(l => l.priority_tier === 'HOT').sort((a, b) => score(b) - score(a));
+    const warm = leads.filter(l => l.priority_tier === 'WARM').sort((a, b) => score(b) - score(a));
+    return [...hot, ...warm].slice(0, 3);
+  }, [leads]);
+
+  if (!top3.length) return null;
+
+  const RANK_COLOR = ['text-emerald-400', 'text-cyan-400', 'text-neutral-400'];
+  const RANK_BORDER = ['border-emerald-900', 'border-cyan-900', 'border-neutral-800'];
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="label text-emerald-600">Top 3 Matches</span>
+        <span className="text-[10px] text-neutral-700">— Richtech Robotics best sales opportunities right now</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {top3.map((lead, i) => {
+          const sig   = topSignal(lead);
+          const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
+          const tier  = TIER_META[lead.priority_tier] || TIER_META.COLD;
+          const plan  = actionPlan(lead);
+          const desc  = matchDescription(lead);
+
+          return (
+            <div key={lead.id}
+              className={`border ${RANK_BORDER[i]} rounded p-4 flex flex-col gap-3 hover:bg-neutral-900/30 transition-colors`}>
+
+              {/* rank + company */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <span className={`text-2xl font-bold tabular-nums leading-none shrink-0 ${RANK_COLOR[i]}`}>
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <button
+                      onClick={() => onSelect(lead)}
+                      className={`text-sm font-semibold leading-tight text-left hover:${RANK_COLOR[i]} transition-colors text-neutral-100 block truncate`}>
+                      {lead.company_name}
+                    </button>
+                    <span className="text-[10px] text-neutral-700">
+                      {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <TierBadge tier={lead.priority_tier} />
+                  <ScoreNum value={lead.score?.overall_score ?? 0} />
+                </div>
+              </div>
+
+              {/* description */}
+              <div>
+                <p className="label mb-1 text-neutral-600">Why they match</p>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">{desc}</p>
+              </div>
+
+              {/* signals */}
+              {sigM && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="label text-neutral-700">top signal</span>
+                  <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
+                  {sig?.raw_text && (
+                    <span className="text-[10px] text-neutral-700 truncate max-w-[12rem]" title={sig.raw_text}>
+                      {sig.raw_text.substring(0, 40)}{sig.raw_text.length > 40 ? '…' : ''}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* plan of action */}
+              <div className="border-t border-neutral-800/60 pt-3 space-y-2">
+                <p className="label text-emerald-700">Plan of Action</p>
+
+                <div>
+                  <span className="label text-neutral-700 block mb-0.5">who to contact</span>
+                  <span className="text-[11px] text-cyan-400">{plan.contact}</span>
+                </div>
+
+                <div>
+                  <span className="label text-neutral-700 block mb-0.5">pitch angle</span>
+                  <span className="text-[11px] text-neutral-300 leading-relaxed">{plan.pitch}</span>
+                </div>
+
+                <div>
+                  <span className="label text-neutral-700 block mb-0.5">timing</span>
+                  <span className="text-[11px] text-yellow-600 leading-relaxed">{plan.timing}</span>
+                </div>
+
+                <div>
+                  <span className="label text-neutral-700 block mb-1">talking points</span>
+                  <ul className="space-y-1">
+                    {plan.points.map((pt, pi) => (
+                      <li key={pi} className="flex gap-2 text-[11px] text-neutral-500 leading-relaxed">
+                        <span className="text-emerald-800 shrink-0">›</span>
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => onSelect(lead)}
+                className="mt-auto text-[11px] font-medium text-emerald-800 hover:text-emerald-400 transition-colors text-left">
+                Full analysis →
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function StrategicSnapshot({ leads, onSelect }) {
@@ -1437,6 +1636,11 @@ export default function Dashboard() {
 
       {/* intelligence search — primary tool, above the fold */}
       <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+
+      {/* top 3 matches */}
+      {!loading && leads.length > 0 && (
+        <Top3Matches leads={leads} onSelect={setSelectedLead} />
+      )}
 
       {/* strategic snapshot */}
       {!loading && leads.length > 0 && (
