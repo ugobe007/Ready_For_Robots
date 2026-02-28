@@ -275,6 +275,9 @@ function matchDescription(lead) {
 }
 
 function Top3Matches({ leads, onSelect }) {
+  const [open, setOpen]         = useState(false);
+  const [expandedPlan, setExpandedPlan] = useState({});
+
   const top3 = useMemo(() => {
     const score = l => l.priority_score ?? l.score?.overall_score ?? 0;
     const hot  = leads.filter(l => l.priority_tier === 'HOT').sort((a, b) => score(b) - score(a));
@@ -284,112 +287,118 @@ function Top3Matches({ leads, onSelect }) {
 
   if (!top3.length) return null;
 
-  const RANK_COLOR = ['text-emerald-400', 'text-cyan-400', 'text-neutral-400'];
+  const RANK_COLOR  = ['text-emerald-400', 'text-cyan-400', 'text-neutral-400'];
   const RANK_BORDER = ['border-emerald-900', 'border-cyan-900', 'border-neutral-800'];
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-3 mb-3">
-        <span className="label text-emerald-600">Top 3 Matches</span>
-        <span className="text-[10px] text-neutral-700">— Richtech Robotics best sales opportunities right now</span>
-      </div>
+    <div className="mb-6 border border-neutral-800 rounded">
+      {/* collapsed header — always visible */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-neutral-900/40 transition-colors">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="label text-emerald-600 shrink-0">Top 3 Matches</span>
+          <div className="hidden sm:flex items-center gap-2 min-w-0 overflow-hidden">
+            {top3.map((lead, i) => (
+              <span key={lead.id} className="flex items-center gap-1.5 shrink-0">
+                {i > 0 && <span className="text-neutral-800">·</span>}
+                <span className={`text-[10px] font-medium ${RANK_COLOR[i]}`}>{i + 1}</span>
+                <span className="text-[10px] text-neutral-500 truncate max-w-[12rem]">{lead.company_name}</span>
+                <ScoreNum value={lead.score?.overall_score ?? 0} />
+              </span>
+            ))}
+          </div>
+        </div>
+        <span className="text-neutral-700 text-[10px] shrink-0 ml-3">{open ? '▲ collapse' : '▼ expand'}</span>
+      </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {top3.map((lead, i) => {
-          const sig   = topSignal(lead);
-          const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
-          const tier  = TIER_META[lead.priority_tier] || TIER_META.COLD;
-          const plan  = actionPlan(lead);
-          const desc  = matchDescription(lead);
+      {/* expanded panel */}
+      {open && (
+        <div className="border-t border-neutral-800 p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {top3.map((lead, i) => {
+            const sig   = topSignal(lead);
+            const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
+            const plan  = actionPlan(lead);
+            const desc  = matchDescription(lead);
+            const planOpen = !!expandedPlan[lead.id];
 
-          return (
-            <div key={lead.id}
-              className={`border ${RANK_BORDER[i]} rounded p-4 flex flex-col gap-3 hover:bg-neutral-900/30 transition-colors`}>
+            return (
+              <div key={lead.id}
+                className={`border ${RANK_BORDER[i]} rounded p-3 flex flex-col gap-2`}>
 
-              {/* rank + company */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-baseline gap-2 min-w-0">
-                  <span className={`text-2xl font-bold tabular-nums leading-none shrink-0 ${RANK_COLOR[i]}`}>
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0">
-                    <button
-                      onClick={() => onSelect(lead)}
-                      className={`text-sm font-semibold leading-tight text-left hover:${RANK_COLOR[i]} transition-colors text-neutral-100 block truncate`}>
-                      {lead.company_name}
-                    </button>
-                    <span className="text-[10px] text-neutral-700">
-                      {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
-                    </span>
+                {/* rank + company */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`text-lg font-bold tabular-nums leading-none shrink-0 ${RANK_COLOR[i]}`}>{i + 1}</span>
+                    <div className="min-w-0">
+                      <button onClick={() => onSelect(lead)}
+                        className="text-xs font-semibold leading-tight text-left text-neutral-100 hover:text-emerald-400 transition-colors block truncate">
+                        {lead.company_name}
+                      </button>
+                      <span className="text-[10px] text-neutral-700">
+                        {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <TierBadge tier={lead.priority_tier} />
+                    <ScoreNum value={lead.score?.overall_score ?? 0} />
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <TierBadge tier={lead.priority_tier} />
-                  <ScoreNum value={lead.score?.overall_score ?? 0} />
-                </div>
+
+                {/* why + signal inline */}
+                <p className="text-[10px] text-neutral-500 leading-relaxed">{desc}</p>
+                {sigM && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
+                    {sig?.raw_text && (
+                      <span className="text-[10px] text-neutral-700 truncate max-w-[10rem]" title={sig.raw_text}>
+                        {sig.raw_text.substring(0, 36)}{sig.raw_text.length > 36 ? '…' : ''}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* plan toggle */}
+                <button
+                  onClick={() => setExpandedPlan(p => ({ ...p, [lead.id]: !p[lead.id] }))}
+                  className="text-left text-[10px] text-emerald-800 hover:text-emerald-500 transition-colors mt-0.5">
+                  {planOpen ? '▲ hide plan' : '▼ plan of action'}
+                </button>
+
+                {planOpen && (
+                  <div className="border-t border-neutral-800/60 pt-2 space-y-2">
+                    <div>
+                      <span className="label text-neutral-700 block mb-0.5">contact</span>
+                      <span className="text-[10px] text-cyan-400">{plan.contact}</span>
+                    </div>
+                    <div>
+                      <span className="label text-neutral-700 block mb-0.5">pitch</span>
+                      <span className="text-[10px] text-neutral-300 leading-relaxed">{plan.pitch}</span>
+                    </div>
+                    <div>
+                      <span className="label text-neutral-700 block mb-0.5">timing</span>
+                      <span className="text-[10px] text-yellow-600 leading-relaxed">{plan.timing}</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {plan.points.map((pt, pi) => (
+                        <li key={pi} className="flex gap-1.5 text-[10px] text-neutral-600 leading-relaxed">
+                          <span className="text-emerald-800 shrink-0">›</span>{pt}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <button onClick={() => onSelect(lead)}
+                  className="mt-auto pt-1 text-[10px] font-medium text-emerald-800 hover:text-emerald-400 transition-colors text-left">
+                  Full analysis →
+                </button>
               </div>
-
-              {/* description */}
-              <div>
-                <p className="label mb-1 text-neutral-600">Why they match</p>
-                <p className="text-[11px] text-neutral-400 leading-relaxed">{desc}</p>
-              </div>
-
-              {/* signals */}
-              {sigM && (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="label text-neutral-700">top signal</span>
-                  <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
-                  {sig?.raw_text && (
-                    <span className="text-[10px] text-neutral-700 truncate max-w-[12rem]" title={sig.raw_text}>
-                      {sig.raw_text.substring(0, 40)}{sig.raw_text.length > 40 ? '…' : ''}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* plan of action */}
-              <div className="border-t border-neutral-800/60 pt-3 space-y-2">
-                <p className="label text-emerald-700">Plan of Action</p>
-
-                <div>
-                  <span className="label text-neutral-700 block mb-0.5">who to contact</span>
-                  <span className="text-[11px] text-cyan-400">{plan.contact}</span>
-                </div>
-
-                <div>
-                  <span className="label text-neutral-700 block mb-0.5">pitch angle</span>
-                  <span className="text-[11px] text-neutral-300 leading-relaxed">{plan.pitch}</span>
-                </div>
-
-                <div>
-                  <span className="label text-neutral-700 block mb-0.5">timing</span>
-                  <span className="text-[11px] text-yellow-600 leading-relaxed">{plan.timing}</span>
-                </div>
-
-                <div>
-                  <span className="label text-neutral-700 block mb-1">talking points</span>
-                  <ul className="space-y-1">
-                    {plan.points.map((pt, pi) => (
-                      <li key={pi} className="flex gap-2 text-[11px] text-neutral-500 leading-relaxed">
-                        <span className="text-emerald-800 shrink-0">›</span>
-                        {pt}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={() => onSelect(lead)}
-                className="mt-auto text-[11px] font-medium text-emerald-800 hover:text-emerald-400 transition-colors text-left">
-                Full analysis →
-              </button>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1523,16 +1532,16 @@ export default function Dashboard() {
       )}
 
       {/* header */}
-      <header className="mb-10 flex items-start justify-between">
+      <header className="mb-8 flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Ready for Robots</h1>
             <span className="label border border-neutral-700 rounded px-2 py-0.5 text-neutral-300">RICHTECH ROBOTICS</span>
           </div>
-          <p className="text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
+          <p className="text-sm text-neutral-400">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>
-        <div className="flex items-center gap-3">
-          {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
+        <div className="flex items-center flex-wrap gap-2">
+          {lastRefresh && <span className="label text-neutral-600 hidden sm:inline">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
@@ -1541,7 +1550,7 @@ export default function Dashboard() {
               <Link href="/login"
                 className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600"
                 title="Browse freely — sign in only to save companies and reports">
-                → sign in to save
+                → sign in
               </Link>
             )}
           <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
@@ -1689,37 +1698,40 @@ export default function Dashboard() {
         </div>
 
         {/* row 2 -- filter tabs */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-1.5">
-            <span className="label mr-1">priority</span>
-            {TIERS.map(t => (
-              <button key={t} onClick={() => setTier(t)}
-                className={tier === t ? 'tab-active' : 'tab-inactive'}>
-                {t === 'HOT' ? 'HOT' : t === 'WARM' ? 'WARM' : t === 'COLD' ? 'COLD' : 'ALL'}
-              </button>
-            ))}
+        <div className="flex flex-col gap-2">
+          {/* priority + signal — always one line */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="flex items-center gap-1.5">
+              <span className="label mr-1">priority</span>
+              {TIERS.map(t => (
+                <button key={t} onClick={() => setTier(t)}
+                  className={tier === t ? 'tab-active' : 'tab-inactive'}>
+                  {t === 'HOT' ? 'HOT' : t === 'WARM' ? 'WARM' : t === 'COLD' ? 'COLD' : 'ALL'}
+                </button>
+              ))}
+            </div>
+            <div className="w-px h-4 bg-neutral-800 hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <span className="label">signal</span>
+              <select value={sigType} onChange={e => setSigType(e.target.value)}
+                className="bg-transparent border border-neutral-800 rounded px-2 py-0.5 text-xs
+                           text-neutral-500 focus:outline-none focus:border-neutral-600">
+                <option value="">any</option>
+                {SIGNAL_TYPES.filter(Boolean).map(st => (
+                  <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="w-px h-4 bg-neutral-800" />
-          <div className="flex items-center gap-1.5">
-            <span className="label mr-1">industry</span>
+          {/* industry — scrollable on mobile */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+            <span className="label mr-1 shrink-0">industry</span>
             {INDUSTRIES.map(ind => (
               <button key={ind} onClick={() => setIndustry(ind)}
-                className={industry === ind ? 'tab-active' : 'tab-inactive'}>
-                {ind.toLowerCase()}
+                className={`shrink-0 ${industry === ind ? 'tab-active' : 'tab-inactive'}`}>
+                {ind === 'All' ? 'all' : ind.toLowerCase()}
               </button>
             ))}
-          </div>
-          <div className="w-px h-4 bg-neutral-800" />
-          <div className="flex items-center gap-2">
-            <span className="label">signal</span>
-            <select value={sigType} onChange={e => setSigType(e.target.value)}
-              className="bg-transparent border border-neutral-800 rounded px-2 py-0.5 text-xs
-                         text-neutral-500 focus:outline-none focus:border-neutral-600">
-              <option value="">any</option>
-              {SIGNAL_TYPES.filter(Boolean).map(st => (
-                <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -1814,7 +1826,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* score bars */}
-                <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-5 pl-10">
+                <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-5 pl-6 sm:pl-10">
                   <ScoreBar value={sc.automation_score ?? 0} label="automation" />
                   <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
                   <ScoreBar value={sc.expansion_score   ?? 0} label="expansion"  />
@@ -1824,14 +1836,14 @@ export default function Dashboard() {
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-10 text-xs text-neutral-500">
+                  <p className="mt-2 pl-6 sm:pl-10 text-xs text-neutral-500">
                     {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
 
                 {/* expanded drawer */}
                 {isOpen && (
-                  <div className="mt-4 pl-10 space-y-4">
+                  <div className="mt-4 pl-6 sm:pl-10 space-y-4">
                     {/* AI Analysis + Save actions */}
                     <div className="flex items-center gap-2">
                       <button
