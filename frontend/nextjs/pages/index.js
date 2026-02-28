@@ -342,9 +342,9 @@ function QuickScrape({ onDone }) {
         <div className="px-4 pb-4 space-y-3 border-t border-neutral-800">
           <textarea value={urls} onChange={e => setUrls(e.target.value)}
             rows={4} placeholder="https://www.simplyhired.com/search?q=hotel+manager&l=las+vegas&#10;https://www.linkedin.com/jobs/search/?keywords=warehouse+automation"
-            className="w-full mt-3 bg-transparent border border-neutral-800 rounded px-3 py-2 text-xs
-                       text-neutral-300 placeholder-neutral-700 font-mono
-                       focus:outline-none focus:border-emerald-800 transition-colors resize-y" />
+            className="w-full mt-3 bg-neutral-900 border border-neutral-600 rounded px-3 py-2 text-xs
+                       text-neutral-200 placeholder-neutral-500 font-mono
+                       focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-900 transition-colors resize-y" />
           <div className="flex flex-wrap items-center gap-4">
             <div>
               <label className="label block mb-1">industry hint</label>
@@ -1051,9 +1051,9 @@ function IntelSearchPanel({ onOpenLead }) {
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input ref={searchRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
               placeholder="/ search — company name or keyword..."
-              className="flex-1 bg-transparent border border-neutral-800 rounded px-3 py-2 text-sm
-                         text-neutral-200 placeholder-neutral-600
-                         focus:outline-none focus:border-cyan-800 focus:text-white transition-colors" />
+              className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-3 py-2 text-sm
+                         text-neutral-100 placeholder-neutral-400
+                         focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-900 focus:text-white transition-colors" />
             <button type="submit"
               className="btn border-cyan-800 text-cyan-400 hover:border-cyan-600 hover:text-cyan-300 shrink-0">
               &#8853; search
@@ -1410,9 +1410,9 @@ export default function Dashboard() {
             <label className="label block mb-1">Search</label>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder="company name..."
-              className="w-full bg-transparent border border-neutral-800 rounded px-3 py-1.5 text-sm
-                         text-neutral-300 placeholder-neutral-700
-                         focus:outline-none focus:border-emerald-700 focus:text-neutral-100
+              className="w-full bg-neutral-900 border border-neutral-600 rounded px-3 py-1.5 text-sm
+                         text-neutral-100 placeholder-neutral-400
+                         focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-900 focus:text-neutral-100
                          transition-colors" />
           </div>
           <div>
