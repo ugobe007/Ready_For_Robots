@@ -234,7 +234,7 @@ class MLAgent:
         industry_lookup: Dict[int, str] = {}
         for c in companies:
             s = c.scores
-            score_lookup[c.id]    = (s.overall_intent_score * 100) if s else 0.0
+            score_lookup[c.id]    = s.overall_intent_score if s else 0.0
             industry_lookup[c.id] = c.industry or "Unknown"
 
         # Aggregate by domain
@@ -287,7 +287,7 @@ class MLAgent:
         ind_map:   Dict[int, str]   = {}
         for c in companies:
             s = c.scores
-            score_map[c.id] = (s.overall_intent_score * 100) if s else 0.0
+            score_map[c.id] = s.overall_intent_score if s else 0.0
             ind_map[c.id]   = c.industry or "Unknown"
 
         # Count common pairs/triples
@@ -343,7 +343,7 @@ class MLAgent:
             s = c.scores
             if not s:
                 continue
-            overall = s.overall_intent_score * 100
+            overall = s.overall_intent_score  # already 0-100
             if overall < 50:
                 continue
 
@@ -435,7 +435,7 @@ class MLAgent:
             )
 
         # Score distribution
-        scores = [c.scores.overall_intent_score * 100 for c in companies if c.scores]
+        scores = [c.scores.overall_intent_score for c in companies if c.scores]
         if scores:
             hot  = sum(1 for s in scores if s >= 75)
             warm = sum(1 for s in scores if 40 <= s < 75)
@@ -486,7 +486,7 @@ class MLAgent:
 
 def _build_strategy(company: Company, score: Score, sigs: List[Signal]) -> ApproachStrategy:
     industry = company.industry or "Unknown"
-    overall  = score.overall_intent_score * 100
+    overall  = score.overall_intent_score  # already 0-100
 
     # Urgency: weighted by signal types + recency
     urgency_score = 0.0
