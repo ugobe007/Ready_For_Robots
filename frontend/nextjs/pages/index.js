@@ -1349,6 +1349,35 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* platform descriptor */}
+      <div className="mb-8 pb-7 border-b border-neutral-800 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
+        <div>
+          <p className="label mb-1.5 text-emerald-600">What is Ready for Robots</p>
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            An <span className="text-cyan-400">AI-powered lead intelligence platform</span> built for Richtech Robotics sales teams.
+            Continuously monitors companies across hospitality, logistics, healthcare, and other labor-intensive industries
+            — surfacing organizations most likely to be evaluating{' '}
+            <span className="text-cyan-400">automation investments right now</span>, so reps focus only on the right accounts at the right time.
+          </p>
+        </div>
+        <div>
+          <p className="label mb-1.5 text-emerald-600">What are Signals</p>
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            Real-time behavioral and event indicators that a company is ready to buy.
+            Includes <span className="text-cyan-400">funding rounds</span>,{' '}
+            <span className="text-cyan-400">strategic executive hires</span>,{' '}
+            <span className="text-cyan-400">CapEx announcements</span>,{' '}
+            <span className="text-cyan-400">labor shortages</span>,{' '}
+            <span className="text-cyan-400">facility expansions</span>, and{' '}
+            <span className="text-cyan-400">M&amp;A activity</span>. Each company is scored and tiered —{' '}
+            <span className="text-red-400">Hot</span>,{' '}
+            <span className="text-yellow-500">Warm</span>, or{' '}
+            <span className="text-cyan-600">Cold</span>{' '}
+            — by the volume, recency, and strength of its detected signals.
+          </p>
+        </div>
+      </div>
+
       {/* error */}
       {error && (
         <div className="mb-6 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">
