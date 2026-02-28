@@ -42,13 +42,13 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
-        # scores — normalised to 0-100
+        # scores — DB already stores 0-100
         "score": {
-            "overall_score":    round((s.overall_intent_score  if s else 0) * 100, 1),
-            "automation_score": round((s.automation_score      if s else 0) * 100, 1),
-            "labor_pain_score": round((s.labor_pain_score      if s else 0) * 100, 1),
-            "expansion_score":  round((s.expansion_score       if s else 0) * 100, 1),
-            "market_fit_score": round((s.robotics_fit_score    if s else 0) * 100, 1),
+            "overall_score":    round((s.overall_intent_score  if s else 0), 1),
+            "automation_score": round((s.automation_score      if s else 0), 1),
+            "labor_pain_score": round((s.labor_pain_score      if s else 0), 1),
+            "expansion_score":  round((s.expansion_score       if s else 0), 1),
+            "market_fit_score": round((s.robotics_fit_score    if s else 0), 1),
         },
         "signal_count": len(sigs),
         "signals": [
@@ -98,8 +98,8 @@ def get_leads(
 
         overall = pri.score  # includes boosts, 0-100
 
-        # score range filter (against raw inference score normalised to 100)
-        raw = (c.scores.overall_intent_score if c.scores else 0) * 100
+        # score range filter (DB already stores 0-100)
+        raw = (c.scores.overall_intent_score if c.scores else 0)
         if raw < min_score or raw > max_score:
             continue
 
