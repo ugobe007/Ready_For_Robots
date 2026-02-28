@@ -74,8 +74,11 @@ function HealthDot({ open }) {
 
 function ScoreNum({ value }) {
   const v = Math.round(value ?? 0);
-  const cls = v >= 75 ? 'text-emerald-400' : v >= 50 ? 'text-cyan-400' : v >= 30 ? 'text-yellow-500' : 'text-neutral-500';
-  return <span className={`tabular-nums font-mono font-semibold text-xs ${cls}`}>{v}</span>;
+  return (
+    <span className="inline-flex items-center border border-emerald-700 text-emerald-400 rounded px-1.5 leading-none tabular-nums font-mono font-semibold text-[10px]" style={{ paddingTop: '0.2rem', paddingBottom: '0.2rem' }}>
+      {v}
+    </span>
+  );
 }
 
 const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service'];

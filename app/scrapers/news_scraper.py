@@ -162,21 +162,26 @@ _COMPANY_ANNOUNCE_RE = re.compile(
 
 # ── Open market intent queries (no specific company) ─────────────────────────
 INTENT_QUERIES = [
-    "warehouse automation funding round 2025",
-    "logistics robotics investment acquisition",
-    "hotel labor shortage automation solution",
-    "fulfillment center expansion opening 2025",
-    "warehouse robotics capex deployment",
+    "warehouse automation funding round 2026",
+    "logistics robotics investment acquisition 2026",
+    "hotel labor shortage automation solution 2026",
+    "fulfillment center expansion opening 2026",
+    "warehouse robotics capex deployment 2026",
     "supply chain automation merger acquisition",
     "VP automation director robotics hired appointed",
-    "autonomous mobile robot AMR logistics deal",
-    "hotel staffing crisis service robot pilot",
-    "distribution center new construction opening",
-    "restaurant labor shortage automation kitchen 2025",
-    "hospital staffing shortage disinfection robot 2025",
-    "senior living caregiver shortage robot companion 2025",
-    "food service delivery robot deployment chain 2025",
-    "grocery distribution center automation investment 2025",
+    "autonomous mobile robot AMR logistics deal 2026",
+    "hotel staffing crisis service robot pilot 2026",
+    "distribution center new construction opening 2026",
+    "restaurant labor shortage automation kitchen 2026",
+    "hospital staffing shortage disinfection robot 2026",
+    "senior living caregiver shortage robot companion 2026",
+    "food service delivery robot deployment chain 2026",
+    "grocery distribution center automation investment 2026",
+    "hotels minimum wage labor cost operations 2026",
+    "warehouse worker shortage overtime staffing pressure 2026",
+    "healthcare EVS housekeeping staffing shortage robot",
+    "3PL logistics new distribution center expansion 2026",
+    "restaurant chain automation pilot program technology 2026",
 ]
 
 # ── Per-company query templates ───────────────────────────────────────────────
@@ -221,12 +226,13 @@ class NewsScraper:
                     logger.info("  [%s] '%s' → %d signals", name, query, saved)
                 time.sleep(self.DELAY_BETWEEN_REQUESTS)
 
-    def run_intent_queries(self, max_per_query: int = 8):
+    def run_intent_queries(self, queries: List[str] = None, max_per_query: int = 8):
         """
-        Run INTENT_QUERIES to discover new companies showing buying intent.
-        Extracts company names from article text using KNOWN_COMPANIES dict + regex.
+        Run open-market intent queries to discover new companies showing buying intent.
+        Pass a custom `queries` list or defaults to the built-in INTENT_QUERIES.
         """
-        for query in INTENT_QUERIES:
+        effective_queries = queries if queries is not None else INTENT_QUERIES
+        for query in effective_queries:
             logger.info("Intent query: %s", query)
             articles = self._fetch_rss(query)
             for article in articles[:max_per_query]:
@@ -239,11 +245,74 @@ class NewsScraper:
             time.sleep(self.DELAY_BETWEEN_REQUESTS)
 
     def run(self, company_names: List[str] = None, intent_queries: bool = True):
-        """Main entry — run both modes."""
+        """Main entry — run both Google News modes."""
         if company_names:
             self.run_company_queries(company_names)
         if intent_queries:
             self.run_intent_queries()
+
+    def run_rss_feeds(self, feed_urls: List[str], max_per_feed: int = 20):
+        """
+        Directly fetch external RSS/Atom feed URLs (e.g. supplychaindive.com/feeds/news/)
+        and save relevant articles as signals.
+        This is distinct from run_intent_queries() which searches Google News RSS.
+        """
+        for feed_url in feed_urls:
+            logger.info("Fetching RSS feed: %s", feed_url)
+            articles = self._fetch_direct_rss(feed_url)
+            saved = 0
+            for article in articles[:max_per_feed]:
+                if not self._is_relevant(article["text"]):
+                    continue
+                company_name, industry = self._extract_company_from_text(article["text"])
+                if company_name:
+                    self._save_article_as_signal(article, company_name=company_name,
+                                                  query=feed_url, inferred_industry=industry)
+                    saved += 1
+            logger.info("  [%s] → %d signals", feed_url.split("/")[2], saved)
+            time.sleep(self.DELAY_BETWEEN_REQUESTS)
+
+    def _fetch_direct_rss(self, feed_url: str) -> List[dict]:
+        """Fetch a direct RSS/Atom URL (not a Google News query)."""
+        articles = []
+        try:
+            req = urllib.request.Request(feed_url, headers={
+                "User-Agent": "Mozilla/5.0 (compatible; RobotsLeadIntel/1.0)",
+                "Accept": "application/rss+xml, application/atom+xml, text/xml, */*",
+            })
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                xml_bytes = resp.read()
+            root = ET.fromstring(xml_bytes)
+            # RSS 2.0
+            channel = root.find("channel")
+            items = channel.findall("item") if channel is not None else []
+            # Atom
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
+            if not items:
+                items = root.findall("atom:entry", ns) or root.findall("entry")
+            for item in items:
+                title = (item.findtext("title") or
+                         (item.find("{http://www.w3.org/2005/Atom}title") or item).text or "").strip()
+                desc  = (item.findtext("description") or
+                         item.findtext("{http://www.w3.org/2005/Atom}summary") or
+                         item.findtext("{http://www.w3.org/2005/Atom}content") or "").strip()
+                link  = (item.findtext("link") or
+                         (item.find("{http://www.w3.org/2005/Atom}link") or None) and
+                         item.find("{http://www.w3.org/2005/Atom}link").get("href", "") or "")
+                articles.append({
+                    "title": title,
+                    "description": desc,
+                    "text": f"{title}. {desc}",
+                    "url": link or feed_url,
+                    "published": "",
+                    "source": feed_url,
+                    "query": feed_url,
+                })
+        except ET.ParseError as e:
+            logger.warning("XML parse error for feed '%s': %s", feed_url, e)
+        except Exception as e:
+            logger.warning("Feed fetch failed '%s': %s", feed_url, e)
+        return articles
 
     # ── RSS Fetching ──────────────────────────────────────────────────────────
 

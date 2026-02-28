@@ -257,7 +257,7 @@ def list_scrape_targets(
 # ── Trigger Scrape ────────────────────────────────────────────────────────────
 
 class TriggerScrapePayload(BaseModel):
-    scraper:  str = "all"          # all | job_board | hotel_dir | rss_feed | news
+    scraper:  str = "all"   # all | job_board | hotel_dir | rss_feed | news | serp | logistics | score_recalc
     industry: Optional[str] = None
     urls:     Optional[List[str]] = None
 
@@ -272,6 +272,9 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
             run_hotel_scraper_task,
             run_news_scraper_task,
             run_rss_scraper_task,
+            run_serp_scraper_task,
+            run_logistics_scraper_task,
+            recalculate_all_scores_task,
         )
         task_map = {
             "all":          run_all_scrapers_task,
@@ -279,12 +282,15 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
             "hotel_dir":    run_hotel_scraper_task,
             "news":         run_news_scraper_task,
             "rss_feed":     run_rss_scraper_task,
+            "serp":         run_serp_scraper_task,
+            "logistics":    run_logistics_scraper_task,
+            "score_recalc": recalculate_all_scores_task,
         }
         fn = task_map.get(payload.scraper)
         if not fn:
             raise HTTPException(400, f"Unknown scraper '{payload.scraper}'. Options: {list(task_map)}")
 
-        if payload.scraper == "all":
+        if payload.scraper in ("all", "score_recalc"):
             background_tasks.add_task(fn.delay)
         elif payload.urls:
             background_tasks.add_task(fn.delay, urls=payload.urls)
@@ -296,5 +302,5 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
     except ImportError:
         return {
             "status": "skipped",
-            "reason": "Celery worker not running — start with: celery -A worker.celery_worker worker",
+            "reason": "Celery worker not running — start with: celery -A worker.celery_worker worker -B",
         }
