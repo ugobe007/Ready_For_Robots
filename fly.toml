@@ -1,7 +1,7 @@
 # fly.toml — Fly.io configuration for Ready for Robots FastAPI backend
 # Run `flyctl deploy` from the project root to deploy.
 
-app = "ready-for-robots"
+app = "ready-2-robot"
 primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 
 [build]
