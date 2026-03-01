@@ -46,14 +46,45 @@ function Bdg({ label, border, text }) {
 
 // ─── Email script generator ────────────────────────────────────────────────
 
+// Generates 3 clean prospect-facing bullet points for the email body.
+// We deliberately DO NOT use st.talking_points here because those are
+// internal sales-intelligence notes (e.g. "signal detected", "capex confirms
+// budget authority") that would confuse the prospect if sent verbatim.
+function emailBullets(lead) {
+  const st      = lead.strategy || {}
+  const robot   = st.primary_robot || 'Titan'
+  const industry = lead.industry || ''
+  const emp     = lead.employee_estimate || 0
+
+  const BULLETS = {
+    'Hospitality':                 [`${robot} handles room-service and amenity delivery 24/7 — no sick days, no turnover`, `Guest satisfaction scores improve when delivery response time drops below 5 minutes`, `Typical ROI window: 12–18 months based on labor cost reduction alone`],
+    'Food Service':                [`${robot} covers every delivery run so your team focuses on food quality and guest experience`, `Consistent delivery speed improves table turn rate by 12–18%`, `No callouts, no training ramp — ${robot} is operational from day one`],
+    'Logistics':                   [`${robot} scales your pick-and-move throughput without adding headcount`, `Payback period under 18 months at standard DC volumes`, `Integrates with existing WMS — no rip-and-replace required`],
+    'Healthcare':                  [`${robot} reduces nurse walking distance by an average of 1.2 miles per shift`, `Sterile, traceable supply delivery — consistent every run`, `Frees clinical staff to spend more time on patient care, not logistics`],
+    'Automotive Dealerships':      [`${robot} moves parts from the warehouse to the service bay in under 2 minutes — eliminating runner labor`, `Fixed Ops directors report 30–40% reduction in parts-retrieval labor costs`, `Measurable ROI per service bay — we can model it for your store count`],
+    'Automotive Manufacturing':    [`${robot} handles WIP and kitting runs so your line workers stay on value-add tasks`, `OEM-grade cycle-time data and traceability built in`, `Typical AMR fleet ROI closes inside 18 months at production volumes`],
+    'Casinos & Gaming':            [`${robot} boosts F&B delivery speed — directly tied to spend-per-visit lift`, `Frees floor staff to focus on guest engagement, not running orders`, `Deployed in casino environments — quiet, safe, and brand-consistent`],
+    'Senior Living':               [`${robot} handles meal rounds and supply delivery on a consistent schedule`, `Reduces staff walking burden so caregivers spend more time with residents`, `Families notice the difference — service consistency is a retention driver`],
+    'Manufacturing':               [`${robot} automates kitting and intra-facility parts delivery`, `Operators stay on the line — no walking, no waiting`, `Modular fleet scales with your production volume`],
+    'Real Estate & Facilities':    [`${robot} provides consistent floor cleaning and concierge delivery — 24/7`, `Reduces janitorial and logistics labor costs by up to 35%`, `Tenant satisfaction scores improve when common areas are consistently maintained`],
+  }
+
+  const base = BULLETS[industry] || [
+    `${robot} reduces labor dependency in your highest-cost operational workflows`,
+    `Typical deployment ROI: 12–18 months based on headcount reduction and throughput gains`,
+    `Modular, scalable fleet — starts with ${Math.max(2, st.deal_est_units || 3)} units and grows with your operation`,
+  ]
+
+  return base
+}
+
 function generatePlainText(lead) {
   const st = lead.strategy || {}
   const contact = st.contact_role || 'Director of Operations'
   const robot = st.primary_robot || 'Titan'
   const company = lead.company_name || 'your organization'
-  const points = (st.talking_points || []).map(p => `  • ${p}`).join('\n')
   const topSigType = lead.signals?.[0]?.signal_type || ''
-  const topSigSnippet = (lead.signals?.[0]?.raw_text || '').replace(/<[^>]*>/g, '').substring(0, 100)
+  const bullets = emailBullets(lead).map(p => `  • ${p}`).join('\n')
 
   const urgencyLine = (() => {
     if (topSigType === 'labor_shortage' || topSigType === 'labor_pain')
@@ -79,10 +110,10 @@ ${urgencyLine}
 
 I'm reaching out from Richtech Robotics. We build autonomous mobile robots purpose-built for operations like yours — specifically the ${robot}, which handles ${st.use_case || 'intra-facility logistics'}.
 
-Why it matters for ${company}:
-${points}
+Why ${company} is a strong fit:
+${bullets}
 
-Our typical ${st.deal_tier || 'Mid-Market'} deployment runs ${st.deal_est_units || 5}–${(st.deal_est_units || 5) + 5} units with a measurable ROI inside 12–18 months.
+Our typical ${st.deal_tier || 'Mid-Market'} deployment starts at ${st.deal_est_units || 5} units with measurable ROI inside 12–18 months.
 
 I'd love to schedule a 20-minute call to walk you through a quick ROI model specific to ${company}'s footprint.
 
@@ -100,7 +131,7 @@ function generateHtmlEmail(lead) {
   const robot = st.primary_robot || 'Titan'
   const company = lead.company_name || 'your organization'
   const contact = st.contact_role || 'Director of Operations'
-  const points = (st.talking_points || []).map(p =>
+  const bullets = emailBullets(lead).map(p =>
     `<li style="margin-bottom:6px;color:#374151;">${p}</li>`
   ).join('')
   const robots = (st.robots || [robot]).join(', ')
@@ -160,8 +191,8 @@ function generateHtmlEmail(lead) {
           <td style="padding:0 28px 8px;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
               <tr><td style="padding:16px 20px;">
-                <p style="margin:0 0 10px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Why it matters for ${company}</p>
-                <ul style="margin:0;padding:0 0 0 16px;">${points}</ul>
+                <p style="margin:0 0 10px;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Why ${company} is a strong fit</p>
+                <ul style="margin:0;padding:0 0 0 16px;">${bullets}</ul>
               </td></tr>
             </table>
           </td>
@@ -400,27 +431,27 @@ function OpportunityRow({ lead, rank }) {
           <button
             onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
             title="Generate email script"
-            style={{ background: 'transparent', border: 'none', color: '#6366f1', cursor: 'pointer', fontSize: '12px', padding: '2px 3px', lineHeight: 1, opacity: 0.8 }}
+            style={{ background: 'transparent', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: '17px', padding: '2px 4px', lineHeight: 1 }}
           >
             ✉
           </button>
           <span className="text-[10px] text-neutral-700 group-hover:text-neutral-400 transition-colors">
-            {open ? '' : ''}
+            {open ? '▲' : '▼'}
           </span>
         </div>
       </div>
 
       {open && (
         <div className={`${tm.accent} border-b border-neutral-900 bg-neutral-950/60`} style={{ paddingLeft: '2rem' }}>
-          {/* Email script action bar — top of expanded panel */}
-          <div className="px-3 pt-2.5 pb-2 flex items-center gap-3 border-b border-neutral-800/50">
+          {/* ✉ Email button — first thing visible when row expands */}
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(38,38,38,0.8)', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
               style={{ background: 'transparent', border: '1px solid #3730a3', color: '#818cf8', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
             >
               ✉ email script
             </button>
-            <span style={{ fontSize: '10px', color: '#525252' }}>generate outreach email for {lead.company_name}</span>
+            <span style={{ fontSize: '10px', color: '#6b7280' }}>ready-to-send outreach email for {lead.company_name}</span>
           </div>
           <div className="px-3 py-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2">
             <div>
