@@ -40,16 +40,20 @@ export default function LoginPage() {
   }, []);
 
   // If already logged in, or magic link just clicked, redirect to ?next (or /)
+  // NOTE: router intentionally excluded from deps — getNext() reads window.location directly,
+  // so we don't want the effect to re-run (and cause race conditions) when router changes.
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data?.session) router.replace(getNext());
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) router.replace(getNext());
+      // Only redirect on an actual sign-in event, not every session refresh
+      if (event === 'SIGNED_IN' && session) router.replace(getNext());
     });
     return () => listener?.subscription?.unsubscribe();
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();

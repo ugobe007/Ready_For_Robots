@@ -16,9 +16,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Singleton client — safe to import anywhere
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession:    true,
-    autoRefreshToken:  true,
+    persistSession:     true,
+    autoRefreshToken:   true,
     detectSessionInUrl: true,   // picks up magic-link hash on redirect
+    flowType:           'implicit', // magic links return #access_token fragment — no PKCE code exchange needed
   },
 });
 
