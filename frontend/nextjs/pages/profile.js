@@ -310,6 +310,7 @@ export default function ProfilePage() {
   const [addToListOpen, setAddToListOpen] = useState(null);
   const [dispName,      setDispName]      = useState('');
   const [savingName,    setSavingName]    = useState(false);
+  const [loadError,     setLoadError]     = useState(null);
 
   // redirect if not logged in
   useEffect(() => {
@@ -331,16 +332,30 @@ export default function ProfilePage() {
   const loadAll = useCallback(async () => {
     if (!token) return;
     setDataLoading(true);
+    setLoadError(null);
+    // Step 1 — auth check: if this fails the token is bad
+    let me;
     try {
-      const [me, r, s, l] = await Promise.all([
-        apiFetch('/api/user/me'),
+      me = await apiFetch('/api/user/me');
+      setUserInfo(me); setDispName(me.display_name || '');
+    } catch (e) {
+      console.error('profile/me:', e);
+      setLoadError(`Sign-in error: ${e.message}. Try signing out and back in.`);
+      setDataLoading(false);
+      return;
+    }
+    // Step 2 — load data
+    try {
+      const [r, s, l] = await Promise.all([
         apiFetch('/api/user/reports'),
         apiFetch('/api/user/saved'),
         apiFetch('/api/user/lists'),
       ]);
-      setUserInfo(me); setDispName(me.display_name || '');
       setReports(r); setSaved(s); setLists(l);
-    } catch (e) { console.error('profile load:', e); }
+    } catch (e) {
+      console.error('profile/data:', e);
+      setLoadError(`Failed to load data: ${e.message}`);
+    }
     finally { setDataLoading(false); }
   }, [apiFetch, token]);
 
@@ -431,6 +446,12 @@ export default function ProfilePage() {
             <button onClick={handleSignOut} className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500">sign out</button>
           </div>
         </header>
+
+        {loadError && (
+          <div className="mb-6 rounded border border-red-800/60 bg-red-950/40 px-4 py-3 text-xs text-red-400">
+            <strong>Error:</strong> {loadError}
+          </div>
+        )}
 
         {/* section tabs */}
         <div className="flex border-b border-neutral-800 mb-8">

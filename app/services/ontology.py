@@ -241,6 +241,21 @@ CONCEPTS: Dict[str, Concept] = {
         patterns=["casino", "gaming.*facilit", "resort.*casino"],
         synonyms=["gaming", "resort gaming"],
     ),
+    "automotive_vertical": Concept(
+        name="automotive_vertical", domain="industry_fit", base_weight=0.82,
+        patterns=["automotive.*dealer", "auto.*dealer", "car.*dealer",
+                  "dealership", "fixed.*operat", "parts.*department",
+                  "service.*department.*auto", "dealer.*group"],
+        synonyms=["auto dealership", "car dealer", "fixed ops", "dealer group"],
+    ),
+    "parts_inventory_pain": Concept(
+        name="parts_inventory_pain", domain="labor_pain", base_weight=0.85,
+        patterns=["parts.*counter", "parts.*runner", "parts.*deliver",
+                  "parts.*resupply", "inventory.*resupply", "parts.*department.*staff",
+                  "mechanics.*parts", "service.*bay.*supply",
+                  "parts.*picker", "internal.*deliver.*parts"],
+        synonyms=["parts delivery", "inventory delivery", "parts resupply"],
+    ),
 
     # ── Strategic hiring signals ────────────────────────────────────────────
     "strategic_automation_hire": Concept(
@@ -414,6 +429,10 @@ RELATIONSHIPS: List[Relationship] = [
     Relationship("franchise_operations",     "labor_shortage",           "associated_with", 0.55),
     Relationship("equipment_integration",    "warehouse_automation",     "associated_with", 0.60),
     Relationship("equipment_integration",    "automation_intent",        "associated_with", 0.65),
+    # Automotive
+    Relationship("automotive_vertical",      "parts_inventory_pain",     "associated_with", 0.80),
+    Relationship("parts_inventory_pain",     "reduce_labor_costs",       "implies",         0.85),
+    Relationship("automotive_vertical",      "labor_shortage",           "associated_with", 0.70),
 ]
 
 
@@ -570,6 +589,28 @@ INFERENCE_RULES: List[InferenceRule] = [
         boost=0.32,
         description="Multi-unit operator with staffing pain → high-ROI automation candidate"
     ),
+    # ── Automotive ────────────────────────────────────────────────────────────
+    InferenceRule(
+        name="automotive_parts_pain",
+        conditions=["automotive_vertical", "parts_inventory_pain"],
+        conclusion_domain="automation",
+        boost=0.42,
+        description="Dealership + parts resupply pain → Titan robot direct fit signal"
+    ),
+    InferenceRule(
+        name="automotive_labor_shortage",
+        conditions=["automotive_vertical", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="Dealership + staffing shortage → service dept throughput pressure Titan solves"
+    ),
+    InferenceRule(
+        name="automotive_expansion_capex",
+        conditions=["automotive_vertical", "capex_announcement"],
+        conclusion_domain="automation",
+        boost=0.30,
+        description="Dealer group with active capex → new bays and facilities = Titan deployment opportunity"
+    ),
 ]
 
 
@@ -577,17 +618,20 @@ INFERENCE_RULES: List[InferenceRule] = [
 # 7. Industry priors (base robotics-fit score)
 # ──────────────────────────────────────────────
 INDUSTRY_PRIORS: Dict[str, float] = {
-    "logistics":     0.90,
-    "hospitality":   0.85,
-    "hotel":         0.85,
-    "healthcare":    0.80,
-    "food service":  0.75,
-    "restaurant":    0.72,
-    "airport":       0.78,
-    "casino":        0.70,
-    "manufacturing": 0.68,
-    "retail":        0.62,
-    "unknown":       0.40,
+    "logistics":              0.90,
+    "hospitality":            0.85,
+    "hotel":                  0.85,
+    "healthcare":             0.80,
+    "food service":           0.75,
+    "restaurant":             0.72,
+    "airport":                0.78,
+    "casino":                 0.70,
+    "automotive":             0.82,
+    "dealership":             0.82,
+    "automotive dealerships": 0.82,
+    "manufacturing":          0.68,
+    "retail":                 0.62,
+    "unknown":                0.40,
 }
 
 

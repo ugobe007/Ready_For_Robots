@@ -206,7 +206,129 @@ KNOWN_COMPANIES: dict = {
     "greystar": ("Greystar Real Estate Partners", "Real Estate & Facilities"),
     "abm industries": ("ABM Industries", "Real Estate & Facilities"),
     "abm": ("ABM Industries", "Real Estate & Facilities"),
+    # Automotive Dealerships
+    "autonation": ("AutoNation", "Automotive Dealerships"),
+    "auto nation": ("AutoNation", "Automotive Dealerships"),
+    "penske automotive": ("Penske Automotive Group", "Automotive Dealerships"),
+    "sonic automotive": ("Sonic Automotive", "Automotive Dealerships"),
+    "lithia motors": ("Lithia Motors", "Automotive Dealerships"),
+    "lithia": ("Lithia Motors", "Automotive Dealerships"),
+    "group 1 automotive": ("Group 1 Automotive", "Automotive Dealerships"),
+    "group 1": ("Group 1 Automotive", "Automotive Dealerships"),
+    "asbury automotive": ("Asbury Automotive Group", "Automotive Dealerships"),
+    "asbury": ("Asbury Automotive Group", "Automotive Dealerships"),
+    "ken garff": ("Ken Garff Automotive Group", "Automotive Dealerships"),
+    "hendrick automotive": ("Hendrick Automotive Group", "Automotive Dealerships"),
+    "hendrick": ("Hendrick Automotive Group", "Automotive Dealerships"),
+    "holman enterprises": ("Holman Enterprises", "Automotive Dealerships"),
+    "holman": ("Holman Enterprises", "Automotive Dealerships"),
+    "cox automotive": ("Cox Automotive", "Automotive Dealerships"),
+    "manheim": ("Manheim (Cox Automotive)", "Automotive Dealerships"),
+    "oreilly auto": ("O'Reilly Auto Parts", "Automotive Dealerships"),
+    "o'reilly auto": ("O'Reilly Auto Parts", "Automotive Dealerships"),
+    "advance auto": ("Advance Auto Parts", "Automotive Dealerships"),
+    "autozone": ("AutoZone", "Automotive Dealerships"),
+    "napa auto": ("NAPA Auto Parts", "Automotive Dealerships"),
+    # Additional dealership groups (seed_v5)
+    "findlay automotive": ("Findlay Automotive Group", "Automotive Dealerships"),
+    "findlay auto": ("Findlay Automotive Group", "Automotive Dealerships"),
+    "larry h miller": ("Larry H. Miller Dealerships", "Automotive Dealerships"),
+    "lhm auto": ("Larry H. Miller Dealerships", "Automotive Dealerships"),
+    "jm family": ("JM Family Enterprises", "Automotive Dealerships"),
+    "park place dealerships": ("Park Place Dealerships", "Automotive Dealerships"),
+    "sewell automotive": ("Sewell Automotive Companies", "Automotive Dealerships"),
+    "sewell auto": ("Sewell Automotive Companies", "Automotive Dealerships"),
+    "berkshire hathaway automotive": ("Berkshire Hathaway Automotive", "Automotive Dealerships"),
+    "bh automotive": ("Berkshire Hathaway Automotive", "Automotive Dealerships"),
+    "herb chambers": ("Herb Chambers Companies", "Automotive Dealerships"),
+    "flow automotive": ("Flow Automotive", "Automotive Dealerships"),
+    "keyes auto": ("Keyes Automotive Group", "Automotive Dealerships"),
+    "keyes automotive": ("Keyes Automotive Group", "Automotive Dealerships"),
+    "bergstrom auto": ("Bergstrom Automotive", "Automotive Dealerships"),
+    "galpin motors": ("Galpin Motors", "Automotive Dealerships"),
+    "galpin ford": ("Galpin Motors", "Automotive Dealerships"),
+    "lucid motors retail": ("Lucid Motors Retail & Service Centers", "Automotive Dealerships"),
+    "lucid service center": ("Lucid Motors Retail & Service Centers", "Automotive Dealerships"),
+    # OEM Innovation & Ventures (seed_v5)
+    "toyota ventures": ("Toyota Ventures", "Automotive Innovation & Ventures"),
+    "gm ventures": ("GM Ventures", "Automotive Innovation & Ventures"),
+    "ford motor ventures": ("Ford Motor Company Ventures", "Automotive Innovation & Ventures"),
+    "ford ventures": ("Ford Motor Company Ventures", "Automotive Innovation & Ventures"),
+    "bmw iventures": ("BMW i Ventures", "Automotive Innovation & Ventures"),
+    "bmw i ventures": ("BMW i Ventures", "Automotive Innovation & Ventures"),
+    "hyundai cradle": ("Hyundai CRADLE", "Automotive Innovation & Ventures"),
+    "stellantis ventures": ("Stellantis Ventures", "Automotive Innovation & Ventures"),
+    # Aerospace & Defense (seed_v5)
+    "boeing commercial": ("Boeing Commercial Airplanes", "Aerospace & Defense"),
+    "boeing manufacturing": ("Boeing Commercial Airplanes", "Aerospace & Defense"),
+    "lockheed martin": ("Lockheed Martin", "Aerospace & Defense"),
+    "raytheon": ("RTX (Raytheon Technologies)", "Aerospace & Defense"),
+    "rtx corporation": ("RTX (Raytheon Technologies)", "Aerospace & Defense"),
+    "pratt & whitney": ("RTX (Raytheon Technologies)", "Aerospace & Defense"),
+    "collins aerospace": ("RTX (Raytheon Technologies)", "Aerospace & Defense"),
+    "northrop grumman": ("Northrop Grumman", "Aerospace & Defense"),
+    "airbus americas": ("Airbus Americas", "Aerospace & Defense"),
+    "airbus mobile": ("Airbus Americas", "Aerospace & Defense"),
+    "spacex": ("SpaceX", "Aerospace & Defense"),
+    "general dynamics land": ("General Dynamics Land Systems", "Aerospace & Defense"),
+    "gdls": ("General Dynamics Land Systems", "Aerospace & Defense"),
+    # Individual OEM brand dealerships (seed_v6)
+    "longo toyota": ("Longo Toyota", "Automotive Dealerships"),
+    "norm reeves honda": ("Norm Reeves Honda Superstore", "Automotive Dealerships"),
+    "bmw of sterling": ("BMW of Sterling", "Automotive Dealerships"),
+    "mercedes-benz of atlanta": ("Mercedes-Benz of Atlanta", "Automotive Dealerships"),
+    "mercedes benz of atlanta": ("Mercedes-Benz of Atlanta", "Automotive Dealerships"),
+    "autonation ford margate": ("AutoNation Ford Margate", "Automotive Dealerships"),
+    "crest chevrolet": ("Crest Chevrolet", "Automotive Dealerships"),
+    "findlay buick gmc": ("Findlay Buick GMC", "Automotive Dealerships"),
+    "findlay gmc": ("Findlay Buick GMC", "Automotive Dealerships"),
+    "tesla service center las vegas": ("Tesla Service Center Las Vegas", "Automotive Dealerships"),
+    "tesla service las vegas": ("Tesla Service Center Las Vegas", "Automotive Dealerships"),
+    "hyundai of new port richey": ("Hyundai of New Port Richey", "Automotive Dealerships"),
+    "kia of henderson": ("Kia of Henderson", "Automotive Dealerships"),
+    "nissan of las vegas": ("Nissan of Las Vegas", "Automotive Dealerships"),
+    "hendrick volkswagen frisco": ("Hendrick Volkswagen Frisco", "Automotive Dealerships"),
+    "hendrick vw frisco": ("Hendrick Volkswagen Frisco", "Automotive Dealerships"),
+    "audi henderson": ("Audi Henderson", "Automotive Dealerships"),
+    "porsche las vegas": ("Porsche Las Vegas", "Automotive Dealerships"),
+    "lexus of las vegas": ("Lexus of Las Vegas", "Automotive Dealerships"),
+    "desert infiniti": ("Desert Infiniti", "Automotive Dealerships"),
+    "acura of peoria": ("Acura of Peoria", "Automotive Dealerships"),
+    "findlay cadillac": ("Findlay Cadillac", "Automotive Dealerships"),
+    "lincoln of dallas": ("Lincoln of Dallas", "Automotive Dealerships"),
+    "genesis of henderson": ("Genesis of Henderson", "Automotive Dealerships"),
+    "groove subaru": ("Groove Subaru", "Automotive Dealerships"),
+    "mazda of orange park": ("Mazda of Orange Park", "Automotive Dealerships"),
+    "volvo cars las vegas": ("Volvo Cars Las Vegas", "Automotive Dealerships"),
+    "findlay chrysler dodge jeep ram": ("Findlay Chrysler Dodge Jeep Ram", "Automotive Dealerships"),
+    "findlay cdjr": ("Findlay Chrysler Dodge Jeep Ram", "Automotive Dealerships"),
+    "rivian service hub": ("Rivian Service Hub — Scottsdale", "Automotive Dealerships"),
+    "rivian scottsdale": ("Rivian Service Hub — Scottsdale", "Automotive Dealerships"),
+    "findlay mitsubishi": ("Findlay Mitsubishi", "Automotive Dealerships"),
 }
+
+# ── Vendor / tech-company name keywords — NEVER treat these as buyers ─────────
+# If a regex-extracted company name contains any of these, skip it.
+# (We want BUYERS of robots, not robot/AI vendors)
+VENDOR_NAME_KEYWORDS = [
+    "robotics", "robot", " ai ", "a.i.", "autonomous", "drone",
+    "lidar", "semiconductor", "startup", "maker miso",
+]
+
+# First words of a regex match that indicate non-company text was captured
+_NON_COMPANY_STARTS = frozenset([
+    "slated", "set", "expected", "scheduled", "our", "your",
+    "their", "its", "by", "for", "from", "on", "at", "in",
+    "as", "with", "after", "before", "while", "when", "if",
+    "so", "but", "yet", "and", "or", "nor",
+])
+
+# Exact phrases (lowercased) that are definitely not company names
+_NON_COMPANY_EXACT = frozenset([
+    "ice cream", "food service", "supply chain", "labor shortage",
+    "real estate", "last year", "last week", "first quarter",
+    "second quarter", "third quarter", "fourth quarter",
+])
 
 # Regex to find "Company X announces/says/reports/invests/opens" patterns
 _COMPANY_ANNOUNCE_RE = re.compile(
@@ -302,6 +424,12 @@ class NewsScraper:
                     continue
                 company_name, industry = self._extract_company_from_text(article["text"])
                 if company_name:
+                    # Skip companies with no identifiable buyer industry —
+                    # these are almost always robot/AI vendors found via regex fallback,
+                    # not buyer companies (e.g. ZaiNar, AI2 Robotics, Wayve)
+                    if not industry or industry == "Unknown":
+                        logger.debug("  Skipping Unknown-industry company: %s", company_name)
+                        continue
                     self._save_article_as_signal(article, company_name=company_name,
                                                   query=query, inferred_industry=industry)
             time.sleep(self.DELAY_BETWEEN_REQUESTS)
@@ -328,6 +456,10 @@ class NewsScraper:
                     continue
                 company_name, industry = self._extract_company_from_text(article["text"])
                 if company_name:
+                    # Skip Unknown-industry (vendor/tech company) same as intent queries
+                    if not industry or industry == "Unknown":
+                        logger.debug("  Skipping Unknown-industry company: %s", company_name)
+                        continue
                     self._save_article_as_signal(article, company_name=company_name,
                                                   query=feed_url, inferred_industry=industry)
                     saved += 1
@@ -464,7 +596,18 @@ class NewsScraper:
         match = _COMPANY_ANNOUNCE_RE.search(text)
         if match:
             extracted = match.group(1).strip()
-            if len(extracted) > 2 and not extracted.lower() in ("the", "a", "an", "this"):
+            extracted_lower = extracted.lower()
+            first_word = extracted_lower.split()[0] if extracted_lower.split() else ""
+            valid_name = (
+                len(extracted) > 3
+                and extracted_lower not in ("the", "a", "an", "this")
+                and first_word not in _NON_COMPANY_STARTS
+                and extracted_lower not in _NON_COMPANY_EXACT
+            )
+            if valid_name:
+                # Skip robotics/AI/tech vendors — we want buyers, not sellers
+                if any(kw in extracted_lower for kw in VENDOR_NAME_KEYWORDS):
+                    return None, None
                 industry = self._infer_industry_from_text(text)
                 return extracted, industry
         return None, None
@@ -488,19 +631,27 @@ class NewsScraper:
             return "Theme Parks & Entertainment"
         if any(w in lower for w in ["facilities management", "property management", "commercial real estate", "building services", "janitorial"]):
             return "Real Estate & Facilities"
+        if any(w in lower for w in ["auto dealer", "car dealer", "dealership", "fixed ops", "parts department",
+                                     "service department", "dealer group", "automotive dealer",
+                                     "parts resupply", "autonation", "penske auto", "sonic automotive",
+                                     "lithia motors", "dealer"]):
+            return "Automotive Dealerships"
         return "Unknown"
 
     # ── DB persistence ────────────────────────────────────────────────────────
 
     def _get_or_create_company(self, name: str, industry: str = "Unknown") -> Optional[Company]:
-        """Look up or create a company record by name."""
+        """Look up or create a company record by name. Thread-safe: handles race conditions."""
         if not name:
             return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
             if existing.industry == "Unknown" and industry != "Unknown":
                 existing.industry = industry
-                self.db.commit()
+                try:
+                    self.db.commit()
+                except Exception:
+                    self.db.rollback()
             return existing
         company = Company(
             name=name,
@@ -508,9 +659,14 @@ class NewsScraper:
             source="news_scraper",
         )
         self.db.add(company)
-        self.db.commit()
-        self.db.refresh(company)
-        return company
+        try:
+            self.db.commit()
+            self.db.refresh(company)
+            return company
+        except Exception:
+            # Race condition: another thread inserted the same company
+            self.db.rollback()
+            return self.db.query(Company).filter(Company.name == name).first()
 
     def _save_article_as_signal(self, article: dict, company_name: Optional[str],
                                   query: str, inferred_industry: Optional[str] = None):

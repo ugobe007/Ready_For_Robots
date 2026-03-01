@@ -29,9 +29,10 @@ import os
 import threading
 import time
 import traceback
+from contextlib import contextmanager
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-from typing import Callable, Dict, List, Optional, Any
+from typing import Callable, Dict, Generator, List, Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -294,6 +295,47 @@ class ScraperWatchdog:
                 uh.circuit_opened_at = None
             self._save_state()
         logger.info("[WATCHDOG] All circuits reset")
+
+    @contextmanager
+    def track(self, scraper_name: str) -> Generator[ScraperRunRecord, None, None]:
+        """
+        Context manager for scrapers that manage their own fetch logic
+        (news, RSS, SERP, query-based scrapers). Records run start/finish
+        into the watchdog so /api/scraper-health reflects their activity.
+
+        Usage:
+            with get_watchdog().track("news") as run:
+                NewsScraper(db=db).run_intent_queries(queries)
+                run.urls_attempted = 12
+                run.urls_succeeded = 10
+        """
+        record = ScraperRunRecord(
+            scraper_name=scraper_name,
+            started_at=self._now(),
+            status="running",
+        )
+        with self._lock:
+            self._run_history.append(record)
+        self._save_state()
+        logger.info("[WATCHDOG] tracking '%s'", scraper_name)
+        try:
+            yield record
+            if record.status == "running":
+                record.status = "success" if record.urls_succeeded > 0 else "no_results"
+        except Exception as exc:
+            record.status = "failed"
+            record.errors.append(str(exc)[:300])
+            logger.error("[WATCHDOG] '%s' failed: %s", scraper_name, exc)
+            raise
+        finally:
+            record.current_url = None
+            record.finished_at = self._now()
+            self._save_state()
+            logger.info(
+                "[WATCHDOG] '%s' done — status=%s attempted=%d succeeded=%d",
+                scraper_name, record.status,
+                record.urls_attempted, record.urls_succeeded,
+            )
 
     def last_heartbeat_age(self, scraper_name: str) -> Optional[float]:
         """Seconds since last heartbeat for a scraper. None if never started."""

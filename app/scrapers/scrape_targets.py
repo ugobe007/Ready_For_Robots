@@ -15,7 +15,11 @@ We are NOT interested in:
   - Companies building their own robots (not buyers)
 
 Richtech Robotics target verticals:
-    Hospitality . Logistics . Healthcare . Food Service
+    Hospitality . Logistics . Healthcare . Food Service . Automotive Dealerships
+
+Titan use case (Automotive):
+    Automated parts & inventory resupply from parts department to mechanics and service bays.
+    Target contacts: Fixed Ops Director, Parts Manager, Service Director.
 """
 
 from dataclasses import dataclass, field
@@ -336,6 +340,48 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         scraper="job_board", cadence="daily",
         industries=["Food Service"],
         signal_types=["automation_intent", "strategic_hire"],
+    ),
+
+    # === AUTOMOTIVE DEALERSHIPS: parts dept / service bay labor pain ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=parts+counter+associate+automotive+dealership&l=United+States&sort=date",
+        label="Indeed - Automotive Parts Counter Associates (volume hiring)",
+        scraper="job_board", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["labor_pain", "labor_shortage"],
+        notes="Mass hiring of parts counter staff = manual resupply to mechanics is a pain point Titan solves",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=parts+runner+parts+delivery+automotive+service+department&l=United+States&sort=date",
+        label="Indeed - Parts Runners / Delivery (internal resupply roles)",
+        scraper="job_board", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["labor_pain", "labor_shortage"],
+        notes="Hiring parts runners = manual cart delivery that Titan directly replaces",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=service+advisor+automotive+dealership+franchise&l=United+States&sort=date",
+        label="Indeed - Service Advisors (dealership throughput indicator)",
+        scraper="job_board", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["labor_pain", "expansion"],
+        notes="Hiring service advisors at scale = service dept throughput pressure, Titan accelerates parts flow",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=fixed+operations+director+parts+manager+automotive&l=United+States&sort=date",
+        label="Indeed - Fixed Ops Director / Parts Manager (buyer persona)",
+        scraper="job_board", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["strategic_hire"],
+        notes="Fixed ops & parts leadership hires = direct buyer persona for Titan",
+    ),
+    ScrapeTarget(
+        url="https://www.linkedin.com/jobs/search/?keywords=director+fixed+operations+automotive+dealership&sortBy=DD",
+        label="LinkedIn - Director Fixed Operations (senior buyer persona)",
+        scraper="job_board", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["strategic_hire"],
+        notes="Senior fixed ops hires reshape vendor relationships — prime Titan outreach window",
     ),
 ]
 
@@ -910,6 +956,32 @@ RSS_FEED_TARGETS: List[ScrapeTarget] = [
         signal_types=["funding_round", "capex", "automation_intent"],
         notes="Official press releases from companies deploying or evaluating robots",
     ),
+
+    # === AUTOMOTIVE DEALERSHIPS RSS ===
+    ScrapeTarget(
+        url="https://www.autonews.com/rss.xml",
+        label="Automotive News - Dealership Operations & Industry",
+        scraper="rss_feed", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["expansion", "capex", "ma_activity", "labor_shortage"],
+        notes="Top trade publication for dealership operations — expansion, acquisitions, throughput stories",
+    ),
+    ScrapeTarget(
+        url="https://www.wardsauto.com/rss.xml",
+        label="WardsAuto - Dealer Operations Intel",
+        scraper="rss_feed", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["expansion", "capex", "automation_intent"],
+        notes="WardsAuto covers fixed ops, service dept technology and dealer group M&A",
+    ),
+    ScrapeTarget(
+        url="https://www.dealershipnews.com/feed/",
+        label="Dealership News - Dealer Group Moves",
+        scraper="rss_feed", cadence="daily",
+        industries=["Automotive Dealerships"],
+        signal_types=["expansion", "ma_activity", "strategic_hire"],
+        notes="Tracks dealer group acquisitions and expansions — budget unlock signals",
+    ),
 ]
 
 
@@ -995,6 +1067,18 @@ NEWS_QUERIES = [
     {"query": "hospital EHR clinical system integration upgrade operational technology",                "industries": ["Healthcare"],                  "signal_types": ["equipment_integration", "capex"]},
     {"query": "restaurant POS technology upgrade system integration chain multi-unit",                  "industries": ["Food Service"],                "signal_types": ["equipment_integration"]},
     {"query": "fulfillment center automation technology integration existing equipment",                "industries": ["Logistics"],                   "signal_types": ["equipment_integration", "automation_intent"]},
+
+    # === AUTOMOTIVE DEALERSHIPS ===
+    {"query": "automotive dealership parts department labor shortage staffing 2025",                    "industries": ["Automotive Dealerships"],       "signal_types": ["labor_shortage"]},
+    {"query": "dealership fixed operations efficiency throughput service department",                   "industries": ["Automotive Dealerships"],       "signal_types": ["automation_intent", "labor_shortage"]},
+    {"query": "auto dealer group acquisition merger expansion new locations 2025",                     "industries": ["Automotive Dealerships"],       "signal_types": ["ma_activity", "expansion"]},
+    {"query": "automotive dealership parts counter inventory resupply automation technology",           "industries": ["Automotive Dealerships"],       "signal_types": ["automation_intent", "capex"]},
+    {"query": "dealership service department technician productivity throughput improvement",           "industries": ["Automotive Dealerships"],       "signal_types": ["automation_intent", "labor_shortage"]},
+    {"query": "auto dealer group capital investment new facility construction expansion",              "industries": ["Automotive Dealerships"],       "signal_types": ["capex", "expansion"]},
+    {"query": "Director Fixed Operations Parts Manager appointed automotive dealership 2025",           "industries": ["Automotive Dealerships"],       "signal_types": ["strategic_hire"]},
+    {"query": "automotive dealer group funding private equity investment growth 2025",                 "industries": ["Automotive Dealerships"],       "signal_types": ["funding_round"]},
+    {"query": "dealership EV electric vehicle service expansion new bays investment",                  "industries": ["Automotive Dealerships"],       "signal_types": ["expansion", "capex"]},
+    {"query": "AutoNation Penske Sonic Lithia dealer group expansion operations new",                  "industries": ["Automotive Dealerships"],       "signal_types": ["expansion", "ma_activity"]},
 ]
 
 

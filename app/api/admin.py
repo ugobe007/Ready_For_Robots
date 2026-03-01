@@ -264,43 +264,131 @@ class TriggerScrapePayload(BaseModel):
 
 @router.post("/scrape/trigger")
 def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTasks):
-    """Queue a scraper run. Returns immediately; work happens in background."""
+    """Queue a scraper run via APScheduler job functions. Returns immediately; work happens in background."""
+    from app.scrapers.scheduled_jobs import (
+        job_news, job_rss, job_jobs, job_hotel,
+        job_serp, job_logistics, job_score_recalc, job_all,
+    )
+
+    task_map = {
+        "all":          job_all,
+        "news":         job_news,
+        "rss_feed":     job_rss,
+        "job_board":    job_jobs,
+        "hotel_dir":    job_hotel,
+        "serp":         job_serp,
+        "logistics":    job_logistics,
+        "score_recalc": job_score_recalc,
+    }
+
+    fn = task_map.get(payload.scraper)
+    if not fn:
+        raise HTTPException(400, f"Unknown scraper '{payload.scraper}'. Options: {list(task_map)}")
+
+    background_tasks.add_task(fn)
+    return {"status": "queued", "scraper": payload.scraper}
+
+
+# ── DB Maintenance ────────────────────────────────────────────────────────────
+
+@router.post("/maintenance/dedup")
+def dedup_companies(db: Session = Depends(get_db)):
+    """
+    Deduplicate the companies table (keep lowest id per name) and
+    purge Unknown-industry / news_scraper companies (robot/AI vendors).
+    Returns a summary of what was removed.
+    """
+    from sqlalchemy import text
+
+    def _delete_company_children(ids: list):
+        """Delete signals, scores, contacts for a list of company ids before deleting the company rows."""
+        if not ids:
+            return
+        db.execute(text("DELETE FROM signals  WHERE company_id = ANY(:ids)"), {"ids": ids})
+        db.execute(text("DELETE FROM scores   WHERE company_id = ANY(:ids)"), {"ids": ids})
+        db.execute(text("DELETE FROM contacts WHERE company_id = ANY(:ids)"), {"ids": ids})
+
+    # ── 1. Find duplicate company names ──────────────────────────────────────
+    dup_rows = db.execute(text("""
+        SELECT name, MIN(id) AS keep_id, array_agg(id ORDER BY id) AS all_ids
+        FROM companies
+        GROUP BY name
+        HAVING COUNT(*) > 1
+    """)).fetchall()
+
+    signals_repointed = 0
+    companies_deleted = 0
+
+    for row in dup_rows:
+        keep_id  = row.keep_id
+        del_ids  = [i for i in row.all_ids if i != keep_id]
+
+        # Re-point signals from duplicates to canonical id (before deleting)
+        updated = db.execute(
+            text("UPDATE signals SET company_id = :keep_id WHERE company_id = ANY(:del_ids)"),
+            {"keep_id": keep_id, "del_ids": del_ids},
+        ).rowcount
+        signals_repointed += updated
+
+        # Delete all child rows for the duplicate companies
+        _delete_company_children(del_ids)
+
+        deleted = db.execute(
+            text("DELETE FROM companies WHERE id = ANY(:del_ids)"),
+            {"del_ids": del_ids},
+        ).rowcount
+        companies_deleted += deleted
+
+    # ── 2. Purge Unknown-industry vendor companies from news_scraper ─────────
+    vendor_ids = [
+        r.id for r in db.execute(text("""
+            SELECT id FROM companies
+            WHERE
+              (industry = 'Unknown' AND source = 'news_scraper')
+              OR (
+                source = 'news_scraper'
+                AND (
+                  name ILIKE '%robotics%'
+                  OR name ILIKE '%robot%'
+                  OR name ILIKE '% ai %'
+                  OR name ILIKE '% ai'
+                  OR name ILIKE 'ai %'
+                  OR name ILIKE '%autonomous%'
+                  OR name ILIKE '%slated to%'
+                  OR name ILIKE '%ice cream'
+                  OR name LIKE 'Ice Cream'
+                )
+              )
+        """)).fetchall()
+    ]
+
+    orphan_sigs = 0
+    vendor_deleted = 0
+    if vendor_ids:
+        _delete_company_children(vendor_ids)
+        orphan_sigs = db.execute(text("""
+            SELECT COUNT(*) FROM signals
+            WHERE company_id = ANY(:ids)
+        """), {"ids": vendor_ids}).scalar() or 0   # already deleted above; count is 0
+        vendor_deleted = db.execute(
+            text("DELETE FROM companies WHERE id = ANY(:ids)"),
+            {"ids": vendor_ids},
+        ).rowcount
+
+    # ── 3. Ensure unique index exists ─────────────────────────────────────────
     try:
-        from worker.tasks import (
-            run_all_scrapers_task,
-            run_job_scraper_task,
-            run_hotel_scraper_task,
-            run_news_scraper_task,
-            run_rss_scraper_task,
-            run_serp_scraper_task,
-            run_logistics_scraper_task,
-            recalculate_all_scores_task,
-        )
-        task_map = {
-            "all":          run_all_scrapers_task,
-            "job_board":    run_job_scraper_task,
-            "hotel_dir":    run_hotel_scraper_task,
-            "news":         run_news_scraper_task,
-            "rss_feed":     run_rss_scraper_task,
-            "serp":         run_serp_scraper_task,
-            "logistics":    run_logistics_scraper_task,
-            "score_recalc": recalculate_all_scores_task,
-        }
-        fn = task_map.get(payload.scraper)
-        if not fn:
-            raise HTTPException(400, f"Unknown scraper '{payload.scraper}'. Options: {list(task_map)}")
+        db.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_companies_name ON companies (name)
+        """))
+    except Exception:
+        pass  # non-fatal: may fail if duplicates remain
 
-        if payload.scraper in ("all", "score_recalc"):
-            background_tasks.add_task(fn.delay)
-        elif payload.urls:
-            background_tasks.add_task(fn.delay, urls=payload.urls)
-        else:
-            background_tasks.add_task(fn.delay, industry=payload.industry)
+    db.commit()
 
-        return {"status": "queued", "scraper": payload.scraper, "industry": payload.industry}
-
-    except ImportError:
-        return {
-            "status": "skipped",
-            "reason": "Celery worker not running — start with: celery -A worker.celery_worker worker -B",
-        }
+    return {
+        "status": "ok",
+        "duplicate_companies_removed": companies_deleted,
+        "signals_repointed":           signals_repointed,
+        "vendor_companies_purged":     vendor_deleted,
+        "orphan_signals_purged":       len(vendor_ids),
+    }

@@ -1542,6 +1542,7 @@ export default function Dashboard() {
   }, []);
 
   async function quickSave(lead) {
+    if (!session) { setLoginModal(true); return; }
     try {
       const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],' + '"lists":[]}');
       if (!store.companies) store.companies = [];

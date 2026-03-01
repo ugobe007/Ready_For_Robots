@@ -80,9 +80,14 @@ class BaseScraper(ABC):
             return existing
         company = Company(**data)
         self.db.add(company)
-        self.db.commit()
-        self.db.refresh(company)
-        return company
+        try:
+            self.db.commit()
+            self.db.refresh(company)
+            return company
+        except Exception:
+            # Race condition: another thread inserted the same company first
+            self.db.rollback()
+            return self.db.query(Company).filter(Company.name == data.get("name")).first()
 
     def save_signal(self, company_id: int, signal_data: dict) -> Signal:
         signal = Signal(company_id=company_id, **signal_data)

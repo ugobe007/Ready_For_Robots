@@ -196,4 +196,17 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+
+  /* ── Supabase-style flat surfaces ── */
+
+  /* Flat card — border only, no fill, no shadow */
+  .glass-card {
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 0.375rem;
+  }
+
+  /* Lead row tier: left accent only, no background */
+  .lead-hot  { border-left: 2px solid rgba(239, 68,  68,  0.50); }
+  .lead-warm { border-left: 2px solid rgba(234, 179, 8,   0.38); }
+  .lead-cold { border-left: 2px solid rgba(71,  85,  105, 0.22); }
 }
