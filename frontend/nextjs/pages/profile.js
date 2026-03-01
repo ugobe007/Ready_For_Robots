@@ -495,6 +495,11 @@ export default function ProfilePage() {
                                 {c.score != null && <ScoreNum value={c.score} />}
                               </div>
                             </div>
+                            {c.notes === 'Follow Up' && (
+                              <div>
+                                <span className="badge border-amber-800 text-amber-400">&#128204; follow up</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5 text-[10px] text-neutral-600">
                               <span>saved {fmt(c.saved_at)}</span>
                               {c.website && (

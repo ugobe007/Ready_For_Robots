@@ -5,6 +5,9 @@
 import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useAuth } from './_app'
+import { authHeader } from '../lib/supabase'
+import AuthPrompt from '../components/AuthPrompt'
 
 const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000')
 
@@ -373,11 +376,39 @@ function ScoreNum({ value }) {
 }
 
 function OpportunityRow({ lead, rank }) {
+  const { session } = useAuth()
   const [open, setOpen] = useState(false)
   const [emailOpen, setEmailOpen] = useState(false)
+  const [followedUp, setFollowedUp] = useState(false)
+  const [savingFollowUp, setSavingFollowUp] = useState(false)
+  const [authPrompt, setAuthPrompt] = useState(false)
   const tm   = TIER_META[lead.priority_tier] || TIER_META.COLD
   const st   = lead.strategy || {}
   const topSig = lead.signals?.[0]
+
+  async function handleFollowUp(e) {
+    e.stopPropagation()
+    if (!session) { setAuthPrompt(true); return }
+    if (followedUp || savingFollowUp) return
+    setSavingFollowUp(true)
+    try {
+      const resp = await fetch(`${API}/api/user/saved`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+        body: JSON.stringify({
+          company_id:   lead.id,
+          company_name: lead.company_name,
+          industry:     lead.industry || '',
+          tier:         lead.priority_tier || 'COLD',
+          score:        lead.score?.overall_score ?? 0,
+          website:      lead.website || '',
+          notes:        'Follow Up',
+        }),
+      })
+      if (resp.ok) setFollowedUp(true)
+    } catch {}
+    setSavingFollowUp(false)
+  }
   const sigM = topSig ? (SIGNAL_META[topSig.signal_type] || { label: topSig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null
   const meta = [lead.industry, lead.location_city, lead.location_state].filter(Boolean).join('  ')
 
@@ -385,7 +416,7 @@ function OpportunityRow({ lead, rank }) {
     <>
       <div
         className={`${tm.accent} grid items-center border-b border-neutral-900 hover:bg-neutral-900/40 transition-colors group cursor-pointer`}
-        style={{ gridTemplateColumns: '2rem 1fr 9rem 9rem 6rem 4rem 3.5rem' }}
+        style={{ gridTemplateColumns: '2rem 1fr 9rem 9rem 6rem 4rem 5rem' }}
         onClick={() => setOpen(o => !o)}
       >
         <span className="text-[10px] text-neutral-700 group-hover:text-neutral-500 pl-3 tabular-nums">{rank}</span>
@@ -429,9 +460,16 @@ function OpportunityRow({ lead, rank }) {
 
         <div className="flex items-center justify-center gap-1 pr-2">
           <button
+            onClick={handleFollowUp}
+            title={followedUp ? 'Follow-up queued' : 'Add to follow-ups'}
+            style={{ background: 'transparent', border: 'none', color: followedUp ? '#34d399' : '#6b7280', cursor: followedUp ? 'default' : 'pointer', fontSize: '13px', padding: '2px 3px', lineHeight: 1 }}
+          >
+            {savingFollowUp ? '…' : followedUp ? '★' : '☆'}
+          </button>
+          <button
             onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
             title="Generate email script"
-            style={{ background: 'transparent', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: '17px', padding: '2px 4px', lineHeight: 1 }}
+            style={{ background: 'transparent', border: 'none', color: '#818cf8', cursor: 'pointer', fontSize: '17px', padding: '2px 3px', lineHeight: 1 }}
           >
             ✉
           </button>
@@ -443,15 +481,21 @@ function OpportunityRow({ lead, rank }) {
 
       {open && (
         <div className={`${tm.accent} border-b border-neutral-900 bg-neutral-950/60`} style={{ paddingLeft: '2rem' }}>
-          {/* ✉ Email button — first thing visible when row expands */}
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(38,38,38,0.8)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* action buttons — first thing visible when row expands */}
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(38,38,38,0.8)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
               style={{ background: 'transparent', border: '1px solid #3730a3', color: '#818cf8', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
             >
               ✉ email script
             </button>
-            <span style={{ fontSize: '10px', color: '#6b7280' }}>ready-to-send outreach email for {lead.company_name}</span>
+            <button
+              onClick={handleFollowUp}
+              style={{ background: 'transparent', border: followedUp ? '1px solid #065f46' : '1px solid #374151', color: followedUp ? '#34d399' : '#9ca3af', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: followedUp ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+            >
+              {savingFollowUp ? '…' : followedUp ? '★ queued for follow up' : '☆ follow up'}
+            </button>
+            <span style={{ fontSize: '10px', color: '#6b7280' }}>ready-to-send outreach for {lead.company_name}</span>
           </div>
           <div className="px-3 py-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2">
             <div>
@@ -497,6 +541,7 @@ function OpportunityRow({ lead, rank }) {
         </div>
       )}
       {emailOpen && <EmailModal lead={lead} onClose={() => setEmailOpen(false)} />}
+      {authPrompt && <AuthPrompt onClose={() => setAuthPrompt(false)} />}
     </>
   )
 }
@@ -522,7 +567,7 @@ function TierSection({ tier, leads, startRank }) {
         <div className="border border-neutral-800 border-t-0 rounded-b overflow-hidden">
           <div
             className="hidden md:grid border-b border-neutral-800/60 bg-neutral-950"
-            style={{ gridTemplateColumns: '2rem 1fr 9rem 9rem 6rem 4rem 3.5rem' }}
+            style={{ gridTemplateColumns: '2rem 1fr 9rem 9rem 6rem 4rem 5rem' }}
           >
             <span />
             <span className="label px-3 py-2">company</span>

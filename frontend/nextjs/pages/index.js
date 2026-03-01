@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
+import AuthPrompt from '../components/AuthPrompt';
 
 // In production (Fly.io) frontend + API share the same origin — use relative URLs.
 // For local dev, point to the local uvicorn server.
@@ -83,7 +84,7 @@ function ScoreNum({ value }) {
   );
 }
 
-const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities'];
+const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Automotive Dealerships', 'Automotive Manufacturing', 'Automotive Innovation & Ventures', 'Aerospace & Defense', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities'];
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
@@ -150,16 +151,20 @@ function uniqueSignalTypes(signals = []) {
 
 // -- Strategic Snapshot (replaces HOT/WARM/COLD boxes) ----------------------
 const INDUSTRY_ROBOT_FIT = {
-  'Hospitality':               'Service & Delivery',
-  'Logistics':                 'Warehouse AMR Fleet',
-  'Healthcare':                'Clinical Logistics',
-  'Food Service':              'BOH Automation',
-  'Airports & Transportation': 'Ground Ops Robots',
-  'Retail':                    'Picking & Restocking',
-  'Casinos & Gaming':          'Floor & F&B Delivery',
-  'Cruise Lines':              'Onboard Delivery',
+  'Hospitality':                 'Service & Delivery',
+  'Logistics':                   'Warehouse AMR Fleet',
+  'Healthcare':                  'Clinical Logistics',
+  'Food Service':                'BOH Automation',
+  'Airports & Transportation':   'Ground Ops Robots',
+  'Retail':                      'Picking & Restocking',
+  'Automotive Dealerships':      'Parts & Inventory Delivery',
+  'Automotive Manufacturing':    'Intra-Facility AMR Fleet',
+  'Automotive Innovation & Ventures': 'Smart Factory & Logistics Pilot',
+  'Aerospace & Defense':         'Factory Floor AMR & MRO Logistics',
+  'Casinos & Gaming':            'Floor & F&B Delivery',
+  'Cruise Lines':                'Onboard Delivery',
   'Theme Parks & Entertainment': 'F&B & Custodial',
-  'Real Estate & Facilities':  'Cleaning & Concierge',
+  'Real Estate & Facilities':    'Cleaning & Concierge',
 };
 
 const READINESS = {
@@ -197,15 +202,19 @@ function strategicFit(lead) {
 
 // -- Top 3 Matches ------------------------------------------------------------
 const CONTACT_BY_INDUSTRY = {
-  'Hospitality':               'Director of F&B or Hotel GM',
-  'Logistics':                 'VP of Operations or Warehouse Director',
-  'Healthcare':                'Director of Supply Chain or COO',
-  'Food Service':              'Director of Operations',
-  'Airports & Transportation': 'VP of Ground Operations',
-  'Casinos & Gaming':          'VP of F&B or Facilities Director',
-  'Cruise Lines':              'Director of Onboard Services',
+  'Hospitality':                 'Director of F&B or Hotel GM',
+  'Logistics':                   'VP of Operations or Warehouse Director',
+  'Healthcare':                  'Director of Supply Chain or COO',
+  'Food Service':                'Director of Operations',
+  'Airports & Transportation':   'VP of Ground Operations',
+  'Automotive Dealerships':      'Fixed Ops Director or Parts Manager',
+  'Automotive Manufacturing':    'VP of Manufacturing Operations or Director of Smart Factory',
+  'Automotive Innovation & Ventures': 'Innovation Director or Venture Partner',
+  'Aerospace & Defense':         'VP of Manufacturing Operations or Director of MRO',
+  'Casinos & Gaming':            'VP of F&B or Facilities Director',
+  'Cruise Lines':                'Director of Onboard Services',
   'Theme Parks & Entertainment': 'Director of Operations',
-  'Real Estate & Facilities':  'Director of Facilities',
+  'Real Estate & Facilities':    'Director of Facilities',
 };
 
 function actionPlan(lead) {
@@ -231,17 +240,34 @@ function actionPlan(lead) {
     news:           'Use news mention as an outreach hook — reference it directly.',
   }[sig?.signal_type] || 'Follow up with an industry case study and ROI calculator.';
 
-  // pitch angle
+  // pitch angle — automotive dealerships get Titan-specific framing
+  const isAuto = ['Automotive Dealerships', 'Automotive Manufacturing', 'Automotive Innovation & Ventures'].includes(lead.industry);
   const pitch = {
-    strategic_hire: `Connect with the new exec before they finalize vendor relationships. Lead with ${fit} ROI data.`,
-    capex:          `Align ${fit} with their active capital spend. Position now while budget is open.`,
-    labor_shortage: `Show how ${fit} directly eliminates the documented staffing gap. Use cost-per-worker math.`,
-    expansion:      `Propose ${fit} as the automation layer for their growth initiative — scale from day one.`,
-    funding_round:  `New capital means new spending mandates. Position ${fit} as a growth-phase multiplier.`,
-    ma_activity:    `Use M&A disruption as the entry point — ${fit} reduces integration complexity and cost.`,
-    job_posting:    `Reframe open headcount as automation budget. ${fit} pays back in under 18 months.`,
+    strategic_hire: isAuto
+      ? `Reach the new Fixed Ops Director before they lock in their vendor stack. Lead with Titan's parts-to-bay delivery ROI.`
+      : `Connect with the new exec before they finalize vendor relationships. Lead with ${fit} ROI data.`,
+    capex:          isAuto
+      ? `Align Titan with their active service expansion budget — position as cost-per-parts-delivery vs. headcount.`
+      : `Align ${fit} with their active capital spend. Position now while budget is open.`,
+    labor_shortage: isAuto
+      ? `Their parts runners and counter labor shortage is exactly what Titan solves. Run the headcount-vs-robot cost model live.`
+      : `Show how ${fit} directly eliminates the documented staffing gap. Use cost-per-worker math.`,
+    expansion:      isAuto
+      ? `New service bays or locations are the perfect Titan entry point — propose it as day-one infrastructure for the expanded dept.`
+      : `Propose ${fit} as the automation layer for their growth initiative — scale from day one.`,
+    funding_round:  isAuto
+      ? `Dealer group capital raise signals growth capex. Titan ROI is compelling when comparing robot cost vs. multiple parts-runner salaries.`
+      : `New capital means new spending mandates. Position ${fit} as a growth-phase multiplier.`,
+    ma_activity:    isAuto
+      ? `Dealer group acquisitions create multi-location standardization pressure — Titan normalizes the parts flow across all stores.`
+      : `Use M&A disruption as the entry point — ${fit} reduces integration complexity and cost.`,
+    job_posting:    isAuto
+      ? `They're actively hiring parts runners — reframe every open req as robot ROI. Titan replaces the role, not the person.`
+      : `Reframe open headcount as automation budget. ${fit} pays back in under 18 months.`,
     news:           `Reference their press coverage to open the door, then pivot to ${fit} ROI.`,
-  }[sig?.signal_type] || `Lead with ${fit} ROI benchmarks for the ${lead.industry || 'industry'} vertical.`;
+  }[sig?.signal_type] || (isAuto
+    ? `Lead with Titan's parts-to-bay delivery use case — show cycle time and staffing ROI for a typical ${deal.tier} dealer group.`
+    : `Lead with ${fit} ROI benchmarks for the ${lead.industry || 'industry'} vertical.`);
 
   // talking points: seed from priority_reasons, fill with defaults
   const reasons = (lead.priority_reasons || []).slice(0, 2);
@@ -263,11 +289,19 @@ function matchDescription(lead) {
   const why = {
     strategic_hire: 'recently hired automation leadership, signaling an active vendor evaluation',
     capex:          'has active capital expenditure underway — budget is open for equipment',
-    labor_shortage: 'is experiencing documented labor shortages — the primary pain Richtech solves',
-    expansion:      'is actively expanding facilities and needs automation infrastructure from day one',
+    labor_shortage: lead.industry === 'Automotive Dealerships'
+                      ? 'is struggling to staff parts runners and counter associates — the exact manual workflow Titan eliminates'
+                      : 'is experiencing documented labor shortages — the primary pain Richtech solves',
+    expansion:      lead.industry === 'Automotive Dealerships'
+                      ? 'is expanding service capacity with new bays or locations — Titan integrates on day one'
+                      : 'is actively expanding facilities and needs automation infrastructure from day one',
     funding_round:  'completed a funding round and is in a capital-deployment phase',
-    ma_activity:    'is navigating M&A activity that creates operational gaps automation can fill',
-    job_posting:    'is posting roles that indicate chronic labor dependency and staffing pressure',
+    ma_activity:    lead.industry === 'Automotive Dealerships'
+                      ? 'is a dealer group growing through acquisition — Titan standardizes parts flow across locations'
+                      : 'is navigating M&A activity that creates operational gaps automation can fill',
+    job_posting:    lead.industry === 'Automotive Dealerships'
+                      ? 'is actively hiring parts runners and counter staff — chronic dependency that Titan directly replaces'
+                      : 'is posting roles that indicate chronic labor dependency and staffing pressure',
     news:           'is in the news cycle with developments that signal operational investment',
   }[sig?.signal_type] || 'shows multiple indicators of automation readiness';
 
@@ -275,8 +309,11 @@ function matchDescription(lead) {
 }
 
 function Top3Matches({ leads, onSelect }) {
+  const { session } = useAuth();
   const [open, setOpen]               = useState(false);
   const [expandedPlan, setExpandedPlan] = useState({});
+  const [followedIds, setFollowedIds] = useState(new Set());
+  const [authPrompt, setAuthPrompt]   = useState(false);
 
   const top3 = useMemo(() => {
     const score = l => l.priority_score ?? l.score?.overall_score ?? 0;
@@ -286,6 +323,20 @@ function Top3Matches({ leads, onSelect }) {
   }, [leads]);
 
   if (!top3.length) return null;
+
+  async function handleFollowUp(e, lead) {
+    e.stopPropagation();
+    if (!session) { setAuthPrompt(true); return; }
+    if (followedIds.has(lead.id)) return;
+    try {
+      const resp = await fetch(`${API}/api/user/saved`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+        body: JSON.stringify({ company_id: lead.id, company_name: lead.company_name, industry: lead.industry || '', tier: lead.priority_tier || 'COLD', score: lead.score?.overall_score ?? 0, website: lead.website || '', notes: 'Follow Up' }),
+      });
+      if (resp.ok) setFollowedIds(prev => new Set([...prev, lead.id]));
+    } catch {}
+  }
 
   const CARD_CLASS  = ['top3-card-1', 'top3-card-2', 'top3-card-3'];
   const RANK_GLOW   = ['rank-glow-em', 'rank-glow-cy', 'rank-glow-nt'];
@@ -321,6 +372,7 @@ function Top3Matches({ leads, onSelect }) {
         </span>
       </button>
 
+      {authPrompt && <AuthPrompt onClose={() => setAuthPrompt(false)} />}
       {/* expanded panel */}
       {open && (
         <div className="border-t border-neutral-800/80 p-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -411,10 +463,16 @@ function Top3Matches({ leads, onSelect }) {
                 )}
 
                 {/* CTA */}
-                <button onClick={() => onSelect(lead)}
-                  className={`mt-auto pt-2 text-[11px] font-semibold transition-colors text-left ${CTA_COLOR[i]}`}>
-                  Full analysis →
-                </button>
+                <div className="mt-auto pt-2 flex items-center gap-3">
+                  <button onClick={() => onSelect(lead)}
+                    className={`flex-1 text-[11px] font-semibold transition-colors text-left ${CTA_COLOR[i]}`}>
+                    Full analysis →
+                  </button>
+                  <button onClick={e => handleFollowUp(e, lead)}
+                    style={{ fontSize: '11px', background: 'transparent', border: 'none', color: followedIds.has(lead.id) ? '#34d399' : '#6b7280', cursor: followedIds.has(lead.id) ? 'default' : 'pointer', padding: 0 }}>
+                    {followedIds.has(lead.id) ? '★' : '☆'}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -425,16 +483,40 @@ function Top3Matches({ leads, onSelect }) {
 }
 
 function StrategicSnapshot({ leads, onSelect }) {
+  const { session } = useAuth();
   const [showAll, setShowAll] = useState(false);
+  const [followedIds, setFollowedIds] = useState(new Set());
+  const [authPrompt, setAuthPrompt] = useState(false);
   const sorted = [...leads]
     .filter(l => l.score?.overall_score != null)
     .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
   const visible = showAll ? sorted.slice(0, 10) : sorted.slice(0, 5);
 
-  if (!sorted.length) return null;
+  async function handleFollowUp(e, lead) {
+    e.stopPropagation();
+    if (!session) { setAuthPrompt(true); return; }
+    if (followedIds.has(lead.id)) return;
+    try {
+      const resp = await fetch(`${API}/api/user/saved`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+        body: JSON.stringify({
+          company_id:   lead.id,
+          company_name: lead.company_name,
+          industry:     lead.industry || '',
+          tier:         lead.priority_tier || 'COLD',
+          score:        lead.score?.overall_score ?? 0,
+          website:      lead.website || '',
+          notes:        'Follow Up',
+        }),
+      });
+      if (resp.ok) setFollowedIds(prev => new Set([...prev, lead.id]));
+    } catch {}
+  }
 
   return (
     <div className="mb-6">
+      {authPrompt && <AuthPrompt onClose={() => setAuthPrompt(false)} />}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <span className="label">Strategic Snapshot</span>
@@ -521,7 +603,14 @@ function StrategicSnapshot({ leads, onSelect }) {
               </div>
 
               {/* CTA */}
-              <div className="flex items-center justify-end pr-3 py-2">
+              <div className="flex items-center justify-end gap-1 pr-3 py-2">
+                <button
+                  onClick={(e) => handleFollowUp(e, lead)}
+                  title={followedIds.has(lead.id) ? 'Follow-up queued' : 'Add to follow-ups'}
+                  style={{ background: 'transparent', border: 'none', color: followedIds.has(lead.id) ? '#34d399' : '#6b7280', cursor: followedIds.has(lead.id) ? 'default' : 'pointer', fontSize: '13px', padding: '2px', lineHeight: 1 }}
+                >
+                  {followedIds.has(lead.id) ? '\u2605' : '\u2606'}
+                </button>
                 <button
                   onClick={() => onSelect(lead)}
                   className="text-[10px] text-emerald-800 hover:text-emerald-400 transition-colors whitespace-nowrap font-medium">
@@ -541,26 +630,41 @@ function QuickScrape({ onDone }) {
   const [open,   setOpen]   = useState(false);
   const [urls,   setUrls]   = useState('');
   const [ind,    setInd]    = useState('');
-  const [now,    setNow]    = useState(false);
+  const [now,    setNow]    = useState(true);
   const [status, setStatus] = useState(null);  // null | 'loading' | 'done' | 'error'
   const [result, setResult] = useState(null);
+
+  function reset() {
+    setUrls('');
+    setInd('');
+    setNow(true);
+    setStatus(null);
+    setResult(null);
+  }
 
   async function submit() {
     if (!urls.trim()) return;
     setStatus('loading');
     try {
-      const r = await fetch(`${API}/api/agent/scrape/quick`, {
+      const urlList = urls
+        .split(/[\n,]+/)
+        .map(u => u.trim())
+        .filter(u => u.startsWith('http'));
+      if (!urlList.length) { setStatus('error'); return; }
+      const r = await fetch(`${API}/api/admin/import/urls`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls, industry: ind || null, scrape_now: now }),
+        body: JSON.stringify({ urls: urlList, industry: ind || null, scrape_now: now }),
       });
+      if (!r.ok) throw new Error(r.status);
       const data = await r.json();
       setResult(data);
       setStatus('done');
-      setUrls('');
       if (onDone) onDone();
+      setTimeout(reset, 2500);
     } catch {
       setStatus('error');
+      setTimeout(() => setStatus(null), 3000);
     }
   }
 
@@ -597,7 +701,7 @@ function QuickScrape({ onDone }) {
             </label>
             <button onClick={submit} disabled={status === 'loading'}
               className="ml-auto btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-600">
-              {status === 'loading' ? 'adding...' : '&#8599; add sources'}
+              {status === 'loading' ? 'adding…' : '↗ add sources'}
             </button>
           </div>
           {status === 'done' && result && (
@@ -1400,10 +1504,13 @@ export default function Dashboard() {
   const [error, setError]         = useState(null);
   const [expanded, setExpanded]         = useState({});
   const [collapsedSections, setCollapsedSections] = useState({});
+  const [expandedIndustries, setExpandedIndustries] = useState({});
   const [lastRefresh, setLast]    = useState(null);
   const [resetting, setResetting] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [savedIds, setSavedIds] = useState(new Set());
+  const [followupIds, setFollowupIds] = useState(new Set());
+  const [mainAuthPrompt, setMainAuthPrompt] = useState(false);
 
   // load saved company IDs from localStorage on mount
   useEffect(() => {
@@ -1413,19 +1520,38 @@ export default function Dashboard() {
     } catch {}
   }, []);
 
-  function quickSave(lead) {
+  async function quickSave(lead) {
     try {
       const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],' + '"lists":[]}');
       if (!store.companies) store.companies = [];
       const alreadySaved = !!store.companies.find(c => c.id === lead.id);
       if (alreadySaved) {
         store.companies = store.companies.filter(c => c.id !== lead.id);
+        if (session) {
+          fetch(`${API}/api/user/saved/${lead.id}`, {
+            method: 'DELETE', headers: authHeader(session.access_token),
+          }).catch(() => {});
+        }
       } else {
         store.companies.push({
           id: lead.id, name: lead.company_name, industry: lead.industry,
           score: lead.score?.overall_score ?? 0, tier: lead.priority_tier,
           saved_at: new Date().toISOString(), website: lead.website,
         });
+        if (session) {
+          fetch(`${API}/api/user/saved`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+            body: JSON.stringify({
+              company_id:   lead.id,
+              company_name: lead.company_name,
+              industry:     lead.industry || '',
+              tier:         lead.priority_tier || 'COLD',
+              score:        lead.score?.overall_score ?? 0,
+              website:      lead.website || '',
+            }),
+          }).catch(() => {});
+        }
       }
       localStorage.setItem('rfr_saved', JSON.stringify(store));
       setSavedIds(new Set(store.companies.map(c => c.id)));
@@ -1533,12 +1659,10 @@ export default function Dashboard() {
   }
 
   const openCircuits = health?.circuit_open_urls?.length ?? 0;
+  const totalSignals = leads.reduce((a, l) => a + (l.signal_count || 0), 0);
 
   return (
     <>
-      <TrendingTicker />
-      <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
-
       {selectedLead && (
         <AIAnalysisModal
           lead={selectedLead}
@@ -1552,468 +1676,467 @@ export default function Dashboard() {
         />
       )}
 
-      {/* header */}
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
-            <span className="label border border-neutral-600 rounded px-2 py-0.5 text-neutral-200">RICHTECH ROBOTICS</span>
-          </div>
-          <p className="text-base text-neutral-200">Lead Intelligence &middot; Automation Signal Platform</p>
+      {mainAuthPrompt && <AuthPrompt onClose={() => setMainAuthPrompt(false)} />}
+
+      {/* ── Sticky header ── */}
+      <header className="sticky top-0 z-40 bg-[#080808]/95 backdrop-blur-md border-b border-neutral-800/80 px-4 md:px-6 h-12 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-bold text-white tracking-tight">Ready for Robots</h1>
+          <span className="label border border-neutral-800 rounded px-1.5 py-0.5 text-neutral-500 hidden sm:inline">RICHTECH ROBOTICS</span>
+          {lastRefresh && <span className="label text-neutral-700 hidden md:inline">{lastRefresh}</span>}
         </div>
-        <div className="flex items-center flex-wrap gap-2">
-          {lastRefresh && <span className="label text-neutral-600 hidden sm:inline">{lastRefresh}</span>}
-          <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
-          <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
+        <div className="flex items-center gap-1.5">
+          <button onClick={fetchData} className="btn-ghost text-neutral-600" title="Refresh">↺</button>
+          <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-600 hover:border-neutral-600" title="Profile">♡</Link>
           {session
-            ? <span className="label text-neutral-600 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
-            : (
-              <Link href="/login"
-                className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600"
-                title="Browse freely — sign in only to save companies and reports">
-                → sign in
-              </Link>
-            )}
-          <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
+            ? <span className="label text-neutral-700 hidden md:inline">{session.user.email.split('@')[0]}</span>
+            : <Link href="/login" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">sign in</Link>
+          }
+          <Link href="/strategy" className="btn border-indigo-500 text-indigo-300 hover:border-indigo-300 hover:text-indigo-100 font-semibold">⚡ strategy</Link>
+          <Link href="/admin" className="btn-ghost text-emerald-500 border-emerald-900 hover:border-emerald-700">⚙ admin</Link>
         </div>
       </header>
 
-      {/* platform descriptor */}
-      <div className="mb-8 pb-7 border-b border-neutral-800 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
-        <div>
-          <p className="label mb-2 text-emerald-400">What is Ready for Robots</p>
-          <p className="text-sm text-neutral-300 leading-relaxed">
-            An <span className="text-cyan-300">AI-powered lead intelligence platform</span> built for Richtech Robotics sales teams.
-            Continuously monitors companies across hospitality, logistics, healthcare, and other labor-intensive industries
-            — surfacing organizations most likely to be evaluating{' '}
-            <span className="text-cyan-300">automation investments right now</span>, so reps focus only on the right accounts at the right time.
-          </p>
-        </div>
-        <div>
-          <p className="label mb-2 text-emerald-400">What are Signals</p>
-          <p className="text-sm text-neutral-300 leading-relaxed">
-            Real-time behavioral and event indicators that a company is ready to buy.
-            Includes <span className="text-cyan-300">funding rounds</span>,{' '}
-            <span className="text-cyan-300">strategic executive hires</span>,{' '}
-            <span className="text-cyan-300">CapEx announcements</span>,{' '}
-            <span className="text-cyan-300">labor shortages</span>,{' '}
-            <span className="text-cyan-300">facility expansions</span>, and{' '}
-            <span className="text-cyan-300">M&amp;A activity</span>. Each company is scored and tiered —{' '}
-            <span className="text-red-400">Hot</span>,{' '}
-            <span className="text-yellow-400">Warm</span>, or{' '}
-            <span className="text-cyan-500">Cold</span>{' '}
-            — by the volume, recency, and strength of its detected signals.
-          </p>
-        </div>
-      </div>
+      <TrendingTicker />
 
-      {/* error */}
       {error && (
-        <div className="mb-6 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">
-          &#9888; {error}
+        <div className="mx-4 md:mx-6 mt-4 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">
+          ⚠ {error}
         </div>
       )}
 
-      {/* quick scrape */}
-      <QuickScrape onDone={fetchData} />
+      {/* ── Two-column layout ── */}
+      <div className="flex bg-[#080808] min-h-[calc(100vh-6rem)]">
 
-      {/* stat row — numbers are clickable tier filters */}
-      <div className="mb-6 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-5">
-        <div>
-          <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-2xl font-semibold text-neutral-200 tabular-nums">
-            {summary.total ?? leads.length}
-          </span>
-        </div>
-        <div className="w-px h-6 bg-neutral-800" />
-        <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-red-500 transition-colors">Hot</span>
-          <span className="text-2xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
-        </button>
-        <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-yellow-500 transition-colors">Warm</span>
-          <span className="text-2xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
-        </button>
-        <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-cyan-400 transition-colors">Cold</span>
-          <span className="text-2xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
-        </button>
-        <div className="w-px h-6 bg-neutral-800" />
-        <div>
-          <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-2xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
-        </div>
-        {openCircuits > 0 && (
-          <>
-            <div className="w-px h-6 bg-neutral-800" />
-            <div>
-              <span className="label block mb-0.5">Open circuits</span>
-              <span className="text-2xl font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
+        {/* ── SIDEBAR ── */}
+        <aside className="hidden lg:flex flex-col w-[256px] xl:w-[272px] shrink-0 border-r border-neutral-800/50 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto px-4 scrollbar-none">
+
+          {/* KPI stat block */}
+          <div className="pb-5 pt-4 border-b border-neutral-800/60">
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <div className="text-[2rem] font-extrabold tracking-tight tabular-nums text-emerald-400 leading-none">
+                  {summary.total ?? leads.length}
+                </div>
+                <div className="label mt-1 text-neutral-600">companies</div>
+              </div>
+              <div>
+                <div className="text-[2rem] font-extrabold tracking-tight tabular-nums text-cyan-400 leading-none">
+                  {totalSignals}
+                </div>
+                <div className="label mt-1 text-neutral-600">signals</div>
+              </div>
             </div>
-          </>
-        )}
-        {/* tier active indicator */}
-        {tier !== 'ALL' && (
-          <button onClick={() => setTier('ALL')}
-            className="ml-auto text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors">
-            ✕ clear filter
-          </button>
-        )}
-      </div>
+            <div className="flex gap-3 pt-3 border-t border-neutral-800">
+              <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
+                className="flex-1 text-left hover:opacity-75 transition-opacity">
+                <div className="text-xl font-bold tabular-nums text-red-400 leading-none">{summary.hot ?? 0}</div>
+                <div className="label mt-0.5 text-neutral-700">hot</div>
+              </button>
+              <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
+                className="flex-1 text-left hover:opacity-75 transition-opacity">
+                <div className="text-xl font-bold tabular-nums text-yellow-400 leading-none">{summary.warm ?? 0}</div>
+                <div className="label mt-0.5 text-neutral-700">warm</div>
+              </button>
+              <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
+                className="flex-1 text-left hover:opacity-75 transition-opacity">
+                <div className="text-xl font-bold tabular-nums text-cyan-500 leading-none">{summary.cold ?? 0}</div>
+                <div className="label mt-0.5 text-neutral-700">cold</div>
+              </button>
+            </div>
+          </div>
 
-      {/* intelligence search — primary tool, above the fold */}
-      <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+          {/* Filters */}
+          <div className="py-5 border-b border-neutral-800/60 space-y-4">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400">Filters</span>
 
-      {/* top 3 matches */}
-      {!loading && leads.length > 0 && (
-        <Top3Matches leads={leads} onSelect={setSelectedLead} />
-      )}
-
-      {/* strategic snapshot */}
-      {!loading && leads.length > 0 && (
-        <StrategicSnapshot leads={leads} onSelect={setSelectedLead} />
-      )}
-
-      {/* agent insights */}
-      <AgentInsightsPanel />
-
-      {/* filter bar */}
-      <div className="mb-6 space-y-3">
-        {/* row 1 */}
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <label className="label block mb-1">Search</label>
+            {/* Search */}
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="company name..."
-              className="w-full bg-neutral-900 border border-neutral-600 rounded px-3 py-1.5 text-sm
-                         text-neutral-100 placeholder-neutral-400
-                         focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-900 focus:text-neutral-100
-                         transition-colors" />
-          </div>
-          <div>
-            <label className="label block mb-1">Min score -- <span className="text-emerald-500">{minScore}</span></label>
-            <input type="range" min={0} max={100} value={minScore}
-              onChange={e => setMinScore(Number(e.target.value))}
-              className="w-32 accent-emerald-500" />
-          </div>
-          <div>
-            <label className="label block mb-1">Sort</label>
-            <select value={sort} onChange={e => setSort(e.target.value)}
-              className="bg-transparent border border-neutral-800 rounded px-2 py-1.5 text-xs
-                         text-neutral-400 focus:outline-none focus:border-neutral-600">
-              <option value="score">by score</option>
-              <option value="signals">by signals</option>
-              <option value="name">by name</option>
-            </select>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer select-none mb-0.5">
-            <input type="checkbox" checked={excludeJunk} onChange={e => setExcludeJunk(e.target.checked)}
-              className="sr-only peer" />
-            <span className="text-xs transition-colors peer-checked:text-emerald-400 text-neutral-600">
-              {excludeJunk ? 'hide junk' : 'show junk'}
-            </span>
-          </label>
-        </div>
+              placeholder="Search companies…"
+              className="w-full bg-neutral-900 border border-neutral-700 rounded-md px-2.5 py-2 text-sm
+                         text-neutral-200 placeholder-neutral-600
+                         focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-900/50 transition-colors" />
 
-        {/* row 2 -- filter tabs */}
-        <div className="flex flex-col gap-2">
-          {/* priority + signal — always one line */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <div className="flex items-center gap-1.5">
-              <span className="label mr-1">priority</span>
-              {TIERS.map(t => (
-                <button key={t} onClick={() => setTier(t)}
-                  className={tier === t ? 'tab-active' : 'tab-inactive'}>
-                  {t === 'HOT' ? 'HOT' : t === 'WARM' ? 'WARM' : t === 'COLD' ? 'COLD' : 'ALL'}
-                </button>
-              ))}
+            {/* Priority */}
+            <div>
+              <span className="label block mb-1.5">Priority</span>
+              <div className="flex gap-1 flex-wrap">
+                {TIERS.map(t => (
+                  <button key={t} onClick={() => setTier(t)} className={tier === t ? 'tab-active' : 'tab-inactive'}>
+                    {t === 'ALL' ? 'all' : t.toLowerCase()}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="w-px h-4 bg-neutral-800 hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <span className="label">signal</span>
+
+            {/* Signal type */}
+            <div>
+              <span className="label block mb-1.5">Signal</span>
               <select value={sigType} onChange={e => setSigType(e.target.value)}
-                className="bg-transparent border border-neutral-800 rounded px-2 py-0.5 text-xs
-                           text-neutral-500 focus:outline-none focus:border-neutral-600">
-                <option value="">any</option>
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-2.5 py-1.5 text-xs
+                           text-neutral-400 focus:outline-none focus:border-neutral-600">
+                <option value="">any signal</option>
                 {SIGNAL_TYPES.filter(Boolean).map(st => (
                   <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
                 ))}
               </select>
             </div>
+
+            {/* Min score */}
+            <div>
+              <div className="flex justify-between mb-1.5">
+                <span className="label">Min score</span>
+                <span className="text-xs font-semibold text-emerald-400 tabular-nums">{minScore}</span>
+              </div>
+              <input type="range" min={0} max={100} value={minScore}
+                onChange={e => setMinScore(Number(e.target.value))}
+                className="w-full accent-emerald-500" />
+            </div>
+
+            {/* Sort + hide junk */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <select value={sort} onChange={e => setSort(e.target.value)}
+                className="flex-1 min-w-[80px] bg-neutral-900 border border-neutral-700 rounded px-2 py-1.5 text-xs
+                           text-neutral-400 focus:outline-none focus:border-neutral-600">
+                <option value="score">by score</option>
+                <option value="signals">by signals</option>
+                <option value="name">by name</option>
+              </select>
+              <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
+                <input type="checkbox" checked={excludeJunk} onChange={e => setExcludeJunk(e.target.checked)}
+                  className="accent-emerald-500" />
+                <span className={`text-xs transition-colors ${excludeJunk ? 'text-emerald-400' : 'text-neutral-600'}`}>
+                  hide junk
+                </span>
+              </label>
+            </div>
           </div>
-          {/* industry — scrollable on mobile */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            <span className="label mr-1 shrink-0">industry</span>
-            {INDUSTRIES.map(ind => (
-              <button key={ind} onClick={() => setIndustry(ind)}
-                className={`shrink-0 ${industry === ind ? 'tab-active' : 'tab-inactive'}`}>
-                {ind === 'All' ? 'all' : ind.toLowerCase()}
-              </button>
-            ))}
+
+          {/* Industry nav */}
+          <div className="py-5 border-b border-neutral-800/60">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 block mb-2.5">Industry</span>
+            <div className="space-y-px">
+              {INDUSTRIES.map(ind => {
+                const count = ind === 'All'
+                  ? leads.length
+                  : leads.filter(l => l.industry === ind).length;
+                return (
+                  <button key={ind} onClick={() => setIndustry(ind)}
+                    className={`w-full flex items-center justify-between text-left text-xs px-2.5 py-1.5 rounded transition-all
+                      ${industry === ind
+                        ? 'bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500 pl-2'
+                        : 'text-neutral-600 border-l-2 border-transparent hover:text-neutral-300 hover:bg-white/[0.03]'
+                      }`}>
+                    <span>{ind}</span>
+                    {count > 0 && <span className="tabular-nums text-[10px] opacity-50">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Scraper health compact */}
+          {health && (
+            <div className="pt-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="label text-neutral-500">Scraper</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${openCircuits > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  <span className={`text-[10px] ${openCircuits > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {openCircuits > 0 ? `${openCircuits} open` : 'healthy'}
+                  </span>
+                </div>
+              </div>
+              {health.summary?.last_run_scraper && (
+                <p className="text-[10px] text-neutral-700">
+                  last: <span className="text-neutral-500">{health.summary.last_run_scraper}</span>{' '}
+                  <span className={health.summary.last_run_status === 'success' || health.summary.last_run_status === 'no_results' ? 'text-emerald-600' : 'text-neutral-600'}>
+                    {health.summary.last_run_status}
+                  </span>
+                </p>
+              )}
+              {openCircuits > 0 && (
+                <button onClick={handleResetAll} disabled={resetting}
+                  className="text-[10px] text-red-600 hover:text-red-400 transition-colors">
+                  {resetting ? 'resetting…' : '✕ reset circuits'}
+                </button>
+              )}
+            </div>
+          )}
+        </aside>
+
+        {/* ── MAIN CONTENT ── */}
+        <div className="flex-1 min-w-0">
+          <div className="px-4 md:px-8 py-6 max-w-[1060px]">
+
+            {/* Mobile filter row (< lg only) */}
+            <div className="lg:hidden mb-5 space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search…"
+                  className="flex-1 min-w-[140px] bg-neutral-900 border border-neutral-700 rounded px-2.5 py-1.5 text-sm
+                             text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600 transition-colors" />
+                <select value={sort} onChange={e => setSort(e.target.value)}
+                  className="bg-neutral-900 border border-neutral-700 rounded px-2 py-1.5 text-xs text-neutral-400 focus:outline-none">
+                  <option value="score">score</option>
+                  <option value="signals">signals</option>
+                  <option value="name">name</option>
+                </select>
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-2">
+                <div className="flex items-center gap-1">
+                  {TIERS.map(t => (
+                    <button key={t} onClick={() => setTier(t)} className={tier === t ? 'tab-active' : 'tab-inactive'}>
+                      {t === 'ALL' ? 'all' : t.toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                  {INDUSTRIES.map(ind => (
+                    <button key={ind} onClick={() => setIndustry(ind)}
+                      className={`shrink-0 ${industry === ind ? 'tab-active' : 'tab-inactive'}`}>
+                      {ind === 'All' ? 'all' : ind.toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Scrape */}
+            <QuickScrape onDone={fetchData} />
+
+            {/* Intel search */}
+            <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+
+            {/* Top 3 matches */}
+            {!loading && leads.length > 0 && (
+              <Top3Matches leads={leads} onSelect={setSelectedLead} />
+            )}
+
+            {/* Agent insights */}
+            <AgentInsightsPanel />
+
+            {/* Lead list */}
+            {loading ? (
+              <p className="py-16 text-center text-neutral-700 text-sm animate-pulse">loading…</p>
+            ) : filtered.length === 0 ? (
+              <div className="py-16 text-center text-neutral-700 text-sm">
+                no leads match your filters
+                {leads.length === 0 && (
+                  <p className="mt-2 text-xs text-neutral-800">
+                    run <code className="border border-neutral-800 rounded px-1 text-neutral-600">python scripts/test_scraper.py --clear</code> to seed
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {INDUSTRIES.filter(ind => ind !== 'All').map(sectionInd => {
+                  const group = filtered.filter(l => (l.industry || 'Unknown') === sectionInd);
+                  if (group.length === 0) return null;
+                  const hotCount  = group.filter(l => l.priority_tier === 'HOT').length;
+                  const warmCount = group.filter(l => l.priority_tier === 'WARM').length;
+                  const isCollapsed = !!collapsedSections[sectionInd];
+                  return (
+                    <div key={sectionInd}>
+                      {/* Section header */}
+                      <button
+                        onClick={() => setCollapsedSections(p => ({ ...p, [sectionInd]: !isCollapsed }))}
+                        className="w-full flex items-center gap-3 py-2.5 mb-3 border-b border-neutral-800 hover:border-neutral-700 transition-colors text-left group">
+                        <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-neutral-300 group-hover:text-white transition-colors">
+                          {sectionInd}
+                        </span>
+                        {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
+                        {warmCount > 0 && <span className="label text-yellow-500 tabular-nums">{warmCount} warm</span>}
+                        <span className="label text-neutral-700 ml-auto tabular-nums">
+                          {group.length} {group.length === 1 ? 'lead' : 'leads'}&nbsp;&nbsp;{isCollapsed ? '▶' : '▼'}
+                        </span>
+                      </button>
+
+                      {!isCollapsed && (
+                        <div className="border border-neutral-800/50 rounded-md overflow-hidden">
+                          {(expandedIndustries[sectionInd] ? group : group.slice(0, 5)).map((lead, i) => {
+                            const sc     = lead.score || {};
+                            const isOpen = expanded[lead.id];
+                            const sig    = topSignal(lead);
+                            const tm     = TIER_META[lead.priority_tier] || TIER_META.COLD;
+                            return (
+                              <div key={lead.id}
+                                className={`border-b border-neutral-800/40 px-3 py-2 cursor-pointer transition-colors hover:bg-neutral-900/50 last:border-b-0
+                                  ${lead.priority_tier === 'HOT'  ? 'lead-hot' :
+                                    lead.priority_tier === 'WARM' ? 'lead-warm' : 'lead-cold'}`}>
+
+                                {/* Main row */}
+                                <div className="flex items-center gap-4 group"
+                                  onClick={() => setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] }))}>
+
+                                  <span className="label w-5 text-right shrink-0 hidden sm:block">{i + 1}</span>
+
+                                  {/* Company name + metadata */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="text-[15px] font-semibold text-neutral-100 leading-tight group-hover:text-white transition-colors">
+                                        {lead.company_name}
+                                      </span>
+                                      <TierBadge tier={lead.priority_tier} />
+                                      {lead.location_city && (
+                                        <span className="label hidden md:inline">
+                                          {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-xs text-neutral-600">{lead.industry}</span>
+                                      {sig?.raw_text && (
+                                        <span className="text-[11px] text-neutral-700 italic truncate hidden sm:block max-w-[28rem]">
+                                          &ldquo;{sig.raw_text.substring(0, 72)}{sig.raw_text.length > 72 ? '…' : ''}&rdquo;
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Signal + Score + AI arrow */}
+                                  <div className="shrink-0 flex items-center gap-3">
+                                    {sig && <SignalBadge type={sig.signal_type} />}
+                                    <ScoreNum value={sc.overall_score ?? 0} />
+                                    <button
+                                      onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}
+                                      className="text-neutral-700 hover:text-emerald-400 transition-colors text-sm font-semibold hidden sm:block"
+                                      title="AI Analysis">
+                                      →
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Expanded drawer */}
+                                {isOpen && (
+                                  <div className="mt-4 pt-4 border-t border-neutral-800/60 space-y-4">
+                                    {/* Score bars */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-x-6 gap-y-2">
+                                      <ScoreBar value={sc.automation_score ?? 0} label="automation" />
+                                      <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
+                                      <ScoreBar value={sc.expansion_score   ?? 0} label="expansion"  />
+                                      <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
+                                      <ScoreBar value={sc.overall_score     ?? 0} label="overall"    />
+                                    </div>
+                                    {lead.priority_reasons?.length > 0 && (
+                                      <p className="text-xs text-neutral-400">{lead.priority_reasons.join('  ·  ')}</p>
+                                    )}
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <button
+                                        className="btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-700 text-xs"
+                                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
+                                        ▲ AI Analysis
+                                      </button>
+                                      <button
+                                        className={`btn-ghost text-xs ${
+                                          savedIds.has(lead.id)
+                                            ? 'border-emerald-800 text-emerald-400 hover:border-emerald-600'
+                                            : 'border-neutral-800 text-neutral-600 hover:border-neutral-600'
+                                        }`}
+                                        onClick={e => { e.stopPropagation(); quickSave(lead); }}>
+                                        {savedIds.has(lead.id) ? '★ saved' : '☆ save'}
+                                      </button>
+                                      <button
+                                        className={`btn-ghost text-xs ${
+                                          followupIds.has(lead.id)
+                                            ? 'border-emerald-900 text-emerald-400'
+                                            : 'border-neutral-800 text-neutral-600 hover:border-indigo-800 hover:text-indigo-400'
+                                        }`}
+                                        onClick={async e => {
+                                          e.stopPropagation();
+                                          if (!session) { setMainAuthPrompt(true); return; }
+                                          if (followupIds.has(lead.id)) return;
+                                          try {
+                                            const r = await fetch(`${API}/api/user/saved`, {
+                                              method: 'POST',
+                                              headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+                                              body: JSON.stringify({ company_id: lead.id, company_name: lead.company_name, industry: lead.industry || '', tier: lead.priority_tier || 'COLD', score: lead.score?.overall_score ?? 0, website: lead.website || '', notes: 'Follow Up' }),
+                                            });
+                                            if (r.ok) setFollowupIds(prev => new Set([...prev, lead.id]));
+                                          } catch {}
+                                        }}>
+                                        {followupIds.has(lead.id) ? '★ queued' : '+ follow up'}
+                                      </button>
+                                    </div>
+                                    {/* Meta */}
+                                    <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                                      {lead.website && (
+                                        <a href={lead.website} target="_blank" rel="noreferrer"
+                                          className="text-cyan-600 hover:text-cyan-400 transition-colors"
+                                          onClick={e => e.stopPropagation()}>
+                                          {lead.website}
+                                        </a>
+                                      )}
+                                      {lead.employee_estimate && (
+                                        <span className="text-neutral-400">
+                                          {lead.employee_estimate.toLocaleString()} employees
+                                        </span>
+                                      )}
+                                      <span className={`font-mono ${tm.text}`}>priority {lead.priority_score}</span>
+                                    </div>
+                                    {/* Signals table */}
+                                    {(lead.signals || []).length > 0 && (
+                                      <div>
+                                        <p className="label mb-2">signals · {lead.signal_count}</p>
+                                        <table className="w-full text-xs">
+                                          <thead>
+                                            <tr className="border-b border-neutral-800 text-left">
+                                              <th className="pb-1 pr-4 label font-normal">type</th>
+                                              <th className="pb-1 pr-4 label font-normal">strength</th>
+                                              <th className="pb-1 pr-4 label font-normal">source</th>
+                                              <th className="pb-1 label font-normal">summary</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {(lead.signals || []).map((s, si) => (
+                                              <tr key={si} className="border-b border-neutral-900 align-top">
+                                                <td className="py-1 pr-4"><SignalBadge type={s.signal_type} /></td>
+                                                <td className="py-1 pr-4 tabular-nums">
+                                                  <span className={`font-mono ${s.strength >= 0.7 ? 'text-emerald-400' : s.strength >= 0.4 ? 'text-cyan-500' : 'text-neutral-600'}`}>
+                                                    {(s.strength * 100).toFixed(0)}%
+                                                  </span>
+                                                </td>
+                                                <td className="py-1 pr-4">
+                                                  {s.source_url
+                                                    ? <a href={s.source_url} target="_blank" rel="noreferrer" className="text-cyan-700 hover:text-cyan-500" onClick={e => e.stopPropagation()}>↗</a>
+                                                    : <span className="text-neutral-800">—</span>}
+                                                </td>
+                                                <td className="py-1 text-[11px] text-neutral-500 max-w-xs truncate">{s.raw_text || '—'}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {group.length > 5 && (
+                            <button
+                              onClick={() => setExpandedIndustries(p => ({ ...p, [sectionInd]: !p[sectionInd] }))}
+                              className="w-full py-2 text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors border-t border-neutral-800/40 tracking-wide">
+                              {expandedIndustries[sectionInd]
+                                ? 'show less ↑'
+                                : `show ${group.length - 5} more ↓`}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <footer className="mt-16 text-center label">
+              ready for robots · richtech robotics · refreshes every 30s
+            </footer>
           </div>
         </div>
       </div>
-
-      {/* lead list */}
-      {loading ? (
-        <p className="py-16 text-center text-neutral-700 text-sm animate-pulse">loading...</p>
-      ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-neutral-700 text-sm">
-          no leads match your filters
-          {leads.length === 0 && (
-            <p className="mt-2 text-xs text-neutral-800">
-              run <code className="border border-neutral-800 rounded px-1 text-neutral-600">python scripts/test_scraper.py --clear</code> to seed
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {INDUSTRIES.filter(ind => ind !== 'All').map(ind => {
-            const group = filtered.filter(l => (l.industry || 'Unknown') === ind);
-            if (group.length === 0) return null;
-            const hotCount  = group.filter(l => l.priority_tier === 'HOT').length;
-            const warmCount = group.filter(l => l.priority_tier === 'WARM').length;
-            const isCollapsed = !!collapsedSections[ind];
-            return (
-              <div key={ind}>
-                {/* industry section header */}
-                <button
-                  onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isCollapsed }))}
-                  className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left">
-                  <span className="text-xs font-semibold tracking-widest uppercase text-neutral-200 group-hover:text-white transition-colors">
-                    {ind}
-                  </span>
-                  {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
-                  {warmCount > 0 && <span className="label text-yellow-500 tabular-nums">{warmCount} warm</span>}
-                  <span className="label text-neutral-700 ml-auto tabular-nums">
-                    {group.length} {group.length === 1 ? 'lead' : 'leads'} &nbsp; {isCollapsed ? '\u25b6' : '\u25bc'}
-                  </span>
-                </button>
-                {!isCollapsed && (
-                  <div className="space-y-px">
-                    {group.map((lead, i) => {
-            const sc     = lead.score || {};
-            const isOpen = expanded[lead.id];
-            const tm     = TIER_META[lead.priority_tier] || TIER_META.COLD;
-
-            return (
-              <div key={lead.id}
-                className={`border-b border-neutral-800/60 py-3 ${
-                  isOpen ? `border-l-2 pl-3 ${tm.borderL}` : 'pl-0'
-                }`}>
-
-                {/* row header */}
-                <div className="flex cursor-pointer items-start gap-4"
-                  onClick={() => setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] }))}
-                  role="button" tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && setExpanded(p => ({...p, [lead.id]: !p[lead.id]}))  }>
-
-        <span className="label w-6 text-right shrink-0 mt-0.5">#{i+1}</span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-base font-semibold text-neutral-100">{lead.company_name}</span>
-                      <TierBadge tier={lead.priority_tier} />
-                      {lead.location_city && (
-                        <span className="label">
-                          {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
-                        </span>
-                      )}
-                      {/* AI Analysis button — always visible */}
-                      <button
-                        className="btn-ghost text-[10px] border-emerald-900 text-emerald-700
-                                   hover:text-emerald-300 hover:border-emerald-600 transition-colors"
-                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
-                        AI Analysis
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {uniqueSignalTypes(lead.signals || []).map(s => (
-                        <SignalBadge key={s.signal_type} type={s.signal_type} />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* score -- text only, no pill bg */}
-                  <div className="shrink-0 text-right">
-                    <ScoreNum value={sc.overall_score ?? 0} />
-                    <span className="label block">score</span>
-                  </div>
-
-                  <span className={`label mt-1 ${tm.text}`}>{isOpen ? 'v' : '>'}</span>
-                </div>
-
-                {/* score bars */}
-                <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-5 pl-6 sm:pl-10">
-                  <ScoreBar value={sc.automation_score ?? 0} label="automation" />
-                  <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
-                  <ScoreBar value={sc.expansion_score   ?? 0} label="expansion"  />
-                  <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
-                  <ScoreBar value={sc.overall_score     ?? 0} label="overall"    />
-                </div>
-
-                {/* priority reasons -- inline text */}
-                {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-6 sm:pl-10 text-xs text-neutral-400">
-                    {lead.priority_reasons.join('  ·  ')}
-                  </p>
-                )}
-
-                {/* expanded drawer */}
-                {isOpen && (
-                  <div className="mt-4 pl-6 sm:pl-10 space-y-4">
-                    {/* AI Analysis + Save actions */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-700 text-xs"
-                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
-                        ▲ AI Analysis
-                      </button>
-                      <button
-                        className={`btn-ghost text-xs ${
-                          savedIds.has(lead.id)
-                            ? 'border-emerald-800 text-emerald-400 hover:border-emerald-600'
-                            : 'border-neutral-800 text-neutral-600 hover:border-neutral-600'
-                        }`}
-                        onClick={e => { e.stopPropagation(); quickSave(lead); }}>
-                        {savedIds.has(lead.id) ? '★ saved' : '☆ save'}
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-                      {lead.website && (
-                        <a href={lead.website} target="_blank" rel="noreferrer"
-                          className="text-cyan-600 hover:text-cyan-400 transition-colors">
-                          {lead.website}
-                        </a>
-                      )}
-                      {lead.employee_estimate && (
-                        <span className="text-neutral-400">
-                          {lead.employee_estimate.toLocaleString()} employees
-                        </span>
-                      )}
-                      <span className={`font-mono ${tm.text}`}>
-                        priority {lead.priority_score}
-                      </span>
-                    </div>
-
-                    {(lead.signals || []).length > 0 && (
-                      <div>
-                        <p className="label mb-2">signals &middot; {lead.signal_count}</p>
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="border-b border-neutral-800 text-left">
-                              <th className="pb-1 pr-4 label font-normal">type</th>
-                              <th className="pb-1 pr-4 label font-normal">strength</th>
-                              <th className="pb-1 pr-4 label font-normal">source</th>
-                              <th className="pb-1 label font-normal">summary</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(lead.signals || []).map((s, si) => (
-                              <tr key={si} className="border-b border-neutral-900 align-top">
-                                <td className="py-1.5 pr-4"><SignalBadge type={s.signal_type} /></td>
-                                <td className="py-1.5 pr-4 tabular-nums">
-                                  <span className={`font-mono ${
-                                    s.strength >= 0.7 ? 'text-emerald-400'
-                                    : s.strength >= 0.4 ? 'text-cyan-500'
-                                    : 'text-neutral-600'
-                                  }`}>
-                                    {(s.strength * 100).toFixed(0)}%
-                                  </span>
-                                </td>
-                                <td className="py-1.5 pr-4">
-                                  {s.source_url
-                                    ? <a href={s.source_url} target="_blank" rel="noreferrer"
-                                        className="text-cyan-700 hover:text-cyan-500">&#8599;</a>
-                                    : <span className="text-neutral-800">&mdash;</span>}
-                                </td>
-                                <td className="py-1.5 text-[11px] text-neutral-500 max-w-xs truncate">
-                                  {s.raw_text || '—'}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* scraper health */}
-      {health && (
-        <div className="mt-12 border-t border-neutral-800 pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="label">scraper health</span>
-            <button onClick={handleResetAll} disabled={resetting || openCircuits === 0}
-              className="btn-danger">
-              {resetting ? 'resetting...' : 'reset circuits'}
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs mb-4 text-neutral-600">
-            <span>tracked &mdash; <span className="text-neutral-400">{health.summary?.total_urls_tracked ?? 0}</span></span>
-            <span>healthy &mdash; <span className="text-emerald-500">{health.summary?.healthy_urls ?? 0}</span></span>
-            {openCircuits > 0 && <span className="text-red-500">open &mdash; {openCircuits}</span>}
-            {health.summary?.last_run_scraper && (
-              <span>
-                last run &mdash; {health.summary.last_run_scraper}{' '}
-                <span className={health.summary.last_run_status === 'success' ? 'text-emerald-500' : 'text-red-500'}>
-                  {health.summary.last_run_status}
-                </span>
-              </span>
-            )}
-          </div>
-
-          {Object.keys(health.url_health || {}).length > 0 ? (
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-neutral-800">
-                  {['', 'url', 'failures', 'restarts', 'last seen'].map(h => (
-                    <th key={h} className="label pb-2 pr-6 text-left font-normal">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(health.url_health).map(([url, info]) => (
-                  <tr key={url} className="border-b border-neutral-900">
-                    <td className="py-1.5 pr-4"><HealthDot open={info.circuit_open} /></td>
-                    <td className="py-1.5 pr-6 max-w-[14rem] truncate text-neutral-600" title={url}>
-                      {url.replace(/^https?:\/\//, '').substring(0, 45)}
-                    </td>
-                    <td className="py-1.5 pr-6 tabular-nums text-neutral-600">{info.consecutive_failures}</td>
-                    <td className="py-1.5 pr-6 tabular-nums text-neutral-600">{info.restart_count}</td>
-                    <td className="py-1.5 text-neutral-700">
-                      {info.last_success
-                        ? new Date(info.last_success * 1000).toLocaleTimeString()
-                        : 'never'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-xs text-neutral-800">no urls tracked -- run a scraper first</p>
-          )}
-        </div>
-      )}
-
-      <footer className="mt-16 text-center label">
-        ready for robots &middot; richtech robotics &middot; refreshes every 30s
-      </footer>
-    </div>
     </>
   );
 }
