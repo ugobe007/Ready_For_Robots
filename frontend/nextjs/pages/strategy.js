@@ -412,6 +412,16 @@ function OpportunityRow({ lead, rank }) {
 
       {open && (
         <div className={`${tm.accent} border-b border-neutral-900 bg-neutral-950/60`} style={{ paddingLeft: '2rem' }}>
+          {/* Email script action bar — top of expanded panel */}
+          <div className="px-3 pt-2.5 pb-2 flex items-center gap-3 border-b border-neutral-800/50">
+            <button
+              onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
+              style={{ background: 'transparent', border: '1px solid #3730a3', color: '#818cf8', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+            >
+              ✉ email script
+            </button>
+            <span style={{ fontSize: '10px', color: '#525252' }}>generate outreach email for {lead.company_name}</span>
+          </div>
           <div className="px-3 py-3 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2">
             <div>
               <span className="label block mb-1">Pitch Angle</span>
@@ -453,16 +463,6 @@ function OpportunityRow({ lead, rank }) {
               })}
             </div>
           )}
-          {/* Email script action bar */}
-          <div className="px-3 py-2.5 flex items-center gap-3" style={{ borderTop: '1px solid rgba(64,64,64,0.5)' }}>
-            <button
-              onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
-              style={{ background: 'transparent', border: '1px solid #3730a3', color: '#818cf8', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-            >
-              ✉ email script
-            </button>
-            <span style={{ fontSize: '10px', color: '#525252' }}>generate outreach email for {lead.company_name}</span>
-          </div>
         </div>
       )}
       {emailOpen && <EmailModal lead={lead} onClose={() => setEmailOpen(false)} />}
