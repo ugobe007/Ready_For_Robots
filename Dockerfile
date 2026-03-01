@@ -12,6 +12,9 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 COPY frontend/nextjs/package*.json ./
 RUN npm ci
+# Cache bust: change value to force re-copy of frontend source files
+ARG CACHE_BUST=20260301c
+RUN echo "cache bust: $CACHE_BUST"
 COPY frontend/nextjs/ ./
 RUN npm run build
 # output: /frontend/out/

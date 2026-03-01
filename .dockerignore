@@ -1,0 +1,25 @@
+# Node
+frontend/nextjs/node_modules/
+frontend/nextjs/.next/
+frontend/nextjs/out/
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+venv/
+env/
+.env
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.log
+*.tmp
+.DS_Store
+scraper_health.json
+tests/
