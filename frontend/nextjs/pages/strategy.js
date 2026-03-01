@@ -375,6 +375,22 @@ function ScoreNum({ value }) {
   )
 }
 
+// -- Toast notification -------------------------------------------------------
+function Toast({ msg }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1.75rem', left: '50%', transform: 'translateX(-50%)',
+      background: '#0f172a', border: '1px solid #34d399', color: '#34d399',
+      borderRadius: '9999px', padding: '0.45rem 1.25rem', fontSize: '13px',
+      fontWeight: 500, zIndex: 9999, pointerEvents: 'none', whiteSpace: 'nowrap',
+      boxShadow: '0 0 18px rgba(52,211,153,0.18)',
+    }}>
+      {msg}
+    </div>
+  );
+}
+
 function OpportunityRow({ lead, rank }) {
   const { session } = useAuth()
   const [open, setOpen] = useState(false)
@@ -382,6 +398,8 @@ function OpportunityRow({ lead, rank }) {
   const [followedUp, setFollowedUp] = useState(false)
   const [savingFollowUp, setSavingFollowUp] = useState(false)
   const [authPrompt, setAuthPrompt] = useState(false)
+  const [rowToast, setRowToast] = useState('')
+  const rowToastTimer = useRef(null)
   const tm   = TIER_META[lead.priority_tier] || TIER_META.COLD
   const st   = lead.strategy || {}
   const topSig = lead.signals?.[0]
@@ -405,7 +423,7 @@ function OpportunityRow({ lead, rank }) {
           notes:        'Follow Up',
         }),
       })
-      if (resp.ok) setFollowedUp(true)
+      if (resp.ok) { setFollowedUp(true); setRowToast('✓ Queued for follow-up'); clearTimeout(rowToastTimer.current); rowToastTimer.current = setTimeout(() => setRowToast(''), 2500); }
     } catch {}
     setSavingFollowUp(false)
   }
@@ -542,6 +560,7 @@ function OpportunityRow({ lead, rank }) {
       )}
       {emailOpen && <EmailModal lead={lead} onClose={() => setEmailOpen(false)} />}
       {authPrompt && <AuthPrompt onClose={() => setAuthPrompt(false)} />}
+      <Toast msg={rowToast} />
     </>
   )
 }

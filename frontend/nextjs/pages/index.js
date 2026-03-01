@@ -149,6 +149,22 @@ function uniqueSignalTypes(signals = []) {
   return signals.filter(s => { if (seen.has(s.signal_type)) return false; seen.add(s.signal_type); return true; });
 }
 
+// -- Toast notification --------------------------------------------------------
+function Toast({ msg }) {
+  if (!msg) return null;
+  return (
+    <div style={{
+      position: 'fixed', bottom: '1.75rem', left: '50%', transform: 'translateX(-50%)',
+      background: '#0f172a', border: '1px solid #34d399', color: '#34d399',
+      borderRadius: '9999px', padding: '0.45rem 1.25rem', fontSize: '13px',
+      fontWeight: 500, zIndex: 9999, pointerEvents: 'none', whiteSpace: 'nowrap',
+      boxShadow: '0 0 18px rgba(52,211,153,0.18)',
+    }}>
+      {msg}
+    </div>
+  );
+}
+
 // -- Strategic Snapshot (replaces HOT/WARM/COLD boxes) ----------------------
 const INDUSTRY_ROBOT_FIT = {
   'Hospitality':                 'Service & Delivery',
@@ -308,7 +324,7 @@ function matchDescription(lead) {
   return `${lead.industry || 'Company'}${loc ? ` based in ${loc}` : ''} that ${why}. A strong fit for Richtech's ${fit} product line.`;
 }
 
-function Top3Matches({ leads, onSelect }) {
+function Top3Matches({ leads, onSelect, showToast = () => {} }) {
   const { session } = useAuth();
   const [open, setOpen]               = useState(false);
   const [expandedPlan, setExpandedPlan] = useState({});
@@ -334,7 +350,7 @@ function Top3Matches({ leads, onSelect }) {
         headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
         body: JSON.stringify({ company_id: lead.id, company_name: lead.company_name, industry: lead.industry || '', tier: lead.priority_tier || 'COLD', score: lead.score?.overall_score ?? 0, website: lead.website || '', notes: 'Follow Up' }),
       });
-      if (resp.ok) setFollowedIds(prev => new Set([...prev, lead.id]));
+      if (resp.ok) { setFollowedIds(prev => new Set([...prev, lead.id])); showToast('✓ Queued for follow-up'); }
     } catch {}
   }
 
@@ -482,7 +498,7 @@ function Top3Matches({ leads, onSelect }) {
   );
 }
 
-function StrategicSnapshot({ leads, onSelect }) {
+function StrategicSnapshot({ leads, onSelect, showToast = () => {} }) {
   const { session } = useAuth();
   const [showAll, setShowAll] = useState(false);
   const [followedIds, setFollowedIds] = useState(new Set());
@@ -510,7 +526,7 @@ function StrategicSnapshot({ leads, onSelect }) {
           notes:        'Follow Up',
         }),
       });
-      if (resp.ok) setFollowedIds(prev => new Set([...prev, lead.id]));
+      if (resp.ok) { setFollowedIds(prev => new Set([...prev, lead.id])); showToast('✓ Queued for follow-up'); }
     } catch {}
   }
 
@@ -1511,6 +1527,9 @@ export default function Dashboard() {
   const [savedIds, setSavedIds] = useState(new Set());
   const [followupIds, setFollowupIds] = useState(new Set());
   const [mainAuthPrompt, setMainAuthPrompt] = useState(false);
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef(null);
+  function showToast(msg) { setToast(msg); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 2500); }
 
   // load saved company IDs from localStorage on mount
   useEffect(() => {
@@ -1555,6 +1574,7 @@ export default function Dashboard() {
       }
       localStorage.setItem('rfr_saved', JSON.stringify(store));
       setSavedIds(new Set(store.companies.map(c => c.id)));
+      showToast(alreadySaved ? '✓ Removed from saved' : '✓ Saved to profile');
     } catch {}
   }
 
@@ -1910,7 +1930,7 @@ export default function Dashboard() {
 
             {/* Top 3 matches */}
             {!loading && leads.length > 0 && (
-              <Top3Matches leads={leads} onSelect={setSelectedLead} />
+              <Top3Matches leads={leads} onSelect={setSelectedLead} showToast={showToast} />
             )}
 
             {/* Agent insights */}
@@ -2053,7 +2073,7 @@ export default function Dashboard() {
                                               headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
                                               body: JSON.stringify({ company_id: lead.id, company_name: lead.company_name, industry: lead.industry || '', tier: lead.priority_tier || 'COLD', score: lead.score?.overall_score ?? 0, website: lead.website || '', notes: 'Follow Up' }),
                                             });
-                                            if (r.ok) setFollowupIds(prev => new Set([...prev, lead.id]));
+                                            if (r.ok) { setFollowupIds(prev => new Set([...prev, lead.id])); showToast('✓ Queued for follow-up'); }
                                           } catch {}
                                         }}>
                                         {followupIds.has(lead.id) ? '★ queued' : '+ follow up'}
@@ -2137,6 +2157,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <Toast msg={toast} />
     </>
   );
 }
