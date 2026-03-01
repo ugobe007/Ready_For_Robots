@@ -698,10 +698,8 @@ export default function StrategyPage() {
                 </button>
               </>
             )}
-                Log In
-              </button>
-            )}
-            {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}          </div>
+            {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}
+          </div>
         </header>
 
         <main className="flex-1 px-4 md:px-6 py-4">
