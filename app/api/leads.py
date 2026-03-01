@@ -13,7 +13,7 @@ GET /api/leads
     sort          str    score|name|signals  default score
 """
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from typing import Optional
 from app.database import get_db
 from app.models.score import Score
@@ -82,8 +82,10 @@ def get_leads(
     # Eager-load relations in one query
     companies = (
         db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .limit(2000)   # internal cap before filtering
+        # joinedload scores (uselist=False, one row) + selectinload signals
+        # (one-to-many) — avoids cartesian product JOIN that causes slow queries
+        .options(joinedload(Company.scores), selectinload(Company.signals))
+        .limit(2000)
         .all()
     )
 

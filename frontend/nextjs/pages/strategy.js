@@ -396,7 +396,14 @@ function OpportunityRow({ lead, rank }) {
           <ScoreNum value={lead.score?.overall_score ?? 0} />
         </div>
 
-        <div className="flex items-center justify-center pr-3">
+        <div className="flex items-center justify-center gap-1 pr-2">
+          <button
+            onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
+            title="Generate email script"
+            style={{ background: 'transparent', border: 'none', color: '#6366f1', cursor: 'pointer', fontSize: '12px', padding: '2px 3px', lineHeight: 1, opacity: 0.8 }}
+          >
+            ✉
+          </button>
           <span className="text-[10px] text-neutral-700 group-hover:text-neutral-400 transition-colors">
             {open ? '' : ''}
           </span>

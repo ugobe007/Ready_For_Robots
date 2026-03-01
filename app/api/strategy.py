@@ -13,7 +13,7 @@ GET /api/strategy
 
 from datetime import date as dt_date
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from typing import Optional
 
 from app.database import get_db
@@ -280,7 +280,7 @@ def get_strategy(
 
     companies = (
         db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .options(joinedload(Company.scores), selectinload(Company.signals))
         .limit(2000)
         .all()
     )
