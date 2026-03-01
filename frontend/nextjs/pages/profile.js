@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
   // redirect if not logged in
   useEffect(() => {
-    if (!authLoading && !session) router.replace('/login');
+    if (!authLoading && !session) router.replace('/login?next=%2Fprofile');
   }, [session, authLoading, router]);
 
   const token = session?.access_token;

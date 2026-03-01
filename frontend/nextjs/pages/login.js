@@ -6,7 +6,7 @@
  *  1. User enters email → supabase.auth.signInWithOtp({ email })
  *  2. Supabase emails a magic link
  *  3. Clicking the link redirects to /login (detectSessionInUrl: true handles the hash)
- *  4. onAuthStateChange fires → redirect to /profile
+ *  4. onAuthStateChange fires → redirect to ?next= or /
  */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -18,15 +18,29 @@ export default function LoginPage() {
   const [email,   setEmail]   = useState('');
   const [status,  setStatus]  = useState('idle'); // idle | sending | sent | error | redirect
   const [errMsg,  setErrMsg]  = useState('');
+  const [hashError, setHashError] = useState('');
 
-  // If already logged in, or magic link just clicked, redirect to profile
+  // Check URL hash for Supabase error params (e.g. expired link)
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash;
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const desc = params.get('error_description') || params.get('error') || 'Link error';
+      setHashError(decodeURIComponent(desc.replace(/\+/g, ' ')));
+    }
+  }, []);
+
+  // If already logged in, or magic link just clicked, redirect back (or to /)
+  useEffect(() => {
+    const next = router.query.next || '/';
+
     supabase.auth.getSession().then(({ data }) => {
-      if (data?.session) router.replace('/profile');
+      if (data?.session) router.replace(next);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) router.replace('/profile');
+      if (session) router.replace(next);
     });
     return () => listener?.subscription?.unsubscribe();
   }, [router]);
@@ -37,21 +51,27 @@ export default function LoginPage() {
     setStatus('sending');
     setErrMsg('');
 
+    const next = router.query.next || '/';
     const redirectUrl =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/login`
-        : 'https://ready-2-robot.fly.dev/login';
+        ? `${window.location.origin}/login?next=${encodeURIComponent(next)}`
+        : `https://ready-2-robot.fly.dev/login?next=${encodeURIComponent(next)}`;
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirectUrl },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: redirectUrl },
+      });
 
-    if (error) {
+      if (error) {
+        setStatus('error');
+        setErrMsg(error.message);
+      } else {
+        setStatus('sent');
+      }
+    } catch (err) {
       setStatus('error');
-      setErrMsg(error.message);
-    } else {
-      setStatus('sent');
+      setErrMsg(err?.message || 'Unexpected error — check your connection.');
     }
   }
 
@@ -87,6 +107,12 @@ export default function LoginPage() {
             <p className="text-xs text-neutral-600 mb-5">
               Enter your work email — we'll send a one-click login link. No password needed.
             </p>
+
+            {hashError && (
+              <p className="text-xs text-red-400 border border-red-900 rounded px-3 py-2 mb-3">
+                ⚠ {hashError} — please request a new link below.
+              </p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <input

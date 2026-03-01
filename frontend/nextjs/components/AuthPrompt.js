@@ -1,8 +1,14 @@
 /**
  * AuthPrompt — shown when an unauthenticated user clicks "Follow Up" or "Save".
  * Drop-in modal that prompts the user to create an account or sign in.
+ * After auth, Supabase redirects back to /login?next=<current page>, which then
+ * redirects the user back to where they started.
  */
-export default function AuthPrompt({ onClose }) {
+export default function AuthPrompt({ onClose, returnPath }) {
+  // returnPath defaults to current page or home
+  const next = returnPath || (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const loginUrl = `/login?next=${encodeURIComponent(next)}`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -23,18 +29,21 @@ export default function AuthPrompt({ onClose }) {
 
         <div className="flex gap-2">
           <a
-            href="/login?mode=signup"
+            href={loginUrl}
             className="flex-1 text-center py-2 px-4 border border-emerald-700 text-emerald-400 hover:border-emerald-500 hover:text-emerald-300 rounded text-xs font-medium transition-colors"
           >
             Create account
           </a>
           <a
-            href="/login"
+            href={loginUrl}
             className="flex-1 text-center py-2 px-4 border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200 rounded text-xs transition-colors"
           >
             Sign in
           </a>
         </div>
+        <p className="text-[10px] text-neutral-700 text-center mt-3">
+          No password needed — we'll email you a one-click sign-in link.
+        </p>
       </div>
     </div>
   );
