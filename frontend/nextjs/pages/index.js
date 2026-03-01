@@ -1709,10 +1709,12 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-1.5">
           <button onClick={fetchData} className="btn-ghost text-neutral-600" title="Refresh">↺</button>
-          <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-600 hover:border-neutral-600" title="Profile">♡</Link>
           {session ? (
             <>
-              <span className="label text-neutral-600 hidden md:inline" title={session.user.email}>{session.user.email.split('@')[0]}</span>
+              <Link href="/profile" className="label text-neutral-500 hover:text-neutral-200 transition-colors hidden md:inline" title={session.user.email}>
+                {session.user.email.split('@')[0]}
+              </Link>
+              <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200 text-xs">My Profile</Link>
               <button
                 onClick={() => supabase.auth.signOut()}
                 className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500"
@@ -1721,11 +1723,14 @@ export default function Dashboard() {
               </button>
             </>
           ) : (
-            <button
-              onClick={() => setLoginModal(true)}
-              className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
-              Log In
-            </button>
+            <>
+              <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-600 hover:border-neutral-600 text-xs">My Profile</Link>
+              <button
+                onClick={() => setLoginModal(true)}
+                className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
+                Log In
+              </button>
+            </>
           )}
           {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}
           <Link href="/strategy" className="btn border-indigo-500 text-indigo-300 hover:border-indigo-300 hover:text-indigo-100 font-semibold">⚡ strategy</Link>

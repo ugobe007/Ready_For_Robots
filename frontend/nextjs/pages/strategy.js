@@ -675,9 +675,13 @@ export default function StrategyPage() {
               <option value={50} style={{background:'#080808'}}>top 50</option>
             </select>
             <button onClick={() => fetchStrategy(limit)} className="btn-ghost text-neutral-600" title="Refresh"></button>
-            <button onClick={() => window.print()} className="btn-ghost text-neutral-500 hidden sm:inline-flex">print</button>            {session ? (
+            <button onClick={() => window.print()} className="btn-ghost text-neutral-500 hidden sm:inline-flex">print</button>
+            {session ? (
               <>
-                <span className="label text-neutral-600 hidden md:inline" title={session.user.email}>{session.user.email.split('@')[0]}</span>
+                <Link href="/profile" className="label text-neutral-500 hover:text-neutral-200 transition-colors hidden md:inline" title={session.user.email}>
+                  {session.user.email.split('@')[0]}
+                </Link>
+                <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200 text-xs">My Profile</Link>
                 <button
                   onClick={() => supabase.auth.signOut()}
                   className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500">
@@ -685,9 +689,15 @@ export default function StrategyPage() {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => setLoginModal(true)}
-                className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
+              <>
+                <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-600 hover:border-neutral-600 text-xs">My Profile</Link>
+                <button
+                  onClick={() => setLoginModal(true)}
+                  className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
+                  Log In
+                </button>
+              </>
+            )}
                 Log In
               </button>
             )}
