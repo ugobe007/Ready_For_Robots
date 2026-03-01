@@ -28,6 +28,71 @@ Base.metadata.create_all(bind=engine)
 logger = logging.getLogger(__name__)
 
 
+def _ensure_user_tables():
+    """Create user-facing tables if they don't exist.
+    These are not part of the SQLAlchemy ORM models so Base.metadata.create_all
+    doesn't cover them — we create them here with raw SQL on every startup."""
+    ddl = """
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id           UUID        PRIMARY KEY,
+            email        TEXT        NOT NULL,
+            display_name TEXT,
+            created_at   TIMESTAMPTZ DEFAULT now(),
+            updated_at   TIMESTAMPTZ DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS user_saved_companies (
+            id           SERIAL      PRIMARY KEY,
+            user_id      UUID        NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+            company_id   INTEGER     NOT NULL,
+            company_name TEXT        NOT NULL,
+            industry     TEXT,
+            tier         TEXT,
+            score        NUMERIC(6,2),
+            website      TEXT,
+            notes        TEXT,
+            saved_at     TIMESTAMPTZ DEFAULT now(),
+            UNIQUE (user_id, company_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS user_lists (
+            id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id     UUID        NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+            name        TEXT        NOT NULL,
+            description TEXT,
+            created_at  TIMESTAMPTZ DEFAULT now(),
+            updated_at  TIMESTAMPTZ DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS user_list_companies (
+            id           SERIAL      PRIMARY KEY,
+            list_id      UUID        NOT NULL REFERENCES user_lists(id) ON DELETE CASCADE,
+            company_id   INTEGER     NOT NULL,
+            company_name TEXT        NOT NULL,
+            added_at     TIMESTAMPTZ DEFAULT now(),
+            UNIQUE (list_id, company_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS ai_reports (
+            id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id      UUID        NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+            company_id   INTEGER     NOT NULL,
+            company_name TEXT        NOT NULL,
+            title        TEXT,
+            report_data  JSONB,
+            summary_card JSONB,
+            created_at   TIMESTAMPTZ DEFAULT now(),
+            updated_at   TIMESTAMPTZ DEFAULT now()
+        );
+    """
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(ddl))
+        logger.info("[startup] user tables ensured")
+    except Exception as exc:
+        logger.error(f"[startup] failed to create user tables: {exc}")
+
+
 def _db_keepalive():
     """Ping the database every 2 minutes to prevent Supabase from sleeping
     and to keep the SQLAlchemy connection pool alive."""
@@ -42,6 +107,8 @@ def _db_keepalive():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure user tables exist (raw-SQL tables not covered by ORM)
+    _ensure_user_tables()
     # Warm the DB connection on startup so the first user request isn't slow
     _db_keepalive()
     scheduler = AsyncIOScheduler(timezone="UTC")
