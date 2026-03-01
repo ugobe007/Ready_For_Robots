@@ -6,8 +6,9 @@ import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useAuth } from './_app'
-import { authHeader } from '../lib/supabase'
+import { authHeader, supabase } from '../lib/supabase'
 import AuthPrompt from '../components/AuthPrompt'
+import LoginModal from '../components/LoginModal'
 
 const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000')
 
@@ -409,6 +410,9 @@ function OpportunityRow({ lead, rank }) {
     if (!session) { setAuthPrompt(true); return }
     if (followedUp || savingFollowUp) return
     setSavingFollowUp(true)
+    // Optimistic — show toast immediately, revert on failure
+    setFollowedUp(true)
+    setRowToast('✓ Queued for follow-up'); clearTimeout(rowToastTimer.current); rowToastTimer.current = setTimeout(() => setRowToast(''), 2500)
     try {
       const resp = await fetch(`${API}/api/user/saved`, {
         method: 'POST',
@@ -423,8 +427,8 @@ function OpportunityRow({ lead, rank }) {
           notes:        'Follow Up',
         }),
       })
-      if (resp.ok) { setFollowedUp(true); setRowToast('✓ Queued for follow-up'); clearTimeout(rowToastTimer.current); rowToastTimer.current = setTimeout(() => setRowToast(''), 2500); }
-    } catch {}
+      if (!resp.ok) setFollowedUp(false)
+    } catch { setFollowedUp(false) }
     setSavingFollowUp(false)
   }
   const sigM = topSig ? (SIGNAL_META[topSig.signal_type] || { label: topSig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null
@@ -606,10 +610,12 @@ function TierSection({ tier, leads, startRank }) {
 }
 
 export default function StrategyPage() {
+  const { session } = useAuth()
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
   const [limit, setLimit]     = useState(25)
+  const [loginModal, setLoginModal] = useState(false)
 
   const fetchStrategy = (lmt) => {
     setLoading(true)
@@ -669,8 +675,23 @@ export default function StrategyPage() {
               <option value={50} style={{background:'#080808'}}>top 50</option>
             </select>
             <button onClick={() => fetchStrategy(limit)} className="btn-ghost text-neutral-600" title="Refresh"></button>
-            <button onClick={() => window.print()} className="btn-ghost text-neutral-500 hidden sm:inline-flex">print</button>
-          </div>
+            <button onClick={() => window.print()} className="btn-ghost text-neutral-500 hidden sm:inline-flex">print</button>            {session ? (
+              <>
+                <span className="label text-neutral-600 hidden md:inline" title={session.user.email}>{session.user.email.split('@')[0]}</span>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500">
+                  sign out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setLoginModal(true)}
+                className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
+                Log In
+              </button>
+            )}
+            {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}          </div>
         </header>
 
         <main className="flex-1 px-4 md:px-6 py-4">

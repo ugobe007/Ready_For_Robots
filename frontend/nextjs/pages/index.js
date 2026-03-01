@@ -5,8 +5,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
-import { authHeader } from '../lib/supabase';
+import { authHeader, supabase } from '../lib/supabase';
 import AuthPrompt from '../components/AuthPrompt';
+import LoginModal from '../components/LoginModal';
 
 // In production (Fly.io) frontend + API share the same origin — use relative URLs.
 // For local dev, point to the local uvicorn server.
@@ -1527,6 +1528,7 @@ export default function Dashboard() {
   const [savedIds, setSavedIds] = useState(new Set());
   const [followupIds, setFollowupIds] = useState(new Set());
   const [mainAuthPrompt, setMainAuthPrompt] = useState(false);
+  const [loginModal, setLoginModal] = useState(false);
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
   function showToast(msg) { setToast(msg); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 2500); }
@@ -1708,10 +1710,24 @@ export default function Dashboard() {
         <div className="flex items-center gap-1.5">
           <button onClick={fetchData} className="btn-ghost text-neutral-600" title="Refresh">↺</button>
           <Link href="/profile" className="btn-ghost border-neutral-800 text-neutral-600 hover:border-neutral-600" title="Profile">♡</Link>
-          {session
-            ? <span className="label text-neutral-700 hidden md:inline">{session.user.email.split('@')[0]}</span>
-            : <Link href="/login" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">sign in</Link>
-          }
+          {session ? (
+            <>
+              <span className="label text-neutral-600 hidden md:inline" title={session.user.email}>{session.user.email.split('@')[0]}</span>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500"
+                title="Sign out">
+                sign out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setLoginModal(true)}
+              className="btn-ghost text-xs border-emerald-900 text-emerald-500 hover:border-emerald-600 font-medium">
+              Log In
+            </button>
+          )}
+          {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}
           <Link href="/strategy" className="btn border-indigo-500 text-indigo-300 hover:border-indigo-300 hover:text-indigo-100 font-semibold">⚡ strategy</Link>
           <Link href="/admin" className="btn-ghost text-emerald-500 border-emerald-900 hover:border-emerald-700">⚙ admin</Link>
         </div>
@@ -2067,14 +2083,19 @@ export default function Dashboard() {
                                           e.stopPropagation();
                                           if (!session) { setMainAuthPrompt(true); return; }
                                           if (followupIds.has(lead.id)) return;
+                                          // Optimistic — show toast immediately, revert on failure
+                                          setFollowupIds(prev => new Set([...prev, lead.id]));
+                                          showToast('✓ Queued for follow-up');
                                           try {
                                             const r = await fetch(`${API}/api/user/saved`, {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
                                               body: JSON.stringify({ company_id: lead.id, company_name: lead.company_name, industry: lead.industry || '', tier: lead.priority_tier || 'COLD', score: lead.score?.overall_score ?? 0, website: lead.website || '', notes: 'Follow Up' }),
                                             });
-                                            if (r.ok) { setFollowupIds(prev => new Set([...prev, lead.id])); showToast('✓ Queued for follow-up'); }
-                                          } catch {}
+                                            if (!r.ok) setFollowupIds(prev => { const n = new Set(prev); n.delete(lead.id); return n; });
+                                          } catch {
+                                            setFollowupIds(prev => { const n = new Set(prev); n.delete(lead.id); return n; });
+                                          }
                                         }}>
                                         {followupIds.has(lead.id) ? '★ queued' : '+ follow up'}
                                       </button>
