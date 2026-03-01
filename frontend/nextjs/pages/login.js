@@ -20,6 +20,14 @@ export default function LoginPage() {
   const [errMsg,  setErrMsg]  = useState('');
   const [hashError, setHashError] = useState('');
 
+  // Read ?next= directly from window.location so it works in static export
+  // (router.query is empty until hydration completes in a static Next.js build)
+  function getNext() {
+    if (typeof window === 'undefined') return '/';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('next') || '/';
+  }
+
   // Check URL hash for Supabase error params (e.g. expired link)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -31,16 +39,14 @@ export default function LoginPage() {
     }
   }, []);
 
-  // If already logged in, or magic link just clicked, redirect back (or to /)
+  // If already logged in, or magic link just clicked, redirect to ?next (or /)
   useEffect(() => {
-    const next = router.query.next || '/';
-
     supabase.auth.getSession().then(({ data }) => {
-      if (data?.session) router.replace(next);
+      if (data?.session) router.replace(getNext());
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) router.replace(next);
+      if (session) router.replace(getNext());
     });
     return () => listener?.subscription?.unsubscribe();
   }, [router]);
@@ -51,7 +57,7 @@ export default function LoginPage() {
     setStatus('sending');
     setErrMsg('');
 
-    const next = router.query.next || '/';
+    const next = getNext();
     const redirectUrl =
       typeof window !== 'undefined'
         ? `${window.location.origin}/login?next=${encodeURIComponent(next)}`
