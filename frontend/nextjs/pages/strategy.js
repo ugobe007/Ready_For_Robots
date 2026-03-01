@@ -279,6 +279,7 @@ function EmailModal({ lead, onClose }) {
         <div className="flex-1 overflow-auto p-4 min-h-0">
           {tab === 'plain' && (
             <textarea
+              id="email-plain-text"
               ref={textRef}
               readOnly
               value={plainText}
@@ -287,6 +288,7 @@ function EmailModal({ lead, onClose }) {
           )}
           {tab === 'html' && (
             <textarea
+              id="email-html-text"
               readOnly
               value={htmlText}
               className="w-full h-full min-h-[28rem] resize-none bg-neutral-950 border border-neutral-800 rounded p-3 text-[11px] text-neutral-400 font-mono leading-relaxed focus:outline-none focus:border-neutral-700"
@@ -445,14 +447,14 @@ function OpportunityRow({ lead, rank }) {
             </div>
           )}
           {/* Email script action bar */}
-          <div className="px-3 py-2.5 border-t border-neutral-800/50 flex items-center gap-3">
+          <div className="px-3 py-2.5 flex items-center gap-3" style={{ borderTop: '1px solid rgba(64,64,64,0.5)' }}>
             <button
               onClick={e => { e.stopPropagation(); setEmailOpen(true) }}
-              className="btn border-indigo-800 text-indigo-400 hover:border-indigo-500 hover:text-indigo-200 text-xs"
+              style={{ background: 'transparent', border: '1px solid #3730a3', color: '#818cf8', padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
             >
               ✉ email script
             </button>
-            <span className="text-[10px] text-neutral-700">generate outreach email for {lead.company_name}</span>
+            <span style={{ fontSize: '10px', color: '#525252' }}>generate outreach email for {lead.company_name}</span>
           </div>
         </div>
       )}
