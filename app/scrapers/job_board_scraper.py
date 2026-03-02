@@ -1,162 +1,57 @@
-import re
-from bs4 import BeautifulSoup
-from app.scrapers.base_scraper import BaseScraper
+"""Job Board Scraper — Google News RSS=====================================Scrapes Google News RSS to detect labor-pain signals for robot-buying prospects.Indeed blocks direct RSS access; Google News freely indexes hiring/shortage news.Strategy:  - Extract the job/role keyword from the existing Indeed scrape_targets URLs  - Build Google News RSS queries like "warehouse hiring shortage 2026"  - Parse article titles/snippets for company names + labor signal language  - Signal types: labor_pain, labor_shortage, strategic_hireNo Playwright, no browser, no CAPTCHA risk — pure urllib + XML."""import htmlimport loggingimport reimport timeimport urllib.requestimport urllib.parseimport xml.etree.ElementTree as ETfrom typing import List, Optionalfrom sqlalchemy.orm import Sessionfrom app.database import SessionLocalfrom app.models.company import Companyfrom app.models.signal import Signallogger = logging.getLogger(__name__)DELAY = 2.5  # seconds between requestsGNEWS_RSS = "https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"# Queries keyed to labour-pain themes — sent directly to Google NewsLABOR_NEWS_QUERIES = [    # Logistics / warehouse    ("warehouse labor shortage hiring 2026",           "Logistics",    "labor_shortage"),    ("fulfillment center hiring workers shortage",     "Logistics",    "labor_shortage"),    ("distribution center hiring now workers needed",  "Logistics",    "labor_pain"),    ("supply chain workforce shortage 2026",           "Logistics",    "labor_shortage"),    # Hospitality    ("hotel housekeeping staff shortage hiring 2026",  "Hospitality",  "labor_shortage"),    ("hotel workers hiring shortage turnover",         "Hospitality",  "labor_shortage"),    ("resort hiring hospitality staff shortage",       "Hospitality",  "labor_pain"),    # Food Service    ("restaurant staff shortage hiring 2026",          "Food Service", "labor_shortage"),    ("food service workers shortage turnover",         "Food Service", "labor_shortage"),    ("kitchen workers hiring fast food shortage",      "Food Service", "labor_pain"),    # Healthcare    ("hospital workers shortage hiring 2026",          "Healthcare",   "labor_shortage"),    ("healthcare staffing shortage nursing aide",      "Healthcare",   "labor_shortage"),    # Operations buyer personas    ("VP operations logistics hired appointment",      "Logistics",    "strategic_hire"),    ("director of operations hospitality appointed",   "Hospitality",  "strategic_hire"),    ("VP supply chain appointed named",                "Logistics",    "strategic_hire"),]JUNK_RE = re.compile(    r"^(how to|tips for|best|top \d|what is|why |guide to|review:|opinion:|editorial|"    r"government|congress|senate|bill |law |policy |regulation|union |strike )",    re.I,)COMPANY_EXTRACTORS = [    re.compile(r"^(.+?)\s+(?:is hiring|hiring|seeks|adds|names|appoints|expands|opens|faces shortage)", re.I),    re.compile(r"^(.+?)\s+(?:staff|worker|employee|labor)\s+shortage", re.I),    re.compile(r"^(.+?)[,;]\s+(?:a|an|the)\s+\w+\s+(?:company|corp|inc|group|hotel|resort|warehouse)", re.I),]INDUSTRY_MAP = {    "Logistics":   ["warehouse", "fulfillment", "logistics", "supply chain", "distribution", "dock", "3pl"],    "Hospitality": ["hotel", "resort", "hospitality", "housekeeper", "valet", "lodging", "casino"],    "Food Service": ["restaurant", "cook", "kitchen", "food", "cafe", "dining", "qsr", "fast food"],    "Healthcare":  ["hospital", "health", "medical", "pharmacy", "nursing", "clinic"],}SIG_STRENGTH = {    "labor_shortage": 0.72,    "labor_pain":     0.55,    "strategic_hire": 0.80,}def _infer_industry(text: str, hint: str = "") -> str:    lower = (text + " " + hint).lower()    for industry, keywords in INDUSTRY_MAP.items():        if any(kw in lower for kw in keywords):            return industry    return "Unknown"
+# Words that end a sentence fragment, not a company name
+_SENTENCE_VERBS = re.compile(
+    r'\b(face|faces|faced|fight|fights|fighting|is|are|was|were|has|have|had|'
+    r'work|works|worked|say|says|said|warn|warns|warned|warn|ring|rings|lack|lacks|'
+    r'struggle|struggles|suffer|suffers|report|reports|feel|feels)\b$',
+    re.I,
+)
 
-# Operational roles posted in volume = labor pain = robot opportunity.
-# We score by how many qualifying role keywords appear and how senior the posting is.
-LABOR_PAIN_KEYWORDS = [
-    # Logistics / warehouse
-    "warehouse associate", "fulfillment associate", "order picker", "packer",
-    "forklift operator", "material handler", "receiving associate",
-    "inventory associate", "shipping associate", "dock worker",
-    "freight handler", "distribution center associate",
-    # Hospitality
-    "housekeeper", "room attendant", "bell", "valet", "concierge",
-    "front desk", "laundry attendant", "banquet server", "porter",
-    "housekeeping supervisor",
-    # Food service
-    "line cook", "prep cook", "dishwasher", "food runner", "busser",
-    "kitchen staff", "crew member", "team member", "fry cook",
-    "barista", "cashier",
-    # Healthcare
-    "patient transport", "environmental services", "sterile processing",
-    "pharmacy technician", "dietary aide", "hospital aide", "EVS tech",
-    "linen service", "supply chain tech",
-]
+def _extract_company(title: str) -> Optional[str]:
+    """Try to pull a real company name from a news headline.
 
-# Retention / wage pain language in job descriptions
-PAIN_SIGNALS = [
-    "competitive pay", "immediate hire", "hiring now", "urgent", "high turnover",
-    "retention bonus", "sign-on bonus", "starting immediately",
-    "multiple openings", "various shifts", "night shift", "weekend required",
-    "staffing shortage", "hard to fill", "labor shortage",
-]
-
-# Buyer personas: operations decision-makers who approve robot purchases.
-# VP/Director of Operations, Facilities, F&B, Housekeeping — NOT robotics engineers.
-BUYER_PERSONA_PATTERNS = [
-    re.compile(r"(VP|SVP|Director|Head|Chief).{0,30}(operations|facilities|logistics|supply chain)", re.I),
-    re.compile(r"(VP|SVP|Director|Head).{0,30}(food.{0,10}beverage|F&B|restaurant|culinary)", re.I),
-    re.compile(r"(VP|SVP|Director|Head).{0,30}(housekeeping|rooms|property)", re.I),
-    re.compile(r"(VP|SVP|Director|Head).{0,30}(distribution|fulfillment|warehouse)", re.I),
-    re.compile(r"Chief (Operating|Operations|Supply Chain|Facilities) Officer", re.I),
-    re.compile(r"(General Manager|GM).{0,20}(hotel|resort|property|distribution)", re.I),
-    re.compile(r"(Director|Manager).{0,20}(guest services|guest experience)", re.I),
-]
-
-MULTI_BRAND_HOTELS = ["marriott", "hilton", "hyatt", "ihg", "wyndham", "best western", "radisson"]
-
-# Operational efficiency / digital transformation hires.
-# These are managers and directors whose mandate IS to automate — NOT engineers
-# who build robots. A "Director of Operational Excellence" is approving budgets;
-# a "Robotics Engineer" is a builder we will never sell to.
-AUTOMATION_INTENT_PATTERNS = [
-    re.compile(r"(VP|SVP|Director|Manager|Head|Lead).{0,40}(process improvement|operational excellence|continuous improvement)", re.I),
-    re.compile(r"(VP|SVP|Director|Manager|Head).{0,40}(lean|six sigma|kaizen|productivity improvement|efficiency manager)", re.I),
-    re.compile(r"(VP|Director|Manager).{0,40}(operations technology|technology operations|ops technology)", re.I),
-    re.compile(r"(VP|Director).{0,40}(guest experience|service quality|brand standards|service delivery)", re.I),
-    re.compile(r"(Chief Digital|VP Digital|Director Digital).{0,30}(officer|transformation|operations)", re.I),
-]
-
-
-def _is_buyer_persona(title: str) -> bool:
-    return any(p.search(title) for p in BUYER_PERSONA_PATTERNS)
-
-
-def _is_automation_intent(title: str) -> bool:
-    """Senior ops/efficiency exec who will champion an automation initiative."""
-    return any(p.search(title) for p in AUTOMATION_INTENT_PATTERNS)
-
-
-class JobBoardScraper(BaseScraper):
-    """Scrapes job boards for robot-buying intent signals.
-
-    Strategy: we are NOT looking for companies that build robots.
-    We look for companies that:
-      1. Post high volumes of manual operational roles  → labor_pain signal
-      2. Use retention/urgency language in postings    → labor_shortage signal
-      3. Hire operations decision-makers               → strategic_hire (buyer persona)
+    Strict rules:
+    - At most 5 words (long extractions are sentence fragments, not names)
+    - Must contain at least one capitalized word (proper noun signal)
+    - Must not end with a verb or connector word
+    - Must pass the lead_filter junk check
     """
+    from app.services.lead_filter import is_junk
 
-    def parse(self, html: str, url: str):
-        soup = BeautifulSoup(html, "html.parser")
+    for pattern in COMPANY_EXTRACTORS:
+        m = pattern.match(title)
+        if not m:
+            continue
+        name = m.group(1).strip().strip('"\'')
 
-        postings = (
-            soup.select("div.job_seen_beacon")      # Indeed
-            or soup.select("div.base-card")          # LinkedIn
-            or soup.select("article.jobsearch-result")
-            or soup.select(".job-listing, .result, .posting")
-        )
+        # Length sanity
+        if not (3 < len(name) < 55):
+            continue
 
-        for post in postings:
-            title_el    = post.select_one("h2, h3, .jobTitle, .job-title")
-            company_el  = post.select_one(".companyName, .company, .org, [data-testid='company-name']")
-            location_el = post.select_one(".companyLocation, .location, [data-testid='text-location']")
-            desc_el     = post.select_one(".job-snippet, .description, p")
+        words = name.split()
 
-            title        = title_el.get_text(strip=True) if title_el else ""
-            company_name = company_el.get_text(strip=True) if company_el else None
-            location     = location_el.get_text(strip=True) if location_el else ""
-            desc         = desc_el.get_text(strip=True) if desc_el else ""
-            full_text    = f"{title} {desc}".lower()
+        # No more than 5 words — real company names are short
+        if len(words) > 5:
+            continue
 
-            if not company_name:
-                continue
+        # At least one word must start with an uppercase letter (proper noun)
+        if not any(w[0].isupper() for w in words if w):
+            continue
 
-            # --- Buyer persona hire (operations decision-maker) ---
-            if _is_buyer_persona(title):
-                strength = 0.80
-                sig_type = "strategic_hire"
-                summary_text = f"Buyer persona hire: {title}"
+        # Must not end with a verb/sentence-connector
+        if _SENTENCE_VERBS.search(name):
+            continue
 
-            # --- Automation intent hire (efficiency / digital transformation exec) ---
-            elif _is_automation_intent(title):
-                strength = 0.72
-                sig_type = "automation_intent"
-                summary_text = f"Automation intent hire: {title}"
+        # Reject trailing articles / determiners
+        if re.search(r'\b(the|a|an|this|that|these|those|and|or|but|for)\b$', name, re.I):
+            continue
 
-            # --- High-volume operational role (labor pain signal) ---
-            else:
-                pain_score   = sum(1 for kw in LABOR_PAIN_KEYWORDS if kw in full_text)
-                urgency_score = sum(1 for p in PAIN_SIGNALS if p in full_text)
+        # Final junk check
+        junk, _ = is_junk(name)
+        if junk:
+            continue
 
-                if pain_score == 0:
-                    continue
+        return name
 
-                # Multiple pain keywords or urgency language = stronger signal
-                strength = min(1.0, round(0.20 + pain_score * 0.15 + urgency_score * 0.10, 2))
-                sig_type = "labor_shortage" if urgency_score >= 2 else "labor_pain"
-                summary_text = f"{title} | pain_kws={pain_score} urgency={urgency_score} | {desc[:300]}"
-
-            parts = location.split(",")
-            city  = parts[0].strip() if parts else location
-            state = parts[1].strip() if len(parts) > 1 else ""
-
-            # Infer industry from the URL query we used to find this posting
-            industry = "Unknown"
-            url_lower = url.lower()
-            if any(w in url_lower for w in ["hotel", "hospitality", "resort", "housekeep", "valet", "bell"]):
-                industry = "Hospitality"
-            elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
-                industry = "Logistics"
-            elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew"]):
-                industry = "Food Service"
-            elif any(w in url_lower for w in ["hospital", "health", "medical", "pharmacy", "sterile", "dietary"]):
-                industry = "Healthcare"
-
-            company = self.save_company({
-                "name": company_name,
-                "website": None,
-                "industry": industry,
-                "location_city": city,
-                "location_state": state,
-                "location_country": "US",
-                "source": url,
-            })
-
-            self.save_signal(company.id, {
-                "signal_type": sig_type,
-                "signal_text": summary_text,
-                "signal_strength": strength,
-                "source_url": url,
-            })
+    return None
+def _query_from_indeed_url(source_url: str) -> str:    """Extract q= from an Indeed /jobs URL and build a Google News query."""    try:        params = urllib.parse.parse_qs(urllib.parse.urlparse(source_url).query)        q = params.get("q", [""])[0].replace("+", " ")        if q:            return f"{q} hiring shortage 2026"    except Exception:        pass    return ""class JobBoardScraper:    """Uses Google News RSS to surface labor-pain signals for robot-buying prospects."""    def __init__(self, db: Session = None):        self.db = db or SessionLocal()        self._leads_added = 0    def run(self, urls: List[str]):        """Run all hardcoded labor-pain news queries (ignores the Indeed URL list)."""        for query, industry_hint, default_sig_type in LABOR_NEWS_QUERIES:            self._run_query(query, industry_hint, default_sig_type)            time.sleep(DELAY)        # Also try to derive extra queries from the scrape_targets Indeed URLs        seen_queries = {q for q, _, _ in LABOR_NEWS_QUERIES}        for url in urls:            q = _query_from_indeed_url(url)            if q and q not in seen_queries:                seen_queries.add(q)                self._run_query(q, "", "labor_pain")                time.sleep(DELAY)    def _run_query(self, query: str, industry_hint: str, default_sig_type: str):        rss_url = GNEWS_RSS.format(q=urllib.parse.quote(query))        try:            req = urllib.request.Request(                rss_url,                headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"},            )            with urllib.request.urlopen(req, timeout=12) as resp:                self._parse_rss(resp.read(), query, industry_hint, default_sig_type)        except Exception as e:            logger.warning("Google News RSS failed for %r: %s", query, e)    def _parse_rss(self, xml_bytes: bytes, query: str, industry_hint: str, default_sig_type: str):        try:            root = ET.fromstring(xml_bytes)        except ET.ParseError as e:            logger.warning("XML parse error: %s", e)            return        channel = root.find("channel")        if channel is None:            return        for item in channel.findall("item"):            raw_title = html.unescape(item.findtext("title", "") or "")            raw_desc  = html.unescape(item.findtext("description", "") or "")            link      = item.findtext("link", "") or ""            title = re.sub(r"\s*-\s*[^-]{3,50}$", "", raw_title).strip()  # strip "- Source Name"            full_text = f"{title} {raw_desc}".lower()            if JUNK_RE.match(title):                continue            company_name = _extract_company(title)            if not company_name:                continue            # Determine signal type from query context            if "strategic_hire" in default_sig_type or re.search(r"(VP|director|appointed|named)", full_text, re.I):                sig_type = "strategic_hire"                strength = 0.80            elif "shortage" in full_text or "turnover" in full_text:                sig_type = "labor_shortage"                strength = 0.72            else:

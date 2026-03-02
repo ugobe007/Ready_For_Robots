@@ -267,18 +267,24 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
     """Queue a scraper run via APScheduler job functions. Returns immediately; work happens in background."""
     from app.scrapers.scheduled_jobs import (
         job_news, job_rss, job_jobs, job_hotel,
-        job_serp, job_logistics, job_score_recalc, job_all,
+        job_serp, job_logistics, job_score_recalc, job_intelligence,
+        job_refresh_cold_leads, job_publish_daily_top25,
+        job_enrich_contacts, job_all,
     )
 
     task_map = {
-        "all":          job_all,
-        "news":         job_news,
-        "rss_feed":     job_rss,
-        "job_board":    job_jobs,
-        "hotel_dir":    job_hotel,
-        "serp":         job_serp,
-        "logistics":    job_logistics,
-        "score_recalc": job_score_recalc,
+        "all":                  job_all,
+        "news":                 job_news,
+        "rss_feed":             job_rss,
+        "job_board":            job_jobs,
+        "hotel_dir":            job_hotel,
+        "serp":                 job_serp,
+        "logistics":            job_logistics,
+        "score_recalc":         job_score_recalc,
+        "intelligence":         job_intelligence,
+        "refresh_cold_leads":   job_refresh_cold_leads,
+        "publish_daily_top25":  job_publish_daily_top25,
+        "enrich_contacts":      job_enrich_contacts,
     }
 
     fn = task_map.get(payload.scraper)
@@ -287,6 +293,78 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
 
     background_tasks.add_task(fn)
     return {"status": "queued", "scraper": payload.scraper}
+
+
+@router.post("/debug/score-sample")
+def debug_score_sample(db: Session = Depends(get_db)):
+    """Score the first 20 unscored companies inline and return errors.
+    Used to diagnose why score_recalc might be failing."""
+    from app.services.scoring_engine import compute_scores
+
+    # Find companies without a score record
+    scored_ids = {r[0] for r in db.query(Score.company_id).all()}
+    unscored = (
+        db.query(Company)
+        .filter(Company.id.notin_(scored_ids))
+        .limit(20)
+        .all()
+    )
+
+    results = []
+    for company in unscored:
+        try:
+            scores = compute_scores(company, company.signals or [])
+            s = Score(company_id=company.id, **scores)
+            db.add(s)
+            db.commit()
+            results.append({"id": company.id, "name": company.name, "status": "ok",
+                            "overall": scores["overall_intent_score"]})
+        except Exception as ex:
+            db.rollback()
+            results.append({"id": company.id, "name": company.name,
+                            "status": "error", "error": str(ex)})
+
+    return {
+        "unscored_count": len(scored_ids),
+        "total_companies": db.query(Company).count(),
+        "sample_results": results,
+    }
+
+
+@router.post("/debug/score-all")
+def debug_score_all(db: Session = Depends(get_db)):
+    """Score ALL unscored companies synchronously. Returns totals.
+    Safe to call multiple times — skips already-scored companies."""
+    from app.services.scoring_engine import compute_scores
+
+    scored_ids = {r[0] for r in db.query(Score.company_id).all()}
+    unscored = (
+        db.query(Company)
+        .filter(Company.id.notin_(scored_ids))
+        .all()
+    )
+
+    ok = 0
+    errors = []
+    for company in unscored:
+        try:
+            scores = compute_scores(company, company.signals or [])
+            s = Score(company_id=company.id, **scores)
+            db.add(s)
+            db.commit()
+            ok += 1
+        except Exception as ex:
+            db.rollback()
+            errors.append({"id": company.id, "name": company.name, "error": str(ex)})
+
+    total_scored = db.query(Score.company_id).distinct().count()
+    return {
+        "newly_scored": ok,
+        "errors": errors[:20],  # cap to 20 for readability
+        "total_distinct_scored": total_scored,
+        "total_companies": db.query(Company).count(),
+    }
+
 
 
 # ── DB Maintenance ────────────────────────────────────────────────────────────
@@ -375,7 +453,58 @@ def dedup_companies(db: Session = Depends(get_db)):
             {"ids": vendor_ids},
         ).rowcount
 
-    # ── 3. Ensure unique index exists ─────────────────────────────────────────
+    # ── 3. Purge junk company names from all scraper sources ─────────────────
+    from app.services.lead_filter import is_junk
+    import re as _re
+
+    _SENT_VERBS_MAINT = _re.compile(
+        r'\b(face|faces|faced|fight|fights|fighting|is|are|was|were|has|have|had|'
+        r'work|works|worked|say|says|said|warn|warns|ring|rings|lack|lacks|'
+        r'struggle|struggles|suffer|suffers|report|reports|feel|feels|holds|hold|'
+        r'plans|plan|aims|aim|tries|uses|use|improves|improve|slows|slow)\b$',
+        _re.IGNORECASE,
+    )
+
+    # News-headline openers that are never company names
+    _HEADLINE_START = _re.compile(
+        r'^(how|why|when|where|what|who|the|a|an)\s', _re.IGNORECASE
+    )
+    # Looks like a standalone abbreviation (e.g. "U.S.", "U.K.", "AI")
+    _ABBREV_ONLY = _re.compile(r'^([A-Z]\.)+[A-Z]?\.?$')
+
+    all_companies = db.execute(text("SELECT id, name FROM companies")).fetchall()
+    junk_ids = []
+    for row in all_companies:
+        name = row.name or ""
+        words = name.split()
+        junk, _ = is_junk(name)
+        has_non_ascii = bool(_re.search(r'[^\x00-\x7F]', name))
+        ends_with_prep = bool(_re.search(
+            r'\b(over|amid|about|because|during|after|before|into|onto|with|'
+            r'of|for|in|on|by|from|at|to)\b$', name, _re.IGNORECASE))
+        is_headline = bool(_HEADLINE_START.match(name)) and len(words) > 2
+        is_abbrev = bool(_ABBREV_ONLY.match(name))
+        fragment = (
+            len(words) > 6 or
+            _SENT_VERBS_MAINT.search(name) or
+            ends_with_prep or
+            has_non_ascii or
+            is_headline or
+            is_abbrev or
+            (len(words) >= 4 and not any(w[0].isupper() for w in words if w))
+        )
+        if junk or fragment:
+            junk_ids.append(row.id)
+
+    junk_deleted = 0
+    if junk_ids:
+        _delete_company_children(junk_ids)
+        junk_deleted = db.execute(
+            text("DELETE FROM companies WHERE id = ANY(:ids)"),
+            {"ids": junk_ids},
+        ).rowcount
+
+    # ── 4. Ensure unique index exists ─────────────────────────────────────────
     try:
         db.execute(text("""
             CREATE UNIQUE INDEX IF NOT EXISTS uq_companies_name ON companies (name)
@@ -390,5 +519,6 @@ def dedup_companies(db: Session = Depends(get_db)):
         "duplicate_companies_removed": companies_deleted,
         "signals_repointed":           signals_repointed,
         "vendor_companies_purged":     vendor_deleted,
+        "junk_companies_purged":       junk_deleted,
         "orphan_signals_purged":       len(vendor_ids),
     }

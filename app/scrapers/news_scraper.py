@@ -307,6 +307,22 @@ KNOWN_COMPANIES: dict = {
     "findlay mitsubishi": ("Findlay Mitsubishi", "Automotive Dealerships"),
 }
 
+# ── Junk headline patterns — never save listicles / how-to advice as signals ──
+# Headlines matching these are editorial content, not company-event news.
+_JUNK_HEADLINE_PATTERNS = [
+    r"^\d+\s+(?:ways?|strategies?|tips?|tricks?|ideas?|steps?|reasons?|mistakes?|secrets?|things?|questions?|examples?|factors?|hacks?|methods?|tactics?)\s+(?:to|for|that|you|on|about|every|when)",
+    r"^top\s+\d+",                         # Top 10 …
+    r"^\d+\s+(?:best|great|key|simple|easy|proven|powerful|effective)",
+    r"^how\s+to\b",                         # How to …
+    r"^why\s+(?:you|your|every|hotels?|restaurants?|companies)",
+    r"^what\s+(?:is|are|hotel|restaurant)\b",
+    r"^the\s+(?:ultimate|complete|definitive|best|top)\s+guide",
+    r"^(?:a\s+)?guide\s+to\b",
+    r"combat\s+(?:restaurant|labor|wage|cost|inflation)",  # "… to combat restaurants"
+    r"^(?:everything|all)\s+you\s+(?:need|should|must|want)",
+]
+_JUNK_HEADLINE_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_HEADLINE_PATTERNS]
+
 # ── Vendor / tech-company name keywords — NEVER treat these as buyers ─────────
 # If a regex-extracted company name contains any of these, skip it.
 # (We want BUYERS of robots, not robot/AI vendors)
@@ -555,6 +571,11 @@ class NewsScraper:
         lower = text.lower()
         return any(kw.lower() in lower for kw in RELEVANCE_KEYWORDS)
 
+    def _is_junk_headline(self, title: str) -> bool:
+        """True if the headline is a listicle, how-to, or opinion piece—not company-event news."""
+        t = (title or "").strip()
+        return any(rx.search(t) for rx in _JUNK_HEADLINE_RE)
+
     def _score_article(self, text: str, company_name: str = "", industry: str = "") -> float:
         """Run inference engine on article text → overall_intent as signal strength."""
         combined = f"{company_name} {industry} {text}"
@@ -671,6 +692,12 @@ class NewsScraper:
     def _save_article_as_signal(self, article: dict, company_name: Optional[str],
                                   query: str, inferred_industry: Optional[str] = None):
         """Save one RSS article as a Signal row."""
+        # ── Headline junk guard ────────────────────────────────────────────────
+        title = article.get("title", "")
+        if self._is_junk_headline(title):
+            logger.debug("  Skipping junk headline: %s", title)
+            return
+
         industry = inferred_industry or "Unknown"
         company = self._get_or_create_company(company_name, industry) if company_name else None
         if company is None:

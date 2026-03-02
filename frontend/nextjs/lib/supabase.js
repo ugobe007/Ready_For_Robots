@@ -3,25 +3,36 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL      || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  // Warn in development only — in production the build args ensure these exist
-  if (typeof window !== 'undefined') {
-    console.warn(
-      '[Supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.\n' +
-      'Auth features will be disabled. See README for setup instructions.'
-    );
-  }
+const SUPABASE_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+if (!SUPABASE_CONFIGURED && typeof window !== 'undefined') {
+  console.warn(
+    '[Supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. ' +
+    'Auth features will be disabled.'
+  );
 }
 
-// Singleton client — safe to import anywhere
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+// Stub used when credentials are absent — prevents createClient crash
+const _stubClient = {
   auth: {
-    persistSession:     true,
-    autoRefreshToken:   true,
-    detectSessionInUrl: true,   // picks up magic-link hash on redirect
-    flowType:           'implicit', // magic links return #access_token fragment — no PKCE code exchange needed
+    getSession:    () => Promise.resolve({ data: { session: null }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signInWithOtp: () => Promise.resolve({ error: { message: 'Auth not configured' } }),
+    signOut:       () => Promise.resolve({}),
   },
-});
+};
+
+// Singleton client — safe to import anywhere
+export const supabase = SUPABASE_CONFIGURED
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession:     true,
+        autoRefreshToken:   true,
+        detectSessionInUrl: true,
+        flowType:           'implicit',
+      },
+    })
+  : _stubClient;
 
 /**
  * Returns the current session's access_token for backend API calls.

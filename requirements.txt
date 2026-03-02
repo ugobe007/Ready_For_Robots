@@ -1,7 +1,6 @@
 FastAPI
 SQLAlchemy
 psycopg2-binary
-playwright
 celery
 redis
 apscheduler
@@ -16,4 +15,3 @@ pytest
 alembic
 uvicorn
 tailwindcss
-PyJWT

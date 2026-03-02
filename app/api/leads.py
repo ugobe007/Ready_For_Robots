@@ -19,7 +19,7 @@ from app.database import get_db
 from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead, is_junk
+from app.services.lead_filter import classify_lead, is_junk, clean_signals, qualify_hot_lead
 from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
@@ -27,7 +27,21 @@ router = APIRouter()
 
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
-    sigs = c.signals or []
+    sigs = clean_signals(c.signals or [])   # strip listicle / junk headlines
+
+    # HOT lead qualification — buying window, intent confidence, action
+    hot_qual = None
+    if pri.tier == "HOT":
+        q = qualify_hot_lead(sigs)
+        hot_qual = {
+            "buying_window":       q.buying_window,        # NOW | NEAR | PIPELINE | UNCLEAR
+            "intent_confidence":   q.intent_confidence,    # HIGH | MEDIUM | LOW
+            "recommended_action":  q.recommended_action,
+            "window_evidence":     q.window_evidence,      # quoted signal phrases
+            "confidence_drivers":  q.confidence_drivers,   # signal types driving score
+            "freshest_signal_days": q.freshest_signal_days,
+        }
+
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -43,6 +57,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
+        # HOT-only deep qualification
+        "hot_qualification": hot_qual,
         # scores — DB already stores 0-100
         "score": {
             "overall_score":    round((s.overall_intent_score  if s else 0), 1),
@@ -138,6 +154,74 @@ def get_leads(
     cold = sum(1 for r in results if r["priority_tier"] == "COLD")
 
     return results   # plain list — dashboard iterates it directly
+
+
+# Buying-window sort order: NOW is most urgent
+_WINDOW_ORDER = {"NOW": 0, "NEAR": 1, "PIPELINE": 2, "UNCLEAR": 3}
+_CONF_ORDER   = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+
+
+@router.get("/hot")
+def get_hot_leads(
+    industry: Optional[str] = Query(None, description="Partial industry filter"),
+    window:   Optional[str] = Query(None, description="NOW | NEAR | PIPELINE | UNCLEAR"),
+    confidence: Optional[str] = Query(None, description="HIGH | MEDIUM | LOW"),
+    limit: int = Query(100),
+    db: Session = Depends(get_db),
+):
+    """
+    HOT leads only, sorted by buying urgency:
+      1. Buying window  (NOW → NEAR → PIPELINE → UNCLEAR)
+      2. Intent confidence  (HIGH → MEDIUM → LOW)
+      3. Priority score  (desc)
+
+    Each result includes a `hot_qualification` block with:
+      - buying_window, intent_confidence, recommended_action
+      - window_evidence (quoted signal phrases)
+      - confidence_drivers (signal types)
+      - freshest_signal_days
+    """
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), selectinload(Company.signals))
+        .all()
+    )
+
+    results = []
+    for c in companies:
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        if junk or pri.tier != "HOT":
+            continue
+        if industry and (not c.industry or industry.lower() not in c.industry.lower()):
+            continue
+
+        fmt = _fmt_company(c, junk, junk_reason, pri)
+        hq  = fmt.get("hot_qualification") or {}
+        w   = hq.get("buying_window", "UNCLEAR")
+        cf  = hq.get("intent_confidence", "LOW")
+
+        if window and w != window.upper():
+            continue
+        if confidence and cf != confidence.upper():
+            continue
+
+        fmt["_sort_key"] = (_WINDOW_ORDER.get(w, 9), _CONF_ORDER.get(cf, 9), -pri.score)
+        results.append(fmt)
+
+    results.sort(key=lambda x: x.pop("_sort_key"))
+    results = results[:limit]
+
+    # Summary counts by window
+    by_window = {}
+    for r in results:
+        w = (r.get("hot_qualification") or {}).get("buying_window", "UNCLEAR")
+        by_window[w] = by_window.get(w, 0) + 1
+
+    return {
+        "total_hot": len(results),
+        "by_window": by_window,
+        "leads": results,
+    }
 
 
 @router.get("/summary")

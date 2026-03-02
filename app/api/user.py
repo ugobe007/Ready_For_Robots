@@ -25,10 +25,12 @@ JWT is verified against SUPABASE_JWT_SECRET env var.
 """
 
 import os
+import logging
+import json
+import urllib.request
 from typing import Optional, Any
 from datetime import datetime
 
-import jwt
 from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -36,31 +38,64 @@ from sqlalchemy import text
 
 from app.database import get_db
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
-# ── JWT verification ──────────────────────────────────────────────────────────
+# ── JWT verification via Supabase /auth/v1/user ───────────────────────────────
+# Instead of verifying the JWT locally (fragile — HS256 vs RS256 confusion),
+# we ask Supabase directly. If Supabase accepts the token, we trust it.
 
-_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+_SUPABASE_URL      = os.getenv("SUPABASE_URL", "").rstrip("/")
+_SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 
 def _require_user(authorization: Optional[str] = Header(None)) -> dict:
-    """Verify Supabase Bearer token and return {uid, email}."""
+    """Verify Supabase Bearer token by calling /auth/v1/user. Returns {uid, email}."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Authorization: Bearer <token> required")
+    if not _SUPABASE_URL:
+        raise HTTPException(status_code=503, detail="SUPABASE_URL not configured on server")
     token = authorization.split(" ", 1)[1]
-    if not _JWT_SECRET:
-        raise HTTPException(status_code=503, detail="SUPABASE_JWT_SECRET not configured on server")
+    url = f"{_SUPABASE_URL}/auth/v1/user"
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "apikey": _SUPABASE_ANON_KEY,
+        },
+    )
     try:
-        payload = jwt.decode(
-            token, _JWT_SECRET,
-            algorithms=["HS256"],
-            options={"verify_aud": False},
-        )
-        return {"uid": payload["sub"], "email": payload.get("email", "")}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired — please log in again")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")
+        logger.warning("Supabase /auth/v1/user rejected token: %s %s", e.code, body)
+        if e.code == 401:
+            raise HTTPException(status_code=401, detail="Token rejected by Supabase — please sign in again")
+        raise HTTPException(status_code=401, detail=f"Auth check failed ({e.code})")
+    except Exception as e:
+        logger.error("Failed to reach Supabase auth: %s", e)
+        raise HTTPException(status_code=503, detail="Auth service unreachable")
+
+    uid = data.get("id") or data.get("sub")
+    email = data.get("email", "")
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid token — no user id in response")
+    return {"uid": uid, "email": email}
+
+
+@router.get("/debug-token")
+def debug_token(authorization: Optional[str] = Header(None)):
+    """Diagnostic endpoint — shows auth check result."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"error": "No Bearer token provided"}
+    try:
+        user = _require_user(authorization)
+        return {"ok": True, "uid": user["uid"], "email": user["email"],
+                "supabase_url": _SUPABASE_URL or "(not set)"}
+    except HTTPException as e:
+        return {"error": e.detail, "supabase_url": _SUPABASE_URL or "(not set)"}
 
 
 def _uid(user: dict) -> str:

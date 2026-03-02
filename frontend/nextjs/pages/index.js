@@ -1735,6 +1735,7 @@ export default function Dashboard() {
           )}
           {loginModal && <LoginModal onClose={() => setLoginModal(false)} />}
           <Link href="/strategy" className="btn border-indigo-500 text-indigo-300 hover:border-indigo-300 hover:text-indigo-100 font-semibold">⚡ strategy</Link>
+          <Link href="/intelligence" className="btn-ghost border-pink-900 text-pink-400 hover:border-pink-700 hover:text-pink-200">◈ intelligence</Link>
           <Link href="/admin" className="btn-ghost text-emerald-500 border-emerald-900 hover:border-emerald-700">⚙ admin</Link>
         </div>
       </header>

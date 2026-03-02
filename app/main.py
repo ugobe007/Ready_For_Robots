@@ -17,11 +17,14 @@ from app.api.search import router as search_router
 from app.api.trending import router as trending_router
 from app.api.user import router as user_router
 from app.api.strategy import router as strategy_router
+from app.api.intelligence import router as intelligence_router
 from app.database import Base, engine, SessionLocal
 from app.scrapers.scheduled_jobs import (
     job_news, job_rss, job_jobs, job_hotel,
-    job_serp, job_logistics, job_score_recalc,
+    job_serp, job_logistics, job_score_recalc, job_intelligence,
+    job_publish_daily_top25, job_enrich_contacts,
 )
+from app.scrapers.intelligence_scraper import _ensure_table as _ensure_intelligence_table
 import app.models
 
 Base.metadata.create_all(bind=engine)
@@ -109,6 +112,8 @@ def _db_keepalive():
 async def lifespan(app: FastAPI):
     # Ensure user tables exist (raw-SQL tables not covered by ORM)
     _ensure_user_tables()
+    # Ensure intelligence table + migrations (adds relevance_score if missing)
+    _ensure_intelligence_table()
     # Warm the DB connection on startup so the first user request isn't slow
     _db_keepalive()
     scheduler = AsyncIOScheduler(timezone="UTC")
@@ -122,11 +127,17 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(job_serp,        CronTrigger(minute=0,  hour=6),      id="serp",     replace_existing=True)
     scheduler.add_job(job_logistics,   CronTrigger(minute=30, hour=6),      id="logistics",replace_existing=True)
     # Score recalc — every 6 hours
-    scheduler.add_job(job_score_recalc,CronTrigger(minute=0,  hour="*/6"),  id="scores",   replace_existing=True)
+    scheduler.add_job(job_score_recalc,  CronTrigger(minute=0,  hour="*/6"), id="scores",        replace_existing=True)
+    # Strategic intelligence — once daily at 07:00 UTC
+    scheduler.add_job(job_intelligence,         CronTrigger(minute=0,  hour=7),    id="intelligence",         replace_existing=True)
+    # Contact enrichment — once daily at 06:45 UTC (before the daily brief)
+    scheduler.add_job(job_enrich_contacts,      CronTrigger(minute=45, hour=6),    id="enrich_contacts",       replace_existing=True)
+    # Publish daily top-25 brief — once daily at 07:30 UTC (after intelligence + enrichment)
+    scheduler.add_job(job_publish_daily_top25,  CronTrigger(minute=30, hour=7),    id="daily_top25",           replace_existing=True)
     # DB keepalive — runs every 2 minutes so Supabase never goes idle
     scheduler.add_job(_db_keepalive, CronTrigger(minute="*/2"), id="db_keepalive", replace_existing=True)
     scheduler.start()
-    logger.info("[scheduler] started — news/rss every 4h, jobs/hotel every 12h, serp/logistics daily 06:00 UTC, scores every 6h")
+    logger.info("[scheduler] started — news/rss every 4h, jobs/hotel every 12h, serp/logistics daily 06:00 UTC, scores every 6h, daily brief 07:30 UTC")
     yield
     scheduler.shutdown(wait=False)
     logger.info("[scheduler] shut down")
@@ -152,7 +163,8 @@ app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
 app.include_router(search_router, prefix="/api/search", tags=["search"])
 app.include_router(trending_router, prefix="/api/trending", tags=["trending"])
 app.include_router(user_router,    prefix="/api/user",     tags=["user"])
-app.include_router(strategy_router, prefix="/api/strategy", tags=["strategy"])
+app.include_router(strategy_router,     prefix="/api/strategy",     tags=["strategy"])
+app.include_router(intelligence_router, prefix="/api",            tags=["intelligence"])
 
 @app.get("/health")
 def health():

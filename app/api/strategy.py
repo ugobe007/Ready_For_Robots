@@ -12,13 +12,15 @@ GET /api/strategy
 """
 
 from datetime import date as dt_date
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload, selectinload
 from typing import Optional
 
 from app.database import get_db
 from app.models.company import Company
-from app.services.lead_filter import classify_lead
+from app.models.contact import Contact
+from app.models.daily_report import DailyReport
+from app.services.lead_filter import classify_lead, qualify_hot_lead
 from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
@@ -318,6 +320,38 @@ def get_strategy(
         pitch   = _pitch(industry, top_sig_type, primary_robot)
         talking = _talking_points(industry, pri.reasons, fmt_signals, primary_robot)
 
+        # ── Contacts (from contacts table) ──────────────────────────────
+        db_contacts = (
+            db.query(Contact)
+            .filter(Contact.company_id == c.id)
+            .order_by(Contact.confidence_score.desc())
+            .all()
+        )
+        contacts_out = [
+            {
+                "name":       f"{ct.first_name} {ct.last_name}".strip(),
+                "title":      ct.title or contact,
+                "linkedin":   ct.linkedin_url,
+                "email":      ct.email,
+                "confidence": ct.confidence_score,
+                "verified":   bool(ct.linkedin_url and (ct.confidence_score or 0) >= 90),
+            }
+            for ct in db_contacts
+        ]
+
+        # ── HOT qualification ─────────────────────────────────────────────
+        hot_qual = None
+        if pri.tier == "HOT":
+            hq = qualify_hot_lead(c.signals or [])
+            hot_qual = {
+                "buying_window":       hq.buying_window,
+                "intent_confidence":   hq.intent_confidence,
+                "recommended_action":  hq.recommended_action,
+                "window_evidence":     hq.window_evidence,
+                "confidence_drivers":  hq.confidence_drivers,
+                "freshest_signal_days": hq.freshest_signal_days,
+            }
+
         results.append({
             # Core lead fields
             "id":               c.id,
@@ -340,8 +374,10 @@ def get_strategy(
                 "expansion_score":  round((s.expansion_score      if s else 0), 1),
                 "market_fit_score": round((s.robotics_fit_score   if s else 0), 1),
             },
-            "signal_count": len(sigs),
-            "signals":      fmt_signals,
+            "signal_count":    len(sigs),
+            "signals":         fmt_signals,
+            "contacts":        contacts_out,
+            "hot_qualification": hot_qual,
             # Strategy fields
             "strategy": {
                 "robots":          rmap["robots"],
@@ -362,7 +398,56 @@ def get_strategy(
     results = results[:limit]
 
     return {
-        "report_date":    report_date,
+        "report_date":       report_date,
         "opportunity_count": len(results),
-        "opportunities":  results,
+        "contacts_found":    sum(len(r.get("contacts", [])) for r in results),
+        "opportunities":     results,
     }
+
+
+@router.get("/today")
+def get_today_report(db: Session = Depends(get_db)):
+    """
+    Returns the most recently *published* daily top-25 brief.
+    This is the stored snapshot from `daily_reports` — stable throughout the day.
+    If no report has been published yet today, returns the live strategy instead.
+    """
+    today = dt_date.today()
+
+    # Look for today's published report first
+    report = (
+        db.query(DailyReport)
+        .filter(DailyReport.report_date == today)
+        .first()
+    )
+
+    if report:
+        data = report.get_data()
+        data["source"] = "published"
+        data["published_at"] = report.generated_at.isoformat() if report.generated_at else None
+        return data
+
+    # No published report yet — fall back to live strategy
+    return get_strategy(limit=25, date=str(today), db=db)
+
+
+@router.get("/history")
+def get_report_history(limit: int = Query(30, ge=1, le=365), db: Session = Depends(get_db)):
+    """
+    Returns metadata for the last N published daily reports (no full payload).
+    """
+    rows = (
+        db.query(DailyReport)
+        .order_by(DailyReport.report_date.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "report_date":      r.report_date.isoformat(),
+            "generated_at":     r.generated_at.isoformat() if r.generated_at else None,
+            "opportunity_count": r.opportunity_count,
+            "contacts_found":   r.contacts_found,
+        }
+        for r in rows
+    ]

@@ -5,17 +5,20 @@ Two-stage pipeline applied to every lead before it surfaces in the API or dashbo
 
   Stage 1 — JUNK FILTER: removes noise (scraped 404 pages, test artifacts, gibberish)
   Stage 2 — PRIORITY TIER: ranks clean leads as HOT / WARM / COLD
+  Stage 3 — HOT QUALIFICATION: for HOT leads, determines buying window, intent
+             confidence, and recommended outreach action.
 
 Usage
 -----
-  from app.services.lead_filter import classify_lead, is_junk, TIERS
+  from app.services.lead_filter import classify_lead, is_junk, qualify_hot_lead, TIERS
 
   tier, reasons = classify_lead(company, score, signals)
+  qual = qualify_hot_lead(signals)
 """
 
 import re
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
@@ -63,6 +66,44 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
             return True, f"junk pattern: {rx.pattern}"
 
     return False, ""
+
+
+# ─── Signal-text junk detection ───────────────────────────────────────────────
+
+# Listicle / advice-article patterns that should never inflate a lead score
+_JUNK_SIGNAL_PATTERNS = [
+    r"^\d+\s+(?:ways?|strategies?|tips?|tricks?|ideas?|steps?|reasons?|mistakes?|secrets?|things?|questions?|examples?|factors?|hacks?|methods?|tactics?)\s+(?:to|for|that|you|on|about|every|when)",
+    r"^top\s+\d+",
+    r"^\d+\s+(?:best|great|key|simple|easy|proven|powerful|effective)",
+    r"^how\s+to\b",
+    r"^why\s+(?:you|your|every|hotels?|restaurants?|companies)",
+    r"^what\s+(?:is|are|hotel|restaurant)\b",
+    r"^the\s+(?:ultimate|complete|definitive|best|top)\s+guide",
+    r"^(?:a\s+)?guide\s+to\b",
+    r"combat\s+(?:restaurant|labor|wage|cost|inflation)",
+    r"^(?:everything|all)\s+you\s+(?:need|should|must|want)",
+]
+_JUNK_SIGNAL_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_SIGNAL_PATTERNS]
+
+
+def is_junk_signal_text(text: Optional[str]) -> tuple[bool, str]:
+    """
+    Returns (True, reason) if the signal text looks like a listicle/editorial,
+    NOT a real company-event signal.
+    """
+    if not text:
+        return False, ""
+    # Only check the first 200 chars (the title portion)
+    head = text.strip()[:200]
+    for rx in _JUNK_SIGNAL_RE:
+        if rx.search(head):
+            return True, f"junk headline pattern: {rx.pattern}"
+    return False, ""
+
+
+def clean_signals(signals) -> list:
+    """Return only signals whose text does not match junk patterns."""
+    return [s for s in (signals or []) if not is_junk_signal_text(getattr(s, "signal_text", ""))[0]]
 
 
 # ─── Priority tier ────────────────────────────────────────────────────────────
@@ -136,11 +177,15 @@ def priority_tier(
         reasons.append(f"high-fit industry ({industry})")
 
     # Signal type boosters
-    hot_hits = [s for s in signal_types if s in _HOT_SIGNAL_TYPES]
+    hot_hits  = [s for s in signal_types if s in _HOT_SIGNAL_TYPES]
     warm_hits = [s for s in signal_types if s in _WARM_SIGNAL_TYPES]
     if hot_hits:
         boost += 5.0 * len(hot_hits)
-        reasons.append(f"intent signals: {', '.join(hot_hits)}")
+        # Show unique types only (e.g. 3x funding_round → "funding_round x3")
+        from collections import Counter
+        hit_counts = Counter(hot_hits)
+        hit_labels = [f"{t} x{n}" if n > 1 else t for t, n in hit_counts.items()]
+        reasons.append(f"intent signals: {', '.join(hit_labels)}")
     if warm_hits:
         boost += 2.0 * len(warm_hits)
 
@@ -183,9 +228,227 @@ def classify_lead(company, score, signals) -> tuple[bool, str, PriorityResult]:
         return True, junk_reason, PriorityResult("COLD", 0.0, [junk_reason])
 
     overall = getattr(score, "overall_intent_score", 0.0) if score else 0.0
-    sig_types = [s.signal_type for s in (signals or [])]
-    sig_count = len(signals or [])
+    # Strip listicle / advice-article signals before scoring
+    clean_sigs = clean_signals(signals)
+    sig_types = [s.signal_type for s in clean_sigs]
+    sig_count = len(clean_sigs)
     emp = getattr(company, "employee_estimate", None)
 
     pri = priority_tier(overall, company.industry, sig_types, sig_count, emp)
     return False, "", pri
+
+
+# ─── HOT Lead Qualification ───────────────────────────────────────────────────
+# For leads already classified as HOT, this layer answers the sales question:
+#   "When should we reach out, how confident are we, and what do we say?"
+
+# ── Buying-window pattern sets ────────────────────────────────────────────────
+# NOW  (0-30 days)   — active, committed, real-time urgency
+_NOW_PATTERNS = [
+    r"\b(breaking ground|opened today|opens today|now open|just opened|'grand opening)\b",
+    r"\b(immediately|urgent(?:ly)?|asap|right now|this week|this month)\b",
+    r"\b(approved budget|budget approved|committed \$|signed contract|contract signed)\b",
+    r"\b(deployed|deploying|gone live|go.?live|launching now|just launch)\b",
+    r"\bQ1 20(?:25|26)\b",                    # Q1 2026 = current quarter
+    r"\b(March|February|January) 20(?:25|26)\b",
+    r"\b(effective immediately|effective today|starting today|start(?:ing)? now)\b",
+    r"\bopen(?:ing)? for business\b",
+    r"\blabor shortage.*critical\b|\bcritical.*labor shortage\b",
+    r"\b(staff shortage|staffing crisis).*now\b|\bnow.*(staff shortage|staffing crisis)\b",
+    r"\bhired.*(?:VP|Director|Head of|SVP).*automat\b",
+    r"\bnew.*(?:VP|Director).*appoint",
+]
+
+# NEAR (30-90 days)  — near-term milestone visible
+_NEAR_PATTERNS = [
+    r"\bQ2 20(?:25|26)\b",
+    r"\b(April|May|June) 20(?:25|26)\b",
+    r"\b(this (?:spring|summer|quarter)|next quarter|coming (?:weeks|months))\b",
+    r"\bwithin (?:\d+ )?(?:weeks|days|month)\b",
+    r"\b(just closed|recently (closed|raised|secured|acquired|merged))\b",
+    r"\bintegration (?:underway|in progress|ongoing|phase)\b",
+    r"\b(opening|expansion) (?:planned|scheduled|set) for\b",
+    r"\b(new facility|new hotel|new center|new warehouse).{0,40}(open|complete|finish)\b",
+    r"\braising \$|\bseries [A-E]\b|\bfunding round\b",
+    r"\b(renovation|remodel).{0,30}(planned|scheduled|underway)\b",
+    r"\bnewly (?:appointed|hired|named)\b",
+]
+
+# PIPELINE (90-180 days) — longer horizon but confirmed forward motion
+_PIPELINE_PATTERNS = [
+    r"\bQ[34] 20(?:25|26)\b",
+    r"\b(July|August|September|October|November|December) 20(?:25|26)\b",
+    r"\b(by end of year|end of 2026|later this year|later in 2026)\b",
+    r"\b(2026 (?:plan|initiative|roadmap|strategy|budget)|strategic (?:plan|initiative|roadmap))\b",
+    r"\b(announced|planning|intend(?:ing)?|plan(?:ning)? to) (?:open|expand|automat|deploy|invest)\b",
+    r"\bnew (?:facility|warehouse|hotel|campus|location).{0,50}(break ground|planned|announce)\b",
+    r"\b(multi.?year|long.?term|3.year|5.year) (?:plan|investment|partnership|contract)\b",
+]
+
+_NOW_RE      = [re.compile(p, re.IGNORECASE) for p in _NOW_PATTERNS]
+_NEAR_RE     = [re.compile(p, re.IGNORECASE) for p in _NEAR_PATTERNS]
+_PIPELINE_RE = [re.compile(p, re.IGNORECASE) for p in _PIPELINE_PATTERNS]
+
+
+# ── Intent confidence signal-type mapping ─────────────────────────────────────
+_HIGH_CONFIDENCE_TYPES = {
+    "funding_round", "capex", "strategic_hire", "ma_activity", "automation_intent"
+}
+_MEDIUM_CONFIDENCE_TYPES = {
+    "expansion", "labor_pain", "labor_shortage", "job_posting"
+}
+
+# ── Recommended action lookup [window][confidence] ───────────────────────────
+_ACTION_MATRIX: Dict[str, Dict[str, str]] = {
+    "NOW": {
+        "HIGH":   "Immediate outreach — decision in progress. Call/email same day. Demo ready.",
+        "MEDIUM": "Same-week outreach — active pain. Lead with ROI on labor cost.",
+        "LOW":    "Reach out within 3 days. Validate urgency via discovery call.",
+    },
+    "NEAR": {
+        "HIGH":   "Schedule discovery call this week. Budget window 30–90 days.",
+        "MEDIUM": "Prioritize in 30-day sequence. Proposal by next week.",
+        "LOW":    "Add to 2-week follow-up sequence. Share case study first.",
+    },
+    "PIPELINE": {
+        "HIGH":   "Intro call + send ROI brief now. Proposal in 60 days.",
+        "MEDIUM": "Add to 45-day nurture. Check back at Q3 budget cycle.",
+        "LOW":    "Monthly nurture. Flag for Q4 budget push.",
+    },
+    "UNCLEAR": {
+        "HIGH":   "Research + timed intro within 2 weeks. Strong signals but timing unknown.",
+        "MEDIUM": "Monthly cadence. Monitor for timing triggers.",
+        "LOW":    "Low touch nurture. Re-score when new signals arrive.",
+    },
+}
+
+
+_HTML_TAG_RE    = re.compile(r"<[^>]+>", re.IGNORECASE)
+_MULTI_SPACE_RE = re.compile(r"\s{2,}")
+
+
+def _strip_html(text: str) -> str:
+    """Remove HTML tags and collapse whitespace."""
+    text = _HTML_TAG_RE.sub(" ", text)
+    text = text.replace("&amp;", "&").replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">")
+    return _MULTI_SPACE_RE.sub(" ", text).strip()
+
+
+def _extract_evidence(text: str, patterns: list) -> Optional[str]:
+    """Return first matching sentence fragment for a pattern list (HTML stripped)."""
+    clean = _strip_html(text)
+    for rx in patterns:
+        m = rx.search(clean)
+        if m:
+            # Return up to 120 chars centred on the match
+            start = max(0, m.start() - 40)
+            end   = min(len(clean), m.end() + 80)
+            return clean[start:end].strip().replace("\n", " ")
+    return None
+
+
+@dataclass
+class HotQualification:
+    buying_window:      str             # NOW | NEAR | PIPELINE | UNCLEAR
+    intent_confidence:  str             # HIGH | MEDIUM | LOW
+    recommended_action: str             # plain-English outreach instruction
+    window_evidence:    List[str] = field(default_factory=list)   # quotes from signals
+    confidence_drivers: List[str] = field(default_factory=list)   # signal types driving confidence
+    freshest_signal_days: Optional[int] = None                    # age of most recent signal
+
+
+def qualify_hot_lead(signals) -> HotQualification:
+    """
+    Deep-qualify a HOT lead by analysing signal texts for:
+      - Buying window (NOW / NEAR / PIPELINE / UNCLEAR)
+      - Intent confidence (HIGH / MEDIUM / LOW)
+      - Recommended outreach action
+      - Quoted evidence from signal text
+    """
+    from datetime import datetime, timezone
+
+    clean = clean_signals(signals or [])
+    if not clean:
+        return HotQualification(
+            buying_window="UNCLEAR",
+            intent_confidence="LOW",
+            recommended_action=_ACTION_MATRIX["UNCLEAR"]["LOW"],
+        )
+
+    # ── Age of freshest signal ──────────────────────────────────────────────
+    now = datetime.now(timezone.utc)
+    ages = []
+    for s in clean:
+        ca = getattr(s, "created_at", None)
+        if ca:
+            if ca.tzinfo is None:
+                ca = ca.replace(tzinfo=timezone.utc)
+            ages.append((now - ca).days)
+    freshest = min(ages) if ages else None
+
+    # ── Intent confidence — from signal types ──────────────────────────────
+    sig_types = [getattr(s, "signal_type", "") or "" for s in clean]
+    high_drivers  = [t for t in sig_types if t in _HIGH_CONFIDENCE_TYPES]
+    med_drivers   = [t for t in sig_types if t in _MEDIUM_CONFIDENCE_TYPES]
+
+    if high_drivers:
+        confidence = "HIGH"
+        conf_drivers = list(dict.fromkeys(high_drivers))   # unique, ordered
+    elif med_drivers:
+        confidence = "MEDIUM"
+        conf_drivers = list(dict.fromkeys(med_drivers))
+    else:
+        confidence = "LOW"
+        conf_drivers = list(dict.fromkeys(sig_types))
+
+    # ── Buying window — from signal text ───────────────────────────────────
+    all_text = " ".join(
+        (getattr(s, "signal_text", "") or "") for s in clean
+    )
+
+    now_evidence      = []
+    near_evidence     = []
+    pipeline_evidence = []
+
+    for rx in _NOW_RE:
+        ev = _extract_evidence(all_text, [rx])
+        if ev:
+            now_evidence.append(ev)
+
+    for rx in _NEAR_RE:
+        ev = _extract_evidence(all_text, [rx])
+        if ev:
+            near_evidence.append(ev)
+
+    for rx in _PIPELINE_RE:
+        ev = _extract_evidence(all_text, [rx])
+        if ev:
+            pipeline_evidence.append(ev)
+
+    # Also treat very fresh signals as a NOW booster
+    if freshest is not None and freshest <= 7 and high_drivers:
+        now_evidence.append(f"Signal received within last {freshest} day(s)")
+
+    if now_evidence:
+        window   = "NOW"
+        evidence = now_evidence[:3]
+    elif near_evidence:
+        window   = "NEAR"
+        evidence = near_evidence[:3]
+    elif pipeline_evidence:
+        window   = "PIPELINE"
+        evidence = pipeline_evidence[:3]
+    else:
+        window   = "UNCLEAR"
+        evidence = []
+
+    action = _ACTION_MATRIX[window][confidence]
+
+    return HotQualification(
+        buying_window=window,
+        intent_confidence=confidence,
+        recommended_action=action,
+        window_evidence=evidence,
+        confidence_drivers=conf_drivers,
+        freshest_signal_days=freshest,
+    )

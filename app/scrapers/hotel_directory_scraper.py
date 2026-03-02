@@ -1,86 +1,191 @@
-from bs4 import BeautifulSoup
-from app.scrapers.base_scraper import BaseScraper
+"""
+Hotel Directory Scraper — Google News RSS
+==========================================
+Searches Google News for hotel/hospitality expansion, renovation, and
+staffing-shortage signals in key US metro markets.
 
-MULTI_BRAND_HOTELS = [
-    "marriott", "hilton", "hyatt", "ihg", "wyndham",
-    "best western", "radisson", "accor", "choice hotels"
-]
+Previously used Playwright on Yellow Pages (fragile, blocked).
+Now uses Google News RSS — same approach as serp_scraper.py.
+
+For each market in the target URLs, we build Google News queries like:
+  "hotel Las Vegas NV opening renovation expansion 2026"
+and store resulting companies + signals.
+"""
+import logging
+import re
+import time
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from typing import List, Optional
+
+from sqlalchemy.orm import Session
+
+from app.database import SessionLocal
+from app.models.company import Company
+from app.models.signal import Signal
+from app.scrapers.news_scraper import KNOWN_COMPANIES
+
+logger = logging.getLogger(__name__)
+
+DELAY = 1.5
+GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en"
+
+HOTEL_SIGNAL_KEYWORDS = {
+    "expansion":     ["expansion", "expand", "new hotel", "opens", "opening", "grand opening", "ribbon cutting", "new property", "construction", "new tower"],
+    "capex":         ["renovation", "renovating", "refurbish", "capital investment", "investing", "upgrade", "million"],
+    "labor_shortage": ["staffing shortage", "labor shortage", "hard to hire", "workforce", "housekeeping shortage", "turnover"],
+    "strategic_hire": ["VP", "Director", "Chief", "General Manager", "appointed", "joins", "named"],
+}
+
+# Regex to pull a company name from news headlines
+_HOTEL_NAME_RE = re.compile(
+    r"([A-Z][A-Za-z0-9&'\- ]{3,40}(?:Hotel|Resort|Inn|Suites|Hilton|Marriott|Hyatt|IHG|Wyndham|Accor|Loews|Omni|Radisson|MGM)[A-Za-z0-9 ]*)"
+)
 
 
-class HotelDirectoryScraper(BaseScraper):
-    """Scrapes hotel directories for hospitality robotics leads."""
+def _extract_city_from_url(url: str) -> str:
+    """Extract geo_location_terms from a Yellow Pages URL like:
+    ...?search_terms=hotel+resort&geo_location_terms=Las+Vegas+NV
+    Returns 'Las Vegas NV' or '' if not found.
+    """
+    try:
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+        loc = params.get("geo_location_terms", [""])[0]
+        return urllib.parse.unquote_plus(loc)
+    except Exception:
+        return ""
 
-    def parse(self, html: str, url: str):
-        soup = BeautifulSoup(html, "html.parser")
 
-        # Yellow Pages specific selectors
-        listings = soup.select("div.result, div.v-card, article.result") or []
+def _extract_industry_from_url(url: str) -> str:
+    lower = url.lower()
+    if "senior" in lower or "nursing" in lower or "healthcare" in lower:
+        return "Healthcare"
+    if "restaurant" in lower or "food" in lower:
+        return "Food Service"
+    return "Hospitality"
 
-        # Generic fallback selectors
-        if not listings:
-            listings = (
-                soup.select(".hotel-item, .property-card, .listing-item, article")
-                or soup.select("div[class*='hotel'], div[class*='property']")
-            )
 
-        for item in listings:
-            name_el = item.select_one("a.business-name, h2.n, h2, h3, h1, .hotel-name, .property-name")
-            link_el = item.select_one("a.business-name[href], a[href]")
-            location_el = item.select_one(".locality, .location, .address, .city, [class*='location']")
-            rating_el = item.select_one(".stars, .rating, [class*='star'], [class*='rating']")
-            rooms_el = item.select_one(".rooms, [class*='room']")
+class HotelDirectoryScraper:
+    """Searches Google News for hotel/hospitality expansion signals in key metros."""
 
-            name = name_el.get_text(strip=True) if name_el else None
-            if not name:
+    def __init__(self, db: Session = None):
+        self.db = db or SessionLocal()
+        self._leads_added = 0
+
+    def run(self, urls: List[str]):
+        """Accept the existing Yellow Pages target URLs; extract city and run news queries."""
+        seen_cities: set = set()
+        for url in urls:
+            city = _extract_city_from_url(url)
+            industry = _extract_industry_from_url(url)
+
+            if not city or city in seen_cities:
+                # For US-wide targets (no specific city), use a generic national query
+                if not city and url not in seen_cities:
+                    seen_cities.add(url)
+                    self._run_query(
+                        f"{industry.lower()} opening expansion renovation 2026",
+                        industry, source_url=url,
+                    )
                 continue
 
-            website = link_el["href"] if link_el else None
-            location = location_el.get_text(strip=True) if location_el else ""
-            rating_text = rating_el.get_text(strip=True) if rating_el else "0"
-            rooms_text = rooms_el.get_text(strip=True) if rooms_el else "0"
+            seen_cities.add(city)
+            queries = [
+                f"hotel {city} opening expansion renovation 2026",
+                f"hotel {city} new property opens grand opening",
+            ]
+            if industry == "Healthcare":
+                queries = [
+                    f"senior living {city} opens expansion 2026",
+                    f"nursing facility {city} new campus opens",
+                ]
+            elif industry == "Food Service":
+                queries = [f"restaurant chain {city} new locations expansion 2026"]
 
-            # Extract numeric values
-            try:
-                stars = float("".join(filter(lambda c: c.isdigit() or c == ".", rating_text)) or 0)
-            except ValueError:
-                stars = 0
-            try:
-                rooms = int("".join(filter(str.isdigit, rooms_text)) or 0)
-            except ValueError:
-                rooms = 0
+            for q in queries:
+                self._run_query(q, industry, source_url=url)
+                time.sleep(DELAY)
 
-            parts = location.split(",")
-            city = parts[0].strip() if parts else location
-            state = parts[1].strip() if len(parts) > 1 else ""
+    def _run_query(self, query: str, industry: str, source_url: str):
+        rss_url = GOOGLE_NEWS_RSS.format(q=urllib.parse.quote(query))
+        try:
+            req = urllib.request.Request(
+                rss_url,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; RSS reader)"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                self._parse_rss(resp.read(), industry, source_url)
+        except Exception as e:
+            logger.warning("Hotel RSS query failed %r: %s", query, e)
 
-            is_brand = any(b in name.lower() for b in MULTI_BRAND_HOTELS)
+    def _parse_rss(self, xml_bytes: bytes, industry: str, source_url: str):
+        try:
+            root = ET.fromstring(xml_bytes)
+        except ET.ParseError:
+            return
 
-            company = self.save_company({
-                "name": name,
-                "website": website,
-                "industry": "Hospitality",
-                "sub_industry": "Hotel",
-                "employee_estimate": rooms if rooms else None,
-                "location_city": city,
-                "location_state": state,
-                "location_country": "US",
-                "source": url
-            })
+        channel = root.find("channel")
+        if channel is None:
+            return
 
-            # Create signals based on qualification criteria
-            if stars >= 3 or rooms >= 100 or is_brand:
-                strength = 0.3
-                if stars >= 3:
-                    strength += 0.2
-                if rooms >= 100:
-                    strength += 0.3
-                if is_brand:
-                    strength += 0.2
-                strength = min(1.0, round(strength, 2))
+        for item in channel.findall("item"):
+            title_el = item.find("title")
+            desc_el  = item.find("description")
+            if title_el is None:
+                continue
 
-                self.save_signal(company.id, {
-                    "signal_type": "hospitality_fit",
-                    "signal_text": f"{name} | Stars: {stars} | Rooms: {rooms} | Brand: {is_brand}",
-                    "signal_strength": strength,
-                    "source_url": url
-                })
+            title     = title_el.text or ""
+            desc_text = (desc_el.text or "") if desc_el is not None else ""
+            full_text = f"{title} {desc_text}"
+            lower     = full_text.lower()
+
+            # Determine signal type and strength
+            sig_type = None
+            strength  = 0.0
+            for stype, keywords in HOTEL_SIGNAL_KEYWORDS.items():
+                if any(kw.lower() in lower for kw in keywords):
+                    sig_type = stype
+                    strength = {"expansion": 0.75, "capex": 0.65, "labor_shortage": 0.60, "strategic_hire": 0.70}.get(stype, 0.50)
+                    break
+
+            if not sig_type:
+                continue
+
+            # Try to extract a company name
+            company_name = None
+            m = _HOTEL_NAME_RE.search(title)
+            if m:
+                company_name = m.group(1).strip()
+            if not company_name:
+                # Try known company lookup
+                for key, (canon, _) in KNOWN_COMPANIES.items():
+                    if key in lower:
+                        company_name = canon
+                        break
+
+            if not company_name:
+                continue
+
+            existing = self.db.query(Company).filter(Company.name == company_name).first()
+            if existing:
+                company = existing
+            else:
+                company = Company(
+                    name=company_name,
+                    industry=industry,
+                    source="google_news_rss",
+                )
+                self.db.add(company)
+                self.db.flush()
+                self._leads_added += 1
+
+            self.db.add(Signal(
+                company_id=company.id,
+                signal_type=sig_type,
+                signal_text=title[:500],
+                signal_strength=strength,
+                source_url=source_url,
+            ))
+            self.db.commit()
+

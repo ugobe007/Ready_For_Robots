@@ -2,13 +2,19 @@ import time
 import random
 import logging
 from abc import ABC, abstractmethod
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 
 logger = logging.getLogger(__name__)
+
+# Playwright is optional — only needed if a subclass calls _run_bare()
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+    _PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    _PLAYWRIGHT_AVAILABLE = False
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36",

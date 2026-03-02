@@ -467,7 +467,14 @@ function OpportunityRow({ lead, rank }) {
         </div>
 
         <div className="hidden md:block px-2 min-w-0">
-          <span className="text-[10px] text-neutral-400 truncate block leading-snug">{st.contact_role}</span>
+          {(() => {
+            const verified = (lead.contacts || []).find(c => c.verified && c.linkedin)
+            const possible = (lead.contacts || []).find(c => (c.confidence || 0) >= 70)
+            const best = verified || possible
+            return best
+              ? <span className="text-[10px] text-neutral-200 truncate block leading-snug font-medium">{best.name}</span>
+              : <span className="text-[10px] text-neutral-500 truncate block leading-snug">{st.contact_role}</span>
+          })()}
         </div>
 
         <div className="hidden md:flex items-center px-2">
@@ -542,6 +549,38 @@ function OpportunityRow({ lead, rank }) {
               <p className="text-[11px] text-neutral-500 leading-snug">{st.use_case}</p>
             </div>
           </div>
+          {/* Named contacts discovered by contact scraper */}
+          {lead.contacts?.length > 0 && (() => {
+            const verified = lead.contacts.filter(c => c.verified && c.linkedin)
+            const possible = lead.contacts.filter(c => (c.confidence || 0) >= 70 && !(c.verified && c.linkedin))
+            return (
+              <div className="px-3 pb-2 border-t border-neutral-800/50 pt-2">
+                <span className="label block mb-1.5">Decision Makers</span>
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  {verified.map((ct, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <a href={ct.linkedin} target="_blank" rel="noreferrer"
+                        className="text-[11px] text-emerald-300 hover:text-emerald-100 font-medium"
+                        onClick={e => e.stopPropagation()}>
+                        {ct.name}
+                      </a>
+                      <span className="text-[10px] text-neutral-600">{ct.title}</span>
+                      <span className="text-[10px] text-emerald-800 border border-emerald-900 rounded px-1">LinkedIn</span>
+                    </div>
+                  ))}
+                  {possible.slice(0, 4).map((ct, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                      <span className="text-[11px] text-neutral-300">{ct.name}</span>
+                      <span className="text-[10px] text-neutral-600">{ct.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           {lead.signals?.length > 0 && (
             <div className="px-3 pb-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-800/50 pt-2">
               {lead.signals.slice(0, 4).map((sig, i) => {
@@ -614,19 +653,18 @@ export default function StrategyPage() {
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
-  const [limit, setLimit]     = useState(25)
   const [loginModal, setLoginModal] = useState(false)
 
-  const fetchStrategy = (lmt) => {
+  const fetchStrategy = () => {
     setLoading(true)
     setError(null)
-    fetch(`${API}/api/strategy?limit=${lmt}`)
+    fetch(`${API}/api/strategy/today`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(d => { setData(d); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }
 
-  useEffect(() => { fetchStrategy(limit) }, [])
+  useEffect(() => { fetchStrategy() }, [])
 
   const hot  = data?.opportunities?.filter(o => o.priority_tier === 'HOT')  || []
   const warm = data?.opportunities?.filter(o => o.priority_tier === 'WARM') || []
@@ -643,6 +681,8 @@ export default function StrategyPage() {
         <header className="sticky top-0 z-40 bg-[#080808]/95 backdrop-blur-md border-b border-neutral-800/80 px-4 md:px-6 h-12 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-neutral-700 hover:text-neutral-300 text-xs transition-colors"> dashboard</Link>
+            <span className="text-neutral-800">|</span>
+            <Link href="/intelligence" className="text-neutral-700 hover:text-pink-300 text-xs transition-colors">intelligence</Link>
             <span className="text-neutral-800">|</span>
             <h1 className="text-sm font-bold text-white tracking-tight">Daily Strategy Brief</h1>
             {data && (
@@ -665,16 +705,17 @@ export default function StrategyPage() {
                 </span>
               </div>
             )}
-            <select
-              value={limit}
-              onChange={e => { const v = Number(e.target.value); setLimit(v); fetchStrategy(v) }}
-              className="btn-ghost text-xs appearance-none bg-transparent cursor-pointer"
-            >
-              <option value={10} style={{background:'#080808'}}>top 10</option>
-              <option value={25} style={{background:'#080808'}}>top 25</option>
-              <option value={50} style={{background:'#080808'}}>top 50</option>
-            </select>
-            <button onClick={() => fetchStrategy(limit)} className="btn-ghost text-neutral-600" title="Refresh"></button>
+            {data?.source && (
+              <span className={`label px-1.5 py-0.5 border rounded text-[10px] hidden sm:inline ${
+                data.source === 'published' ? 'border-emerald-900 text-emerald-600' : 'border-neutral-800 text-neutral-600'
+              }`}>
+                {data.source === 'published' ? '✓ published' : 'live'}
+              </span>
+            )}
+            {data?.contacts_found > 0 && (
+              <span className="label text-neutral-600 hidden sm:inline">{data.contacts_found} contacts</span>
+            )}
+            <button onClick={() => fetchStrategy()} className="btn-ghost text-neutral-600" title="Refresh"></button>
             <button onClick={() => window.print()} className="btn-ghost text-neutral-500 hidden sm:inline-flex">print</button>
             {session ? (
               <>
@@ -717,7 +758,7 @@ export default function StrategyPage() {
             <div className="border border-red-900 rounded p-4 mt-4">
               <span className="label text-red-500">error  </span>
               <span className="text-[11px] text-neutral-400">{error}</span>
-              <button onClick={() => fetchStrategy(limit)} className="btn-danger ml-4">retry</button>
+              <button onClick={() => fetchStrategy()} className="btn-danger ml-4">retry</button>
             </div>
           )}
 
