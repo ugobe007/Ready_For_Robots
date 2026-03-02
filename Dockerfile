@@ -7,8 +7,11 @@ WORKDIR /frontend
 # OR set them in fly.toml [build.args] (safe to commit — these are anon/public keys)
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+# API URL — leave empty for production (relative URL); set to http://localhost:8000 for local dev only
+ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY frontend/nextjs/package*.json ./
 RUN npm ci

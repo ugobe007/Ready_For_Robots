@@ -2,6 +2,8 @@
 frontend/nextjs/node_modules/
 frontend/nextjs/.next/
 frontend/nextjs/out/
+frontend/nextjs/.env.local
+frontend/nextjs/.env*.local
 
 # Python
 **/__pycache__/
