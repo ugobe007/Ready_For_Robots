@@ -957,6 +957,174 @@ RSS_FEED_TARGETS: List[ScrapeTarget] = [
         notes="Official press releases from companies deploying or evaluating robots",
     ),
 
+    # ── TIER 1: Robotics & Automation News ──────────────────────────────────
+    ScrapeTarget(
+        url="https://news.google.com/rss/search?q=logistics+robot+AMR+warehouse+deployment&hl=en-US&gl=US&ceid=US:en",
+        label="Google News - Logistics Robot AMR Deployments",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["automation_intent", "capex", "funding_round"],
+        notes="Broad logistics robot deployment news (TRR category feeds return 403; Google News captures same stories)",
+    ),
+    ScrapeTarget(
+        url="https://news.google.com/rss/search?q=service+robot+hotel+restaurant+hospital+deployment&hl=en-US&gl=US&ceid=US:en",
+        label="Google News - Service Robot Deployments",
+        scraper="rss_feed", cadence="daily",
+        industries=["Hospitality", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "capex", "funding_round"],
+        notes="Service robot deployment coverage for hotel, restaurant, hospital verticals",
+    ),
+    ScrapeTarget(
+        url="https://roboticsbusinessreview.com/feed/",
+        label="Robotics Business Review",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Hospitality", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "funding_round", "capex"],
+        notes="Buyer-side robotics coverage: enterprise deployment analyses and vendor news",
+    ),
+    ScrapeTarget(
+        url="https://www.robotics247.com/feed/",
+        label="Robotics 24/7",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "capex", "expansion"],
+        notes="Deployment-focused: new robot installs, operator case studies, AMR coverage",
+    ),
+    ScrapeTarget(
+        url="https://spectrum.ieee.org/rss",
+        label="IEEE Spectrum - Automaton (Robotics Blog)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "funding_round"],
+        notes="IEEE robotics editorial: cutting-edge deployments and commercial pilot coverage",
+    ),
+    ScrapeTarget(
+        url="https://www.automate.org/feed",
+        label="Automate.org (A3 Automation News)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "capex", "expansion"],
+        notes="A3 Association: industry deployment stats, buyer guides, show news",
+    ),
+
+    # ── TIER 2: Logistics & Supply Chain (missing from current list) ─────────
+    ScrapeTarget(
+        url="https://supplychain247.com/rss",
+        label="Supply Chain 24/7 (SCM Operations)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["capex", "expansion", "automation_intent"],
+        notes="Operations-level supply chain coverage: new DCs, AMR pilots, 3PL tech",
+    ),
+    ScrapeTarget(
+        url="https://www.mmh.com/rss/all",
+        label="Modern Materials Handling (MMH)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["capex", "expansion", "automation_intent", "equipment_integration"],
+        notes="Top 12 high-signal site: warehouse tech, AMR deployments, DC operations",
+    ),
+
+    # ── TIER 3: Robotics Startup & Technology ───────────────────────────────
+    ScrapeTarget(
+        url="https://venturebeat.com/feed/?cat=robotics",
+        label="VentureBeat - Robotics (funding & enterprise AI)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Hospitality", "Healthcare", "Food Service"],
+        signal_types=["funding_round", "automation_intent", "ma_activity"],
+        notes="VC-lens on robotics: who is getting funded to deploy or use robots",
+    ),
+    ScrapeTarget(
+        url="https://www.unite.ai/category/robotics/feed/",
+        label="Unite.AI - Robotics Category",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Healthcare", "Food Service"],
+        signal_types=["automation_intent", "funding_round"],
+        notes="AI + robotics convergence: emerging capabilities before commercialization",
+    ),
+    ScrapeTarget(
+        url="https://www.theverge.com/rss/index.xml",
+        label="The Verge (Robotics & Tech Deployment Coverage)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Hospitality", "Food Service"],
+        signal_types=["automation_intent", "funding_round"],
+        notes="Mainstream tech coverage; filters to robot+deployment signals via keyword scoring",
+    ),
+
+    # ── TIER 4: Restaurant / Hospitality Service Robots ─────────────────────
+    ScrapeTarget(
+        url="https://www.restaurantnews.com/feed/",
+        label="Restaurant News (Operator Moves & Deployments)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Service"],
+        signal_types=["expansion", "capex", "automation_intent", "labor_shortage"],
+        notes="Chain operator news: automation pilots, new openings, labor cost coverage",
+    ),
+
+    # ── TIER 5: Healthcare & MedTech ────────────────────────────────────────
+    ScrapeTarget(
+        url="https://www.medtechdive.com/feeds/news/",
+        label="MedTech Dive (Healthcare Technology Investment)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Healthcare"],
+        signal_types=["funding_round", "capex", "automation_intent", "expansion"],
+        notes="Hospital tech capex: robots for pharmacy, specimen transport, EVS",
+    ),
+    ScrapeTarget(
+        url="https://www.fiercebiotech.com/rss/xml",
+        label="Fierce Biotech / MedTech (Healthcare Innovation)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Healthcare"],
+        signal_types=["funding_round", "capex", "automation_intent"],
+        notes="Health innovation funding: hospital robot deployments and OR automation",
+    ),
+
+    # ── TIER 6: Manufacturing & Industrial Automation ────────────────────────
+    ScrapeTarget(
+        url="https://www.controleng.com/rss.xml",
+        label="Control Engineering (Industrial Automation)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["automation_intent", "capex", "equipment_integration"],
+        notes="Plant-floor automation: robot integrators, PLC upgrades, Industry 4.0",
+    ),
+    ScrapeTarget(
+        url="https://www.manufacturing.net/rss/all",
+        label="Manufacturing.net (Factory Operations)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["capex", "automation_intent", "expansion"],
+        notes="Factory floor: new facility investment, automation deployment announcements",
+    ),
+
+    # ── TIER 7: Retail Automation ────────────────────────────────────────────
+    ScrapeTarget(
+        url="https://www.retaildive.com/feeds/news/",
+        label="Retail Dive (Retail Tech & Automation)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Food Service"],
+        signal_types=["automation_intent", "capex", "expansion", "funding_round"],
+        notes="Top 12 high-signal site: shelf-scanning robots, store automation investments",
+    ),
+    ScrapeTarget(
+        url="https://www.retailtouchpoints.com/feed.rss",
+        label="Retail TouchPoints (Retail Operations Technology)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Food Service"],
+        signal_types=["capex", "automation_intent", "equipment_integration"],
+        notes="Retail ops tech: in-store robots, fulfillment automation, digital stores",
+    ),
+
+    # ── BONUS: Research & Emerging Tech ─────────────────────────────────────
+    ScrapeTarget(
+        url="https://rss.arxiv.org/rss/cs.RO",
+        label="arXiv cs.RO (Robotics Research)",
+        scraper="rss_feed", cadence="weekly",
+        industries=["Logistics", "Healthcare", "Food Service"],
+        signal_types=["automation_intent"],
+        notes="Scout: new robot capabilities before commercialization — humanoids, grasping, AMRs",
+    ),
+
     # === AUTOMOTIVE DEALERSHIPS RSS ===
     ScrapeTarget(
         url="https://www.autonews.com/rss.xml",
@@ -1067,6 +1235,23 @@ NEWS_QUERIES = [
     {"query": "hospital EHR clinical system integration upgrade operational technology",                "industries": ["Healthcare"],                  "signal_types": ["equipment_integration", "capex"]},
     {"query": "restaurant POS technology upgrade system integration chain multi-unit",                  "industries": ["Food Service"],                "signal_types": ["equipment_integration"]},
     {"query": "fulfillment center automation technology integration existing equipment",                "industries": ["Logistics"],                   "signal_types": ["equipment_integration", "automation_intent"]},
+
+    # === ROBOTICS & AUTOMATION DEPLOYMENT SIGNALS ===
+    {"query": "AMR autonomous mobile robot warehouse deployment rollout 2025",                       "industries": ["Logistics"],                    "signal_types": ["automation_intent", "capex"]},
+    {"query": "humanoid robot logistics warehouse pilot deployment operator",                        "industries": ["Logistics"],                    "signal_types": ["automation_intent", "capex"]},
+    {"query": "robot fulfillment center deployment AMR autonomous picking 2025",                    "industries": ["Logistics"],                    "signal_types": ["automation_intent", "capex"]},
+    {"query": "GXO Agility Robotics warehouse humanoid robot pilot program",                        "industries": ["Logistics"],                    "signal_types": ["automation_intent", "funding_round"]},
+    {"query": "service robot hotel delivery deployment guest experience 2025",                       "industries": ["Hospitality"],                  "signal_types": ["automation_intent", "capex"]},
+    {"query": "restaurant food delivery robot kitchen automation deployment chain",                  "industries": ["Food Service"],                 "signal_types": ["automation_intent", "capex"]},
+    {"query": "hospital robot delivery automation pharmacy EVS deployment",                         "industries": ["Healthcare"],                   "signal_types": ["automation_intent", "capex"]},
+    {"query": "shelf scanning robot retail store inventory automation deployment",                   "industries": ["Logistics", "Food Service"],    "signal_types": ["automation_intent", "capex"]},
+    {"query": "Richtech robotics robot deployment hospitality hotel restaurant",                     "industries": ["Hospitality", "Food Service"],  "signal_types": ["automation_intent"]},
+    {"query": "automated guided vehicle AGV distribution center warehouse upgrade",                 "industries": ["Logistics"],                    "signal_types": ["automation_intent", "capex"]},
+    {"query": "robotics startup funding warehouse logistics deployment series 2025",                 "industries": ["Logistics"],                    "signal_types": ["funding_round", "automation_intent"]},
+    {"query": "cleaning robot disinfection hospital hotel deployment autonomous 2025",               "industries": ["Healthcare", "Hospitality"],    "signal_types": ["automation_intent", "capex"]},
+    {"query": "robot as a service RaaS subscription deployment operator 2025",                      "industries": ["Logistics", "Hospitality", "Healthcare", "Food Service"], "signal_types": ["automation_intent", "funding_round"]},
+    {"query": "3PL fulfillment operator automation investment robot pilot scale 2025",               "industries": ["Logistics"],                    "signal_types": ["automation_intent", "capex", "expansion"]},
+    {"query": "Tally shelf robot Bear Robotics Servi Keenon Pudu restaurant hotel",                 "industries": ["Food Service", "Hospitality"],  "signal_types": ["automation_intent", "capex"]},
 
     # === AUTOMOTIVE DEALERSHIPS ===
     {"query": "automotive dealership parts department labor shortage staffing 2025",                    "industries": ["Automotive Dealerships"],       "signal_types": ["labor_shortage"]},
