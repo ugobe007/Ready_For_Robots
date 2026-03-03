@@ -18,6 +18,7 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
 from app.services.ml_agent import MLAgent, _build_strategy, insights_to_dict
+from app.services.lead_filter import strip_html, clean_source_url
 
 router = APIRouter()
 
@@ -282,8 +283,8 @@ def get_profile(company_id: int, db: Session = Depends(get_db)):
         {
             "signal_type": s.signal_type,
             "strength": round(float(s.signal_strength or 0), 2),
-            "text": (s.signal_text or "")[:300],
-            "source_url": s.source_url,
+            "text": strip_html((s.signal_text or "")[:300]),
+            "source_url": clean_source_url(s.source_url),
         }
         for s in sorted(sigs, key=lambda x: float(x.signal_strength or 0), reverse=True)[:10]
     ]

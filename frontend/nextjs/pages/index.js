@@ -29,6 +29,15 @@ function stripHtml(str) {
     .trim();
 }
 
+function cleanSourceUrl(url) {
+  if (!url || !url.startsWith('http')) return '';
+  // Google News RSS redirect → web article viewer
+  if (url.includes('news.google.com/rss/articles/')) {
+    return url.replace('/rss/articles/', '/articles/').split('?')[0];
+  }
+  return url;
+}
+
 function barColor(v) {
   if (v >= 75) return 'bg-emerald-500';
   if (v >= 50) return 'bg-cyan-500';
@@ -1321,8 +1330,8 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                       : (s.strength || 0) >= 0.4 ? 'text-cyan-500'
                       : 'text-neutral-600'
                     }`}>{((s.strength || 0) * 100).toFixed(0)}%</span>
-                    {s.source_url && (
-                      <a href={s.source_url} target="_blank" rel="noreferrer"
+                    {cleanSourceUrl(s.source_url) && (
+                      <a href={cleanSourceUrl(s.source_url)} target="_blank" rel="noreferrer"
                         className="text-[10px] text-cyan-800 hover:text-cyan-600">src ↗</a>
                     )}
                   </div>
@@ -2160,8 +2169,8 @@ export default function Dashboard() {
                                                   </span>
                                                 </td>
                                                 <td className="py-1 pr-4">
-                                                  {s.source_url
-                                                    ? <a href={s.source_url} target="_blank" rel="noreferrer" className="text-cyan-700 hover:text-cyan-500" onClick={e => e.stopPropagation()}>↗</a>
+                                                  {cleanSourceUrl(s.source_url)
+                                                    ? <a href={cleanSourceUrl(s.source_url)} target="_blank" rel="noreferrer" className="text-cyan-700 hover:text-cyan-500" onClick={e => e.stopPropagation()}>↗</a>
                                                     : <span className="text-neutral-800">—</span>}
                                                 </td>
                                                 <td className="py-1 text-[11px] text-neutral-500 max-w-xs truncate">{stripHtml(s.raw_text || '') || '—'}</td>

@@ -36,6 +36,24 @@ def strip_html(text: Optional[str]) -> str:
     return ' '.join(text.split())
 
 
+def clean_source_url(url: Optional[str]) -> str:
+    """Return a browser-navigable URL or empty string.
+
+    Fixes two common problems:
+    - Fake seed values like "seed_v4" that aren't URLs at all.
+    - Google News RSS redirect URLs (news.google.com/rss/articles/...)
+      which open as blank/XML pages; converted to the web viewer URL.
+    """
+    if not url or not url.startswith("http"):
+        return ""
+    # Google News RSS → web article viewer
+    if "news.google.com/rss/articles/" in url:
+        url = url.replace("/rss/articles/", "/articles/")
+        # strip ?oc=5 tracking param that sometimes causes issues
+        url = url.split("?")[0]
+    return url
+
+
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
 # Exact / partial strings that always mean the record is garbage

@@ -20,7 +20,7 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.contact import Contact
 from app.models.daily_report import DailyReport
-from app.services.lead_filter import classify_lead, qualify_hot_lead, strip_html
+from app.services.lead_filter import classify_lead, qualify_hot_lead, strip_html, clean_source_url
 from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
@@ -310,6 +310,7 @@ def get_strategy(
                 "strength":       sig.signal_strength,
                 "weighted_score": compute_weighted_score(sig),
                 "raw_text":       strip_html(sig.signal_text),
+                "source_url":     clean_source_url(sig.source_url),
             }
             for sig in sigs
         ]
