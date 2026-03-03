@@ -36,7 +36,7 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
-from app.services.lead_filter import strip_html
+from app.services.lead_filter import strip_html, _decode_gnews_token, _google_search
 
 logger = logging.getLogger(__name__)
 
@@ -550,16 +550,9 @@ class NewsScraper:
                 source_el = item.find("source")
                 source  = source_el.text.strip() if source_el is not None else ""
                 full_text = f"{title}. {desc}"
-                # Build a usable search URL from the title so users can find the real article.
-                # Google News opaque tokens (news.google.com/rss/articles/...) require JS to
-                # redirect; a search URL always opens the correct article in results.
-                clean_title = strip_html(title)[:80].strip()
-                if clean_title:
-                    source_url = f"https://news.google.com/search?q={urllib.parse.quote(clean_title)}"
-                elif link.startswith("http") and "news.google.com" not in link:
-                    source_url = link  # direct publisher URL (e.g. from RSS feeds)
-                else:
-                    source_url = ""
+                # 1. Try to decode the Google News opaque token to the real publisher URL.
+                # 2. Fall back to a Google web search from the article title.
+                source_url = _decode_gnews_token(link) or _google_search(strip_html(title))
                 articles.append({
                     "title": title,
                     "description": desc,

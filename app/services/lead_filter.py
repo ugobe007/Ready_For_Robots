@@ -16,6 +16,7 @@ Usage
   qual = qualify_hot_lead(signals)
 """
 
+import base64
 import re
 import urllib.parse
 from dataclasses import dataclass, field
@@ -40,34 +41,74 @@ def strip_html(text: Optional[str]) -> str:
 def clean_source_url(url: Optional[str], fallback_text: Optional[str] = None) -> str:
     """Return a browser-navigable URL or empty string.
 
-    Fixes two common problems:
-    - Fake seed values like "seed_v4" that aren't URLs at all.
-    - Google News RSS / opaque article token URLs that require JavaScript to
-      redirect, leading to blank pages.  For these we construct a Google News
-      search URL from the fallback_text (signal headline / text) instead.
+    Priority:
+      1. Non-Google real http URL → pass through unchanged.
+      2. Google News opaque token  → try base64 decode to extract publisher URL;
+         fall back to Google web search if decoding fails.
+      3. No URL / seed junk        → Google web search from fallback_text.
     """
     if not url or not url.startswith("http"):
-        # No usable URL — build a Google News search from signal text if available
-        return _google_news_search(fallback_text)
-    # Google News opaque token URLs (rss OR web) — swap for a search URL
-    if "news.google.com" in url and "/articles/" in url:
-        return _google_news_search(fallback_text) or url
-    if "news.google.com/rss/articles/" in url:
-        return _google_news_search(fallback_text) or url.replace("/rss/articles/", "/articles/").split("?")[0]
+        return _google_search(fallback_text)
+    if "news.google.com" in url and ("/articles/" in url or "/rss/articles/" in url):
+        real = _decode_gnews_token(url)
+        return real or _google_search(fallback_text) or url
     return url
 
 
-def _google_news_search(text: Optional[str]) -> str:
-    """Build a Google News search URL from the first ~80 chars of signal text."""
+def _decode_gnews_token(url: str) -> str:
+    """Attempt to decode a Google News opaque article token to the real publisher URL.
+
+    Google News article tokens (CBMi...) are base64url-encoded protobufs where
+    the real article URL is stored as a plain UTF-8 string after a 2-byte
+    protobuf field header.  This works for the majority of tokens.
+    """
+    try:
+        m = re.search(r'/(?:rss/)?articles/([^?/\s]+)', url)
+        if not m:
+            return ""
+        token = m.group(1)
+        # Normalise base64url → base64 and add padding
+        token = token.replace("-", "+").replace("_", "/")
+        pad = len(token) % 4
+        if pad:
+            token += "=" * (4 - pad)
+        data = base64.b64decode(token)
+        # The real URL is a plain ASCII/UTF-8 string somewhere in the proto bytes.
+        # Scan for the first occurrence of 'http'.
+        decoded = data.decode("latin-1")
+        start = decoded.find("http")
+        if start == -1:
+            return ""
+        candidate = decoded[start:]
+        # Terminate at the first non-printable / control character
+        end = next((i for i, c in enumerate(candidate) if ord(c) < 32), len(candidate))
+        candidate = candidate[:end].strip()
+        if candidate.startswith("http") and "." in candidate and len(candidate) > 12:
+            return candidate
+    except Exception:
+        pass
+    return ""
+
+
+def _google_search(text: Optional[str]) -> str:
+    """Build a standard Google web-search URL from signal text headline.
+
+    Uses google.com/search (not news.google.com/search) because the Google News
+    search page is a JavaScript SPA that renders blank in many contexts.
+    Strips scraper metadata annotations like [query: ...] before building the URL.
+    """
     if not text:
         return ""
     clean = strip_html(text)
-    # Use first sentence / up to 80 chars as search query
-    snippet = clean.split(".")[0][:80].strip()
+    # Remove scraper annotations: [query: ...] or (query: ...) appended to headlines
+    clean = re.sub(r'\s*[\[\(]query\s*:[^\]\)]*[\]\)]', '', clean, flags=re.IGNORECASE)
+    clean = clean.strip()
+    # Use the first sentence, capped at 100 chars, so the query is a clean headline
+    snippet = clean.split(".")[0][:100].strip()
     if not snippet:
         return ""
     encoded = urllib.parse.quote(snippet)
-    return f"https://news.google.com/search?q={encoded}"
+    return f"https://www.google.com/search?q={encoded}"
 
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
