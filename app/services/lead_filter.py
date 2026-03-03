@@ -38,20 +38,25 @@ def strip_html(text: Optional[str]) -> str:
     return ' '.join(text.split())
 
 
-def clean_source_url(url: Optional[str], fallback_text: Optional[str] = None) -> str:
+def clean_source_url(url: Optional[str], fallback_text: Optional[str] = None,
+                     publisher_domain: Optional[str] = None) -> str:
     """Return a browser-navigable URL or empty string.
 
     Priority:
       1. Non-Google real http URL → pass through unchanged.
       2. Google News opaque token  → try base64 decode to extract publisher URL;
-         fall back to Google web search if decoding fails.
-      3. No URL / seed junk        → Google web search from fallback_text.
+         fall back to site-scoped Google search if decoding fails.
+      3. No URL / seed junk        → site-scoped Google search from fallback_text.
     """
     if not url or not url.startswith("http"):
-        return _google_search(fallback_text)
+        return _google_search(fallback_text, publisher_domain)
+    # Convert any old news.google.com/search URLs (JS SPA, renders blank) to google.com/search
+    if "news.google.com/search" in url:
+        qs = urllib.parse.urlparse(url).query
+        return f"https://www.google.com/search?{qs}" if qs else _google_search(fallback_text, publisher_domain)
     if "news.google.com" in url and ("/articles/" in url or "/rss/articles/" in url):
         real = _decode_gnews_token(url)
-        return real or _google_search(fallback_text) or url
+        return real or _google_search(fallback_text, publisher_domain) or url
     return url
 
 
@@ -90,12 +95,13 @@ def _decode_gnews_token(url: str) -> str:
     return ""
 
 
-def _google_search(text: Optional[str]) -> str:
-    """Build a standard Google web-search URL from signal text headline.
+def _google_search(text: Optional[str], publisher_domain: Optional[str] = None) -> str:
+    """Build a Google web-search URL from a signal headline.
 
-    Uses google.com/search (not news.google.com/search) because the Google News
-    search page is a JavaScript SPA that renders blank in many contexts.
-    Strips scraper metadata annotations like [query: ...] before building the URL.
+    If publisher_domain is provided (e.g. 'www.bizjournals.com'), the search is
+    scoped with the 'site:' operator so the first result is the exact article.
+    Uses google.com/search (not news.google.com/search which is a JS SPA).
+    Strips scraper annotations like [query: ...] before building the URL.
     """
     if not text:
         return ""
@@ -103,11 +109,17 @@ def _google_search(text: Optional[str]) -> str:
     # Remove scraper annotations: [query: ...] or (query: ...) appended to headlines
     clean = re.sub(r'\s*[\[\(]query\s*:[^\]\)]*[\]\)]', '', clean, flags=re.IGNORECASE)
     clean = clean.strip()
-    # Use the first sentence, capped at 100 chars, so the query is a clean headline
+    # Use the first sentence, capped at 100 chars
     snippet = clean.split(".")[0][:100].strip()
     if not snippet:
         return ""
-    encoded = urllib.parse.quote(snippet)
+    if publisher_domain:
+        # Strip scheme if present (e.g. https://www.bizjournals.com → www.bizjournals.com)
+        domain = re.sub(r'^https?://', '', publisher_domain).rstrip('/')
+        query = f"site:{domain} {snippet}"
+    else:
+        query = snippet
+    encoded = urllib.parse.quote(query)
     return f"https://www.google.com/search?q={encoded}"
 
 

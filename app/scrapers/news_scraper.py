@@ -549,10 +549,13 @@ class NewsScraper:
                 pub     = (item.findtext("pubDate") or "").strip()
                 source_el = item.find("source")
                 source  = source_el.text.strip() if source_el is not None else ""
+                publisher_url = source_el.get("url", "") if source_el is not None else ""
                 full_text = f"{title}. {desc}"
                 # 1. Try to decode the Google News opaque token to the real publisher URL.
-                # 2. Fall back to a Google web search from the article title.
-                source_url = _decode_gnews_token(link) or _google_search(strip_html(title))
+                # 2. Fall back to a site-scoped Google search (site:publisher.com + headline)
+                #    so the first result is the exact article on the publisher's site.
+                source_url = (_decode_gnews_token(link)
+                              or _google_search(strip_html(title), publisher_url))
                 articles.append({
                     "title": title,
                     "description": desc,
@@ -560,6 +563,7 @@ class NewsScraper:
                     "url": source_url,
                     "published": pub,
                     "source": source,
+                    "publisher_url": publisher_url,
                     "query": query,
                 })
         except ET.ParseError as e:
@@ -727,7 +731,11 @@ class NewsScraper:
         sig_type = self._classify_signal_type(article["text"])
 
         source_url = article.get("url", "")
-        source_id  = self.upsert_source(source_url, article.get("title", ""))
+        source_id  = self.upsert_source(
+            source_url,
+            article.get("title", ""),
+            publisher_url=article.get("publisher_url", ""),
+        )
 
         signal = Signal(
             company_id=company.id,

@@ -83,12 +83,13 @@ class BaseScraper(ABC):
                     logger.exception("Error scraping %s: %s", url, e)
             browser.close()
 
-    def upsert_source(self, url: str, title: str = "") -> Optional[int]:
+    def upsert_source(self, url: str, title: str = "",
+                       publisher_url: str = "") -> Optional[int]:
         """Insert url into signal_sources if new; return its serial id.
 
         Returns None if url is blank or not a real http URL.
-        Deduplicates by URL so the same article shared across multiple
-        signals never creates duplicate rows.
+        Deduplicates by URL. publisher_url is used to extract the real publisher
+        domain when url itself is a search URL (google.com/search...).
         """
         if not url or not url.startswith("http"):
             return None
@@ -98,7 +99,9 @@ class BaseScraper(ABC):
             ).first()
             if existing:
                 return existing.id
-            domain = urllib.parse.urlparse(url).netloc or None
+            # Use publisher_url for domain if the stored URL is a google search
+            domain_src = publisher_url if publisher_url else url
+            domain = urllib.parse.urlparse(domain_src).netloc or None
             src = SignalSource(
                 url=url,
                 title=(title or "")[:500] or None,
@@ -110,7 +113,6 @@ class BaseScraper(ABC):
             return src.id
         except Exception:
             self.db.rollback()
-            # Another worker may have inserted concurrently — fetch it.
             row = self.db.query(SignalSource).filter(
                 SignalSource.url == url
             ).first()
