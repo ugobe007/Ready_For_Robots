@@ -571,7 +571,11 @@ SIGNAL_INTENT_STAGE: Dict[str, str] = {
     "labor_shortage":        "Early Watch",
     "news":                  "Early Watch",
     "service_consistency":   "Early Watch",
-    "equipment_integration": "Budget Moving",
+    "equipment_integration":   "Budget Moving",
+    "rfp_activity":             "Active Evaluation",
+    "competitor_displacement":  "Active Evaluation",
+    "pilot_program":            "Budget Moving",
+    "regulatory_driver":        "Budget Moving",
 }
 
 

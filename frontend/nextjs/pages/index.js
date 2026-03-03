@@ -78,14 +78,18 @@ function TierBadge({ tier }) {
 
 // Signal badges -- stroke only, no fill
 const SIGNAL_META = {
-  funding_round:  { label: 'Funding',   border: 'border-violet-700', text: 'text-violet-400' },
-  strategic_hire: { label: 'Exec Hire', border: 'border-blue-700',   text: 'text-blue-400'   },
-  capex:          { label: 'CapEx',     border: 'border-cyan-700',   text: 'text-cyan-400'   },
-  ma_activity:    { label: 'M&A',       border: 'border-pink-700',   text: 'text-pink-400'   },
-  expansion:      { label: 'Expand',    border: 'border-emerald-800',text: 'text-emerald-400'},
-  job_posting:    { label: 'Hiring',    border: 'border-amber-700',  text: 'text-amber-400'  },
-  labor_shortage: { label: 'Labor Gap', border: 'border-red-800',    text: 'text-red-400'    },
-  news:           { label: 'News',      border: 'border-neutral-700',text: 'text-neutral-400'},
+  funding_round:          { label: 'Funding',      border: 'border-violet-700', text: 'text-violet-400' },
+  strategic_hire:         { label: 'Exec Hire',    border: 'border-blue-700',   text: 'text-blue-400'   },
+  capex:                  { label: 'CapEx',        border: 'border-cyan-700',   text: 'text-cyan-400'   },
+  ma_activity:            { label: 'M&A',          border: 'border-pink-700',   text: 'text-pink-400'   },
+  expansion:              { label: 'Expand',       border: 'border-emerald-800',text: 'text-emerald-400'},
+  job_posting:            { label: 'Hiring',       border: 'border-amber-700',  text: 'text-amber-400'  },
+  labor_shortage:         { label: 'Labor Gap',    border: 'border-red-800',    text: 'text-red-400'    },
+  news:                   { label: 'News',         border: 'border-neutral-700',text: 'text-neutral-400'},
+  rfp_activity:           { label: 'RFP',          border: 'border-orange-700', text: 'text-orange-400' },
+  competitor_displacement:{ label: 'Churn Signal', border: 'border-amber-700',  text: 'text-amber-400'  },
+  pilot_program:          { label: 'Pilot',        border: 'border-emerald-700',text: 'text-emerald-400'},
+  regulatory_driver:      { label: 'Regulatory',   border: 'border-rose-800',   text: 'text-rose-400'   },
 };
 
 function SignalBadge({ type }) {

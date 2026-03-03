@@ -130,7 +130,11 @@ SIGNAL_TIMING = {
     "news":                   "HOOK — Use the news mention as the outreach conversation opener.",
     "automation_intent":      "HIGH PRIORITY — Active automation program in progress.",
     "equipment_integration":  "ALIGNED — WMS/ERP rollout signals robot-ready infrastructure.",
-    "service_consistency":    "TIMELY — Brand standard pressure is creating automation urgency.",
+    "service_consistency":        "TIMELY — Brand standard pressure is creating automation urgency.",
+    "rfp_activity":               "HIGHEST — Active RFP in progress. Submit a response immediately.",
+    "competitor_displacement":    "URGENT — Prospect showing dissatisfaction with current vendor. Reach out now.",
+    "pilot_program":              "IMMEDIATE — Active automation pilot running. Offer a competitive demo.",
+    "regulatory_driver":          "TIME-SENSITIVE — Regulatory pressure is accelerating timeline. Lead with compliance ROI.",
 }
 
 _DEFAULT_TIMING = "Monitor — Queue for follow-up in 30 days."

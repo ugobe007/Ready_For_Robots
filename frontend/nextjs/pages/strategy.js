@@ -28,9 +28,13 @@ const SIGNAL_META = {
   job_posting:          { label: 'Hiring',    border: 'border-amber-700',  text: 'text-amber-400'  },
   labor_shortage:       { label: 'Labor Gap', border: 'border-red-800',    text: 'text-red-400'    },
   labor_pain:           { label: 'Labor Pain',border: 'border-red-800',    text: 'text-red-400'    },
-  news:                 { label: 'News',      border: 'border-neutral-700',text: 'text-neutral-400'},
-  automation_intent:    { label: 'Auto',      border: 'border-indigo-700', text: 'text-indigo-400' },
-  equipment_integration:{ label: 'ERP/WMS',  border: 'border-teal-700',   text: 'text-teal-400'   },
+  news:                   { label: 'News',         border: 'border-neutral-700', text: 'text-neutral-400' },
+  automation_intent:      { label: 'Auto',          border: 'border-indigo-700',  text: 'text-indigo-400'  },
+  equipment_integration:  { label: 'ERP/WMS',       border: 'border-teal-700',    text: 'text-teal-400'    },
+  rfp_activity:           { label: 'RFP',           border: 'border-orange-700',  text: 'text-orange-400'  },
+  competitor_displacement:{ label: 'Churn Signal',  border: 'border-amber-700',   text: 'text-amber-400'   },
+  pilot_program:          { label: 'Pilot',         border: 'border-emerald-700', text: 'text-emerald-400' },
+  regulatory_driver:      { label: 'Regulatory',    border: 'border-rose-800',    text: 'text-rose-400'    },
 }
 
 const ROBOT_META = {
@@ -782,8 +786,10 @@ export default function StrategyPage() {
                 </div>
               )}
 
+              <RichtechPlaybook />
+
               <div className="mt-8 pt-4 border-t border-neutral-900 flex items-center gap-3">
-                <span className="label">richtech robotics  ready for robots intelligence platform  {data.report_date}</span>
+                <span className="label">richtech robotics · built for the business, not the boardroom · {data.report_date}</span>
               </div>
             </>
           )}
