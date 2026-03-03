@@ -17,6 +17,7 @@ Usage
 """
 
 import re
+import urllib.parse
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -36,22 +37,37 @@ def strip_html(text: Optional[str]) -> str:
     return ' '.join(text.split())
 
 
-def clean_source_url(url: Optional[str]) -> str:
+def clean_source_url(url: Optional[str], fallback_text: Optional[str] = None) -> str:
     """Return a browser-navigable URL or empty string.
 
     Fixes two common problems:
     - Fake seed values like "seed_v4" that aren't URLs at all.
-    - Google News RSS redirect URLs (news.google.com/rss/articles/...)
-      which open as blank/XML pages; converted to the web viewer URL.
+    - Google News RSS / opaque article token URLs that require JavaScript to
+      redirect, leading to blank pages.  For these we construct a Google News
+      search URL from the fallback_text (signal headline / text) instead.
     """
     if not url or not url.startswith("http"):
-        return ""
-    # Google News RSS → web article viewer
+        # No usable URL — build a Google News search from signal text if available
+        return _google_news_search(fallback_text)
+    # Google News opaque token URLs (rss OR web) — swap for a search URL
+    if "news.google.com" in url and "/articles/" in url:
+        return _google_news_search(fallback_text) or url
     if "news.google.com/rss/articles/" in url:
-        url = url.replace("/rss/articles/", "/articles/")
-        # strip ?oc=5 tracking param that sometimes causes issues
-        url = url.split("?")[0]
+        return _google_news_search(fallback_text) or url.replace("/rss/articles/", "/articles/").split("?")[0]
     return url
+
+
+def _google_news_search(text: Optional[str]) -> str:
+    """Build a Google News search URL from the first ~80 chars of signal text."""
+    if not text:
+        return ""
+    clean = strip_html(text)
+    # Use first sentence / up to 80 chars as search query
+    snippet = clean.split(".")[0][:80].strip()
+    if not snippet:
+        return ""
+    encoded = urllib.parse.quote(snippet)
+    return f"https://news.google.com/search?q={encoded}"
 
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
