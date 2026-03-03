@@ -410,14 +410,16 @@ def get_today_report(db: Session = Depends(get_db)):
     """
     Returns the most recently *published* daily top-25 brief.
     This is the stored snapshot from `daily_reports` — stable throughout the day.
-    If no report has been published yet today, returns the live strategy instead.
+    Falls back to the most recent published report from a prior day if today's
+    hasn't been generated yet (avoids the slow live-scan before the 07:30 UTC job).
+    Only generates a live report when there are no published reports at all.
     """
     today = dt_date.today()
 
-    # Look for today's published report first
+    # Look for today's published report first, then any recent report
     report = (
         db.query(DailyReport)
-        .filter(DailyReport.report_date == today)
+        .order_by(DailyReport.report_date.desc())
         .first()
     )
 
@@ -425,9 +427,13 @@ def get_today_report(db: Session = Depends(get_db)):
         data = report.get_data()
         data["source"] = "published"
         data["published_at"] = report.generated_at.isoformat() if report.generated_at else None
+        # Flag if we're serving a prior day's report (before today's 07:30 UTC job)
+        if report.report_date < today:
+            data["report_date"] = str(today)   # show today's date in header
+            data["prior_date"]  = str(report.report_date)
         return data
 
-    # No published report yet — fall back to live strategy
+    # No published report at all yet — fall back to live strategy (first-run only)
     return get_strategy(limit=25, date=str(today), db=db)
 
 
