@@ -733,7 +733,7 @@ function QuickScrape({ onDone }) {
       <button onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
         <span>&#43; quick scrape &mdash; paste URLs to add as lead sources</span>
-        <span className="text-neutral-700">{open ? '&#9650;' : '&#9660;'}</span>
+        <span className="text-neutral-600">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-neutral-800">
@@ -818,7 +818,7 @@ function AgentInsightsPanel() {
           <span className="text-emerald-400">&#9650; ML Agent</span>
           <span className="text-neutral-600">&mdash; lead source rankings, signal patterns &amp; approach strategies</span>
         </span>
-        <span className="text-neutral-700">{open ? '&#9650;' : '&#9660;'}</span>
+        <span className="text-neutral-600">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
