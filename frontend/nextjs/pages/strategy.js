@@ -652,6 +652,289 @@ function TierSection({ tier, leads, startRank }) {
   )
 }
 
+// ─── RichTech Growth Playbook ─────────────────────────────────────────────────
+
+const PLAYBOOK = {
+  narrative: {
+    headline: 'Robots Built for the Business, Not the Boardroom.',
+    tagline:  'Your Labor Problem, Solved by Shift One.',
+    pillars: [
+      {
+        name:   'Operational First',
+        detail: 'Designed around shift workers, not software teams. Trained in days, not months. No PhD required, no six-month integration, no robot-shaped showpieces gathering dust in a lobby.',
+      },
+      {
+        name:   'Real Economy, Real ROI',
+        detail: 'RichTech customers run hotels, warehouses, and dealerships. ROI is measured in labor hours saved per shift, not in innovation optics. Every pitch leads with payback period.',
+      },
+      {
+        name:   'Partners in Scale',
+        detail: 'Not a vendor that ships and disappears. WMS integrations, channel partnerships, and managed fleet programs let customers grow from 1 robot to 100 without switching vendors.',
+      },
+    ],
+    retire: [
+      { word: 'innovation',   replace: '"operational efficiency" or a specific metric' },
+      { word: 'autonomous',   replace: '"runs without a handler" or "no dedicated operator required"' },
+      { word: 'cutting-edge', replace: '"shift-ready in 72 hours" or "proven in your vertical"' },
+    ],
+  },
+  gtm: [
+    {
+      title:    'Build a WMS API Integration Strategy',
+      priority: 'HIGH',
+      detail:   'Every logistics and distribution buyer runs a WMS. Without certified integrations, RichTech loses deals at the IT checkpoint before the sales conversation ends. Build and certify native connectors for the top 3 platforms — then pursue ISV partner listings to get in front of their existing customer bases.',
+      partners: ['Manhattan Associates WM', 'Oracle WMS Cloud', 'Blue Yonder / JDA', 'Logiwa', 'Extensiv'],
+      action:   'Target: 2 certified WMS integrations live by Q3 2026. Pursue ISV/partner marketplace listing in each.',
+    },
+    {
+      title:    'Channel Partnership — Managed Services',
+      priority: 'HIGH',
+      detail:   'Aramark, Sodexo, and Compass Group manage food and facilities at tens of thousands of locations globally — all under the same labor pressure as your direct buyers. A single preferred vendor agreement converts RichTech\'s go-to-market from 1-deal-at-a-time to a channel that opens hundreds of locations simultaneously.',
+      partners: ['Aramark', 'Sodexo', 'Compass Group', 'Marriott Bonvoy Vendor Program', 'Hilton Supply Management'],
+      action:   'Target: preferred vendor agreement with one managed services firm by Q3 2026. Co-deploy model: their endorsement, your robots, shared services margin.',
+    },
+    {
+      title:    'Channel Partnership — Hotel Brand Ecosystems',
+      priority: 'MEDIUM',
+      detail:   'A single preferred vendor designation with Marriott, IHG, or Hilton immediately legitimizes RichTech for every franchisee and property owner in their network. Hotel brands run annual vendor summits where approved vendors get direct access to hundreds of GMs and VP Ops simultaneously.',
+      partners: ['Marriott International', 'IHG Hotels & Resorts', 'Hilton Worldwide', 'Choice Hotels', 'Wyndham Hotels'],
+      action:   'Target: vendor program enrollment with one Tier-1 hotel brand in H2 2026.',
+    },
+  ],
+  roadmap: [
+    {
+      title:    'Elevator & Multi-Level Integration Protocol',
+      priority: 'HIGH',
+      detail:   'Titan is locked to flat-floor environments. Hotels have service floors, hospitals have multi-level supply routes, distribution centers have mezzanine pick levels. Elevator API integration is largely a software effort — and it opens the entire vertical real estate sector.',
+      systems:  ['Schindler PORT', 'Otis Compass 360', 'Kone FLOW', 'thyssenkrupp MAX'],
+      unlock:   'Hotels, Hospitals, Multi-Story DCs, Mixed-Use Facilities',
+    },
+    {
+      title:    'Elevated Reach Module for Titan',
+      priority: 'MEDIUM',
+      detail:   'A modular attachment allowing Titan to deposit and retrieve from standard warehouse racking without a human picker. Converts Titan from "transport cart" to "autonomous material handler" — a significantly larger TAM and a direct answer to why logistics buyers choose Locus over Titan today.',
+      systems:  [],
+      unlock:   'Automotive Parts High-Rack, Distribution Racking, Mezzanine Retrieval',
+    },
+  ],
+  startupWatch: [
+    {
+      name:      'Slamtec (RPLIDAR)',
+      category:  'Localization / Mapping',
+      action:    'License',
+      rationale: 'Their LiDAR SDK and fleet mapping package is already proven in production AMRs. Licensing RPLIDAR Pro + multi-robot coordination closes Titan\'s large-floor enterprise deployment gap at accessible cost.',
+    },
+    {
+      name:      'Logiwa',
+      category:  'Cloud WMS',
+      action:    'Partner',
+      rationale: 'Mid-market e-commerce fulfillment WMS. Customer base overlaps directly with Titan\'s logistics TAM. A native Titan integration + co-sell motion puts RichTech in front of every new Logiwa deployment.',
+    },
+    {
+      name:      'Extensiv (3PL WMS)',
+      category:  'Logistics Platform',
+      action:    'Partner',
+      rationale: '3PL-focused WMS. 3PLs are the fastest-growing segment in logistics automation adoption. Extensiv partnership gives RichTech a channel into hundreds of 3PL operators simultaneously.',
+    },
+    {
+      name:      'Marble (Service Robot Nav IP)',
+      category:  'Navigation / Autonomy',
+      action:    'Acquire / License',
+      rationale: 'Pivoted from last-mile delivery. Indoor/outdoor transition navigation and complex-environment autonomy apply directly to Titan deployments in campus and multi-building environments.',
+    },
+  ],
+  university: [
+    {
+      name:    'Carnegie Mellon Robotics Institute',
+      focus:   'Multi-robot SLAM & fleet coordination',
+      app:     'Large-scale Titan fleet deployment in distribution centers — 50+ unit coordination, live rerouting, dynamic obstacle response.',
+      contact: 'CMU Technology Transfer',
+    },
+    {
+      name:    'Georgia Tech IRIM',
+      focus:   'Healthcare robot interaction & proximity navigation',
+      app:     'MEDBOT expansion into hospital systems and senior care — FDA-adjacent compliance, patient safety protocols, clinical environment navigation.',
+      contact: 'Georgia Tech Research Corporation (GTRC)',
+    },
+    {
+      name:    'Stanford HCI Group',
+      focus:   'Social robotics & natural language guest interaction',
+      app:     'ADAM and Matradee guest-facing interaction quality. Differentiates hospitality deployments at the brand narrative level.',
+      contact: 'Stanford Office of Technology Licensing (OTL)',
+    },
+    {
+      name:    'UC Berkeley AUTOLAB',
+      focus:   'Bin picking & uncertainty-aware grasping',
+      app:     'Automotive parts retrieval from bins — extends Titan into parts-picking, unlocking service-bay automation at dealerships.',
+      contact: 'Berkeley Skydeck / IPIRA',
+    },
+  ],
+}
+
+function RichtechPlaybook() {
+  const [section, setSection] = useState(null)
+  function toggle(key) { setSection(s => s === key ? null : key) }
+
+  const P_META = {
+    HIGH:   { text: 'text-red-400',   border: 'border-red-900',   label: 'HIGH PRIORITY' },
+    MEDIUM: { text: 'text-amber-400', border: 'border-amber-900', label: 'MEDIUM'        },
+  }
+  const A_META = {
+    'License':           { text: 'text-violet-400', border: 'border-violet-800' },
+    'Partner':           { text: 'text-cyan-400',   border: 'border-cyan-900'   },
+    'Acquire / License': { text: 'text-red-400',    border: 'border-red-900'    },
+  }
+  const SECTIONS = [
+    { key: 'narrative',  label: 'Brand Narrative',     sub: '3 pillars'                                    },
+    { key: 'gtm',        label: 'Go-to-Market Moves',  sub: `${PLAYBOOK.gtm.length} actions`               },
+    { key: 'roadmap',    label: 'Technology Roadmap',  sub: `${PLAYBOOK.roadmap.length} programs`           },
+    { key: 'startups',   label: 'Startup Watch List',  sub: `${PLAYBOOK.startupWatch.length} targets`      },
+    { key: 'university', label: 'University Pipeline', sub: `${PLAYBOOK.university.length} research groups` },
+  ]
+
+  return (
+    <div className="mt-10 pt-6 border-t border-neutral-800 space-y-1">
+      <div className="flex items-center gap-3 mb-5">
+        <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-widest">RichTech Growth Playbook</span>
+        <span className="text-neutral-800">·</span>
+        <span className="label text-neutral-700">strategic recommendations · March 2026</span>
+      </div>
+
+      {SECTIONS.map(sec => (
+        <div key={sec.key} className="border border-neutral-800 rounded overflow-hidden">
+          <button
+            onClick={() => toggle(sec.key)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-900/50 transition-colors"
+          >
+            <span className="flex items-center gap-3">
+              <span className="text-[13px] font-semibold text-neutral-200">{sec.label}</span>
+              <span className="label text-neutral-700">{sec.sub}</span>
+            </span>
+            <span className="text-neutral-700 text-[10px] font-mono">{section === sec.key ? '▲' : '▼'}</span>
+          </button>
+
+          {section === sec.key && (
+            <div className="border-t border-neutral-800 px-4 pt-4 pb-5 space-y-4 bg-neutral-950/30">
+
+              {sec.key === 'narrative' && (
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <p className="text-[18px] font-bold text-white leading-snug tracking-tight">&ldquo;{PLAYBOOK.narrative.headline}&rdquo;</p>
+                    <p className="text-sm text-neutral-400 italic pl-1">{PLAYBOOK.narrative.tagline}</p>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    {PLAYBOOK.narrative.pillars.map(p => (
+                      <div key={p.name} className="border border-emerald-900/50 rounded p-3 space-y-1.5 bg-emerald-950/10">
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{p.name}</p>
+                        <p className="text-[11px] text-neutral-400 leading-relaxed">{p.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border border-neutral-800 rounded p-3 space-y-2">
+                    <p className="label text-neutral-600 mb-2">language to retire from all materials</p>
+                    <div className="space-y-2">
+                      {PLAYBOOK.narrative.retire.map(r => (
+                        <div key={r.word} className="flex items-start gap-3">
+                          <span className="text-[11px] text-neutral-600 line-through shrink-0 w-28">{r.word}</span>
+                          <span className="text-[11px] text-neutral-400">→ {r.replace}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {sec.key === 'gtm' && (
+                <div className="space-y-3">
+                  {PLAYBOOK.gtm.map(item => {
+                    const pm = P_META[item.priority] || P_META.MEDIUM
+                    return (
+                      <div key={item.title} className={`border ${pm.border} rounded p-4 space-y-2.5 bg-neutral-950/20`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[12px] font-semibold text-neutral-100">{item.title}</span>
+                          <span className={`badge ${pm.border} ${pm.text} text-[9px]`}>{pm.label}</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-400 leading-relaxed">{item.detail}</p>
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <span className="label text-neutral-700 shrink-0">target partners</span>
+                          {item.partners.map(p => (
+                            <span key={p} className="badge border-neutral-800 text-neutral-500 text-[9px]">{p}</span>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-emerald-500 font-medium border-t border-neutral-800 pt-2">{item.action}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {sec.key === 'roadmap' && (
+                <div className="space-y-3">
+                  {PLAYBOOK.roadmap.map(item => {
+                    const pm = P_META[item.priority] || P_META.MEDIUM
+                    return (
+                      <div key={item.title} className={`border ${pm.border} rounded p-4 space-y-2.5 bg-neutral-950/20`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[12px] font-semibold text-neutral-100">{item.title}</span>
+                          <span className={`badge ${pm.border} ${pm.text} text-[9px]`}>{pm.label}</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-400 leading-relaxed">{item.detail}</p>
+                        {item.systems.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="label text-neutral-700 shrink-0">integration targets</span>
+                            {item.systems.map(s => (
+                              <span key={s} className="badge border-neutral-800 text-neutral-500 text-[9px]">{s}</span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[11px] text-cyan-500 font-medium border-t border-neutral-800 pt-2">Unlocks: <span className="text-cyan-400">{item.unlock}</span></p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {sec.key === 'startups' && (
+                <div className="space-y-2">
+                  {PLAYBOOK.startupWatch.map(item => {
+                    const am = A_META[item.action] || { text: 'text-neutral-400', border: 'border-neutral-800' }
+                    return (
+                      <div key={item.name} className="border border-neutral-800 rounded p-3 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[12px] font-semibold text-neutral-100">{item.name}</span>
+                          <span className="badge border-neutral-800 text-neutral-600 text-[9px]">{item.category}</span>
+                          <span className={`badge ${am.border} ${am.text} text-[9px]`}>{item.action}</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-400 leading-relaxed">{item.rationale}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {sec.key === 'university' && (
+                <div className="space-y-2">
+                  {PLAYBOOK.university.map(item => (
+                    <div key={item.name} className="border border-neutral-800 rounded p-3 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[12px] font-semibold text-neutral-100">{item.name}</span>
+                        <span className="badge border-indigo-900 text-indigo-500 text-[9px]">{item.focus}</span>
+                      </div>
+                      <p className="text-[11px] text-neutral-400 leading-relaxed">{item.app}</p>
+                      <p className="text-[10px] text-neutral-600 border-t border-neutral-900 pt-1.5">Contact via: {item.contact}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function StrategyPage() {
   const { session } = useAuth()
   const [data, setData]       = useState(null)
