@@ -555,3 +555,87 @@ def qualify_hot_lead(signals) -> HotQualification:
         confidence_drivers=conf_drivers,
         freshest_signal_days=freshest,
     )
+
+
+# ─── Signal Intent Stage ──────────────────────────────────────────────────────
+# Maps each signal type to a buyer journey stage label shown in the UI.
+SIGNAL_INTENT_STAGE: Dict[str, str] = {
+    "funding_round":         "Budget Moving",
+    "strategic_hire":        "Budget Moving",
+    "capex":                 "Active Evaluation",
+    "ma_activity":           "Budget Moving",
+    "labor_pain":            "Active Evaluation",
+    "automation_intent":     "Active Evaluation",
+    "expansion":             "Early Watch",
+    "job_posting":           "Early Watch",
+    "labor_shortage":        "Early Watch",
+    "news":                  "Early Watch",
+    "service_consistency":   "Early Watch",
+    "equipment_integration": "Budget Moving",
+}
+
+
+# ─── Cold Lead Qualification ──────────────────────────────────────────────────
+@dataclass
+class ColdQualification:
+    watch_reason:       str             # Primary reason this lead is COLD
+    upgrade_signals:    List[str]       # Signal types that would push it to WARM/HOT
+    recommended_action: str             # monitor | first_contact | research
+    upgrade_blockers:   List[str]       # What's currently missing
+
+
+def qualify_cold_lead(
+    industry: Optional[str],
+    overall_score: float,
+    signal_types: List[str],
+    signal_count: int,
+) -> ColdQualification:
+    """
+    Explain why a lead is COLD and what observable signals would move it to WARM/HOT.
+    """
+    sig_set = set(signal_types)
+    blockers: List[str] = []
+    upgrade:  List[str] = []
+
+    # ── Determine blockers ─────────────────────────────────────────────────
+    if overall_score < 25:
+        blockers.append("very low intent score — no buying signals detected")
+        upgrade += ["capex", "strategic_hire", "funding_round"]
+    elif overall_score < 45:
+        blockers.append("score below warm threshold — moderate signals only")
+        upgrade += ["labor_pain", "automation_intent", "expansion"]
+
+    if not _industry_fits(industry):
+        ind_label = industry.strip().lower() if industry else "unknown"
+        blockers.append(f"industry '{ind_label}' outside primary target set")
+
+    # Suggest the missing HOT signal types most likely to trigger promotion
+    missing_hot = [s for s in _HOT_SIGNAL_TYPES if s not in sig_set]
+    upgrade = list(dict.fromkeys(upgrade + missing_hot[:3]))
+
+    # ── Choose watch reason ────────────────────────────────────────────────
+    if signal_count == 0:
+        reason = "No signals detected yet — awaiting first intelligence signals"
+        action = "monitor"
+    elif signal_count < 3 and not (sig_set & _HOT_SIGNAL_TYPES):
+        reason = (
+            f"Only {signal_count} early-stage signal{'s' if signal_count != 1 else ''}"
+            " — lacks buying intent indicators"
+        )
+        action = "monitor"
+    elif _industry_fits(industry):
+        reason = "Good industry fit but no confirmed budget or active-evaluation signals yet"
+        action = "first_contact"
+    else:
+        reason = "Insufficient buying signal strength to qualify as WARM"
+        action = "research"
+
+    if not upgrade:
+        upgrade = ["capex", "strategic_hire", "labor_shortage"]
+
+    return ColdQualification(
+        watch_reason=reason,
+        upgrade_signals=upgrade[:4],
+        recommended_action=action,
+        upgrade_blockers=blockers or ["composite score below 50 threshold"],
+    )

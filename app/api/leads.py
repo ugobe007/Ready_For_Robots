@@ -20,7 +20,7 @@ from app.database import get_db
 from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead, is_junk, clean_signals, qualify_hot_lead, strip_html, clean_source_url
+from app.services.lead_filter import classify_lead, is_junk, clean_signals, qualify_hot_lead, qualify_cold_lead, SIGNAL_INTENT_STAGE, strip_html, clean_source_url
 from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
@@ -69,6 +69,22 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
             "freshest_signal_days": q.freshest_signal_days,
         }
 
+    # COLD lead qualification — watch reason, upgrade triggers, recommended action
+    cold_qual = None
+    if pri.tier == "COLD":
+        cq = qualify_cold_lead(
+            industry=c.industry,
+            overall_score=(s.overall_intent_score if s else 0),
+            signal_types=[sig.signal_type for sig in sigs],
+            signal_count=len(sigs),
+        )
+        cold_qual = {
+            "watch_reason":        cq.watch_reason,
+            "upgrade_signals":     cq.upgrade_signals,
+            "recommended_action":  cq.recommended_action,
+            "upgrade_blockers":    cq.upgrade_blockers,
+        }
+
     # Keep ALL signal types for server-side filtering; send only top-5 to reduce payload.
     # Full signals are available via GET /api/leads/signals/{id} (loaded on card expand).
     _SIGNAL_PREVIEW = 5
@@ -86,7 +102,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
-        "hot_qualification": hot_qual,
+        "hot_qualification":  hot_qual,
+        "cold_qualification": cold_qual,
         "score": {
             "overall_score":    round((s.overall_intent_score  if s else 0), 1),
             "automation_score": round((s.automation_score      if s else 0), 1),
@@ -105,6 +122,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
                 "weighted_score": compute_weighted_score(sig),
                 "raw_text":       strip_html(sig.signal_text),
                 "source_url":     sig.source.url if sig.source else clean_source_url(sig.source_url, sig.signal_text),
+                "intent_stage":   SIGNAL_INTENT_STAGE.get(sig.signal_type, "Early Watch"),
             }
             for sig in sorted_sigs[:_SIGNAL_PREVIEW]
         ],

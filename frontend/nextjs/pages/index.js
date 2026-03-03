@@ -93,6 +93,22 @@ function SignalBadge({ type }) {
   return <span className={`badge ${m.border} ${m.text}`}>{m.label}</span>;
 }
 
+const INTENT_STAGE_META = {
+  'Active Evaluation': { text: 'text-red-400',     border: 'border-red-900/60',    dot: 'bg-red-500'    },
+  'Budget Moving':     { text: 'text-amber-400',   border: 'border-amber-900/60',  dot: 'bg-amber-500'  },
+  'Early Watch':       { text: 'text-neutral-500', border: 'border-neutral-800',   dot: 'bg-neutral-600'},
+};
+
+function IntentStageBadge({ stage }) {
+  const m = INTENT_STAGE_META[stage] || INTENT_STAGE_META['Early Watch'];
+  return (
+    <span className={`inline-flex items-center gap-1 border rounded px-1.5 py-0.5 text-[9px] font-medium tracking-wide ${m.border} ${m.text}`}>
+      <span className={`inline-block h-1 w-1 rounded-full ${m.dot}`} />
+      {stage}
+    </span>
+  );
+}
+
 function HealthDot({ open }) {
   return (
     <span className={`inline-block h-1.5 w-1.5 rounded-full ${open ? 'bg-red-500' : 'bg-emerald-500'}`} />
@@ -2087,6 +2103,61 @@ export default function Dashboard() {
                                     {lead.priority_reasons?.length > 0 && (
                                       <p className="text-xs text-neutral-400">{lead.priority_reasons.join('  ·  ')}</p>
                                     )}
+                                    {/* HOT qualification block */}
+                                    {lead.hot_qualification && (
+                                      <div className="border border-red-900/40 rounded p-3 space-y-2 bg-red-950/10">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="label">buying window</span>
+                                          <span className={`font-mono text-[11px] font-semibold ${
+                                            lead.hot_qualification.buying_window === 'NOW'  ? 'text-red-400' :
+                                            lead.hot_qualification.buying_window === 'NEAR' ? 'text-amber-400' :
+                                            'text-neutral-400'
+                                          }`}>{lead.hot_qualification.buying_window}</span>
+                                          <span className="label">·</span>
+                                          <span className="label">confidence</span>
+                                          <span className={`font-mono text-[11px] font-semibold ${
+                                            lead.hot_qualification.intent_confidence === 'HIGH'   ? 'text-emerald-400' :
+                                            lead.hot_qualification.intent_confidence === 'MEDIUM' ? 'text-amber-400' :
+                                            'text-neutral-500'
+                                          }`}>{lead.hot_qualification.intent_confidence}</span>
+                                        </div>
+                                        <p className="text-xs text-neutral-300">{lead.hot_qualification.recommended_action}</p>
+                                        {lead.hot_qualification.window_evidence?.length > 0 && (
+                                          <ul className="space-y-0.5">
+                                            {lead.hot_qualification.window_evidence.map((ev, i) => (
+                                              <li key={i} className="text-[11px] text-neutral-500 italic">&ldquo;{ev}&rdquo;</li>
+                                            ))}
+                                          </ul>
+                                        )}
+                                      </div>
+                                    )}
+                                    {/* COLD qualification block */}
+                                    {lead.cold_qualification && (
+                                      <div className="border border-neutral-800 rounded p-3 space-y-2 bg-neutral-900/30">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="label">cold watch</span>
+                                          <span className={`font-mono text-[11px] font-semibold ${
+                                            lead.cold_qualification.recommended_action === 'first_contact' ? 'text-cyan-500' :
+                                            lead.cold_qualification.recommended_action === 'research'      ? 'text-amber-600' :
+                                            'text-neutral-600'
+                                          }`}>{lead.cold_qualification.recommended_action.replace('_', ' ')}</span>
+                                        </div>
+                                        <p className="text-xs text-neutral-400">{lead.cold_qualification.watch_reason}</p>
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                          <span className="label">warm up with</span>
+                                          {(lead.cold_qualification.upgrade_signals || []).map(sig => (
+                                            <SignalBadge key={sig} type={sig} />
+                                          ))}
+                                        </div>
+                                        {lead.cold_qualification.upgrade_blockers?.length > 0 && (
+                                          <ul className="space-y-0.5">
+                                            {lead.cold_qualification.upgrade_blockers.map((b, i) => (
+                                              <li key={i} className="text-[11px] text-neutral-600">· {b}</li>
+                                            ))}
+                                          </ul>
+                                        )}
+                                      </div>
+                                    )}
                                     {/* Actions */}
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <button
@@ -2154,6 +2225,7 @@ export default function Dashboard() {
                                           <thead>
                                             <tr className="border-b border-neutral-800 text-left">
                                               <th className="pb-1 pr-4 label font-normal">type</th>
+                                              <th className="pb-1 pr-4 label font-normal">stage</th>
                                               <th className="pb-1 pr-4 label font-normal">strength</th>
                                               <th className="pb-1 pr-4 label font-normal">source</th>
                                               <th className="pb-1 label font-normal">summary</th>
@@ -2163,6 +2235,7 @@ export default function Dashboard() {
                                             {(lead.signals || []).map((s, si) => (
                                               <tr key={si} className="border-b border-neutral-900 align-top">
                                                 <td className="py-1 pr-4"><SignalBadge type={s.signal_type} /></td>
+                                                <td className="py-1 pr-4"><IntentStageBadge stage={s.intent_stage || 'Early Watch'} /></td>
                                                 <td className="py-1 pr-4 tabular-nums">
                                                   <span className={`font-mono ${s.strength >= 0.7 ? 'text-emerald-400' : s.strength >= 0.4 ? 'text-cyan-500' : 'text-neutral-600'}`}>
                                                     {(s.strength * 100).toFixed(0)}%
@@ -2203,7 +2276,7 @@ export default function Dashboard() {
             )}
 
             <footer className="mt-16 text-center label">
-              ready for robots · richtech robotics · refreshes every 30s
+              ready for robots · richtech robotics · refreshes every 5m
             </footer>
           </div>
         </div>
