@@ -12,6 +12,7 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
+import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload, selectinload
 from typing import Optional
@@ -24,24 +25,53 @@ from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
 
+# ── In-process TTL cache ──────────────────────────────────────────────────────
+# Classifying 2000 companies is expensive; cache the full formatted list
+# and re-use it across both get_leads and leads_summary.
+_CACHE: dict = {}           # "full" -> (timestamp_float, list[dict])
+_CACHE_TTL = 120            # seconds — scrapers run every 4 h, 2 min is safe
+
+def _invalidate_cache():
+    _CACHE.clear()
+
+def _full_leads_cached(db: Session) -> list:
+    """Load + classify + format ALL companies, returning cached result if fresh."""
+    entry = _CACHE.get("full")
+    if entry and time.time() - entry[0] < _CACHE_TTL:
+        return entry[1]
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), selectinload(Company.signals))
+        .limit(2000)
+        .all()
+    )
+    formatted = [_fmt_company(c, *classify_lead(c, c.scores, c.signals))
+                 for c in companies]
+    _CACHE["full"] = (time.time(), formatted)
+    return formatted
+
 
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
     sigs = clean_signals(c.signals or [])   # strip listicle / junk headlines
+    sorted_sigs = sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
 
     # HOT lead qualification — buying window, intent confidence, action
     hot_qual = None
     if pri.tier == "HOT":
         q = qualify_hot_lead(sigs)
         hot_qual = {
-            "buying_window":       q.buying_window,        # NOW | NEAR | PIPELINE | UNCLEAR
-            "intent_confidence":   q.intent_confidence,    # HIGH | MEDIUM | LOW
+            "buying_window":       q.buying_window,
+            "intent_confidence":   q.intent_confidence,
             "recommended_action":  q.recommended_action,
-            "window_evidence":     q.window_evidence,      # quoted signal phrases
-            "confidence_drivers":  q.confidence_drivers,   # signal types driving score
+            "window_evidence":     q.window_evidence,
+            "confidence_drivers":  q.confidence_drivers,
             "freshest_signal_days": q.freshest_signal_days,
         }
 
+    # Keep ALL signal types for server-side filtering; send only top-5 to reduce payload.
+    # Full signals are available via GET /api/leads/signals/{id} (loaded on card expand).
+    _SIGNAL_PREVIEW = 5
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -51,15 +81,12 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "location_state": c.location_state,
         "employee_estimate": c.employee_estimate,
         "source":         c.source,
-        # priority classification
         "priority_tier":    pri.tier,
         "priority_score":   round(pri.score, 1),
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
-        # HOT-only deep qualification
         "hot_qualification": hot_qual,
-        # scores — DB already stores 0-100
         "score": {
             "overall_score":    round((s.overall_intent_score  if s else 0), 1),
             "automation_score": round((s.automation_score      if s else 0), 1),
@@ -68,15 +95,18 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
             "market_fit_score": round((s.robotics_fit_score    if s else 0), 1),
         },
         "signal_count": len(sigs),
+        # All signal types (used for server-side signal_type filter) — lightweight
+        "_signal_types": list({sig.signal_type for sig in sigs}),
+        # Top-5 signals only — keeps the list-view payload small (~10× reduction)
         "signals": [
             {
-                "signal_type":     sig.signal_type,
-                "strength":        sig.signal_strength,
-                "weighted_score":  compute_weighted_score(sig),
-                "raw_text":        strip_html(sig.signal_text),
-                "source_url":      sig.source.url if sig.source else clean_source_url(sig.source_url, sig.signal_text),
+                "signal_type":    sig.signal_type,
+                "strength":       sig.signal_strength,
+                "weighted_score": compute_weighted_score(sig),
+                "raw_text":       strip_html(sig.signal_text),
+                "source_url":     sig.source.url if sig.source else clean_source_url(sig.source_url, sig.signal_text),
             }
-            for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
+            for sig in sorted_sigs[:_SIGNAL_PREVIEW]
         ],
     }
 
@@ -95,49 +125,33 @@ def get_leads(
     sort: str             = Query("score", description="score | name | signals"),
     db: Session           = Depends(get_db),
 ):
-    # Eager-load relations in one query
-    companies = (
-        db.query(Company)
-        # joinedload scores (uselist=False, one row) + selectinload signals
-        # (one-to-many) — avoids cartesian product JOIN that causes slow queries
-        .options(joinedload(Company.scores), selectinload(Company.signals))
-        .limit(2000)
-        .all()
-    )
+    # Serve from TTL cache — avoids re-classifying 2000 companies every request.
+    # Cache is populated once and reused for _CACHE_TTL seconds (default 120 s).
+    all_leads = _full_leads_cached(db)
 
     results = []
-    junk_count = 0
+    for r in all_leads:
+        if r["is_junk"] and exclude_junk:
+            continue
 
-    for c in companies:
-        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-
-        if junk:
-            junk_count += 1
-            if exclude_junk:
-                continue
-
-        overall = pri.score  # includes boosts, 0-100
-
-        # score range filter (DB already stores 0-100)
-        raw = (c.scores.overall_intent_score if c.scores else 0)
+        # score range filter
+        raw = r["score"]["overall_score"]
         if raw < min_score or raw > max_score:
             continue
 
         # tier filter
-        if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
+        if tier and tier.upper() != "ALL" and r["priority_tier"] != tier.upper():
             continue
 
         # industry filter
-        if industry and (not c.industry or industry.lower() not in c.industry.lower()):
+        if industry and (not r["industry"] or industry.lower() not in (r["industry"] or "").lower()):
             continue
 
-        # signal type filter
-        if signal_type:
-            sig_types = {s.signal_type for s in (c.signals or [])}
-            if signal_type not in sig_types:
-                continue
+        # signal type filter — use _signal_types which covers ALL signals, not just preview top-5
+        if signal_type and signal_type not in r.get("_signal_types", []):
+            continue
 
-        results.append(_fmt_company(c, junk, junk_reason, pri))
+        results.append(r)
 
     # sort
     if sort == "name":
@@ -147,13 +161,7 @@ def get_leads(
     else:
         results.sort(key=lambda x: x["priority_score"], reverse=True)
 
-    results = results[:limit]
-
-    hot  = sum(1 for r in results if r["priority_tier"] == "HOT")
-    warm = sum(1 for r in results if r["priority_tier"] == "WARM")
-    cold = sum(1 for r in results if r["priority_tier"] == "COLD")
-
-    return results   # plain list — dashboard iterates it directly
+    return results[:limit]   # plain list — dashboard iterates it directly
 
 
 # Buying-window sort order: NOW is most urgent
@@ -229,23 +237,18 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts for the dashboard stat cards."""
-    companies = (
-        db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .all()
-    )
+    """Pipeline counts for the dashboard stat cards — served from TTL cache."""
+    all_leads = _full_leads_cached(db)
     total = hot = warm = cold = junk_count = 0
-    for c in companies:
-        j, _, pri = classify_lead(c, c.scores, c.signals)
-        if j:
+    for r in all_leads:
+        if r["is_junk"]:
             junk_count += 1
             if exclude_junk:
                 continue
         total += 1
-        if pri.tier == "HOT":  hot  += 1
-        elif pri.tier == "WARM": warm += 1
-        else: cold += 1
+        if r["priority_tier"] == "HOT":    hot  += 1
+        elif r["priority_tier"] == "WARM": warm += 1
+        else:                              cold += 1
 
     return {
         "total": total, "hot": hot, "warm": warm, "cold": cold,

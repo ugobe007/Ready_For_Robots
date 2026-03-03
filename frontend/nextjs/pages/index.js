@@ -1645,7 +1645,7 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
-    const t = setInterval(fetchData, 30_000);
+    const t = setInterval(fetchData, 300_000); // 5 min — server has 2-min TTL cache
     return () => clearInterval(t);
   }, [fetchData]);
 
