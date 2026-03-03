@@ -129,6 +129,7 @@ def generate_daily_summary(db, new_count: int = 0) -> dict:
             "source_name":     it["source_name"],
             "relevance_score": it["relevance_score"],
             "pub_date":        it["pub_date"],
+            "excerpt":         (it.get("summary") or "")[:220].strip(),
         }
         for it in items[:15]
     ]
@@ -153,6 +154,7 @@ def generate_daily_summary(db, new_count: int = 0) -> dict:
                 "source_name":     t["source_name"],
                 "relevance_score": t["relevance_score"],
                 "pub_date":        t["pub_date"],
+                "excerpt":         (t.get("summary") or "")[:220].strip(),
             }
         by_category[cat] = {
             "count": len(cat_items),
@@ -165,6 +167,17 @@ def generate_daily_summary(db, new_count: int = 0) -> dict:
     trending_tags = [tag for tag, _ in tag_counts.most_common(10)]
 
     # ── Assemble final summary dict ───────────────────────────────────────
+    # ── Narrative lede ────────────────────────────────────────────────────────
+    _active = [(cat, len(buckets[cat])) for cat in CATEGORY_ORDER if buckets.get(cat)]
+    _total  = sum(n for _, n in _active)
+    _big    = max(_active, key=lambda x: x[1], default=("", 0))
+    narrative = (
+        f"{_total} intelligence signals across {len(_active)} coverage areas."
+        + (f" Leading today: {items[0]['title']}." if items else "")
+        + (f" {CATEGORY_LABELS.get(_big[0], _big[0])} is most active with {_big[1]} items."
+           if len(_active) > 1 else "")
+    )
+
     today = date.today().isoformat()
     now   = datetime.now(timezone.utc).isoformat()
     summary = {
@@ -172,6 +185,7 @@ def generate_daily_summary(db, new_count: int = 0) -> dict:
         "generated_at":  now,
         "total_items":   len(items),
         "new_today":     new_count,
+        "narrative":     narrative,
         "spotlight":     spotlight,
         "by_category":   by_category,
         "trending_tags": trending_tags,

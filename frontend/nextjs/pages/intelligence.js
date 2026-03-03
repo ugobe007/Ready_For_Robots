@@ -209,227 +209,165 @@ function SummaryBar({ summary }) {
   )
 }
 
-// ── Daily Briefing drawer ────────────────────────────────────────────────────
+// ── Daily Briefing (article format) ─────────────────────────────────────────
 
-function faviconUrl(url) {
-  if (!url) return null
-  try {
-    const domain = new URL(url).hostname
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
-  } catch { return null }
-}
-
-function StoryTile({ s, idx }) {
-  const m   = CAT_META[s.category] || { color: 'text-neutral-400', dot: 'bg-neutral-500', border: 'border-neutral-800', label: s.category }
-  const img = faviconUrl(s.source_url)
+function BriefingStory({ item }) {
+  const excerpt = (item.summary || '').replace(/<[^>]*>/g, '').trim()
+  const short   = excerpt.length > 220 ? excerpt.substring(0, 218) + '…' : excerpt
   return (
-    <a
-      href={s.source_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={e => e.stopPropagation()}
-      className="flex items-start gap-3 px-3 py-2.5 rounded border border-neutral-800/60 hover:border-neutral-700 hover:bg-neutral-900/50 transition-all group"
-    >
-      {/* Favicon / letter avatar */}
-      <div className={`shrink-0 w-8 h-8 rounded border ${m.border} bg-neutral-900/80 flex items-center justify-center overflow-hidden`}>
-        {img && (
-          <img
-            src={img}
-            alt=""
-            width={20}
-            height={20}
-            className="opacity-75 group-hover:opacity-100 transition-opacity"
-            onError={e => { e.currentTarget.style.display = 'none' }}
-          />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className={`text-[11px] font-medium leading-snug ${m.color} group-hover:underline mb-1`}>
-          {s.title}
+    <div className="py-2.5 border-b border-neutral-900/60 last:border-0">
+      <a
+        href={item.source_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block text-[11.5px] font-medium text-neutral-200 hover:text-white leading-snug mb-1"
+        onClick={e => e.stopPropagation()}
+      >
+        {item.title}
+      </a>
+      {short && (
+        <p className="text-[10px] text-neutral-600 leading-relaxed mb-1.5">
+          {short}
         </p>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {s.source_name && <span className="text-[9px] text-neutral-700">{s.source_name}</span>}
-          {s.tag && <TagBadge tag={s.tag} />}
-          <RelDate iso={s.pub_date} />
-          <span className={`text-[9px] font-semibold uppercase tracking-wide opacity-50 ${m.color}`}>{m.label}</span>
-        </div>
+      )}
+      <div className="flex items-center gap-2 flex-wrap">
+        {item.source_name && <span className="text-[9px] text-neutral-700">{item.source_name}</span>}
+        <RelDate iso={item.pub_date || item.fetched_at} />
+        {item.tag && <TagBadge tag={item.tag} />}
+        <a
+          href={item.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto text-[9px] text-emerald-800 hover:text-emerald-500 transition-colors"
+          onClick={e => e.stopPropagation()}
+        >read ↗</a>
       </div>
-
-      <span className="text-[11px] text-neutral-800 group-hover:text-neutral-400 shrink-0 self-center transition-colors">↗</span>
-    </a>
+    </div>
   )
 }
 
-function DailyBriefing({ briefing, activeFilter, onFilter }) {
-  const [open,          setOpen]          = useState(false)
-  const [showAllStories, setShowAllStories] = useState(false)
+function DailyBriefing({ briefing, byCategory, activeFilter, onFilter }) {
+  const [open,     setOpen]     = useState(false)
+  const [expanded, setExpanded] = useState({})   // { catKey: bool } — show all vs preview
   if (!briefing) return null
 
+  const PREVIEW      = 3
+  const tags         = (briefing.trending_tags || []).slice(0, 12)
+  const narrative    = briefing.narrative || ''
+  const teaser       = (briefing.spotlight || [])[0]
+  const totalStories = (briefing.spotlight || []).length
+  const safeCats     = byCategory || {}
+  const activeSecs   = CAT_ORDER.filter(c => (safeCats[c] || []).length > 0)
+
   const dateLabel = briefing.date
-    ? new Date(briefing.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    ? new Date(briefing.date + 'T12:00:00').toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+      })
     : 'Today'
-
-  const allStories  = briefing.spotlight || []
-  const topStories  = allStories.slice(0, 5)
-  const moreStories = allStories.slice(5)
-  const visible     = showAllStories ? allStories : topStories
-  const tags        = (briefing.trending_tags || []).slice(0, 10)
-  const byCat       = briefing.by_category || {}
-  const teaser      = allStories[0]
-
-  function handleCatClick(cat) {
-    onFilter(activeFilter === cat ? null : cat)
-    setTimeout(() => {
-      document.getElementById('intel-feed')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 60)
-  }
-
-  function toggleOpen() {
-    setOpen(o => !o)
-    if (open) setShowAllStories(false)
-  }
 
   return (
     <section className="mb-5 border border-neutral-800 rounded-lg overflow-hidden">
 
-      {/* ── Drawer handle ── */}
+      {/* ── Toggle header ── */}
       <div
-        className={`cursor-pointer transition-colors select-none ${open ? 'bg-neutral-900/50' : 'hover:bg-neutral-900/30'}`}
-        onClick={toggleOpen}
+        className={`cursor-pointer select-none transition-colors ${open ? 'bg-neutral-900/40' : 'hover:bg-neutral-900/20'}`}
+        onClick={() => { setOpen(o => !o); if (open) setExpanded({}) }}
       >
-        {/* Top bar */}
         <div className={`flex items-center gap-3 px-4 py-3 ${open ? 'border-b border-neutral-800/60' : ''}`}>
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
           <span className="text-xs font-semibold text-emerald-400 tracking-wide">Daily Briefing</span>
           <span className="text-[10px] text-neutral-600 hidden sm:inline">{dateLabel}</span>
-
           {briefing.new_today > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 border border-emerald-900/60 text-emerald-500 rounded">
               +{briefing.new_today} new
             </span>
           )}
-
-          {/* Mini category count pills */}
-          <div className="hidden md:flex items-center gap-1 ml-1">
-            {CAT_ORDER.filter(c => (byCat[c]?.count || 0) > 0).map(cat => {
-              const m = CAT_META[cat]
-              return (
-                <span key={cat} className={`text-[9px] px-1.5 py-0.5 border ${m.border} ${m.color} rounded`}>
-                  {byCat[cat].count}
-                </span>
-              )
-            })}
-          </div>
-
           <div className="ml-auto flex items-center gap-2">
             {activeFilter && (
               <button
                 onClick={e => { e.stopPropagation(); onFilter(null) }}
-                className="text-[10px] px-1.5 py-0.5 border border-neutral-700 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 rounded transition-colors"
+                className="text-[10px] px-1.5 py-0.5 border border-neutral-700 text-neutral-500 hover:text-neutral-300 rounded transition-colors"
               >
                 ✕ {CAT_META[activeFilter]?.label || activeFilter}
               </button>
             )}
-            <span className={`text-[9px] text-neutral-600 transition-transform duration-200 inline-block ${open ? '-rotate-180' : ''}`}>▼</span>
+            <span className="text-[10px] text-neutral-700">{totalStories} stories</span>
+            <span className={`text-[9px] text-neutral-600 inline-block transition-transform duration-200 ${open ? '-rotate-180' : ''}`}>▼</span>
           </div>
         </div>
 
-        {/* Teaser row — visible only when collapsed */}
+        {/* Collapsed teaser row */}
         {!open && teaser && (
           <div className="flex items-center gap-2.5 px-4 py-2.5 border-t border-neutral-900">
-            {faviconUrl(teaser.source_url) && (
-              <img
-                src={faviconUrl(teaser.source_url)}
-                alt=""
-                width={14}
-                height={14}
-                className="rounded opacity-50 shrink-0"
-                onError={e => { e.currentTarget.style.display = 'none' }}
-              />
-            )}
             <span className="text-[11px] text-neutral-500 truncate flex-1 leading-snug">{teaser.title}</span>
-            <span className="text-[10px] text-neutral-700 shrink-0 whitespace-nowrap">{allStories.length} stories ›</span>
+            <span className="text-[10px] text-neutral-700 shrink-0">{totalStories} stories ›</span>
           </div>
         )}
       </div>
 
-      {/* ── Drawer body ── */}
+      {/* ── Article body ── */}
       {open && (
-        <div className="divide-y divide-neutral-900">
+        <div>
 
-          {/* Stories */}
-          <div className="px-4 pt-4 pb-3">
-            <p className="text-[9px] uppercase tracking-widest text-neutral-600 font-semibold mb-3">
-              Top Stories &mdash; {allStories.length} total
+          {/* Dateline & narrative lede */}
+          <div className="px-5 pt-4 pb-3 border-b border-neutral-800/40">
+            <p className="text-[9px] uppercase tracking-[0.14em] text-neutral-600 font-semibold mb-2">
+              {dateLabel} &nbsp;·&nbsp; {activeSecs.length} coverage areas
             </p>
-            <div className="flex flex-col gap-1.5">
-              {visible.map((s, i) => <StoryTile key={i} s={s} idx={i} />)}
-            </div>
-
-            {moreStories.length > 0 && (
-              <button
-                onClick={e => { e.stopPropagation(); setShowAllStories(v => !v) }}
-                className="mt-2.5 w-full text-[10px] text-neutral-600 hover:text-neutral-300 py-2 border border-neutral-800 hover:border-neutral-700 rounded transition-colors"
-              >
-                {showAllStories ? '▲ show fewer' : `▼ show ${moreStories.length} more stories`}
-              </button>
+            {narrative && (
+              <p className="text-[11.5px] text-neutral-400 leading-relaxed">{narrative}</p>
             )}
           </div>
 
-          {/* Category stat boxes */}
-          <div className="p-3">
-            <p className="text-[9px] uppercase tracking-widest text-neutral-600 font-semibold mb-2.5 px-1">By Category</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {CAT_ORDER.map(cat => {
-                const m      = CAT_META[cat] || { label: cat, color: 'text-neutral-400', border: 'border-neutral-800' }
-                const info   = byCat[cat] || { count: 0, top: null }
-                const active = activeFilter === cat
-                return (
-                  <button
-                    key={cat}
-                    onClick={e => { e.stopPropagation(); handleCatClick(cat) }}
-                    className={[
-                      'group text-left border rounded px-3 py-2.5 transition-all w-full',
-                      active
-                        ? `${m.border} bg-neutral-800/60 ring-1 ring-inset ring-neutral-700/50`
-                        : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/60',
-                    ].join(' ')}
-                  >
-                    <div className="flex items-baseline justify-between gap-1 mb-1">
-                      <span className={`text-[9px] font-semibold tracking-wide truncate ${m.color}`}>{m.label}</span>
-                      <span className={`text-base font-bold tabular-nums shrink-0 transition-colors ${active ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
-                        {info.count}
-                      </span>
-                    </div>
-                    {info.top
-                      ? <p className={`text-[9px] leading-tight truncate transition-colors ${active ? 'text-neutral-400' : 'text-neutral-700 group-hover:text-neutral-500'}`}>
-                          {info.top.title}
-                        </p>
-                      : <p className="text-[9px] text-neutral-800">no items</p>
-                    }
-                  </button>
-                )
-              })}
-            </div>
-            {activeFilter && (
-              <p className="text-[9px] text-neutral-700 mt-2.5 text-center">
-                Filtered to <span className={CAT_META[activeFilter]?.color}>{CAT_META[activeFilter]?.label}</span>
-                {' — '}
-                <button onClick={e => { e.stopPropagation(); onFilter(null) }} className="text-neutral-600 hover:text-neutral-400 underline transition-colors">
-                  show all
+          {/* Per-category article sections */}
+          {activeSecs.map(cat => {
+            const m       = CAT_META[cat] || { label: cat, color: 'text-neutral-400', border: 'border-neutral-800' }
+            const items   = safeCats[cat] || []
+            const isExp   = expanded[cat]
+            const preview = isExp ? items : items.slice(0, PREVIEW)
+            const more    = items.length - PREVIEW
+
+            return (
+              <div key={cat} className="border-b border-neutral-900 last:border-0">
+
+                {/* Section heading — click to filter the feed below */}
+                <button
+                  className="w-full flex items-center gap-2.5 px-5 py-2.5 hover:bg-neutral-900/30 transition-colors text-left"
+                  onClick={e => {
+                    e.stopPropagation()
+                    onFilter(activeFilter === cat ? null : cat)
+                    setTimeout(() => document.getElementById('intel-feed')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60)
+                  }}
+                >
+                  <span className={`text-[9px] font-bold uppercase tracking-[0.12em] ${m.color}`}>{m.label}</span>
+                  <span className="flex-1 border-b border-neutral-800/60" />
+                  <span className={`text-[9px] tabular-nums opacity-60 ${m.color}`}>
+                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  </span>
                 </button>
-              </p>
-            )}
-          </div>
 
-          {/* Trending tags */}
-          {tags.length > 0 && (
-            <div className="px-4 py-3">
-              <p className="text-[9px] uppercase tracking-widest text-neutral-700 font-semibold mb-2">Trending Topics</p>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map(tag => <TagBadge key={tag} tag={tag} />)}
+                {/* Story rows */}
+                <div className="px-5">
+                  {preview.map(item => <BriefingStory key={item.id} item={item} />)}
+                  {!isExp && more > 0 && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setExpanded(v => ({ ...v, [cat]: true })) }}
+                      className="w-full py-2 text-[9px] text-neutral-700 hover:text-neutral-400 transition-colors text-left"
+                    >
+                      + {more} more {m.label} {more === 1 ? 'story' : 'stories'} ›
+                    </button>
+                  )}
+                </div>
+
               </div>
+            )
+          })}
+
+          {/* Trending topics footer */}
+          {tags.length > 0 && (
+            <div className="px-5 py-3 bg-neutral-900/20 flex flex-wrap gap-1.5 items-center">
+              <span className="text-[9px] uppercase tracking-[0.12em] text-neutral-700 font-semibold mr-2">Trending</span>
+              {tags.map(tag => <TagBadge key={tag} tag={tag} />)}
             </div>
           )}
 
@@ -597,7 +535,7 @@ export default function IntelligencePage() {
           </div>
 
           {/* Daily Briefing */}
-          {!loading && briefing && <DailyBriefing briefing={briefing} activeFilter={filter} onFilter={setFilter} />}
+          {!loading && briefing && <DailyBriefing briefing={briefing} byCategory={byCategory} activeFilter={filter} onFilter={setFilter} />}
 
           {/* Summary counts */}
           {summary && <SummaryBar summary={summary} />}
