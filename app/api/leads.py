@@ -19,7 +19,7 @@ from app.database import get_db
 from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead, is_junk, clean_signals, qualify_hot_lead
+from app.services.lead_filter import classify_lead, is_junk, clean_signals, qualify_hot_lead, strip_html
 from app.services.signal_ranker import compute_weighted_score
 
 router = APIRouter()
@@ -73,7 +73,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
                 "signal_type":     sig.signal_type,
                 "strength":        sig.signal_strength,
                 "weighted_score":  compute_weighted_score(sig),
-                "raw_text":        sig.signal_text,
+                "raw_text":        strip_html(sig.signal_text),
                 "source_url":      sig.source_url,
             }
             for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
@@ -261,7 +261,7 @@ def get_signals(company_id: int, db: Session = Depends(get_db)):
             "id": s.id,
             "signal_type": s.signal_type,
             "strength": s.signal_strength,
-            "raw_text": s.signal_text,
+            "raw_text": strip_html(s.signal_text),
             "source_url": s.source_url,
         }
         for s in signals

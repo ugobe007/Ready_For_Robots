@@ -20,6 +20,22 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+
+def strip_html(text: Optional[str]) -> str:
+    """Strip HTML tags and decode common entities from signal text."""
+    if not text:
+        return ""
+    text = re.sub(r'<[^>]+>', '', text)
+    text = (text
+            .replace('&nbsp;', ' ')
+            .replace('&amp;',  '&')
+            .replace('&lt;',   '<')
+            .replace('&gt;',   '>')
+            .replace('&quot;', '"')
+            .replace('&#39;',  "'"))
+    return ' '.join(text.split())
+
+
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
 # Exact / partial strings that always mean the record is garbage

@@ -20,6 +20,20 @@ import { supabase, authHeader } from '../lib/supabase';
 const API = process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
+function stripHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
 const TIER_META = {
@@ -233,7 +247,7 @@ function ReportModal({ report, onClose }) {
               {(d.signals || []).map((s, i) => (
                 <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
                   <span className="badge border-neutral-700 text-neutral-400 shrink-0">{s.signal_type}</span>
-                  <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.text || s.raw_text}</span>
+                  <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{stripHtml(s.text || s.raw_text || '')}</span>
                   <span className="text-xs font-mono text-neutral-600 tabular-nums shrink-0">{((s.strength || 0) * 100).toFixed(0)}%</span>
                 </div>
               ))}

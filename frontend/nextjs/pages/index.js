@@ -15,6 +15,20 @@ const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' &&
 
 // -- helpers ----------------------------------------------------------------
 
+function stripHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function barColor(v) {
   if (v >= 75) return 'bg-emerald-500';
   if (v >= 50) return 'bg-cyan-500';
@@ -443,8 +457,8 @@ function Top3Matches({ leads, onSelect, showToast = () => {} }) {
 
                 {/* signal excerpt */}
                 {sig?.raw_text && (
-                  <p className="text-[10px] text-neutral-700 italic truncate" title={sig.raw_text}>
-                    "{sig.raw_text.substring(0, 60)}{sig.raw_text.length > 60 ? '…' : ''}"
+                  <p className="text-[10px] text-neutral-700 italic truncate" title={stripHtml(sig.raw_text)}>
+                    "{stripHtml(sig.raw_text).substring(0, 60)}{stripHtml(sig.raw_text).length > 60 ? '…' : ''}"
                   </p>
                 )}
 
@@ -568,7 +582,7 @@ function StrategicSnapshot({ leads, onSelect, showToast = () => {} }) {
           const deal  = dealLabel(lead.employee_estimate);
           const fit   = strategicFit(lead);
           const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
-          const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
+          const excerpt = sig ? stripHtml(sig.raw_text || '').substring(0, 55) : '';
 
           return (
             <div key={lead.id}
@@ -590,7 +604,7 @@ function StrategicSnapshot({ leads, onSelect, showToast = () => {} }) {
                   </span>
                 </div>
                 {excerpt && (
-                  <p className="text-[10px] text-neutral-700 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
+                  <p className="text-[10px] text-neutral-700 truncate mt-0.5 max-w-[24rem]" title={stripHtml(sig?.raw_text || '')}>
                     {excerpt}{excerpt.length === 55 ? '…' : ''}
                   </p>
                 )}
@@ -1300,7 +1314,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               {((profile?.signals?.length ? profile.signals : lead.signals) || []).map((s, i) => (
                 <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
                   <SignalBadge type={s.signal_type} />
-                  <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.text || s.raw_text}</span>
+                  <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{stripHtml(s.text || s.raw_text || '')}</span>
                   <div className="shrink-0 flex flex-col items-end gap-1">
                     <span className={`text-xs font-mono tabular-nums ${
                       (s.strength || 0) >= 0.7 ? 'text-emerald-500'
@@ -2031,7 +2045,7 @@ export default function Dashboard() {
                                       <span className="text-xs text-neutral-600">{lead.industry}</span>
                                       {sig?.raw_text && (
                                         <span className="text-[11px] text-neutral-700 italic truncate hidden sm:block max-w-[28rem]">
-                                          &ldquo;{sig.raw_text.substring(0, 72)}{sig.raw_text.length > 72 ? '…' : ''}&rdquo;
+                                          &ldquo;{stripHtml(sig.raw_text).substring(0, 72)}{stripHtml(sig.raw_text).length > 72 ? '…' : ''}&rdquo;
                                         </span>
                                       )}
                                     </div>
@@ -2150,7 +2164,7 @@ export default function Dashboard() {
                                                     ? <a href={s.source_url} target="_blank" rel="noreferrer" className="text-cyan-700 hover:text-cyan-500" onClick={e => e.stopPropagation()}>↗</a>
                                                     : <span className="text-neutral-800">—</span>}
                                                 </td>
-                                                <td className="py-1 text-[11px] text-neutral-500 max-w-xs truncate">{s.raw_text || '—'}</td>
+                                                <td className="py-1 text-[11px] text-neutral-500 max-w-xs truncate">{stripHtml(s.raw_text || '') || '—'}</td>
                                               </tr>
                                             ))}
                                           </tbody>
