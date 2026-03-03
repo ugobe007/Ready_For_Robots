@@ -153,8 +153,9 @@ _DOMAIN_SCRAPER = {
 
 def _domain(url: str) -> str:
     """Extract root domain from a URL string."""
-    if not url or url in ("seed", "manual"):
-        return url or "unknown"
+    # Treat internal seed/manual labels as non-domain sources
+    if not url or not url.startswith('http'):
+        return "manual"
     url = re.sub(r'^https?://', '', url)
     parts = url.split('/')[0].split('.')
     if len(parts) >= 2:
@@ -245,6 +246,8 @@ class MLAgent:
 
         for sig in signals:
             dom = _domain(sig.source_url)
+            if dom == "manual":     # skip seed/internal sources — not real domains
+                continue
             d   = by_domain[dom]
             d["scores"].append(score_lookup.get(sig.company_id, 0))
             d["industries"][industry_lookup.get(sig.company_id, "Unknown")] += 1

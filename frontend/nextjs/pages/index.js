@@ -2132,7 +2132,7 @@ export default function Dashboard() {
                                     </div>
                                     {/* Meta */}
                                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-                                      {lead.website && (
+                                      {lead.website && lead.website.startsWith('http') && (
                                         <a href={lead.website} target="_blank" rel="noreferrer"
                                           className="text-cyan-600 hover:text-cyan-400 transition-colors"
                                           onClick={e => e.stopPropagation()}>
