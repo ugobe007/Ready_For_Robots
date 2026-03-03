@@ -1432,7 +1432,7 @@ function IntelSearchPanel({ onOpenLead }) {
           <span className="text-neutral-600 hidden sm:inline">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
           <span className="text-neutral-800 text-[10px] hidden md:inline">press / to focus</span>
         </span>
-        <span className="text-neutral-600">{open ? '&#9650;' : '&#9660;'}</span>
+        <span className="text-neutral-400">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
