@@ -32,16 +32,18 @@ logger = logging.getLogger(__name__)
 
 
 def _ensure_signal_sources_column():
-    """Add source_id FK column to the existing signals table if not present.
-    Base.metadata.create_all() creates new tables but does not alter existing
-    ones, so we handle this column addition with idempotent raw SQL."""
-    with engine.connect() as conn:
-        conn.execute(text(
-            "ALTER TABLE signals "
-            "ADD COLUMN IF NOT EXISTS source_id INTEGER "
-            "REFERENCES signal_sources(id)"
-        ))
-        conn.commit()
+    """Add source_id column to the existing signals table if not present.
+    Omits the FK constraint to avoid table-scan validation that Supabase's
+    statement_timeout can kill; ORM relationship handles integrity instead."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(
+                "ALTER TABLE signals "
+                "ADD COLUMN IF NOT EXISTS source_id INTEGER"
+            ))
+            conn.commit()
+    except Exception as exc:
+        logger.warning("[startup] Could not add source_id column: %s", exc)
 
 
 def _ensure_user_tables():
