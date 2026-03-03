@@ -52,8 +52,8 @@
            hover:border-cyan-500 hover:text-cyan-300;
   }
   .btn-ghost {
-    @apply btn border-neutral-700 text-neutral-400
-           hover:border-neutral-500 hover:text-neutral-200;
+    @apply btn border-neutral-700 text-neutral-300
+           hover:border-neutral-500 hover:text-neutral-100;
   }
   .btn-danger {
     @apply btn border-red-800 text-red-400
@@ -69,8 +69,8 @@
     @apply tab border-emerald-600 text-emerald-400;
   }
   .tab-inactive {
-    @apply tab border-neutral-800 text-neutral-600
-           hover:border-neutral-600 hover:text-neutral-400;
+    @apply tab border-neutral-800 text-neutral-500
+           hover:border-neutral-600 hover:text-neutral-300;
   }
 
   /* score bar */
@@ -88,7 +88,7 @@
 
   /* inline label */
   .label {
-    @apply text-[10px] uppercase tracking-widest text-neutral-500;
+    @apply text-[10px] uppercase tracking-widest text-neutral-400;
   }
 
   /* top-3 matches — outer container with emerald→cyan gradient top border */
@@ -206,7 +206,7 @@
   }
 
   /* Lead row tier: left accent only, no background */
-  .lead-hot  { border-left: 2px solid rgba(239, 68,  68,  0.50); }
-  .lead-warm { border-left: 2px solid rgba(234, 179, 8,   0.38); }
-  .lead-cold { border-left: 2px solid rgba(71,  85,  105, 0.22); }
+  .lead-hot  { border-left: 2px solid rgba(239, 68,  68,  0.55); }
+  .lead-warm { border-left: 2px solid rgba(234, 179, 8,   0.45); }
+  .lead-cold { border-left: 2px solid rgba(71,  85,  105, 0.35); }
 }
