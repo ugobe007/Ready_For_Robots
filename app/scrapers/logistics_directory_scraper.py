@@ -196,12 +196,15 @@ class LogisticsDirectoryScraper:
         strength = round(min(result.overall_intent, 1.0), 4)
         if strength < 0.05:
             return False
+        source_url = article.get("url", "")
+        source_id  = self.upsert_source(source_url, article.get("title", ""))
         signal = Signal(
             company_id=company.id,
             signal_type=_classify(article["text"]),
             signal_text=signal_text,
             signal_strength=strength,
-            source_url=article.get("url", ""),
+            source_url=source_url,
+            source_id=source_id,
         )
         self.db.add(signal)
         self.db.commit()

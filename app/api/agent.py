@@ -284,7 +284,7 @@ def get_profile(company_id: int, db: Session = Depends(get_db)):
             "signal_type": s.signal_type,
             "strength": round(float(s.signal_strength or 0), 2),
             "text": strip_html((s.signal_text or "")[:300]),
-            "source_url": clean_source_url(s.source_url, s.signal_text),
+            "source_url": s.source.url if s.source else clean_source_url(s.source_url, s.signal_text),
         }
         for s in sorted(sigs, key=lambda x: float(x.signal_strength or 0), reverse=True)[:10]
     ]

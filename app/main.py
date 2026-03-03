@@ -31,6 +31,19 @@ Base.metadata.create_all(bind=engine)
 logger = logging.getLogger(__name__)
 
 
+def _ensure_signal_sources_column():
+    """Add source_id FK column to the existing signals table if not present.
+    Base.metadata.create_all() creates new tables but does not alter existing
+    ones, so we handle this column addition with idempotent raw SQL."""
+    with engine.connect() as conn:
+        conn.execute(text(
+            "ALTER TABLE signals "
+            "ADD COLUMN IF NOT EXISTS source_id INTEGER "
+            "REFERENCES signal_sources(id)"
+        ))
+        conn.commit()
+
+
 def _ensure_user_tables():
     """Create user-facing tables if they don't exist.
     These are not part of the SQLAlchemy ORM models so Base.metadata.create_all
@@ -112,6 +125,8 @@ def _db_keepalive():
 async def lifespan(app: FastAPI):
     # Ensure user tables exist (raw-SQL tables not covered by ORM)
     _ensure_user_tables()
+    # Add source_id column to signals if this is a first deploy after the migration
+    _ensure_signal_sources_column()
     # Ensure intelligence table + migrations (adds relevance_score if missing)
     _ensure_intelligence_table()
     # Warm the DB connection on startup so the first user request isn't slow

@@ -733,12 +733,16 @@ class NewsScraper:
 
         sig_type = self._classify_signal_type(article["text"])
 
+        source_url = article.get("url", "")
+        source_id  = self.upsert_source(source_url, article.get("title", ""))
+
         signal = Signal(
             company_id=company.id,
             signal_type=sig_type,
             signal_text=signal_text,
             signal_strength=min(strength, 1.0),
-            source_url=article.get("url", ""),
+            source_url=source_url,
+            source_id=source_id,
         )
         self.db.add(signal)
         self.db.commit()

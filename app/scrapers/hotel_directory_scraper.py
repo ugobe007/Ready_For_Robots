@@ -180,12 +180,14 @@ class HotelDirectoryScraper:
                 self.db.flush()
                 self._leads_added += 1
 
+            source_id = self.upsert_source(source_url, title)
             self.db.add(Signal(
                 company_id=company.id,
                 signal_type=sig_type,
                 signal_text=title[:500],
                 signal_strength=strength,
                 source_url=source_url,
+                source_id=source_id,
             ))
             self.db.commit()
 

@@ -6,12 +6,15 @@ from app.database import Base
 class Signal(Base):
     __tablename__ = 'signals'
 
-    id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
-    signal_type = Column(String, nullable=False)
-    signal_text = Column(String, nullable=False)
+    id            = Column(Integer, primary_key=True, index=True)
+    company_id    = Column(Integer, ForeignKey('companies.id'), nullable=False)
+    signal_type   = Column(String, nullable=False)
+    signal_text   = Column(String, nullable=False)
     signal_strength = Column(Float, nullable=False)
-    source_url = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    source_url    = Column(String, nullable=True)   # legacy – kept for existing rows
+    source_id     = Column(Integer, ForeignKey('signal_sources.id'), nullable=True)
+    created_at    = Column(DateTime, nullable=False,
+                           default=lambda: datetime.now(timezone.utc))
 
     company = relationship("Company", back_populates="signals")
+    source  = relationship("SignalSource", back_populates="signals")

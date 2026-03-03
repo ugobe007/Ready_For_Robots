@@ -1,11 +1,14 @@
 import time
 import random
 import logging
+import urllib.parse
 from abc import ABC, abstractmethod
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
+from app.models.source import SignalSource
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +82,39 @@ class BaseScraper(ABC):
                 except Exception as e:
                     logger.exception("Error scraping %s: %s", url, e)
             browser.close()
+
+    def upsert_source(self, url: str, title: str = "") -> Optional[int]:
+        """Insert url into signal_sources if new; return its serial id.
+
+        Returns None if url is blank or not a real http URL.
+        Deduplicates by URL so the same article shared across multiple
+        signals never creates duplicate rows.
+        """
+        if not url or not url.startswith("http"):
+            return None
+        try:
+            existing = self.db.query(SignalSource).filter(
+                SignalSource.url == url
+            ).first()
+            if existing:
+                return existing.id
+            domain = urllib.parse.urlparse(url).netloc or None
+            src = SignalSource(
+                url=url,
+                title=(title or "")[:500] or None,
+                domain=domain,
+            )
+            self.db.add(src)
+            self.db.commit()
+            self.db.refresh(src)
+            return src.id
+        except Exception:
+            self.db.rollback()
+            # Another worker may have inserted concurrently — fetch it.
+            row = self.db.query(SignalSource).filter(
+                SignalSource.url == url
+            ).first()
+            return row.id if row else None
 
     def save_company(self, data: dict) -> Company:
         existing = self.db.query(Company).filter(Company.name == data.get("name")).first()

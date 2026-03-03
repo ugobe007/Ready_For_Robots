@@ -74,7 +74,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
                 "strength":        sig.signal_strength,
                 "weighted_score":  compute_weighted_score(sig),
                 "raw_text":        strip_html(sig.signal_text),
-                "source_url":      clean_source_url(sig.source_url, sig.signal_text),
+                "source_url":      sig.source.url if sig.source else clean_source_url(sig.source_url, sig.signal_text),
             }
             for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
         ],
@@ -262,7 +262,7 @@ def get_signals(company_id: int, db: Session = Depends(get_db)):
             "signal_type": s.signal_type,
             "strength": s.signal_strength,
             "raw_text": strip_html(s.signal_text),
-            "source_url": clean_source_url(s.source_url, s.signal_text),
+            "source_url": s.source.url if s.source else clean_source_url(s.source_url, s.signal_text),
         }
         for s in signals
     ]
