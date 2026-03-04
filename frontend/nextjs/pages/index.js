@@ -1335,6 +1335,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
+          <Link href="/brief" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">📋 Strategy Brief</Link>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
             ? <span className="label text-neutral-600 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
