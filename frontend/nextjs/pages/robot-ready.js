@@ -77,6 +77,41 @@ export default function RobotReady() {
     }
   }
 
+  const generatePlaybook = async () => {
+    if (!results) return;
+    
+    try {
+      const response = await fetch('/api/generate-playbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          robot_name: robotName,
+          matched_companies: results.matched_companies,
+          overall_strategy: results.overall_strategy,
+          target_industries: targetIndustries,
+          target_regions: targetRegions
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate playbook');
+      }
+
+      // Download the PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${robotName.replace(/[^a-zA-Z0-9]/g, '_')}_sales_playbook.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert('Failed to generate playbook. Please try again.');
+    }
+  };
+
   const toggleIndustry = (ind) => {
     setTargetIndustries(prev => 
       prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind]
@@ -517,7 +552,12 @@ export default function RobotReady() {
             )}
 
             {/* CTA */}
-            <div className="text-center pt-6 border-t border-neutral-800">
+            <div className="flex gap-4 pt-6 border-t border-neutral-800">
+              <button
+                onClick={generatePlaybook}
+                className="flex-1 border-2 border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white font-semibold px-6 py-3 rounded transition-colors">
+                📄 Download Sales Playbook
+              </button>
               <button
                 onClick={() => { 
                   setStep('form'); 

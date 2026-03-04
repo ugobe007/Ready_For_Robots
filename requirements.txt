@@ -16,3 +16,4 @@ alembic
 uvicorn
 tailwindcss
 PyJWT
+reportlab
