@@ -260,7 +260,7 @@ export default function RobotReady() {
 
               <button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-6 rounded transition-colors">
+                className="w-full border-2 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white font-semibold py-3 px-6 rounded transition-colors">
                 🚀 Find My Customers
               </button>
 

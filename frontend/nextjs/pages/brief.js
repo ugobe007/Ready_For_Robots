@@ -24,13 +24,7 @@ export default function StrategyBrief() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-neutral-500">Please log in to view the strategy brief</p>
-      </div>
-    );
-  }
+  // Removed auth requirement - public access for demos
 
   const hotLeads = leads.filter(l => l.priority_tier === 'HOT').slice(0, 10);
   const warmLeads = leads.filter(l => l.priority_tier === 'WARM').slice(0, 15);
