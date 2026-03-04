@@ -35,7 +35,8 @@ router = APIRouter()
 
 class RobotSubmission(BaseModel):
     robot_name: str
-    url: str
+    url: Optional[str] = None
+    description: Optional[str] = None
     email: Optional[str] = None
     target_industries: Optional[List[str]] = None
     target_regions: Optional[List[str]] = None
@@ -307,13 +308,20 @@ def generate_overall_strategy(matches: List[Dict], robot_caps: Dict) -> str:
 def submit_robot(submission: RobotSubmission, db: Session = Depends(get_db)):
     """
     Process robot submission:
-    1. Scrape URL
+    1. Get robot data (scrape URL OR use description)
     2. Analyze capabilities
     3. Match with companies
     4. Generate strategy
     """
-    # Scrape robot page
-    page_text = scrape_robot_page(submission.url)
+    # Get robot page content
+    if submission.url:
+        # Scrape URL if provided
+        page_text = scrape_robot_page(submission.url)
+    elif submission.description:
+        # Use provided description
+        page_text = submission.description
+    else:
+        return {"error": "Please provide either a URL or description of your robot"}
     
     # Analyze capabilities
     robot_caps = analyze_robot_capabilities(submission.robot_name, page_text)

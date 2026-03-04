@@ -16,6 +16,8 @@ export default function RobotReady() {
   const [email, setEmail] = useState('');
   const [targetIndustries, setTargetIndustries] = useState([]);
   const [targetRegions, setTargetRegions] = useState([]);
+  const [inputMode, setInputMode] = useState('url'); // url | text
+  const [robotDescription, setRobotDescription] = useState('');
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
 
@@ -41,7 +43,8 @@ export default function RobotReady() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           robot_name: robotName,
-          url: robotUrl,
+          url: inputMode === 'url' ? robotUrl : null,
+          description: inputMode === 'text' ? robotDescription : null,
           email: email,
           target_industries: targetIndustries.length > 0 ? targetIndustries : null,
           target_regions: targetRegions.length > 0 ? targetRegions : null,
@@ -120,22 +123,70 @@ export default function RobotReady() {
                 </p>
               </div>
 
+              {/* Input Mode Toggle */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
-                  Product URL *
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  How would you like to provide information?
                 </label>
-                <input
-                  type="url"
-                  value={robotUrl}
-                  onChange={(e) => setRobotUrl(e.target.value)}
-                  placeholder="https://yourcompany.com/products/robot"
-                  required
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
-                />
-                <p className="text-xs text-neutral-600 mt-1">
-                  We'll scrape this page to understand your robot's capabilities
-                </p>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setInputMode('url')}
+                    className={`flex-1 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      inputMode === 'url'
+                        ? 'border-2 border-emerald-600 text-emerald-400'
+                        : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                    }`}>
+                    🔗 I have a URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInputMode('text')}
+                    className={`flex-1 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                      inputMode === 'text'
+                        ? 'border-2 border-emerald-600 text-emerald-400'
+                        : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                    }`}>
+                    📝 Describe my robot
+                  </button>
+                </div>
               </div>
+
+              {inputMode === 'url' ? (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Product URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={robotUrl}
+                    onChange={(e) => setRobotUrl(e.target.value)}
+                    placeholder="https://yourcompany.com/products/robot"
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
+                  />
+                  <p className="text-xs text-neutral-600 mt-1">
+                    We'll scrape this page to understand your robot's capabilities
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Robot Description *
+                  </label>
+                  <textarea
+                    value={robotDescription}
+                    onChange={(e) => setRobotDescription(e.target.value)}
+                    placeholder="Describe your robot's capabilities, use cases, and key features...\n\nExample: Our autonomous delivery robot is designed for hospitals and hotels. It can navigate elevators, deliver items up to 50 lbs, has UV-C disinfection, operates 24/7, and integrates with building management systems."
+                    required
+                    rows={6}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
+                  />
+                  <p className="text-xs text-neutral-600 mt-1">
+                    Include capabilities, target industries, key features, and use cases
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
@@ -166,7 +217,7 @@ export default function RobotReady() {
                       onClick={() => toggleIndustry(ind)}
                       className={`px-3 py-2 rounded text-xs font-medium transition-colors ${
                         targetIndustries.includes(ind)
-                          ? 'bg-violet-900/50 border border-violet-700 text-violet-400'
+                          ? 'border-2 border-emerald-600 text-emerald-400'
                           : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
                       }`}>
                       {ind}
@@ -193,7 +244,7 @@ export default function RobotReady() {
                       onClick={() => toggleRegion(reg)}
                       className={`px-3 py-2 rounded text-xs font-medium transition-colors ${
                         targetRegions.includes(reg)
-                          ? 'bg-cyan-900/50 border border-cyan-700 text-cyan-400'
+                          ? 'border-2 border-emerald-600 text-emerald-400'
                           : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
                       }`}>
                       {reg}
@@ -387,6 +438,8 @@ export default function RobotReady() {
                   setResults(null); 
                   setRobotName(''); 
                   setRobotUrl(''); 
+                  setRobotDescription('');
+                  setInputMode('url');
                   setTargetIndustries([]);
                   setTargetRegions([]);
                 }}
