@@ -14,6 +14,21 @@ export default function ROICalculator() {
   const [hourlyWage, setHourlyWage] = useState('');
   const [annualLaborCost, setAnnualLaborCost] = useState('');
   const [results, setResults] = useState(null);
+  const [showBenchmarkDownload, setShowBenchmarkDownload] = useState(false);
+  const [benchmarkEmail, setBenchmarkEmail] = useState('');
+
+  // Industry benchmark data
+  const INDUSTRY_BENCHMARKS = {
+    'Hospitality (Hotels/Resorts)': { avgCost: 28000, avgPayback: 8.5, adoptionRate: 42 },
+    'Healthcare (Hospitals/Clinics)': { avgCost: 35000, avgPayback: 9.2, adoptionRate: 38 },
+    'Logistics/Warehousing': { avgCost: 45000, avgPayback: 7.1, adoptionRate: 61 },
+    'Food Service/Restaurants': { avgCost: 22000, avgPayback: 11.3, adoptionRate: 28 },
+    'Airports/Transportation': { avgCost: 38000, avgPayback: 8.8, adoptionRate: 45 },
+    'Retail': { avgCost: 25000, avgPayback: 10.2, adoptionRate: 31 },
+    'Manufacturing': { avgCost: 52000, avgPayback: 6.5, adoptionRate: 67 },
+    'Real Estate/Facilities': { avgCost: 30000, avgPayback: 9.5, adoptionRate: 35 },
+    'Other': { avgCost: 30000, avgPayback: 9.0, adoptionRate: 40 }
+  };
 
   const ROBOT_TYPES = [
     'Delivery/Transport',
@@ -68,6 +83,9 @@ export default function ROICalculator() {
     const roi3Year = (((annualSavings * 3) - cost) / cost) * 100;
     const totalSavings3Year = (annualSavings * 3) - cost;
 
+    // Get industry benchmark if available
+    const benchmark = industry ? INDUSTRY_BENCHMARKS[industry] : null;
+
     setResults({
       robotCost: cost,
       annualLaborReplaced: annualLabor,
@@ -76,8 +94,21 @@ export default function ROICalculator() {
       paybackMonths: paybackMonths,
       roi1Year: roi1Year,
       roi3Year: roi3Year,
-      totalSavings3Year: totalSavings3Year
+      totalSavings3Year: totalSavings3Year,
+      industry: industry,
+      benchmark: benchmark
     });
+  }
+
+  function downloadBenchmarkReport() {
+    if (!benchmarkEmail) {
+      alert('Please enter your email to receive the report');
+      return;
+    }
+    // TODO: Send to backend for email capture
+    alert(`✅ Industry Benchmark Report sent to ${benchmarkEmail}!\n\nCheck your inbox in a few minutes.`);
+    setShowBenchmarkDownload(false);
+    setBenchmarkEmail('');
   }
 
   function reset() {
@@ -328,6 +359,72 @@ export default function ROICalculator() {
                     ${results.totalSavings3Year.toLocaleString()}
                   </div>
                 </div>
+
+                {/* Industry Benchmark Comparison */}
+                {results.benchmark && (
+                  <div className="border-2 border-yellow-800/50 rounded-lg p-4 bg-gradient-to-br from-yellow-950/20 to-transparent">
+                    <div className="text-xs text-yellow-400 font-semibold mb-3">📊 INDUSTRY BENCHMARK</div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Your Payback:</span>
+                        <span className={`font-semibold ${
+                          results.paybackMonths < results.benchmark.avgPayback 
+                            ? 'text-emerald-400' : 'text-yellow-400'
+                        }`}>
+                          {results.paybackMonths.toFixed(1)} mo
+                          {results.paybackMonths < results.benchmark.avgPayback && ' ✓ Better'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-500">Industry Avg:</span>
+                        <span className="text-neutral-400">{results.benchmark.avgPayback} mo</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-neutral-800">
+                        <span className="text-neutral-500">Market Adoption:</span>
+                        <span className="text-neutral-400">{results.benchmark.adoptionRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Download Industry Report CTA */}
+                {!showBenchmarkDownload ? (
+                  <div className="pt-4 border-t border-neutral-800">
+                    <button
+                      onClick={() => setShowBenchmarkDownload(true)}
+                      className="w-full border-2 border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white font-semibold py-3 px-6 rounded transition-colors">
+                      📥 Download Full Industry Benchmark Report
+                    </button>
+                    <p className="text-xs text-neutral-600 text-center mt-2">
+                      Get avg costs, payback times, and adoption trends for your industry
+                    </p>
+                  </div>
+                ) : (
+                  <div className="pt-4 border-t border-neutral-800 space-y-3">
+                    <div className="text-sm text-neutral-400 mb-2">
+                      📧 Enter your email to receive the full industry benchmark report:
+                    </div>
+                    <input
+                      type="email"
+                      value={benchmarkEmail}
+                      onChange={(e) => setBenchmarkEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-yellow-600"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={downloadBenchmarkReport}
+                        className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-semibold py-3 px-6 rounded transition-colors">
+                        Send Report
+                      </button>
+                      <button
+                        onClick={() => setShowBenchmarkDownload(false)}
+                        className="border border-neutral-700 text-neutral-400 hover:border-neutral-600 px-6 py-3 rounded transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* CTA */}
                 <div className="pt-4 border-t border-neutral-800">

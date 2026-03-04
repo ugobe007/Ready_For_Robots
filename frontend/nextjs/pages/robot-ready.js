@@ -325,6 +325,79 @@ export default function RobotReady() {
               </div>
             </div>
 
+            {/* Market Fit Score */}
+            {(() => {
+              // Calculate market fit score components
+              const hotCount = results.matched_companies?.filter(c => c.priority_tier === 'HOT').length || 0;
+              const totalMatches = results.matched_companies?.length || 0;
+              
+              // Industry demand score (0-35 points based on hot leads ratio)
+              const industryDemand = Math.min(35, Math.round((hotCount / Math.max(totalMatches, 1)) * 35));
+              
+              // Geographic coverage (0-25 points based on total matches)
+              const geoCoverage = Math.min(25, Math.round((totalMatches / 25) * 25));
+              
+              // Signal strength (0-25 points based on average signals per company)
+              const avgSignals = results.matched_companies?.reduce((sum, c) => sum + (c.key_signals?.length || 0), 0) / Math.max(totalMatches, 1);
+              const signalStrength = Math.min(25, Math.round(avgSignals * 5));
+              
+              // Opportunity quality (0-15 points based on estimated deal value)
+              const dealQuality = Math.min(15, Math.round((results.estimated_deal_value || 0) / 50000));
+              
+              const marketFitScore = industryDemand + geoCoverage + signalStrength + dealQuality;
+              
+              // Score interpretation
+              let scoreColor = 'text-red-400';
+              let scoreBg = 'from-red-950/20';
+              let scoreBorder = 'border-red-800/50';
+              let scoreLabel = 'Weak Fit';
+              
+              if (marketFitScore >= 75) {
+                scoreColor = 'text-emerald-400';
+                scoreBg = 'from-emerald-950/20';
+                scoreBorder = 'border-emerald-800/50';
+                scoreLabel = 'Excellent Fit';
+              } else if (marketFitScore >= 50) {
+                scoreColor = 'text-yellow-400';
+                scoreBg = 'from-yellow-950/20';
+                scoreBorder = 'border-yellow-800/50';
+                scoreLabel = 'Good Fit';
+              }
+
+              return (
+                <div className={`border-2 ${scoreBorder} rounded-lg p-6 bg-gradient-to-br ${scoreBg} to-transparent`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-300 mb-1">Market Fit Score</h3>
+                      <p className="text-xs text-neutral-600">Based on industry demand, coverage, and opportunity quality</p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-4xl font-bold ${scoreColor}`}>{marketFitScore}</div>
+                      <div className={`text-xs font-semibold ${scoreColor}`}>{scoreLabel}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-neutral-600 mb-1">Industry Demand</div>
+                      <div className="text-lg font-semibold text-neutral-300">{industryDemand}/35</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-neutral-600 mb-1">Geo Coverage</div>
+                      <div className="text-lg font-semibold text-neutral-300">{geoCoverage}/25</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-neutral-600 mb-1">Signal Strength</div>
+                      <div className="text-lg font-semibold text-neutral-300">{signalStrength}/25</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-neutral-600 mb-1">Deal Quality</div>
+                      <div className="text-lg font-semibold text-neutral-300">{dealQuality}/15</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Robot Capabilities */}
             {results.robot_capabilities && (
               <div className="border border-neutral-800 rounded-lg p-6">
