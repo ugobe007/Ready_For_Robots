@@ -237,46 +237,6 @@ export default function Analytics() {
               )) || <p className="text-neutral-500 text-center py-4">No data available</p>}
             </div>
           </div>
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-zinc-300">{region.name}</span>
-                      <span className="text-zinc-400 text-sm">{region.searches} searches</span>
-                    </div>
-                    <div className="w-full bg-zinc-700 rounded-full h-2">
-                      <div 
-                        className="bg-purple-500 h-2 rounded-full transition-all"
-                        style={{ width: `${region.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )) || <p className="text-zinc-500 text-center py-4">No data available</p>}
-            </div>
-          </div>
-
-          {/* Cost Distribution */}
-          <div className="bg-zinc-800 border border-zinc-700 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Robot Cost Distribution</h3>
-            <div className="space-y-3">
-              {analytics?.cost_buckets?.map((bucket, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-zinc-300">{bucket.range}</span>
-                      <span className="text-zinc-400 text-sm">{bucket.count} robots</span>
-                    </div>
-                    <div className="w-full bg-zinc-700 rounded-full h-2">
-                      <div 
-                        className="bg-yellow-500 h-2 rounded-full transition-all"
-                        style={{ width: `${bucket.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )) || <p className="text-zinc-500 text-center py-4">No data available</p>}
-            </div>
-          </div>
 
         </div>
 
