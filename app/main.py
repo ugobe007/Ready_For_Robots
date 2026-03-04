@@ -14,8 +14,10 @@ from app.api.user import router as user_router
 from app.api.robots import router as robots_router
 from app.api.robot_ready import router as robot_ready_router
 from app.api.analytics import router as analytics_router
+from app.api.share import router as share_router
 from app.database import Base, engine
 import app.models
+import app.models.shared_calculation
 
 Base.metadata.create_all(bind=engine)
 
@@ -43,6 +45,7 @@ app.include_router(user_router,    prefix="/api/user",     tags=["user"])
 app.include_router(robots_router,  prefix="/api",          tags=["robots"])
 app.include_router(robot_ready_router, prefix="/api/robot-ready", tags=["robot-ready"])
 app.include_router(analytics_router, prefix="/api", tags=["analytics"])
+app.include_router(share_router, prefix="/api", tags=["share"])
 
 @app.get("/health")
 def health():

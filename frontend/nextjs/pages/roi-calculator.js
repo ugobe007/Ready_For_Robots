@@ -16,6 +16,8 @@ export default function ROICalculator() {
   const [results, setResults] = useState(null);
   const [showBenchmarkDownload, setShowBenchmarkDownload] = useState(false);
   const [benchmarkEmail, setBenchmarkEmail] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Industry benchmark data
   const INDUSTRY_BENCHMARKS = {
@@ -136,6 +138,39 @@ export default function ROICalculator() {
     alert(`✅ Industry Benchmark Report sent to ${benchmarkEmail}!\n\nCheck your inbox in a few minutes.`);
     setShowBenchmarkDownload(false);
     setBenchmarkEmail('');
+  }
+
+  async function shareResults() {
+    if (!results) return;
+    
+    try {
+      const response = await fetch('/api/share-calculation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          robot_type: robotType,
+          robot_cost: results.robotCost,
+          industry: industry,
+          payback_months: results.paybackMonths,
+          annual_savings: results.annualSavings,
+          roi_1_year: results.roi1Year,
+          roi_3_year: results.roi3Year,
+          total_savings_3_year: results.totalSavings3Year
+        })
+      });
+      
+      const data = await response.json();
+      const fullUrl = `${window.location.origin}${data.share_url}`;
+      setShareUrl(fullUrl);
+      setShowShareModal(true);
+    } catch (err) {
+      alert('Failed to create share link. Please try again.');
+    }
+  }
+
+  function copyShareLink() {
+    navigator.clipboard.writeText(shareUrl);
+    alert('✅ Link copied to clipboard!');
   }
 
   function reset() {
@@ -454,14 +489,27 @@ export default function ROICalculator() {
                 )}
 
                 {/* CTA */}
-                <div className="pt-4 border-t border-neutral-800">
-                  <p className="text-xs text-neutral-500 mb-3">
-                    💡 Want to find companies ready to buy robots like yours?
-                  </p>
-                  <Link href="/robot-ready"
-                    className="block text-center border-2 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white font-semibold py-3 px-6 rounded transition-colors">
-                    Find Your Customers →
-                  </Link>
+                <div className="pt-4 border-t border-neutral-800 space-y-3">
+                  <div>
+                    <button
+                      onClick={shareResults}
+                      className="w-full text-center border-2 border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white font-semibold py-3 px-6 rounded transition-colors">
+                      🔗 Share These Results
+                    </button>
+                    <p className="text-xs text-neutral-600 mt-1 text-center">
+                      Get a link to share on LinkedIn, Twitter, or email
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-2">
+                      💡 Want to find companies ready to buy robots like yours?
+                    </p>
+                    <Link href="/robot-ready"
+                      className="block text-center border-2 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white font-semibold py-3 px-6 rounded transition-colors">
+                      Find Your Customers →
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Save Results Teaser */}
@@ -485,6 +533,55 @@ export default function ROICalculator() {
           </p>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowShareModal(false)}>
+          <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold text-white mb-4">🔗 Share Your Results</h2>
+            <p className="text-neutral-400 text-sm mb-6">
+              Anyone with this link can view your ROI calculation results. Share on social media or send to colleagues!
+            </p>
+            
+            <div className="bg-neutral-800 border border-neutral-700 rounded p-3 mb-4 flex items-center gap-2">
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                className="flex-1 bg-transparent text-neutral-300 text-sm focus:outline-none"
+              />
+              <button
+                onClick={copyShareLink}
+                className="border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+                Copy
+              </button>
+            </div>
+
+            <div className="flex gap-3 mb-6">
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my robot ROI calculation: ${results?.paybackMonths.toFixed(1)} month payback, $${results?.annualSavings.toLocaleString()}/year savings!`)}&url=${encodeURIComponent(shareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-blue-500 hover:bg-blue-400 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                Share on Twitter
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm font-medium transition-colors">
+                Share on LinkedIn
+              </a>
+            </div>
+
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full border border-neutral-700 text-neutral-400 hover:border-neutral-600 py-2 px-4 rounded transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
