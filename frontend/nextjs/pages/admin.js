@@ -537,9 +537,14 @@ export default function AdminPage() {
           <span className="text-neutral-700">|</span>
           <span className="text-sm text-neutral-500">Admin</span>
         </div>
-        <Link href="/" className="text-xs text-neutral-600 hover:text-cyan-400 transition-colors">
-          ← Dashboard
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/analytics" className="text-xs text-neutral-600 hover:text-emerald-400 transition-colors">
+            📊 Analytics
+          </Link>
+          <Link href="/" className="text-xs text-neutral-600 hover:text-cyan-400 transition-colors">
+            ← Dashboard
+          </Link>
+        </div>
       </header>
 
       <main className="px-6 pt-6 pb-16 max-w-5xl mx-auto">

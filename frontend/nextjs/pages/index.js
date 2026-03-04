@@ -1338,7 +1338,6 @@ export default function Dashboard() {
           <Link href="/roi-calculator" className="btn-ghost border-yellow-800 text-yellow-400 hover:border-yellow-600">💰 ROI Calc</Link>
           <Link href="/pilot-calculator" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">🧪 Pilot Calc</Link>
           <Link href="/robot-ready" className="btn-ghost border-emerald-800 text-emerald-400 hover:border-emerald-600">🤖 Robot Ready</Link>
-          <Link href="/analytics" className="btn-ghost border-purple-800 text-purple-400 hover:border-purple-600">📊 Analytics</Link>
           <Link href="/brief" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">📋 Strategy Brief</Link>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
