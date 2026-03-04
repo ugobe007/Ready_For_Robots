@@ -1606,6 +1606,66 @@ export default function Dashboard() {
         {/* RIGHT COLUMN - Main Content */}
         <main className="flex-1 min-w-0 space-y-6">
           
+          {/* TOP 3 HOT DEALS OF THE DAY - Hero Section */}
+          {!loading && leads.length > 0 && (() => {
+            const hotDeals = [...leads]
+              .filter(l => l.priority_tier === 'HOT' && l.score?.overall_score != null)
+              .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
+              .slice(0, 3);
+            
+            if (hotDeals.length === 0) return null;
+            
+            return (
+              <div className="border-2 border-red-800/50 rounded-lg p-6 bg-gradient-to-br from-red-950/20 to-transparent">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                    <span className="text-2xl">🔥</span> Top {hotDeals.length} Hot Deals Today
+                  </h2>
+                  <span className="text-[10px] text-neutral-600 uppercase tracking-wider">Priority Outreach</span>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-3">
+                  {hotDeals.map((deal, idx) => {
+                    const sig = topSignal(deal);
+                    const sigM = sig ? (SIGNAL_META[sig.signal_type] || {}) : {};
+                    return (
+                      <div key={deal.id} 
+                        className="border border-red-900 rounded-lg p-4 hover:border-red-700 hover:bg-red-950/30 transition-all cursor-pointer group"
+                        onClick={() => setSelectedLead(deal)}>
+                        <div className="flex items-start justify-between mb-2">
+                          <span className="text-xs font-bold text-red-500">#{idx + 1}</span>
+                          <ScoreNum value={deal.score?.overall_score ?? 0} />
+                        </div>
+                        <h3 className="text-base font-semibold text-neutral-100 mb-1 group-hover:text-emerald-400 transition-colors">
+                          {deal.company_name}
+                        </h3>
+                        <div className="text-[10px] text-neutral-600 mb-3">
+                          {[deal.industry, deal.location_city, deal.location_state].filter(Boolean).join(' · ')}
+                        </div>
+                        {sig && (
+                          <div className="space-y-2">
+                            <SignalBadge type={sig.signal_type} />
+                            <p className="text-[10px] text-neutral-500 line-clamp-2">
+                              {sig.raw_text}
+                            </p>
+                          </div>
+                        )}
+                        <div className="mt-3 pt-3 border-t border-red-900/50 flex items-center justify-between">
+                          <span className="text-[9px] text-neutral-700">
+                            {deal.signal_count} signals
+                          </span>
+                          <span className="text-[10px] text-red-400 group-hover:text-red-300 font-medium">
+                            Analyze →
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+          
           {/* intelligence search — primary tool, above the fold */}
           <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
 
