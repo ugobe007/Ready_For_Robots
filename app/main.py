@@ -7,6 +7,7 @@ from app.api import leads, companies, scoring
 from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
 from app.api.admin import router as admin_router
+from app.api.admin_extended import router as admin_extended_router
 from app.api.agent import router as agent_router
 from app.api.search import router as search_router
 from app.api.trending import router as trending_router
@@ -39,6 +40,7 @@ app.include_router(scoring.router, prefix="/api/scoring", tags=["scoring"])
 app.include_router(analyze_router, prefix="/api", tags=["analyze"])
 app.include_router(scraper_health_router, prefix="/api", tags=["scraper-health"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
 app.include_router(search_router, prefix="/api/search", tags=["search"])
 app.include_router(trending_router, prefix="/api/trending", tags=["trending"])
