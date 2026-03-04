@@ -109,7 +109,7 @@ _INDUSTRY_CONTACT = {
 
 # Industry → best pitch angle
 _INDUSTRY_PITCH = {
-    "Hospitality":   "eliminate labor gaps in food delivery, cleaning, and front-desk tasks — Richtech robots maintain service consistency across every shift",
+    "Hospitality":   "eliminate labor gaps in food delivery, cleaning, and front-desk tasks — automation maintains service consistency across every shift",
     "Logistics":     "automate repetitive warehouse pick-pack-sort operations — reduce labor costs 30–60% while running 24/7 with zero fatigue",
     "Healthcare":    "autonomous delivery robots for medications, linens, and supplies — free nursing staff for patient care",
     "Food Service":  "autonomous cooking and serving robots that ensure consistent food quality and handle peak-hour volume without extra staff",
@@ -571,7 +571,7 @@ def _build_talking_points(company: Company, score: Score, sigs: List, industry: 
         points.append("Labor costs represent 30–40% of your operating budget — our robots reduce that by up to 50%.")
 
     if "automation_intent" in sig_types or "strategic_hire" in sig_types:
-        points.append("You're already evaluating automation — Richtech has deployed at scale in your exact use case.")
+        points.append("You're already evaluating automation — proven solutions have deployed at scale in your exact use case.")
 
     if "funding_round" in sig_types or "capex" in sig_types:
         points.append("With your recent capital allocation, now is the ideal window to lock in pricing and deployment.")
@@ -580,10 +580,10 @@ def _build_talking_points(company: Company, score: Score, sigs: List, industry: 
         points.append("As you scale to new locations, robots ensure consistent quality without proportional headcount growth.")
 
     if "service_consistency" in sig_types:
-        points.append("Richtech robots deliver the same service standard on the 1st shift as the 4th — zero variability.")
+        points.append("Automation delivers the same service standard on the 1st shift as the 4th — zero variability.")
 
     if industry == "Hospitality":
-        points.append("Hotels and restaurants using our ADAM robot report 40% reduction in delivery labor and 95%+ guest satisfaction.")
+        points.append("Hotels and restaurants using delivery robots report 40% reduction in delivery labor and 95%+ guest satisfaction.")
     elif industry == "Logistics":
         points.append("Our AMRs integrate with existing WMS systems in days, not months — zero disruption to your current ops.")
     elif industry == "Healthcare":
@@ -591,8 +591,8 @@ def _build_talking_points(company: Company, score: Score, sigs: List, industry: 
 
     # Fallback
     if not points:
-        points.append(f"Richtech Robotics has case studies in {industry} with measurable ROI within 12–18 months.")
-        points.append("Our robots integrate with existing software and require minimal infrastructure changes.")
+        points.append(f"Proven automation solutions in {industry} deliver measurable ROI within 12–18 months.")
+        points.append("Modern robots integrate with existing software and require minimal infrastructure changes.")
 
     return points[:4]
 

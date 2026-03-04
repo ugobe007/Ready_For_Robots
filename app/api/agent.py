@@ -17,78 +17,50 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
+from app.models.robot import Robot
 from app.services.ml_agent import MLAgent, _build_strategy, insights_to_dict
 
 router = APIRouter()
 
-# ── Richtech Robotics product line ────────────────────────────────────────────
-_ROBOTS = {
-    "MATRADEE": {
-        "name": "MATRADEE",
-        "tagline": "Autonomous food & amenity delivery",
-        "url": "https://www.richtechrobotics.com/matradee",
-        "use_cases": ["In-room dining delivery", "Restaurant food runner", "Floor-to-floor room service"],
-        "industries": ["Hospitality", "Food Service"],
-        "roi_stat": "Handles 400+ daily deliveries, reducing delivery labor by 40%",
-    },
-    "MATRADEE_X": {
-        "name": "MATRADEE X",
-        "tagline": "High-capacity food & cargo delivery",
-        "url": "https://www.richtechrobotics.com/matradee-x",
-        "use_cases": ["Large-tray banquet delivery", "High-volume restaurant service", "Multi-stop room service"],
-        "industries": ["Hospitality", "Food Service"],
-        "roi_stat": "Larger payload capacity for peak-hour banquet and catering operations",
-    },
-    "ADAM": {
-        "name": "ADAM",
-        "tagline": "Autonomous bar & F&B robot",
-        "url": "https://www.richtechrobotics.com/adam",
-        "use_cases": ["Bar & cocktail service", "Coffee & beverage automation", "Event drink service"],
-        "industries": ["Hospitality", "Food Service"],
-        "roi_stat": "Consistent pour accuracy, operates 18+ hours without breaks",
-    },
-    "LUCKI": {
-        "name": "LUCKI",
-        "tagline": "Delivery robot with secured drawers",
-        "url": "https://www.richtechrobotics.com/lucki",
-        "use_cases": ["Pharmacy & medication delivery", "Secure document/supply transport", "Back-of-house logistics"],
-        "industries": ["Healthcare", "Hospitality", "Logistics"],
-        "roi_stat": "Secure multi-compartment delivery — ideal for sensitive items like medications",
-    },
-    "MEDBOT": {
-        "name": "MEDBOT",
-        "tagline": "Hospital-grade autonomous delivery robot",
-        "url": "https://www.richtechrobotics.com/medbot",
-        "use_cases": ["Medication delivery to patient rooms", "Linen & supply transport", "Lab sample courier"],
-        "industries": ["Healthcare"],
-        "roi_stat": "200+ deliveries/day per unit; frees nursing staff for direct patient care",
-    },
-    "DUST_E_MX": {
-        "name": "DUST-E MX",
-        "tagline": "Autonomous UV-C disinfection robot",
-        "url": "https://www.richtechrobotics.com/dust-e-mx",
-        "use_cases": ["Hospital room & corridor disinfection", "Hotel room turnover sanitation", "Food prep area sterilization"],
-        "industries": ["Healthcare", "Hospitality", "Food Service"],
-        "roi_stat": "Disinfects a standard room in <10 minutes; reduces HAI risk by up to 97.7%",
-    },
-    "AIDY": {
-        "name": "AIDY",
-        "tagline": "Guest-facing indoor delivery robot",
-        "url": "https://www.richtechrobotics.com/aidy",
-        "use_cases": ["Hotel amenity delivery", "Package & parcel delivery", "Concierge fulfillment"],
-        "industries": ["Hospitality"],
-        "roi_stat": "Automates up to 80% of standard concierge delivery tasks 24/7",
-    },
-}
 
-# Industry → recommended robots (ordered by priority)
-_INDUSTRY_ROBOTS = {
-    "Hospitality":  ["MATRADEE", "ADAM", "AIDY", "DUST_E_MX"],
-    "Food Service": ["MATRADEE", "MATRADEE_X", "ADAM", "LUCKI"],
-    "Healthcare":   ["MEDBOT", "LUCKI", "DUST_E_MX"],
-    "Logistics":    ["LUCKI", "MATRADEE"],
-    "Unknown":      ["MATRADEE", "LUCKI"],
-}
+# Helper function to get robots from database
+def _get_robots_for_industry(industry: str, db: Session, limit: int = 5):
+    """Get robots from database that match the given industry."""
+    robots = db.query(Robot).filter(Robot.is_active == True).all()
+    
+    # Filter by industry in Python for SQLite compatibility
+    filtered = [r for r in robots if r.industries and industry in r.industries][:limit]
+    
+    return [{
+        "name": r.name,
+        "vendor": r.vendor,
+        "tagline": r.tagline,
+        "url": r.product_url,
+        "use_cases": r.use_cases or [],
+        "industries": r.industries or [],
+        "roi_stat": r.roi_stat,
+        "robot_type": r.robot_type,
+    } for r in filtered]
+
+
+def _get_all_active_robots(db: Session):
+    """Get all active robots from database."""
+    robots = db.query(Robot).filter(Robot.is_active == True).all()
+    
+    result = {}
+    for r in robots:
+        key = r.name.upper().replace(" ", "_").replace("-", "_")
+        result[key] = {
+            "name": r.name,
+            "vendor": r.vendor,
+            "tagline": r.tagline,
+            "url": r.product_url,
+            "use_cases": r.use_cases or [],
+            "industries": r.industries or [],
+            "roi_stat": r.roi_stat,
+        }
+    return result
+
 
 # Decision-maker roles per industry with LinkedIn search query
 _DM_ROLES = {
@@ -154,17 +126,28 @@ def _intelligence_links(company_name: str, website: str = None) -> list:
         links.insert(0, {"label": "Company Website", "url": website, "icon": "web"})
     return links
 
-def _robot_positioning(company: Company, score: Score, sigs: list) -> list:
+def _robot_positioning(company: Company, score: Score, sigs: list, db: Session) -> list:
+    """Get robot recommendations from database based on company industry and signals."""
     industry = company.industry or "Unknown"
-    robot_keys = _INDUSTRY_ROBOTS.get(industry, _INDUSTRY_ROBOTS["Unknown"])
+    
+    # Get robots from database for this industry
+    all_robots = db.query(Robot).filter(Robot.is_active == True).all()
+    
+    # Filter by industry in Python for SQLite compatibility
+    robots_query = [r for r in all_robots if r.industries and industry in r.industries]
+    
+    # Sort by preference: preferred robots first
+    robots_query.sort(key=lambda r: (not r.is_preferred, r.vendor, r.name))
+    
+    # Fallback to any active robots if no industry match
+    if not robots_query:
+        robots_query = all_robots[:5]
+        robots_query.sort(key=lambda r: (not r.is_preferred, r.vendor, r.name))
 
     sig_types = {s.signal_type for s in sigs}
 
     recommendations = []
-    for key in robot_keys:
-        robot = _ROBOTS.get(key)
-        if not robot:
-            continue
+    for robot in robots_query[:3]:  # Top 3 recommendations
         # Build why-now rationale
         why = []
         if "labor_shortage" in sig_types or "labor_pain" in sig_types:
@@ -179,12 +162,18 @@ def _robot_positioning(company: Company, score: Score, sigs: list) -> list:
             why.append(f"Strong {industry} market fit — ROI achievable in 12–18 months")
 
         recommendations.append({
-            **robot,
+            "name": robot.name,
+            "vendor": robot.vendor,
+            "tagline": robot.tagline,
+            "url": robot.product_url,
+            "use_cases": robot.use_cases or [],
+            "industries": robot.industries or [],
+            "roi_stat": robot.roi_stat,
             "why_now": why[:2],
-            "priority": "PRIMARY" if recommendations == [] else "SECONDARY",
+            "priority": "PRIMARY" if len(recommendations) == 0 else "SECONDARY",
         })
 
-    return recommendations[:3]
+    return recommendations
 
 def _decision_makers(company: Company) -> list:
     industry = company.industry or "Unknown"
@@ -301,7 +290,7 @@ def get_profile(company_id: int, db: Session = Depends(get_db)):
         },
         "scores":          score_dict,
         "strategy":        strategy_dict,
-        "robot_match":     _robot_positioning(company, score, sigs),
+        "robot_match":     _robot_positioning(company, score, sigs, db),
         "decision_makers": _decision_makers(company),
         "intel_links":     _intelligence_links(company.name, company.website),
         "signals":         sig_summary,

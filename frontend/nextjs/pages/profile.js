@@ -422,7 +422,6 @@ export default function ProfilePage() {
               <h1 className="text-2xl font-bold tracking-tight text-white">
                 {userInfo?.display_name || userInfo?.email?.split('@')[0] || 'My Profile'}
               </h1>
-              <span className="label border border-neutral-700 rounded px-2 py-0.5 text-neutral-400">Richtech Robotics</span>
             </div>
             <p className="text-xs text-neutral-600">{userInfo?.email}</p>
           </div>
@@ -625,7 +624,7 @@ export default function ProfilePage() {
         )}
 
         <footer className="mt-16 text-center text-[10px] text-neutral-700">
-          ready for robots · richtech robotics · profile data synced to cloud
+          ready for robots · profile data synced to cloud
         </footer>
       </div>
     </>

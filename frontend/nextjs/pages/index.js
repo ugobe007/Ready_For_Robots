@@ -884,7 +884,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
             <div className="space-y-3">
               <p className="text-xs text-neutral-600 mb-4">
                 Click any role to search LinkedIn for people at {lead.company_name} with that title.
-                These are the typical decision-makers and economic buyers for Richtech Robotics deployments.
+                These are typical decision-makers and economic buyers for robotics automation deployments.
               </p>
               {loading && <p className="text-sm text-neutral-700 animate-pulse">loading&hellip;</p>}
               {(profile?.decision_makers || []).map((dm, i) => (
@@ -1328,7 +1328,6 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
-            <span className="label border border-neutral-700 rounded px-2 py-0.5 text-neutral-300">RICHTECH ROBOTICS</span>
           </div>
           <p className="text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>

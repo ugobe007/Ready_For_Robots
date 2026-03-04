@@ -62,7 +62,7 @@ export default function LoginPage() {
         {/* logo */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-white tracking-tight">Ready for Robots</h1>
-          <p className="text-xs text-neutral-500 mt-1">Richtech Robotics · Lead Intelligence</p>
+          <p className="text-xs text-neutral-500 mt-1">Lead Intelligence Platform</p>
         </div>
 
         {status === 'sent' ? (

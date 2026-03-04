@@ -14,8 +14,8 @@ We are NOT interested in:
   - Robotics engineers / AMR software developers (those are competitors/builders)
   - Companies building their own robots (not buyers)
 
-Richtech Robotics target verticals:
-    Hospitality . Logistics . Healthcare . Food Service
+Target verticals:
+    Hospitality . Logistics . Healthcare . Food Service . Retail . Manufacturing
 """
 
 from dataclasses import dataclass, field
@@ -964,7 +964,7 @@ NEWS_QUERIES = [
     {"query": "VP Director facilities hospital health system named",        "industries": ["Healthcare"],                   "signal_types": ["strategic_hire"]},
     {"query": "Director food beverage operations appointed hospitality",    "industries": ["Hospitality", "Food Service"],  "signal_types": ["strategic_hire"]},
 
-    # === Named Richtech Target Accounts ===
+    # === High-Value Target Accounts ===
     {"query": "Marriott International labor staffing operations 2025",       "industries": ["Hospitality"],                  "signal_types": ["labor_shortage", "capex"]},
     {"query": "Hilton Hotels expansion new properties investment 2025",      "industries": ["Hospitality"],                  "signal_types": ["expansion", "capex"]},
     {"query": "DHL supply chain operations expansion new facility",          "industries": ["Logistics"],                    "signal_types": ["capex", "expansion"]},

@@ -69,7 +69,7 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
 
 TIERS = ("HOT", "WARM", "COLD")
 
-# Industries where Richtech robots have the strongest fit
+# Industries where automation robots have the strongest fit
 _HIGH_FIT_INDUSTRIES = {
     "hospitality", "hotel", "hotel & hospitality",
     "logistics", "supply chain", "3pl", "distribution",
