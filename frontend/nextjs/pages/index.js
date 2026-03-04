@@ -1430,7 +1430,7 @@ export default function Dashboard() {
       <div className="flex gap-6">
         
         {/* LEFT COLUMN - Filters & Controls */}
-        <aside className="w-80 shrink-0 space-y-6 sticky top-6 self-start hidden lg:block">
+        <aside className="w-80 shrink-0 space-y-6 sticky top-6 self-start hidden lg:block max-h-[calc(100vh-3rem)] overflow-y-auto sidebar-scroll">
           
           {/* Quick Stats */}
           <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
