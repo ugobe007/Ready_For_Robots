@@ -12,6 +12,7 @@ from app.api.search import router as search_router
 from app.api.trending import router as trending_router
 from app.api.user import router as user_router
 from app.api.robots import router as robots_router
+from app.api.robot_ready import router as robot_ready_router
 from app.database import Base, engine
 import app.models
 
@@ -39,6 +40,7 @@ app.include_router(search_router, prefix="/api/search", tags=["search"])
 app.include_router(trending_router, prefix="/api/trending", tags=["trending"])
 app.include_router(user_router,    prefix="/api/user",     tags=["user"])
 app.include_router(robots_router,  prefix="/api",          tags=["robots"])
+app.include_router(robot_ready_router, prefix="/api/robot-ready", tags=["robot-ready"])
 
 @app.get("/health")
 def health():
