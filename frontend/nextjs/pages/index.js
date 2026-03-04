@@ -1335,7 +1335,8 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
-          <Link href="/robot-ready" className="btn-ghost border-violet-800 text-violet-400 hover:border-violet-600">🤖 Robot Ready</Link>
+          <Link href="/roi-calculator" className="btn-ghost border-yellow-800 text-yellow-400 hover:border-yellow-600">💰 ROI Calc</Link>
+          <Link href="/robot-ready" className="btn-ghost border-emerald-800 text-emerald-400 hover:border-emerald-600">🤖 Robot Ready</Link>
           <Link href="/brief" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">📋 Strategy Brief</Link>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
@@ -1369,6 +1370,30 @@ export default function Dashboard() {
             <Link href="/robot-ready" 
               className="inline-flex items-center gap-2 px-6 py-3 border-2 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white font-semibold rounded transition-colors">
               <span>🚀 Find My Customers</span>
+              <span>→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ROI Calculator CTA Banner */}
+      <div className="mb-8 border-2 border-yellow-800/50 rounded-lg bg-gradient-to-r from-yellow-950/20 to-neutral-950 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">💰</span>
+              <h2 className="text-xl font-bold text-yellow-400">ROI Calculator</h2>
+              <span className="px-2 py-0.5 border-2 border-yellow-700 rounded text-[10px] text-yellow-300 uppercase font-semibold">Free</span>
+            </div>
+            <p className="text-sm text-neutral-300 mb-1">Calculate Your Robot's Payback Period</p>
+            <p className="text-xs text-neutral-600">
+              Enter cost + labor savings → Get instant payback period, annual ROI, 3-year projections
+            </p>
+          </div>
+          <div className="shrink-0">
+            <Link href="/roi-calculator" 
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white font-semibold rounded transition-colors">
+              <span>📊 Calculate ROI</span>
               <span>→</span>
             </Link>
           </div>
