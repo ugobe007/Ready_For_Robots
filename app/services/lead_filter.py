@@ -140,7 +140,12 @@ def priority_tier(
     warm_hits = [s for s in signal_types if s in _WARM_SIGNAL_TYPES]
     if hot_hits:
         boost += 5.0 * len(hot_hits)
-        reasons.append(f"intent signals: {', '.join(hot_hits)}")
+        # Show unique signal types with count instead of listing all instances
+        unique_hot = list(dict.fromkeys(hot_hits))[:5]  # max 5 types
+        if len(hot_hits) > 5:
+            reasons.append(f"{len(hot_hits)} intent signals ({', '.join(unique_hot)}, ...)")
+        else:
+            reasons.append(f"{len(hot_hits)} intent signals ({', '.join(unique_hot)})")
     if warm_hits:
         boost += 2.0 * len(warm_hits)
 
