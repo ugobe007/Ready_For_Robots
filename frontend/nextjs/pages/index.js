@@ -1175,6 +1175,7 @@ export default function Dashboard() {
   const [resetting, setResetting] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [savedIds, setSavedIds] = useState(new Set());
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // load saved company IDs from localStorage on mount
   useEffect(() => {
@@ -1355,140 +1356,266 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* quick scrape */}
-      <QuickScrape onDone={fetchData} />
+      {/* Mobile filter button (visible on small screens) */}
+      <div className="lg:hidden mb-6">
+        <button onClick={() => setShowMobileFilters(!showMobileFilters)}
+          className="w-full flex items-center justify-between px-4 py-3 border border-neutral-800 rounded hover:border-neutral-700 transition-colors">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-neutral-300">Filters & Stats</span>
+            {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
+              <span className="px-2 py-0.5 bg-emerald-900/50 border border-emerald-700 rounded text-[10px] text-emerald-400 font-semibold">
+                {[tier !== 'ALL', industry !== 'All', sigType, search, minScore > 0].filter(Boolean).length} active
+              </span>
+            )}
+          </div>
+          <span className="text-neutral-600">{showMobileFilters ? '▼' : '▶'}</span>
+        </button>
 
-      {/* stat row — numbers are clickable tier filters */}
-      <div className="mb-6 flex flex-wrap items-center gap-6 border-b border-neutral-800 pb-5">
-        <div>
-          <span className="label block mb-0.5">Total Leads</span>
-          <span className="text-2xl font-semibold text-neutral-200 tabular-nums">
-            {summary.total ?? leads.length}
-          </span>
-        </div>
-        <div className="w-px h-6 bg-neutral-800" />
-        <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-red-500 transition-colors">Hot</span>
-          <span className="text-2xl font-semibold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
-        </button>
-        <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-yellow-500 transition-colors">Warm</span>
-          <span className="text-2xl font-semibold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
-        </button>
-        <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
-          className="text-left hover:opacity-80 transition-opacity group">
-          <span className="label block mb-0.5 group-hover:text-cyan-400 transition-colors">Cold</span>
-          <span className="text-2xl font-semibold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
-        </button>
-        <div className="w-px h-6 bg-neutral-800" />
-        <div>
-          <span className="label block mb-0.5">Junk filtered</span>
-          <span className="text-2xl font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
-        </div>
-        {openCircuits > 0 && (
-          <>
-            <div className="w-px h-6 bg-neutral-800" />
-            <div>
-              <span className="label block mb-0.5">Open circuits</span>
-              <span className="text-2xl font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
+        {/* Mobile filters dropdown */}
+        {showMobileFilters && (
+          <div className="mt-4 border border-neutral-800 rounded-lg p-4 space-y-4 bg-neutral-900/50">
+            {/* Stats summary */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="border border-neutral-800 rounded p-3">
+                <span className="label block mb-1">Total</span>
+                <span className="text-2xl font-bold text-neutral-200">{summary.total ?? leads.length}</span>
+              </div>
+              <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); setShowMobileFilters(false); }}
+                className="border border-red-900 rounded p-3 text-left hover:bg-red-900/10 transition-colors">
+                <span className="label block mb-1 text-neutral-500">HOT</span>
+                <span className="text-2xl font-bold text-red-400">{summary.hot ?? 0}</span>
+              </button>
             </div>
-          </>
-        )}
-        {/* tier active indicator */}
-        {tier !== 'ALL' && (
-          <button onClick={() => setTier('ALL')}
-            className="ml-auto text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors">
-            ✕ clear filter
-          </button>
+
+            {/* Filters */}
+            <div>
+              <label className="label block mb-2">Search</label>
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="company name..."
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:border-emerald-600" />
+            </div>
+
+            <div>
+              <label className="label block mb-2">Priority: <span className="text-emerald-400">{tier}</span></label>
+              <div className="grid grid-cols-4 gap-2">
+                {TIERS.map(t => (
+                  <button key={t} onClick={() => setTier(t)}
+                    className={`px-3 py-2 rounded text-xs font-medium ${tier === t ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' : 'border border-neutral-800 text-neutral-600'}`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="label block mb-2">Industry</label>
+              <select value={industry} onChange={e => setIndustry(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-300">
+                {INDUSTRIES.map(ind => (<option key={ind} value={ind}>{ind}</option>))}
+              </select>
+            </div>
+
+            {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
+              <button onClick={() => {
+                setTier('ALL'); setIndustry('All'); setSigType(''); setSearch(''); setMinScore(0);
+              }} className="w-full text-xs text-neutral-600 hover:text-emerald-400 py-2 border border-neutral-800 rounded">
+                ✕ Clear all
+              </button>
+            )}
+          </div>
         )}
       </div>
 
-      {/* intelligence search — primary tool, above the fold */}
-      <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+      {/* Two-column layout */}
+      <div className="flex gap-6">
+        
+        {/* LEFT COLUMN - Filters & Controls */}
+        <aside className="w-80 shrink-0 space-y-6 sticky top-6 self-start hidden lg:block">
+          
+          {/* Quick Stats */}
+          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
+            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400 mb-3">Pipeline Overview</h3>
+            
+            <div>
+              <span className="label block mb-1">Total Leads</span>
+              <span className="text-3xl font-bold text-neutral-200 tabular-nums">
+                {summary.total ?? leads.length}
+              </span>
+            </div>
 
-      {/* strategic snapshot */}
-      {!loading && leads.length > 0 && (
-        <StrategicSnapshot leads={leads} onSelect={setSelectedLead} />
-      )}
+            <div className="h-px bg-neutral-800" />
+            
+            <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
+              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-red-800 transition-colors group">
+              <div className="flex items-center justify-between">
+                <span className="label text-neutral-500 group-hover:text-red-400 transition-colors">HOT</span>
+                <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
+              </div>
+              <div className="text-[10px] text-neutral-700 mt-1">High priority • Ready to engage</div>
+            </button>
 
-      {/* agent insights */}
-      <AgentInsightsPanel />
+            <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
+              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-yellow-800 transition-colors group">
+              <div className="flex items-center justify-between">
+                <span className="label text-neutral-500 group-hover:text-yellow-400 transition-colors">WARM</span>
+                <span className="text-2xl font-bold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
+              </div>
+              <div className="text-[10px] text-neutral-700 mt-1">Medium priority • Nurture sequence</div>
+            </button>
 
-      {/* filter bar */}
-      <div className="mb-6 space-y-3">
-        {/* row 1 */}
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <label className="label block mb-1">Search</label>
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="company name..."
-              className="w-full bg-neutral-900 border border-neutral-600 rounded px-3 py-1.5 text-sm
-                         text-neutral-100 placeholder-neutral-400
-                         focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-900 focus:text-neutral-100
-                         transition-colors" />
-          </div>
-          <div>
-            <label className="label block mb-1">Min score -- <span className="text-emerald-500">{minScore}</span></label>
-            <input type="range" min={0} max={100} value={minScore}
-              onChange={e => setMinScore(Number(e.target.value))}
-              className="w-32 accent-emerald-500" />
-          </div>
-          <div>
-            <label className="label block mb-1">Sort</label>
-            <select value={sort} onChange={e => setSort(e.target.value)}
-              className="bg-transparent border border-neutral-800 rounded px-2 py-1.5 text-xs
-                         text-neutral-400 focus:outline-none focus:border-neutral-600">
-              <option value="score">by score</option>
-              <option value="signals">by signals</option>
-              <option value="name">by name</option>
-            </select>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer select-none mb-0.5">
-            <input type="checkbox" checked={excludeJunk} onChange={e => setExcludeJunk(e.target.checked)}
-              className="sr-only peer" />
-            <span className="text-xs transition-colors peer-checked:text-emerald-400 text-neutral-600">
-              {excludeJunk ? 'hide junk' : 'show junk'}
-            </span>
-          </label>
-        </div>
+            <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
+              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-cyan-900 transition-colors group">
+              <div className="flex items-center justify-between">
+                <span className="label text-neutral-500 group-hover:text-cyan-400 transition-colors">COLD</span>
+                <span className="text-2xl font-bold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
+              </div>
+              <div className="text-[10px] text-neutral-700 mt-1">Low priority • Monitor</div>
+            </button>
 
-        {/* row 2 -- filter tabs */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-1.5">
-            <span className="label mr-1">priority</span>
-            {TIERS.map(t => (
-              <button key={t} onClick={() => setTier(t)}
-                className={tier === t ? 'tab-active' : 'tab-inactive'}>
-                {t === 'HOT' ? 'HOT' : t === 'WARM' ? 'WARM' : t === 'COLD' ? 'COLD' : 'ALL'}
-              </button>
-            ))}
+            <div className="h-px bg-neutral-800" />
+
+            <div className="flex items-center justify-between">
+              <span className="label">Junk filtered</span>
+              <span className="text-lg font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+            </div>
+
+            {openCircuits > 0 && (
+              <>
+                <div className="h-px bg-neutral-800" />
+                <div className="flex items-center justify-between p-2 border border-red-900 rounded">
+                  <span className="label text-red-400">Open circuits</span>
+                  <span className="text-lg font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
+                </div>
+              </>
+            )}
           </div>
-          <div className="w-px h-4 bg-neutral-800" />
-          <div className="flex items-center gap-1.5">
-            <span className="label mr-1">industry</span>
-            {INDUSTRIES.map(ind => (
-              <button key={ind} onClick={() => setIndustry(ind)}
-                className={industry === ind ? 'tab-active' : 'tab-inactive'}>
-                {ind.toLowerCase()}
-              </button>
-            ))}
+
+          {/* Filters */}
+          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
+            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400 mb-3">Filters</h3>
+            
+            <div>
+              <label className="label block mb-2">Search Companies</label>
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="company name..."
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
+                           text-neutral-100 placeholder-neutral-600
+                           focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-900
+                           transition-colors" />
+            </div>
+
+            <div>
+              <label className="label block mb-2">
+                Min Score <span className="text-emerald-400 font-semibold">{minScore}</span>
+              </label>
+              <input type="range" min={0} max={100} value={minScore}
+                onChange={e => setMinScore(Number(e.target.value))}
+                className="w-full accent-emerald-500" />
+              <div className="flex justify-between text-[10px] text-neutral-700 mt-1">
+                <span>0</span>
+                <span>50</span>
+                <span>100</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="label block mb-2">Priority Tier</label>
+              <div className="grid grid-cols-2 gap-2">
+                {TIERS.map(t => (
+                  <button key={t} onClick={() => setTier(t)}
+                    className={`px-3 py-2 rounded text-xs font-medium transition-all ${
+                      tier === t 
+                        ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' 
+                        : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                    }`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="label block mb-2">Industry</label>
+              <select value={industry} onChange={e => setIndustry(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
+                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                {INDUSTRIES.map(ind => (
+                  <option key={ind} value={ind}>{ind}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="label block mb-2">Signal Type</label>
+              <select value={sigType} onChange={e => setSigType(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
+                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                <option value="">All Signals</option>
+                {SIGNAL_TYPES.filter(Boolean).map(st => (
+                  <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="label block mb-2">Sort By</label>
+              <select value={sort} onChange={e => setSort(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
+                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                <option value="score">Score (High → Low)</option>
+                <option value="signals">Signal Count</option>
+                <option value="name">Company Name</option>
+              </select>
+            </div>
+
+            <div className="h-px bg-neutral-800" />
+
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={excludeJunk} onChange={e => setExcludeJunk(e.target.checked)}
+                className="sr-only peer" />
+              <div className="w-10 h-5 bg-neutral-800 rounded-full peer-checked:bg-emerald-900 transition-colors relative">
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-neutral-600 peer-checked:bg-emerald-500 rounded-full transition-all ${excludeJunk ? 'translate-x-5' : ''}`} />
+              </div>
+              <span className="text-xs text-neutral-400">
+                {excludeJunk ? 'Hiding junk leads' : 'Showing all leads'}
+              </span>
+            </label>
+
+            {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
+              <>
+                <div className="h-px bg-neutral-800" />
+                <button onClick={() => {
+                  setTier('ALL');
+                  setIndustry('All');
+                  setSigType('');
+                  setSearch('');
+                  setMinScore(0);
+                }}
+                  className="w-full text-xs text-neutral-600 hover:text-emerald-400 transition-colors py-2 border border-neutral-800 rounded hover:border-neutral-700">
+                  ✕ Clear all filters
+                </button>
+              </>
+            )}
           </div>
-          <div className="w-px h-4 bg-neutral-800" />
-          <div className="flex items-center gap-2">
-            <span className="label">signal</span>
-            <select value={sigType} onChange={e => setSigType(e.target.value)}
-              className="bg-transparent border border-neutral-800 rounded px-2 py-0.5 text-xs
-                         text-neutral-500 focus:outline-none focus:border-neutral-600">
-              <option value="">any</option>
-              {SIGNAL_TYPES.filter(Boolean).map(st => (
-                <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+
+          {/* Quick Scrape */}
+          <QuickScrape onDone={fetchData} />
+
+        </aside>
+
+        {/* RIGHT COLUMN - Main Content */}
+        <main className="flex-1 min-w-0 space-y-6">
+          
+          {/* intelligence search — primary tool, above the fold */}
+          <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+
+          {/* strategic snapshot */}
+          {!loading && leads.length > 0 && (
+            <StrategicSnapshot leads={leads} onSelect={setSelectedLead} />
+          )}
+
+          {/* agent insights */}
+          <AgentInsightsPanel />
 
       {/* lead list */}
       {loading ? (
@@ -1743,8 +1870,11 @@ export default function Dashboard() {
         </div>
       )}
 
+        </main>
+      </div>
+
       <footer className="mt-16 text-center label">
-        ready for robots &middot; richtech robotics &middot; refreshes every 30s
+        ready for robots &middot; automation signal platform &middot; refreshes every 30s
       </footer>
     </div>
     </>
