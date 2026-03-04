@@ -20,6 +20,13 @@ export default function RobotReady() {
   const [robotDescription, setRobotDescription] = useState('');
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const [expandedCompanies, setExpandedCompanies] = useState([]);
+
+  const toggleCompany = (idx) => {
+    setExpandedCompanies(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
 
   const INDUSTRIES = [
     'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 
@@ -210,10 +217,10 @@ export default function RobotReady() {
                     value={robotUrl}
                     onChange={(e) => setRobotUrl(e.target.value)}
                     placeholder="https://yourcompany.com/products/robot"
-                    required
+                    required={inputMode === 'url'}
                     className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
                   />
-                  <p className="text-xs text-neutral-600 mt-1">
+                  <p className="text-xs text-neutral-400 mt-1">
                     We'll scrape this page to understand your robot's capabilities
                   </p>
                 </div>
@@ -226,6 +233,7 @@ export default function RobotReady() {
                     value={robotDescription}
                     onChange={(e) => setRobotDescription(e.target.value)}
                     placeholder="Describe your robot's capabilities, use cases, and key features...\n\nExample: Our autonomous delivery robot is designed for hospitals and hotels. It can navigate elevators, deliver items up to 50 lbs, has UV-C disinfection, operates 24/7, and integrates with building management systems."
+                    required={inputMode === 'text'}
                     required
                     rows={6}
                     className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
@@ -343,32 +351,36 @@ export default function RobotReady() {
         {step === 'results' && results && (
           <div className="space-y-6">
             
-            {/* Summary */}
-            <div className="border-2 border-emerald-800/50 rounded-lg p-6 bg-gradient-to-br from-emerald-950/20 to-transparent">
-              <h2 className="text-2xl font-bold text-emerald-400 mb-4">
-                ✅ Found {results.matched_companies?.length || 0} Perfect Matches
-              </h2>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <div className="text-3xl font-bold text-neutral-100 mb-1">
+            {/* Hero Header with Summary */}
+            <div className="bg-gradient-to-br from-emerald-900/30 via-neutral-900 to-neutral-950 border-2 border-emerald-600/50 rounded-xl p-8">
+              <div className="text-center mb-6">
+                <h2 className="text-3xl font-bold text-emerald-400 mb-2">
+                  ✅ Found {results.matched_companies?.length || 0} Perfect Matches
+                </h2>
+                <p className="text-neutral-300">Companies ready to buy your robot</p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div className="text-center">
+                  <div className="text-5xl font-bold text-white mb-2">
                     {results.matched_companies?.filter(c => c.priority_tier === 'HOT').length || 0}
                   </div>
-                  <div className="text-xs text-neutral-500 uppercase tracking-wider">Hot Leads</div>
-                  <div className="text-[10px] text-red-400 mt-1">Ready to buy now</div>
+                  <div className="text-sm text-neutral-300 uppercase tracking-wider font-semibold">Hot Leads</div>
+                  <div className="text-xs text-red-400 mt-1">🔥 Ready to buy now</div>
                 </div>
-                <div>
-                  <div className="text-3xl font-bold text-neutral-100 mb-1">
+                <div className="text-center">
+                  <div className="text-5xl font-bold text-white mb-2">
                     ${((results.estimated_deal_value || 0) / 1000).toFixed(0)}K
                   </div>
-                  <div className="text-xs text-neutral-500 uppercase tracking-wider">Est. Pipeline Value</div>
-                  <div className="text-[10px] text-emerald-400 mt-1">Total opportunity</div>
+                  <div className="text-sm text-neutral-300 uppercase tracking-wider font-semibold">Pipeline Value</div>
+                  <div className="text-xs text-emerald-400 mt-1">💰 Total opportunity</div>
                 </div>
-                <div>
-                  <div className="text-3xl font-bold text-neutral-100 mb-1">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-white mb-2">
                     {results.top_industry || 'Multiple'}
                   </div>
-                  <div className="text-xs text-neutral-500 uppercase tracking-wider">Top Industry</div>
-                  <div className="text-[10px] text-cyan-400 mt-1">Best fit sector</div>
+                  <div className="text-sm text-neutral-300 uppercase tracking-wider font-semibold">Top Industry</div>
+                  <div className="text-xs text-cyan-400 mt-1">🎯 Best fit sector</div>
                 </div>
               </div>
             </div>
@@ -448,20 +460,20 @@ export default function RobotReady() {
 
             {/* Robot Capabilities */}
             {results.robot_capabilities && (
-              <div className="border border-neutral-800 rounded-lg p-6">
-                <h3 className="text-sm font-semibold text-neutral-300 mb-3">Your Robot Profile</h3>
+              <div className="border border-neutral-700 rounded-lg p-6 bg-neutral-900/50">
+                <h3 className="text-base font-semibold text-white mb-4">Your Robot Profile</h3>
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-600">Type</span>
-                    <p className="text-neutral-300">{results.robot_capabilities.type || 'Not specified'}</p>
+                    <span className="text-xs uppercase tracking-wider text-neutral-400 font-semibold">Type</span>
+                    <p className="text-neutral-200 mt-1">{results.robot_capabilities.type || 'Not specified'}</p>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-600">Primary Use Case</span>
-                    <p className="text-neutral-300">{results.robot_capabilities.use_case || 'General automation'}</p>
+                    <span className="text-xs uppercase tracking-wider text-neutral-400 font-semibold">Primary Use Case</span>
+                    <p className="text-neutral-200 mt-1">{results.robot_capabilities.use_case || 'General automation'}</p>
                   </div>
                   {results.robot_capabilities.capabilities && (
                     <div className="md:col-span-2">
-                      <span className="text-[10px] uppercase tracking-wider text-neutral-600">Capabilities</span>
+                      <span className="text-xs uppercase tracking-wider text-neutral-400 font-semibold">Capabilities</span>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {results.robot_capabilities.capabilities.map((cap, idx) => (
                           <span key={idx} className="border border-cyan-800 text-cyan-400 rounded px-2 py-1 text-xs">
@@ -480,57 +492,87 @@ export default function RobotReady() {
               <h3 className="text-lg font-semibold text-neutral-100 mb-4">Your Top Matches</h3>
               <div className="space-y-4">
                 {results.matched_companies?.slice(0, 10).map((company, idx) => (
-                  <div key={idx} className="border border-neutral-800 rounded-lg p-5 hover:border-emerald-800 transition-colors">
+                  <div 
+                    key={idx} 
+                    className="border border-neutral-700 rounded-lg p-5 hover:border-emerald-600 transition-all cursor-pointer"
+                    onClick={() => toggleCompany(idx)}
+                  >
                     <div className="flex items-start justify-between mb-3">
-                      <div>
+                      <div className="flex-1">
                         <div className="flex items-baseline gap-2 mb-1">
-                          <span className="text-xs font-bold text-neutral-600">#{idx + 1}</span>
-                          <h4 className="text-base font-semibold text-neutral-100">{company.company_name}</h4>
+                          <span className="text-xs font-bold text-neutral-400">#{idx + 1}</span>
+                          <h4 className="text-lg font-bold text-white">{company.company_name}</h4>
                           {company.priority_tier === 'HOT' && (
-                            <span className="border border-red-800 text-red-400 rounded px-2 py-0.5 text-[10px] uppercase">
+                            <span className="border border-red-700 bg-red-900/30 text-red-300 rounded px-2 py-0.5 text-[10px] uppercase font-semibold">
                               🔥 Hot
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-neutral-600">
+                        <p className="text-sm text-neutral-400">
                           {[company.industry, company.location_city, company.location_state].filter(Boolean).join(' · ')}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-emerald-400 mb-1">
+                      <div className="text-right ml-4">
+                        <div className="text-lg font-bold text-emerald-400 mb-1">
                           {company.match_score}% match
                         </div>
                         {company.employee_estimate && (
-                          <div className="text-[10px] text-neutral-600">
+                          <div className="text-xs text-neutral-400">
                             {company.employee_estimate.toLocaleString()} employees
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Value Proposition */}
-                    <div className="bg-emerald-950/20 border border-emerald-900/50 rounded p-3 mb-3">
-                      <div className="text-[10px] uppercase tracking-wider text-emerald-500 mb-1">💡 Your Pitch</div>
-                      <p className="text-sm text-neutral-300">{company.value_proposition}</p>
+                    {/* Always Visible: Value Proposition */}
+                    <div className="bg-emerald-950/30 border border-emerald-800/50 rounded p-3 mb-3">
+                      <div className="text-xs uppercase tracking-wider text-emerald-400 mb-1 font-semibold">💡 Your Pitch</div>
+                      <p className="text-sm text-neutral-200">{company.value_proposition}</p>
                     </div>
 
-                    {/* Key Signals */}
-                    {company.key_signals && company.key_signals.length > 0 && (
-                      <div className="mb-3">
-                        <div className="text-[10px] uppercase tracking-wider text-neutral-600 mb-2">📊 Key Signals</div>
-                        <div className="space-y-1">
-                          {company.key_signals.slice(0, 2).map((signal, sidx) => (
-                            <p key={sidx} className="text-xs text-neutral-500 pl-3 border-l-2 border-cyan-800">
-                              {signal}
-                            </p>
-                          ))}
-                        </div>
+                    {/* Expandable Details */}
+                    {expandedCompanies.includes(idx) && (
+                      <div className="space-y-3 pt-3 border-t border-neutral-700">
+                        {/* Key Signals */}
+                        {company.key_signals && company.key_signals.length > 0 && (
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-cyan-400 mb-2 font-semibold">📊 Key Signals</div>
+                            <div className="space-y-2">
+                              {company.key_signals.map((signal, sidx) => (
+                                <p key={sidx} className="text-sm text-neutral-300 pl-3 border-l-2 border-cyan-600">
+                                  {signal}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Contact Info */}
+                        {company.website && (
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-purple-400 mb-2 font-semibold">🔗 Contact</div>
+                            <a 
+                              href={company.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-purple-300 hover:text-purple-200 underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {company.website}
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Next Steps */}
-                    <div className="text-xs text-neutral-600">
-                      <span className="text-emerald-500">→</span> {company.recommended_action || 'Reach out with personalized demo offer'}
+                    {/* Click to expand/collapse indicator */}
+                    <div className="text-xs text-neutral-400 mt-3 flex items-center justify-between">
+                      <div>
+                        <span className="text-emerald-400">→</span> {company.recommended_action || 'Reach out with personalized demo offer'}
+                      </div>
+                      <div className="text-emerald-400">
+                        {expandedCompanies.includes(idx) ? '▲ Click to collapse' : '▼ Click to learn more'}
+                      </div>
                     </div>
                   </div>
                 ))}
