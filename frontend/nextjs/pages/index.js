@@ -1351,6 +1351,30 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Robot Ready CTA - Hero Banner */}
+      <div className="mb-8 border-2 border-violet-800/50 rounded-lg bg-gradient-to-r from-violet-950/30 to-purple-950/20 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">🤖</span>
+              <h2 className="text-xl font-bold text-violet-400">Robot Ready</h2>
+              <span className="px-2 py-0.5 bg-violet-900/50 border border-violet-700 rounded text-[10px] text-violet-300 uppercase font-semibold">New</span>
+            </div>
+            <p className="text-sm text-neutral-300 mb-1">Find Your Ideal Customers in Seconds</p>
+            <p className="text-xs text-neutral-600">
+              Submit your robot's URL → Get matched with companies ready to buy → Customized outreach strategy
+            </p>
+          </div>
+          <div className="shrink-0">
+            <Link href="/robot-ready" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded transition-colors shadow-lg shadow-violet-900/50">
+              <span>🚀 Find My Customers</span>
+              <span>→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* error */}
       {error && (
         <div className="mb-6 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">

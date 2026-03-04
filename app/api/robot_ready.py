@@ -37,6 +37,8 @@ class RobotSubmission(BaseModel):
     robot_name: str
     url: str
     email: Optional[str] = None
+    target_industries: Optional[List[str]] = None
+    target_regions: Optional[List[str]] = None
 
 
 def scrape_robot_page(url: str) -> str:
@@ -119,19 +121,54 @@ def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict:
     }
 
 
-def match_companies(robot_caps: Dict, db: Session) -> List[Dict]:
+def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] = None, target_regions: List[str] = None) -> List[Dict]:
     """
     Match robot capabilities with companies in the database.
     Returns top matches with scores and customized pitches.
+    Filters by target industries and regions if specified.
     """
     # Get all companies with their signals
     companies = db.query(Company).limit(1000).all()
     
     matches = []
     
+    # Region mapping for filtering
+    REGION_STATES = {
+        'Northeast US': ['NY', 'NJ', 'PA', 'MA', 'CT', 'RI', 'VT', 'NH', 'ME'],
+        'Southeast US': ['FL', 'GA', 'NC', 'SC', 'VA', 'AL', 'MS', 'TN', 'KY', 'WV'],
+        'Midwest US': ['OH', 'MI', 'IN', 'IL', 'WI', 'MN', 'IA', 'MO', 'ND', 'SD', 'NE', 'KS'],
+        'Southwest US': ['TX', 'OK', 'AR', 'LA', 'NM', 'AZ'],
+        'West Coast US': ['CA', 'OR', 'WA', 'NV', 'ID', 'UT', 'CO', 'MT', 'WY'],
+        'Canada': ['ON', 'BC', 'AB', 'QC'],
+        'United Kingdom': ['UK', 'GB'],
+        'Europe': ['UK', 'GB', 'DE', 'FR', 'IT', 'ES'],
+        'Global': [],  # Accept all
+    }
+    
     for company in companies:
         if not company.scores:
             continue
+        
+        # Filter by industry if specified
+        if target_industries:
+            company_industry = company.industry or ""
+            if not any(target_ind.lower() in company_industry.lower() for target_ind in target_industries):
+                continue
+        
+        # Filter by region if specified
+        if target_regions and 'Global' not in target_regions:
+            company_state = company.location_state or ""
+            matches_region = False
+            for region in target_regions:
+                allowed_states = REGION_STATES.get(region, [])
+                if not allowed_states:  # Global
+                    matches_region = True
+                    break
+                if company_state in allowed_states:
+                    matches_region = True
+                    break
+            if not matches_region:
+                continue
         
         score = company.scores
         signals = company.signals or []
@@ -281,8 +318,13 @@ def submit_robot(submission: RobotSubmission, db: Session = Depends(get_db)):
     # Analyze capabilities
     robot_caps = analyze_robot_capabilities(submission.robot_name, page_text)
     
-    # Match with companies
-    matched_companies = match_companies(robot_caps, db)
+    # Match with companies (with optional filters)
+    matched_companies = match_companies(
+        robot_caps, 
+        db, 
+        target_industries=submission.target_industries,
+        target_regions=submission.target_regions
+    )
     
     # Generate strategy
     overall_strategy = generate_overall_strategy(matched_companies, robot_caps)

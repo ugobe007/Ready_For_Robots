@@ -14,8 +14,21 @@ export default function RobotReady() {
   const [robotName, setRobotName] = useState('');
   const [robotUrl, setRobotUrl] = useState('');
   const [email, setEmail] = useState('');
+  const [targetIndustries, setTargetIndustries] = useState([]);
+  const [targetRegions, setTargetRegions] = useState([]);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+
+  const INDUSTRIES = [
+    'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 
+    'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 
+    'Theme Parks & Entertainment', 'Real Estate & Facilities'
+  ];
+
+  const REGIONS = [
+    'Northeast US', 'Southeast US', 'Midwest US', 'Southwest US', 'West Coast US',
+    'Canada', 'United Kingdom', 'Europe', 'Asia-Pacific', 'Global'
+  ];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,6 +43,8 @@ export default function RobotReady() {
           robot_name: robotName,
           url: robotUrl,
           email: email,
+          target_industries: targetIndustries.length > 0 ? targetIndustries : null,
+          target_regions: targetRegions.length > 0 ? targetRegions : null,
         }),
       });
 
@@ -45,6 +60,18 @@ export default function RobotReady() {
       setStep('form');
     }
   }
+
+  const toggleIndustry = (ind) => {
+    setTargetIndustries(prev => 
+      prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind]
+    );
+  };
+
+  const toggleRegion = (reg) => {
+    setTargetRegions(prev => 
+      prev.includes(reg) ? prev.filter(r => r !== reg) : [...prev, reg]
+    );
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950">
@@ -123,6 +150,60 @@ export default function RobotReady() {
                 />
                 <p className="text-xs text-neutral-600 mt-1">
                   We'll email you the results (no spam, promise)
+                </p>
+              </div>
+
+              {/* Target Industries */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Target Industries (optional)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {INDUSTRIES.map(ind => (
+                    <button
+                      key={ind}
+                      type="button"
+                      onClick={() => toggleIndustry(ind)}
+                      className={`px-3 py-2 rounded text-xs font-medium transition-colors ${
+                        targetIndustries.includes(ind)
+                          ? 'bg-violet-900/50 border border-violet-700 text-violet-400'
+                          : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                      }`}>
+                      {ind}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-neutral-600 mt-2">
+                  {targetIndustries.length > 0 
+                    ? `Selected: ${targetIndustries.join(', ')}`
+                    : 'Leave blank to search all industries'}
+                </p>
+              </div>
+
+              {/* Target Regions */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Target Regions (optional)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {REGIONS.map(reg => (
+                    <button
+                      key={reg}
+                      type="button"
+                      onClick={() => toggleRegion(reg)}
+                      className={`px-3 py-2 rounded text-xs font-medium transition-colors ${
+                        targetRegions.includes(reg)
+                          ? 'bg-cyan-900/50 border border-cyan-700 text-cyan-400'
+                          : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                      }`}>
+                      {reg}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-neutral-600 mt-2">
+                  {targetRegions.length > 0 
+                    ? `Selected: ${targetRegions.join(', ')}`
+                    : 'Leave blank to search globally'}
                 </p>
               </div>
 
@@ -301,7 +382,14 @@ export default function RobotReady() {
             {/* CTA */}
             <div className="text-center pt-6 border-t border-neutral-800">
               <button
-                onClick={() => { setStep('form'); setResults(null); setRobotName(''); setRobotUrl(''); }}
+                onClick={() => { 
+                  setStep('form'); 
+                  setResults(null); 
+                  setRobotName(''); 
+                  setRobotUrl(''); 
+                  setTargetIndustries([]);
+                  setTargetRegions([]);
+                }}
                 className="border border-neutral-700 text-neutral-400 hover:border-emerald-600 hover:text-emerald-400 px-6 py-3 rounded transition-colors">
                 ← Analyze Another Robot
               </button>
