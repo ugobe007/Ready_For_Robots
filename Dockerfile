@@ -35,6 +35,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/        ./app/
 COPY worker/     ./worker/
 COPY migrations  ./migrations/
+COPY scripts/    ./scripts/
 COPY alembic.ini .
 
 # Copy built Next.js static files
