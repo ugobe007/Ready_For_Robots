@@ -34,8 +34,8 @@ def get_stats(db: Session = Depends(get_db)):
     scored    = db.query(func.count(Score.id)).scalar()    or 0
 
     # Calculate business metrics
-    hot_leads = db.query(Score).filter(Score.score >= 80).count()
-    avg_score = db.query(func.avg(Score.score)).scalar() or 0
+    hot_leads = db.query(Score).filter(Score.overall_intent_score >= 80).count()
+    avg_score = db.query(func.avg(Score.overall_intent_score)).scalar() or 0
     
     # Estimated pipeline value ($50K per hot lead)
     pipeline_value = hot_leads * 50000

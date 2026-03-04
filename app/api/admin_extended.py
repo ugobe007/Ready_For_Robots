@@ -57,7 +57,7 @@ def search_companies(
             "location_city": c.location_city,
             "location_state": c.location_state,
             "signal_count": signal_count,
-            "score": score_rec.score if score_rec else None,
+            "score": score_rec.overall_intent_score if score_rec else None,
         })
     
     return {"companies": result}
@@ -132,7 +132,9 @@ def export_all_data(db: Session = Depends(get_db)):
             {
                 "id": sc.id,
                 "company_id": sc.company_id,
-                "score": sc.score,
+                "overall_intent_score": sc.overall_intent_score,
+                "automation_score": sc.automation_score,
+                "labor_pain_score": sc.labor_pain_score,
             }
             for sc in scores
         ],
