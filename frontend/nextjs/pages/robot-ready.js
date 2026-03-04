@@ -58,6 +58,19 @@ export default function RobotReady() {
       const data = await response.json();
       setResults(data);
       setStep('results');
+
+      // Track robot search for analytics
+      fetch('/api/track/robot-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          robot_name: robotName,
+          has_url: !!robotUrl,
+          target_industries: targetIndustries,
+          target_regions: targetRegions,
+          matches_found: data.matched_companies?.length || 0
+        })
+      }).catch(err => console.error('Analytics tracking failed:', err));
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setStep('form');

@@ -98,6 +98,19 @@ export default function ROICalculator() {
       industry: industry,
       benchmark: benchmark
     });
+
+    // Track calculation for analytics
+    fetch('/api/track/roi-calculation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        robot_type: robotType,
+        robot_cost: cost,
+        industry: industry,
+        payback_months: paybackMonths,
+        annual_savings: annualSavings
+      })
+    }).catch(err => console.error('Analytics tracking failed:', err));
   }
 
   function downloadBenchmarkReport() {
@@ -105,7 +118,21 @@ export default function ROICalculator() {
       alert('Please enter your email to receive the report');
       return;
     }
-    // TODO: Send to backend for email capture
+    
+    // Track email capture for analytics
+    fetch('/api/track/roi-calculation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        robot_type: robotType,
+        robot_cost: parseFloat(robotCost),
+        industry: industry,
+        payback_months: results?.paybackMonths,
+        annual_savings: results?.annualSavings,
+        email: benchmarkEmail
+      })
+    }).catch(err => console.error('Analytics tracking failed:', err));
+    
     alert(`✅ Industry Benchmark Report sent to ${benchmarkEmail}!\n\nCheck your inbox in a few minutes.`);
     setShowBenchmarkDownload(false);
     setBenchmarkEmail('');
