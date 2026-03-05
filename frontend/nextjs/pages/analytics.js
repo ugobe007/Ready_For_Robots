@@ -7,16 +7,8 @@ export default function Analytics() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d, all
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin (simple check - in production use proper auth)
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (!isAdmin) {
-      router.push('/');
-      return;
-    }
-    setIsAuthorized(true);
     fetchAnalytics();
   }, [timeRange]);
 
@@ -33,7 +25,7 @@ export default function Analytics() {
     }
   };
 
-  if (loading || !isAuthorized) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
         <div className="text-center">
