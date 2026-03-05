@@ -227,7 +227,7 @@ function StrategicSnapshot({ leads, onSelect }) {
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <span className="label">Strategic Snapshot</span>
+          <span className="label text-cyan-400" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.5), 0 0 20px rgba(34, 211, 238, 0.3)' }}>Strategic Snapshot</span>
           <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-400">
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />buyer</span>
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />eval</span>
@@ -279,7 +279,7 @@ function StrategicSnapshot({ leads, onSelect }) {
               {/* company — name + dim metadata inline - CLICKABLE */}
               <button onClick={() => onSelect(lead)} className="px-3 py-2 min-w-0 text-left w-full">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-[11px] font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors leading-tight cursor-pointer">
+                  <span className="text-[11px] font-medium text-cyan-400 group-hover:text-cyan-300 transition-colors leading-tight cursor-pointer">
                     {lead.company_name}
                   </span>
                   {newSignal && (
