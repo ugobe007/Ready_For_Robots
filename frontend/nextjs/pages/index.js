@@ -2219,6 +2219,14 @@ export default function Dashboard() {
                     <span className="label block">score</span>
                   </div>
 
+                  {/* Click indicator */}
+                  <button 
+                    className="shrink-0 px-3 py-1 text-[10px] border border-cyan-700 text-cyan-400 
+                               rounded hover:border-cyan-500 hover:text-cyan-300 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] })); }}>
+                    {isOpen ? 'close' : 'click here'}
+                  </button>
+
                   <span className={`label mt-1 ${tm.text}`}>{isOpen ? 'v' : '>'}</span>
                 </div>
 
