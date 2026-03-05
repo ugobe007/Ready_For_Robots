@@ -91,6 +91,8 @@ const SEARCH_CATEGORIES = [
   { key: 'automation_investment', label: 'Automation Investments' },
   { key: 'acquisitions',          label: 'Acquisitions & M&A'    },
   { key: 'labor_downsizing',      label: 'Labor Downsizing'      },
+  { key: 'warehouse_logistics',   label: 'Warehouse Logistics'   },
+  { key: 'robot_automation',      label: 'Robot Automation'      },
   { key: 'intra_logistics',       label: 'Intra-Logistics'       },
   { key: 'pack_work',             label: 'Pack In / Pack Out'    },
   { key: 'kitting',               label: 'Kitting & Assembly'    },
