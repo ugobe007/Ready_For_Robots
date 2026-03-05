@@ -19,7 +19,7 @@ Target verticals:
 """
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -1191,8 +1191,8 @@ ALL_TARGETS: List[ScrapeTarget] = (
 
 
 def get_targets(
-    scraper: str | None = None,
-    industry: str | None = None,
+    scraper: Optional[str] = None,
+    industry: Optional[str] = None,
     active_only: bool = True,
 ) -> List[ScrapeTarget]:
     result = ALL_TARGETS
@@ -1206,16 +1206,16 @@ def get_targets(
 
 
 def get_urls(
-    scraper: str | None = None,
-    industry: str | None = None,
+    scraper: Optional[str] = None,
+    industry: Optional[str] = None,
     active_only: bool = True,
 ) -> List[str]:
     return [t.url for t in get_targets(scraper, industry, active_only)]
 
 
 def get_news_queries(
-    industry: str | None = None,
-    signal_type: str | None = None,
+    industry: Optional[str] = None,
+    signal_type: Optional[str] = None,
 ) -> List[str]:
     queries = NEWS_QUERIES
     if industry:
