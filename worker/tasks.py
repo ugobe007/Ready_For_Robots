@@ -249,3 +249,116 @@ def run_rfp_marketplace_scraper_task(self):
         raise self.retry(exc=exc)
     finally:
         db.close()
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def run_manufacturing_news_task(self):
+    """
+    Dedicated manufacturing signal scraper
+    Searches for: quality bottlenecks, safety incidents, production capacity,
+    warehouse throughput, packaging automation, repetitive processes, material handling
+    """
+    from app.scrapers.news_scraper import NewsScraper
+    
+    manufacturing_queries = [
+        "quality control problems manufacturing",
+        "production bottleneck factory",
+        "workplace safety incident manufacturing",
+        "warehouse automation fulfillment",
+        "packaging line automation",
+        "repetitive manufacturing tasks",
+        "material handling forklift",
+        "production capacity expansion",
+        "manufacturing labor shortage",
+        "factory automation investment",
+    ]
+    
+    db = get_db()
+    try:
+        scraper = NewsScraper(db=db)
+        scraper.run_intent_queries(queries=manufacturing_queries)
+        logger.info(f"Manufacturing news scraper completed {len(manufacturing_queries)} queries")
+    except Exception as exc:
+        logger.error(f"Manufacturing news scraper failed: {exc}")
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def run_linkedin_scraper_task(self, max_companies=50):
+    """
+    LinkedIn company scraper (requires authentication)
+    Note: Use LinkedIn Sales Navigator API or Phantombuster for production
+    """
+    logger.info("LinkedIn scraper task - requires API authentication")
+    logger.info("Implement LinkedIn Sales Navigator API or Phantombuster integration")
+    # TODO: Integrate with LinkedIn API when credentials available
+    pass
+
+
+@celery_app.task(bind=True)
+def rescore_all_companies_task(self):
+    """Re-score all companies after new signals have been collected"""
+    from app.models.company import Company
+    from app.services.scoring_engine import score_company
+    
+    db = get_db()
+    try:
+        companies = db.query(Company).all()
+        for company in companies:
+            try:
+                score_company(company, db)
+            except Exception as e:
+                logger.warning(f"Failed to score company {company.id}: {e}")
+                continue
+        
+        db.commit()
+        logger.info(f"Re-scored {len(companies)} companies")
+    except Exception as exc:
+        logger.error(f"Rescore task failed: {exc}")
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True)
+def cleanup_junk_leads_task(self):
+    """Remove leads marked as junk or with very low scores"""
+    from app.models.company import Company
+    
+    db = get_db()
+    try:
+        # Delete companies marked as junk
+        deleted = db.query(Company).filter(Company.is_junk == True).delete()
+        db.commit()
+        logger.info(f"Cleanup task deleted {deleted} junk leads")
+    except Exception as exc:
+        logger.error(f"Cleanup task failed: {exc}")
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True)
+def scraper_health_check_task(self):
+    """Monitor scraper health and alert on failures"""
+    import json
+    from pathlib import Path
+    
+    health_file = Path("/tmp/scraper_health.json")
+    
+    if health_file.exists():
+        try:
+            with open(health_file) as f:
+                health_data = json.load(f)
+            
+            # Check for failures
+            failures = [k for k, v in health_data.items() if v.get('status') == 'failed']
+            
+            if failures:
+                logger.warning(f"Scraper health check: {len(failures)} scrapers failing: {failures}")
+            else:
+                logger.info("Scraper health check: All scrapers operational")
+                
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+    else:
+        logger.info("No health data available yet")

@@ -11,6 +11,9 @@ celery_app = Celery(
     include=["worker.tasks"]
 )
 
+# Import production schedule
+from worker.celery_beat_schedule import CELERYBEAT_SCHEDULE
+
 celery_app.conf.update(
     task_serializer="json",
     result_serializer="json",
@@ -20,34 +23,17 @@ celery_app.conf.update(
     task_routes={
         "worker.tasks.*": {"queue": "scrapers"}
     },
-
-    # ── Automatic scraper schedule ─────────────────────────────────────────
-    # News + RSS feeds: every 4 hours (highest signal freshness)
-    # Job boards + hotel dirs: every 12 hours (slower-moving data)
-    # SERP + logistics dir: once daily at 06:00 UTC (expansion queries)
-    # RFP marketplaces: daily at 08:00 UTC (HIGH-VALUE buyer intent signals)
-    # Score recalculation: every 6 hours (after scrapers have run)
-    beat_schedule={
-        "news-scraper-4h": {
-            "task": "worker.tasks.run_news_scraper_task",
-            "schedule": crontab(minute=0, hour="*/4"),
-        },
-        "rss-scraper-4h": {
-            "task": "worker.tasks.run_rss_scraper_task",
-            "schedule": crontab(minute=20, hour="*/4"),
-        },
-        "serp-scraper-daily": {
-            "task": "worker.tasks.run_serp_scraper_task",
-            "schedule": crontab(minute=0, hour=6),
-        },
-        "logistics-scraper-daily": {
-            "task": "worker.tasks.run_logistics_scraper_task",
-            "schedule": crontab(minute=30, hour=6),
-        },
-        "rfp-marketplace-daily": {
-            "task": "worker.tasks.run_rfp_marketplace_scraper_task",
-            "schedule": crontab(minute=0, hour=8),
-        },
+    
+    # Production-grade automated schedule (pythh.ai style)
+    beat_schedule=CELERYBEAT_SCHEDULE,
+    
+    # Task execution settings
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    task_time_limit=3600,  # 1 hour max
+    task_soft_time_limit=3000,  # 50 minutes soft limit
+    worker_prefetch_multiplier=1,  # One task at a time
+    worker_max_tasks_per_child=50,  # Restart worker after 50 tasks
         "job-scraper-12h": {
             "task": "worker.tasks.run_job_scraper_task",
             "schedule": crontab(minute=45, hour="*/12"),
