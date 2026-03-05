@@ -1260,7 +1260,7 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
           {/* category grid */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <p className="label">quick search by category</p>
+              <p className="label text-cyan-400">quick search by category</p>
               <span className="text-[9px] text-neutral-600">🎯 Pre-configured signal searches</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
