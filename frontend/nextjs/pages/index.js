@@ -1462,6 +1462,7 @@ export default function Dashboard() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [savedIds, setSavedIds] = useState(new Set());
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Usage tracking and tier management
   const [usageCount, setUsageCount] = useState(0);
@@ -1670,8 +1671,6 @@ export default function Dashboard() {
           <Link href="/roi-calculator" className="btn-ghost border-yellow-800 text-yellow-400 hover:border-yellow-600">💰 ROI Calc</Link>
           <Link href="/pilot-calculator" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">🧪 Pilot Calc</Link>
           <Link href="/robot-ready" className="btn-ghost border-emerald-800 text-emerald-400 hover:border-emerald-600">🤖 Robot Ready</Link>
-          <Link href="/brief" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">📋 Strategy Brief</Link>
-          <Link href="/about" className="btn-ghost border-emerald-800 text-emerald-400 hover:border-emerald-600">📘 About</Link>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
             ? <span className="label text-neutral-400 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
@@ -1682,7 +1681,34 @@ export default function Dashboard() {
                 → sign in to save
               </Link>
             )}
-          <Link href="/admin" className="btn-ghost text-emerald-400 border-emerald-900 hover:border-emerald-700">&#9881; admin</Link>
+          
+          {/* Hamburger Menu */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-ghost border-neutral-700 text-neutral-400 hover:border-neutral-500 px-3">
+              ☰
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+                <Link href="/admin" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    ⚙️ Admin Panel
+                  </div>
+                </Link>
+                <Link href="/brief" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    📋 Strategy Brief
+                  </div>
+                </Link>
+                <Link href="/about" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer">
+                    📘 About
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -2036,135 +2062,34 @@ export default function Dashboard() {
         {/* RIGHT COLUMN - Main Content */}
         <main className="flex-1 min-w-0 space-y-6">
           
-          {/* LIVE ACTIVITY STREAM - Real-time pipeline movement */}
-          {!loading && leads.length > 0 && (
-            <div className="border border-cyan-800/50 rounded-lg p-5 bg-gradient-to-br from-cyan-950/10 via-neutral-900 to-transparent">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span>
-                  <h2 className="text-sm font-bold text-cyan-400 tracking-wide uppercase">Live Feed · Pipeline Activity</h2>
-                </div>
-                <span className="text-[9px] text-neutral-600 border border-neutral-800 px-2 py-1 rounded">
-                  Auto-updates every 30s
-                </span>
+          {/* Recent Activity - Inline text only */}
+          {!loading && leads.length > 0 && (() => {
+            const hotLead = leads.filter(l => l.priority_tier === 'HOT').sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))[0];
+            const warmLead = leads.filter(l => l.priority_tier === 'WARM')[0];
+            const signalLead = leads.filter(l => l.signals && l.signals.length > 0).sort((a, b) => b.signal_count - a.signal_count)[0];
+            
+            return (
+              <div className="text-sm text-neutral-500 flex items-center gap-3 flex-wrap">
+                {hotLead && (
+                  <span>
+                    Latest HOT: <button onClick={() => setSelectedLead(hotLead)} className="text-red-400 hover:text-red-300 underline">{hotLead.company_name}</button>
+                  </span>
+                )}
+                {warmLead && (
+                  <span>
+                    Latest WARM: <button onClick={() => setSelectedLead(warmLead)} className="text-yellow-400 hover:text-yellow-300 underline">{warmLead.company_name}</button>
+                  </span>
+                )}
+                {signalLead && (
+                  <span>
+                    Latest signal: <button onClick={() => setSelectedLead(signalLead)} className="text-cyan-400 hover:text-cyan-300 underline">{signalLead.company_name}</button>
+                  </span>
+                )}
+                <span>·</span>
+                <span>{summary.total} total</span>
               </div>
-              
-              <div className="space-y-2.5">
-                {/* Activity items - these will be populated from real data later */}
-                {(() => {
-                  const recentActivities = [];
-                  
-                  // Get recent HOT leads
-                  const newHotLeads = leads
-                    .filter(l => l.priority_tier === 'HOT')
-                    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-                    .slice(0, 2);
-                  
-                  newHotLeads.forEach((lead, idx) => {
-                    recentActivities.push({
-                      type: 'hot_lead',
-                      icon: '⚡',
-                      text: `New HOT lead: ${lead.company_name}`,
-                      subtext: `Score: ${Math.round(lead.score?.overall_score ?? 0)} · ${lead.industry || 'Unknown'}`,
-                      time: `${idx * 4 + 2}s ago`,
-                      color: 'text-red-400',
-                      borderColor: 'border-red-900',
-                      onClick: () => setSelectedLead(lead)
-                    });
-                  });
-                  
-                  // Get recent score updates
-                  const scoreUpdates = leads
-                    .filter(l => l.score?.overall_score >= 70)
-                    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
-                    .slice(0, 1);
-                  
-                  scoreUpdates.forEach(lead => {
-                    recentActivities.push({
-                      type: 'score_update',
-                      icon: '📊',
-                      text: `Score updated: ${lead.company_name}`,
-                      subtext: `+${Math.round(lead.score?.overall_score ?? 0)} overall score`,
-                      time: '8s ago',
-                      color: 'text-emerald-400',
-                      borderColor: 'border-emerald-900',
-                      onClick: () => setSelectedLead(lead)
-                    });
-                  });
-                  
-                  // Get recent signals
-                  const recentSignals = leads
-                    .filter(l => l.signals && l.signals.length > 0)
-                    .sort((a, b) => b.signal_count - a.signal_count)
-                    .slice(0, 1);
-                  
-                  recentSignals.forEach(lead => {
-                    const sig = topSignal(lead);
-                    if (sig) {
-                      recentActivities.push({
-                        type: 'signal',
-                        icon: '🔔',
-                        text: `Signal detected: ${lead.company_name}`,
-                        subtext: `${sig.signal_type.replace('_', ' ')} · ${lead.signal_count} total signals`,
-                        time: '15s ago',
-                        color: 'text-cyan-400',
-                        borderColor: 'border-cyan-900',
-                        onClick: () => setSelectedLead(lead)
-                      });
-                    }
-                  });
-                  
-                  // Get recent WARM leads
-                  const warmLeads = leads
-                    .filter(l => l.priority_tier === 'WARM')
-                    .slice(0, 1);
-                  
-                  warmLeads.forEach(lead => {
-                    recentActivities.push({
-                      type: 'warm_lead',
-                      icon: '⚡',
-                      text: `New WARM lead: ${lead.company_name}`,
-                      subtext: `Score: ${Math.round(lead.score?.overall_score ?? 0)} · ${lead.industry || 'Unknown'}`,
-                      time: '22s ago',
-                      color: 'text-yellow-400',
-                      borderColor: 'border-yellow-900',
-                      onClick: () => setSelectedLead(lead)
-                    });
-                  });
-                  
-                  return recentActivities.slice(0, 4).map((activity, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex items-center justify-between p-3 border ${activity.borderColor} rounded 
-                                 bg-gradient-to-r from-neutral-900/50 to-transparent hover:from-neutral-900/80 
-                                 transition-all cursor-pointer group`}
-                      onClick={activity.onClick}>
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <span className="text-lg shrink-0">{activity.icon}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className={`text-sm ${activity.color} font-medium truncate group-hover:text-cyan-300 transition-colors`}>
-                            {activity.text}
-                          </p>
-                          <p className="text-[10px] text-neutral-500 truncate">
-                            {activity.subtext}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[9px] text-neutral-600 shrink-0 ml-3 tabular-nums">
-                        {activity.time}
-                      </span>
-                    </div>
-                  ));
-                })()}
-              </div>
-              
-              <div className="mt-4 pt-3 border-t border-neutral-800 text-center">
-                <p className="text-[9px] text-neutral-600">
-                  Showing latest pipeline activity · {summary.total || leads.length} total leads tracked
-                </p>
-              </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* intelligence search — primary tool, above the fold */}
           <IntelSearchPanel 
