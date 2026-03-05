@@ -1181,7 +1181,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
 }
 
 // -- Intelligence search panel -----------------------------------------------
-function IntelSearchPanel({ onOpenLead }) {
+function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywall }) {
   const searchRef = useRef(null);
   const [open,     setOpen]     = useState(true);
   const [query,    setQuery]    = useState('');
@@ -1203,6 +1203,12 @@ function IntelSearchPanel({ onOpenLead }) {
   }, [open]);
 
   async function runSearch(q, cat) {
+    // Check usage limit before searching
+    if (!canPerformAction()) {
+      showPaywall();
+      return;
+    }
+    
     setLoading(true);
     setResults(null);
     try {
@@ -1211,7 +1217,10 @@ function IntelSearchPanel({ onOpenLead }) {
       if (cat)            params.set('category', cat);
       params.set('limit', '30');
       const r = await fetch(`${API}/api/search?${params}`);
-      if (r.ok) setResults(await r.json());
+      if (r.ok) {
+        setResults(await r.json());
+        trackUsage(); // Track successful search
+      }
     } catch {}
     setLoading(false);
   }
@@ -1368,6 +1377,76 @@ function IntelSearchPanel({ onOpenLead }) {
   );
 }
 
+// -- Paywall Modal -----------------------------------------------------------
+function PaywallModal({ isOpen, onClose, usageCount, limit }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-neutral-950 border-2 border-emerald-700 rounded-lg max-w-lg w-full p-8" onClick={e => e.stopPropagation()}>
+        <div className="text-center space-y-6">
+          {/* Icon */}
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-900/50 to-cyan-900/50 flex items-center justify-center text-3xl">
+              🚀
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">You've Discovered the Power!</h2>
+            <p className="text-neutral-400 text-sm">
+              You've used all <span className="text-emerald-400 font-semibold">{limit} free searches</span>. 
+              Sign up to unlock unlimited searches, save companies, and build your sales strategy.
+            </p>
+          </div>
+
+          {/* Features list */}
+          <div className="border border-neutral-800 rounded-lg p-4 text-left space-y-3">
+            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">With a free account you get:</p>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-400 mt-0.5">✓</span>
+                <span className="text-neutral-300">Unlimited searches & company matching</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-400 mt-0.5">✓</span>
+                <span className="text-neutral-300">Save companies and build target lists</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-400 mt-0.5">✓</span>
+                <span className="text-neutral-300">Generate outreach strategies with AI</span>
+              </div>
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-400 mt-0.5">✓</span>
+                <span className="text-neutral-300">Access daily strategy briefs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tier comparison hint */}
+          <div className="text-xs text-neutral-600 bg-neutral-900/50 border border-neutral-800 rounded p-3">
+            💎 <span className="text-cyan-400">Professional</span> and <span className="text-yellow-400">Premium</span> tiers 
+            unlock advanced features like API access, custom integrations, and priority support.
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="space-y-3">
+            <Link href="/login" 
+              className="block w-full py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded transition-colors text-center">
+              Sign Up Free →
+            </Link>
+            <button onClick={onClose}
+              className="block w-full py-2 px-6 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-300 rounded transition-colors">
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // -- main page --------------------------------------------------------------
 export default function Dashboard() {
   const { session } = useAuth();
@@ -1383,6 +1462,39 @@ export default function Dashboard() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [savedIds, setSavedIds] = useState(new Set());
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Usage tracking and tier management
+  const [usageCount, setUsageCount] = useState(0);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [userTier, setUserTier] = useState('free'); // free, professional, premium
+  const FREE_LIMIT = 5;
+
+  // Load usage count on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('rfr_usage_count');
+      setUsageCount(parseInt(stored || '0', 10));
+    } catch {}
+  }, []);
+
+  // Check if user can perform action
+  function canPerformAction() {
+    // Signed-in users can always perform actions (tier determines features)
+    if (session) return true;
+    // Anonymous users have a limit
+    return usageCount < FREE_LIMIT;
+  }
+
+  // Track usage for anonymous users
+  function trackUsage() {
+    if (session) return; // Don't track signed-in users
+    const newCount = usageCount + 1;
+    setUsageCount(newCount);
+    localStorage.setItem('rfr_usage_count', newCount.toString());
+    if (newCount >= FREE_LIMIT) {
+      setShowPaywall(true);
+    }
+  }
 
   // load saved company IDs from localStorage on mount
   useEffect(() => {
@@ -1518,6 +1630,14 @@ export default function Dashboard() {
       <TrendingTicker />
       <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
+      {/* Paywall Modal */}
+      <PaywallModal 
+        isOpen={showPaywall} 
+        onClose={() => setShowPaywall(false)}
+        usageCount={usageCount}
+        limit={FREE_LIMIT}
+      />
+
       {selectedLead && (
         <AIAnalysisModal
           lead={selectedLead}
@@ -1540,6 +1660,11 @@ export default function Dashboard() {
           <p className="text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
         </div>
         <div className="flex items-center gap-3">
+          {!session && usageCount < FREE_LIMIT && (
+            <span className="text-[10px] border border-emerald-800 text-emerald-400 px-2 py-1 rounded">
+              {FREE_LIMIT - usageCount} free searches left
+            </span>
+          )}
           {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
           <button onClick={fetchData} className="btn-ghost">&#8635; refresh</button>
           <Link href="/roi-calculator" className="btn-ghost border-yellow-800 text-yellow-400 hover:border-yellow-600">💰 ROI Calc</Link>
@@ -1993,7 +2118,12 @@ export default function Dashboard() {
           })()}
           
           {/* intelligence search — primary tool, above the fold */}
-          <IntelSearchPanel onOpenLead={handleOpenFromSearch} />
+          <IntelSearchPanel 
+            onOpenLead={handleOpenFromSearch}
+            canPerformAction={canPerformAction}
+            trackUsage={trackUsage}
+            showPaywall={() => setShowPaywall(true)}
+          />
 
           {/* strategic snapshot */}
           {!loading && leads.length > 0 && (

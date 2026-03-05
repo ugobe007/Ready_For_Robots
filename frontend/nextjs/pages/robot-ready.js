@@ -22,6 +22,27 @@ export default function RobotReady() {
   const [error, setError] = useState('');
   const [expandedCompanies, setExpandedCompanies] = useState([]);
 
+  // Usage tracking
+  const [usageCount, setUsageCount] = useState(0);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const FREE_LIMIT = 5;
+
+  // Load usage count on mount
+  useState(() => {
+    try {
+      const stored = localStorage.getItem('rfr_usage_count');
+      setUsageCount(parseInt(stored || '0', 10));
+    } catch {}
+  }, []);
+
+  // Track usage for anonymous users
+  function trackUsage() {
+    if (user) return; // Don't track signed-in users
+    const newCount = usageCount + 1;
+    setUsageCount(newCount);
+    localStorage.setItem('rfr_usage_count', newCount.toString());
+  }
+
   const toggleCompany = (idx) => {
     setExpandedCompanies(prev => 
       prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
@@ -42,6 +63,13 @@ export default function RobotReady() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    
+    // Check usage limit for anonymous users
+    if (!user && usageCount >= FREE_LIMIT) {
+      setShowPaywall(true);
+      return;
+    }
+    
     setStep('loading');
 
     try {
@@ -65,6 +93,9 @@ export default function RobotReady() {
       const data = await response.json();
       setResults(data);
       setStep('results');
+      
+      // Track usage for anonymous users
+      trackUsage();
 
       // Track robot search for analytics
       fetch('/api/track/robot-search', {
@@ -133,6 +164,38 @@ export default function RobotReady() {
 
   return (
     <div className="min-h-screen bg-neutral-950">
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
+          <div className="bg-neutral-950 border-2 border-emerald-700 rounded-lg max-w-lg w-full p-8" onClick={e => e.stopPropagation()}>
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-900/50 to-cyan-900/50 flex items-center justify-center text-3xl">
+                  🚀
+                </div>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Ready to Find More Customers?</h2>
+                <p className="text-neutral-400 text-sm">
+                  You've used all <span className="text-emerald-400 font-semibold">{FREE_LIMIT} free robot matches</span>. 
+                  Sign up to unlock unlimited matches, save strategies, and accelerate your sales.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <Link href="/login" 
+                  className="block w-full py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded transition-colors text-center">
+                  Sign Up Free →
+                </Link>
+                <button onClick={() => setShowPaywall(false)}
+                  className="block w-full py-2 px-6 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-300 rounded transition-colors">
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto p-8">
         
         {/* Header */}
