@@ -998,6 +998,61 @@ NEWS_QUERIES = [
 ]
 
 
+# -- RFP & Project Marketplaces: HIGH-VALUE DIRECT BUYER INTENT --------------
+# Companies actively posting automation projects = ready to buy
+
+RFP_MARKETPLACE_TARGETS: List[ScrapeTarget] = [
+    # Qviro - Automation Project Marketplace
+    ScrapeTarget(
+        url="https://qviro.com/match/projects",
+        label="Qviro - Automation Project Marketplace",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Manufacturing", "Logistics", "Food Service"],
+        signal_types=["automation_intent", "rfp_posted", "budget_allocated"],
+        notes="Companies posting automation projects = direct vendor selection phase. Robot + integrator opportunities."
+    ),
+    
+    # JobToRob - Global Robotics RFP Database
+    ScrapeTarget(
+        url="https://jobtorob.com/global-robotics-command-center-tenders",
+        label="JobToRob - Global Robotics Tenders & RFPs",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Manufacturing", "Healthcare", "Logistics", "Government"],
+        signal_types=["rfp_posted", "government_contract", "budget_allocated"],
+        notes="Government + commercial robotics tenders: delivery robots, AMRs, surgical robots, facility management"
+    ),
+    
+    # Automate America - Industrial Automation RFQs
+    ScrapeTarget(
+        url="https://automateamerica.com/automation-rfqs-and-projects/",
+        label="Automate America - Factory Automation RFQs",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Manufacturing", "Automotive"],
+        signal_types=["rfp_posted", "automation_intent", "factory_automation"],
+        notes="Assembly automation, robotic machine tending, factory equipment. Automotive + heavy industry."
+    ),
+]
+
+
+# -- LinkedIn Search Queries: SOCIAL BUYING SIGNALS --------------------------
+# LinkedIn posts reveal projects before official RFPs
+
+LINKEDIN_SEARCH_QUERIES: List[dict] = [
+    # Project announcement signals
+    {"query": "robot automation project",          "signal_types": ["automation_intent", "project_planning"]},
+    {"query": "robotics RFP",                      "signal_types": ["rfp_posted", "vendor_selection"]},
+    {"query": "automation system integrator",      "signal_types": ["automation_intent", "vendor_search"]},
+    {"query": "factory automation upgrade",        "signal_types": ["capex", "automation_intent"]},
+    {"query": "looking for cobot",                 "signal_types": ["automation_intent", "vendor_search"]},
+    {"query": "warehouse automation project",      "signal_types": ["automation_intent", "logistics"]},
+    {"query": "AMR implementation",                "signal_types": ["automation_intent", "mobile_robots"]},
+    {"query": "robotic process automation budget", "signal_types": ["budget_allocated", "automation_intent"]},
+]
+
+
 # -- Master helpers ----------------------------------------------------------
 
 ALL_TARGETS: List[ScrapeTarget] = (
@@ -1005,6 +1060,7 @@ ALL_TARGETS: List[ScrapeTarget] = (
     + HOTEL_DIRECTORY_TARGETS
     + LOGISTICS_DIRECTORY_TARGETS
     + RSS_FEED_TARGETS
+    + RFP_MARKETPLACE_TARGETS
 )
 
 
@@ -1049,7 +1105,9 @@ def summary() -> dict:
         "hotel_dir":     len(get_targets("hotel_dir")),
         "logistics_dir": len(get_targets("logistics_dir")),
         "rss_feed":      len(get_targets("rss_feed")),
+        "rfp_marketplace": len(get_targets("rfp_marketplace")),
         "news_queries":  len(NEWS_QUERIES),
+        "linkedin_queries": len(LINKEDIN_SEARCH_QUERIES),
         "total_targets": len(ALL_TARGETS),
     }
 

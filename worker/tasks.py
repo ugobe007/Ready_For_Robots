@@ -192,3 +192,60 @@ def recalculate_all_scores_task(self):
         raise self.retry(exc=exc)
     finally:
         db.close()
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def run_rfp_marketplace_scraper_task(self):
+    """
+    Scrape RFP marketplaces for direct buyer intent signals.
+    HIGH-VALUE: Companies posting automation projects are ready to buy.
+    """
+    from app.scrapers.rfp_marketplace_scraper import scrape_rfp_marketplaces
+    from app.models.company import Company
+    from app.models.signal import Signal
+    
+    db = get_db()
+    try:
+        signals = scrape_rfp_marketplaces()
+        logger.info(f"RFP marketplace scraper found {len(signals)} signals")
+        
+        # Process signals and create/update companies
+        for signal_data in signals:
+            try:
+                # Find or create company
+                company = db.query(Company).filter(
+                    Company.name == signal_data['company_name']
+                ).first()
+                
+                if not company:
+                    company = Company(
+                        name=signal_data['company_name'],
+                        industry=signal_data.get('industry'),
+                        source=signal_data['source']
+                    )
+                    db.add(company)
+                    db.flush()
+                
+                # Create signal
+                signal = Signal(
+                    company_id=company.id,
+                    signal_type=signal_data['signal_type'],
+                    signal_text=signal_data['signal_text'],
+                    url=signal_data['url'],
+                    detected_at=signal_data['detected_at'],
+                    confidence=signal_data.get('confidence', 0.85)
+                )
+                db.add(signal)
+                
+            except Exception as e:
+                logger.warning(f"Failed to process RFP signal: {e}")
+                continue
+        
+        db.commit()
+        logger.info("RFP marketplace scraper completed successfully")
+        
+    except Exception as exc:
+        logger.error(f"RFP marketplace scraper failed: {exc}")
+        raise self.retry(exc=exc)
+    finally:
+        db.close()

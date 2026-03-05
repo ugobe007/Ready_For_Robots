@@ -26,6 +26,7 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
             run_news_scraper_task,
             run_serp_scraper_task,
             run_logistics_scraper_task,
+            run_rfp_marketplace_scraper_task,
         )
         
         # Trigger all scraper tasks
@@ -34,6 +35,7 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
         news_task = run_news_scraper_task.delay()
         serp_task = run_serp_scraper_task.delay()
         logistics_task = run_logistics_scraper_task.delay()
+        rfp_task = run_rfp_marketplace_scraper_task.delay()
         
         return {
             "status": "scrapers_started",
@@ -43,6 +45,7 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
                 "news_feeds": news_task.id,
                 "search_engines": serp_task.id,
                 "logistics_directories": logistics_task.id,
+                "rfp_marketplaces": rfp_task.id,
             },
             "estimated_completion": "20-30 minutes",
             "check_status": "/api/scraper/status",
@@ -54,7 +57,7 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
 @router.post("/run/{scraper_type}")
 async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """
-    Run a specific scraper type: job_boards, hotels, news, serp, logistics
+    Run a specific scraper type: job_boards, hotels, news, serp, logistics, rfp_marketplace
     """
     try:
         from worker.tasks import (
@@ -63,6 +66,7 @@ async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db))
             run_news_scraper_task,
             run_serp_scraper_task,
             run_logistics_scraper_task,
+            run_rfp_marketplace_scraper_task,
         )
         
         task_map = {
@@ -71,6 +75,7 @@ async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db))
             "news": run_news_scraper_task,
             "serp": run_serp_scraper_task,
             "logistics": run_logistics_scraper_task,
+            "rfp_marketplace": run_rfp_marketplace_scraper_task,
         }
         
         if scraper_type not in task_map:

@@ -25,6 +25,7 @@ celery_app.conf.update(
     # News + RSS feeds: every 4 hours (highest signal freshness)
     # Job boards + hotel dirs: every 12 hours (slower-moving data)
     # SERP + logistics dir: once daily at 06:00 UTC (expansion queries)
+    # RFP marketplaces: daily at 08:00 UTC (HIGH-VALUE buyer intent signals)
     # Score recalculation: every 6 hours (after scrapers have run)
     beat_schedule={
         "news-scraper-4h": {
@@ -42,6 +43,10 @@ celery_app.conf.update(
         "logistics-scraper-daily": {
             "task": "worker.tasks.run_logistics_scraper_task",
             "schedule": crontab(minute=30, hour=6),
+        },
+        "rfp-marketplace-daily": {
+            "task": "worker.tasks.run_rfp_marketplace_scraper_task",
+            "schedule": crontab(minute=0, hour=8),
         },
         "job-scraper-12h": {
             "task": "worker.tasks.run_job_scraper_task",
