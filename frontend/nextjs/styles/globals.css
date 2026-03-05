@@ -33,7 +33,7 @@
 
   /* badges — stroke + text, no fill */
   .badge {
-    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium
            border tracking-wide uppercase;
   }
 
