@@ -191,6 +191,4 @@ def recalculate_all_scores_task(self):
         logger.error("Bulk score recalc failed: %s", exc)
         raise self.retry(exc=exc)
     finally:
-        db.close()        raise self.retry(exc=exc)
-    finally:
         db.close()
