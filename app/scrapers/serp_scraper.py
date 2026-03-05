@@ -74,12 +74,19 @@ EXPANSION_QUERIES = [
 ]
 
 _SIGNAL_KEYWORDS = {
-    "expansion":      ["expand", "opening", "new facilit", "new propert", "groundbreak", "ribbon cut", "new hotel", "new warehouse", "construction", "new location"],
-    "capex":          ["capex", "capital expenditure", "capital investment", "investing $", "million invest", "million capital"],
-    "funding_round":  ["series ", "funding", "raised $", "private equity", "capital raise"],
-    "ma_activity":    ["acqui", "merger", "merges with", "buyout", "joint venture"],
-    "strategic_hire": ["vp ", "svp ", "director of", "head of", "chief ", "appoint", "joins as", "named as"],
-    "labor_shortage": ["labor shortage", "staffing shortage", "worker shortage", "turnover", "staffing crisis", "understaffed"],
+    "expansion":             ["expand", "opening", "new facilit", "new propert", "groundbreak", "ribbon cut", "new hotel", "new warehouse", "construction", "new location"],
+    "capex":                 ["capex", "capital expenditure", "capital investment", "investing $", "million invest", "million capital"],
+    "funding_round":         ["series ", "funding", "raised $", "private equity", "capital raise"],
+    "ma_activity":           ["acqui", "merger", "merges with", "buyout", "joint venture"],
+    "strategic_hire":        ["vp ", "svp ", "director of", "head of", "chief ", "appoint", "joins as", "named as"],
+    "labor_shortage":        ["labor shortage", "staffing shortage", "worker shortage", "turnover", "staffing crisis", "understaffed"],
+    "quality_bottleneck":    ["quality issue", "defect rate", "scrap rate", "rework", "quality control", "inspection failure", "reject rate", "non-conformance", "qc problem"],
+    "safety_incident":       ["safety incident", "osha", "worker injury", "workplace injury", "ergonomic", "back injury", "repetitive strain", "accident rate", "safety violation"],
+    "production_capacity":   ["running at capacity", "capacity constraint", "maxed out", "24/7 operation", "overtime", "capacity expansion", "bottleneck", "throughput limit"],
+    "warehouse_throughput":  ["pick rate", "fulfillment delay", "shipping delay", "throughput", "processing capacity", "order backlog", "warehouse efficiency", "picking productivity"],
+    "packaging_automation":  ["packaging line", "end-of-line", "palletizing", "case packing", "automated packaging", "packaging efficiency", "packing speed"],
+    "repetitive_process":    ["repetitive task", "manual process", "repetitive motion", "assembly line", "manual handling", "repetitive work"],
+    "material_handling":     ["forklift", "material handling", "internal logistics", "warehouse movement", "material transport", "intralogistics"],
 }
 
 

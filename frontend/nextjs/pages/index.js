@@ -53,14 +53,21 @@ function TierBadge({ tier }) {
 
 // Signal badges -- stroke only, no fill
 const SIGNAL_META = {
-  funding_round:  { label: 'Funding',   border: 'border-violet-700', text: 'text-violet-400' },
-  strategic_hire: { label: 'Exec Hire', border: 'border-blue-700',   text: 'text-blue-400'   },
-  capex:          { label: 'CapEx',     border: 'border-cyan-700',   text: 'text-cyan-400'   },
-  ma_activity:    { label: 'M&A',       border: 'border-pink-700',   text: 'text-pink-400'   },
-  expansion:      { label: 'Expand',    border: 'border-emerald-800',text: 'text-emerald-400'},
-  job_posting:    { label: 'Hiring',    border: 'border-amber-700',  text: 'text-amber-400'  },
-  labor_shortage: { label: 'Labor Gap', border: 'border-red-800',    text: 'text-red-400'    },
-  news:           { label: 'News',      border: 'border-neutral-700',text: 'text-neutral-400'},
+  funding_round:         { label: 'Funding',      border: 'border-violet-700',  text: 'text-violet-400'  },
+  strategic_hire:        { label: 'Exec Hire',    border: 'border-blue-700',    text: 'text-blue-400'    },
+  capex:                 { label: 'CapEx',        border: 'border-cyan-700',    text: 'text-cyan-400'    },
+  ma_activity:           { label: 'M&A',          border: 'border-pink-700',    text: 'text-pink-400'    },
+  expansion:             { label: 'Expand',       border: 'border-emerald-800', text: 'text-emerald-400' },
+  job_posting:           { label: 'Hiring',       border: 'border-amber-700',   text: 'text-amber-400'   },
+  labor_shortage:        { label: 'Labor Gap',    border: 'border-red-800',     text: 'text-red-400'     },
+  quality_bottleneck:    { label: 'Quality',      border: 'border-orange-700',  text: 'text-orange-400'  },
+  safety_incident:       { label: 'Safety',       border: 'border-red-700',     text: 'text-red-300'     },
+  production_capacity:   { label: 'Capacity',     border: 'border-yellow-700',  text: 'text-yellow-400'  },
+  warehouse_throughput:  { label: 'Throughput',   border: 'border-teal-700',    text: 'text-teal-400'    },
+  packaging_automation:  { label: 'Packaging',    border: 'border-indigo-700',  text: 'text-indigo-400'  },
+  repetitive_process:    { label: 'Repetitive',   border: 'border-purple-700',  text: 'text-purple-400'  },
+  material_handling:     { label: 'Material',     border: 'border-lime-700',    text: 'text-lime-400'    },
+  news:                  { label: 'News',         border: 'border-neutral-700', text: 'text-neutral-400' },
 };
 
 function SignalBadge({ type }) {
@@ -83,8 +90,8 @@ function ScoreNum({ value }) {
   );
 }
 
-const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities'];
-const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage'];
+const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities', 'Manufacturing'];
+const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage', 'quality_bottleneck', 'safety_incident', 'production_capacity', 'warehouse_throughput', 'packaging_automation', 'repetitive_process', 'material_handling'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
 const SEARCH_CATEGORIES = [
@@ -113,14 +120,21 @@ function TrendingTicker() {
   if (!items.length) return null;
 
   const TYPE_COLOR = {
-    strategic_hire: 'text-blue-400',
-    capex:          'text-cyan-400',
-    labor_shortage: 'text-red-400',
-    expansion:      'text-emerald-400',
-    funding_round:  'text-violet-400',
-    job_posting:    'text-amber-400',
-    ma_activity:    'text-pink-400',
-    news:           'text-neutral-400',
+    strategic_hire:        'text-blue-400',
+    capex:                 'text-cyan-400',
+    labor_shortage:        'text-red-400',
+    expansion:             'text-emerald-400',
+    funding_round:         'text-violet-400',
+    job_posting:           'text-amber-400',
+    ma_activity:           'text-pink-400',
+    quality_bottleneck:    'text-orange-400',
+    safety_incident:       'text-red-300',
+    production_capacity:   'text-yellow-400',
+    warehouse_throughput:  'text-teal-400',
+    packaging_automation:  'text-indigo-400',
+    repetitive_process:    'text-purple-400',
+    material_handling:     'text-lime-400',
+    news:                  'text-neutral-400',
   };
 
   const doubled = [...items, ...items];
@@ -188,12 +202,19 @@ function topSignal(lead) {
 function strategicFit(lead) {
   const base = INDUSTRY_ROBOT_FIT[lead.industry] || 'Automation Suite';
   const sig  = topSignal(lead);
-  if (sig?.signal_type === 'labor_shortage') return `${base} · Labor Crisis`;
-  if (sig?.signal_type === 'capex')          return `${base} · CapEx Window`;
-  if (sig?.signal_type === 'expansion')      return `${base} · Growth Phase`;
-  if (sig?.signal_type === 'strategic_hire') return `${base} · New Exec`;
-  if (sig?.signal_type === 'funding_round')  return `${base} · Funded`;
-  if (sig?.signal_type === 'ma_activity')    return `${base} · M&A`;
+  if (sig?.signal_type === 'quality_bottleneck')   return `${base} · Quality Fix`;
+  if (sig?.signal_type === 'safety_incident')      return `${base} · Safety Issue`;
+  if (sig?.signal_type === 'production_capacity')  return `${base} · At Capacity`;
+  if (sig?.signal_type === 'warehouse_throughput') return `${base} · Throughput`;
+  if (sig?.signal_type === 'packaging_automation') return `${base} · Packaging`;
+  if (sig?.signal_type === 'repetitive_process')   return `${base} · Repetitive`;
+  if (sig?.signal_type === 'material_handling')    return `${base} · Material`;
+  if (sig?.signal_type === 'labor_shortage')       return `${base} · Labor Crisis`;
+  if (sig?.signal_type === 'capex')                return `${base} · CapEx Window`;
+  if (sig?.signal_type === 'expansion')            return `${base} · Growth Phase`;
+  if (sig?.signal_type === 'strategic_hire')       return `${base} · New Exec`;
+  if (sig?.signal_type === 'funding_round')        return `${base} · Funded`;
+  if (sig?.signal_type === 'ma_activity')          return `${base} · M&A`;
   return base;
 }
 

@@ -995,8 +995,50 @@ NEWS_QUERIES = [
     {"query": "hospital EHR clinical system integration upgrade operational technology",                "industries": ["Healthcare"],                  "signal_types": ["equipment_integration", "capex"]},
     {"query": "restaurant POS technology upgrade system integration chain multi-unit",                  "industries": ["Food Service"],                "signal_types": ["equipment_integration"]},
     {"query": "fulfillment center automation technology integration existing equipment",                "industries": ["Logistics"],                   "signal_types": ["equipment_integration", "automation_intent"]},
-]
 
+    # === MANUFACTURING OPERATIONAL SIGNALS (NEW) ===
+    # Quality Bottlenecks
+    {"query": "manufacturing quality issues defect rate scrap reduction initiative 2025",               "industries": ["Manufacturing", "Logistics"],  "signal_types": ["quality_bottleneck"]},
+    {"query": "factory quality control problems inspection failure reject rate improvement",            "industries": ["Manufacturing"],               "signal_types": ["quality_bottleneck"]},
+    {"query": "production line rework scrap waste reduction quality improvement program",               "industries": ["Manufacturing"],               "signal_types": ["quality_bottleneck"]},
+    {"query": "packaging quality defects damage rate quality assurance automation",                     "industries": ["Manufacturing", "Logistics"],  "signal_types": ["quality_bottleneck", "packaging_automation"]},
+    
+    # Safety Incidents
+    {"query": "manufacturing workplace injury OSHA ergonomic repetitive strain worker safety",          "industries": ["Manufacturing", "Logistics"],  "signal_types": ["safety_incident"]},
+    {"query": "warehouse forklift accident worker injury safety incident automation solution",          "industries": ["Logistics"],                   "signal_types": ["safety_incident", "material_handling"]},
+    {"query": "factory back injury lifting repetitive motion ergonomic workplace safety 2025",          "industries": ["Manufacturing"],               "signal_types": ["safety_incident"]},
+    {"query": "distribution center safety violation OSHA fine penalty workplace injury prevention",     "industries": ["Logistics"],                   "signal_types": ["safety_incident"]},
+    
+    # Production Capacity Constraints
+    {"query": "manufacturing running at capacity bottleneck production expansion 24/7 operations",      "industries": ["Manufacturing"],               "signal_types": ["production_capacity"]},
+    {"query": "factory maxed out capacity overtime production constraint throughput limit 2025",        "industries": ["Manufacturing"],               "signal_types": ["production_capacity"]},
+    {"query": "production capacity expansion investment new line manufacturing throughput",             "industries": ["Manufacturing"],               "signal_types": ["production_capacity", "capex"]},
+    {"query": "assembly line bottleneck capacity constraint production efficiency improvement",         "industries": ["Manufacturing"],               "signal_types": ["production_capacity", "repetitive_process"]},
+    
+    # Warehouse Throughput Issues
+    {"query": "warehouse throughput pick rate fulfillment delay shipping backlog efficiency",           "industries": ["Logistics"],                   "signal_types": ["warehouse_throughput"]},
+    {"query": "distribution center order backlog processing capacity picking productivity improvement", "industries": ["Logistics"],                   "signal_types": ["warehouse_throughput"]},
+    {"query": "fulfillment center efficiency throughput improvement pick pack automation 2025",         "industries": ["Logistics"],                   "signal_types": ["warehouse_throughput", "automation_intent"]},
+    {"query": "warehouse picking speed productivity picking accuracy efficiency technology investment",  "industries": ["Logistics"],                   "signal_types": ["warehouse_throughput", "capex"]},
+    
+    # Packaging Automation
+    {"query": "packaging line automation end-of-line palletizing case packing investment 2025",         "industries": ["Manufacturing", "Logistics"],  "signal_types": ["packaging_automation"]},
+    {"query": "automated packaging system palletizer robotic case packer manufacturing facility",       "industries": ["Manufacturing"],               "signal_types": ["packaging_automation"]},
+    {"query": "end-of-line packaging automation efficiency improvement throughput production",          "industries": ["Manufacturing", "Logistics"],  "signal_types": ["packaging_automation"]},
+    {"query": "palletizing automation robotic packaging line investment warehouse distribution",        "industries": ["Logistics"],                   "signal_types": ["packaging_automation", "capex"]},
+    
+    # Repetitive Processes
+    {"query": "manufacturing repetitive task manual process assembly line automation opportunity",      "industries": ["Manufacturing"],               "signal_types": ["repetitive_process"]},
+    {"query": "factory repetitive motion manual handling ergonomic automation solution 2025",           "industries": ["Manufacturing"],               "signal_types": ["repetitive_process", "safety_incident"]},
+    {"query": "warehouse repetitive picking manual process automation efficiency improvement",          "industries": ["Logistics"],                   "signal_types": ["repetitive_process", "warehouse_throughput"]},
+    {"query": "assembly line manual work repetitive operations automation robotics deployment",         "industries": ["Manufacturing"],               "signal_types": ["repetitive_process"]},
+    
+    # Material Handling & Intralogistics
+    {"query": "warehouse forklift operations material handling AGV AMR autonomous solution",            "industries": ["Logistics"],                   "signal_types": ["material_handling"]},
+    {"query": "factory internal logistics material transport intralogistics automation investment",     "industries": ["Manufacturing"],               "signal_types": ["material_handling"]},
+    {"query": "distribution center material handling equipment upgrade automation technology 2025",     "industries": ["Logistics"],                   "signal_types": ["material_handling", "capex"]},
+    {"query": "manufacturing material movement warehouse transport autonomous mobile robots AMR",       "industries": ["Manufacturing", "Logistics"],  "signal_types": ["material_handling"]},
+]
 
 # -- RFP & Project Marketplaces: HIGH-VALUE DIRECT BUYER INTENT --------------
 # Companies actively posting automation projects = ready to buy

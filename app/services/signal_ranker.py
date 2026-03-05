@@ -16,14 +16,21 @@ from datetime import datetime, timezone
 # Signal type weights — how strongly each type predicts a robot purchase
 # ---------------------------------------------------------------------------
 SIGNAL_TYPE_WEIGHTS: dict[str, float] = {
-    "strategic_hire": 1.00,  # SVP/Dir of Automation = highest direct intent
-    "capex":          0.95,  # committed capital spend
-    "labor_shortage": 0.90,  # primary pain point robots solve
-    "expansion":      0.85,  # new facility = new equipment opportunity
-    "funding_round":  0.80,  # has capital + growth phase
-    "ma_activity":    0.75,  # integration disruption creates openings
-    "job_posting":    0.65,  # indirect but ongoing need
-    "news":           0.45,  # awareness only
+    "strategic_hire":      1.00,  # SVP/Dir of Automation = highest direct intent
+    "capex":               0.95,  # committed capital spend
+    "quality_bottleneck":  0.93,  # quality issues = immediate automation need
+    "safety_incident":     0.92,  # safety problems = urgent automation driver
+    "labor_shortage":      0.90,  # primary pain point robots solve
+    "production_capacity": 0.88,  # maxed out capacity = automation to scale
+    "warehouse_throughput":0.87,  # throughput constraints = clear ROI opportunity
+    "packaging_automation":0.86,  # end-of-line packaging = proven robot use case
+    "repetitive_process":  0.85,  # repetitive work = ideal for automation
+    "expansion":           0.85,  # new facility = new equipment opportunity
+    "material_handling":   0.83,  # forklift/logistics pain = AMR/AGV opportunity
+    "funding_round":       0.80,  # has capital + growth phase
+    "ma_activity":         0.75,  # integration disruption creates openings
+    "job_posting":         0.65,  # indirect but ongoing need
+    "news":                0.45,  # awareness only
 }
 DEFAULT_TYPE_WEIGHT = 0.50
 

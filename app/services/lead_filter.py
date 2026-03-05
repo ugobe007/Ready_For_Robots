@@ -82,20 +82,27 @@ _HIGH_FIT_INDUSTRIES = {
 # HOT  → company has budget + mandate → priority outreach
 # WARM → confirmed pain or expansion → nurture / sequence
 _HOT_SIGNAL_TYPES  = {
-    "funding_round",   # money just raised
-    "strategic_hire",  # ops decision-maker just hired
-    "capex",           # active technology spend
-    "ma_activity",     # M&A = new leadership + integration need
-    "labor_pain",      # mass hiring of manual workers = pain to automate
-    "automation_intent",  # company running lean / process-improvement programs
+    "funding_round",         # money just raised
+    "strategic_hire",        # ops decision-maker just hired
+    "capex",                 # active technology spend
+    "ma_activity",           # M&A = new leadership + integration need
+    "labor_pain",            # mass hiring of manual workers = pain to automate
+    "automation_intent",     # company running lean / process-improvement programs
+    "quality_bottleneck",    # quality/scrap issues = immediate automation need
+    "safety_incident",       # worker safety problems = urgent automation driver
+    "production_capacity",   # running at max capacity = need to scale
+    "warehouse_throughput",  # pick/pack/ship constraints = clear automation ROI
+    "packaging_automation",  # packaging line pain = proven robot application
+    "repetitive_process",    # repetitive manual work = automation ready
 }
 _WARM_SIGNAL_TYPES = {
-    "expansion",         # new facility — needs equipment
-    "job_posting",       # general ops posting
-    "labor_shortage",    # urgency language in postings
-    "news",              # general press mention
-    "service_consistency",  # franchise / brand standard drive
+    "expansion",             # new facility — needs equipment
+    "job_posting",           # general ops posting
+    "labor_shortage",        # urgency language in postings
+    "news",                  # general press mention
+    "service_consistency",   # franchise / brand standard drive
     "equipment_integration", # WMS / ERP rollout — robot-ready infra
+    "material_handling",     # forklift/internal logistics = AMR opportunity
 }
 
 
