@@ -300,14 +300,33 @@ def run_linkedin_scraper_task(self, max_companies=50):
 def rescore_all_companies_task(self):
     """Re-score all companies after new signals have been collected"""
     from app.models.company import Company
-    from app.services.scoring_engine import score_company
+    from app.models.signal import Signal
+    from app.models.score import Score
+    from app.services.scoring_engine import compute_scores
+    from app.services.lead_filter import classify_lead
     
     db = get_db()
     try:
         companies = db.query(Company).all()
         for company in companies:
             try:
-                score_company(company, db)
+                signals = db.query(Signal).filter(Signal.company_id == company.id).all()
+                score_data = compute_scores(company, signals)
+                
+                score = db.query(Score).filter(Score.company_id == company.id).first()
+                if not score:
+                    score = Score(company_id=company.id)
+                    db.add(score)
+                
+                score.overall_score = score_data.get('overall_score', 0)
+                score.automation_score = score_data.get('automation_score', 0)
+                score.labor_pain_score = score_data.get('labor_pain_score', 0)
+                score.expansion_score = score_data.get('expansion_score', 0)
+                score.market_fit_score = score_data.get('market_fit_score', 0)
+                
+                tier_data = classify_lead(company, signals, score_data)
+                score.tier = tier_data.get('tier', 'COLD')
+                
             except Exception as e:
                 logger.warning(f"Failed to score company {company.id}: {e}")
                 continue

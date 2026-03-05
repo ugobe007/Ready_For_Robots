@@ -14,7 +14,7 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
-from app.services.scoring_engine import score_company
+from app.services.scoring_engine import compute_scores
 from app.scrapers.news_scraper import NewsScraper
 from app.scrapers.job_board_scraper import JobBoardScraper
 from app.scrapers.serp_scraper import SERPScraper
@@ -205,10 +205,37 @@ class ScraperOrchestrator:
             
             for company in companies:
                 try:
-                    result = score_company(company, self.db)
+                    # Get company signals
+                    signals = self.db.query(Signal).filter(
+                        Signal.company_id == company.id
+                    ).all()
+                    
+                    # Compute scores
+                    score_data = compute_scores(company, signals)
+                    
+                    # Create or update Score record
+                    score = self.db.query(Score).filter(
+                        Score.company_id == company.id
+                    ).first()
+                    
+                    if not score:
+                        score = Score(company_id=company.id)
+                        self.db.add(score)
+                    
+                    score.overall_score = score_data.get('overall_score', 0)
+                    score.automation_score = score_data.get('automation_score', 0)
+                    score.labor_pain_score = score_data.get('labor_pain_score', 0)
+                    score.expansion_score = score_data.get('expansion_score', 0)
+                    score.market_fit_score = score_data.get('market_fit_score', 0)
+                    
+                    # Determine tier
+                    from app.services.lead_filter import classify_lead
+                    tier_data = classify_lead(company, signals, score_data)
+                    score.tier = tier_data.get('tier', 'COLD')
+                    
                     scored += 1
                     
-                    if result and result.get('tier') == 'HOT':
+                    if score.tier == 'HOT':
                         hot_count += 1
                         
                 except Exception as e:
