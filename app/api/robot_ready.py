@@ -29,6 +29,7 @@ from bs4 import BeautifulSoup
 from app.database import get_db
 from app.models.company import Company
 from app.services.ontology import get_industry_prior
+from app.services.lead_filter import classify_lead
 
 router = APIRouter()
 
@@ -230,10 +231,12 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
         elif any(s.signal_type == 'expansion' for s in signals):
             action = "Propose as part of new facility build-out"
         
-        # Determine priority tier from score
+        # Determine priority tier from score using classification logic
         priority_tier = 'COLD'
-        if score and hasattr(score, 'tier'):
-            priority_tier = score.tier or 'COLD'
+        if score and signals is not None:
+            junk, junk_reason, pri = classify_lead(company, score, signals)
+            if not junk:
+                priority_tier = pri.tier
         
         matches.append({
             "company_name": company.name,
