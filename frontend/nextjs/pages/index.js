@@ -1240,7 +1240,7 @@ function IntelSearchPanel({ onOpenLead }) {
         className="w-full flex items-center justify-between px-4 py-2.5 text-xs hover:bg-neutral-900/40 transition-colors">
         <span className="flex items-center gap-2">
           <span className="text-cyan-400">&#8855; Intelligence Search</span>
-          <span className="text-neutral-400 hidden sm:inline">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
+          <span className="text-neutral-400 hidden sm:inline">&mdash; find buyers by investment activity, M&A, labor trends &amp; verticals</span>
           <span className="text-neutral-800 text-[10px] hidden md:inline">press / to focus</span>
         </span>
         <span className="text-neutral-500">{open ? '&#9650;' : '&#9660;'}</span>
@@ -1250,7 +1250,10 @@ function IntelSearchPanel({ onOpenLead }) {
         <div className="border-t border-neutral-800 px-4 pb-5 pt-4 space-y-4">
           {/* category grid */}
           <div>
-            <p className="label mb-2.5">quick search by category</p>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="label">quick search by category</p>
+              <span className="text-[9px] text-neutral-600">🎯 Pre-configured signal searches</span>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {SEARCH_CATEGORIES.map(cat => (
                 <button key={cat.key} onClick={() => selectCategory(cat.key)}
@@ -1268,7 +1271,7 @@ function IntelSearchPanel({ onOpenLead }) {
           {/* free-text input */}
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input ref={searchRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="/ search — company name or keyword..."
+              placeholder="/ search — company name, keyword, or signal type..."
               className="flex-1 bg-neutral-900 border border-neutral-600 rounded px-3 py-2 text-sm
                          text-neutral-100 placeholder-neutral-400
                          focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-900 focus:text-white transition-colors" />
@@ -1557,6 +1560,48 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Platform Descriptor - What we do and how signals work */}
+      <div className="mb-8 border border-cyan-900/30 rounded-lg bg-gradient-to-br from-cyan-950/10 via-neutral-950 to-emerald-950/10 p-6">
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 text-3xl">🎯</div>
+          <div className="flex-1 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-1">AI-Powered Lead Intelligence for Robot Companies</h2>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                We monitor thousands of companies in real-time, detecting <span className="text-cyan-400 font-medium">buying signals</span> that indicate automation readiness. 
+                Every funding round, executive hire, expansion announcement, and labor challenge is a signal—our AI ranks them to show you exactly who's ready to buy robots <span className="text-emerald-400 font-medium">right now</span>.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-400 text-lg shrink-0">📡</span>
+                <div>
+                  <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">Signal Collection</h3>
+                  <p className="text-xs text-neutral-400">We scrape funding announcements, job boards, expansion news, M&A activity, and industry reports—aggregating thousands of buying signals daily.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <span className="text-cyan-400 text-lg shrink-0">🧠</span>
+                <div>
+                  <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-0.5">AI Scoring Engine</h3>
+                  <p className="text-xs text-neutral-400">Our ML models analyze signal patterns, company profiles, and industry trends to assign urgency scores (0-100) prioritizing your hottest leads.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-400 text-lg shrink-0">🚀</span>
+                <div>
+                  <h3 className="text-xs font-semibold text-yellow-400 uppercase tracking-wide mb-0.5">Action Intelligence</h3>
+                  <p className="text-xs text-neutral-400">Get decision-maker intel, timing windows, competitive landscape, and approach strategies—everything you need to close the deal faster.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Robot Ready CTA - Hero Banner */}
       <div className="mb-6 border border-emerald-800/50 rounded bg-gradient-to-r from-emerald-950/20 to-neutral-950 overflow-hidden">
         <div className="flex flex-col md:flex-row items-center justify-between p-3 gap-4">
@@ -1684,19 +1729,28 @@ export default function Dashboard() {
           
           {/* Quick Stats */}
           <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
-            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400 mb-3">Pipeline Overview</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400">Pipeline Overview</h3>
+              <span className="text-[9px] text-neutral-600 border border-neutral-800 px-2 py-0.5 rounded">Live</span>
+            </div>
             
-            <div>
-              <span className="label block mb-1">Total Leads</span>
-              <span className="text-3xl font-bold text-neutral-200 tabular-nums">
+            <div className="bg-gradient-to-br from-neutral-900/50 to-transparent border border-neutral-800 rounded p-3">
+              <span className="label block mb-1 text-neutral-500">Total Leads</span>
+              <span className="text-3xl font-bold text-white tabular-nums">
                 {summary.total ?? leads.length}
               </span>
+              <p className="text-[9px] text-neutral-600 mt-1">Active opportunities in database</p>
+            </div>
+
+            <div className="flex items-center gap-2 text-[9px] text-neutral-600 px-1">
+              <span className="inline-block h-1 w-1 rounded-full bg-cyan-500 animate-pulse"></span>
+              <span>Auto-refreshes every 30 seconds</span>
             </div>
 
             <div className="h-px bg-neutral-800" />
             
             <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
-              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-red-800 transition-colors group">
+              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-red-800 transition-colors group bg-gradient-to-br from-red-950/10 to-transparent hover:from-red-950/20">
               <div className="flex items-center justify-between">
                 <span className="label text-neutral-500 group-hover:text-red-400 transition-colors">HOT</span>
                 <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
@@ -1866,46 +1920,68 @@ export default function Dashboard() {
             if (hotDeals.length === 0) return null;
             
             return (
-              <div className="border-2 border-red-800/50 rounded-lg p-6 bg-gradient-to-br from-red-950/20 to-transparent">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-red-400 flex items-center gap-2">
-                    <span className="text-2xl">🔥</span> Top {hotDeals.length} Hot Deals Today
-                  </h2>
-                  <span className="text-[10px] text-neutral-600 uppercase tracking-wider">Priority Outreach</span>
+              <div className="border-2 border-red-800/50 rounded-lg p-6 bg-gradient-to-br from-red-950/20 via-red-950/10 to-transparent mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h2 className="text-xl font-bold text-red-400 flex items-center gap-2 mb-1">
+                      <span className="text-2xl">🔥</span> Today's Hottest Opportunities
+                    </h2>
+                    <p className="text-xs text-neutral-500">High-intent buyers with fresh signals—outreach <span className="text-red-400 font-medium">immediately</span></p>
+                  </div>
+                  <span className="text-[10px] text-red-500 uppercase tracking-wider border border-red-900 px-2 py-1 rounded">Priority Outreach</span>
                 </div>
                 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-3 mt-4">
                   {hotDeals.map((deal, idx) => {
                     const sig = topSignal(deal);
                     const sigM = sig ? (SIGNAL_META[sig.signal_type] || {}) : {};
+                    const dealSize = dealLabel(deal.employee_estimate);
                     return (
                       <div key={deal.id} 
-                        className="border border-red-900 rounded-lg p-4 hover:border-red-700 hover:bg-red-950/30 transition-all cursor-pointer group"
+                        className="border border-red-900 rounded-lg p-4 hover:border-red-700 hover:bg-red-950/30 transition-all cursor-pointer group relative overflow-hidden"
                         onClick={() => setSelectedLead(deal)}>
-                        <div className="flex items-start justify-between mb-2">
-                          <span className="text-xs font-bold text-red-500">#{idx + 1}</span>
+                        {/* Rank badge */}
+                        <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden">
+                          <div className="absolute top-1 right-1 bg-red-900/50 text-red-400 text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center">
+                            #{idx + 1}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-base font-semibold text-neutral-100 mb-1 group-hover:text-red-300 transition-colors leading-tight">
+                              {deal.company_name}
+                            </h3>
+                            <div className="text-[10px] text-neutral-500 mb-1">
+                              {[deal.industry, deal.location_city, deal.location_state].filter(Boolean).join(' · ')}
+                            </div>
+                            {dealSize.tier && (
+                              <span className="inline-block px-2 py-0.5 rounded text-[9px] bg-neutral-900 border border-neutral-700 text-neutral-400">
+                                {dealSize.tier} {dealSize.est ? `· ~${dealSize.est} robots` : ''}
+                              </span>
+                            )}
+                          </div>
                           <ScoreNum value={deal.score?.overall_score ?? 0} />
                         </div>
-                        <h3 className="text-base font-semibold text-neutral-100 mb-1 group-hover:text-emerald-400 transition-colors">
-                          {deal.company_name}
-                        </h3>
-                        <div className="text-[10px] text-neutral-600 mb-3">
-                          {[deal.industry, deal.location_city, deal.location_state].filter(Boolean).join(' · ')}
-                        </div>
+                        
                         {sig && (
-                          <div className="space-y-2">
-                            <SignalBadge type={sig.signal_type} />
-                            <p className="text-[10px] text-neutral-500 line-clamp-2">
+                          <div className="space-y-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <SignalBadge type={sig.signal_type} />
+                              <span className="text-[9px] text-neutral-600">{Math.round((sig.strength || 0) * 100)}% confidence</span>
+                            </div>
+                            <p className="text-[10px] text-neutral-400 line-clamp-2 leading-relaxed">
                               {sig.raw_text}
                             </p>
                           </div>
                         )}
+                        
                         <div className="mt-3 pt-3 border-t border-red-900/50 flex items-center justify-between">
-                          <span className="text-[9px] text-neutral-700">
-                            {deal.signal_count} signals
+                          <span className="text-[9px] text-neutral-600">
+                            {deal.signal_count} signals detected
                           </span>
-                          <span className="text-[10px] text-red-400 group-hover:text-red-300 font-medium">
-                            Analyze →
+                          <span className="text-[10px] text-red-400 group-hover:text-red-300 font-medium flex items-center gap-1">
+                            Full Analysis <span className="group-hover:translate-x-0.5 transition-transform">→</span>
                           </span>
                         </div>
                       </div>
