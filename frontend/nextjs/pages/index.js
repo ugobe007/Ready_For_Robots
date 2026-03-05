@@ -219,13 +219,46 @@ function strategicFit(lead) {
 }
 
 function StrategicSnapshot({ leads, onSelect }) {
-  const [showAll, setShowAll] = useState(false);
+  const [rotationIndex, setRotationIndex] = useState(0);
+  const [prevVisible, setPrevVisible] = useState([]);
   const sorted = [...leads]
     .filter(l => l.score?.overall_score != null)
     .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
-  const visible = showAll ? sorted.slice(0, 10) : sorted.slice(0, 5);
+  
+  // Rotate through leads every 5 seconds, showing 25 at a time
+  useEffect(() => {
+    if (sorted.length <= 25) return; // No need to rotate if we have 25 or fewer
+    
+    const interval = setInterval(() => {
+      setRotationIndex(prev => {
+        const maxIndex = sorted.length - 25;
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(interval);
+  }, [sorted.length]);
+
+  // Get 25 leads starting from rotationIndex
+  const visible = sorted.slice(rotationIndex, rotationIndex + 25);
+
+  // Track previous visible leads for animation
+  useEffect(() => {
+    if (visible.length > 0) {
+      setPrevVisible(visible.map(l => l.id));
+    }
+  }, [rotationIndex]);
 
   if (!sorted.length) return null;
+
+  // Determine which leads are entering (new in visible, not in prevVisible)
+  const enteringIds = new Set(
+    visible.filter(l => !prevVisible.includes(l.id)).map(l => l.id)
+  );
+  // Determine which leads are exiting (in prevVisible, not in visible)
+  const exitingIds = new Set(
+    prevVisible.filter(id => !visible.some(l => l.id === id))
+  );
 
   // Helper to check if lead was updated recently (last hour)
   const isRecentlyUpdated = (lead) => {
@@ -255,10 +288,9 @@ function StrategicSnapshot({ leads, onSelect }) {
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />watch</span>
           </div>
         </div>
-        <button onClick={() => setShowAll(s => !s)}
-          className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors">
-          {showAll ? 'show less ↑' : `show all 10 ↓`}
-        </button>
+        <div className="text-[10px] text-neutral-500">
+          Showing 25 of {sorted.length} leads {sorted.length > 25 && '• Rotating every 5s'}
+        </div>
       </div>
 
       <div className="border border-neutral-800 rounded overflow-hidden">
@@ -283,6 +315,12 @@ function StrategicSnapshot({ leads, onSelect }) {
           const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
           const recentlyUpdated = isRecentlyUpdated(lead);
           const newSignal = hasNewSignals(lead);
+          
+          // Determine animation based on position and rotation state
+          const isEntering = enteringIds.has(lead.id);
+          const animationStyle = isEntering
+            ? `slideInFromTop 0.4s ease-out both` // New leads enter from top
+            : `slideInFromLeft 0.3s ease-out ${i * 0.05}s both`; // Initial cascade effect
 
           return (
             <div key={lead.id}
@@ -291,7 +329,7 @@ function StrategicSnapshot({ leads, onSelect }) {
                          ${recentlyUpdated ? 'bg-emerald-950/10 animate-pulse-slow' : ''}`}
               style={{
                 gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem',
-                animation: `slideInFromLeft 0.3s ease-out ${i * 0.05}s both`
+                animation: animationStyle
               }}>
 
               {/* rank */}
