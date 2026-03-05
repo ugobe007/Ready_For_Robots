@@ -1,14 +1,21 @@
 """
-RFP Marketplace Scraper
-=======================
-Scrapes automation project marketplaces for direct buyer intent signals.
+RFP Marketplace & Government Tender Scraper
+============================================
+Scrapes automation RFP marketplaces and government procurement sites for direct buyer intent.
 
 Target sites:
 - Qviro.com - automation project marketplace
 - JobToRob.com - global robotics tenders
 - Automate America - factory automation RFQs
+- RFPBot.com - RFP discovery platform
+- SAM.gov - US federal contracts (HUGE budgets)
+- GSA.gov - US government procurement
+- TED.europa.eu - EU tenders (thousands yearly)
+- TendersInfo.com - global government contracts
+- Biddingo.com - worldwide procurement
+- MERX.com - Canadian government contracts
 
-These are HIGH-VALUE leads - companies actively posting projects are ready to buy.
+These are HIGHEST-VALUE leads - government + enterprise contracts with confirmed budgets.
 """
 import logging
 from typing import List, Dict, Any
@@ -152,6 +159,72 @@ class RFPMarketplaceScraper(BaseScraper):
         
         return results
     
+    def scrape_government_tender(self, url: str, source_name: str) -> List[Dict[str, Any]]:
+        """
+        Generic scraper for government tender sites.
+        Handles SAM.gov, GSA.gov, TED, TendersInfo, Biddingo, MERX, RFPBot.
+        """
+        results = []
+        try:
+            resp = requests.get(url, headers=self.headers, timeout=30)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            
+            # Generic tender parsing - look for common patterns
+            # Most tender sites use similar structures: title, agency/company, description, value
+            tender_containers = (
+                soup.find_all('div', class_=['tender', 'opportunity', 'listing', 'result']) or
+                soup.find_all('article') or
+                soup.find_all('li', class_=['item', 'result'])
+            )
+            
+            for tender in tender_containers[:15]:  # Government sites have many results
+                try:
+                    # Try to find title/heading
+                    title_elem = (
+                        tender.find('h2') or tender.find('h3') or 
+                        tender.find('h4') or tender.find('a', class_='title')
+                    )
+                    
+                    # Try to find organization/agency
+                    org_elem = (
+                        tender.find(class_=['agency', 'organization', 'department', 'company']) or
+                        tender.find('span', text=lambda t: t and ('Agency' in t or 'Dept' in t))
+                    )
+                    
+                    # Try to find description
+                    desc_elem = tender.find('p', class_=['description', 'summary', 'detail'])
+                    
+                    if title_elem:
+                        title_text = title_elem.get_text(strip=True)
+                        org_text = org_elem.get_text(strip=True) if org_elem else "Government Agency"
+                        desc_text = desc_elem.get_text(strip=True)[:200] if desc_elem else ""
+                        
+                        # Only include if robotics/automation related
+                        combined_text = f"{title_text} {desc_text}".lower()
+                        automation_keywords = ['robot', 'automat', 'unmanned', 'autonomous', 'cobot', 'amr']
+                        
+                        if any(keyword in combined_text for keyword in automation_keywords):
+                            results.append({
+                                'company_name': org_text,
+                                'signal_type': 'government_contract',
+                                'signal_text': f"Gov Tender: {title_text}",
+                                'url': url,
+                                'detected_at': datetime.utcnow(),
+                                'source': source_name,
+                                'industry': 'Government',
+                                'confidence': 0.95,  # Government = confirmed budget
+                            })
+                
+                except Exception as e:
+                    logger.debug(f"Failed to parse tender item: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"{source_name} scrape failed for {url}: {e}")
+        
+        return results
+    
     def scrape(self, url: str, **kwargs) -> List[Dict[str, Any]]:
         """
         Route to appropriate scraper based on URL.
@@ -162,6 +235,20 @@ class RFPMarketplaceScraper(BaseScraper):
             return self.scrape_jobtorob(url)
         elif 'automateamerica.com' in url:
             return self.scrape_automate_america(url)
+        elif 'rfpbot.com' in url:
+            return self.scrape_government_tender(url, "RFPBot")
+        elif 'sam.gov' in url:
+            return self.scrape_government_tender(url, "SAM.gov Federal Contracts")
+        elif 'gsa.gov' in url:
+            return self.scrape_government_tender(url, "GSA.gov")
+        elif 'ted.europa.eu' in url:
+            return self.scrape_government_tender(url, "TED EU Tenders")
+        elif 'tendersinfo.com' in url:
+            return self.scrape_government_tender(url, "TendersInfo Global")
+        elif 'biddingo.com' in url:
+            return self.scrape_government_tender(url, "Biddingo")
+        elif 'merx.com' in url:
+            return self.scrape_government_tender(url, "MERX Canada")
         else:
             logger.warning(f"Unknown RFP marketplace: {url}")
             return []

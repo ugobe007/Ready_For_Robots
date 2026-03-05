@@ -1034,6 +1034,89 @@ RFP_MARKETPLACE_TARGETS: List[ScrapeTarget] = [
         signal_types=["rfp_posted", "automation_intent", "factory_automation"],
         notes="Assembly automation, robotic machine tending, factory equipment. Automotive + heavy industry."
     ),
+    
+    # RFPBot - RFP Discovery Platform
+    ScrapeTarget(
+        url="https://rfpbot.com/search?keywords=robotics+automation+cobot",
+        label="RFPBot - Automation RFP Scanner",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Manufacturing", "Logistics", "Healthcare", "Government"],
+        signal_types=["rfp_posted", "automation_intent", "government_contract", "budget_allocated"],
+        notes="PREMIUM SOURCE: Scans thousands of RFP portals. Set keywords: robotics, robotic automation, cobot, industrial robot, warehouse automation"
+    ),
+]
+
+
+# -- Government Tender Websites: HIGH-VALUE CONTRACTS ------------------------
+# Government procurement = large budgets, transparent requirements, multi-year contracts
+
+GOVERNMENT_TENDER_TARGETS: List[ScrapeTarget] = [
+    # United States - SAM.gov (System for Award Management)
+    ScrapeTarget(
+        url="https://sam.gov/search?index=opp&page=1&keywords=robotics+automation+unmanned",
+        label="SAM.gov - US Federal Contract Opportunities",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government", "Defense", "Infrastructure"],
+        signal_types=["government_contract", "rfp_posted", "budget_allocated"],
+        notes="US federal procurement. Keywords: robotics, inspection robot, warehouse automation, unmanned systems, robotic automation. HUGE budgets."
+    ),
+    
+    # United States - GSA.gov
+    ScrapeTarget(
+        url="https://www.gsa.gov/buy-through-us/purchasing-programs/gsa-schedules",
+        label="GSA.gov - General Services Administration",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government"],
+        signal_types=["government_contract", "rfp_posted"],
+        notes="GSA Schedule opportunities for government automation projects. Pre-approved vendor programs."
+    ),
+    
+    # Europe - TED (Tenders Electronic Daily)
+    ScrapeTarget(
+        url="https://ted.europa.eu/en/search?q=robotics+automation",
+        label="TED - EU Tenders Electronic Daily",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government", "Infrastructure", "Manufacturing"],
+        signal_types=["government_contract", "rfp_posted", "budget_allocated"],
+        notes="EU publishes THOUSANDS of automation/robotics tenders yearly. All EU member states. Massive market."
+    ),
+    
+    # Global - TendersInfo
+    ScrapeTarget(
+        url="https://www.tendersinfo.com/search/robotics-automation",
+        label="TendersInfo - Global Tender Database",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government", "Defense", "Agriculture", "Infrastructure"],
+        signal_types=["government_contract", "rfp_posted", "automation_intent"],
+        notes="Global government tenders: defense, infrastructure, agriculture, smart cities. Multi-country coverage."
+    ),
+    
+    # Global - Biddingo
+    ScrapeTarget(
+        url="https://www.biddingo.com/tenders/robotics",
+        label="Biddingo - Global Procurement Platform",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government", "Manufacturing", "Infrastructure"],
+        signal_types=["government_contract", "rfp_posted"],
+        notes="Worldwide government + enterprise procurement. Robotics for defense, smart cities, industrial automation."
+    ),
+    
+    # Canada/North America - MERX
+    ScrapeTarget(
+        url="https://www.merx.com/search/?keywords=robotics+automation",
+        label="MERX - Canadian Government Procurement",
+        scraper="rfp_marketplace",
+        cadence="daily",
+        industries=["Government", "Infrastructure"],
+        signal_types=["government_contract", "rfp_posted"],
+        notes="Canadian federal, provincial, municipal procurement. Also covers some US state/local contracts."
+    ),
 ]
 
 
@@ -1061,6 +1144,7 @@ ALL_TARGETS: List[ScrapeTarget] = (
     + LOGISTICS_DIRECTORY_TARGETS
     + RSS_FEED_TARGETS
     + RFP_MARKETPLACE_TARGETS
+    + GOVERNMENT_TENDER_TARGETS
 )
 
 
@@ -1106,6 +1190,7 @@ def summary() -> dict:
         "logistics_dir": len(get_targets("logistics_dir")),
         "rss_feed":      len(get_targets("rss_feed")),
         "rfp_marketplace": len(get_targets("rfp_marketplace")),
+        "government_tenders": len(GOVERNMENT_TENDER_TARGETS),
         "news_queries":  len(NEWS_QUERIES),
         "linkedin_queries": len(LINKEDIN_SEARCH_QUERIES),
         "total_targets": len(ALL_TARGETS),
