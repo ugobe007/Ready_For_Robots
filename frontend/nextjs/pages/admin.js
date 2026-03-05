@@ -53,7 +53,7 @@ function Spinner() {
   return <span className="inline-block w-3 h-3 border border-neutral-500 border-t-cyan-400 rounded-full animate-spin" />;
 }
 
-const TABS = ['Dashboard', 'Companies', 'Scrapers', 'Analytics', 'System'];
+const TABS = ['Dashboard', 'Users', 'Companies', 'Scrapers', 'Analytics', 'System'];
 
 const SCRAPERS  = ['all', 'job_board', 'hotel_dir', 'rss_feed', 'news'];
 const INDUSTRIES = ['', 'Logistics', 'Hospitality', 'Food Service', 'Healthcare'];
@@ -218,6 +218,190 @@ function Analytics() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Users ──────────────────────────────────────────────────────────────────
+
+function Users() {
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userActivity, setUserActivity] = useState(null);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+
+  const loadUsers = useCallback(() => {
+    setLoading(true);
+    Promise.all([
+      fetch(`${API}/api/admin/users`).then(r => r.json()),
+      fetch(`${API}/api/admin/users/stats`).then(r => r.json())
+    ])
+      .then(([usersData, statsData]) => {
+        setUsers(usersData.users || []);
+        setStats(statsData);
+        setLoading(false);
+      })
+      .catch(e => { console.error(e); setLoading(false); });
+  }, []);
+
+  useEffect(() => { loadUsers(); }, [loadUsers]);
+
+  const viewActivity = (userId) => {
+    setSelectedUser(userId);
+    setLoadingActivity(true);
+    fetch(`${API}/api/admin/users/${userId}/activity`)
+      .then(r => r.json())
+      .then(d => { setUserActivity(d); setLoadingActivity(false); })
+      .catch(e => { console.error(e); setLoadingActivity(false); });
+  };
+
+  const deleteUser = (userId, email) => {
+    if (!confirm(`Delete user ${email} and ALL their data? This cannot be undone.`)) return;
+    fetch(`${API}/api/admin/users/${userId}`, { method: 'DELETE' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'success') {
+          alert(`User ${email} deleted`);
+          loadUsers();
+          setSelectedUser(null);
+          setUserActivity(null);
+        } else {
+          alert(`Error: ${d.message}`);
+        }
+      })
+      .catch(e => alert(`Error deleting user: ${e.message}`));
+  };
+
+  if (loading) return <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading users…</div>;
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-100">User Management</h2>
+          <p className="text-xs text-neutral-600 mt-1">Manage registered users and view activity</p>
+        </div>
+        <button onClick={loadUsers} className="border border-neutral-700 px-4 py-2 text-sm text-neutral-400 hover:text-emerald-400 hover:border-emerald-800 transition-colors">
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <StatCard label="Total Users" value={stats.total_users} />
+          <StatCard label="Active (7d)" value={stats.active_users} />
+          <StatCard label="Total Saved" value={stats.total_saved} />
+          <StatCard label="Total Reports" value={stats.total_reports} />
+          <StatCard label="Total Lists" value={stats.total_lists} />
+        </div>
+      )}
+
+      {/* Users Table */}
+      <div>
+        <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-3">
+          All Users ({users.length})
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-neutral-800">
+              <th className="text-left py-2 text-xs text-neutral-500 font-normal">Email</th>
+              <th className="text-left py-2 text-xs text-neutral-500 font-normal">Created</th>
+              <th className="text-left py-2 text-xs text-neutral-500 font-normal">Last Active</th>
+              <th className="text-right py-2 text-xs text-neutral-500 font-normal">Saved</th>
+              <th className="text-right py-2 text-xs text-neutral-500 font-normal">Reports</th>
+              <th className="text-right py-2 text-xs text-neutral-500 font-normal">Lists</th>
+              <th className="text-right py-2 text-xs text-neutral-500 font-normal">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id} className="border-b border-neutral-800/50 hover:bg-neutral-900/30">
+                <td className="py-2 text-neutral-300">{user.email}</td>
+                <td className="py-2 text-neutral-500 text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
+                <td className="py-2 text-neutral-500 text-xs">{user.last_active ? new Date(user.last_active).toLocaleDateString() : '—'}</td>
+                <td className="py-2 text-right tabular-nums text-neutral-500">{user.saved_count}</td>
+                <td className="py-2 text-right tabular-nums text-neutral-500">{user.reports_count}</td>
+                <td className="py-2 text-right tabular-nums text-neutral-500">{user.lists_count}</td>
+                <td className="py-2 text-right">
+                  <button
+                    onClick={() => viewActivity(user.id)}
+                    className="border border-neutral-700 px-2 py-1 text-xs text-neutral-400 hover:text-cyan-400 hover:border-cyan-700 transition-colors mr-2"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => deleteUser(user.id, user.email)}
+                    className="border border-neutral-700 px-2 py-1 text-xs text-neutral-400 hover:text-red-400 hover:border-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* User Activity Panel */}
+      {selectedUser && (
+        <div className="border border-cyan-900 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm font-semibold text-cyan-400">User Activity</div>
+            <button onClick={() => { setSelectedUser(null); setUserActivity(null); }} className="text-neutral-600 hover:text-neutral-400 text-xs">
+              ✕ Close
+            </button>
+          </div>
+          
+          {loadingActivity ? (
+            <div className="text-neutral-500 text-sm py-4 flex gap-2 items-center"><Spinner /> Loading activity…</div>
+          ) : userActivity ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Saved Companies */}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Saved Companies ({userActivity.saved_companies?.length || 0})</div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {userActivity.saved_companies?.map(c => (
+                    <div key={c.company_id} className="text-xs text-neutral-400 border-l-2 border-neutral-800 pl-2">
+                      {c.name} <span className="text-neutral-600">· {c.industry}</span>
+                    </div>
+                  ))}
+                  {!userActivity.saved_companies?.length && <div className="text-xs text-neutral-600">No saved companies</div>}
+                </div>
+              </div>
+
+              {/* Reports */}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Reports ({userActivity.reports?.length || 0})</div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {userActivity.reports?.map(r => (
+                    <div key={r.id} className="text-xs text-neutral-400 border-l-2 border-neutral-800 pl-2">
+                      Report #{r.id.slice(0, 8)} <span className="text-neutral-600">· {r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</span>
+                    </div>
+                  ))}
+                  {!userActivity.reports?.length && <div className="text-xs text-neutral-600">No reports</div>}
+                </div>
+              </div>
+
+              {/* Lists */}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Lists ({userActivity.lists?.length || 0})</div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {userActivity.lists?.map(l => (
+                    <div key={l.id} className="text-xs text-neutral-400 border-l-2 border-neutral-800 pl-2">
+                      {l.name} <span className="text-neutral-600">· {l.description || 'No description'}</span>
+                    </div>
+                  ))}
+                  {!userActivity.lists?.length && <div className="text-xs text-neutral-600">No lists</div>}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -970,6 +1154,7 @@ export default function AdminPage() {
         </div>
 
         {tab === 'Dashboard'   && <Dashboard />}
+        {tab === 'Users'       && <Users />}
         {tab === 'Companies'   && <CompaniesManager />}
         {tab === 'Scrapers'    && <ScraperPanel />}
         {tab === 'Analytics'   && <Analytics />}
