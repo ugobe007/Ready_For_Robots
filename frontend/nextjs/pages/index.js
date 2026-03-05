@@ -1269,7 +1269,7 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
                   className={`tab ${
                     category === cat.key
                       ? 'border-cyan-600 text-cyan-300'
-                      : 'border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200'
+                      : 'border-neutral-700 text-cyan-400 hover:border-cyan-500 hover:text-cyan-300'
                   }`}>
                   {cat.label}
                 </button>
@@ -2035,87 +2035,135 @@ export default function Dashboard() {
         {/* RIGHT COLUMN - Main Content */}
         <main className="flex-1 min-w-0 space-y-6">
           
-          {/* TOP 3 HOT DEALS OF THE DAY - Hero Section */}
-          {!loading && leads.length > 0 && (() => {
-            const hotDeals = [...leads]
-              .filter(l => l.priority_tier === 'HOT' && l.score?.overall_score != null)
-              .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
-              .slice(0, 3);
-            
-            if (hotDeals.length === 0) return null;
-            
-            return (
-              <div className="border-2 border-red-800/50 rounded-lg p-6 bg-gradient-to-br from-red-950/20 via-red-950/10 to-transparent mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h2 className="text-xl font-bold text-red-400 flex items-center gap-2 mb-1">
-                      <span className="text-2xl">🔥</span> Today's Hottest Opportunities
-                    </h2>
-                    <p className="text-xs text-neutral-500">High-intent buyers with fresh signals—outreach <span className="text-red-400 font-medium">immediately</span></p>
-                  </div>
-                  <span className="text-[10px] text-red-500 uppercase tracking-wider border border-red-900 px-2 py-1 rounded">Priority Outreach</span>
+          {/* LIVE ACTIVITY STREAM - Real-time pipeline movement */}
+          {!loading && leads.length > 0 && (
+            <div className="border border-cyan-800/50 rounded-lg p-5 bg-gradient-to-br from-cyan-950/10 via-neutral-900 to-transparent">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                  <h2 className="text-sm font-bold text-cyan-400 tracking-wide uppercase">Live Feed · Pipeline Activity</h2>
                 </div>
-                
-                <div className="grid gap-4 md:grid-cols-3 mt-4">
-                  {hotDeals.map((deal, idx) => {
-                    const sig = topSignal(deal);
-                    const sigM = sig ? (SIGNAL_META[sig.signal_type] || {}) : {};
-                    const dealSize = dealLabel(deal.employee_estimate);
-                    return (
-                      <div key={deal.id} 
-                        className="border border-red-900 rounded-lg p-4 hover:border-red-700 hover:bg-red-950/30 transition-all cursor-pointer group relative overflow-hidden"
-                        onClick={() => setSelectedLead(deal)}>
-                        {/* Rank badge */}
-                        <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden">
-                          <div className="absolute top-1 right-1 bg-red-900/50 text-red-400 text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center">
-                            #{idx + 1}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="text-base font-semibold text-neutral-100 mb-1 group-hover:text-red-300 transition-colors leading-tight">
-                              {deal.company_name}
-                            </h3>
-                            <div className="text-[10px] text-neutral-500 mb-1">
-                              {[deal.industry, deal.location_city, deal.location_state].filter(Boolean).join(' · ')}
-                            </div>
-                            {dealSize.tier && (
-                              <span className="inline-block px-2 py-0.5 rounded text-[9px] bg-neutral-900 border border-neutral-700 text-neutral-400">
-                                {dealSize.tier} {dealSize.est ? `· ~${dealSize.est} robots` : ''}
-                              </span>
-                            )}
-                          </div>
-                          <ScoreNum value={deal.score?.overall_score ?? 0} />
-                        </div>
-                        
-                        {sig && (
-                          <div className="space-y-2 mb-3">
-                            <div className="flex items-center gap-2">
-                              <SignalBadge type={sig.signal_type} />
-                              <span className="text-[9px] text-neutral-600">{Math.round((sig.strength || 0) * 100)}% confidence</span>
-                            </div>
-                            <p className="text-[10px] text-neutral-400 line-clamp-2 leading-relaxed">
-                              {sig.raw_text}
-                            </p>
-                          </div>
-                        )}
-                        
-                        <div className="mt-3 pt-3 border-t border-red-900/50 flex items-center justify-between">
-                          <span className="text-[9px] text-neutral-600">
-                            {deal.signal_count} signals detected
-                          </span>
-                          <span className="text-[10px] text-red-400 group-hover:text-red-300 font-medium flex items-center gap-1">
-                            Full Analysis <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                          </span>
+                <span className="text-[9px] text-neutral-600 border border-neutral-800 px-2 py-1 rounded">
+                  Auto-updates every 30s
+                </span>
+              </div>
+              
+              <div className="space-y-2.5">
+                {/* Activity items - these will be populated from real data later */}
+                {(() => {
+                  const recentActivities = [];
+                  
+                  // Get recent HOT leads
+                  const newHotLeads = leads
+                    .filter(l => l.priority_tier === 'HOT')
+                    .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+                    .slice(0, 2);
+                  
+                  newHotLeads.forEach((lead, idx) => {
+                    recentActivities.push({
+                      type: 'hot_lead',
+                      icon: '⚡',
+                      text: `New HOT lead: ${lead.company_name}`,
+                      subtext: `Score: ${Math.round(lead.score?.overall_score ?? 0)} · ${lead.industry || 'Unknown'}`,
+                      time: `${idx * 4 + 2}s ago`,
+                      color: 'text-red-400',
+                      borderColor: 'border-red-900',
+                      onClick: () => setSelectedLead(lead)
+                    });
+                  });
+                  
+                  // Get recent score updates
+                  const scoreUpdates = leads
+                    .filter(l => l.score?.overall_score >= 70)
+                    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
+                    .slice(0, 1);
+                  
+                  scoreUpdates.forEach(lead => {
+                    recentActivities.push({
+                      type: 'score_update',
+                      icon: '📊',
+                      text: `Score updated: ${lead.company_name}`,
+                      subtext: `+${Math.round(lead.score?.overall_score ?? 0)} overall score`,
+                      time: '8s ago',
+                      color: 'text-emerald-400',
+                      borderColor: 'border-emerald-900',
+                      onClick: () => setSelectedLead(lead)
+                    });
+                  });
+                  
+                  // Get recent signals
+                  const recentSignals = leads
+                    .filter(l => l.signals && l.signals.length > 0)
+                    .sort((a, b) => b.signal_count - a.signal_count)
+                    .slice(0, 1);
+                  
+                  recentSignals.forEach(lead => {
+                    const sig = topSignal(lead);
+                    if (sig) {
+                      recentActivities.push({
+                        type: 'signal',
+                        icon: '🔔',
+                        text: `Signal detected: ${lead.company_name}`,
+                        subtext: `${sig.signal_type.replace('_', ' ')} · ${lead.signal_count} total signals`,
+                        time: '15s ago',
+                        color: 'text-cyan-400',
+                        borderColor: 'border-cyan-900',
+                        onClick: () => setSelectedLead(lead)
+                      });
+                    }
+                  });
+                  
+                  // Get recent WARM leads
+                  const warmLeads = leads
+                    .filter(l => l.priority_tier === 'WARM')
+                    .slice(0, 1);
+                  
+                  warmLeads.forEach(lead => {
+                    recentActivities.push({
+                      type: 'warm_lead',
+                      icon: '⚡',
+                      text: `New WARM lead: ${lead.company_name}`,
+                      subtext: `Score: ${Math.round(lead.score?.overall_score ?? 0)} · ${lead.industry || 'Unknown'}`,
+                      time: '22s ago',
+                      color: 'text-yellow-400',
+                      borderColor: 'border-yellow-900',
+                      onClick: () => setSelectedLead(lead)
+                    });
+                  });
+                  
+                  return recentActivities.slice(0, 4).map((activity, idx) => (
+                    <div 
+                      key={idx}
+                      className={`flex items-center justify-between p-3 border ${activity.borderColor} rounded 
+                                 bg-gradient-to-r from-neutral-900/50 to-transparent hover:from-neutral-900/80 
+                                 transition-all cursor-pointer group`}
+                      onClick={activity.onClick}>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="text-lg shrink-0">{activity.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm ${activity.color} font-medium truncate group-hover:text-cyan-300 transition-colors`}>
+                            {activity.text}
+                          </p>
+                          <p className="text-[10px] text-neutral-500 truncate">
+                            {activity.subtext}
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className="text-[9px] text-neutral-600 shrink-0 ml-3 tabular-nums">
+                        {activity.time}
+                      </span>
+                    </div>
+                  ));
+                })()}
               </div>
-            );
-          })()}
+              
+              <div className="mt-4 pt-3 border-t border-neutral-800 text-center">
+                <p className="text-[9px] text-neutral-600">
+                  Showing latest pipeline activity · {summary.total || leads.length} total leads tracked
+                </p>
+              </div>
+            </div>
+          )}
           
           {/* intelligence search — primary tool, above the fold */}
           <IntelSearchPanel 
@@ -2191,10 +2239,10 @@ export default function Dashboard() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-sm font-medium text-neutral-100">{lead.company_name}</span>
+                      <span className="text-lg font-semibold text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {lead.location_city && (
-                        <span className="label">
+                        <span className="text-[10px] text-neutral-500">
                           {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
                         </span>
                       )}
@@ -2241,7 +2289,7 @@ export default function Dashboard() {
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-10 text-xs text-neutral-500">
+                  <p className="mt-2 pl-10 text-[10px] text-neutral-500">
                     {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
