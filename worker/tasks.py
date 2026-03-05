@@ -1,4 +1,6 @@
 import logging
+import subprocess
+import os
 from worker.celery_worker import celery_app
 from app.database import SessionLocal, Base, engine
 import app.models
@@ -381,3 +383,39 @@ def scraper_health_check_task(self):
             logger.error(f"Health check failed: {e}")
     else:
         logger.info("No health data available yet")
+
+
+@celery_app.task(bind=True)
+def daily_scraper_report_task(self):
+    """
+    Daily scraper performance report - actual vs projected metrics
+    Runs at 8am UTC daily
+    """
+    logger.info("[REPORT] Generating daily scraper performance report...")
+    
+    try:
+        # Run the daily report script
+        script_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'scripts',
+            'daily_scraper_report.py'
+        )
+        
+        result = subprocess.run(
+            ['python3', script_path],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        if result.returncode == 0:
+            logger.info("[REPORT] Daily report generated successfully")
+            # Log key metrics from report
+            for line in result.stdout.split('\n'):
+                if 'New Leads' in line or 'Actual:' in line or 'Manufacturing' in line:
+                    logger.info(f"[REPORT] {line.strip()}")
+        else:
+            logger.error(f"[REPORT] Report generation failed: {result.stderr}")
+            
+    except Exception as e:
+        logger.error(f"[REPORT] Error generating daily report: {e}")

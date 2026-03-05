@@ -1,0 +1,52 @@
+================================================================================
+DAILY SCRAPER PERFORMANCE REPORT - March 05, 2026
+================================================================================
+
+📊 EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+New Leads (24h):        0
+  ├─ Automated:         0 (0.0%)
+  └─ Seeded:            0 (0.0%)
+New Signals:            0
+7-Day Daily Avg:        0.0 leads/day
+
+Total Database:         0 companies, 0 signals
+
+🎯 ACTUAL vs PROJECTED
+--------------------------------------------------------------------------------
+Actual:                 0 leads/day
+Conservative Target:    15-25 leads/day  ⚠️ BELOW TARGET
+Realistic Target:       30-50 leads/day  ⚠️ BELOW TARGET
+Optimistic Target:      60-80 leads/day  ⚠️ BELOW TARGET
+
+🔥 QUALITY DISTRIBUTION
+--------------------------------------------------------------------------------
+No scored leads in last 24h
+
+🏭 MANUFACTURING SIGNALS
+--------------------------------------------------------------------------------
+Detected (24h):         0
+Status:                 ⏳ PENDING - Queries running but no matches yet
+Action:                 Monitor for 48-72h, then adjust ontology if needed
+
+📡 DATA SOURCES
+--------------------------------------------------------------------------------
+  No new leads from automated sources
+
+🎯 SIGNAL TYPES
+--------------------------------------------------------------------------------
+  No new signals detected
+
+📈 7-DAY TREND
+--------------------------------------------------------------------------------
+Insufficient data for trend analysis
+
+💡 RECOMMENDATIONS
+--------------------------------------------------------------------------------
+  ⚠️  Manufacturing signals: Monitor for 48h, consider ontology refinement
+  ✅ Automated discovery: Exceeding 70% target
+  📈 Scale up: Add more news sources or increase scraper frequency
+
+================================================================================
+Report generated: 2026-03-05 23:14:33 UTC
+================================================================================

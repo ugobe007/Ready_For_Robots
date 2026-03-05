@@ -97,6 +97,12 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.tasks.scraper_health_check_task',
         'schedule': crontab(minute=0),  # Every hour
     },
+    
+    # ── DAILY REPORT ── Performance metrics (actual vs projected)
+    'daily-scraper-report': {
+        'task': 'worker.tasks.daily_scraper_report_task',
+        'schedule': crontab(hour=8, minute=0),  # Daily at 8am UTC
+    },
 }
 
 # Timezone
