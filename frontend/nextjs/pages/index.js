@@ -206,6 +206,23 @@ function StrategicSnapshot({ leads, onSelect }) {
 
   if (!sorted.length) return null;
 
+  // Helper to check if lead was updated recently (last hour)
+  const isRecentlyUpdated = (lead) => {
+    const updated = new Date(lead.updated_at || lead.created_at);
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return updated > hourAgo;
+  };
+
+  // Helper to check if lead has new signals (last 24h)
+  const hasNewSignals = (lead) => {
+    if (!lead.signals || lead.signals.length === 0) return false;
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return lead.signals.some(s => {
+      const detected = new Date(s.detected_at || s.created_at);
+      return detected > dayAgo;
+    });
+  };
+
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
@@ -243,22 +260,38 @@ function StrategicSnapshot({ leads, onSelect }) {
           const fit   = strategicFit(lead);
           const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
           const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
+          const recentlyUpdated = isRecentlyUpdated(lead);
+          const newSignal = hasNewSignals(lead);
 
           return (
             <div key={lead.id}
-              className="grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-neutral-900 last:border-0
-                         hover:bg-neutral-900/40 transition-colors group items-center"
-              style={{gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem'}}>
+              className={`grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-neutral-900 last:border-0
+                         hover:bg-neutral-900/40 transition-all group items-center
+                         ${recentlyUpdated ? 'bg-emerald-950/10 animate-pulse-slow' : ''}`}
+              style={{
+                gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem',
+                animation: `slideInFromLeft 0.3s ease-out ${i * 0.05}s both`
+              }}>
 
               {/* rank */}
               <span className="text-[10px] text-neutral-800 pl-3 group-hover:text-neutral-600 transition-colors tabular-nums">{i + 1}</span>
 
-              {/* company — name + dim metadata inline */}
-              <div className="px-3 py-2 min-w-0">
+              {/* company — name + dim metadata inline - CLICKABLE */}
+              <button onClick={() => onSelect(lead)} className="px-3 py-2 min-w-0 text-left w-full">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-[11px] font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors leading-tight">
+                  <span className="text-[11px] font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors leading-tight cursor-pointer">
                     {lead.company_name}
                   </span>
+                  {newSignal && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-700 text-cyan-400 font-semibold uppercase">
+                      New
+                    </span>
+                  )}
+                  {recentlyUpdated && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded border border-emerald-700 text-emerald-400 font-semibold">
+                      ↗ Active
+                    </span>
+                  )}
                   <span className="text-[10px] text-neutral-500 truncate hidden sm:inline">
                     {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
                   </span>
@@ -268,7 +301,7 @@ function StrategicSnapshot({ leads, onSelect }) {
                     {excerpt}{excerpt.length === 55 ? '…' : ''}
                   </p>
                 )}
-              </div>
+              </button>
 
               {/* signal badge only */}
               <div className="hidden md:flex items-center px-2 py-2">
