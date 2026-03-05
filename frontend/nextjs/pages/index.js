@@ -1603,7 +1603,6 @@ export default function Dashboard({ initialLeads = [], initialSummary = {}, init
     if (initialLeads.length === 0) fetchData(); 
   }, [fetchData, initialLeads.length]);
   
-  // Auto-refresh every 30 seconds
   useEffect(() => {
     const t = setInterval(fetchData, 30_000);
     return () => clearInterval(t);
@@ -2421,7 +2420,7 @@ export default function Dashboard({ initialLeads = [], initialSummary = {}, init
 
 // Server-side snapshot: Load data immediately on page load
 export async function getServerSideProps() {
-  // Use production API if deployed, otherwise localhost
+  // Use production API URL - both frontend and backend share same origin on Fly.io
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   
   try {
@@ -2443,7 +2442,7 @@ export async function getServerSideProps() {
       },
     };
   } catch (error) {
-    console.error('Failed to fetch initial data:', error);
+    console.error('Failed to fetch initial snapshot:', error);
     return {
       props: {
         initialLeads: [],

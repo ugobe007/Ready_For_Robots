@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',       // static HTML/CSS/JS — no Node server needed
-  trailingSlash: true,    // /admin → /admin/index.html (clean file paths)
+  // Removed 'output: export' to enable server-side rendering (getServerSideProps)
+  // This allows instant page loads with pre-rendered data snapshot
+  trailingSlash: true,
   images: {
-    unoptimized: true,    // required for static export
+    unoptimized: true,
   },
 };
 

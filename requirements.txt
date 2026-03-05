@@ -6,6 +6,7 @@ celery
 redis
 beautifulsoup4
 requests
+httpx
 pydantic
 python-dotenv
 spaCy
