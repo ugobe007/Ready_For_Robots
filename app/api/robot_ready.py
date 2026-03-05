@@ -230,13 +230,18 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
         elif any(s.signal_type == 'expansion' for s in signals):
             action = "Propose as part of new facility build-out"
         
+        # Determine priority tier from score
+        priority_tier = 'COLD'
+        if score and hasattr(score, 'tier'):
+            priority_tier = score.tier or 'COLD'
+        
         matches.append({
             "company_name": company.name,
             "industry": company.industry,
             "location_city": company.location_city,
             "location_state": company.location_state,
             "employee_estimate": company.employee_estimate,
-            "priority_tier": getattr(company, 'priority_tier', 'COLD'),
+            "priority_tier": priority_tier,
             "match_score": match_score,
             "value_proposition": value_prop,
             "key_signals": key_signals[:3],
@@ -337,9 +342,23 @@ def submit_robot(submission: RobotSubmission, db: Session = Depends(get_db)):
     # Generate strategy
     overall_strategy = generate_overall_strategy(matched_companies, robot_caps)
     
-    # Estimate deal value (rough calculation)
+    # Estimate deal value (rough calculation based on company size)
     hot_matches = [m for m in matched_companies if m.get('priority_tier') == 'HOT']
-    estimated_value = len(hot_matches) * 50000  # Assume avg $50K deal
+    estimated_value = 0
+    for match in hot_matches:
+        emp = match.get('employee_estimate', 0) or 0
+        # Estimate robots needed based on employee count
+        if emp >= 100000:
+            deal_size = 500000  # Enterprise
+        elif emp >= 20000:
+            deal_size = 250000  # Large
+        elif emp >= 5000:
+            deal_size = 150000  # Mid-market
+        elif emp >= 1000:
+            deal_size = 75000   # Regional
+        else:
+            deal_size = 35000   # SMB
+        estimated_value += deal_size
     
     # Determine top industry
     if matched_companies:
