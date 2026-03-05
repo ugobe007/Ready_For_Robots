@@ -48,7 +48,11 @@ COPY --from=frontend /frontend/.next ./frontend/.next
 COPY --from=frontend /frontend/node_modules ./frontend/node_modules
 COPY --from=frontend /frontend/package.json ./frontend/package.json
 COPY --from=frontend /frontend/next.config.js ./frontend/next.config.js
-COPY --from=frontend /frontend/public ./frontend/public
+COPY --from=frontend /frontend/pages ./frontend/pages
+COPY --from=frontend /frontend/styles ./frontend/styles
+COPY --from=frontend /frontend/lib ./frontend/lib
+COPY --from=frontend /frontend/postcss.config.js ./frontend/postcss.config.js
+COPY --from=frontend /frontend/tailwind.config.js ./frontend/tailwind.config.js
 
 EXPOSE 8080
 
