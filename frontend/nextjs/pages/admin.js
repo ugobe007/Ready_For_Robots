@@ -63,6 +63,165 @@ const SIGNAL_TYPES = [
   'funding_round', 'capex', 'ma_activity', 'expansion',
 ];
 
+// ── Analytics ──────────────────────────────────────────────────────────────
+
+function Analytics() {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('7d');
+
+  const fetchAnalytics = useCallback(() => {
+    setLoading(true);
+    fetch(`${API}/api/analytics?range=${timeRange}`)
+      .then(r => r.json())
+      .then(d => { setAnalytics(d); setLoading(false); })
+      .catch(e => { console.error('Analytics error:', e); setLoading(false); });
+  }, [timeRange]);
+
+  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
+
+  if (loading) return <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading analytics…</div>;
+  if (!analytics) return <Notice type="err">No analytics data available</Notice>;
+
+  return (
+    <div className="space-y-8">
+      {/* Time Range Selector */}
+      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-100">Platform Analytics</h2>
+          <p className="text-xs text-neutral-600 mt-1">Track user behavior and platform usage</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {[
+            { label: '7D', value: '7d' },
+            { label: '30D', value: '30d' },
+            { label: '90D', value: '90d' },
+            { label: 'All', value: 'all' }
+          ].map((range) => (
+            <button
+              key={range.value}
+              onClick={() => setTimeRange(range.value)}
+              className={`px-3 py-1.5 text-xs border transition-colors ${
+                timeRange === range.value
+                  ? 'border-emerald-600 text-emerald-400'
+                  : 'border-neutral-800 text-neutral-500 hover:border-neutral-700'
+              }`}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <StatCard label="Total Calculations" value={analytics?.total_calculations || 0} sub={`+${analytics?.calculation_growth || 0}% growth`} />
+        <StatCard label="Robot Searches" value={analytics?.robot_searches || 0} sub={`${analytics?.avg_matches_per_search || 0} avg matches`} />
+        <StatCard label="Avg Payback" value={`${analytics?.avg_payback_months || 0}mo`} sub={`$${(analytics?.avg_robot_cost || 0).toLocaleString()} avg cost`} />
+        <StatCard label="Email Captures" value={analytics?.email_captures || 0} sub={`${analytics?.conversion_rate || 0}% conversion`} />
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Robot Types */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Top Robot Types</div>
+          <div className="space-y-3">
+            {analytics?.top_robot_types?.map((robot, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{robot.type}</span>
+                  <span className="text-neutral-500 tabular-nums">{robot.count}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${robot.percentage}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs text-center py-4">No data</p>}
+          </div>
+        </div>
+
+        {/* Top Industries */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Top Industries</div>
+          <div className="space-y-3">
+            {analytics?.top_industries?.map((industry, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{industry.name}</span>
+                  <span className="text-neutral-500 tabular-nums">{industry.count}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-cyan-500 h-1.5 rounded-full transition-all" style={{ width: `${industry.percentage}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs text-center py-4">No data</p>}
+          </div>
+        </div>
+
+        {/* Geographic Distribution */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Geographic Distribution</div>
+          <div className="space-y-3">
+            {analytics?.top_regions?.map((region, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{region.name}</span>
+                  <span className="text-neutral-500 tabular-nums">{region.searches}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-purple-500 h-1.5 rounded-full transition-all" style={{ width: `${region.percentage}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs text-center py-4">No data</p>}
+          </div>
+        </div>
+
+        {/* Cost Distribution */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Robot Cost Distribution</div>
+          <div className="space-y-3">
+            {analytics?.cost_buckets?.map((bucket, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{bucket.range}</span>
+                  <span className="text-neutral-500 tabular-nums">{bucket.count}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-yellow-500 h-1.5 rounded-full transition-all" style={{ width: `${bucket.percentage}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs text-center py-4">No data</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Strategic Insights */}
+      <div className="border border-emerald-900 p-5">
+        <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-4">📊 Strategic Insights</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border border-neutral-800 p-3">
+            <div className="text-xs text-neutral-400 mb-1">🔥 Hottest Trend</div>
+            <p className="text-xs text-neutral-500">{analytics?.insights?.hottest_trend || 'Not enough data yet'}</p>
+          </div>
+          <div className="border border-neutral-800 p-3">
+            <div className="text-xs text-neutral-400 mb-1">💡 Opportunity</div>
+            <p className="text-xs text-neutral-500">{analytics?.insights?.opportunity || 'Gather more data'}</p>
+          </div>
+          <div className="border border-neutral-800 p-3">
+            <div className="text-xs text-neutral-400 mb-1">📈 Growth Area</div>
+            <p className="text-xs text-neutral-500">{analytics?.insights?.growth_area || 'Monitor user behavior'}</p>
+          </div>
+          <div className="border border-neutral-800 p-3">
+            <div className="text-xs text-neutral-400 mb-1">🎯 Action Item</div>
+            <p className="text-xs text-neutral-500">{analytics?.insights?.action_item || 'Build requested features'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Overview ───────────────────────────────────────────────────────────────
 
 function Dashboard() {
@@ -813,7 +972,7 @@ export default function AdminPage() {
         {tab === 'Dashboard'   && <Dashboard />}
         {tab === 'Companies'   && <CompaniesManager />}
         {tab === 'Scrapers'    && <ScraperPanel />}
-        {tab === 'Analytics'   && <Link href="/analytics" className="block text-center py-12 text-neutral-500 hover:text-emerald-400 transition-colors">📊 Open Analytics Dashboard →</Link>}
+        {tab === 'Analytics'   && <Analytics />}
         {tab === 'System'      && <SystemControls />}
       </main>
     </div>
