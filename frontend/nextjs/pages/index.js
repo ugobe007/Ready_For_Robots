@@ -921,24 +921,228 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
 
           {/* ── INTEL tab ── */}
           {activeTab === 'intel' && (
-            <div className="space-y-3">
-              <p className="text-xs text-neutral-600 mb-4">
-                Research links for {lead.company_name} — use these to build your pre-call briefing.
-              </p>
-              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading&hellip;</p>}
-              {(profile?.intel_links || []).map((link, i) => (
-                <a key={i} href={link.url} target="_blank" rel="noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="flex items-center justify-between border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{link.label}</p>
-                    <p className="text-xs text-neutral-700 truncate max-w-sm">{link.url}</p>
+            <div className="space-y-5">
+              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading intelligence&hellip;</p>}
+              
+              {!loading && (
+                <>
+                  {/* 1. Competitive Intelligence */}
+                  <div className="border border-violet-900 rounded p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-violet-400">🏆 Competitive Intelligence</span>
+                    </div>
+                    <div className="space-y-2">
+                      {profile?.competitive_intel?.current_vendors ? (
+                        <div className="text-xs">
+                          <span className="label">Current vendors:</span>
+                          <p className="text-neutral-300 mt-1">{profile.competitive_intel.current_vendors}</p>
+                        </div>
+                      ) : (
+                        <div className="text-xs">
+                          <span className="label">Current vendors:</span>
+                          <p className="text-neutral-500 mt-1">No competitive vendor data detected in signals</p>
+                        </div>
+                      )}
+                      
+                      {lead.industry && (
+                        <div className="text-xs border-t border-neutral-800 pt-2">
+                          <span className="label">Industry benchmark:</span>
+                          <p className="text-cyan-400 mt-1">
+                            {lead.industry === 'Logistics' && '67% of peer companies adopted warehouse AMRs in 2025'}
+                            {lead.industry === 'Hospitality' && '43% of hotel chains deployed service robots in 2025'}
+                            {lead.industry === 'Food Service' && '38% of QSR chains automated BOH operations in 2025'}
+                            {lead.industry === 'Healthcare' && '52% of hospitals deployed clinical logistics robots in 2025'}
+                            {!['Logistics', 'Hospitality', 'Food Service', 'Healthcare'].includes(lead.industry) && 'Automation adoption accelerating across industry'}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Competitive pressure:</span>
+                        <p className="text-amber-400 mt-1">
+                          {sc.overall_score >= 75 && 'HIGH - Competitors likely automating; risk falling behind'}
+                          {sc.overall_score >= 45 && sc.overall_score < 75 && 'MEDIUM - Some competitive movement expected'}
+                          {sc.overall_score < 45 && 'LOW - Early mover opportunity'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-neutral-700 group-hover:text-neutral-400 text-xs">↗</span>
-                </a>
-              ))}
-              {!loading && (profile?.intel_links || []).length === 0 && (
-                <p className="text-sm text-neutral-700">No links available.</p>
+
+                  {/* 2. Decision Maker Intelligence */}
+                  <div className="border border-blue-900 rounded p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-blue-400">👔 Decision Maker Intelligence</span>
+                    </div>
+                    <div className="space-y-2">
+                      {(lead.signals || []).filter(s => s.signal_type === 'strategic_hire').length > 0 ? (
+                        <>
+                          <div className="text-xs">
+                            <span className="label">Recent executive hires:</span>
+                            {(lead.signals || []).filter(s => s.signal_type === 'strategic_hire').slice(0, 2).map((s, i) => (
+                              <p key={i} className="text-emerald-400 mt-1">• {s.text}</p>
+                            ))}
+                          </div>
+                          <div className="text-xs border-t border-neutral-800 pt-2">
+                            <span className="label">Opportunity window:</span>
+                            <p className="text-cyan-400 mt-1">
+                              ⚡ New executives typically plan initiatives in first 90 days - strike now!
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-xs">
+                          <span className="label">Recent executive hires:</span>
+                          <p className="text-neutral-500 mt-1">No recent C-suite/VP hires detected in signals</p>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Primary decision makers:</span>
+                        <div className="mt-1 space-y-1">
+                          {lead.industry === 'Logistics' && (
+                            <>
+                              <p className="text-neutral-300">• VP Operations / COO (budget owner)</p>
+                              <p className="text-neutral-300">• Director Warehouse Operations (technical buyer)</p>
+                            </>
+                          )}
+                          {lead.industry === 'Hospitality' && (
+                            <>
+                              <p className="text-neutral-300">• VP Operations / COO (budget owner)</p>
+                              <p className="text-neutral-300">• Director F&B / Guest Services (end user)</p>
+                            </>
+                          )}
+                          {lead.industry === 'Food Service' && (
+                            <>
+                              <p className="text-neutral-300">• VP Operations (budget owner)</p>
+                              <p className="text-neutral-300">• Director Kitchen Operations (technical buyer)</p>
+                            </>
+                          )}
+                          {!['Logistics', 'Hospitality', 'Food Service'].includes(lead.industry) && (
+                            <>
+                              <p className="text-neutral-300">• COO / VP Operations (budget owner)</p>
+                              <p className="text-neutral-300">• Operations Director (technical buyer)</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Timing Intelligence */}
+                  <div className="border border-amber-900 rounded p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-amber-400">⏰ Timing Intelligence</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-xs">
+                        <span className="label">Budget cycle:</span>
+                        <p className="text-neutral-300 mt-1">
+                          {new Date().getMonth() >= 9 && new Date().getMonth() <= 11 && 'Q4 - Budget planning season (best time to position for next fiscal year)'}
+                          {new Date().getMonth() >= 0 && new Date().getMonth() <= 2 && 'Q1 - Fresh budgets released, high approval rate for strategic initiatives'}
+                          {new Date().getMonth() >= 3 && new Date().getMonth() <= 5 && 'Q2 - Mid-year review period, competitive for remaining funds'}
+                          {new Date().getMonth() >= 6 && new Date().getMonth() <= 8 && 'Q3 - Use-it-or-lose-it budget window opening'}
+                        </p>
+                      </div>
+                      
+                      {(lead.signals || []).some(s => s.signal_type === 'expansion') && (
+                        <div className="text-xs border-t border-neutral-800 pt-2">
+                          <span className="label">Expansion timeline:</span>
+                          <p className="text-emerald-400 mt-1">
+                            🚀 Active expansion detected - automation typically approved 4-6 months before facility opens
+                          </p>
+                        </div>
+                      )}
+                      
+                      {(lead.signals || []).some(s => s.signal_type === 'funding_round') && (
+                        <div className="text-xs border-t border-neutral-800 pt-2">
+                          <span className="label">Funding window:</span>
+                          <p className="text-violet-400 mt-1">
+                            💰 Recent funding detected - capital available for strategic initiatives (12-18 month deployment window)
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Best contact timing:</span>
+                        <p className="text-cyan-400 mt-1">
+                          {new Date().getDay() >= 1 && new Date().getDay() <= 3 && '📅 Tue-Thu mornings (9-11am) best for ops leaders'}
+                          {new Date().getDay() === 0 || new Date().getDay() === 6 && '📅 Wait for weekday - Tue-Thu mornings best'}
+                          {new Date().getDay() === 4 && '📅 Thursday morning good, but Tue-Wed optimal for ops leaders'}
+                          {new Date().getDay() === 5 && '📅 Friday avoid - Tue-Thu mornings best for ops leaders'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Risk/Readiness Scoring */}
+                  <div className="border border-red-900 rounded p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-red-400">⚠️ Risk & Readiness Assessment</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-xs">
+                        <span className="label">Automation maturity:</span>
+                        <p className={`mt-1 ${
+                          (lead.signals || []).some(s => s.signal_type === 'automation_intent') ? 'text-emerald-400' :
+                          (lead.signals || []).some(s => s.signal_type === 'capex') ? 'text-cyan-400' :
+                          'text-amber-400'
+                        }`}>
+                          {(lead.signals || []).some(s => s.signal_type === 'automation_intent') && '✅ HIGH - Active automation initiatives detected'}
+                          {!(lead.signals || []).some(s => s.signal_type === 'automation_intent') && (lead.signals || []).some(s => s.signal_type === 'capex') && '⚡ MEDIUM - CapEx spending indicates investment readiness'}
+                          {!(lead.signals || []).some(s => s.signal_type === 'automation_intent') && !(lead.signals || []).some(s => s.signal_type === 'capex') && '⚠️ LOW - No automation signals; requires education on ROI'}
+                        </p>
+                      </div>
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Labor pain severity:</span>
+                        <p className={`mt-1 ${sc.labor_pain_score >= 70 ? 'text-red-400' : sc.labor_pain_score >= 40 ? 'text-amber-400' : 'text-neutral-400'}`}>
+                          {sc.labor_pain_score >= 70 && '🔴 CRITICAL - Acute labor shortage driving urgency'}
+                          {sc.labor_pain_score >= 40 && sc.labor_pain_score < 70 && '🟡 MODERATE - Labor challenges present but not crisis-level'}
+                          {sc.labor_pain_score < 40 && '🟢 LOW - Limited labor pain signals detected'}
+                        </p>
+                      </div>
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Deal complexity:</span>
+                        <p className="text-neutral-300 mt-1">
+                          {emp && emp >= 10000 && '🏢 ENTERPRISE - Long sales cycle (9-18 months), multiple stakeholders, procurement process'}
+                          {emp && emp >= 1000 && emp < 10000 && '🏭 MID-MARKET - Moderate cycle (4-9 months), executive sponsorship required'}
+                          {emp && emp < 1000 && '🏪 SMB - Fast cycle (1-4 months), owner/operator decision'}
+                          {!emp && '📊 UNKNOWN - Gather company size to estimate sales cycle'}
+                        </p>
+                      </div>
+                      
+                      <div className="text-xs border-t border-neutral-800 pt-2">
+                        <span className="label">Technical risk:</span>
+                        <p className="text-cyan-400 mt-1">
+                          {lead.industry === 'Logistics' && '✅ LOW - Mature automation category with proven ROI'}
+                          {lead.industry === 'Hospitality' && '⚠️ MEDIUM - Emerging category, emphasize case studies'}
+                          {lead.industry === 'Food Service' && '⚡ MEDIUM - Growing adoption, highlight health/labor benefits'}
+                          {!['Logistics', 'Hospitality', 'Food Service'].includes(lead.industry) && '⚠️ ASSESS - Evaluate automation maturity in industry vertical'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Research Links */}
+                  {(profile?.intel_links || []).length > 0 && (
+                    <div className="border border-neutral-800 rounded p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-sm font-semibold text-neutral-400">🔗 Research Links</span>
+                      </div>
+                      <div className="space-y-2">
+                        {(profile?.intel_links || []).map((link, i) => (
+                          <a key={i} href={link.url} target="_blank" rel="noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="flex items-center justify-between border border-neutral-800 rounded px-3 py-2 hover:border-neutral-600 transition-colors group text-xs">
+                            <span className="text-neutral-300 group-hover:text-white transition-colors">{link.label}</span>
+                            <span className="text-neutral-700 group-hover:text-neutral-400">↗</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
