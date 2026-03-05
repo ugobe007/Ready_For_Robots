@@ -530,6 +530,14 @@ export default function RobotReady() {
             {results.robot_capabilities && (
               <div className="border border-neutral-700 rounded-lg p-6 bg-neutral-900/50">
                 <h3 className="text-base font-semibold text-white mb-4">Your Robot Profile</h3>
+                
+                {/* Robot Name with emerald border */}
+                {results.robot_name && (
+                  <div className="mb-4 inline-block border-2 border-emerald-500 rounded px-3 py-1.5">
+                    <span className="text-emerald-400 font-semibold">{results.robot_name}</span>
+                  </div>
+                )}
+                
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-xs uppercase tracking-wider text-neutral-400 font-semibold">Type</span>
