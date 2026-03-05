@@ -225,13 +225,13 @@ function StrategicSnapshot({ leads, onSelect }) {
     .filter(l => l.score?.overall_score != null)
     .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
   
-  // Rotate through leads every 5 seconds, showing 25 at a time
+  // Rotate through leads every 5 seconds, showing 5 at a time
   useEffect(() => {
-    if (sorted.length <= 25) return; // No need to rotate if we have 25 or fewer
+    if (sorted.length <= 5) return; // No need to rotate if we have 5 or fewer
     
     const interval = setInterval(() => {
       setRotationIndex(prev => {
-        const maxIndex = sorted.length - 25;
+        const maxIndex = sorted.length - 5;
         return prev >= maxIndex ? 0 : prev + 1;
       });
     }, 5000); // 5 seconds
@@ -239,8 +239,8 @@ function StrategicSnapshot({ leads, onSelect }) {
     return () => clearInterval(interval);
   }, [sorted.length]);
 
-  // Get 25 leads starting from rotationIndex
-  const visible = sorted.slice(rotationIndex, rotationIndex + 25);
+  // Get 5 leads starting from rotationIndex
+  const visible = sorted.slice(rotationIndex, rotationIndex + 5);
 
   // Track previous visible leads for animation
   useEffect(() => {
@@ -289,7 +289,7 @@ function StrategicSnapshot({ leads, onSelect }) {
           </div>
         </div>
         <div className="text-[10px] text-neutral-500">
-          Showing 25 of {sorted.length} leads {sorted.length > 25 && '• Rotating every 5s'}
+          Showing 5 of {sorted.length} leads {sorted.length > 5 && '• Rotating every 5s'}
         </div>
       </div>
 
