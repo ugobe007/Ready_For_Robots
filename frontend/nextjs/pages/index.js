@@ -1688,14 +1688,70 @@ export default function Dashboard() {
       )}
 
       {/* header */}
-      <header className="mb-10 flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+      <header className="mb-6 md:mb-10">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 md:gap-3 mb-2">
+              <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+            </div>
+            <p className="text-xs md:text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
           </div>
-          <p className="text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
+          
+          {/* Mobile: Just hamburger menu */}
+          <div className="md:hidden relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-ghost border-neutral-700 text-neutral-400 hover:border-neutral-500 px-3 text-xl">
+              ☰
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+                <button onClick={() => { fetchData(); setShowMenu(false); }}
+                  className="w-full text-left px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                  &#8635; Refresh Data
+                </button>
+                <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    💰 ROI Calculator
+                  </div>
+                </Link>
+                <Link href="/pilot-calculator" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    🧪 Pilot Calculator
+                  </div>
+                </Link>
+                <Link href="/robot-ready" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    🤖 Robot Ready
+                  </div>
+                </Link>
+                <Link href="/profile" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    ♡ Profile
+                  </div>
+                </Link>
+                <Link href="/admin" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    ⚙️ Admin Panel
+                  </div>
+                </Link>
+                <Link href="/brief" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    📋 Strategy Brief
+                  </div>
+                </Link>
+                <Link href="/about" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer">
+                    📘 About
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        
+        {/* Desktop: Full nav bar */}
+        <div className="hidden md:flex items-center gap-3 flex-wrap">
           {!session && usageCount < FREE_LIMIT && (
             <span className="text-[10px] border border-emerald-800 text-emerald-400 px-2 py-1 rounded">
               {FREE_LIMIT - usageCount} free searches left
@@ -1748,40 +1804,40 @@ export default function Dashboard() {
       </header>
 
       {/* Platform Descriptor - What we do and how signals work */}
-      <div className="mb-8 border border-cyan-900/30 rounded-lg bg-gradient-to-br from-cyan-950/10 via-neutral-950 to-emerald-950/10 p-6">
-        <div className="flex items-start gap-4">
-          <div className="shrink-0 text-3xl">🎯</div>
-          <div className="flex-1 space-y-3">
+      <div className="mb-6 md:mb-8 border border-cyan-900/30 rounded-lg bg-gradient-to-br from-cyan-950/10 via-neutral-950 to-emerald-950/10 p-4 md:p-6">
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="shrink-0 text-2xl md:text-3xl">🎯</div>
+          <div className="flex-1 space-y-2 md:space-y-3">
             <div>
-              <h2 className="text-lg font-semibold text-white mb-1">AI-Powered Lead Intelligence for Robot Companies</h2>
-              <p className="text-sm text-neutral-300 leading-relaxed">
+              <h2 className="text-base md:text-lg font-semibold text-white mb-1">AI-Powered Lead Intelligence for Robot Companies</h2>
+              <p className="text-xs md:text-sm text-neutral-300 leading-relaxed">
                 We monitor thousands of companies in real-time, detecting <span className="text-cyan-400 font-medium">buying signals</span> that indicate automation readiness. 
                 Every funding round, executive hire, expansion announcement, and labor challenge is a signal—our AI ranks them to show you exactly who's ready to buy robots <span className="text-emerald-400 font-medium">right now</span>.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 pt-2">
               <div className="flex items-start gap-2">
-                <span className="text-emerald-400 text-lg shrink-0">📡</span>
+                <span className="text-emerald-400 text-base md:text-lg shrink-0">📡</span>
                 <div>
-                  <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">Signal Collection</h3>
-                  <p className="text-xs text-neutral-400">We scrape funding announcements, job boards, expansion news, M&A activity, and industry reports—aggregating thousands of buying signals daily.</p>
+                  <h3 className="text-[10px] md:text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">Signal Collection</h3>
+                  <p className="text-[10px] md:text-xs text-neutral-400">We scrape funding announcements, job boards, expansion news, M&A activity, and industry reports—aggregating thousands of buying signals daily.</p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
-                <span className="text-cyan-400 text-lg shrink-0">🧠</span>
+                <span className="text-cyan-400 text-base md:text-lg shrink-0">🧠</span>
                 <div>
-                  <h3 className="text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-0.5">AI Scoring Engine</h3>
-                  <p className="text-xs text-neutral-400">Our ML models analyze signal patterns, company profiles, and industry trends to assign urgency scores (0-100) prioritizing your hottest leads.</p>
+                  <h3 className="text-[10px] md:text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-0.5">AI Scoring Engine</h3>
+                  <p className="text-[10px] md:text-xs text-neutral-400">Our ML models analyze signal patterns, company profiles, and industry trends to assign urgency scores (0-100) prioritizing your hottest leads.</p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
-                <span className="text-yellow-400 text-lg shrink-0">🚀</span>
+                <span className="text-yellow-400 text-base md:text-lg shrink-0">🚀</span>
                 <div>
-                  <h3 className="text-xs font-semibold text-yellow-400 uppercase tracking-wide mb-0.5">Action Intelligence</h3>
-                  <p className="text-xs text-neutral-400">Get decision-maker intel, timing windows, competitive landscape, and approach strategies—everything you need to close the deal faster.</p>
+                  <h3 className="text-[10px] md:text-xs font-semibold text-yellow-400 uppercase tracking-wide mb-0.5">Action Intelligence</h3>
+                  <p className="text-[10px] md:text-xs text-neutral-400">Get decision-maker intel, timing windows, competitive landscape, and approach strategies—everything you need to close the deal faster.</p>
                 </div>
               </div>
             </div>
@@ -1911,8 +1967,31 @@ export default function Dashboard() {
       {/* Two-column layout */}
       <div className="flex gap-6">
         
+        {/* Mobile filter toggle button */}
+        <button 
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+          className="lg:hidden fixed bottom-6 right-6 z-40 bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-3 rounded-full shadow-lg border-2 border-emerald-500 flex items-center gap-2">
+          <span className="text-sm font-semibold">Filters</span>
+          <span className="text-xs">({tier !== 'ALL' || industry !== 'All' || search ? '●' : '○'})</span>
+        </button>
+
         {/* LEFT COLUMN - Filters & Controls */}
-        <aside className="w-80 shrink-0 space-y-6 sticky top-6 self-start hidden lg:block max-h-[calc(100vh-3rem)] overflow-y-auto sidebar-scroll">
+        <aside className={`
+          w-80 shrink-0 space-y-6 
+          lg:sticky lg:top-6 lg:self-start lg:block lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto sidebar-scroll
+          ${
+            showMobileFilters 
+              ? 'fixed inset-0 z-50 bg-[#080808] p-4 overflow-y-auto block' 
+              : 'hidden'
+          }
+        `}>
+          
+          {/* Mobile close button */}
+          <button 
+            onClick={() => setShowMobileFilters(false)}
+            className="lg:hidden mb-4 w-full bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded text-sm font-medium">
+            ✕ Close Filters
+          </button>
           
           {/* Quick Stats */}
           <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
