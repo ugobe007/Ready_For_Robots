@@ -433,7 +433,12 @@ export default function RobotReady() {
                 </div>
                 <div className="text-center">
                   <div className="text-5xl font-bold text-white mb-2">
-                    ${((results.estimated_deal_value || 0) / 1000).toFixed(0)}K
+                    {(() => {
+                      const val = results.estimated_deal_value || 0;
+                      if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
+                      if (val >= 1000) return `$${(val / 1000).toFixed(0)}K`;
+                      return `$${val}`;
+                    })()}
                   </div>
                   <div className="text-sm text-neutral-300 uppercase tracking-wider font-semibold">Pipeline Value</div>
                   <div className="text-xs text-emerald-400 mt-1">💰 Total opportunity</div>
