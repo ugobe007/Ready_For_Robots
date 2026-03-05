@@ -1354,48 +1354,42 @@ export default function Dashboard() {
       </header>
 
       {/* Robot Ready CTA - Hero Banner */}
-      <div className="mb-8 border-2 border-emerald-800/50 rounded-lg bg-gradient-to-r from-emerald-950/20 to-neutral-950 overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6">
+      <div className="mb-6 border border-emerald-800/50 rounded bg-gradient-to-r from-emerald-950/20 to-neutral-950 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between p-3 gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🤖</span>
-              <h2 className="text-xl font-bold text-emerald-400">Robot Ready</h2>
-              <span className="px-2 py-0.5 border-2 border-emerald-700 rounded text-[10px] text-emerald-300 uppercase font-semibold">New</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🤖</span>
+              <h2 className="text-sm font-semibold text-emerald-400">Robot Ready</h2>
+              <span className="px-1.5 py-0.5 border border-emerald-700 rounded text-[9px] text-emerald-300 uppercase font-semibold">New</span>
+              <span className="text-xs text-neutral-500">·</span>
+              <p className="text-xs text-neutral-500">Find your ideal customers in seconds</p>
             </div>
-            <p className="text-sm text-neutral-300 mb-1">Find Your Ideal Customers in Seconds</p>
-            <p className="text-xs text-neutral-600">
-              Submit your robot's URL or description → Get matched with companies ready to buy → Customized outreach strategy
-            </p>
           </div>
           <div className="shrink-0">
             <Link href="/robot-ready" 
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white font-semibold rounded transition-colors">
-              <span>🚀 Find My Customers</span>
-              <span>→</span>
+              className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white text-xs font-medium rounded transition-colors">
+              <span>🚀 Find Customers</span>
             </Link>
           </div>
         </div>
       </div>
 
       {/* ROI Calculator CTA Banner */}
-      <div className="mb-8 border-2 border-yellow-800/50 rounded-lg bg-gradient-to-r from-yellow-950/20 to-neutral-950 overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6">
+      <div className="mb-6 border border-yellow-800/50 rounded bg-gradient-to-r from-yellow-950/20 to-neutral-950 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between p-3 gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">💰</span>
-              <h2 className="text-xl font-bold text-yellow-400">ROI Calculator</h2>
-              <span className="px-2 py-0.5 border-2 border-yellow-700 rounded text-[10px] text-yellow-300 uppercase font-semibold">Free</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">💰</span>
+              <h2 className="text-sm font-semibold text-yellow-400">ROI Calculator</h2>
+              <span className="px-1.5 py-0.5 border border-yellow-700 rounded text-[9px] text-yellow-300 uppercase font-semibold">Free</span>
+              <span className="text-xs text-neutral-500">·</span>
+              <p className="text-xs text-neutral-500">Calculate payback period & annual ROI</p>
             </div>
-            <p className="text-sm text-neutral-300 mb-1">Calculate Your Robot's Payback Period</p>
-            <p className="text-xs text-neutral-600">
-              Enter cost + labor savings → Get instant payback period, annual ROI, 3-year projections
-            </p>
           </div>
           <div className="shrink-0">
             <Link href="/roi-calculator" 
-              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white font-semibold rounded transition-colors">
+              className="inline-flex items-center gap-2 px-4 py-1.5 border border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white text-xs font-medium rounded transition-colors">
               <span>📊 Calculate ROI</span>
-              <span>→</span>
             </Link>
           </div>
         </div>
