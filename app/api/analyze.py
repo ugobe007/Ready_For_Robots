@@ -4,12 +4,13 @@ Dynamic Semantic Analysis API
 Endpoints for real-time ontological parsing and intent inference.
 
 POST /analyze/text           — analyze any raw text string
+POST /analyze/url            — scrape and analyze any URL
 POST /analyze/company/{id}   — re-score a company from its stored signals
 POST /analyze/explain        — full explainability output
 GET  /analyze/concepts       — list ontology concept names
 """
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
@@ -19,9 +20,11 @@ from app.services.inference_engine import InferenceEngine
 from app.services.nlp_classifier import classify, explain
 from app.services.ontology import CONCEPTS, INFERENCE_RULES, INDUSTRY_PRIORS
 from app.models.score import Score
+from app.scrapers.ontological_scraper import OntologicalScraper
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
 _engine = InferenceEngine()
+_scraper = OntologicalScraper()
 
 
 # ── Request / Response models ──────────────────────────
@@ -46,6 +49,32 @@ def analyze_text(req: TextRequest):
     """
     result = _engine.infer(req.text, industry=req.industry)
     return result.to_api_dict()
+
+
+@router.post("/url")
+def analyze_url(url: str):
+    """
+    Scrape any URL and analyze it for automation intent signals.
+    Uses ontological pattern matching to detect:
+    - Manufacturing signals (quality bottlenecks, safety, capacity, etc.)
+    - Labor signals (shortages, turnover, hiring)
+    - Strategic signals (exec hires, capex, expansion, funding)
+    
+    Returns: Company info + detected signals with strength scores
+    """
+    result = _scraper.scrape_url(url)
+    
+    if 'error' in result:
+        raise HTTPException(status_code=400, detail=result['error'])
+    
+    return {
+        'company_name': result['company_name'],
+        'url': result['url'],
+        'industry': result.get('industry'),
+        'signals_detected': result['signal_count'],
+        'signals': result['signals'],
+        'scraped_at': result['scraped_at']
+    }
 
 
 @router.post("/multi")
