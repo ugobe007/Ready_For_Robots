@@ -1860,7 +1860,7 @@ export default function Dashboard() {
             </div>
             
             <div className="bg-gradient-to-br from-neutral-900/50 to-transparent border border-neutral-800 rounded p-3">
-              <span className="label block mb-1 text-neutral-500">Total Leads</span>
+              <span className="label block mb-1 text-emerald-400 font-semibold">Total Leads</span>
               <span className="text-3xl font-bold text-white tabular-nums">
                 {summary.total ?? leads.length}
               </span>
@@ -1877,7 +1877,7 @@ export default function Dashboard() {
             <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
               className="w-full text-left p-3 border border-neutral-800 rounded hover:border-red-800 transition-colors group bg-gradient-to-br from-red-950/10 to-transparent hover:from-red-950/20">
               <div className="flex items-center justify-between">
-                <span className="label text-neutral-500 group-hover:text-red-400 transition-colors">HOT</span>
+                <span className="label text-emerald-400 font-semibold group-hover:text-red-400 transition-colors">HOT</span>
                 <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
               </div>
               <div className="text-[10px] text-neutral-500 mt-1">High priority • Ready to engage</div>
@@ -1886,7 +1886,7 @@ export default function Dashboard() {
             <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
               className="w-full text-left p-3 border border-neutral-800 rounded hover:border-yellow-800 transition-colors group">
               <div className="flex items-center justify-between">
-                <span className="label text-neutral-500 group-hover:text-yellow-400 transition-colors">WARM</span>
+                <span className="label text-emerald-400 font-semibold group-hover:text-yellow-400 transition-colors">WARM</span>
                 <span className="text-2xl font-bold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
               </div>
               <div className="text-[10px] text-neutral-500 mt-1">Medium priority • Nurture sequence</div>
@@ -1895,7 +1895,7 @@ export default function Dashboard() {
             <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
               className="w-full text-left p-3 border border-neutral-800 rounded hover:border-cyan-900 transition-colors group">
               <div className="flex items-center justify-between">
-                <span className="label text-neutral-500 group-hover:text-cyan-400 transition-colors">COLD</span>
+                <span className="label text-emerald-400 font-semibold group-hover:text-cyan-400 transition-colors">COLD</span>
                 <span className="text-2xl font-bold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
               </div>
               <div className="text-[10px] text-neutral-500 mt-1">Low priority • Monitor</div>
@@ -1921,10 +1921,10 @@ export default function Dashboard() {
 
           {/* Filters */}
           <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
-            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400 mb-3">Filters</h3>
+            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-300 mb-3">Filters</h3>
             
             <div>
-              <label className="label block mb-2">Search Companies</label>
+              <label className="label block mb-2 text-neutral-300">Search Companies</label>
               <input type="text" value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="company name..."
                 className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
