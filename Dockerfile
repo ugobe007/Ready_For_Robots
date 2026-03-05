@@ -1,5 +1,5 @@
 # Ready for Robots — Full-stack Fly.io image
-# Stage 1: Build Next.js frontend (SSR mode - not static export)
+# Stage 1: Build Next.js frontend → static HTML/CSS/JS
 FROM node:20-slim AS frontend
 WORKDIR /frontend
 
@@ -13,9 +13,9 @@ COPY frontend/nextjs/package*.json ./
 RUN npm ci
 COPY frontend/nextjs/ ./
 RUN npm run build
-# output: /frontend/.next/ (production build with SSR support)
+# output: /frontend/out/ (static export)
 
-# Stage 2: Runtime image with both Python backend and Node.js frontend
+# Stage 2: FastAPI backend + static frontend
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -23,13 +23,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /code
 
-# Install Node.js, gcc, and postgres client libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc \
         libpq-dev \
-        curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -43,18 +39,10 @@ COPY migrations  ./migrations/
 COPY scripts/    ./scripts/
 COPY alembic.ini .
 
-# Copy built Next.js app and node_modules from build stage
-COPY --from=frontend /frontend/.next ./frontend/.next
-COPY --from=frontend /frontend/node_modules ./frontend/node_modules
-COPY --from=frontend /frontend/package.json ./frontend/package.json
-COPY --from=frontend /frontend/next.config.js ./frontend/next.config.js
-COPY --from=frontend /frontend/pages ./frontend/pages
-COPY --from=frontend /frontend/styles ./frontend/styles
-COPY --from=frontend /frontend/lib ./frontend/lib
-COPY --from=frontend /frontend/postcss.config.js ./frontend/postcss.config.js
-COPY --from=frontend /frontend/tailwind.config.js ./frontend/tailwind.config.js
+# Copy built Next.js static files
+COPY --from=frontend /frontend/out ./static/
 
 EXPOSE 8080
 
-# Start all services: app + celery worker + celery beat + Next.js server
+# Start all services: app + celery worker + celery beat
 CMD ["bash", "/code/scripts/start_all.sh"]

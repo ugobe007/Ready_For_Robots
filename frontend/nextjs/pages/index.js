@@ -1483,12 +1483,12 @@ function PaywallModal({ isOpen, onClose, usageCount, limit }) {
 }
 
 // -- main page --------------------------------------------------------------
-export default function Dashboard({ initialLeads = [], initialSummary = {}, initialHealth = null }) {
+export default function Dashboard() {
   const { session } = useAuth();
-  const [leads, setLeads]         = useState(initialLeads);
-  const [summary, setSummary]     = useState(initialSummary);
-  const [health, setHealth]       = useState(initialHealth);
-  const [loading, setLoading]     = useState(false);
+  const [leads, setLeads]         = useState([]);
+  const [summary, setSummary]     = useState({});
+  const [health, setHealth]       = useState(null);
+  const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
   const [expanded, setExpanded]         = useState({});
   const [collapsedSections, setCollapsedSections] = useState({});
@@ -1598,11 +1598,7 @@ export default function Dashboard({ initialLeads = [], initialSummary = {}, init
     }
   }, [buildQuery, excludeJunk]);
 
-  // Only fetch on mount if we don't have initial data
-  useEffect(() => { 
-    if (initialLeads.length === 0) fetchData(); 
-  }, [fetchData, initialLeads.length]);
-  
+  useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
     const t = setInterval(fetchData, 30_000);
     return () => clearInterval(t);
@@ -2416,39 +2412,4 @@ export default function Dashboard({ initialLeads = [], initialSummary = {}, init
     </div>
     </>
   );
-}
-
-// Server-side snapshot: Load data immediately on page load
-export async function getServerSideProps() {
-  // Use production API URL - both frontend and backend share same origin on Fly.io
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  
-  try {
-    const [leadsRes, summaryRes, healthRes] = await Promise.all([
-      fetch(`${API}/api/leads?exclude_junk=true&min_score=0&sort=score`),
-      fetch(`${API}/api/leads/summary?exclude_junk=true`),
-      fetch(`${API}/api/scraper-health`),
-    ]);
-
-    const initialLeads = leadsRes.ok ? await leadsRes.json() : [];
-    const initialSummary = summaryRes.ok ? await summaryRes.json() : {};
-    const initialHealth = healthRes.ok ? await healthRes.json() : null;
-
-    return {
-      props: {
-        initialLeads,
-        initialSummary,
-        initialHealth,
-      },
-    };
-  } catch (error) {
-    console.error('Failed to fetch initial snapshot:', error);
-    return {
-      props: {
-        initialLeads: [],
-        initialSummary: {},
-        initialHealth: null,
-      },
-    };
-  }
 }

@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Removed 'output: export' to enable server-side rendering (getServerSideProps)
-  // This allows instant page loads with pre-rendered data snapshot
+  output: 'export',       // static HTML/CSS/JS — fast, no Node server needed
   trailingSlash: true,
   images: {
     unoptimized: true,

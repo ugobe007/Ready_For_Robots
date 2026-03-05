@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start all services: FastAPI app + Celery worker + Celery beat + Next.js SSR server
+# Start all services: FastAPI app + Celery worker + Celery beat
 
 set -e  # Exit on error
 
@@ -15,14 +15,8 @@ celery -A worker.celery_worker worker --loglevel=info --concurrency=2 &
 WORKER_PID=$!
 echo "Celery worker started with PID $WORKER_PID"
 
-# Start Next.js server in background (for server-side rendering)
-echo "Starting Next.js server on port 3000..."
-cd /code/frontend && NODE_ENV=production npm start &
-NEXTJS_PID=$!
-echo "Next.js server started with PID $NEXTJS_PID"
-
-# Give services a moment to start
-sleep 3
+# Give workers a moment to start
+sleep 2
 
 # Start uvicorn in foreground (keeps container running)
 echo "Starting FastAPI application on 0.0.0.0:8080..."
