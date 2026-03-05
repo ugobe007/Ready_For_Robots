@@ -135,7 +135,7 @@ function TrendingTicker() {
             <span className="text-[10px] text-neutral-400 max-w-[24rem] truncate">
               {item.signal_text}
             </span>
-            <span className="text-[10px] text-neutral-700 mx-2">&bull;</span>
+            <span className="text-[10px] text-neutral-400 mx-2">&bull;</span>
           </span>
         ))}
       </div>
@@ -209,14 +209,14 @@ function StrategicSnapshot({ leads, onSelect }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <span className="label">Strategic Snapshot</span>
-          <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-700">
+          <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-400">
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />buyer</span>
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />eval</span>
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />watch</span>
           </div>
         </div>
         <button onClick={() => setShowAll(s => !s)}
-          className="text-[10px] text-neutral-700 hover:text-neutral-400 transition-colors">
+          className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors">
           {showAll ? 'show less ↑' : `show all 10 ↓`}
         </button>
       </div>
@@ -257,12 +257,12 @@ function StrategicSnapshot({ leads, onSelect }) {
                   <span className="text-[11px] font-medium text-neutral-100 group-hover:text-emerald-400 transition-colors leading-tight">
                     {lead.company_name}
                   </span>
-                  <span className="text-[10px] text-neutral-700 truncate hidden sm:inline">
+                  <span className="text-[10px] text-neutral-500 truncate hidden sm:inline">
                     {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
                   </span>
                 </div>
                 {excerpt && (
-                  <p className="text-[10px] text-neutral-700 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
+                  <p className="text-[10px] text-neutral-400 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
                     {excerpt}{excerpt.length === 55 ? '…' : ''}
                   </p>
                 )}
@@ -364,7 +364,7 @@ function QuickScrape({ onDone }) {
             <label className="flex items-center gap-2 text-xs cursor-pointer">
               <input type="checkbox" checked={now} onChange={e => setNow(e.target.checked)}
                 className="accent-emerald-500" />
-              <span className={now ? 'text-emerald-400' : 'text-neutral-600'}>scrape now</span>
+              <span className={now ? 'text-emerald-400' : 'text-neutral-400'}>scrape now</span>
             </label>
             <button onClick={submit} disabled={status === 'loading'}
               className="ml-auto btn-ghost border-emerald-900 text-emerald-400 hover:border-emerald-600">
@@ -430,7 +430,7 @@ function AgentInsightsPanel() {
 
       {open && (
         <div className="border-t border-neutral-800">
-          {loading && <p className="px-4 py-6 text-xs text-neutral-700 animate-pulse">running analysis&hellip;</p>}
+          {loading && <p className="px-4 py-6 text-xs text-neutral-400 animate-pulse">running analysis&hellip;</p>}
           {!loading && data && (
             <div className="px-4 pb-4">
               {/* learning notes */}
@@ -465,7 +465,7 @@ function AgentInsightsPanel() {
               {/* strategies tab */}
               {tab === 'strategies' && (
                 <div className="space-y-3">
-                  {data.top_strategies.length === 0 && <p className="text-xs text-neutral-700">No strategies yet — need more lead data.</p>}
+                  {data.top_strategies.length === 0 && <p className="text-xs text-neutral-500">No strategies yet — need more lead data.</p>}
                   {data.top_strategies.map((s, i) => {
                     const um = URGENCY_META[s.urgency] || URGENCY_META.MONITOR;
                     return (
@@ -513,7 +513,7 @@ function AgentInsightsPanel() {
               {/* sources tab */}
               {tab === 'sources' && (
                 <div>
-                  {data.source_rankings.length === 0 && <p className="text-xs text-neutral-700">No source data yet.</p>}
+                  {data.source_rankings.length === 0 && <p className="text-xs text-neutral-500">No source data yet.</p>}
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-neutral-800">
@@ -550,7 +550,7 @@ function AgentInsightsPanel() {
               {/* patterns tab */}
               {tab === 'patterns' && (
                 <div className="space-y-2">
-                  {data.signal_patterns.length === 0 && <p className="text-xs text-neutral-700">No patterns detected yet.</p>}
+                  {data.signal_patterns.length === 0 && <p className="text-xs text-neutral-500">No patterns detected yet.</p>}
                   {data.signal_patterns.map((p, i) => (
                     <div key={i} className="border border-neutral-800 rounded px-3 py-2.5">
                       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
@@ -568,7 +568,7 @@ function AgentInsightsPanel() {
               {/* targets tab */}
               {tab === 'targets' && (
                 <div className="space-y-2">
-                  <p className="text-xs text-neutral-600 mb-3">Agent-recommended scrape sources based on coverage gaps.</p>
+                  <p className="text-xs text-neutral-400 mb-3">Agent-recommended scrape sources based on coverage gaps.</p>
                   {data.recommended_targets.map((t, i) => (
                     <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-3 py-2.5">
                       <div className="flex-1 min-w-0">
@@ -585,7 +585,7 @@ function AgentInsightsPanel() {
               )}
 
               <button onClick={() => setData(null) || load()}
-                className="mt-4 btn-ghost text-neutral-600 text-[10px]">&#8635; rerun analysis</button>
+                className="mt-4 btn-ghost text-neutral-400 text-[10px]">&#8635; rerun analysis</button>
             </div>
           )}
         </div>
@@ -739,12 +739,12 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               disabled={savingReport || reportSaved}
               className={`btn-ghost text-xs ${reportSaved
                 ? 'border-emerald-800 text-emerald-500'
-                : 'border-neutral-800 text-neutral-600 hover:border-neutral-600'}`}>
+                : 'border-neutral-800 text-neutral-400 hover:border-neutral-600'}`}>
               {reportSaved ? '◆ report saved' : savingReport ? '…' : '◇ save report'}
             </button>
-            <a href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600">profile</a>
+            <a href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-400 hover:border-neutral-600">profile</a>
             <button onClick={onClose}
-              className="text-neutral-600 hover:text-neutral-200 transition-colors px-2 py-1 text-sm">
+              className="text-neutral-400 hover:text-neutral-200 transition-colors px-2 py-1 text-sm">
               ✕
             </button>
           </div>
@@ -758,7 +758,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               className={`px-3 py-2.5 text-xs font-medium transition-colors border-b-2 whitespace-nowrap -mb-px ${
                 activeTab === tab
                   ? 'border-emerald-600 text-emerald-400'
-                  : 'border-transparent text-neutral-600 hover:text-neutral-400'
+                  : 'border-transparent text-neutral-400 hover:text-neutral-300'
               }`}>
               {tab}
             </button>
@@ -784,14 +784,14 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               </div>
 
               {loading && (
-                <p className="text-sm text-neutral-700 animate-pulse py-3">generating AI analysis&hellip;</p>
+                <p className="text-sm text-neutral-400 animate-pulse py-3">generating AI analysis&hellip;</p>
               )}
 
               {!loading && strat && um && (
                 <div className={`border ${um.border} rounded p-5 space-y-4`}>
                   <div className="flex items-center justify-between">
                     <span className={`badge ${um.border} ${um.text}`}>{um.label}</span>
-                    <span className="text-xs text-neutral-600">{Math.round(strat.confidence * 100)}% confidence</span>
+                    <span className="text-xs text-neutral-400">{Math.round(strat.confidence * 100)}% confidence</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -812,7 +812,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                     <ul className="space-y-2">
                       {(strat.talking_points || []).map((tp, i) => (
                         <li key={i} className={`flex gap-2 text-sm ${tpColor(tp)}`}>
-                          <span className="text-neutral-700 shrink-0 mt-0.5">▸</span>
+                          <span className="text-neutral-500 shrink-0 mt-0.5">▸</span>
                           {tp}
                         </li>
                       ))}
@@ -826,7 +826,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               )}
 
               {!loading && !strat && (
-                <p className="text-sm text-neutral-700 border border-neutral-800 rounded px-4 py-3">
+                <p className="text-sm text-neutral-500 border border-neutral-800 rounded px-4 py-3">
                   No strategy available — run the ML Agent first.
                 </p>
               )}
@@ -836,9 +836,9 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           {/* ── ROBOT MATCH tab ── */}
           {activeTab === 'robot match' && (
             <div className="space-y-4">
-              {loading && <p className="text-sm text-neutral-700 animate-pulse py-3">matching robots&hellip;</p>}
+              {loading && <p className="text-sm text-neutral-400 animate-pulse py-3">matching robots&hellip;</p>}
               {!loading && (profile?.robot_match || []).length === 0 && (
-                <p className="text-sm text-neutral-700">No robot recommendations available.</p>
+                <p className="text-sm text-neutral-500">No robot recommendations available.</p>
               )}
               {(profile?.robot_match || []).map((robot, i) => (
                 <div key={i} className={`border ${i === 0 ? 'border-emerald-900' : 'border-neutral-800'} rounded p-5 space-y-3`}>
@@ -882,16 +882,16 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           {/* ── DECISION MAKERS tab ── */}
           {activeTab === 'decision makers' && (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-600 mb-4">
+              <p className="text-xs text-neutral-400 mb-4">
                 Click any role to search LinkedIn for people at {lead.company_name} with that title.
                 These are typical decision-makers and economic buyers for robotics automation deployments.
               </p>
-              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading&hellip;</p>}
+              {loading && <p className="text-sm text-neutral-400 animate-pulse">loading&hellip;</p>}
               {(profile?.decision_makers || []).map((dm, i) => (
                 <div key={i} className="flex items-center justify-between border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
                   <div>
                     <p className="text-sm font-medium text-neutral-200">{dm.title}</p>
-                    <p className="text-xs text-neutral-600">{dm.dept} department</p>
+                    <p className="text-xs text-neutral-400">{dm.dept} department</p>
                   </div>
                   <div className="flex gap-2">
                     <a href={dm.linkedin_search} target="_blank" rel="noreferrer"
@@ -922,7 +922,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           {/* ── INTEL tab ── */}
           {activeTab === 'intel' && (
             <div className="space-y-5">
-              {loading && <p className="text-sm text-neutral-700 animate-pulse">loading intelligence&hellip;</p>}
+              {loading && <p className="text-sm text-neutral-400 animate-pulse">loading intelligence&hellip;</p>}
               
               {!loading && (
                 <>
@@ -1136,7 +1136,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                             onClick={e => e.stopPropagation()}
                             className="flex items-center justify-between border border-neutral-800 rounded px-3 py-2 hover:border-neutral-600 transition-colors group text-xs">
                             <span className="text-neutral-300 group-hover:text-white transition-colors">{link.label}</span>
-                            <span className="text-neutral-700 group-hover:text-neutral-400">↗</span>
+                            <span className="text-neutral-500 group-hover:text-neutral-300">↗</span>
                           </a>
                         ))}
                       </div>
@@ -1159,7 +1159,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                     <span className={`text-xs font-mono tabular-nums ${
                       (s.strength || 0) >= 0.7 ? 'text-emerald-500'
                       : (s.strength || 0) >= 0.4 ? 'text-cyan-500'
-                      : 'text-neutral-600'
+                      : 'text-neutral-400'
                     }`}>{((s.strength || 0) * 100).toFixed(0)}%</span>
                     {s.source_url && (
                       <a href={s.source_url} target="_blank" rel="noreferrer"
@@ -1169,7 +1169,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                 </div>
               ))}
               {(profile?.signals?.length === 0 && (lead.signals || []).length === 0) && (
-                <p className="text-sm text-neutral-700">No signals recorded yet.</p>
+                <p className="text-sm text-neutral-500">No signals recorded yet.</p>
               )}
             </div>
           )}
@@ -1240,10 +1240,10 @@ function IntelSearchPanel({ onOpenLead }) {
         className="w-full flex items-center justify-between px-4 py-2.5 text-xs hover:bg-neutral-900/40 transition-colors">
         <span className="flex items-center gap-2">
           <span className="text-cyan-400">&#8855; Intelligence Search</span>
-          <span className="text-neutral-600 hidden sm:inline">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
+          <span className="text-neutral-400 hidden sm:inline">&mdash; investments, acquisitions, labor trends &amp; automation verticals</span>
           <span className="text-neutral-800 text-[10px] hidden md:inline">press / to focus</span>
         </span>
-        <span className="text-neutral-600">{open ? '&#9650;' : '&#9660;'}</span>
+        <span className="text-neutral-500">{open ? '&#9650;' : '&#9660;'}</span>
       </button>
 
       {open && (
@@ -1347,7 +1347,7 @@ function IntelSearchPanel({ onOpenLead }) {
                               <span className={`shrink-0 text-xs font-mono tabular-nums ${
                                 s.strength >= 0.7 ? 'text-emerald-400'
                                 : s.strength >= 0.4 ? 'text-cyan-500'
-                                : 'text-neutral-600'
+                                : 'text-neutral-400'
                               }`}>{(s.strength * 100).toFixed(0)}%</span>
                             </div>
                           ))}
@@ -1545,10 +1545,10 @@ export default function Dashboard() {
           <Link href="/brief" className="btn-ghost border-cyan-800 text-cyan-400 hover:border-cyan-600">📋 Strategy Brief</Link>
           <Link href="/profile" className="btn-ghost border-neutral-700 text-neutral-500 hover:border-neutral-500">♡ profile</Link>
           {session
-            ? <span className="label text-neutral-600 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
+            ? <span className="label text-neutral-400 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
             : (
               <Link href="/login"
-                className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-neutral-600"
+                className="btn-ghost text-xs border-neutral-800 text-neutral-400 hover:border-neutral-600"
                 title="Browse freely — sign in only to save companies and reports">
                 → sign in to save
               </Link>
@@ -1566,7 +1566,7 @@ export default function Dashboard() {
               <h2 className="text-sm font-semibold text-emerald-400">Robot Ready</h2>
               <span className="px-1.5 py-0.5 border border-emerald-700 rounded text-[9px] text-emerald-300 uppercase font-semibold">New</span>
               <span className="text-xs text-neutral-500">·</span>
-              <p className="text-xs text-neutral-500">Find your ideal customers in seconds</p>
+              <p className="text-xs text-neutral-400">Find your ideal customers in seconds</p>
             </div>
           </div>
           <div className="shrink-0">
@@ -1587,7 +1587,7 @@ export default function Dashboard() {
               <h2 className="text-sm font-semibold text-yellow-400">ROI Calculator</h2>
               <span className="px-1.5 py-0.5 border border-yellow-700 rounded text-[9px] text-yellow-300 uppercase font-semibold">Free</span>
               <span className="text-xs text-neutral-500">·</span>
-              <p className="text-xs text-neutral-500">Calculate payback period & annual ROI</p>
+              <p className="text-xs text-neutral-400">Calculate payback period &amp; annual ROI</p>
             </div>
           </div>
           <div className="shrink-0">
@@ -1618,7 +1618,7 @@ export default function Dashboard() {
               </span>
             )}
           </div>
-          <span className="text-neutral-600">{showMobileFilters ? '▼' : '▶'}</span>
+          <span className="text-neutral-500">{showMobileFilters ? '▼' : '▶'}</span>
         </button>
 
         {/* Mobile filters dropdown */}
@@ -1650,7 +1650,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-4 gap-2">
                 {TIERS.map(t => (
                   <button key={t} onClick={() => setTier(t)}
-                    className={`px-3 py-2 rounded text-xs font-medium ${tier === t ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' : 'border border-neutral-800 text-neutral-600'}`}>
+                    className={`px-3 py-2 rounded text-xs font-medium ${tier === t ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' : 'border border-neutral-800 text-neutral-400'}`}>
                     {t}
                   </button>
                 ))}
@@ -1668,7 +1668,7 @@ export default function Dashboard() {
             {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
               <button onClick={() => {
                 setTier('ALL'); setIndustry('All'); setSigType(''); setSearch(''); setMinScore(0);
-              }} className="w-full text-xs text-neutral-600 hover:text-emerald-400 py-2 border border-neutral-800 rounded">
+              }} className="w-full text-xs text-neutral-400 hover:text-emerald-400 py-2 border border-neutral-800 rounded">
                 ✕ Clear all
               </button>
             )}
@@ -1701,7 +1701,7 @@ export default function Dashboard() {
                 <span className="label text-neutral-500 group-hover:text-red-400 transition-colors">HOT</span>
                 <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-700 mt-1">High priority • Ready to engage</div>
+              <div className="text-[10px] text-neutral-500 mt-1">High priority • Ready to engage</div>
             </button>
 
             <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
@@ -1710,7 +1710,7 @@ export default function Dashboard() {
                 <span className="label text-neutral-500 group-hover:text-yellow-400 transition-colors">WARM</span>
                 <span className="text-2xl font-bold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-700 mt-1">Medium priority • Nurture sequence</div>
+              <div className="text-[10px] text-neutral-500 mt-1">Medium priority • Nurture sequence</div>
             </button>
 
             <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
@@ -1719,14 +1719,14 @@ export default function Dashboard() {
                 <span className="label text-neutral-500 group-hover:text-cyan-400 transition-colors">COLD</span>
                 <span className="text-2xl font-bold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-700 mt-1">Low priority • Monitor</div>
+              <div className="text-[10px] text-neutral-500 mt-1">Low priority • Monitor</div>
             </button>
 
             <div className="h-px bg-neutral-800" />
 
             <div className="flex items-center justify-between">
               <span className="label">Junk filtered</span>
-              <span className="text-lg font-semibold text-neutral-700 tabular-nums">{summary.junk_filtered ?? 0}</span>
+              <span className="text-lg font-semibold text-neutral-500 tabular-nums">{summary.junk_filtered ?? 0}</span>
             </div>
 
             {openCircuits > 0 && (
@@ -1761,7 +1761,7 @@ export default function Dashboard() {
               <input type="range" min={0} max={100} value={minScore}
                 onChange={e => setMinScore(Number(e.target.value))}
                 className="w-full accent-emerald-500" />
-              <div className="flex justify-between text-[10px] text-neutral-700 mt-1">
+              <div className="flex justify-between text-[10px] text-neutral-500 mt-1">
                 <span>0</span>
                 <span>50</span>
                 <span>100</span>
@@ -1776,7 +1776,7 @@ export default function Dashboard() {
                     className={`px-3 py-2 rounded text-xs font-medium transition-all ${
                       tier === t 
                         ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' 
-                        : 'border border-neutral-800 text-neutral-600 hover:border-neutral-700'
+                        : 'border border-neutral-800 text-neutral-400 hover:border-neutral-700'
                     }`}>
                     {t}
                   </button>
@@ -1841,7 +1841,7 @@ export default function Dashboard() {
                   setSearch('');
                   setMinScore(0);
                 }}
-                  className="w-full text-xs text-neutral-600 hover:text-emerald-400 transition-colors py-2 border border-neutral-800 rounded hover:border-neutral-700">
+                  className="w-full text-xs text-neutral-400 hover:text-emerald-400 transition-colors py-2 border border-neutral-800 rounded hover:border-neutral-700">
                   ✕ Clear all filters
                 </button>
               </>
