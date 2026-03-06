@@ -68,6 +68,31 @@ def run_news_scraper_task(self, queries=None, industry=None):
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def run_intelligence_scraper_task(self, max_articles=10):
+    """
+    Intelligence News Scraper — discovers new companies from news.
+    FREE alternative to LinkedIn, Pitchbook, CB Insights.
+    """
+    from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+    db = get_db()
+    try:
+        scraper = IntelligenceNewsScraper(db=db)
+        stats = scraper.discover_leads(max_articles_per_query=max_articles)
+        logger.info(
+            "Intelligence scraper completed: %d new companies, %d enriched, %d signals",
+            stats['companies_discovered'],
+            stats['companies_enriched'],
+            stats['signals_created']
+        )
+        return stats
+    except Exception as exc:
+        logger.error("Intelligence scraper failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_rss_scraper_task(self, urls=None, industry=None):
     from app.scrapers.news_scraper import NewsScraper
     urls = urls or get_urls("rss_feed", industry=industry)
@@ -121,13 +146,14 @@ def run_logistics_scraper_task(self, queries=None):
 def run_all_scrapers_task(self):
     """Trigger all active scraper tasks in sequence."""
     try:
+        run_intelligence_scraper_task.delay(max_articles=10)  # FREE lead discovery
         run_news_scraper_task.delay()
         run_rss_scraper_task.delay()
         run_serp_scraper_task.delay()
         run_logistics_scraper_task.delay()
         run_job_scraper_task.delay()
         run_hotel_scraper_task.delay()
-        logger.info("All scraper tasks queued")
+        logger.info("All scraper tasks queued (including intelligence scraper)")
     except Exception as exc:
         logger.error("Failed to queue scraper tasks: %s", exc)
         raise self.retry(exc=exc)
