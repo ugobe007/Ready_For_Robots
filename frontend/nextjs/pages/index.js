@@ -1755,10 +1755,13 @@ export default function Dashboard() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 md:gap-3 mb-2">
-              <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent"
-                style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
-                Ready for Robots
-              </h1>
+              <div className="inline-block border-2 border-cyan-600 rounded-lg px-4 py-2"
+                style={{ boxShadow: '0 0 12px rgba(34, 211, 238, 0.4), 0 0 24px rgba(34, 211, 238, 0.2)' }}>
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 bg-clip-text text-transparent"
+                  style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
+                  Ready for Robots
+                </h1>
+              </div>
             </div>
             <p className="text-xs md:text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
           </div>
@@ -2219,25 +2222,28 @@ export default function Dashboard() {
             if (group.length === 0) return null;
             const hotCount  = group.filter(l => l.priority_tier === 'HOT').length;
             const warmCount = group.filter(l => l.priority_tier === 'WARM').length;
-            const isCollapsed = !!collapsedSections[ind];
+            const isExpanded = !!collapsedSections[ind];
+            const displayGroup = isExpanded ? group : group.slice(0, 3);
+            const hasMore = group.length > 3;
             return (
               <div key={ind}>
-                {/* industry section header */}
+                {/* industry section header - clickable to expand */}
                 <button
-                  onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isCollapsed }))}
-                  className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left">
+                  onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isExpanded }))}
+                  className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left cursor-pointer">
                   <span className="text-[11px] font-semibold tracking-widest uppercase text-neutral-400 group-hover:text-white transition-colors">
                     {ind}
                   </span>
                   {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
                   {warmCount > 0 && <span className="label text-yellow-500 tabular-nums">{warmCount} warm</span>}
                   <span className="label text-neutral-700 ml-auto tabular-nums">
-                    {group.length} {group.length === 1 ? 'lead' : 'leads'} &nbsp; {isCollapsed ? '\u25b6' : '\u25bc'}
+                    {group.length} {group.length === 1 ? 'lead' : 'leads'}
+                    {hasMore && <span className="ml-2 text-cyan-400">{isExpanded ? '(showing all)' : '(top 3)'}</span>}
+                    &nbsp; {isExpanded ? '\u25bc' : '\u25b6'}
                   </span>
                 </button>
-                {!isCollapsed && (
-                  <div className="space-y-px">
-                    {group.map((lead, i) => {
+                <div className="space-y-px">
+                  {displayGroup.map((lead, i) => {
             const sc     = lead.score || {};
             const isOpen = expanded[lead.id];
             const tm     = TIER_META[lead.priority_tier] || TIER_META.COLD;
@@ -2395,8 +2401,22 @@ export default function Dashboard() {
               </div>
             );
                     })}
+                    {/* Show expand button if there are more leads */}
+                    {hasMore && !isExpanded && (
+                      <button
+                        onClick={() => setCollapsedSections(p => ({ ...p, [ind]: true }))}
+                        className="w-full py-3 text-sm text-cyan-400 hover:text-cyan-300 border border-neutral-800 rounded hover:border-cyan-700 transition-colors mt-2">
+                        ▼ Show {group.length - 3} more {group.length - 3 === 1 ? 'lead' : 'leads'} in {ind}
+                      </button>
+                    )}
+                    {isExpanded && hasMore && (
+                      <button
+                        onClick={() => setCollapsedSections(p => ({ ...p, [ind]: false }))}
+                        className="w-full py-3 text-sm text-neutral-400 hover:text-neutral-300 border border-neutral-800 rounded hover:border-neutral-700 transition-colors mt-2">
+                        ▲ Show top 3 only
+                      </button>
+                    )}
                   </div>
-                )}
               </div>
             );
           })}
