@@ -1722,7 +1722,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <TrendingTicker />
       <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
       {/* Paywall Modal */}
@@ -1862,90 +1861,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Platform Descriptor - What we do and how signals work */}
-      <div className="mb-6 md:mb-8 border border-cyan-900/30 rounded-lg bg-gradient-to-br from-cyan-950/10 via-neutral-950 to-emerald-950/10 p-4 md:p-6">
-        <div className="flex items-start gap-3 md:gap-4">
-          <div className="shrink-0 text-2xl md:text-3xl">🎯</div>
-          <div className="flex-1 space-y-2 md:space-y-3">
-            <div>
-              <h2 className="text-base md:text-lg font-semibold text-white mb-1">AI-Powered Lead Intelligence for Robot Companies</h2>
-              <p className="text-xs md:text-sm text-neutral-300 leading-relaxed">
-                We monitor thousands of companies in real-time, detecting <span className="text-cyan-400 font-medium">buying signals</span> that indicate automation readiness. 
-                Every funding round, executive hire, expansion announcement, and labor challenge is a signal—our AI ranks them to show you exactly who's ready to buy robots <span className="text-emerald-400 font-medium">right now</span>.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 pt-2">
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-400 text-base md:text-lg shrink-0">📡</span>
-                <div>
-                  <h3 className="text-[10px] md:text-xs font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">Signal Collection</h3>
-                  <p className="text-[10px] md:text-xs text-neutral-400">We scrape funding announcements, job boards, expansion news, M&A activity, and industry reports—aggregating thousands of buying signals daily.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <span className="text-cyan-400 text-base md:text-lg shrink-0">🧠</span>
-                <div>
-                  <h3 className="text-[10px] md:text-xs font-semibold text-cyan-400 uppercase tracking-wide mb-0.5">AI Scoring Engine</h3>
-                  <p className="text-[10px] md:text-xs text-neutral-400">Our ML models analyze signal patterns, company profiles, and industry trends to assign urgency scores (0-100) prioritizing your hottest leads.</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
-                <span className="text-yellow-400 text-base md:text-lg shrink-0">🚀</span>
-                <div>
-                  <h3 className="text-[10px] md:text-xs font-semibold text-yellow-400 uppercase tracking-wide mb-0.5">Action Intelligence</h3>
-                  <p className="text-[10px] md:text-xs text-neutral-400">Get decision-maker intel, timing windows, competitive landscape, and approach strategies—everything you need to close the deal faster.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Robot Ready CTA - Hero Banner */}
-      <div className="mb-6 border border-emerald-800/50 rounded bg-gradient-to-r from-emerald-950/20 to-neutral-950 overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center justify-between p-3 gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
-              <h2 className="text-sm font-semibold text-emerald-400">Robot Ready</h2>
-              <span className="px-1.5 py-0.5 border border-emerald-700 rounded text-[9px] text-emerald-300 uppercase font-semibold">New</span>
-              <span className="text-xs text-neutral-500">·</span>
-              <p className="text-xs text-neutral-400">Find your ideal customers in seconds</p>
-            </div>
-          </div>
-          <div className="shrink-0">
-            <Link href="/robot-ready" 
-              className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white text-xs font-medium rounded transition-colors">
-              <span>🚀 Find Customers</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ROI Calculator CTA Banner */}
-      <div className="mb-6 border border-yellow-800/50 rounded bg-gradient-to-r from-yellow-950/20 to-neutral-950 overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center justify-between p-3 gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">💰</span>
-              <h2 className="text-sm font-semibold text-yellow-400">ROI Calculator</h2>
-              <span className="px-1.5 py-0.5 border border-yellow-700 rounded text-[9px] text-yellow-300 uppercase font-semibold">Free</span>
-              <span className="text-xs text-neutral-500">·</span>
-              <p className="text-xs text-neutral-400">Calculate payback period &amp; annual ROI</p>
-            </div>
-          </div>
-          <div className="shrink-0">
-            <Link href="/roi-calculator" 
-              className="inline-flex items-center gap-2 px-4 py-1.5 border border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white text-xs font-medium rounded transition-colors">
-              <span>📊 Calculate ROI</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* error */}
       {error && (
         <div className="mb-6 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">
@@ -2080,7 +1995,6 @@ export default function Dashboard() {
                 <span className="label text-emerald-400 font-semibold group-hover:text-red-400 transition-colors">HOT</span>
                 <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-500 mt-1">High priority • Ready to engage</div>
             </button>
 
             <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
@@ -2089,7 +2003,6 @@ export default function Dashboard() {
                 <span className="label text-emerald-400 font-semibold group-hover:text-yellow-400 transition-colors">WARM</span>
                 <span className="text-2xl font-bold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-500 mt-1">Medium priority • Nurture sequence</div>
             </button>
 
             <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
@@ -2098,7 +2011,6 @@ export default function Dashboard() {
                 <span className="label text-emerald-400 font-semibold group-hover:text-cyan-400 transition-colors">COLD</span>
                 <span className="text-2xl font-bold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
               </div>
-              <div className="text-[10px] text-neutral-500 mt-1">Low priority • Monitor</div>
             </button>
 
             <div className="h-px bg-neutral-800" />
