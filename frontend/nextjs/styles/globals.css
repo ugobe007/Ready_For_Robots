@@ -180,4 +180,67 @@
   .animate-pulse-slow {
     animation: pulse-slow 3s ease-in-out infinite;
   }
+
+  /* Lead card hover elevation */
+  .lead-card {
+    @apply transition-all duration-300;
+  }
+  .lead-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 1px rgba(74, 222, 128, 0.1);
+  }
+
+  /* Tier glow effects */
+  .tier-glow-hot:hover {
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.4), 0 0 16px rgba(248, 113, 113, 0.2);
+  }
+  .tier-glow-warm:hover {
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.4), 0 0 16px rgba(234, 179, 8, 0.2);
+  }
+  .tier-glow-cold:hover {
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.4), 0 0 16px rgba(34, 211, 238, 0.2);
+  }
+
+  /* Tier filter pulse */
+  @keyframes tier-pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+  }
+  .tier-active {
+    animation: tier-pulse 2s ease-in-out infinite;
+  }
+
+  /* Score badge gradients */
+  .score-badge-high {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+  }
+  .score-badge-medium {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+  }
+  .score-badge-low {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(202, 138, 4, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.2);
+  }
+  .score-badge-poor {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Signal badge micro-animation */
+  .signal-badge:hover {
+    transform: scale(1.05);
+    transition: transform 0.15s ease-out;
+  }
+
+  /* Strategic Snapshot gradient background */
+  .strategic-snapshot-bg {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.08) 0%, rgba(8, 8, 8, 0.95) 50%, rgba(22, 78, 99, 0.08) 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 1px rgba(34, 211, 238, 0.2);
+  }
 }

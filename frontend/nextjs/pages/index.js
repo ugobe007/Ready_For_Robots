@@ -72,7 +72,7 @@ const SIGNAL_META = {
 
 function SignalBadge({ type }) {
   const m = SIGNAL_META[type] || { label: type, border: 'border-neutral-700', text: 'text-neutral-400' };
-  return <span className={`badge ${m.border} ${m.text}`}>{m.label}</span>;
+  return <span className={`badge signal-badge ${m.border} ${m.text}`} title={`${m.label} signal detected`}>{m.label}</span>;
 }
 
 function HealthDot({ open }) {
@@ -83,8 +83,13 @@ function HealthDot({ open }) {
 
 function ScoreNum({ value }) {
   const v = Math.round(value ?? 0);
+  let badgeClass = 'score-badge-poor border-red-700 text-red-400';
+  if (v >= 75) badgeClass = 'score-badge-high border-emerald-700 text-emerald-400';
+  else if (v >= 50) badgeClass = 'score-badge-medium border-cyan-700 text-cyan-400';
+  else if (v >= 30) badgeClass = 'score-badge-low border-yellow-700 text-yellow-400';
+  
   return (
-    <span className="inline-flex items-center border border-emerald-700 text-emerald-400 rounded px-1.5 leading-none tabular-nums font-mono font-semibold text-[10px]" style={{ paddingTop: '0.2rem', paddingBottom: '0.2rem' }}>
+    <span className={`inline-flex items-center border rounded px-1.5 leading-none tabular-nums font-mono font-semibold text-[10px] ${badgeClass}`} style={{ paddingTop: '0.2rem', paddingBottom: '0.2rem' }}>
       {v}
     </span>
   );
@@ -278,10 +283,10 @@ function StrategicSnapshot({ leads, onSelect }) {
   };
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-2">
+    <div className="mb-6 strategic-snapshot-bg rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <span className="label text-cyan-400" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.5), 0 0 20px rgba(34, 211, 238, 0.3)' }}>Strategic Snapshot</span>
+          <span className="text-sm font-bold uppercase tracking-wider text-cyan-400" style={{ textShadow: '0 0 12px rgba(34, 211, 238, 0.6), 0 0 24px rgba(34, 211, 238, 0.4)' }}>⚡ Strategic Snapshot</span>
           <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-400">
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />buyer</span>
             <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />eval</span>
@@ -1750,7 +1755,10 @@ export default function Dashboard() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 md:gap-3 mb-2">
-              <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-white">Ready for Robots</h1>
+              <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent"
+                style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
+                Ready for Robots
+              </h1>
             </div>
             <p className="text-xs md:text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
           </div>
@@ -2236,8 +2244,8 @@ export default function Dashboard() {
 
             return (
               <div key={lead.id}
-                className={`border-b border-neutral-800/60 py-3 ${
-                  isOpen ? `border-l-2 pl-3 ${tm.borderL}` : 'pl-0'
+                className={`lead-card border-b border-neutral-800/60 py-3 rounded-sm ${
+                  isOpen ? `border-l-4 pl-3 ${tm.borderL}` : 'border-l-2 border-l-transparent pl-3 hover:border-l-emerald-800'
                 }`}>
 
                 {/* row header */}
