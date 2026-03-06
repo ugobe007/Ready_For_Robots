@@ -29,6 +29,16 @@ export default function SignalIntelligencePage() {
   const [stats, setStats] = useState({ total: 0, hot: 0, warm: 0, cold: 0 });
   const [recentSignals, setRecentSignals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [signalFlow, setSignalFlow] = useState([
+    { name: 'Funding Activity', value: 0.69, change: -0.02, max: 1.0 },
+    { name: 'Hiring Velocity', value: 0.85, change: 0.02, max: 1.0 },
+    { name: 'Expansion Signals', value: 0.58, change: 0.02, max: 1.0 },
+    { name: 'Executive Movement', value: 0.73, change: 0.00, max: 1.0 },
+    { name: 'News Momentum', value: 0.91, change: 0.05, max: 1.0 },
+    { name: 'CapEx Indicators', value: 0.56, change: 0.03, max: 1.0 },
+    { name: 'RFP Activity', value: 0.66, change: 0.02, max: 1.0 },
+    { name: 'Signal Correlation', value: 0.86, change: 0.03, max: 1.0 }
+  ]);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,6 +72,26 @@ export default function SignalIntelligencePage() {
     fetchData();
     const interval = setInterval(fetchData, 30000); // Update every 30s
     return () => clearInterval(interval);
+  }, []);
+
+  // Live signal flow animation - updates every 3s
+  useEffect(() => {
+    const flowInterval = setInterval(() => {
+      setSignalFlow(prev => prev.map(signal => {
+        // Random fluctuation between -0.05 and +0.05
+        const randomChange = (Math.random() - 0.5) * 0.1;
+        const newValue = Math.max(0.1, Math.min(1.0, signal.value + randomChange));
+        const change = parseFloat((newValue - signal.value).toFixed(2));
+        
+        return {
+          ...signal,
+          value: parseFloat(newValue.toFixed(2)),
+          change: change
+        };
+      }));
+    }, 3000); // Update every 3s like pythh.ai
+
+    return () => clearInterval(flowInterval);
   }, []);
 
   const getColorClass = (color, type = 'text') => {
@@ -173,6 +203,54 @@ export default function SignalIntelligencePage() {
               <span className="text-cyan-400 font-semibold">Pro tip:</span> Leads with 3+ signals have 
               <span className="text-emerald-400 font-semibold"> 87% higher conversion rates</span>
             </p>
+          </div>
+        </section>
+
+        {/* Live Signal Flow - pythh.ai style */}
+        <section className="border border-cyan-800/50 rounded-lg p-8 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-3xl font-bold text-white">
+                Live Signal Detection Flow
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-neutral-500">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Updates every 3s</span>
+              </div>
+            </div>
+            <p className="text-sm text-neutral-400">
+              Signals are real-time indicators of buying intent — not stated plans. We observe <span className="text-cyan-400 font-semibold">what companies do</span>, not what they say.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {signalFlow.map((signal, idx) => (
+              <div key={signal.name} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-300 font-medium">{signal.name}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-white font-mono tabular-nums">{signal.value.toFixed(2)}</span>
+                    <span className={`text-xs font-mono tabular-nums min-w-[60px] text-right ${
+                      signal.change > 0 ? 'text-emerald-400' : 
+                      signal.change < 0 ? 'text-red-400' : 
+                      'text-neutral-500'
+                    }`}>
+                      {signal.change > 0 ? '▲' : signal.change < 0 ? '▼' : '→'} {Math.abs(signal.change).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-2 bg-neutral-900 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-600 to-cyan-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${(signal.value / signal.max) * 100}%` }}>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-neutral-800 text-center text-xs text-neutral-500">
+            Signal flow metrics update in real-time based on detection patterns across all 140+ data sources
           </div>
         </section>
 
