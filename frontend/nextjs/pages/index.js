@@ -1562,6 +1562,7 @@ export default function Dashboard() {
   const [savedIds, setSavedIds] = useState(new Set());
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [liveSignals, setLiveSignals] = useState([]);
 
   // Usage tracking and tier management
   const [usageCount, setUsageCount] = useState(0);
@@ -1643,6 +1644,33 @@ export default function Dashboard() {
     return p.toString();
   }, [tier, industry, minScore, sigType, excludeJunk, sort]);
 
+  // Fetch live signals for ticker
+  const fetchLiveSignals = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/leads?limit=20&sort=signals_detected_at`);
+      if (res.ok) {
+        const allLeads = await res.json();
+        // Extract unique signals from recent leads
+        const signals = [];
+        allLeads.forEach(lead => {
+          if (lead.signals && lead.signals.length > 0) {
+            lead.signals.slice(0, 2).forEach(sig => {
+              signals.push({
+                company: lead.company_name,
+                type: sig.signal_type || 'news',
+                industry: lead.industry,
+                lead: lead
+              });
+            });
+          }
+        });
+        setLiveSignals(signals.slice(0, 15)); // Keep top 15 for ticker
+      }
+    } catch (e) {
+      console.error('Failed to fetch live signals:', e);
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
     try {
       const [leadsRes, summaryRes, healthRes] = await Promise.all([
@@ -1654,13 +1682,16 @@ export default function Dashboard() {
       if (summaryRes.ok) setSummary(await summaryRes.json());
       if (healthRes.ok)  setHealth(await healthRes.json());
       setError(null);
+      
+      // Also fetch live signals
+      await fetchLiveSignals();
     } catch (e) {
       setError('Cannot reach API -- start the server: python -m uvicorn app.main:app --reload');
     } finally {
       setLoading(false);
       setLast(new Date().toLocaleTimeString());
     }
-  }, [buildQuery, excludeJunk]);
+  }, [buildQuery, excludeJunk, fetchLiveSignals]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
@@ -2186,6 +2217,38 @@ export default function Dashboard() {
               </div>
             );
           })()}
+
+          {/* Live Signal Ticker - horizontal scrolling stream */}
+          {!loading && liveSignals.length > 0 && (
+            <div className="border-t border-b border-neutral-800 py-2.5 px-4 bg-neutral-950/50 overflow-hidden">
+              <div className="flex items-center gap-3 text-xs">
+                <span className="shrink-0 flex items-center gap-1.5 text-neutral-500 font-medium">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live Signals:
+                </span>
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex gap-3 animate-ticker whitespace-nowrap">
+                    {liveSignals.concat(liveSignals).map((sig, idx) => {
+                      const sigMeta = SIGNAL_META[sig.type] || { label: sig.type, text: 'text-neutral-400' };
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedLead(sig.lead)}
+                          className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="text-cyan-400 hover:text-cyan-300 underline decoration-dotted">
+                            {sig.company}
+                          </span>
+                          <span className={`${sigMeta.text} font-semibold`}>({sigMeta.label})</span>
+                          <span className="text-neutral-700">→</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* intelligence search — primary tool, above the fold */}
           <IntelSearchPanel 
