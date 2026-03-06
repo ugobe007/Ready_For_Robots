@@ -12,6 +12,12 @@ function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If Supabase is not configured, skip auth setup
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Initial session fetch
     supabase.auth.getSession().then(({ data }) => {
       setSession(data?.session ?? null);
