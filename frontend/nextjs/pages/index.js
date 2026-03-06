@@ -1763,7 +1763,7 @@ export default function Dashboard() {
                 </h1>
               </div>
             </div>
-            <p className="text-xs md:text-base text-neutral-300">Lead Intelligence &middot; Automation Signal Platform</p>
+            <p className="text-xs md:text-base text-neutral-300">Intent Signal Intelligence → Sales-Ready Leads</p>
           </div>
           
           {/* Mobile: Just hamburger menu */}
@@ -1810,8 +1810,8 @@ export default function Dashboard() {
                   </div>
                 </Link>
                 <Link href="/about" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer">
-                    📘 About
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer">
+                    ⚡ Signal Intelligence
                   </div>
                 </Link>
               </div>
@@ -1862,8 +1862,8 @@ export default function Dashboard() {
                   </div>
                 </Link>
                 <Link href="/about" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer">
-                    📘 About
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer">
+                    ⚡ Signal Intelligence
                   </div>
                 </Link>
               </div>
