@@ -34,19 +34,6 @@ celery_app.conf.update(
     task_soft_time_limit=3000,  # 50 minutes soft limit
     worker_prefetch_multiplier=1,  # One task at a time
     worker_max_tasks_per_child=50,  # Restart worker after 50 tasks
-        "job-scraper-12h": {
-            "task": "worker.tasks.run_job_scraper_task",
-            "schedule": crontab(minute=45, hour="*/12"),
-        },
-        "hotel-scraper-12h": {
-            "task": "worker.tasks.run_hotel_scraper_task",
-            "schedule": crontab(minute=15, hour="*/12"),
-        },
-        "score-recalc-all-6h": {
-            "task": "worker.tasks.recalculate_all_scores_task",
-            "schedule": crontab(minute=0, hour="*/6"),
-        },
-    },
 )
 
 if __name__ == "__main__":
