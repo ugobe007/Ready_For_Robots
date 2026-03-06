@@ -8,6 +8,23 @@ from celery.schedules import crontab
 
 # Celery Beat Schedule - runs scrapers automatically
 CELERYBEAT_SCHEDULE = {
+    # ── INTELLIGENCE NEWS SCRAPER ── FREE lead discovery (runs 3x daily)
+    'intelligence-scraper-morning': {
+        'task': 'worker.tasks.run_intelligence_scraper_task',
+        'schedule': crontab(hour=9, minute=0),  # 9am UTC (4am EST)
+        'kwargs': {'max_articles': 10},  # 10 articles per query
+    },
+    'intelligence-scraper-afternoon': {
+        'task': 'worker.tasks.run_intelligence_scraper_task',
+        'schedule': crontab(hour=15, minute=0),  # 3pm UTC (10am EST)
+        'kwargs': {'max_articles': 10},
+    },
+    'intelligence-scraper-evening': {
+        'task': 'worker.tasks.run_intelligence_scraper_task',
+        'schedule': crontab(hour=21, minute=0),  # 9pm UTC (4pm EST)
+        'kwargs': {'max_articles': 10},
+    },
+    
     # ── NEWS SCRAPERS ── Run every 2 hours during business hours
     'news-scraper-morning': {
         'task': 'worker.tasks.run_news_scraper_task',
