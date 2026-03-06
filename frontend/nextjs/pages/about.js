@@ -166,6 +166,54 @@ export default function SignalIntelligencePage() {
           </div>
         </section>
 
+        {/* Signal Radar → Customer Discovery - pythh.ai style */}
+        <section className="border border-cyan-800/50 rounded-lg p-6 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-2xl font-bold text-white">
+                📡 Signal Radar → Customer Discovery
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-neutral-500">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Live</span>
+              </div>
+            </div>
+            <p className="text-xs text-neutral-400">
+              Signals are real-time indicators of buying intent — not stated plans. We observe <span className="text-cyan-400 font-semibold">what companies do</span>, not what they say.
+            </p>
+          </div>
+
+          <div className="space-y-2.5">
+            {signalFlow.map((signal, idx) => (
+              <div key={signal.name} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-300 font-medium">{signal.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white font-mono tabular-nums">{signal.value.toFixed(2)}</span>
+                    <span className={`text-[10px] font-mono tabular-nums min-w-[50px] text-right ${
+                      signal.change > 0 ? 'text-emerald-400' : 
+                      signal.change < 0 ? 'text-red-400' : 
+                      'text-neutral-500'
+                    }`}>
+                      {signal.change > 0 ? '▲' : signal.change < 0 ? '▼' : '→'} {Math.abs(signal.change).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-neutral-900 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-600 to-cyan-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${(signal.value / signal.max) * 100}%` }}>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-neutral-800 text-center text-[10px] text-neutral-500">
+            Signal velocity metrics update every 3s based on detection patterns across 140+ sources
+          </div>
+        </section>
+
         {/* The Signal Engine - 14 Signal Types */}
         <section className="space-y-8">
           <div className="text-center space-y-3">
@@ -203,54 +251,6 @@ export default function SignalIntelligencePage() {
               <span className="text-cyan-400 font-semibold">Pro tip:</span> Leads with 3+ signals have 
               <span className="text-emerald-400 font-semibold"> 87% higher conversion rates</span>
             </p>
-          </div>
-        </section>
-
-        {/* Live Signal Flow - pythh.ai style */}
-        <section className="border border-cyan-800/50 rounded-lg p-8 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-3xl font-bold text-white">
-                Live Signal Detection Flow
-              </h2>
-              <div className="flex items-center gap-2 text-xs text-neutral-500">
-                <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Updates every 3s</span>
-              </div>
-            </div>
-            <p className="text-sm text-neutral-400">
-              Signals are real-time indicators of buying intent — not stated plans. We observe <span className="text-cyan-400 font-semibold">what companies do</span>, not what they say.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {signalFlow.map((signal, idx) => (
-              <div key={signal.name} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-300 font-medium">{signal.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-white font-mono tabular-nums">{signal.value.toFixed(2)}</span>
-                    <span className={`text-xs font-mono tabular-nums min-w-[60px] text-right ${
-                      signal.change > 0 ? 'text-emerald-400' : 
-                      signal.change < 0 ? 'text-red-400' : 
-                      'text-neutral-500'
-                    }`}>
-                      {signal.change > 0 ? '▲' : signal.change < 0 ? '▼' : '→'} {Math.abs(signal.change).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                <div className="h-2 bg-neutral-900 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-cyan-600 to-cyan-500 transition-all duration-1000 ease-out"
-                    style={{ width: `${(signal.value / signal.max) * 100}%` }}>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-neutral-800 text-center text-xs text-neutral-500">
-            Signal flow metrics update in real-time based on detection patterns across all 140+ data sources
           </div>
         </section>
 
