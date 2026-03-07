@@ -2136,15 +2136,27 @@ export default function Dashboard() {
           <div>
             <div className="mb-2">
               {/* READY → ROBOTS Wordmark - Option 4 */}
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1"
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textShadow: '0 0 30px rgba(16, 185, 129, 0.3)'
-                }}>
-                READY → ROBOTS
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1">
+                <span className="text-white">READY</span>
+                <span className="mx-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                  →
+                </span>
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 30px rgba(16, 185, 129, 0.3)'
+                  }}>
+                  ROBOTS
+                </span>
               </h1>
               <p className="text-xs md:text-sm text-neutral-400">Intent Signal Intelligence → Sales-Ready Leads</p>
             </div>
@@ -2687,18 +2699,7 @@ export default function Dashboard() {
                       window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
                     }
                   }}
-                  className="px-8 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.boxShadow = '0 4px 14px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-                  }}
+                  className="px-8 py-3 rounded-lg font-semibold text-sm sm:text-base border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 transition-all duration-200 whitespace-nowrap bg-transparent"
                 >
                   Get My Pipeline →
                 </button>
