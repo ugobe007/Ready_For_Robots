@@ -6,6 +6,7 @@ export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
   const [robotUrl, setRobotUrl] = useState('');
+  const [hotLeadsCount, setHotLeadsCount] = useState(0);
   
   // Live signal flow state (pythh.ai style)
   const [signalFlow, setSignalFlow] = useState({
@@ -43,6 +44,24 @@ export default function Signals() {
     };
 
     const interval = setInterval(updateSignalFlow, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch hot leads count from last 24 hours
+  useEffect(() => {
+    const fetchHotLeadsCount = async () => {
+      try {
+        const res = await fetch('https://ready-2-robot.fly.dev/api/leads?temp=hot');
+        const data = await res.json();
+        setHotLeadsCount(Array.isArray(data) ? data.length : 0);
+      } catch (err) {
+        console.error('Error fetching hot leads count:', err);
+        setHotLeadsCount(0);
+      }
+    };
+
+    fetchHotLeadsCount();
+    const interval = setInterval(fetchHotLeadsCount, 30000); // Update every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -215,6 +234,16 @@ export default function Signals() {
               Most robotics companies sell <span className="text-red-400">reactively</span> — responding to inbound RFPs when buyers are already comparing 5+ vendors. 
               Our signal intelligence lets you sell <span className="text-emerald-400">proactively</span> — engaging buyers 3-6 months before they enter procurement mode, when you can shape requirements and avoid competitive bidding.
             </p>
+          </div>
+        </div>
+
+        {/* Ticker Line - Hot Leads Count */}
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <span className="text-neutral-400">🔥</span>
+            <span className="text-white font-semibold">{hotLeadsCount}</span>
+            <span className="text-neutral-400">hot leads collected in the past 24 hours</span>
+            <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full animate-pulse ml-1"></span>
           </div>
         </div>
 
