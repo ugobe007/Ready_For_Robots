@@ -111,7 +111,7 @@ export default function RobotCompanies() {
             marginBottom: '8px',
             color: '#10B981'
           }}>
-            Robots Ready Companies
+            [Robot Ready] Companies
           </h1>
           <p style={{ fontSize: '14px', color: '#737373' }}>
             200+ robotics companies • Chinese → U.S. market entry focus
