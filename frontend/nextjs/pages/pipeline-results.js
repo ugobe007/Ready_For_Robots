@@ -22,10 +22,11 @@ export default function PipelineResults() {
       // Get top 5 HOT leads as matches
       const res = await fetch('https://ready-2-robot.fly.dev/api/leads?limit=5&temp=hot');
       const data = await res.json();
-      setMatches(data.slice(0, 5));
+      setMatches(Array.isArray(data) ? data.slice(0, 5) : []);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching matches:', err);
+      setMatches([]);
       setLoading(false);
     }
   };
@@ -125,56 +126,68 @@ export default function PipelineResults() {
               <h2 className="text-xl font-semibold text-emerald-400 mb-4">
                 🎯 Top 5 Prospect Matches
               </h2>
-              <div className="space-y-3">
-                {matches.map((lead, idx) => (
-                  <div key={idx} className="border border-neutral-800 rounded bg-neutral-900/30 p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-neutral-200 mb-1">
-                          {lead.company_name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-neutral-500">
-                          <span>{lead.industry || 'Industry'}</span>
-                          <span>•</span>
-                          <span>{lead.employee_estimate || '100-500'} employees</span>
+              {matches.length === 0 ? (
+                <div className="border border-neutral-800 rounded bg-neutral-900/30 p-8 text-center">
+                  <p className="text-neutral-400">No matches found at the moment. Try again later or sign up to access our full database.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {matches.map((lead, idx) => (
+                    <div key={idx} className="border border-neutral-800 rounded bg-neutral-900/30 p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-neutral-200 mb-1">
+                            {lead.company_name || 'Company Name'}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-neutral-500">
+                            <span>{lead.industry || 'Industry'}</span>
+                            <span>•</span>
+                            <span>{lead.employee_estimate || '100-500'} employees</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-800">
+                            Score: {lead.score || 85}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-800">
-                          Score: {lead.score || 85}
+                      
+                      {/* Signals */}
+                      <div className="mb-2">
+                        {lead.signals && lead.signals.length > 0 ? (
+                          <>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {lead.signals.slice(0, 3).map((sig, i) => (
+                                <span key={i} className="px-2 py-0.5 rounded text-[9px] uppercase font-medium bg-cyan-900/30 text-cyan-400 border border-cyan-800">
+                                  {sig.signal_type || 'Signal'}
+                                </span>
+                              ))}
+                              {lead.signals.length > 3 && (
+                                <span className="px-2 py-0.5 rounded text-[9px] text-neutral-500">
+                                  +{lead.signals.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                            {lead.signals[0]?.description && (
+                              <p className="text-xs text-neutral-400 line-clamp-2">
+                                {lead.signals[0].description}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-xs text-neutral-500">Multiple intent signals detected</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs mt-3 pt-3 border-t border-neutral-800">
+                        <span className="text-emerald-400">
+                          💡 Why they're a match: {lead.signals?.length || 3} automation intent signals detected
                         </span>
                       </div>
                     </div>
-                    
-                    {/* Signals */}
-                    <div className="mb-2">
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {lead.signals && lead.signals.slice(0, 3).map((sig, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded text-[9px] uppercase font-medium bg-cyan-900/30 text-cyan-400 border border-cyan-800">
-                            {sig.signal_type}
-                          </span>
-                        ))}
-                        {lead.signals && lead.signals.length > 3 && (
-                          <span className="px-2 py-0.5 rounded text-[9px] text-neutral-500">
-                            +{lead.signals.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                      {lead.signals && lead.signals[0] && (
-                        <p className="text-xs text-neutral-400 line-clamp-2">
-                          {lead.signals[0].description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs mt-3 pt-3 border-t border-neutral-800">
-                      <span className="text-emerald-400">
-                        💡 Why they're a match: {lead.signals?.length || 3} automation intent signals detected
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Engagement Strategy */}
@@ -207,7 +220,7 @@ export default function PipelineResults() {
                 Want the Full Pipeline Report?
               </h3>
               <p className="text-sm text-neutral-400 mb-4">
-                Sign up free to unlock all {matches[0]?.score || '400+'} automation-ready prospects, save your results, and get weekly updates on new matches.
+                Sign up free to unlock all automation-ready prospects, save your results, and get weekly updates on new matches.
               </p>
               <div className="flex items-center justify-center gap-3">
                 <Link href="/login">
