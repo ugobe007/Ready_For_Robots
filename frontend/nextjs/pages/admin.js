@@ -53,7 +53,7 @@ function Spinner() {
   return <span className="inline-block w-3 h-3 border border-neutral-500 border-t-cyan-400 rounded-full animate-spin" />;
 }
 
-const TABS = ['Dashboard', 'Users', 'Companies', 'Scrapers', 'Analytics', 'System'];
+const TABS = ['Dashboard', 'Users', 'Companies', 'Scrapers', 'Analytics', 'System', 'Robot Companies'];
 
 const SCRAPERS  = ['all', 'job_board', 'hotel_dir', 'rss_feed', 'news'];
 const INDUSTRIES = ['', 'Logistics', 'Hospitality', 'Food Service', 'Healthcare'];
@@ -1159,7 +1159,48 @@ export default function AdminPage() {
         {tab === 'Scrapers'    && <ScraperPanel />}
         {tab === 'Analytics'   && <Analytics />}
         {tab === 'System'      && <SystemControls />}
+        {tab === 'Robot Companies' && <RobotCompaniesLink />}
       </main>
+    </div>
+  );
+}
+
+function RobotCompaniesLink() {
+  return (
+    <div className="max-w-2xl">
+      <div className="border border-emerald-800 bg-emerald-950/20 px-6 py-8">
+        <h2 className="text-lg font-semibold text-emerald-400 mb-3">
+          🤖 Robot Companies Management
+        </h2>
+        <p className="text-sm text-neutral-400 mb-6">
+          Access the full robot companies database with workflow management and email outreach tools.
+          This is an admin-only section for managing Chinese robotics companies looking to enter the U.S. market.
+        </p>
+        <div className="space-y-3 text-sm text-neutral-300">
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500">•</span>
+            <span>View 200+ robot company profiles with scoring and signals</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500">•</span>
+            <span>Track workflow stages and next actions for each company</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500">•</span>
+            <span>Generate personalized email introductions (6 template types)</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-emerald-500">•</span>
+            <span>Filter by hot leads, distribution needs, market entry wave</span>
+          </div>
+        </div>
+        <Link 
+          href="/robot-companies"
+          className="mt-6 inline-block border border-emerald-500 text-emerald-400 px-6 py-3 text-sm font-medium hover:bg-emerald-500/10 transition-colors"
+        >
+          Open Robot Companies →
+        </Link>
+      </div>
     </div>
   );
 }

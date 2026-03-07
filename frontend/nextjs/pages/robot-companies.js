@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabase';
 
 export default function RobotCompanies() {
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [companies, setCompanies] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,10 +25,49 @@ export default function RobotCompanies() {
   const [emailContent, setEmailContent] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
+  // Admin authentication check
   useEffect(() => {
-    loadStats();
-    loadCompanies();
-  }, [filter]);
+    async function checkAdmin() {
+      if (!supabase) {
+        // No Supabase = local dev mode, allow access
+        setIsAdmin(true);
+        setCheckingAuth(false);
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Not logged in, redirect to login
+        router.push('/login?redirect=/robot-companies');
+        return;
+      }
+
+      // Check if user is admin (you can customize this logic)
+      // For now, check if email matches admin emails
+      const adminEmails = ['admin@readyforrobots.com', 'robert@readyforrobots.com'];
+      const userIsAdmin = adminEmails.includes(user.email);
+
+      if (!userIsAdmin) {
+        // Not an admin, redirect to homepage
+        alert('Access denied. This page is for administrators only.');
+        router.push('/');
+        return;
+      }
+
+      setIsAdmin(true);
+      setCheckingAuth(false);
+    }
+
+    checkAdmin();
+  }, [router]);
+
+  useEffect(() => {
+    if (!checkingAuth && isAdmin) {
+      loadStats();
+      loadCompanies();
+    }
+  }, [filter, checkingAuth, isAdmin]);
 
   async function loadStats() {
     try {
@@ -122,13 +166,44 @@ export default function RobotCompanies() {
     alert('Email copied to clipboard!');
   }
 
+  // Show loading state while checking authentication
+  if (checkingAuth) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '16px', fontSize: '18px', color: '#10B981' }}>🔒 Checking admin access...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render page content if not admin
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', padding: '40px 20px' }}>
       <Head>
-        <title>Robots Ready Companies | Ready For Robots</title>
+        <title>[ADMIN] Robot Companies | Ready For Robots</title>
       </Head>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        {/* Admin Badge */}
+        <div style={{ 
+          background: '#10B981', 
+          color: '#000', 
+          padding: '8px 16px', 
+          borderRadius: '4px', 
+          display: 'inline-block',
+          fontSize: '11px',
+          fontWeight: '600',
+          letterSpacing: '0.5px',
+          marginBottom: '20px'
+        }}>
+          🔒 ADMIN ONLY
+        </div>
+
         {/* Header */}
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ 
