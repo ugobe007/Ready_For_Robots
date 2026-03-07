@@ -5,8 +5,9 @@ import Head from 'next/head';
 export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [robotUrl, setRobotUrl] = useState('');
-  const [hotLeadsCount, setHotLeadsCount] = useState(0);
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [temperatureFilter, setTemperatureFilter] = useState('all'); // 'all', 'hot', 'warm', 'cold'
   
   // Live signal flow state (pythh.ai style)
   const [signalFlow, setSignalFlow] = useState({
@@ -47,30 +48,53 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch hot leads count from last 24 hours
+  // Fetch all leads
   useEffect(() => {
-    const fetchHotLeadsCount = async () => {
+    const fetchLeads = async () => {
       try {
-        const res = await fetch('https://ready-2-robot.fly.dev/api/leads?temp=hot');
+        setLoading(true);
+        const res = await fetch('http://localhost:8000/api/leads');
         const data = await res.json();
-        setHotLeadsCount(Array.isArray(data) ? data.length : 0);
+        setLeads(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching hot leads count:', err);
-        setHotLeadsCount(0);
+        console.error('Error fetching leads:', err);
+        setLeads([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchHotLeadsCount();
-    const interval = setInterval(fetchHotLeadsCount, 30000); // Update every 30s
+    fetchLeads();
+    const interval = setInterval(fetchLeads, 30000); // Update every 30s
     return () => clearInterval(interval);
   }, []);
 
-  const handleBuildPipeline = (e) => {
-    e.preventDefault();
-    if (robotUrl.trim()) {
-      router.push(`/pipeline-results?url=${encodeURIComponent(robotUrl)}`);
+  // Calculate lead counts by temperature
+  const hotCount = leads.filter(l => l.temperature === 'hot').length;
+  const warmCount = leads.filter(l => l.temperature === 'warm').length;
+  const coldCount = leads.filter(l => l.temperature === 'cold').length;
+
+  // Filter and group leads by industry, limit to 10 per industry
+  const getFilteredLeads = () => {
+    let filtered = leads;
+    if (temperatureFilter !== 'all') {
+      filtered = filtered.filter(l => l.temperature === temperatureFilter);
     }
+    
+    // Group by industry
+    const byIndustry = {};
+    filtered.forEach(lead => {
+      const industry = lead.industry || 'Unknown';
+      if (!byIndustry[industry]) byIndustry[industry] = [];
+      if (byIndustry[industry].length < 10) {
+        byIndustry[industry].push(lead);
+      }
+    });
+    
+    return byIndustry;
   };
+
+  const filteredLeadsByIndustry = getFilteredLeads();
 
   const getColorClasses = (color) => {
     const colors = {
@@ -237,48 +261,128 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Ticker Line - Hot Leads Count */}
+        {/* Lead Statistics */}
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="border border-neutral-700 rounded-lg py-3 px-4">
-            <div className="flex items-center justify-center gap-2 text-base">
-              <span className="text-neutral-400">🔥</span>
-              <span className="text-white font-semibold">{hotLeadsCount}</span>
-              <span className="text-neutral-400">hot leads collected in the past 24 hours</span>
-              <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full animate-pulse ml-1"></span>
+            <div className="flex items-center justify-center gap-6 text-base flex-wrap">
+              <button
+                onClick={() => setTemperatureFilter('all')}
+                className={`flex items-center gap-2 transition-colors ${
+                  temperatureFilter === 'all' ? 'text-white font-semibold' : 'text-neutral-400 hover:text-neutral-300'
+                }`}
+              >
+                <span>📊 Total: {leads.length}</span>
+              </button>
+              <button
+                onClick={() => setTemperatureFilter('hot')}
+                className={`flex items-center gap-2 transition-colors ${
+                  temperatureFilter === 'hot' ? 'text-red-400 font-semibold' : 'text-neutral-400 hover:text-red-300'
+                }`}
+              >
+                <span>🔥 HOT: {hotCount}</span>
+              </button>
+              <button
+                onClick={() => setTemperatureFilter('warm')}
+                className={`flex items-center gap-2 transition-colors ${
+                  temperatureFilter === 'warm' ? 'text-yellow-400 font-semibold' : 'text-neutral-400 hover:text-yellow-300'
+                }`}
+              >
+                <span>⚡ WARM: {warmCount}</span>
+              </button>
+              <button
+                onClick={() => setTemperatureFilter('cold')}
+                className={`flex items-center gap-2 transition-colors ${
+                  temperatureFilter === 'cold' ? 'text-cyan-400 font-semibold' : 'text-neutral-400 hover:text-cyan-300'
+                }`}
+              >
+                <span>❄️ COLD: {coldCount}</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* CTA */}
+        {/* Dashboard - Leads by Industry */}
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
-                Build Your Sales Pipeline
-              </h2>
-              <p className="text-neutral-300">
-                Enter your robot company URL to see top prospect matches — no signup required
-              </p>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-neutral-400 mt-4">Loading leads...</p>
             </div>
-            <form onSubmit={handleBuildPipeline} className="flex gap-3">
-              <input
-                type="text"
-                value={robotUrl}
-                onChange={(e) => setRobotUrl(e.target.value)}
-                placeholder="amplibotics.ai"
-                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
-              >
-                Build Pipeline →
-              </button>
-            </form>
-            <p className="text-sm text-neutral-400">
-              ✓ Top 5 matches  ✓ Engagement strategy  ✓ No signup required
-            </p>
-          </div>
+          ) : Object.keys(filteredLeadsByIndustry).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-neutral-400">No leads found for this filter</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {Object.entries(filteredLeadsByIndustry)
+                .sort(([, a], [, b]) => b.length - a.length)
+                .map(([industry, industryLeads]) => (
+                  <div key={industry} className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                      <h3 className="text-xl font-semibold text-emerald-400">{industry}</h3>
+                      <span className="text-sm text-neutral-500">{industryLeads.length} leads</span>
+                    </div>
+                    <div className="grid gap-4">
+                      {industryLeads.map(lead => (
+                        <div
+                          key={lead.id}
+                          className="border border-neutral-800 hover:border-neutral-700 rounded-lg p-4 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-3">
+                                <h4 className="text-lg font-semibold text-white">{lead.company_name}</h4>
+                                {lead.temperature === 'hot' && (
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-red-950/50 text-red-400 border border-red-800/50 rounded">🔥 HOT</span>
+                                )}
+                                {lead.temperature === 'warm' && (
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-950/50 text-yellow-400 border border-yellow-800/50 rounded">⚡ WARM</span>
+                                )}
+                                {lead.temperature === 'cold' && (
+                                  <span className="px-2 py-0.5 text-xs font-semibold bg-cyan-950/50 text-cyan-400 border border-cyan-800/50 rounded">❄️ COLD</span>
+                                )}
+                              </div>
+                              {lead.description && (
+                                <p className="text-sm text-neutral-400 line-clamp-2">{lead.description}</p>
+                              )}
+                              {lead.signals && lead.signals.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {lead.signals.slice(0, 3).map((signal, idx) => (
+                                    <span key={idx} className="text-xs text-neutral-500 border border-neutral-800 px-2 py-1 rounded">
+                                      {signal.signal_type}
+                                    </span>
+                                  ))}
+                                  {lead.signals.length > 3 && (
+                                    <span className="text-xs text-neutral-500">+{lead.signals.length - 3} more</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right space-y-2">
+                              {lead.score && (
+                                <div className="text-2xl font-bold text-emerald-400">
+                                  {typeof lead.score === 'object' ? lead.score.overall_score || 0 : lead.score}
+                                </div>
+                              )}
+                              {lead.website && (
+                                <a
+                                  href={lead.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+                                >
+                                  Visit site →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
         {/* Live Signal Velocity (pythh.ai style) */}
@@ -647,35 +751,6 @@ export default function Signals() {
               </div>
               <p className="text-xs text-amber-400/80 italic">Safety + efficiency driver</p>
             </div>
-          </div>
-        </div>
-
-        {/* Final CTA */}
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white">
-                Ready to find buyers showing these signals?
-              </h2>
-              <p className="text-neutral-300">
-                Enter your robot company URL to see top prospect matches
-              </p>
-            </div>
-            <form onSubmit={handleBuildPipeline} className="flex gap-3">
-              <input
-                type="text"
-                value={robotUrl}
-                onChange={(e) => setRobotUrl(e.target.value)}
-                placeholder="amplibotics.ai"
-                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
-              >
-                Build Pipeline →
-              </button>
-            </form>
           </div>
         </div>
 
