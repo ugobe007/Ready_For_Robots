@@ -15,8 +15,8 @@ const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' &&
 
 function barColor(v) {
   if (v >= 75) return 'bg-emerald-500';
-  if (v >= 50) return 'bg-cyan-500';
-  if (v >= 30) return 'bg-yellow-600';
+  if (v >= 50) return 'bg-cyan-400';
+  if (v >= 30) return 'bg-yellow-500';
   return 'bg-neutral-600';
 }
 
@@ -2134,16 +2134,29 @@ export default function Dashboard() {
       <header className="mb-6 md:mb-10">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="flex items-center gap-2 md:gap-3 mb-2">
-              <div className="inline-block border-2 border-cyan-600 rounded-lg px-4 py-2"
-                style={{ boxShadow: '0 0 12px rgba(34, 211, 238, 0.4), 0 0 24px rgba(34, 211, 238, 0.2)' }}>
-                <h1 className="text-2xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 bg-clip-text text-transparent"
-                  style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
-                  Ready for Robots
+            <div className="flex items-center gap-3 md:gap-4 mb-2">
+              {/* RFR Logo Badge - Linear-inspired */}
+              <div className="relative inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-2 border-transparent"
+                style={{ 
+                  backgroundClip: 'padding-box',
+                  borderImage: 'linear-gradient(135deg, #10B981, #06B6D4) 1',
+                  boxShadow: '0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1)'
+                }}>
+                {/* Robot antenna detail */}
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-gradient-to-t from-emerald-400 to-transparent" />
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400"
+                  style={{ boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)' }} />
+                <span className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-br from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  RFR
+                </span>
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-neutral-100 tracking-tight">
+                  Ready For Robots
                 </h1>
+                <p className="text-xs md:text-sm text-neutral-400 mt-0.5">Intent Signal Intelligence → Sales-Ready Leads</p>
               </div>
             </div>
-            <p className="text-xs md:text-base text-neutral-300">Intent Signal Intelligence → Sales-Ready Leads</p>
           </div>
           
           {/* Mobile: Just hamburger menu */}
@@ -2649,7 +2662,10 @@ export default function Dashboard() {
                       window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
                     }
                   }}
-                  className="px-6 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-600 hover:bg-emerald-900/30 transition-colors whitespace-nowrap">
+                  className="px-6 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-500 hover:bg-emerald-900/30 transition-all whitespace-nowrap"
+                  style={{ boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)' }}
+                  onMouseEnter={(e) => e.target.style.boxShadow = '0 0 16px rgba(16, 185, 129, 0.3)'}
+                  onMouseLeave={(e) => e.target.style.boxShadow = '0 0 12px rgba(16, 185, 129, 0.15)'}>
                   Build Pipeline
                 </button>
               </div>
