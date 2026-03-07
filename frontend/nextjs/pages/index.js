@@ -857,9 +857,11 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               className={`px-3 py-2.5 text-xs font-medium transition-colors border-b-2 whitespace-nowrap -mb-px ${
                 activeTab === tab
                   ? 'border-emerald-600 text-emerald-400'
+                  : tab === 'engagement'
+                  ? 'border-transparent text-emerald-400 hover:text-emerald-300 font-semibold'
                   : 'border-transparent text-neutral-400 hover:text-neutral-300'
               }`}>
-              {tab}
+              {tab === 'engagement' ? '📋 engagement' : tab}
             </button>
           ))}
         </div>
@@ -2675,23 +2677,25 @@ export default function Dashboard() {
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span className="text-lg font-semibold text-neutral-100">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
+                      {/* Signal count badge instead of individual badges */}
+                      {(lead.signals || []).length > 0 && (
+                        <span className="text-[10px] border border-cyan-800 text-cyan-400 px-2 py-0.5 rounded">
+                          {lead.signal_count} signal{lead.signal_count !== 1 ? 's' : ''}
+                        </span>
+                      )}
                       {lead.location_city && (
                         <span className="text-[10px] text-neutral-500">
                           {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
                         </span>
                       )}
-                      {/* AI Analysis button — always visible */}
-                      <button
-                        className="btn-ghost text-[10px] border-emerald-900 text-emerald-700
-                                   hover:text-emerald-300 hover:border-emerald-600 transition-colors"
-                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
-                        AI Analysis
-                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {uniqueSignalTypes(lead.signals || []).map(s => (
-                        <SignalBadge key={s.signal_type} type={s.signal_type} />
-                      ))}
+                    {/* Move AI Analysis button to separate line for cleaner layout */}
+                    <div className="flex gap-2 mt-1.5">
+                      <button
+                        className="text-xs text-emerald-400 hover:text-emerald-300 underline decoration-dotted transition-colors"
+                        onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
+                        → View Analysis
+                      </button>
                     </div>
                   </div>
 
