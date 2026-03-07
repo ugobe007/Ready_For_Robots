@@ -48,12 +48,13 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch all leads
+  // Fetch all leads - use production API
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:8000/api/leads');
+        // Use production API that's connected to Supabase
+        const res = await fetch('https://ready-2-robot.fly.dev/api/leads');
         const data = await res.json();
         setLeads(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -70,9 +71,9 @@ export default function Signals() {
   }, []);
 
   // Calculate lead counts by temperature
-  const hotCount = leads.filter(l => l.temperature === 'hot').length;
-  const warmCount = leads.filter(l => l.temperature === 'warm').length;
-  const coldCount = leads.filter(l => l.temperature === 'cold').length;
+  const hotCount = leads.filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT').length;
+  const warmCount = leads.filter(l => l.temperature === 'warm' || l.priority_tier === 'WARM').length;
+  const coldCount = leads.filter(l => l.temperature === 'cold' || l.priority_tier === 'COLD').length;
   
   // Calculate total signals and find hottest
   const totalSignals = leads.reduce((sum, lead) => sum + (lead.signals?.length || 0), 0);
@@ -80,27 +81,15 @@ export default function Signals() {
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
 
-  // Filter and group leads by industry, limit to 10 per industry
-  const getFilteredLeads = () => {
-    let filtered = leads;
-    if (temperatureFilter !== 'all') {
-      filtered = filtered.filter(l => l.temperature === temperatureFilter);
-    }
-    
-    // Group by industry
-    const byIndustry = {};
-    filtered.forEach(lead => {
-      const industry = lead.industry || 'Unknown';
-      if (!byIndustry[industry]) byIndustry[industry] = [];
-      if (byIndustry[industry].length < 10) {
-        byIndustry[industry].push(lead);
-      }
-    });
-    
-    return byIndustry;
-  };
-
-  const filteredLeadsByIndustry = getFilteredLeads();
+  // Get top HOT deals for Strategic Snapshot
+  const topHotDeals = leads
+    .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
+    .sort((a, b) => {
+      const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
+      const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
+      return scoreB - scoreA;
+    })
+    .slice(0, 5);
 
   const getColorClasses = (color) => {
     const colors = {
@@ -291,228 +280,144 @@ export default function Signals() {
               </div>
             </div>
           </div>
-          
-          {/* Temperature Filter Buttons */}
-          <div className="mt-3 border border-neutral-700 rounded-lg py-3 px-4">
-            <div className="flex items-center justify-center gap-6 text-base flex-wrap">
-              <button
-                onClick={() => setTemperatureFilter('all')}
-                className={`flex items-center gap-2 transition-colors ${
-                  temperatureFilter === 'all' ? 'text-white font-semibold' : 'text-neutral-400 hover:text-neutral-300'
-                }`}
+        </div>
+
+        {/* CTA - Build Your Pipeline */}
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="border border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-black rounded-lg px-6 py-8">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-white">
+                  Build Your Sales Pipeline
+                </h2>
+                <p className="text-lg text-neutral-300">
+                  See your top 5 prospect matches instantly — with engagement strategy & buying signals
+                </p>
+              </div>
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const url = e.target.robotUrl.value;
+                  router.push(`/pipeline-results?url=${encodeURIComponent(url)}`);
+                }}
+                className="space-y-4"
               >
-                <span>All Leads</span>
-              </button>
-              <button
-                onClick={() => setTemperatureFilter('hot')}
-                className={`flex items-center gap-2 transition-colors ${
-                  temperatureFilter === 'hot' ? 'text-red-400 font-semibold' : 'text-neutral-400 hover:text-red-300'
-                }`}
-              >
-                <span>🔥 HOT: {hotCount}</span>
-              </button>
-              <button
-                onClick={() => setTemperatureFilter('warm')}
-                className={`flex items-center gap-2 transition-colors ${
-                  temperatureFilter === 'warm' ? 'text-yellow-400 font-semibold' : 'text-neutral-400 hover:text-yellow-300'
-                }`}
-              >
-                <span>⚡ WARM: {warmCount}</span>
-              </button>
-              <button
-                onClick={() => setTemperatureFilter('cold')}
-                className={`flex items-center gap-2 transition-colors ${
-                  temperatureFilter === 'cold' ? 'text-cyan-400 font-semibold' : 'text-neutral-400 hover:text-cyan-300'
-                }`}
-              >
-                <span>❄️ COLD: {coldCount}</span>
-              </button>
+                <div>
+                  <input
+                    type="text"
+                    name="robotUrl"
+                    placeholder="Enter your robot company website (e.g., amplibotics.ai)"
+                    className="w-full px-4 py-3 bg-black border border-emerald-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                
+                <button
+                  type="submit"
+                  className="w-full px-6 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  Build Pipeline →
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800">
+                <span>✓ No signup required</span>
+                <span>✓ Instant results</span>
+                <span>✓ Free trial</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Dashboard - Leads by Industry */}
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Strategic Snapshot - Top Hot Deals */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+          <div>
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">STRATEGIC SNAPSHOT</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Top Hot Deals Today</h2>
+            <p className="text-sm text-neutral-400">
+              Highest-priority automation buyers detected in the last 24 hours
+            </p>
+          </div>
+
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-neutral-400 mt-4">Loading leads...</p>
+              <p className="text-neutral-400 mt-4">Loading hot deals...</p>
             </div>
-          ) : Object.keys(filteredLeadsByIndustry).length === 0 ? (
+          ) : topHotDeals.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-neutral-400">No leads found for this filter</p>
+              <p className="text-neutral-400">No hot deals available yet. Keep monitoring!</p>
             </div>
           ) : (
-            <div className="space-y-8">
-              {Object.entries(filteredLeadsByIndustry)
-                .sort(([, a], [, b]) => b.length - a.length)
-                .map(([industry, industryLeads]) => (
-                  <div key={industry} className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                      <h3 className="text-xl font-semibold text-emerald-400">{industry}</h3>
-                      <span className="text-sm text-neutral-500">{industryLeads.length} leads</span>
-                    </div>
-                    <div className="grid gap-4">
-                      {industryLeads.map(lead => (
-                        <div
-                          key={lead.id}
-                          className="border border-neutral-800 hover:border-neutral-700 rounded-lg p-4 transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-3">
-                                <h4 className="text-lg font-semibold text-white">{lead.company_name}</h4>
-                                {lead.temperature === 'hot' && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-red-950/50 text-red-400 border border-red-800/50 rounded">🔥 HOT</span>
-                                )}
-                                {lead.temperature === 'warm' && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-950/50 text-yellow-400 border border-yellow-800/50 rounded">⚡ WARM</span>
-                                )}
-                                {lead.temperature === 'cold' && (
-                                  <span className="px-2 py-0.5 text-xs font-semibold bg-cyan-950/50 text-cyan-400 border border-cyan-800/50 rounded">❄️ COLD</span>
-                                )}
-                              </div>
-                              {lead.description && (
-                                <p className="text-sm text-neutral-400 line-clamp-2">{lead.description}</p>
-                              )}
-                              {lead.signals && lead.signals.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                  {lead.signals.slice(0, 3).map((signal, idx) => (
-                                    <span key={idx} className="text-xs text-neutral-500 border border-neutral-800 px-2 py-1 rounded">
-                                      {signal.signal_type}
-                                    </span>
-                                  ))}
-                                  {lead.signals.length > 3 && (
-                                    <span className="text-xs text-neutral-500">+{lead.signals.length - 3} more</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-right space-y-2">
-                              {lead.score && (
-                                <div className="text-2xl font-bold text-emerald-400">
-                                  {typeof lead.score === 'object' ? lead.score.overall_score || 0 : lead.score}
-                                </div>
-                              )}
-                              {lead.website && (
-                                <a
-                                  href={lead.website}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-cyan-400 hover:text-cyan-300 underline"
-                                >
-                                  Visit site →
-                                </a>
-                              )}
-                            </div>
-                          </div>
+            <div className="grid gap-3">
+              {topHotDeals.map((lead, idx) => {
+                const score = typeof lead.score === 'object' ? (lead.score.overall_score || 0) : (lead.score || 0);
+                const topSignals = (lead.signals || []).slice(0, 2);
+                
+                return (
+                  <div 
+                    key={lead.id}
+                    onClick={() => router.push(`/analyze?id=${lead.id}`)}
+                    className="border border-neutral-800 hover:border-red-800/50 rounded-lg p-4 space-y-3 transition-all cursor-pointer hover:bg-red-950/5"
+                    style={{
+                      animation: `slideIn 0.5s ease-out ${idx * 0.05}s both`
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center gap-3">
+                          <h4 
+                            className="text-lg font-semibold text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/analyze?id=${lead.id}`);
+                            }}
+                          >
+                            {lead.company_name}
+                          </h4>
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-red-950/50 text-red-400 border border-red-800/50 rounded">
+                            🔥 HOT
+                          </span>
                         </div>
-                      ))}
+                        <div className="text-sm text-neutral-400">
+                          {lead.industry} • {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
+                        </div>
+                        {topSignals.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {topSignals.map((signal, sidx) => (
+                              <span key={sidx} className="text-xs text-neutral-500 border border-neutral-800 px-2 py-1 rounded">
+                                {signal.signal_type}
+                              </span>
+                            ))}
+                            {(lead.signals?.length || 0) > 2 && (
+                              <span className="text-xs text-emerald-400 font-semibold">
+                                +{lead.signals.length - 2} more signals
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right space-y-1">
+                        <div className="text-2xl font-bold text-emerald-400">
+                          {score.toFixed(0)}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/analyze?id=${lead.id}`);
+                          }}
+                          className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+                        >
+                          Analyze →
+                        </button>
+                      </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
             </div>
           )}
-        </div>
-
-        {/* Live Signal Velocity (pythh.ai style) */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
-          <div>
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-1">LIVE SIGNAL VELOCITY</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Real-time buyer intent shifts</h2>
-            <p className="text-sm text-neutral-400">
-              Watch automation buying signals intensify across industries — updated every 3 seconds
-            </p>
-          </div>
-
-          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
-            {/* Labor Shortage */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-neutral-300">Labor Shortage Signals</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-cyan-400 font-mono">
-                    {signalFlow.labor_shortage.value.toFixed(2)}
-                  </span>
-                  <span className={`text-xs ${signalFlow.labor_shortage.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {signalFlow.labor_shortage.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.labor_shortage.delta).toFixed(3)}
-                  </span>
-                </div>
-              </div>
-              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
-                     style={{ width: `${signalFlow.labor_shortage.value * 100}%` }}></div>
-              </div>
-            </div>
-
-            {/* Expansion Activity */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-neutral-300">Expansion Activity</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-emerald-400 font-mono">
-                    {signalFlow.expansion.value.toFixed(2)}
-                  </span>
-                  <span className={`text-xs ${signalFlow.expansion.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {signalFlow.expansion.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.expansion.delta).toFixed(3)}
-                  </span>
-                </div>
-              </div>
-              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
-                     style={{ width: `${signalFlow.expansion.value * 100}%` }}></div>
-              </div>
-            </div>
-
-            {/* Safety Issues */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-neutral-300">Safety & Repetitive Work</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-amber-400 font-mono">
-                    {signalFlow.safety.value.toFixed(2)}
-                  </span>
-                  <span className={`text-xs ${signalFlow.safety.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {signalFlow.safety.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.safety.delta).toFixed(3)}
-                  </span>
-                </div>
-              </div>
-              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000 ease-out"
-                     style={{ width: `${signalFlow.safety.value * 100}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hot Leads Discovered by Signals */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
-          <div>
-            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">HOT LEADS TODAY</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Discovered by Signals</h2>
-            <p className="text-sm text-neutral-400">
-              Live prospects showing automation buying intent — detected in the last 24 hours
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-3">
-            {hotLeads.map((lead, idx) => (
-              <div key={idx} className="border border-neutral-800 hover:border-red-800/50 rounded-lg p-4 space-y-2 transition-colors cursor-pointer">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-white">{lead.company}</div>
-                    <div className="text-xs text-neutral-500">{lead.industry}</div>
-                  </div>
-                  <div className="px-2 py-1 bg-red-950/30 border border-red-800/30 rounded text-xs font-semibold text-red-400">
-                    {lead.score}
-                  </div>
-                </div>
-                <div className="text-sm text-emerald-400">
-                  🔥 {lead.signal}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* RASS Scoring Algorithm */}
@@ -791,6 +696,19 @@ export default function Signals() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </>
   );
 }
