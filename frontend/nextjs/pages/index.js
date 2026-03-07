@@ -2154,7 +2154,8 @@ export default function Dashboard() {
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
                     textShadow: '0 0 30px rgba(16, 185, 129, 0.3)',
-                    fontWeight: '900'
+                    fontWeight: '900',
+                    letterSpacing: '0.02em'
                   }}>
                   ROBOTS
                 </span>
