@@ -1,10 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
+  const [robotUrl, setRobotUrl] = useState('');
+  
+  // Live signal flow state (pythh.ai style)
+  const [signalFlow, setSignalFlow] = useState({
+    labor_shortage: { value: 0.67, delta: 0, prev: 0.67 },
+    expansion: { value: 0.54, delta: 0, prev: 0.54 },
+    safety: { value: 0.71, delta: 0, prev: 0.71 }
+  });
+
+  // Hot leads state
+  const [hotLeads, setHotLeads] = useState([
+    { company: 'Metro Logistics Hub', score: 94, signal: 'Labor Shortage + Expansion', industry: 'Logistics' },
+    { company: 'Coastal Hotel Group', score: 91, signal: 'Staffing Crisis', industry: 'Hospitality' },
+    { company: 'Fresh Valley Foods', score: 89, signal: '24/7 Operations Need', industry: 'Food Service' },
+    { company: 'Regional Health Network', score: 87, signal: 'Safety + Turnover', industry: 'Healthcare' },
+    { company: 'Urban Fulfillment Co', score: 85, signal: 'Capacity Expansion', industry: 'Warehousing' }
+  ]);
+
+  // Animate signal flow
+  useEffect(() => {
+    const updateSignalFlow = () => {
+      setSignalFlow(prev => {
+        const newFlow = {};
+        Object.keys(prev).forEach(key => {
+          const change = (Math.random() - 0.5) * 0.08;
+          const newValue = Math.max(0, Math.min(1, prev[key].value + change));
+          const delta = newValue - prev[key].value;
+          newFlow[key] = {
+            value: newValue,
+            delta: delta,
+            prev: prev[key].value
+          };
+        });
+        return newFlow;
+      });
+    };
+
+    const interval = setInterval(updateSignalFlow, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleBuildPipeline = (e) => {
+    e.preventDefault();
+    if (robotUrl.trim()) {
+      router.push(`/pipeline-results?url=${encodeURIComponent(robotUrl)}`);
+    }
+  };
 
   const getColorClasses = (color) => {
     const colors = {
@@ -141,15 +188,8 @@ export default function Signals() {
       <div className="min-h-screen bg-black text-white">
         {/* Header */}
         <div className="border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <button 
-              onClick={() => router.push('/')}
-              className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
-            >
-              <span className="text-xl">←</span>
-              <span className="font-semibold">Back to Home</span>
-            </button>
-            <div className="text-sm text-neutral-400">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="text-sm text-neutral-400 text-center">
               Signal Intelligence Framework
             </div>
           </div>
@@ -174,6 +214,138 @@ export default function Signals() {
               Most robotics companies sell <span className="text-red-400">reactively</span> — responding to inbound RFPs when buyers are already comparing 5+ vendors. 
               Our signal intelligence lets you sell <span className="text-emerald-400">proactively</span> — engaging buyers 3-6 months before they enter procurement mode, when you can shape requirements and avoid competitive bidding.
             </p>
+          </div>
+        </div>
+
+        {/* Live Signal Velocity (pythh.ai style) */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+          <div>
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-1">LIVE SIGNAL VELOCITY</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Real-time buyer intent shifts</h2>
+            <p className="text-sm text-neutral-400">
+              Watch automation buying signals intensify across industries — updated every 3 seconds
+            </p>
+          </div>
+
+          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
+            {/* Labor Shortage */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Labor Shortage Signals</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-cyan-400 font-mono">
+                    {signalFlow.labor_shortage.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.labor_shortage.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.labor_shortage.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.labor_shortage.delta).toFixed(3)}
+                  </span>
+                </div>
+              </div>
+              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.labor_shortage.value * 100}%` }}></div>
+              </div>
+            </div>
+
+            {/* Expansion Activity */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Expansion Activity</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-emerald-400 font-mono">
+                    {signalFlow.expansion.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.expansion.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.expansion.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.expansion.delta).toFixed(3)}
+                  </span>
+                </div>
+              </div>
+              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.expansion.value * 100}%` }}></div>
+              </div>
+            </div>
+
+            {/* Safety Issues */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Safety & Repetitive Work</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-amber-400 font-mono">
+                    {signalFlow.safety.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.safety.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.safety.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.safety.delta).toFixed(3)}
+                  </span>
+                </div>
+              </div>
+              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.safety.value * 100}%` }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Build Your Sales Pipeline
+              </h2>
+              <p className="text-neutral-300">
+                Enter your robot company URL to see top prospect matches — no signup required
+              </p>
+            </div>
+            <form onSubmit={handleBuildPipeline} className="flex gap-3">
+              <input
+                type="text"
+                value={robotUrl}
+                onChange={(e) => setRobotUrl(e.target.value)}
+                placeholder="amplibotics.ai"
+                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
+              >
+                Build Pipeline →
+              </button>
+            </form>
+            <p className="text-sm text-neutral-400">
+              ✓ Top 5 matches  ✓ Engagement strategy  ✓ No signup required
+            </p>
+          </div>
+        </div>
+
+        {/* Hot Leads Discovered by Signals */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+          <div>
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">HOT LEADS TODAY</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Discovered by Signals</h2>
+            <p className="text-sm text-neutral-400">
+              Live prospects showing automation buying intent — detected in the last 24 hours
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-3">
+            {hotLeads.map((lead, idx) => (
+              <div key={idx} className="border border-neutral-800 hover:border-red-800/50 rounded-lg p-4 space-y-2 transition-colors cursor-pointer">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-white">{lead.company}</div>
+                    <div className="text-xs text-neutral-500">{lead.industry}</div>
+                  </div>
+                  <div className="px-2 py-1 bg-red-950/30 border border-red-800/30 rounded text-xs font-semibold text-red-400">
+                    {lead.score}
+                  </div>
+                </div>
+                <div className="text-sm text-emerald-400">
+                  🔥 {lead.signal}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -482,23 +654,32 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* CTA */}
+        {/* Final CTA */}
         <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="border border-emerald-800/50 rounded-lg px-5 py-4 flex items-center justify-between">
-            <div>
-              <div className="text-base font-semibold text-white mb-1">
+          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white">
                 Ready to find buyers showing these signals?
-              </div>
-              <p className="text-sm text-neutral-400">
-                See your top 5 prospect matches — no signup required
+              </h2>
+              <p className="text-neutral-300">
+                Enter your robot company URL to see top prospect matches
               </p>
             </div>
-            <button
-              onClick={() => router.push('/')}
-              className="px-5 py-2 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap"
-            >
-              Try It Now →
-            </button>
+            <form onSubmit={handleBuildPipeline} className="flex gap-3">
+              <input
+                type="text"
+                value={robotUrl}
+                onChange={(e) => setRobotUrl(e.target.value)}
+                placeholder="amplibotics.ai"
+                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
+              >
+                Build Pipeline →
+              </button>
+            </form>
           </div>
         </div>
 
