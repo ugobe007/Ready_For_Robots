@@ -255,15 +255,23 @@ export default function Signals() {
         </div>
 
         {/* Hero */}
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 text-center">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
           <div className="space-y-6">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
               Find buyers <span className="text-emerald-400">before they know</span> they need automation
             </h2>
-            <p className="text-lg md:text-xl text-neutral-300 max-w-3xl mx-auto">
-              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier.
+            <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
+              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier — when you can shape requirements and win without competition.
             </p>
+            
+            {/* Signal Intelligence Value */}
+            <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-2">
+              <div className="text-sm font-semibold text-emerald-400">💡 Why Signals Matter</div>
+              <p className="text-base text-neutral-200">
+                <span className="text-emerald-400">Signals</span> are the breakthrough. We monitor <span className="text-white font-semibold">{leads.length} companies</span> showing automation buying signals right now — labor shortages, expansion plans, safety issues. These aren't leads "thinking about" robots someday. These are <span className="text-red-400 font-semibold">live opportunities</span> where automation solves urgent problems.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -292,15 +300,15 @@ export default function Signals() {
         </div>
 
         {/* CTA - Build Your Pipeline */}
-        <div className="bg-gradient-to-br from-emerald-950/20 to-black border-y border-neutral-800">
-          <div className="max-w-4xl mx-auto px-6 py-16 md:py-20 text-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold text-white">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="border border-emerald-500 rounded-lg px-6 py-8">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-white">
                   Build Your Sales Pipeline
                 </h2>
-                <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
-                  Get your top 5 prospect matches + engagement strategy instantly
+                <p className="text-lg text-neutral-300">
+                  See your top 5 prospect matches instantly — with engagement strategy & buying signals
                 </p>
               </div>
 
@@ -310,30 +318,30 @@ export default function Signals() {
                   const url = e.target.robotUrl.value;
                   router.push(`/pipeline-results?url=${encodeURIComponent(url)}`);
                 }}
-                className="max-w-xl mx-auto space-y-4"
+                className="space-y-4"
               >
-                <input
-                  type="text"
-                  name="robotUrl"
-                  placeholder="Enter your robot company website"
-                  className="w-full px-5 py-4 bg-black border border-neutral-700 rounded-lg text-white text-center placeholder-neutral-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                  required
-                />
+                <div>
+                  <input
+                    type="text"
+                    name="robotUrl"
+                    placeholder="Enter your robot company website (e.g., amplibotics.ai)"
+                    className="w-full px-4 py-3 bg-black border border-emerald-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                    required
+                  />
+                </div>
                 
                 <button
                   type="submit"
-                  className="w-full px-8 py-4 bg-transparent border-2 border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors text-lg"
+                  className="w-full px-6 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors"
                 >
                   Build Pipeline →
                 </button>
               </form>
 
-              <div className="flex items-center justify-center gap-8 text-xs text-neutral-500 pt-4">
-                <span>No signup required</span>
-                <span>•</span>
-                <span>Instant results</span>
-                <span>•</span>
-                <span>Free trial</span>
+              <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800">
+                <span>✓ No signup required</span>
+                <span>✓ Instant results</span>
+                <span>✓ Free trial</span>
               </div>
             </div>
           </div>
@@ -341,11 +349,11 @@ export default function Signals() {
 
         {/* Strategic Snapshot - Top Hot Deals */}
         <div id="leads" className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-8">
-          <div className="text-center space-y-3">
-            <div className="text-xs text-red-400 font-semibold uppercase tracking-widest">STRATEGIC SNAPSHOT</div>
+          <div className="space-y-3">
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-widest">🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Top Hot Deals Today</h2>
-            <p className="text-neutral-400 max-w-2xl mx-auto">
-              Live companies with urgent automation needs
+            <p className="text-neutral-400">
+              Live companies with urgent automation needs — click any company to see full AI analysis and signal details
             </p>
           </div>
 
@@ -550,14 +558,14 @@ export default function Signals() {
         </div>
 
         {/* Clear Next Steps */}
-        <div className="bg-neutral-900/50 border-y border-neutral-800">
-          <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
-            <div className="text-center space-y-4">
-              <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">GET STARTED</div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white">Your Action Plan</h2>
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-8 space-y-6">
+            <div className="space-y-3">
+              <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">GET STARTED</div>
+              <h2 className="text-3xl font-bold text-white">Your Action Plan</h2>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <div className="text-emerald-400 font-bold text-xl">1. Try It Free</div>
                 <p className="text-sm text-neutral-300">
