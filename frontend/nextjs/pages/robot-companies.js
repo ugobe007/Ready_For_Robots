@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase';
 
 export default function RobotCompanies() {
-  const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [companies, setCompanies] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,38 +20,10 @@ export default function RobotCompanies() {
   const [emailContent, setEmailContent] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
-  // Authentication check - just verify user is logged in
   useEffect(() => {
-    async function checkAuth() {
-      if (!supabase) {
-        // No Supabase = local dev mode, allow access
-        setIsAdmin(true);
-        setCheckingAuth(false);
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        // Not logged in, redirect to login
-        router.push('/login?redirect=/robot-companies');
-        return;
-      }
-
-      // User is logged in, grant access
-      setIsAdmin(true);
-      setCheckingAuth(false);
-    }
-
-    checkAuth();
-  }, [router]);
-
-  useEffect(() => {
-    if (!checkingAuth && isAdmin) {
-      loadStats();
-      loadCompanies();
-    }
-  }, [filter, checkingAuth, isAdmin]);
+    loadStats();
+    loadCompanies();
+  }, [filter]);
 
   async function loadStats() {
     try {
@@ -153,22 +120,6 @@ export default function RobotCompanies() {
     const fullEmail = `Subject: ${emailContent.subject}\n\n${emailContent.body}`;
     navigator.clipboard.writeText(fullEmail);
     alert('Email copied to clipboard!');
-  }
-
-  // Show loading state while checking authentication
-  if (checkingAuth) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '16px', fontSize: '18px', color: '#10B981' }}>🔒 Checking admin access...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render page content if not admin
-  if (!isAdmin) {
-    return null;
   }
 
   return (
