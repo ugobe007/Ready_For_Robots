@@ -2159,6 +2159,11 @@ export default function Dashboard() {
                   className="w-full text-left px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
                   &#8635; Refresh Data
                 </button>
+                <Link href="/search" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    🔍 Intelligence Search
+                  </div>
+                </Link>
                 <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
                   <div className="px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
                     💰 ROI Calculator
@@ -2231,6 +2236,11 @@ export default function Dashboard() {
             </button>
             {showMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+                <Link href="/search" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    🔍 Intelligence Search
+                  </div>
+                </Link>
                 <Link href="/admin" onClick={() => setShowMenu(false)}>
                   <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
                     ⚙️ Admin Panel
@@ -2599,13 +2609,86 @@ export default function Dashboard() {
             </div>
           )}
           
-          {/* intelligence search — primary tool, above the fold */}
-          <IntelSearchPanel 
-            onOpenLead={handleOpenFromSearch}
-            canPerformAction={canPerformAction}
-            trackUsage={trackUsage}
-            showPaywall={() => setShowPaywall(true)}
-          />
+          {/* CTA - Build Your Sales Pipeline */}
+          <div className="mb-6 border-2 border-cyan-700 rounded-lg bg-gradient-to-br from-cyan-950/20 via-neutral-950 to-neutral-950 overflow-hidden"
+            style={{ boxShadow: '0 0 20px rgba(34, 211, 238, 0.15)' }}>
+            <div className="p-8 md:p-10">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-800 flex items-center justify-center text-2xl">
+                  📊
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-bold text-cyan-400 mb-2"
+                    style={{ textShadow: '0 0 20px rgba(34, 211, 238, 0.3)' }}>
+                    Build Your Sales Pipeline & Customer Strategy Report
+                  </h2>
+                  <p className="text-neutral-300 text-sm md:text-base leading-relaxed">
+                    Get a personalized sales strategy report with prioritized leads, engagement tactics, and revenue forecasts 
+                    — powered by AI analysis of {summary.total || '400+'} automation-ready companies.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <span className="text-cyan-400 text-xl">✓</span>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200">Hot Lead Pipeline</p>
+                    <p className="text-xs text-neutral-500">Top 50 companies with automation intent signals</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-cyan-400 text-xl">✓</span>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200">Engagement Playbook</p>
+                    <p className="text-xs text-neutral-500">Signal-based content strategy & outreach sequence</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-cyan-400 text-xl">✓</span>
+                  <div>
+                    <p className="text-sm font-medium text-neutral-200">Revenue Forecast</p>
+                    <p className="text-xs text-neutral-500">Deal sizing & pipeline value projections</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {session ? (
+                  <>
+                    <Link href="/brief">
+                      <button className="px-6 py-3 rounded-lg text-sm font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg hover:shadow-cyan-500/50"
+                        style={{ boxShadow: '0 0 20px rgba(34, 211, 238, 0.4)' }}>
+                        📊 Build My Report Now
+                      </button>
+                    </Link>
+                    <Link href="/search">
+                      <button className="px-5 py-3 rounded-lg text-sm font-medium border border-cyan-700 text-cyan-400 hover:border-cyan-500 hover:text-cyan-300 transition-colors">
+                        🔍 Search Companies
+                      </button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <button className="px-6 py-3 rounded-lg text-sm font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-lg hover:shadow-cyan-500/50"
+                        style={{ boxShadow: '0 0 20px rgba(34, 211, 238, 0.4)' }}>
+                        Sign Up to Build Your Report
+                      </button>
+                    </Link>
+                    <Link href="/search">
+                      <button className="px-5 py-3 rounded-lg text-sm font-medium border border-cyan-700 text-cyan-400 hover:border-cyan-500 hover:text-cyan-300 transition-colors">
+                        🔍 Search Companies First
+                      </button>
+                    </Link>
+                    <span className="text-xs text-neutral-500">
+                      Free to browse · Sign in to save & build reports
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* strategic snapshot */}
           {!loading && leads.length > 0 && (
