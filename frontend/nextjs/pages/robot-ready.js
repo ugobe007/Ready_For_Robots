@@ -297,7 +297,6 @@ export default function RobotReady() {
                     onChange={(e) => setRobotDescription(e.target.value)}
                     placeholder="Describe your robot's capabilities, use cases, and key features...\n\nExample: Our autonomous delivery robot is designed for hospitals and hotels. It can navigate elevators, deliver items up to 50 lbs, has UV-C disinfection, operates 24/7, and integrates with building management systems."
                     required={inputMode === 'text'}
-                    required
                     rows={6}
                     className="w-full bg-neutral-900 border border-neutral-700 rounded px-4 py-3 text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-emerald-600"
                   />

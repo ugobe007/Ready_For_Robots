@@ -841,7 +841,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                 : 'border-neutral-800 text-neutral-400 hover:border-neutral-600'}`}>
               {reportSaved ? '◆ report saved' : savingReport ? '…' : '◇ save report'}
             </button>
-            <a href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-400 hover:border-neutral-600">profile</a>
+            <Link href="/profile" className="btn-ghost text-xs border-neutral-800 text-neutral-400 hover:border-neutral-600">profile</Link>
             <button onClick={onClose}
               className="text-neutral-400 hover:text-neutral-200 transition-colors px-2 py-1 text-sm">
               ✕

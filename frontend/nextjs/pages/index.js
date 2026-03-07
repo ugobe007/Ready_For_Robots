@@ -198,10 +198,11 @@ export default function Signals() {
         {/* Hero */}
         <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
           <div className="space-y-3">
+            <h1 className="text-lg text-white/90 font-medium tracking-wide">ready → ROBOTS</h1>
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE</div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
               Find buyers <span className="text-emerald-400">before they know</span> they need automation
-            </h1>
+            </h2>
             <p className="text-xl text-neutral-300 max-w-3xl">
               Signals are real-time indicators of buyer behavior — not stated intent. We observe <span className="text-emerald-400">what companies do</span>, not what they say.
             </p>
@@ -213,6 +214,38 @@ export default function Signals() {
             <p className="text-base text-neutral-200">
               Most robotics companies sell <span className="text-red-400">reactively</span> — responding to inbound RFPs when buyers are already comparing 5+ vendors. 
               Our signal intelligence lets you sell <span className="text-emerald-400">proactively</span> — engaging buyers 3-6 months before they enter procurement mode, when you can shape requirements and avoid competitive bidding.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Build Your Sales Pipeline
+              </h2>
+              <p className="text-neutral-300">
+                Enter your robot company URL to see top prospect matches — no signup required
+              </p>
+            </div>
+            <form onSubmit={handleBuildPipeline} className="flex gap-3">
+              <input
+                type="text"
+                value={robotUrl}
+                onChange={(e) => setRobotUrl(e.target.value)}
+                placeholder="amplibotics.ai"
+                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
+              >
+                Build Pipeline →
+              </button>
+            </form>
+            <p className="text-sm text-neutral-400">
+              ✓ Top 5 matches  ✓ Engagement strategy  ✓ No signup required
             </p>
           </div>
         </div>
@@ -284,38 +317,6 @@ export default function Signals() {
                      style={{ width: `${signalFlow.safety.value * 100}%` }}></div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
-            <div className="space-y-2">
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
-                Build Your Sales Pipeline
-              </h2>
-              <p className="text-neutral-300">
-                Enter your robot company URL to see top prospect matches — no signup required
-              </p>
-            </div>
-            <form onSubmit={handleBuildPipeline} className="flex gap-3">
-              <input
-                type="text"
-                value={robotUrl}
-                onChange={(e) => setRobotUrl(e.target.value)}
-                placeholder="amplibotics.ai"
-                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
-              >
-                Build Pipeline →
-              </button>
-            </form>
-            <p className="text-sm text-neutral-400">
-              ✓ Top 5 matches  ✓ Engagement strategy  ✓ No signup required
-            </p>
           </div>
         </div>
 
