@@ -16,6 +16,9 @@ export default function RobotCompanies() {
     workflow_notes: '',
     blockers: ''
   });
+  const [emailModal, setEmailModal] = useState(null);
+  const [emailContent, setEmailContent] = useState(null);
+  const [loadingEmail, setLoadingEmail] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -94,6 +97,29 @@ export default function RobotCompanies() {
     } catch (error) {
       console.error('Failed to update workflow:', error);
     }
+  }
+
+  async function generateEmail(company, templateType) {
+    setEmailModal(company);
+    setLoadingEmail(true);
+    setEmailContent(null);
+    
+    try {
+      const res = await fetch(`http://localhost:8000/api/robot-companies/${company.id}/email?template_type=${templateType}`);
+      const data = await res.json();
+      setEmailContent(data.email);
+    } catch (error) {
+      console.error('Failed to generate email:', error);
+      setEmailContent({ error: 'Failed to generate email' });
+    }
+    setLoadingEmail(false);
+  }
+
+  function copyEmail() {
+    if (!emailContent) return;
+    const fullEmail = `Subject: ${emailContent.subject}\n\n${emailContent.body}`;
+    navigator.clipboard.writeText(fullEmail);
+    alert('Email copied to clipboard!');
   }
 
   return (
@@ -295,29 +321,42 @@ export default function RobotCompanies() {
                       )}
                     </td>
                     <td style={tdStyle}>
-                      <button
-                        onClick={() => openWorkflowModal(comp)}
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #404040',
-                          color: '#10B981',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={e => {
-                          e.target.style.borderColor = '#10B981';
-                          e.target.style.color = '#10B981';
-                        }}
-                        onMouseLeave={e => {
-                          e.target.style.borderColor = '#404040';
-                          e.target.style.color = '#10B981';
-                        }}
-                      >
-                        Edit Workflow
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => generateEmail(comp, 'intro')}
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid #404040',
+                            color: '#06B6D4',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.target.style.borderColor = '#06B6D4'}
+                          onMouseLeave={e => e.target.style.borderColor = '#404040'}
+                        >
+                          📧 Email
+                        </button>
+                        <button
+                          onClick={() => openWorkflowModal(comp)}
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid #404040',
+                            color: '#10B981',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.target.style.borderColor = '#10B981'}
+                          onMouseLeave={e => e.target.style.borderColor = '#404040'}
+                        >
+                          Workflow
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -330,6 +369,176 @@ export default function RobotCompanies() {
           {filteredCompanies.length} companies
         </div>
       </div>
+
+      {/* Email Modal */}
+      {emailModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#0a0a0a',
+            border: '1px solid #262626',
+            borderRadius: '8px',
+            padding: '32px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#06B6D4' }}>
+                📧 Email Introduction: {emailModal.company_name}
+              </h2>
+              <button
+                onClick={() => setEmailModal(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#737373',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  padding: '0'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Template Type Selector */}
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['intro', 'demo', 'proposal', 'followup', 'hot_lead'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => generateEmail(emailModal, type)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid #404040',
+                    color: '#10B981',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {type.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+
+            {loadingEmail ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#525252' }}>
+                Generating personalized email...
+              </div>
+            ) : emailContent && !emailContent.error ? (
+              <div>
+                {/* Subject */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '8px' }}>
+                    Subject
+                  </label>
+                  <div style={{
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    borderRadius: '4px',
+                    padding: '12px',
+                    fontSize: '14px',
+                    color: '#fff',
+                    fontWeight: '500'
+                  }}>
+                    {emailContent.subject}
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '8px' }}>
+                    Email Body
+                  </label>
+                  <div style={{
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    borderRadius: '4px',
+                    padding: '16px',
+                    fontSize: '14px',
+                    color: '#a3a3a3',
+                    whiteSpace: 'pre-wrap',
+                    fontFamily: 'monospace',
+                    lineHeight: '1.6',
+                    maxHeight: '400px',
+                    overflow: 'auto'
+                  }}>
+                    {emailContent.body}
+                  </div>
+                </div>
+
+                {/* Follow-up reminder */}
+                {emailContent.suggested_followup_days && (
+                  <div style={{
+                    background: '#1a1a1a',
+                    border: '1px solid #262626',
+                    borderRadius: '4px',
+                    padding: '12px',
+                    fontSize: '13px',
+                    color: '#F59E0B',
+                    marginBottom: '20px'
+                  }}>
+                    💡 Suggested follow-up: {emailContent.suggested_followup_days} days
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={copyEmail}
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: '1px solid #06B6D4',
+                      color: '#06B6D4',
+                      padding: '12px 24px',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 Copy to Clipboard
+                  </button>
+                  <button
+                    onClick={() => setEmailModal(null)}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #404040',
+                      color: '#a3a3a3',
+                      padding: '12px 24px',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : emailContent?.error ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#EF4444' }}>
+                {emailContent.error}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {/* Workflow Modal */}
       {workflowModal && (

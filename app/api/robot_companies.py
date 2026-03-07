@@ -10,6 +10,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.models.robot_company import RobotCompany
+from app.services.email_templates import get_email_template
 
 router = APIRouter(prefix="/api/robot-companies", tags=["robot-companies"])
 
@@ -409,3 +410,91 @@ def get_upcoming_actions(days: int = 7, db: Session = Depends(get_db)):
         "count": len(companies),
         "days": days
     }
+
+
+@router.get("/{company_id}/email")
+def generate_email(
+    company_id: int,
+    template_type: str = Query("intro", description="intro, demo, proposal, followup, trade_show, hot_lead"),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate personalized email for company outreach
+    
+    Template types:
+    - intro: Initial introduction email
+    - demo: Request product demonstration
+    - proposal: Partnership proposal after demo
+    - followup: Follow-up for non-responsive leads
+    - trade_show: Trade show meeting invitation
+    - hot_lead: High-priority outreach for hot leads
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Convert company to dict for template
+    company_data = {
+        'company_name': company.company_name,
+        'robot_type': company.robot_type,
+        'target_market': company.target_market,
+        'us_presence': company.us_presence,
+        'lead_score': company.lead_score,
+        'unique_selling_points': company.unique_selling_points or [],
+        'website': company.website
+    }
+    
+    # Use workflow_stage if template_type is 'auto'
+    if template_type == 'auto':
+        template_type = company.workflow_stage or 'intro'
+    
+    email = get_email_template(template_type, company_data)
+    
+    return {
+        "company_id": company_id,
+        "company_name": company.company_name,
+        "template_type": template_type,
+        "email": email
+    }
+
+
+@router.post("/{company_id}/email/log")
+def log_email_sent(
+    company_id: int,
+    email_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Log that an email was sent to a company
+    Updates workflow notes and last contact date
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Update last contact date
+    company.last_contact_date = datetime.now()
+    
+    # Log to workflow notes
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    template_type = email_data.get('template_type', 'email')
+    subject = email_data.get('subject', 'Email sent')
+    
+    existing = company.workflow_notes or ""
+    company.workflow_notes = f"{existing}\n[{timestamp}] Sent {template_type} email: {subject}".strip()
+    
+    # Update outreach status if not contacted yet
+    if company.outreach_status == 'not_contacted':
+        company.outreach_status = 'contacted'
+    
+    db.commit()
+    db.refresh(company)
+    
+    return {
+        "message": "Email logged successfully",
+        "company": company.company_name,
+        "last_contact_date": str(company.last_contact_date)
+    }
+
