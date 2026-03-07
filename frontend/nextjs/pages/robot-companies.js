@@ -25,9 +25,9 @@ export default function RobotCompanies() {
   const [emailContent, setEmailContent] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
-  // Admin authentication check
+  // Authentication check - just verify user is logged in
   useEffect(() => {
-    async function checkAdmin() {
+    async function checkAuth() {
       if (!supabase) {
         // No Supabase = local dev mode, allow access
         setIsAdmin(true);
@@ -43,23 +43,12 @@ export default function RobotCompanies() {
         return;
       }
 
-      // Check if user is admin (you can customize this logic)
-      // For now, check if email matches admin emails
-      const adminEmails = ['admin@readyforrobots.com', 'robert@readyforrobots.com'];
-      const userIsAdmin = adminEmails.includes(user.email);
-
-      if (!userIsAdmin) {
-        // Not an admin, redirect to homepage
-        alert('Access denied. This page is for administrators only.');
-        router.push('/');
-        return;
-      }
-
+      // User is logged in, grant access
       setIsAdmin(true);
       setCheckingAuth(false);
     }
 
-    checkAdmin();
+    checkAuth();
   }, [router]);
 
   useEffect(() => {
