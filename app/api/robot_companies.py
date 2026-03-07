@@ -312,3 +312,100 @@ def update_robot_company(
     db.refresh(company)
     
     return company
+
+
+@router.put("/{company_id}/workflow")
+def update_workflow(
+    company_id: int,
+    workflow_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Update workflow next steps for a company
+    Body: {
+        "workflow_stage": "demo|outreach|proposal|negotiation|partnership",
+        "next_action": "Schedule product demo",
+        "next_action_date": "2026-03-15",
+        "assigned_to": "Sales Team",
+        "workflow_notes": "CEO interested in AMR solutions",
+        "blockers": null
+    }
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Update workflow fields
+    if "workflow_stage" in workflow_data:
+        old_stage = company.workflow_stage
+        company.workflow_stage = workflow_data["workflow_stage"]
+        
+        # Log to history
+        history = company.workflow_history or []
+        history.append({
+            "date": datetime.now().strftime('%Y-%m-%d %H:%M'),
+            "stage": workflow_data["workflow_stage"],
+            "previous_stage": old_stage,
+            "action": workflow_data.get("next_action", "Stage updated")
+        })
+        company.workflow_history = history
+    
+    if "next_action" in workflow_data:
+        company.next_action = workflow_data["next_action"]
+    if "next_action_date" in workflow_data:
+        company.next_action_date = datetime.fromisoformat(workflow_data["next_action_date"])
+    if "assigned_to" in workflow_data:
+        company.assigned_to = workflow_data["assigned_to"]
+    if "workflow_notes" in workflow_data:
+        # Append to running log
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+        existing = company.workflow_notes or ""
+        company.workflow_notes = f"{existing}\n[{timestamp}] {workflow_data['workflow_notes']}".strip()
+    if "blockers" in workflow_data:
+        company.blockers = workflow_data["blockers"]
+    
+    db.commit()
+    db.refresh(company)
+    
+    return {
+        "message": "Workflow updated",
+        "company": company.company_name,
+        "workflow_stage": company.workflow_stage,
+        "next_action": company.next_action,
+        "next_action_date": str(company.next_action_date) if company.next_action_date else None
+    }
+
+
+@router.get("/workflow/upcoming")
+def get_upcoming_actions(days: int = 7, db: Session = Depends(get_db)):
+    """
+    Get companies with upcoming next actions in the next N days
+    """
+    from datetime import timedelta
+    
+    cutoff_date = datetime.now() + timedelta(days=days)
+    
+    companies = db.query(RobotCompany).filter(
+        RobotCompany.next_action_date <= cutoff_date,
+        RobotCompany.next_action_date >= datetime.now()
+    ).order_by(RobotCompany.next_action_date).all()
+    
+    return {
+        "upcoming_actions": [
+            {
+                "id": c.id,
+                "company_name": c.company_name,
+                "workflow_stage": c.workflow_stage,
+                "next_action": c.next_action,
+                "next_action_date": str(c.next_action_date),
+                "assigned_to": c.assigned_to,
+                "priority_tier": c.priority_tier,
+                "lead_score": c.lead_score,
+                "blockers": c.blockers
+            }
+            for c in companies
+        ],
+        "count": len(companies),
+        "days": days
+    }

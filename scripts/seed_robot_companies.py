@@ -69,7 +69,11 @@ def seed_robot_companies():
             "lead_score": 78,
             "priority_tier": "hot",
             "outreach_status": "not_contacted",
-            "partnership_opportunity": "Expanding U.S. footprint, needs more integrator partners"
+            "partnership_opportunity": "Expanding U.S. footprint, needs more integrator partners",
+            "workflow_stage": "outreach",
+            "next_action": "Send partnership intro email",
+            "assigned_to": "Sales Team",
+            "workflow_notes": "[2026-03-07] Company showed interest at ProMat 2025. Need to follow up on distributor expansion plans."
         },
         {
             "company_name": "AUBO Robotics",
@@ -89,7 +93,12 @@ def seed_robot_companies():
             "lead_score": 85,
             "priority_tier": "hot",
             "outreach_status": "not_contacted",
-            "partnership_opportunity": "Strong cobot tech, needs extensive U.S. distribution network"
+            "partnership_opportunity": "Strong cobot tech, needs extensive U.S. distribution network",
+            "workflow_stage": "demo",
+            "next_action": "Schedule technical demo for cobot line",
+            "assigned_to": "Technical Team",
+            "workflow_notes": "[2026-03-05] Initial contact made. CEO interested in U.S. expansion. Demo scheduled for next week.",
+            "blockers": None
         },
         {
             "company_name": "JAKA Robotics",

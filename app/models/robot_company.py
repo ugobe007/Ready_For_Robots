@@ -83,6 +83,15 @@ class RobotCompany(Base):
     next_followup_date = Column(DateTime)
     outreach_notes = Column(Text)
     
+    # Workflow & Next Steps
+    workflow_stage = Column(String)  # research, outreach, demo, proposal, negotiation, partnership
+    next_action = Column(String)  # specific next step to take
+    next_action_date = Column(DateTime)  # when to take action
+    assigned_to = Column(String)  # team member responsible
+    workflow_notes = Column(Text)  # running log of workflow activity
+    workflow_history = Column(JSON)  # [{date, stage, action, outcome}]
+    blockers = Column(String)  # what's preventing progress
+    
     # Metadata
     data_source = Column(String)  # Crunchbase, trade show, manual research
     verified = Column(Boolean, default=False)

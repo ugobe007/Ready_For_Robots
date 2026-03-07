@@ -7,6 +7,15 @@ export default function RobotCompanies() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [workflowModal, setWorkflowModal] = useState(null);
+  const [workflowForm, setWorkflowForm] = useState({
+    workflow_stage: '',
+    next_action: '',
+    next_action_date: '',
+    assigned_to: '',
+    workflow_notes: '',
+    blockers: ''
+  });
 
   useEffect(() => {
     loadStats();
@@ -55,6 +64,37 @@ export default function RobotCompanies() {
   const filteredCompanies = companies.filter(comp => 
     search ? comp.company_name.toLowerCase().includes(search.toLowerCase()) : true
   );
+
+  function openWorkflowModal(company) {
+    setWorkflowModal(company);
+    setWorkflowForm({
+      workflow_stage: company.workflow_stage || '',
+      next_action: company.next_action || '',
+      next_action_date: company.next_action_date ? company.next_action_date.split('T')[0] : '',
+      assigned_to: company.assigned_to || '',
+      workflow_notes: '',
+      blockers: company.blockers || ''
+    });
+  }
+
+  async function saveWorkflow() {
+    if (!workflowModal) return;
+    
+    try {
+      const res = await fetch(`http://localhost:8000/api/robot-companies/${workflowModal.id}/workflow`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(workflowForm)
+      });
+      
+      if (res.ok) {
+        setWorkflowModal(null);
+        loadCompanies(); // Refresh list
+      }
+    } catch (error) {
+      console.error('Failed to update workflow:', error);
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', padding: '40px 20px' }}>
@@ -171,11 +211,11 @@ export default function RobotCompanies() {
                   <th style={thStyle}>Score</th>
                   <th style={thStyle}>Company</th>
                   <th style={thStyle}>Type</th>
-                  <th style={thStyle}>Country</th>
                   <th style={thStyle}>U.S. Presence</th>
                   <th style={thStyle}>Urgency</th>
-                  <th style={thStyle}>Wave</th>
-                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Workflow</th>
+                  <th style={thStyle}>Next Action</th>
+                  <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,7 +247,6 @@ export default function RobotCompanies() {
                         {comp.robot_type}
                       </span>
                     </td>
-                    <td style={{...tdStyle, color: '#a3a3a3'}}>{comp.country}</td>
                     <td style={tdStyle}>
                       {comp.us_presence === 'none' ? (
                         <span style={{ color: '#F59E0B', fontSize: '13px' }}>None</span>
@@ -227,24 +266,58 @@ export default function RobotCompanies() {
                       )}
                     </td>
                     <td style={tdStyle}>
-                      <span style={{ 
-                        color: comp.market_entry_wave === 'wave_2' ? '#10B981' : 
-                               comp.market_entry_wave === 'wave_3' ? '#06B6D4' : '#525252',
-                        fontSize: '13px'
-                      }}>
-                        {comp.market_entry_wave?.replace('wave_', 'Wave ')}
-                      </span>
+                      {comp.workflow_stage ? (
+                        <span style={{
+                          color: comp.workflow_stage === 'partnership' ? '#10B981' :
+                                 comp.workflow_stage === 'demo' ? '#06B6D4' :
+                                 comp.workflow_stage === 'proposal' ? '#F59E0B' : '#a3a3a3',
+                          fontSize: '12px',
+                          textTransform: 'capitalize'
+                        }}>
+                          {comp.workflow_stage}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#525252', fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                      {comp.next_action ? (
+                        <span style={{ color: '#a3a3a3', fontSize: '12px' }}>
+                          {comp.next_action}
+                          {comp.next_action_date && (
+                            <span style={{ marginLeft: '6px', color: '#525252' }}>
+                              ({new Date(comp.next_action_date).toLocaleDateString()})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#525252', fontSize: '12px' }}>—</span>
+                      )}
                     </td>
                     <td style={tdStyle}>
-                      <span style={{
-                        color: comp.outreach_status === 'partnership' ? '#10B981' :
-                               comp.outreach_status === 'meeting_scheduled' ? '#06B6D4' :
-                               comp.outreach_status === 'responded' ? '#F59E0B' :
-                               comp.outreach_status === 'contacted' ? '#a3a3a3' : '#525252',
-                        fontSize: '12px'
-                      }}>
-                        {comp.outreach_status?.replace('_', ' ') || 'not contacted'}
-                      </span>
+                      <button
+                        onClick={() => openWorkflowModal(comp)}
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid #404040',
+                          color: '#10B981',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                          e.target.style.borderColor = '#10B981';
+                          e.target.style.color = '#10B981';
+                        }}
+                        onMouseLeave={e => {
+                          e.target.style.borderColor = '#404040';
+                          e.target.style.color = '#10B981';
+                        }}
+                      >
+                        Edit Workflow
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -257,6 +330,215 @@ export default function RobotCompanies() {
           {filteredCompanies.length} companies
         </div>
       </div>
+
+      {/* Workflow Modal */}
+      {workflowModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#0a0a0a',
+            border: '1px solid #262626',
+            borderRadius: '8px',
+            padding: '32px',
+            maxWidth: '600px',
+            width: '90%'
+          }}>
+            <h2 style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: '#10B981', 
+              marginBottom: '20px' 
+            }}>
+              Workflow: {workflowModal.company_name}
+            </h2>
+
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {/* Workflow Stage */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Workflow Stage
+                </label>
+                <select
+                  value={workflowForm.workflow_stage}
+                  onChange={e => setWorkflowForm({...workflowForm, workflow_stage: e.target.value})}
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Select stage...</option>
+                  <option value="research">Research</option>
+                  <option value="outreach">Outreach</option>
+                  <option value="demo">Demo Scheduled</option>
+                  <option value="proposal">Proposal Sent</option>
+                  <option value="negotiation">Negotiation</option>
+                  <option value="partnership">Partnership</option>
+                </select>
+              </div>
+
+              {/* Next Action */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Next Action
+                </label>
+                <input
+                  type="text"
+                  value={workflowForm.next_action}
+                  onChange={e => setWorkflowForm({...workflowForm, next_action: e.target.value})}
+                  placeholder="e.g., Send partnership intro email"
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Next Action Date */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Next Action Date
+                </label>
+                <input
+                  type="date"
+                  value={workflowForm.next_action_date}
+                  onChange={e => setWorkflowForm({...workflowForm, next_action_date: e.target.value})}
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Assigned To */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Assigned To
+                </label>
+                <input
+                  type="text"
+                  value={workflowForm.assigned_to}
+                  onChange={e => setWorkflowForm({...workflowForm, assigned_to: e.target.value})}
+                  placeholder="e.g., Sales Team, Technical Team"
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Workflow Notes */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Add Note
+                </label>
+                <textarea
+                  value={workflowForm.workflow_notes}
+                  onChange={e => setWorkflowForm({...workflowForm, workflow_notes: e.target.value})}
+                  placeholder="Log activity, notes, outcomes..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              {/* Blockers */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#737373', marginBottom: '6px' }}>
+                  Blockers
+                </label>
+                <input
+                  type="text"
+                  value={workflowForm.blockers}
+                  onChange={e => setWorkflowForm({...workflowForm, blockers: e.target.value})}
+                  placeholder="What's preventing progress?"
+                  style={{
+                    width: '100%',
+                    background: '#0a0a0a',
+                    border: '1px solid #404040',
+                    color: '#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button
+                  onClick={saveWorkflow}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: '1px solid #10B981',
+                    color: '#10B981',
+                    padding: '12px 24px',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save Workflow
+                </button>
+                <button
+                  onClick={() => setWorkflowModal(null)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: '1px solid #404040',
+                    color: '#a3a3a3',
+                    padding: '12px 24px',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
