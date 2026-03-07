@@ -147,7 +147,7 @@ export default function PipelineResults() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-800">
-                            Score: {lead.score || 85}
+                          Score: {typeof lead.score === 'object' ? lead.score.overall_score : (lead.score || 85)}
                           </span>
                         </div>
                       </div>
