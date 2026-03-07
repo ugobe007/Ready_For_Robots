@@ -19,6 +19,7 @@ from app.api.robot_ready import router as robot_ready_router
 from app.api.analytics import router as analytics_router
 from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
+from app.api.robot_companies import router as robot_companies_router
 from app.database import Base, engine
 import app.models
 import app.models.shared_calculation
@@ -54,6 +55,7 @@ app.include_router(robot_ready_router, prefix="/api/robot-ready", tags=["robot-r
 app.include_router(analytics_router, prefix="/api", tags=["analytics"])
 app.include_router(share_router, prefix="/api", tags=["share"])
 app.include_router(playbook_router, prefix="/api", tags=["playbook"])
+app.include_router(robot_companies_router, tags=["robot-companies"])
 
 @app.get("/health")
 def health():
