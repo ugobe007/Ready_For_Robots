@@ -350,79 +350,6 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* The 25 Strongest Buying Signals */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">The 25 Strongest Automation Buying Signals</h2>
-            <p className="text-neutral-400">
-              These signals appear in job listings, earnings calls, LinkedIn posts, and industry forums — they're the strongest predictors of automation adoption within 3-12 months.
-            </p>
-          </div>
-
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveCategory('all')}
-              className={`px-3 py-1.5 text-xs rounded border transition-colors ${
-                activeCategory === 'all' 
-                  ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20' 
-                  : 'border-neutral-700 text-neutral-400 hover:border-neutral-600'
-              }`}
-            >
-              All Signals (25)
-            </button>
-            {signalCategories.map(cat => {
-              const colors = getColorClasses(cat.color);
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-3 py-1.5 text-xs rounded border transition-colors ${
-                    activeCategory === cat.id
-                      ? `${colors.border} ${colors.text} ${colors.bg}`
-                      : 'border-neutral-700 text-neutral-400 hover:border-neutral-600'
-                  }`}
-                >
-                  {cat.name} ({cat.signals.length})
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Signal Cards by Category */}
-          <div className="space-y-6">
-            {filteredCategories.map(category => {
-              const colors = getColorClasses(category.color);
-              return (
-                <div key={category.id} className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-1 w-12 ${colors.gradient} rounded`}></div>
-                    <h3 className={`text-xl font-bold ${colors.cardText}`}>{category.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded border ${colors.cardBorder} ${colors.cardBg} ${colors.cardText}`}>
-                      {category.strength}
-                    </span>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {category.signals.map((signal, idx) => (
-                      <div key={idx} className={`border ${colors.cardBorder} ${colors.cardBg} rounded-lg p-4 space-y-2`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className={`font-semibold ${colors.cardText}`}>{signal.name}</div>
-                          <div className="text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 font-mono">
-                            {signal.weight.toFixed(1)}
-                          </div>
-                        </div>
-                        <p className={`text-sm ${colors.quoteText} italic`}>
-                          {signal.description}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {/* RASS Scoring Algorithm */}
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
           <div className="space-y-2">
@@ -482,6 +409,43 @@ export default function Signals() {
             <p className="text-xs text-cyan-400/80">
               This 3-month signal progression indicates a buyer entering active evaluation mode. Companies showing this pattern convert at 4x the baseline rate.
             </p>
+          </div>
+        </div>
+
+        {/* The 25 Strongest Buying Signals - Inline Text */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">The 25 Strongest Automation Buying Signals</h2>
+            <p className="text-neutral-400">
+              These signals appear in job listings, earnings calls, LinkedIn posts, and industry forums — they're the strongest predictors of automation adoption within 3-12 months.
+            </p>
+          </div>
+
+          {/* Inline Text Summaries by Category */}
+          <div className="space-y-6">
+            {signalCategories.map(category => {
+              const colors = getColorClasses(category.color);
+              return (
+                <div key={category.id} className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-1 w-12 ${colors.gradient} rounded`}></div>
+                    <h3 className={`text-lg font-bold ${colors.cardText}`}>{category.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded border ${colors.cardBorder} ${colors.cardBg} ${colors.cardText}`}>
+                      {category.strength}
+                    </span>
+                  </div>
+                  <div className="text-sm text-neutral-300 leading-relaxed">
+                    {category.signals.map((signal, idx) => (
+                      <span key={idx}>
+                        <span className="font-semibold text-white">{signal.name}</span>
+                        <span className="text-neutral-500"> ({signal.weight.toFixed(1)})</span>
+                        {idx < category.signals.length - 1 ? ' · ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
