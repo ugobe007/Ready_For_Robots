@@ -2613,51 +2613,45 @@ export default function Dashboard() {
           <div className="mb-6 border border-emerald-800 rounded px-5 py-4 bg-neutral-950/50">
             <div className="space-y-3">
               <div>
-                <h2 className="text-base font-semibold text-emerald-400 mb-1">
-                  Build Your Sales Pipeline & Customer Strategy Report
+                <h2 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-2">
+                  Build Your Sales Pipeline
                 </h2>
                 <p className="text-sm text-neutral-400 leading-relaxed">
-                  Get a personalized sales strategy report with prioritized leads, engagement tactics, and revenue forecasts — powered by AI analysis of {summary.total || '400+'} automation-ready companies.
+                  Enter your robot company URL to instantly discover automation-ready prospects, intent signals, and a personalized engagement strategy.
                 </p>
               </div>
 
               <div className="text-xs text-neutral-500 space-y-1">
-                <p>✓ Hot Lead Pipeline — Top 50 companies with automation intent signals</p>
-                <p>✓ Engagement Playbook — Signal-based content strategy & outreach sequence</p>
-                <p>✓ Revenue Forecast — Deal sizing & pipeline value projections</p>
+                <p>✓ Top 5 prospect matches with automation intent signals</p>
+                <p>✓ Signal-based engagement strategy & outreach tactics</p>
+                <p>✓ No signup required — see value first</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                {session ? (
-                  <>
-                    <Link href="/brief">
-                      <button className="px-4 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-600 hover:bg-emerald-900/30 transition-colors">
-                        Build My Report Now
-                      </button>
-                    </Link>
-                    <Link href="/search">
-                      <button className="px-4 py-2 rounded text-sm border border-neutral-700 text-neutral-400 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
-                        Search Companies
-                      </button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login">
-                      <button className="px-4 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-600 hover:bg-emerald-900/30 transition-colors">
-                        Sign Up to Build Your Report
-                      </button>
-                    </Link>
-                    <Link href="/search">
-                      <button className="px-4 py-2 rounded text-sm border border-neutral-700 text-neutral-400 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
-                        Search Companies First
-                      </button>
-                    </Link>
-                    <span className="text-xs text-neutral-600">
-                      Free to browse · Sign in to save & build reports
-                    </span>
-                  </>
-                )}
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <input
+                  type="text"
+                  placeholder="Enter your company URL (e.g., robotcompany.com)"
+                  className="flex-1 px-4 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-sm placeholder-neutral-600 focus:border-emerald-600 focus:outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const url = e.target.value.trim();
+                      if (url) {
+                        window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                      }
+                    }
+                  }}
+                />
+                <button 
+                  onClick={(e) => {
+                    const input = e.target.closest('div').querySelector('input');
+                    const url = input.value.trim();
+                    if (url) {
+                      window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                    }
+                  }}
+                  className="px-6 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-600 hover:bg-emerald-900/30 transition-colors whitespace-nowrap">
+                  Build Pipeline
+                </button>
               </div>
             </div>
           </div>
