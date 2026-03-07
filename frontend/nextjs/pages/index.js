@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Head from 'next/head';
 
 export default function Signals() {
@@ -224,11 +225,31 @@ export default function Signals() {
       </Head>
 
       <div className="min-h-screen bg-black text-white">
-        {/* Header */}
+        {/* Navigation Bar */}
         <div className="border-b border-neutral-800">
           <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="text-sm text-neutral-400 text-center">
-              Signal Intelligence Framework
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-8">
+                <h1 className="text-lg font-semibold text-white">
+                  <span className="text-white">READY</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
+                </h1>
+                <nav className="hidden md:flex items-center gap-6 text-sm">
+                  <a href="#leads" className="text-neutral-400 hover:text-emerald-400 transition-colors">Browse Leads</a>
+                  <a href="#signals" className="text-neutral-400 hover:text-emerald-400 transition-colors">How It Works</a>
+                  <Link href="/about" className="text-neutral-400 hover:text-emerald-400 transition-colors">About</Link>
+                  <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calculator</Link>
+                </nav>
+              </div>
+              <div className="flex items-center gap-4">
+                <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+                <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
+                  Sign Up Free
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -236,22 +257,21 @@ export default function Signals() {
         {/* Hero */}
         <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
           <div className="space-y-3">
-            <h1 className="text-lg text-white/90 font-medium tracking-wide">ready → ROBOTS</h1>
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE</div>
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
               Find buyers <span className="text-emerald-400">before they know</span> they need automation
             </h2>
             <p className="text-xl text-neutral-300 max-w-3xl">
-              Signals are real-time indicators of buyer behavior — not stated intent. We observe <span className="text-emerald-400">what companies do</span>, not what they say.
+              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier — when you can shape requirements and win without competitive bidding.
             </p>
           </div>
 
           {/* Key Insight */}
           <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-2">
-            <div className="text-sm font-semibold text-emerald-400">Strategic Insight</div>
+            <div className="text-sm font-semibold text-emerald-400">💡 Why This Matters</div>
             <p className="text-base text-neutral-200">
-              Most robotics companies sell <span className="text-red-400">reactively</span> — responding to inbound RFPs when buyers are already comparing 5+ vendors. 
-              Our signal intelligence lets you sell <span className="text-emerald-400">proactively</span> — engaging buyers 3-6 months before they enter procurement mode, when you can shape requirements and avoid competitive bidding.
+              We monitor <span className="text-emerald-400">162 companies</span> showing automation buying signals right now — labor shortages, expansion plans, safety issues. 
+              These aren't leads "thinking about" robots someday. These are <span className="text-red-400">live opportunities</span> where automation solves urgent problems.
             </p>
           </div>
         </div>
@@ -331,12 +351,12 @@ export default function Signals() {
         </div>
 
         {/* Strategic Snapshot - Top Hot Deals */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+        <div id="leads" className="max-w-6xl mx-auto px-4 py-8 space-y-4">
           <div>
-            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">STRATEGIC SNAPSHOT</div>
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">🔥 STRATEGIC SNAPSHOT</div>
             <h2 className="text-2xl font-bold text-white mb-2">Top Hot Deals Today</h2>
             <p className="text-sm text-neutral-400">
-              Highest-priority automation buyers detected in the last 24 hours
+              Live companies with urgent automation needs — click any company to see full AI analysis
             </p>
           </div>
 
@@ -418,6 +438,161 @@ export default function Signals() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Browse All Leads by Industry */}
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="border border-neutral-800 rounded-lg p-6 text-center space-y-3">
+            <h3 className="text-lg font-semibold text-white">Browse All {leads.length} Leads by Industry</h3>
+            <p className="text-sm text-neutral-400">
+              View complete database organized by Logistics, Hospitality, Healthcare, Food Service, and more
+            </p>
+            <Link 
+              href="/index_old_dashboard" 
+              className="inline-block px-6 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-950/30 transition-colors"
+            >
+              View Full Dashboard →
+            </Link>
+          </div>
+        </div>
+
+        {/* What Are Buying Signals? */}
+        <div id="signals" className="max-w-6xl mx-auto px-4 py-12 space-y-6">
+          <div className="space-y-3">
+            <div className="text-xs text-cyan-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE</div>
+            <h2 className="text-3xl font-bold text-white">What Are Buying Signals?</h2>
+            <p className="text-lg text-neutral-300 max-w-3xl">
+              Signals are <span className="text-emerald-400">real-world indicators</span> that a company needs automation — before they post an RFP or contact vendors.
+            </p>
+          </div>
+
+          {/* Signal Categories */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="border border-red-800/30 bg-red-950/10 rounded-lg p-5 space-y-3">
+              <div className="text-red-400 font-semibold text-lg">🔥 Labor Shortage Signals</div>
+              <div className="text-sm text-neutral-300 space-y-2">
+                <p>"We can't find enough workers to cover shifts"</p>
+                <p>"Turnover is killing us — constant training"</p>
+                <p>"Wages up 30%, still can't fill positions"</p>
+              </div>
+              <div className="text-xs text-red-400/80 italic">Strongest automation trigger (35% weight)</div>
+            </div>
+
+            <div className="border border-emerald-800/30 bg-emerald-950/10 rounded-lg p-5 space-y-3">
+              <div className="text-emerald-400 font-semibold text-lg">📈 Expansion Signals</div>
+              <div className="text-sm text-neutral-300 space-y-2">
+                <p>"Opening new facility next quarter"</p>
+                <p>"Need 24/7 operations but can't staff it"</p>
+                <p>"Scaling to meet new demand"</p>
+              </div>
+              <div className="text-xs text-emerald-400/80 italic">Growth-driven automation (25% weight)</div>
+            </div>
+
+            <div className="border border-amber-800/30 bg-amber-950/10 rounded-lg p-5 space-y-3">
+              <div className="text-amber-400 font-semibold text-lg">⚠️ Safety Signals</div>
+              <div className="text-sm text-neutral-300 space-y-2">
+                <p>"OSHA citation for repetitive stress"</p>
+                <p>"Multiple injuries in manual operations"</p>
+                <p>"Heavy lifting causing worker comp claims"</p>
+              </div>
+              <div className="text-xs text-amber-400/80 italic">Risk reduction driver (20% weight)</div>
+            </div>
+          </div>
+
+          <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-6 space-y-3">
+            <div className="font-semibold text-cyan-400">How We Score Leads</div>
+            <p className="text-sm text-neutral-300">
+              Every company gets a score (0-100) based on <span className="text-cyan-400">4 factors</span>:
+            </p>
+            <div className="grid md:grid-cols-4 gap-4 mt-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">35%</div>
+                <div className="text-xs text-neutral-400 mt-1">Labor Pain</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">30%</div>
+                <div className="text-xs text-neutral-400 mt-1">Expansion</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">25%</div>
+                <div className="text-xs text-neutral-400 mt-1">Automation Fit</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">10%</div>
+                <div className="text-xs text-neutral-400 mt-1">Timing</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Success Stories */}
+        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
+          <div className="space-y-3">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SUCCESS STORIES</div>
+            <h2 className="text-3xl font-bold text-white">Real Signals → Real Deals</h2>
+            <p className="text-lg text-neutral-300 max-w-3xl">
+              How robotics companies are using signals to close deals before RFPs
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border border-neutral-800 rounded-lg p-6 space-y-3">
+              <div className="text-emerald-400 font-semibold">Regional Hotel Chain → AMR Deployment</div>
+              <div className="text-sm text-neutral-300">
+                <p className="mb-2"><span className="text-neutral-500">Signal detected:</span> "Can't staff overnight shifts" + "40% housekeeping vacancy" in earnings call</p>
+                <p className="mb-2"><span className="text-neutral-500">Action:</span> Reached out 4 months before RFP with overnight automation case study</p>
+                <p><span className="text-emerald-400">Result:</span> Shaped requirements, won pilot without competition → 15-robot deployment</p>
+              </div>
+            </div>
+
+            <div className="border border-neutral-800 rounded-lg p-6 space-y-3">
+              <div className="text-emerald-400 font-semibold">3PL Warehouse → Palletizing System</div>
+              <div className="text-sm text-neutral-300">
+                <p className="mb-2"><span className="text-neutral-500">Signal detected:</span> "Opening 2 new DCs" + posting for "automation engineer"</p>
+                <p className="mb-2"><span className="text-neutral-500">Action:</span> Contacted during facility design phase with layout recommendations</p>
+                <p><span className="text-emerald-400">Result:</span> Designed automation into new buildings → $2.4M contract</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Clear Next Steps */}
+        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
+          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-8 space-y-6">
+            <div className="space-y-3">
+              <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">GET STARTED</div>
+              <h2 className="text-3xl font-bold text-white">Your Action Plan</h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <div className="text-emerald-400 font-bold text-xl">1. Try It Free</div>
+                <p className="text-sm text-neutral-300">
+                  Enter your robot company URL above to see your top 5 prospects instantly — no signup required
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-emerald-400 font-bold text-xl">2. Browse Database</div>
+                <p className="text-sm text-neutral-300">
+                  View all {hotCount} HOT leads organized by industry — see signals, scores, and contact insights
+                </p>
+                <Link href="/index_old_dashboard" className="text-xs text-cyan-400 hover:text-cyan-300 underline inline-block mt-1">
+                  View Dashboard →
+                </Link>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-emerald-400 font-bold text-xl">3. Get Daily Alerts</div>
+                <p className="text-sm text-neutral-300">
+                  Sign up to receive new hot leads the moment signals are detected — be first to engage
+                </p>
+                <Link href="/login" className="text-xs text-cyan-400 hover:text-cyan-300 underline inline-block mt-1">
+                  Create Free Account →
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* RASS Scoring Algorithm */}
