@@ -255,7 +255,7 @@ export default function Signals() {
         </div>
 
         {/* Hero */}
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
+        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12">
           <div className="space-y-6">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
@@ -275,9 +275,10 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Lead Statistics - Hot Leads Bar */}
-        <div className="max-w-5xl mx-auto px-6 pb-12">
-          <div className="border border-neutral-800 rounded-lg py-6 px-6">
+        {/* Lead Statistics - Hot Leads Bar (hidden when no data) */}
+        {!loading && leads.length > 0 && (
+        <div className="max-w-5xl mx-auto px-6 pb-8">
+          <div className="border border-neutral-800 rounded-lg py-4 px-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-white">{leads.length}</div>
@@ -298,10 +299,11 @@ export default function Signals() {
             </div>
           </div>
         </div>
+        )}
 
         {/* CTA - Build Your Pipeline */}
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <div className="border border-emerald-500 rounded-lg px-6 py-8">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div className="border border-emerald-500 rounded-lg px-6 py-6">
             <div className="space-y-6">
               <div className="space-y-3">
                 <h2 className="text-2xl md:text-3xl font-bold text-white">
@@ -348,7 +350,7 @@ export default function Signals() {
         </div>
 
         {/* Strategic Snapshot - Top Hot Deals */}
-        <div id="leads" className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-8">
+        <div id="leads" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-8">
           <div className="space-y-3">
             <div className="text-xs text-red-400 font-semibold uppercase tracking-widest">🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Top Hot Deals Today</h2>
@@ -438,8 +440,8 @@ export default function Signals() {
         </div>
 
         {/* Browse All Leads by Industry */}
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <div className="border border-neutral-800 rounded-lg p-10 text-center space-y-4">
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          <div className="border border-neutral-800 rounded-lg p-8 text-center space-y-4">
             <h3 className="text-2xl font-semibold text-white">Browse All {leads.length} Leads by Industry</h3>
             <p className="text-neutral-400 max-w-2xl mx-auto">
               View complete database organized by Logistics, Hospitality, Healthcare, Food Service, and more
@@ -456,7 +458,7 @@ export default function Signals() {
         </div>
 
         {/* What Are Buying Signals? */}
-        <div id="signals" className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+        <div id="signals" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
           <div className="text-center space-y-4">
             <div className="text-xs text-cyan-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">What Are Buying Signals?</h2>
@@ -527,7 +529,7 @@ export default function Signals() {
         </div>
 
         {/* Success Stories */}
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
           <div className="text-center space-y-4">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SUCCESS STORIES</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Real Signals → Real Deals</h2>
@@ -558,8 +560,8 @@ export default function Signals() {
         </div>
 
         {/* Clear Next Steps */}
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
-          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-8 space-y-6">
+        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
+          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-6">
             <div className="space-y-3">
               <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">GET STARTED</div>
               <h2 className="text-3xl font-bold text-white">Your Action Plan</h2>
