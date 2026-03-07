@@ -2134,28 +2134,19 @@ export default function Dashboard() {
       <header className="mb-6 md:mb-10">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="flex items-center gap-3 md:gap-4 mb-2">
-              {/* RFR Logo Badge - Linear-inspired */}
-              <div className="relative inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border-2 border-transparent"
-                style={{ 
-                  backgroundClip: 'padding-box',
-                  borderImage: 'linear-gradient(135deg, #10B981, #06B6D4) 1',
-                  boxShadow: '0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1)'
+            <div className="mb-2">
+              {/* READY → ROBOTS Wordmark - Option 4 */}
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  textShadow: '0 0 30px rgba(16, 185, 129, 0.3)'
                 }}>
-                {/* Robot antenna detail */}
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-2 bg-gradient-to-t from-emerald-400 to-transparent" />
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400"
-                  style={{ boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)' }} />
-                <span className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-br from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                  RFR
-                </span>
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-neutral-100 tracking-tight">
-                  Ready For Robots
-                </h1>
-                <p className="text-xs md:text-sm text-neutral-400 mt-0.5">Intent Signal Intelligence → Sales-Ready Leads</p>
-              </div>
+                READY → ROBOTS
+              </h1>
+              <p className="text-xs md:text-sm text-neutral-400">Intent Signal Intelligence → Sales-Ready Leads</p>
             </div>
           </div>
           
@@ -2622,29 +2613,63 @@ export default function Dashboard() {
             </div>
           )}
           
-          {/* CTA - Build Your Sales Pipeline (Supabase style inline) */}
-          <div className="mb-6 border border-emerald-800 rounded px-5 py-4 bg-neutral-950/50">
-            <div className="space-y-3">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-emerald-400 mb-2">
-                  Build Your Sales Pipeline
+          {/* CTA - Enhanced Visual Design */}
+          <div className="mb-6 rounded-lg overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              boxShadow: '0 0 30px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            }}>
+            <div className="px-6 py-5 md:px-8 md:py-6">
+              {/* Headline with stronger copy */}
+              <div className="mb-4">
+                <h2 className="text-3xl md:text-4xl font-bold mb-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    letterSpacing: '-0.02em'
+                  }}>
+                  Find Your Next 5 Customers
                 </h2>
-                <p className="text-sm text-neutral-400 leading-relaxed">
-                  Enter your robot company URL to instantly discover automation-ready prospects, intent signals, and a personalized engagement strategy.
+                <p className="text-base md:text-lg text-neutral-300 leading-relaxed">
+                  Get instant access to automation-ready prospects with active buying signals — in 30 seconds.
                 </p>
               </div>
 
-              <div className="text-xs text-neutral-500 space-y-1">
-                <p>✓ Top 5 prospect matches with automation intent signals</p>
-                <p>✓ Signal-based engagement strategy & outreach tactics</p>
-                <p>✓ No signup required — see value first</p>
+              {/* Benefits Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                <div className="flex items-start gap-2">
+                  <div className="text-emerald-400 text-lg mt-0.5">⚡</div>
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-200">Instant Results</div>
+                    <div className="text-xs text-neutral-400">5 qualified prospects in seconds</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="text-cyan-400 text-lg mt-0.5">🎯</div>
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-200">Active Intent Signals</div>
+                    <div className="text-xs text-neutral-400">Funding, hiring, expansion alerts</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="text-emerald-400 text-lg mt-0.5">📋</div>
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-200">Engagement Playbook</div>
+                    <div className="text-xs text-neutral-400">8-week outreach strategy included</div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              {/* Input + Button with better hierarchy */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
-                  placeholder="Enter your company URL (e.g., robotcompany.com)"
-                  className="flex-1 px-4 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-300 text-sm placeholder-neutral-600 focus:border-emerald-600 focus:outline-none"
+                  placeholder="Enter your robotics company URL..."
+                  className="flex-1 px-5 py-3 rounded-lg text-sm bg-neutral-900/80 border border-neutral-700/50 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-emerald-500/50 focus:bg-neutral-900 transition-all"
+                  style={{ boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const url = e.target.value.trim();
@@ -2654,7 +2679,7 @@ export default function Dashboard() {
                     }
                   }}
                 />
-                <button 
+                <button
                   onClick={(e) => {
                     const input = e.target.closest('div').querySelector('input');
                     const url = input.value.trim();
@@ -2662,13 +2687,27 @@ export default function Dashboard() {
                       window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
                     }
                   }}
-                  className="px-6 py-2 rounded text-sm font-medium border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-500 hover:bg-emerald-900/30 transition-all whitespace-nowrap"
-                  style={{ boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)' }}
-                  onMouseEnter={(e) => e.target.style.boxShadow = '0 0 16px rgba(16, 185, 129, 0.3)'}
-                  onMouseLeave={(e) => e.target.style.boxShadow = '0 0 12px rgba(16, 185, 129, 0.15)'}>
-                  Build Pipeline
+                  className="px-8 py-3 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap"
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.boxShadow = '0 4px 14px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  Get My Pipeline →
                 </button>
               </div>
+
+              {/* Social proof */}
+              <p className="text-xs text-neutral-500 mt-3 text-center sm:text-left">
+                ✓ No signup required · ✓ See results instantly · ✓ Free to try
+              </p>
             </div>
           </div>
 
