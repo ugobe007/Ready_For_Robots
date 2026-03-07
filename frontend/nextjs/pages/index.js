@@ -239,11 +239,13 @@ export default function Signals() {
 
         {/* Ticker Line - Hot Leads Count */}
         <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="text-neutral-400">🔥</span>
-            <span className="text-white font-semibold">{hotLeadsCount}</span>
-            <span className="text-neutral-400">hot leads collected in the past 24 hours</span>
-            <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full animate-pulse ml-1"></span>
+          <div className="border border-neutral-700 rounded-lg py-3 px-4">
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-neutral-400">🔥</span>
+              <span className="text-white font-semibold">{hotLeadsCount}</span>
+              <span className="text-neutral-400">hot leads collected in the past 24 hours</span>
+              <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full animate-pulse ml-1"></span>
+            </div>
           </div>
         </div>
 
