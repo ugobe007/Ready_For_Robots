@@ -73,6 +73,12 @@ export default function Signals() {
   const hotCount = leads.filter(l => l.temperature === 'hot').length;
   const warmCount = leads.filter(l => l.temperature === 'warm').length;
   const coldCount = leads.filter(l => l.temperature === 'cold').length;
+  
+  // Calculate total signals and find hottest
+  const totalSignals = leads.reduce((sum, lead) => sum + (lead.signals?.length || 0), 0);
+  const hottestSignal = leads
+    .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
+    .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
 
   // Filter and group leads by industry, limit to 10 per industry
   const getFilteredLeads = () => {
@@ -261,9 +267,33 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Lead Statistics */}
+        {/* Lead Statistics - Hot Leads Bar */}
         <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="border border-neutral-700 rounded-lg py-3 px-4">
+          <div className="border border-emerald-700/50 bg-emerald-950/20 rounded-lg py-4 px-5">
+            <div className="flex items-center justify-between gap-6 text-sm flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-400 font-semibold">📊 Total Leads:</span>
+                <span className="text-white text-lg font-bold">{leads.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-red-400 font-semibold">🔥 Hot Leads:</span>
+                <span className="text-white text-lg font-bold">{hotCount}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-400 font-semibold">⚡ Total Signals:</span>
+                <span className="text-white text-lg font-bold">{totalSignals}</span>
+              </div>
+              <div className="flex items-center gap-2 max-w-md">
+                <span className="text-amber-400 font-semibold">🎯 Hottest:</span>
+                <span className="text-white text-sm truncate">
+                  {hottestSignal ? `${hottestSignal.signal_type} @ ${hottestSignal.company}` : 'Loading...'}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Temperature Filter Buttons */}
+          <div className="mt-3 border border-neutral-700 rounded-lg py-3 px-4">
             <div className="flex items-center justify-center gap-6 text-base flex-wrap">
               <button
                 onClick={() => setTemperatureFilter('all')}
@@ -271,7 +301,7 @@ export default function Signals() {
                   temperatureFilter === 'all' ? 'text-white font-semibold' : 'text-neutral-400 hover:text-neutral-300'
                 }`}
               >
-                <span>📊 Total: {leads.length}</span>
+                <span>All Leads</span>
               </button>
               <button
                 onClick={() => setTemperatureFilter('hot')}
