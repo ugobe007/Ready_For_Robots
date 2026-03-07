@@ -694,7 +694,7 @@ function AgentInsightsPanel() {
 }
 
 // -- AI Analysis modal (tabbed: Strategy | Robots | Decision Makers | Intel | Signals) --
-const AI_TABS = ['strategy', 'robot match', 'decision makers', 'intel', 'signals'];
+const AI_TABS = ['strategy', 'engagement', 'robot match', 'decision makers', 'intel', 'signals'];
 
 // Classify a talking-point string → emerald (important) | cyan (time-sensitive) | grey
 function tpColor(text) {
@@ -929,6 +929,352 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   No strategy available — run the ML Agent first.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* ── ENGAGEMENT tab ── */}
+          {activeTab === 'engagement' && (
+            <div className="space-y-5">
+              {/* Approach Strategy */}
+              <div className="border border-cyan-900 rounded-lg p-5 bg-gradient-to-br from-neutral-950 to-neutral-900">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base font-bold text-cyan-400">📋 Recommended Approach</span>
+                </div>
+                
+                {/* Determine best approach based on signals */}
+                {(() => {
+                  const signals = lead.signals || [];
+                  const hasExpansion = signals.some(s => ['expansion', 'capex', 'ma_activity'].includes(s.signal_type));
+                  const hasLabor = signals.some(s => ['labor_shortage', 'job_posting'].includes(s.signal_type));
+                  const hasFunding = signals.some(s => s.signal_type === 'funding_round');
+                  const hasExec = signals.some(s => s.signal_type === 'strategic_hire');
+                  const hotSignals = signals.length >= 3;
+                  
+                  let approach, reason, contentType;
+                  
+                  if (hasExpansion && hotSignals) {
+                    approach = "Industry-Specific Solution Brief + ROI Model";
+                    reason = "Expansion signals indicate active planning phase — they need to see concrete ROI and implementation timeline for new facilities.";
+                    contentType = "solution-brief";
+                  } else if (hasLabor) {
+                    approach = "Problem-Solution Whitepaper";
+                    reason = "Labor challenges are immediate pain — demonstrate how automation solves their specific staffing crisis with case studies.";
+                    contentType = "whitepaper";
+                  } else if (hasFunding && hasExec) {
+                    approach = "Executive Briefing + Pilot Proposal";
+                    reason = "New funding + leadership = fresh strategic initiatives. Target new execs with high-level vision and quick-win pilot program.";
+                    contentType = "executive-brief";
+                  } else if (signals.length >= 2) {
+                    approach = "Thought Leadership + Industry Benchmarks";
+                    reason = "Multiple signals indicate they're researching solutions. Position yourself as the industry expert with data-driven insights.";
+                    contentType = "thought-leadership";
+                  } else {
+                    approach = "Educational Content Series";
+                    reason = "Limited signals — build awareness first with valuable, non-salesy content that addresses their industry challenges.";
+                    contentType = "educational";
+                  }
+                  
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 bg-neutral-900/50 border border-cyan-800/50 rounded p-4">
+                        <span className="text-2xl mt-0.5">🎯</span>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-cyan-300 mb-1">{approach}</p>
+                          <p className="text-xs text-neutral-400 leading-relaxed">{reason}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Specific Content Recommendations */}
+                      <div className="pt-3">
+                        <span className="label block mb-2">📝 Specific Content to Create:</span>
+                        <div className="space-y-2">
+                          {contentType === 'solution-brief' && (
+                            <>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-emerald-400 font-semibold">1. Solution Brief:</span>
+                                <span className="text-neutral-300"> "How {profile?.robot_match?.[0]?.name || 'Robotics'} Streamlines {lead.industry} Expansion: A {lead.company_name} Implementation Guide"</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-cyan-400 font-semibold">2. ROI Calculator:</span>
+                                <span className="text-neutral-300"> Custom model showing payback period for {emp ? `${emp.toLocaleString()}-employee` : 'their'} facilities (12-18 month typical ROI)</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-yellow-400 font-semibold">3. Case Study:</span>
+                                <span className="text-neutral-300"> Similar {lead.industry} company that deployed automation during expansion</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          {contentType === 'whitepaper' && (
+                            <>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-emerald-400 font-semibold">1. Whitepaper:</span>
+                                <span className="text-neutral-300"> "Solving {lead.industry}'s Labor Crisis: How Automation Fills {signals.find(s => s.signal_type === 'labor_shortage')?.signal_text?.match(/\d+/)?.[0] || '50+'} Open Positions"</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-cyan-400 font-semibold">2. Data Sheet:</span>
+                                <span className="text-neutral-300"> Labor cost savings breakdown showing total impact on EBITDA</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-yellow-400 font-semibold">3. Video Demo:</span>
+                                <span className="text-neutral-300"> 3-minute walkthrough showing robot deployment in {lead.industry} facility</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          {contentType === 'executive-brief' && (
+                            <>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-emerald-400 font-semibold">1. Executive Briefing:</span>
+                                <span className="text-neutral-300"> One-page strategic overview: "Accelerating {lead.company_name}'s Growth with Automation Infrastructure"</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-cyan-400 font-semibold">2. Pilot Proposal:</span>
+                                <span className="text-neutral-300"> 90-day proof-of-concept program with clear success metrics and fast deployment</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-yellow-400 font-semibold">3. Industry Report:</span>
+                                <span className="text-neutral-300"> "{lead.industry} Automation Trends 2026: What Leading Companies Are Deploying"</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          {contentType === 'thought-leadership' && (
+                            <>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-emerald-400 font-semibold">1. Benchmark Report:</span>
+                                <span className="text-neutral-300"> "{lead.industry} Automation Adoption: How {lead.company_name} Compares to Top Performers"</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-cyan-400 font-semibold">2. LinkedIn Article Series:</span>
+                                <span className="text-neutral-300"> 5-part series on {lead.industry} operational excellence and automation ROI</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-yellow-400 font-semibold">3. Webinar:</span>
+                                <span className="text-neutral-300"> "Future of {lead.industry}: Technology Trends Driving Competitive Advantage"</span>
+                              </div>
+                            </>
+                          )}
+                          
+                          {contentType === 'educational' && (
+                            <>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-emerald-400 font-semibold">1. Educational Guide:</span>
+                                <span className="text-neutral-300"> "Complete Guide to {lead.industry} Automation: Technologies, Costs, and Implementation"</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-cyan-400 font-semibold">2. Cost Comparison Tool:</span>
+                                <span className="text-neutral-300"> Interactive calculator: Manual operations vs. automated solutions for {lead.industry}</span>
+                              </div>
+                              <div className="bg-neutral-900/30 rounded px-3 py-2 text-xs">
+                                <span className="text-yellow-400 font-semibold">3. FAQ Resource:</span>
+                                <span className="text-neutral-300"> "Top 20 Questions {lead.industry} Leaders Ask About Robotics Deployment"</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+              
+              {/* Multi-Touch Engagement Sequence */}
+              <div className="border border-emerald-900 rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base font-bold text-emerald-400">🔄 Trust-Building Sequence</span>
+                  <span className="text-xs text-neutral-500">(6-8 week nurture campaign)</span>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-cyan-900/30 border border-cyan-700 flex items-center justify-center text-xs font-semibold text-cyan-400">1</div>
+                      <div className="w-px h-full bg-neutral-800 mt-2"></div>
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <p className="text-sm font-semibold text-neutral-200 mb-1">Week 1: Value-First Education</p>
+                      <p className="text-xs text-neutral-400 mb-2">Send industry report or whitepaper (no pitch, pure value)</p>
+                      <div className="bg-neutral-900/50 rounded px-3 py-2 text-xs text-neutral-500">
+                        📧 Subject: "[Industry Insight] {lead.industry} Automation Trends Report"<br/>
+                        🎯 Goal: Establish expertise, no ask
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-emerald-900/30 border border-emerald-700 flex items-center justify-center text-xs font-semibold text-emerald-400">2</div>
+                      <div className="w-px h-full bg-neutral-800 mt-2"></div>
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <p className="text-sm font-semibold text-neutral-200 mb-1">Week 3: Relevant Case Study</p>
+                      <p className="text-xs text-neutral-400 mb-2">Share success story from similar company in their industry</p>
+                      <div className="bg-neutral-900/50 rounded px-3 py-2 text-xs text-neutral-500">
+                        📧 Subject: "How [Similar Company] Solved [Their Pain Point]"<br/>
+                        🎯 Goal: Demonstrate real-world results
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-yellow-900/30 border border-yellow-700 flex items-center justify-center text-xs font-semibold text-yellow-400">3</div>
+                      <div className="w-px h-full bg-neutral-800 mt-2"></div>
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <p className="text-sm font-semibold text-neutral-200 mb-1">Week 5: Personalized ROI Analysis</p>
+                      <p className="text-xs text-neutral-400 mb-2">Send custom ROI model specific to their facility size/industry</p>
+                      <div className="bg-neutral-900/50 rounded px-3 py-2 text-xs text-neutral-500">
+                        📧 Subject: "ROI Breakdown: Automation for {emp ? `${emp.toLocaleString()}-person` : 'Your'} {lead.industry} Operations"<br/>
+                        🎯 Goal: Show financial impact with their numbers
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-8 h-8 rounded-full bg-violet-900/30 border border-violet-700 flex items-center justify-center text-xs font-semibold text-violet-400">4</div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-neutral-200 mb-1">Week 7: Soft Pilot Offer</p>
+                      <p className="text-xs text-neutral-400 mb-2">Invite to low-risk proof-of-concept program (NOW you make the ask)</p>
+                      <div className="bg-neutral-900/50 rounded px-3 py-2 text-xs text-neutral-500">
+                        📧 Subject: "Quick Question: Would a 90-day pilot make sense?"<br/>
+                        🎯 Goal: Convert to conversation after establishing trust
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Key Messaging Themes */}
+              <div className="border border-yellow-900 rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base font-bold text-yellow-400">💬 Key Messaging Themes</span>
+                </div>
+                
+                <div className="space-y-2">
+                  {(() => {
+                    const signals = lead.signals || [];
+                    const hasLabor = signals.some(s => ['labor_shortage', 'job_posting'].includes(s.signal_type));
+                    const hasExpansion = signals.some(s => ['expansion', 'capex'].includes(s.signal_type));
+                    const hasFunding = signals.some(s => s.signal_type === 'funding_round');
+                    
+                    const themes = [];
+                    
+                    if (hasLabor) {
+                      themes.push({
+                        icon: '🔴',
+                        title: 'Labor Crisis Solution',
+                        message: `"We help ${lead.industry} companies eliminate dependency on hard-to-find labor while improving consistency and throughput"`
+                      });
+                    }
+                    
+                    if (hasExpansion) {
+                      themes.push({
+                        icon: '📈',
+                        title: 'Scale Without Proportional Headcount',
+                        message: `"Expand to new facilities without the traditional hiring challenge — automation scales instantly"`
+                      });
+                    }
+                    
+                    if (hasFunding) {
+                      themes.push({
+                        icon: '💰',
+                        title: 'Smart Capital Deployment',
+                        message: `"Turn growth capital into competitive moats — automation investments compound over time while labor costs increase indefinitely"`
+                      });
+                    }
+                    
+                    themes.push({
+                      icon: '⚡',
+                      title: 'Speed to Value',
+                      message: `"90-day pilots with measurable KPIs — prove ROI before full commitment"`
+                    });
+                    
+                    themes.push({
+                      icon: '🎯',
+                      title: 'Industry-Specific Expertise',
+                      message: `"We've deployed in ${lead.industry} facilities like yours — we understand your unique challenges and constraints"`
+                    });
+                    
+                    return themes.map((theme, i) => (
+                      <div key={i} className="bg-neutral-900/30 rounded px-4 py-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-lg">{theme.icon}</span>
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold text-yellow-400 mb-1">{theme.title}</p>
+                            <p className="text-xs text-neutral-300 italic leading-relaxed">{theme.message}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+              
+              {/* Distribution Channels */}
+              <div className="border border-blue-900 rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-base font-bold text-blue-400">📡 Distribution Channels</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-neutral-900/30 rounded px-3 py-3 border border-blue-900/30">
+                    <p className="text-xs font-semibold text-blue-400 mb-1">🔗 LinkedIn (Primary)</p>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Connect with {strat?.contact_role || 'VP Operations, COO'} → Share articles → Tag in relevant posts → InMail with value
+                    </p>
+                  </div>
+                  
+                  <div className="bg-neutral-900/30 rounded px-3 py-3 border border-emerald-900/30">
+                    <p className="text-xs font-semibold text-emerald-400 mb-1">📧 Email (Nurture)</p>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Warm sequences with educational content → Personalized insights → No hard sells for first 4-6 weeks
+                    </p>
+                  </div>
+                  
+                  <div className="bg-neutral-900/30 rounded px-3 py-3 border border-yellow-900/30">
+                    <p className="text-xs font-semibold text-yellow-400 mb-1">📰 Industry Publications</p>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Sponsor content in {lead.industry} trade magazines → Build brand awareness before direct outreach
+                    </p>
+                  </div>
+                  
+                  <div className="bg-neutral-900/30 rounded px-3 py-3 border border-violet-900/30">
+                    <p className="text-xs font-semibold text-violet-400 mb-1">🎤 Events/Webinars</p>
+                    <p className="text-xs text-neutral-400 leading-relaxed">
+                      Host virtual {lead.industry} roundtables → Invite as speaker → Facility tours → Build peer network
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Why This Approach Works */}
+              <div className="bg-gradient-to-r from-cyan-950/30 to-emerald-950/30 border border-cyan-900/50 rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-bold text-cyan-400">💡 Why Cold Calling Fails (and This Works)</span>
+                </div>
+                <div className="space-y-2 text-xs text-neutral-300 leading-relaxed">
+                  <p className="flex items-start gap-2">
+                    <span className="text-red-400 shrink-0 mt-0.5">✕</span>
+                    <span><span className="font-semibold text-neutral-200">Cold calling:</span> Interrupts their day, zero context, feels salesy, 99% rejection rate</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
+                    <span><span className="font-semibold text-neutral-200">Value-first content:</span> They discover YOU when researching solutions, builds trust passively, positions you as expert</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
+                    <span><span className="font-semibold text-neutral-200">Multi-touch nurture:</span> By touch #4, they've seen your name 6-8 times across channels — familiarity = trust</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
+                    <span><span className="font-semibold text-neutral-200">Signal-based timing:</span> Their {signals.length >= 3 ? 'hot signals' : 'signals'} show they're in market RIGHT NOW — strike while iron is hot with relevant solutions</span>
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
