@@ -856,9 +856,9 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-2.5 text-xs font-medium transition-colors border-b-2 whitespace-nowrap -mb-px ${
                 activeTab === tab
-                  ? 'border-emerald-600 text-emerald-400'
+                  ? (tab === 'engagement' ? 'border-cyan-600 text-cyan-400' : 'border-emerald-600 text-emerald-400')
                   : tab === 'engagement'
-                  ? 'border-transparent text-emerald-400 hover:text-emerald-300 font-semibold'
+                  ? 'border-transparent text-cyan-400 hover:text-cyan-300 font-semibold'
                   : 'border-transparent text-neutral-400 hover:text-neutral-300'
               }`}>
               {tab === 'engagement' ? '📋 engagement' : tab}
@@ -946,6 +946,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                 {/* Determine best approach based on signals */}
                 {(() => {
                   const signals = lead.signals || [];
+                  const emp = lead.employee_estimate || null;
                   const hasExpansion = signals.some(s => ['expansion', 'capex', 'ma_activity'].includes(s.signal_type));
                   const hasLabor = signals.some(s => ['labor_shortage', 'job_posting'].includes(s.signal_type));
                   const hasFunding = signals.some(s => s.signal_type === 'funding_round');
