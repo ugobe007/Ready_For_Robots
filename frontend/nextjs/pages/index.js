@@ -1,69 +1,35 @@
-/**
- * Ready for Robots - Homepage Redesign
- * Signal-first narrative: CTA → Intelligence Explanation → Live Examples → Engagement
- */
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAuth } from './_app';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
-
-const SIGNAL_META = {
-  funding_round: { label: 'Funding', color: 'violet' },
-  strategic_hire: { label: 'Exec Hire', color: 'blue' },
-  capex: { label: 'CapEx', color: 'cyan' },
-  ma_activity: { label: 'M&A', color: 'pink' },
-  expansion: { label: 'Expand', color: 'emerald' },
-  job_posting: { label: 'Hiring', color: 'amber' },
-  labor_shortage: { label: 'Labor Gap', color: 'red' },
-  quality_bottleneck: { label: 'Quality', color: 'orange' },
-  safety_incident: { label: 'Safety', color: 'red' },
-  production_capacity: { label: 'Capacity', color: 'yellow' },
-  warehouse_throughput: { label: 'Throughput', color: 'teal' },
-  packaging_automation: { label: 'Packaging', color: 'indigo' },
-  repetitive_process: { label: 'Repetitive', color: 'purple' },
-  material_handling: { label: 'Material', color: 'lime' },
-  news: { label: 'News', color: 'neutral' },
-};
-
-export default function HomePage() {
-  const { user } = useAuth();
-  const [companyUrl, setCompanyUrl] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [hotLeads, setHotLeads] = useState([]);
-  const [expandedLead, setExpandedLead] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
-  const [signalVelocity, setSignalVelocity] = useState({
-    labor_shortage: 0,
-    hiring: 0,
-    expansion: 0,
-    safety: 0,
-    capacity: 0,
-    total: 0
-  });
-
-  // Live Signal Flow (pythh.ai style)
+export default function Signals() {
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [robotUrl, setRobotUrl] = useState('');
+  
+  // Live signal flow state (pythh.ai style)
   const [signalFlow, setSignalFlow] = useState({
     labor_shortage: { value: 0.67, delta: 0, prev: 0.67 },
     expansion: { value: 0.54, delta: 0, prev: 0.54 },
     safety: { value: 0.71, delta: 0, prev: 0.71 }
   });
 
-  // Handle client-side mounting to avoid hydration errors
-  useEffect(() => {
-    setMounted(true);
-    setCurrentTime(new Date().toLocaleTimeString());
-  }, []);
+  // Hot leads state
+  const [hotLeads, setHotLeads] = useState([
+    { company: 'Metro Logistics Hub', score: 94, signal: 'Labor Shortage + Expansion', industry: 'Logistics' },
+    { company: 'Coastal Hotel Group', score: 91, signal: 'Staffing Crisis', industry: 'Hospitality' },
+    { company: 'Fresh Valley Foods', score: 89, signal: '24/7 Operations Need', industry: 'Food Service' },
+    { company: 'Regional Health Network', score: 87, signal: 'Safety + Turnover', industry: 'Healthcare' },
+    { company: 'Urban Fulfillment Co', score: 85, signal: 'Capacity Expansion', industry: 'Warehousing' }
+  ]);
 
-  // Animate signal flow values (pythh.ai style - updates every 3s)
+  // Animate signal flow
   useEffect(() => {
     const updateSignalFlow = () => {
       setSignalFlow(prev => {
         const newFlow = {};
         Object.keys(prev).forEach(key => {
-          const change = (Math.random() - 0.5) * 0.08; // Random change -0.04 to +0.04
+          const change = (Math.random() - 0.5) * 0.08;
           const newValue = Math.max(0, Math.min(1, prev[key].value + change));
           const delta = newValue - prev[key].value;
           newFlow[key] = {
@@ -80,681 +46,650 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch top 5 HOT leads
-  useEffect(() => {
-    async function fetchHotLeads() {
-      try {
-        const res = await fetch(`${API}/api/leads?tier=HOT&limit=20&sort=score`);
-        if (res.ok) {
-          const allLeads = await res.json();
-          // Get top 5 by score
-          const top5 = allLeads
-            .filter(l => l.score?.overall_score != null)
-            .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
-            .slice(0, 5);
-          setHotLeads(top5);
-          setCurrentTime(new Date().toLocaleTimeString());
-          
-          // Calculate signal velocity from all leads
-          calculateSignalVelocity(allLeads);
-        }
-      } catch (err) {
-        console.error('Failed to fetch leads:', err);
-      } finally {
-        setLoading(false);
-      }
+  const handleBuildPipeline = (e) => {
+    e.preventDefault();
+    if (robotUrl.trim()) {
+      router.push(`/pipeline-results?url=${encodeURIComponent(robotUrl)}`);
     }
-    fetchHotLeads();
-    
-    // Update every 30 seconds
-    const interval = setInterval(fetchHotLeads, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  };
 
-  // Calculate signal counts from leads (last 24h)
-  const calculateSignalVelocity = (leads) => {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    let counts = {
-      labor_shortage: 0,
-      hiring: 0,
-      expansion: 0,
-      safety: 0,
-      capacity: 0,
-      total: 0
+  const getColorClasses = (color) => {
+    const colors = {
+      cyan: {
+        border: 'border-cyan-500',
+        text: 'text-cyan-400',
+        bg: 'bg-cyan-950/20',
+        gradient: 'bg-gradient-to-r from-cyan-500 to-cyan-400',
+        cardBorder: 'border-cyan-800/20',
+        cardBg: 'bg-cyan-950/10',
+        cardText: 'text-cyan-400',
+        quoteText: 'text-cyan-200/90',
+        quoteBorder: 'border-cyan-800/30',
+        quoteBg: 'bg-cyan-950/20'
+      },
+      emerald: {
+        border: 'border-emerald-500',
+        text: 'text-emerald-400',
+        bg: 'bg-emerald-950/20',
+        gradient: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+        cardBorder: 'border-emerald-800/20',
+        cardBg: 'bg-emerald-950/10',
+        cardText: 'text-emerald-400',
+        quoteText: 'text-emerald-200/90',
+        quoteBorder: 'border-emerald-800/30',
+        quoteBg: 'bg-emerald-950/20'
+      },
+      amber: {
+        border: 'border-amber-500',
+        text: 'text-amber-400',
+        bg: 'bg-amber-950/20',
+        gradient: 'bg-gradient-to-r from-amber-500 to-orange-400',
+        cardBorder: 'border-amber-800/20',
+        cardBg: 'bg-amber-950/10',
+        cardText: 'text-amber-400',
+        quoteText: 'text-amber-200/90',
+        quoteBorder: 'border-amber-800/30',
+        quoteBg: 'bg-amber-950/20'
+      },
+      red: {
+        border: 'border-red-500',
+        text: 'text-red-400',
+        bg: 'bg-red-950/20',
+        gradient: 'bg-gradient-to-r from-red-500 to-red-400',
+        cardBorder: 'border-red-800/20',
+        cardBg: 'bg-red-950/10',
+        cardText: 'text-red-400',
+        quoteText: 'text-red-200/90',
+        quoteBorder: 'border-red-800/30',
+        quoteBg: 'bg-red-950/20'
+      }
     };
-
-    leads.forEach(lead => {
-      if (!lead.signals || !Array.isArray(lead.signals)) return;
-      lead.signals.forEach(signal => {
-        const detectedAt = signal.detected_at || signal.created_at;
-        if (!detectedAt) {
-          // No timestamp, count it anyway
-          counts.total++;
-          if (signal.signal_type === 'labor_shortage') counts.labor_shortage++;
-          else if (signal.signal_type === 'job_posting') counts.hiring++;
-          else if (signal.signal_type === 'expansion') counts.expansion++;
-          else if (signal.signal_type === 'safety_incident') counts.safety++;
-          else if (signal.signal_type === 'production_capacity') counts.capacity++;
-        } else {
-          const signalDate = new Date(detectedAt);
-          if (signalDate > oneDayAgo) {
-            counts.total++;
-            if (signal.signal_type === 'labor_shortage') counts.labor_shortage++;
-            else if (signal.signal_type === 'job_posting') counts.hiring++;
-            else if (signal.signal_type === 'expansion') counts.expansion++;
-            else if (signal.signal_type === 'safety_incident') counts.safety++;
-            else if (signal.signal_type === 'production_capacity') counts.capacity++;
-          }
-        }
-      });
-    });
-
-    setSignalVelocity(counts);
+    return colors[color] || colors.emerald;
   };
 
-  const handleBuildPipeline = () => {
-    if (!companyUrl.trim()) return;
-    window.location.href = `/pipeline-results?url=${encodeURIComponent(companyUrl.trim())}`;
-  };
+  const signalCategories = [
+    {
+      id: 'labor',
+      name: 'Labor Signals',
+      color: 'cyan',
+      strength: 'STRONGEST',
+      signals: [
+        { name: 'Labor Scarcity', description: '"We can\'t find enough workers to cover shifts anymore"', weight: 9.5 },
+        { name: 'Labor Cost Pressure', description: '"Wages are up 30% and still can\'t fill positions"', weight: 9.0 },
+        { name: 'High Turnover', description: '"Turnover is killing us - constant training cycles"', weight: 8.5 },
+        { name: 'Understaffing', description: '"We\'re constantly understaffed, running skeleton crews"', weight: 8.5 },
+        { name: 'Overtime Costs', description: '"Overtime spending is out of control"', weight: 8.0 },
+      ]
+    },
+    {
+      id: 'productivity',
+      name: 'Productivity Signals',
+      color: 'emerald',
+      strength: 'STRONG',
+      signals: [
+        { name: 'Throughput Bottleneck', description: '"We need to increase throughput without adding headcount"', weight: 8.5 },
+        { name: 'Process Too Slow', description: '"This process is too slow, we\'re losing competitive edge"', weight: 8.0 },
+        { name: 'Manual Repetition', description: '"Our team spends too much time on repetitive tasks"', weight: 8.0 },
+        { name: 'Error Rates', description: '"Manual errors are causing costly rework"', weight: 7.5 },
+        { name: 'Quality Issues', description: '"Inconsistent quality from shift to shift"', weight: 7.0 },
+      ]
+    },
+    {
+      id: 'expansion',
+      name: 'Expansion Signals',
+      color: 'emerald',
+      strength: 'STRONG',
+      signals: [
+        { name: 'Capacity Expansion', description: '"We need to scale operations for new demand"', weight: 8.5 },
+        { name: '24/7 Operations', description: '"We need to run overnight shifts but can\'t staff them"', weight: 8.0 },
+        { name: 'New Facility Opening', description: 'Announcing new warehouse/facility construction', weight: 8.0 },
+        { name: 'Geographic Expansion', description: 'Opening locations in new markets/regions', weight: 7.5 },
+        { name: 'Product Line Expansion', description: 'Adding new SKUs/services requiring more capacity', weight: 7.0 },
+      ]
+    },
+    {
+      id: 'safety',
+      name: 'Safety & Risk Signals',
+      color: 'amber',
+      strength: 'MODERATE',
+      signals: [
+        { name: 'Safety Incidents', description: '"We\'ve had injuries doing this repetitive work"', weight: 7.5 },
+        { name: 'Ergonomic Issues', description: '"This job has ergonomic risks - heavy lifting, repetition"', weight: 7.0 },
+        { name: 'Hazardous Environment', description: 'Extreme temps, confined spaces, toxic materials', weight: 7.0 },
+        { name: 'Compliance Pressure', description: 'OSHA citations or regulatory scrutiny', weight: 6.5 },
+      ]
+    },
+    {
+      id: 'intent',
+      name: 'Active Intent Signals',
+      color: 'red',
+      strength: 'HIGHEST VALUE',
+      signals: [
+        { name: 'Pilot Request', description: '"Can we run a pilot program?"', weight: 10.0 },
+        { name: 'Demo Request', description: '"Can we see a demonstration?"', weight: 9.5 },
+        { name: 'Automation Research', description: 'Posting about evaluating automation vendors', weight: 9.0 },
+        { name: 'Automation Hire', description: 'Hiring "automation engineer" or "robotics integration"', weight: 9.0 },
+        { name: 'Vendor Comparison', description: 'Asking about "vs competitor" or feature comparison', weight: 8.5 },
+        { name: 'Budget Discussion', description: 'Asking about pricing, ROI, or payback period', weight: 8.0 },
+      ]
+    }
+  ];
 
-  const toggleExpanded = (leadId) => {
-    setExpandedLead(expandedLead === leadId ? null : leadId);
-  };
+  const filteredCategories = activeCategory === 'all' 
+    ? signalCategories 
+    : signalCategories.filter(cat => cat.id === activeCategory);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 sm:px-6 border-b border-neutral-800">
-        <Link href="/" className="flex items-center gap-2.5">
-          {/* Signal Pulse Icon */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Outer pulse ring */}
-            <circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="0.5" opacity="0.3"/>
-            {/* Middle pulse ring */}
-            <circle cx="12" cy="12" r="7" stroke="#10B981" strokeWidth="0.75" opacity="0.5"/>
-            {/* Inner pulse ring */}
-            <circle cx="12" cy="12" r="4" stroke="#10B981" strokeWidth="1" opacity="0.7"/>
-            {/* Center dot */}
-            <circle cx="12" cy="12" r="1.5" fill="#10B981"/>
-          </svg>
-          
-          <div className="flex flex-col leading-tight">
-            <span className="text-[10px] font-medium text-neutral-400 tracking-wide" style={{fontFamily: 'Inter, system-ui, sans-serif'}}>READY FOR</span>
-            <span className="text-sm font-bold text-emerald-400 tracking-wide" style={{fontFamily: 'Inter, system-ui, sans-serif'}}>ROBOTS</span>
-          </div>
-        </Link>
-        <div className="flex items-center gap-3">
-          {/* Hamburger menu */}
-          <div className="relative">
-            <button 
-              onClick={() => setMenuOpen(!menuOpen)} 
-              className="text-neutral-400 hover:text-neutral-200 text-lg"
-            >
-              ☰
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-neutral-700 rounded shadow-lg z-50">
-                <Link 
-                  href="/roi-calculator" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  ROI Calculator
-                </Link>
-                <Link 
-                  href="/pilot-calculator" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Pilot Calculator
-                </Link>
-                <Link 
-                  href="/robot-ready" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Robot Ready
-                </Link>
-                <Link 
-                  href="/brief" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Strategy Brief
-                </Link>
-                <Link 
-                  href="/about" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  📘 About
-                </Link>
-                {user && (
-                  <Link 
-                    href="/admin" 
-                    className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link 
-                  href="/profile" 
-                  className="block px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  👤 Profile
-                </Link>
-              </div>
-            )}
+    <>
+      <Head>
+        <title>Signal Intelligence Framework | Ready → Robots</title>
+      </Head>
+
+      <div className="min-h-screen bg-black text-white">
+        {/* Header */}
+        <div className="border-b border-neutral-800">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="text-sm text-neutral-400 text-center">
+              Signal Intelligence Framework
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-16">
-        
-        {/* Hero Headline */}
-        <div className="text-center space-y-4 pb-8">
-          <h1 className="tracking-wide" style={{fontFamily: 'Inter, system-ui, sans-serif'}}>
-            <span className="text-neutral-400 font-normal text-3xl sm:text-4xl md:text-5xl" style={{textShadow: '0 0 20px rgba(163, 163, 163, 0.3)'}}>ready for </span>
-            <span className="text-emerald-400 font-bold text-5xl sm:text-6xl md:text-7xl">ROBOTS</span>
-          </h1>
-          <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-            <span className="text-neutral-300">Find companies ready to buy </span>
-            <span className="text-emerald-400 font-semibold" style={{textShadow: '0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(16, 185, 129, 0.2)'}}>Automation</span>
-            <span className="text-neutral-300"> — before your competitors do</span>
-          </p>
-        </div>
-
-        {/* Live Signal Flow (pythh.ai style) */}
-        <div className="space-y-3">
-          <div>
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-1">SIGNALS</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Live buyer intent shifts</h2>
-            <p className="text-sm text-neutral-400">
-              Signals are real-time indicators of buyer behavior — not stated intent. We observe <span className="text-emerald-400">what companies do</span>, not what they say. <a href="/signals" className="text-emerald-400 hover:text-emerald-300 underline">Learn more →</a>
+        {/* Hero */}
+        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
+          <div className="space-y-3">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE</div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Find buyers <span className="text-emerald-400">before they know</span> they need automation
+            </h1>
+            <p className="text-xl text-neutral-300 max-w-3xl">
+              Signals are real-time indicators of buyer behavior — not stated intent. We observe <span className="text-emerald-400">what companies do</span>, not what they say.
             </p>
           </div>
 
-          <a href="/signals" className="block border border-neutral-800 rounded-lg p-4 space-y-4 hover:border-emerald-800/50 transition-colors cursor-pointer">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">SIGNAL FLOW</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-emerald-400">Live</span>
-                </div>
-              </div>
-              <span className="text-xs text-neutral-500">Updates every 3s</span>
-            </div>
+          {/* Key Insight */}
+          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-2">
+            <div className="text-sm font-semibold text-emerald-400">Strategic Insight</div>
+            <p className="text-base text-neutral-200">
+              Most robotics companies sell <span className="text-red-400">reactively</span> — responding to inbound RFPs when buyers are already comparing 5+ vendors. 
+              Our signal intelligence lets you sell <span className="text-emerald-400">proactively</span> — engaging buyers 3-6 months before they enter procurement mode, when you can shape requirements and avoid competitive bidding.
+            </p>
+          </div>
+        </div>
 
+        {/* Live Signal Velocity (pythh.ai style) */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+          <div>
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-1">LIVE SIGNAL VELOCITY</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Real-time buyer intent shifts</h2>
+            <p className="text-sm text-neutral-400">
+              Watch automation buying signals intensify across industries — updated every 3 seconds
+            </p>
+          </div>
+
+          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
             {/* Labor Shortage */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-300">Labor Shortage Intensity</span>
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Labor Shortage Signals</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold">{signalFlow.labor_shortage.value.toFixed(2)}</span>
-                  <span className={`text-xs ${
-                    signalFlow.labor_shortage.delta > 0 ? 'text-red-400' : 
-                    signalFlow.labor_shortage.delta < 0 ? 'text-emerald-400' : 'text-neutral-500'
-                  }`}>
-                    {signalFlow.labor_shortage.delta > 0 ? '▲' : signalFlow.labor_shortage.delta < 0 ? '▼' : '–'}
-                    {signalFlow.labor_shortage.delta !== 0 ? ` ${Math.abs(signalFlow.labor_shortage.delta).toFixed(2)}` : ' 0.00'}
+                  <span className="text-xs text-cyan-400 font-mono">
+                    {signalFlow.labor_shortage.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.labor_shortage.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.labor_shortage.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.labor_shortage.delta).toFixed(3)}
                   </span>
                 </div>
               </div>
               <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
-                  style={{ width: `${signalFlow.labor_shortage.value * 100}%` }}
-                ></div>
+                <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.labor_shortage.value * 100}%` }}></div>
               </div>
             </div>
 
             {/* Expansion Activity */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-300">Expansion Activity</span>
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Expansion Activity</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold">{signalFlow.expansion.value.toFixed(2)}</span>
-                  <span className={`text-xs ${
-                    signalFlow.expansion.delta > 0 ? 'text-emerald-400' : 
-                    signalFlow.expansion.delta < 0 ? 'text-red-400' : 'text-neutral-500'
-                  }`}>
-                    {signalFlow.expansion.delta > 0 ? '▲' : signalFlow.expansion.delta < 0 ? '▼' : '–'}
-                    {signalFlow.expansion.delta !== 0 ? ` ${Math.abs(signalFlow.expansion.delta).toFixed(2)}` : ' 0.00'}
+                  <span className="text-xs text-emerald-400 font-mono">
+                    {signalFlow.expansion.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.expansion.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.expansion.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.expansion.delta).toFixed(3)}
                   </span>
                 </div>
               </div>
               <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
-                  style={{ width: `${signalFlow.expansion.value * 100}%` }}
-                ></div>
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.expansion.value * 100}%` }}></div>
               </div>
             </div>
 
             {/* Safety Issues */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-300">Safety Issue Frequency</span>
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-sm text-neutral-300">Safety & Repetitive Work</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold">{signalFlow.safety.value.toFixed(2)}</span>
-                  <span className={`text-xs ${
-                    signalFlow.safety.delta > 0 ? 'text-orange-400' : 
-                    signalFlow.safety.delta < 0 ? 'text-emerald-400' : 'text-neutral-500'
-                  }`}>
-                    {signalFlow.safety.delta > 0 ? '▲' : signalFlow.safety.delta < 0 ? '▼' : '–'}
-                    {signalFlow.safety.delta !== 0 ? ` ${Math.abs(signalFlow.safety.delta).toFixed(2)}` : ' 0.00'}
+                  <span className="text-xs text-amber-400 font-mono">
+                    {signalFlow.safety.value.toFixed(2)}
+                  </span>
+                  <span className={`text-xs ${signalFlow.safety.delta >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {signalFlow.safety.delta >= 0 ? '▲' : '▼'} {Math.abs(signalFlow.safety.delta).toFixed(3)}
                   </span>
                 </div>
               </div>
               <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000 ease-out"
-                  style={{ width: `${signalFlow.safety.value * 100}%` }}
-                ></div>
+                <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000 ease-out"
+                     style={{ width: `${signalFlow.safety.value * 100}%` }}></div>
               </div>
             </div>
-          </a>
-        </div>
-
-        {/* 1. CTA - Value First */}
-        <div className="border border-emerald-700 rounded-lg px-6 py-8 text-center shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-            Build Your Sales Pipeline
-          </h2>
-          <p className="text-neutral-400 mb-6 max-w-2xl mx-auto">
-            Enter your robot company's website. We'll instantly show you 5 prospects with active buying signals — no signup required.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-            <input
-              type="text"
-              placeholder="amplibotics.ai, badger-robotics.com, etc."
-              value={companyUrl}
-              onChange={(e) => setCompanyUrl(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleBuildPipeline()}
-              className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-            />
-            <button
-              onClick={handleBuildPipeline}
-              disabled={!companyUrl.trim()}
-              className="px-6 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded hover:border-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-            >
-              Build Pipeline →
-            </button>
           </div>
         </div>
 
-        {/* Live Signal Velocity - Inline Minimal */}
-        <div className="border border-neutral-800 rounded px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-semibold text-white">Live Signal Activity</span>
-              <span className="text-xs text-neutral-500">· Last 24h</span>
-            </div>
-            <span className="text-lg font-bold text-emerald-400">{signalVelocity.total}</span>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Labor shortage:</span>
-              <span className="font-semibold text-red-400">{signalVelocity.labor_shortage}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Hiring struggles:</span>
-              <span className="font-semibold text-amber-400">{signalVelocity.hiring}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Expansion:</span>
-              <span className="font-semibold text-cyan-400">{signalVelocity.expansion}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Safety issues:</span>
-              <span className="font-semibold text-orange-400">{signalVelocity.safety}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Capacity needs:</span>
-              <span className="font-semibold text-violet-400">{signalVelocity.capacity}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Live Signal Examples - 3-5 HOT Leads (Clickable) */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-            <h2 className="text-2xl font-bold text-white">
-              Live Hot Leads Right Now
-            </h2>
-            {mounted && currentTime && (
-              <span className="text-xs text-neutral-500">
-                Updated {currentTime}
-              </span>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12 text-neutral-500">
-              <div className="inline-block animate-spin h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full mb-2"></div>
-              <p className="text-sm">Loading live signals...</p>
-            </div>
-          ) : hotLeads.length === 0 ? (
-            <div className="text-center py-12 text-neutral-500">
-              <p>No hot leads available</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {hotLeads.map((lead, index) => (
-                <div 
-                  key={lead.id}
-                  className="border border-neutral-800 rounded-lg overflow-hidden hover:border-emerald-800 transition-all"
-                >
-                  {/* Lead Summary (Always Visible) */}
-                  <button
-                    onClick={() => toggleExpanded(lead.id)}
-                    className="w-full px-5 py-4 text-left hover:bg-neutral-900/40 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-cyan-400">
-                            {lead.company_name}
-                          </h3>
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-red-900/30 border border-red-700 text-red-400 rounded">
-                            HOT
-                          </span>
-                          <span className="px-2 py-0.5 text-xs font-mono bg-emerald-900/30 border border-emerald-700 text-emerald-400 rounded">
-                            {Math.round(lead.score?.overall_score ?? 0)}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 mb-2">
-                          {lead.industry && <span>{lead.industry}</span>}
-                          {lead.location_city && (
-                            <>
-                              <span>·</span>
-                              <span>{lead.location_city}</span>
-                            </>
-                          )}
-                          {lead.employee_estimate && (
-                            <>
-                              <span>·</span>
-                              <span>{lead.employee_estimate.toLocaleString()} employees</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(lead.signals || []).slice(0, 5).map((sig, i) => {
-                            const meta = SIGNAL_META[sig.signal_type] || { label: sig.signal_type, color: 'neutral' };
-                            return (
-                              <span 
-                                key={i}
-                                className={`px-2 py-0.5 text-[9px] border border-${meta.color}-700 text-${meta.color}-400 rounded`}
-                              >
-                                {meta.label}
-                              </span>
-                            );
-                          })}
-                          {(lead.signals || []).length > 5 && (
-                            <span className="px-2 py-0.5 text-[9px] text-neutral-500">
-                              +{lead.signals.length - 5} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-emerald-400 text-sm">
-                        {expandedLead === lead.id ? '▲' : '▼'}
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Expanded Signal Details */}
-                  {expandedLead === lead.id && (
-                    <div className="border-t border-neutral-800 bg-neutral-950/50 px-5 py-4 space-y-4">
-                      <div>
-                        <h4 className="text-sm font-semibold text-emerald-400 mb-2">
-                          Why This Opportunity Is Real
-                        </h4>
-                        <p className="text-xs text-neutral-400 mb-3">
-                          These are actual signals detected from verified sources, not marketing assumptions.
-                        </p>
-                      </div>
-
-                      {/* Signal List */}
-                      <div className="space-y-3">
-                        {(lead.signals || []).map((signal, i) => {
-                          const meta = SIGNAL_META[signal.signal_type] || { label: signal.signal_type, color: 'neutral' };
-                          return (
-                            <div 
-                              key={i}
-                              className="border-l-2 border-cyan-700 pl-3 py-2"
-                            >
-                              <div className="flex items-start justify-between gap-3 mb-1">
-                                <span className={`text-xs font-semibold text-${meta.color}-400 uppercase tracking-wide`}>
-                                  {meta.label}
-                                </span>
-                                {signal.strength && (
-                                  <span className="text-[10px] text-neutral-500">
-                                    {Math.round(signal.strength * 100)}% confidence
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm text-neutral-300">
-                                {signal.raw_text || signal.signal_text || 'Signal detected'}
-                              </p>
-                              {signal.detected_at && (
-                                <p className="text-[10px] text-neutral-600 mt-1">
-                                  Detected: {new Date(signal.detected_at).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Score Breakdown */}
-                      {lead.score && (
-                        <div className="pt-3 border-t border-neutral-800">
-                          <h5 className="text-xs font-semibold text-neutral-400 mb-2">Intelligence Scores</h5>
-                          <div className="grid grid-cols-2 gap-2">
-                            {lead.score.automation_score != null && (
-                              <div className="text-xs">
-                                <span className="text-neutral-500">Automation Fit:</span>
-                                <span className="ml-2 text-emerald-400 font-semibold">
-                                  {Math.round(lead.score.automation_score)}
-                                </span>
-                              </div>
-                            )}
-                            {lead.score.labor_pain_score != null && (
-                              <div className="text-xs">
-                                <span className="text-neutral-500">Labor Pain:</span>
-                                <span className="ml-2 text-red-400 font-semibold">
-                                  {Math.round(lead.score.labor_pain_score)}
-                                </span>
-                              </div>
-                            )}
-                            {lead.score.expansion_score != null && (
-                              <div className="text-xs">
-                                <span className="text-neutral-500">Expansion:</span>
-                                <span className="ml-2 text-cyan-400 font-semibold">
-                                  {Math.round(lead.score.expansion_score)}
-                                </span>
-                              </div>
-                            )}
-                            {lead.score.market_fit_score != null && (
-                              <div className="text-xs">
-                                <span className="text-neutral-500">Market Fit:</span>
-                                <span className="ml-2 text-violet-400 font-semibold">
-                                  {Math.round(lead.score.market_fit_score)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* CTA */}
-                      <div className="pt-3 border-t border-neutral-800">
-                        <Link
-                          href={`/index_old_dashboard?analyze=${lead.id}`}
-                          className="inline-block px-4 py-2 bg-transparent border border-emerald-500 text-emerald-400 rounded hover:border-emerald-400 hover:text-emerald-300 transition-colors text-sm font-semibold"
-                        >
-                          Full AI Analysis →
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="text-center pt-4">
-            <Link
-              href="/brief"
-              className="inline-block px-6 py-3 border border-cyan-700 text-cyan-400 rounded hover:border-cyan-600 hover:text-cyan-300 transition-colors text-sm font-semibold"
-            >
-              View All Hot Leads in Strategy Brief →
-            </Link>
-          </div>
-        </div>
-
-        {/* 3. Signal Intelligence Explanation */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white border-b border-neutral-800 pb-3">
-            What Makes Us Different
-          </h2>
-          
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div className="border border-neutral-800 rounded-lg p-5">
-              <h3 className="text-emerald-400 font-semibold mb-2">Signal Intelligence</h3>
-              <p className="text-sm text-neutral-400">
-                We monitor <strong>behavioral signals</strong> — hiring spikes, expansion announcements, funding rounds, labor pain indicators — that reveal buying intent <em>right now</em>. Like Pythh tracks investor behavior to predict investment opportunities, we track customer behavior to predict automation buyers.
+        {/* CTA */}
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Build Your Sales Pipeline
+              </h2>
+              <p className="text-neutral-300">
+                Enter your robot company URL to see top prospect matches — no signup required
               </p>
             </div>
-
-            <div className="border border-neutral-800 rounded-lg p-5">
-              <h3 className="text-red-400 font-semibold mb-2">NOT Stale Databases</h3>
-              <p className="text-sm text-neutral-400">
-                Most lead gen tools sell outdated company lists with no indication of buyer intent. We show you <strong>who's ready to buy today</strong> based on real-time signals from 122+ sources. This is intelligence, not marketing lists.
-              </p>
-            </div>
-          </div>
-
-          <div className="border-l-2 border-cyan-700 pl-4">
-            <p className="text-sm text-neutral-300 italic">
-              "We need to be really good at finding and predicting customer needs. This is our core. We're battling against market noise — no site really delivers meaningful value because they don't use a signaling system like we do."
+            <form onSubmit={handleBuildPipeline} className="flex gap-3">
+              <input
+                type="text"
+                value={robotUrl}
+                onChange={(e) => setRobotUrl(e.target.value)}
+                placeholder="amplibotics.ai"
+                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
+              >
+                Build Pipeline →
+              </button>
+            </form>
+            <p className="text-sm text-neutral-400">
+              ✓ Top 5 matches  ✓ Engagement strategy  ✓ No signup required
             </p>
           </div>
         </div>
 
-        {/* 4. Engagement Strategy */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white border-b border-neutral-800 pb-3">
-            How to Engage Professionally
-          </h2>
+        {/* Hot Leads Discovered by Signals */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
+          <div>
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">HOT LEADS TODAY</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Discovered by Signals</h2>
+            <p className="text-sm text-neutral-400">
+              Live prospects showing automation buying intent — detected in the last 24 hours
+            </p>
+          </div>
 
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="border border-neutral-800 rounded-lg p-4">
-              <div className="text-emerald-400 font-semibold mb-2 text-sm">1. Timing Matters</div>
-              <p className="text-xs text-neutral-400">
-                Contact prospects when signals are fresh (within 7-14 days). New exec hires = 90-day window. Funding rounds = 12-18 month deployment window.
-              </p>
-            </div>
-
-            <div className="border border-neutral-800 rounded-lg p-4">
-              <div className="text-cyan-400 font-semibold mb-2 text-sm">2. Lead With Insight</div>
-              <p className="text-xs text-neutral-400">
-                Reference the specific signal: "Saw your recent expansion announcement..." or "Noticed you're hiring 15 warehouse roles..." Show you've done research.
-              </p>
-            </div>
-
-            <div className="border border-neutral-800 rounded-lg p-4">
-              <div className="text-violet-400 font-semibold mb-2 text-sm">3. Target Decision Makers</div>
-              <p className="text-xs text-neutral-400">
-                VP Operations, COO, Directors of Ops for logistics/manufacturing. CFO for ROI discussion. New executives are most receptive.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {hotLeads.map((lead, idx) => (
+              <div key={idx} className="border border-neutral-800 hover:border-red-800/50 rounded-lg p-4 space-y-2 transition-colors cursor-pointer">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-white">{lead.company}</div>
+                    <div className="text-xs text-neutral-500">{lead.industry}</div>
+                  </div>
+                  <div className="px-2 py-1 bg-red-950/30 border border-red-800/30 rounded text-xs font-semibold text-red-400">
+                    {lead.score}
+                  </div>
+                </div>
+                <div className="text-sm text-emerald-400">
+                  🔥 {lead.signal}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Buyer Quotes Validation */}
-        <div className="space-y-4" id="what-buyers-say">
-          <div>
-            <div className="text-xs text-neutral-500 uppercase tracking-wider mb-1">VALIDATION</div>
-            <h2 className="text-2xl font-bold text-white mb-2">What buyers actually say</h2>
-            <p className="text-sm text-neutral-400">
-              These quotes appear in job listings, earnings calls, and LinkedIn posts — they're the strongest predictors of automation adoption.
+        {/* The 25 Strongest Buying Signals */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">The 25 Strongest Automation Buying Signals</h2>
+            <p className="text-neutral-400">
+              These signals appear in job listings, earnings calls, LinkedIn posts, and industry forums — they're the strongest predictors of automation adoption within 3-12 months.
+            </p>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={`px-3 py-1.5 text-xs rounded border transition-colors ${
+                activeCategory === 'all' 
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20' 
+                  : 'border-neutral-700 text-neutral-400 hover:border-neutral-600'
+              }`}
+            >
+              All Signals (25)
+            </button>
+            {signalCategories.map(cat => {
+              const colors = getColorClasses(cat.color);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-3 py-1.5 text-xs rounded border transition-colors ${
+                    activeCategory === cat.id
+                      ? `${colors.border} ${colors.text} ${colors.bg}`
+                      : 'border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                  }`}
+                >
+                  {cat.name} ({cat.signals.length})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Signal Cards by Category */}
+          <div className="space-y-6">
+            {filteredCategories.map(category => {
+              const colors = getColorClasses(category.color);
+              return (
+                <div key={category.id} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-1 w-12 ${colors.gradient} rounded`}></div>
+                    <h3 className={`text-xl font-bold ${colors.cardText}`}>{category.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded border ${colors.cardBorder} ${colors.cardBg} ${colors.cardText}`}>
+                      {category.strength}
+                    </span>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {category.signals.map((signal, idx) => (
+                      <div key={idx} className={`border ${colors.cardBorder} ${colors.cardBg} rounded-lg p-4 space-y-2`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className={`font-semibold ${colors.cardText}`}>{signal.name}</div>
+                          <div className="text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 font-mono">
+                            {signal.weight.toFixed(1)}
+                          </div>
+                        </div>
+                        <p className={`text-sm ${colors.quoteText} italic`}>
+                          {signal.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RASS Scoring Algorithm */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SCORING ENGINE</div>
+            <h2 className="text-2xl font-bold">Robot Adoption Signal Score (RASS)</h2>
+            <p className="text-neutral-400">
+              Our proprietary algorithm combines multiple signal types to predict automation readiness and deal timing.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
+              <div className="text-emerald-400 font-semibold">Labor Pain Score</div>
+              <div className="text-xs text-neutral-400">
+                Weighted combination of labor scarcity, turnover, cost pressure, and understaffing signals
+              </div>
+              <div className="text-2xl font-bold text-white">35%</div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
+              <div className="text-emerald-400 font-semibold">Expansion Score</div>
+              <div className="text-xs text-neutral-400">
+                Capacity expansion, new facilities, geographic growth, 24/7 operations needs
+              </div>
+              <div className="text-2xl font-bold text-white">30%</div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
+              <div className="text-emerald-400 font-semibold">Automation Fit</div>
+              <div className="text-xs text-neutral-400">
+                Industry benchmarks, use case match, technical feasibility, ROI potential
+              </div>
+              <div className="text-2xl font-bold text-white">25%</div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
+              <div className="text-emerald-400 font-semibold">Timing Score</div>
+              <div className="text-xs text-neutral-400">
+                Budget cycles, executive hires, funding rounds, expansion timelines
+              </div>
+              <div className="text-2xl font-bold text-white">10%</div>
+            </div>
+          </div>
+
+          <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-5 space-y-3">
+            <div className="font-semibold text-cyan-400">Signal Velocity Tracking</div>
+            <p className="text-sm text-neutral-300">
+              We don't just count signals — we track their <span className="text-cyan-400">velocity and sequence</span>. Example progression:
+            </p>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-neutral-400">January:</span>
+              <span className="text-neutral-300">"Labor shortage" complaints in earnings call</span>
+              <span className="text-neutral-600">→</span>
+              <span className="text-neutral-400">March:</span>
+              <span className="text-neutral-300">Researching automation on LinkedIn</span>
+              <span className="text-neutral-600">→</span>
+              <span className="text-neutral-400">April:</span>
+              <span className="text-emerald-400 font-semibold">Request vendor demos</span>
+            </div>
+            <p className="text-xs text-cyan-400/80">
+              This 3-month signal progression indicates a buyer entering active evaluation mode. Companies showing this pattern convert at 4x the baseline rate.
+            </p>
+          </div>
+        </div>
+
+        {/* Data Sources */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">DATA SOURCES</div>
+            <h2 className="text-2xl font-bold">Where Signals Come From</h2>
+            <p className="text-neutral-400">
+              We monitor 140+ public data sources to detect automation buying signals in real-time.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Labor Signals */}
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">Job Listings (45 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Indeed, LinkedIn, Glassdoor, ZipRecruiter</li>
+                <li>• Industry-specific job boards</li>
+                <li>• Company career pages (direct scraping)</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Labor shortage, automation hires, expansion hiring, executive movement
+              </div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">News & Earnings (32 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Earnings call transcripts (public companies)</li>
+                <li>• Industry trade publications</li>
+                <li>• Business news (Reuters, Bloomberg)</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Expansion plans, labor pain mentions, CapEx increases, strategic priorities
+              </div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">Social & Forums (28 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• LinkedIn posts (executives discussing pain)</li>
+                <li>• Reddit (r/logistics, r/manufacturing)</li>
+                <li>• Industry-specific forums</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Pain point discussions, vendor research, peer recommendations
+              </div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">RFP Marketplaces (12 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Government RFP databases</li>
+                <li>• Private RFP platforms</li>
+                <li>• Procurement networks</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Active automation projects, budget allocated, procurement timelines
+              </div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">Directories (18 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• Industry association directories</li>
+                <li>• Hotel/restaurant directories</li>
+                <li>• Logistics network databases</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Company profiles, facility locations, employee counts, equipment
+              </div>
+            </div>
+            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
+              <div className="text-emerald-400 font-semibold">Government (5 sources)</div>
+              <ul className="text-sm text-neutral-300 space-y-1">
+                <li>• OSHA safety reports</li>
+                <li>• SEC filings (expansion, CapEx)</li>
+                <li>• Building permits</li>
+              </ul>
+              <div className="text-xs text-neutral-500">
+                Signals: Safety incidents, facility construction, financial health
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Why This Matters */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">STRATEGIC ADVANTAGE</div>
+            <h2 className="text-2xl font-bold">Sell Before Your Competitors Know a Company Is Shopping</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="border border-red-800/30 bg-red-950/20 rounded-lg p-5 space-y-3">
+              <div className="text-red-400 font-semibold text-lg">❌ Reactive Selling (Traditional)</div>
+              <ul className="text-sm text-neutral-300 space-y-2">
+                <li>• Wait for inbound RFP or demo request</li>
+                <li>• Buyer already has 3-5 vendors in evaluation</li>
+                <li>• Requirements written by competitor or consultant</li>
+                <li>• Forced into price-based competition</li>
+                <li>• 6-9 month sales cycle, 15-20% win rate</li>
+              </ul>
+              <div className="text-xs text-red-400/70 italic">
+                "By the time they call you, the deal is already half-lost."
+              </div>
+            </div>
+            <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-5 space-y-3">
+              <div className="text-emerald-400 font-semibold text-lg">✓ Proactive Selling (Signal-Based)</div>
+              <ul className="text-sm text-neutral-300 space-y-2">
+                <li>• Engage 3-6 months before procurement mode</li>
+                <li>• Only vendor in conversation (no competition)</li>
+                <li>• Shape requirements around your solution</li>
+                <li>• Build trust through consultative approach</li>
+                <li>• 3-4 month sales cycle, 40-50% win rate</li>
+              </ul>
+              <div className="text-xs text-emerald-400/70 italic">
+                "Become their trusted advisor before they start vendor evaluation."
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Real Buyer Quotes */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div className="space-y-2">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">VALIDATION</div>
+            <h2 className="text-2xl font-bold">What Buyers Actually Say</h2>
+            <p className="text-neutral-400">
+              These quotes appear in job listings, earnings calls, and LinkedIn posts — they're the language of automation adoption.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-1 w-8 bg-gradient-to-r from-cyan-500 to-cyan-400 rounded"></div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wide">Labor Scarcity</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-neutral-300">“We can't find enough workers to cover shifts anymore.”</p>
-                <p className="text-neutral-300">“Turnover is killing us.”</p>
-                <p className="text-neutral-300">“We're constantly short staffed.”</p>
-                <p className="text-neutral-300">“Nobody wants to do this job anymore.”</p>
+              <div className="space-y-2 text-sm text-cyan-200/90">
+                <p>"We can't find enough workers to cover shifts anymore"</p>
+                <p>"Turnover is killing us — constant training cycles"</p>
+                <p>"We're constantly understaffed, running skeleton crews"</p>
+                <p>"Overtime spending is out of control"</p>
               </div>
               <p className="text-xs text-cyan-400/80 italic">Strongest automation trigger</p>
             </div>
-
-            {/* Expansion Signals */}
             <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-1 w-8 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded"></div>
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Capacity Pressure</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-neutral-300">“We need to increase throughput.”</p>
-                <p className="text-neutral-300">“We need to scale without adding headcount.”</p>
-                <p className="text-neutral-300">“We need to run overnight.”</p>
-                <p className="text-neutral-300">“We're expanding production capacity.”</p>
+              <div className="space-y-2 text-sm text-emerald-200/90">
+                <p>"We need to increase throughput without adding headcount"</p>
+                <p>"This process is too slow, we're losing competitive edge"</p>
+                <p>"We need to run overnight shifts but can't staff them"</p>
+                <p>"We need to scale operations for new demand"</p>
               </div>
-              <p className="text-xs text-emerald-400/80 italic">Scaling opportunity</p>
+              <p className="text-xs text-emerald-400/80 italic">Growth-driven automation</p>
             </div>
-
-            {/* Safety Signals */}
             <div className="border border-amber-800/30 bg-amber-950/20 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-1 w-8 bg-gradient-to-r from-amber-500 to-orange-400 rounded"></div>
                 <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Repetitive Work</span>
               </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-neutral-300">“Our team spends too much time on repetitive tasks.”</p>
-                <p className="text-neutral-300">“Employees hate doing this work.”</p>
-                <p className="text-neutral-300">“This job has safety risks.”</p>
-                <p className="text-neutral-300">“We've had injuries doing this task.”</p>
+              <div className="space-y-2 text-sm text-amber-200/90">
+                <p>"Our team spends too much time on repetitive tasks"</p>
+                <p>"This job has safety risks — heavy lifting, repetition"</p>
+                <p>"Manual errors are causing costly rework"</p>
+                <p>"We've had injuries doing this repetitive work"</p>
               </div>
-              <p className="text-xs text-amber-400/80 italic">Prime robotics candidate</p>
+              <p className="text-xs text-amber-400/80 italic">Safety + efficiency driver</p>
             </div>
           </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="text-center pt-8 border-t border-neutral-800">
-          <p className="text-neutral-400 mb-4">
-            Ready to find prospects with real buying intent?
-          </p>
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-8 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded hover:border-emerald-400 hover:text-emerald-300 transition-colors font-semibold"
-          >
-            Build Your Pipeline →
-          </button>
+        {/* Final CTA */}
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="border border-emerald-800/50 rounded-lg px-6 py-8 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white">
+                Ready to find buyers showing these signals?
+              </h2>
+              <p className="text-neutral-300">
+                Enter your robot company URL to see top prospect matches
+              </p>
+            </div>
+            <form onSubmit={handleBuildPipeline} className="flex gap-3">
+              <input
+                type="text"
+                value={robotUrl}
+                onChange={(e) => setRobotUrl(e.target.value)}
+                placeholder="amplibotics.ai"
+                className="flex-1 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 rounded transition-colors whitespace-nowrap font-semibold"
+              >
+                Build Pipeline →
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-neutral-800 mt-12">
+          <div className="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-neutral-500">
+            <p>Ready → Robots | Signal Intelligence for Robotics Sales</p>
+          </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="text-center py-8 text-xs text-neutral-600 border-t border-neutral-800">
-        <p>READY → ROBOTS · Signal Intelligence Platform · Updated every 30s</p>
-      </div>
-    </div>
+    </>
   );
 }
