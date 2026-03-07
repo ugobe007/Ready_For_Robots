@@ -255,63 +255,52 @@ export default function Signals() {
         </div>
 
         {/* Hero */}
-        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
-          <div className="space-y-3">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 text-center">
+          <div className="space-y-6">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
               Find buyers <span className="text-emerald-400">before they know</span> they need automation
             </h2>
-            <p className="text-xl text-neutral-300 max-w-3xl">
-              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier — when you can shape requirements and win without competitive bidding.
-            </p>
-          </div>
-
-          {/* Key Insight */}
-          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-2">
-            <div className="text-sm font-semibold text-emerald-400">💡 Why This Matters</div>
-            <p className="text-base text-neutral-200">
-              We monitor <span className="text-emerald-400">162 companies</span> showing automation buying signals right now — labor shortages, expansion plans, safety issues. 
-              These aren't leads "thinking about" robots someday. These are <span className="text-red-400">live opportunities</span> where automation solves urgent problems.
+            <p className="text-lg md:text-xl text-neutral-300 max-w-3xl mx-auto">
+              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier.
             </p>
           </div>
         </div>
 
         {/* Lead Statistics - Hot Leads Bar */}
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="border border-emerald-700/50 bg-emerald-950/20 rounded-lg py-4 px-5">
-            <div className="flex items-center justify-between gap-6 text-sm flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400 font-semibold">📊 Total Leads:</span>
-                <span className="text-white text-lg font-bold">{leads.length}</span>
+        <div className="max-w-5xl mx-auto px-6 pb-12">
+          <div className="border border-neutral-800 rounded-lg py-6 px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-white">{leads.length}</div>
+                <div className="text-xs text-neutral-400 mt-1">Total Leads</div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-red-400 font-semibold">🔥 Hot Leads:</span>
-                <span className="text-white text-lg font-bold">{hotCount}</span>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-red-400">{hotCount}</div>
+                <div className="text-xs text-neutral-400 mt-1">🔥 Hot</div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-semibold">⚡ Total Signals:</span>
-                <span className="text-white text-lg font-bold">{totalSignals}</span>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-cyan-400">{totalSignals}</div>
+                <div className="text-xs text-neutral-400 mt-1">Signals</div>
               </div>
-              <div className="flex items-center gap-2 max-w-md">
-                <span className="text-amber-400 font-semibold">🎯 Hottest:</span>
-                <span className="text-white text-sm truncate">
-                  {hottestSignal ? `${hottestSignal.signal_type} @ ${hottestSignal.company}` : 'Loading...'}
-                </span>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-emerald-400">{warmCount}</div>
+                <div className="text-xs text-neutral-400 mt-1">Warm</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* CTA - Build Your Pipeline */}
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="border border-emerald-500 bg-gradient-to-br from-emerald-950/40 to-black rounded-lg px-6 py-8">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
+        <div className="bg-gradient-to-br from-emerald-950/20 to-black border-y border-neutral-800">
+          <div className="max-w-4xl mx-auto px-6 py-16 md:py-20 text-center">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-white">
                   Build Your Sales Pipeline
                 </h2>
-                <p className="text-lg text-neutral-300">
-                  See your top 5 prospect matches instantly — with engagement strategy & buying signals
+                <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
+                  Get your top 5 prospect matches + engagement strategy instantly
                 </p>
               </div>
 
@@ -321,42 +310,42 @@ export default function Signals() {
                   const url = e.target.robotUrl.value;
                   router.push(`/pipeline-results?url=${encodeURIComponent(url)}`);
                 }}
-                className="space-y-4"
+                className="max-w-xl mx-auto space-y-4"
               >
-                <div>
-                  <input
-                    type="text"
-                    name="robotUrl"
-                    placeholder="Enter your robot company website (e.g., amplibotics.ai)"
-                    className="w-full px-4 py-3 bg-black border border-emerald-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-                    required
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="robotUrl"
+                  placeholder="Enter your robot company website"
+                  className="w-full px-5 py-4 bg-black border border-neutral-700 rounded-lg text-white text-center placeholder-neutral-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  required
+                />
                 
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="w-full px-8 py-4 bg-transparent border-2 border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors text-lg"
                 >
                   Build Pipeline →
                 </button>
               </form>
 
-              <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800">
-                <span>✓ No signup required</span>
-                <span>✓ Instant results</span>
-                <span>✓ Free trial</span>
+              <div className="flex items-center justify-center gap-8 text-xs text-neutral-500 pt-4">
+                <span>No signup required</span>
+                <span>•</span>
+                <span>Instant results</span>
+                <span>•</span>
+                <span>Free trial</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Strategic Snapshot - Top Hot Deals */}
-        <div id="leads" className="max-w-6xl mx-auto px-4 py-8 space-y-4">
-          <div>
-            <div className="text-xs text-red-400 font-semibold uppercase tracking-wider mb-1">🔥 STRATEGIC SNAPSHOT</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Top Hot Deals Today</h2>
-            <p className="text-sm text-neutral-400">
-              Live companies with urgent automation needs — click any company to see full AI analysis
+        <div id="leads" className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-8">
+          <div className="text-center space-y-3">
+            <div className="text-xs text-red-400 font-semibold uppercase tracking-widest">STRATEGIC SNAPSHOT</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Top Hot Deals Today</h2>
+            <p className="text-neutral-400 max-w-2xl mx-auto">
+              Live companies with urgent automation needs
             </p>
           </div>
 
@@ -441,33 +430,35 @@ export default function Signals() {
         </div>
 
         {/* Browse All Leads by Industry */}
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="border border-neutral-800 rounded-lg p-6 text-center space-y-3">
-            <h3 className="text-lg font-semibold text-white">Browse All {leads.length} Leads by Industry</h3>
-            <p className="text-sm text-neutral-400">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="border border-neutral-800 rounded-lg p-10 text-center space-y-4">
+            <h3 className="text-2xl font-semibold text-white">Browse All {leads.length} Leads by Industry</h3>
+            <p className="text-neutral-400 max-w-2xl mx-auto">
               View complete database organized by Logistics, Hospitality, Healthcare, Food Service, and more
             </p>
-            <Link 
-              href="/index_old_dashboard" 
-              className="inline-block px-6 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-950/30 transition-colors"
-            >
-              View Full Dashboard →
-            </Link>
+            <div className="pt-2">
+              <Link 
+                href="/index_old_dashboard" 
+                className="inline-block px-8 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-950/30 transition-colors font-medium"
+              >
+                View Full Dashboard →
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* What Are Buying Signals? */}
-        <div id="signals" className="max-w-6xl mx-auto px-4 py-12 space-y-6">
-          <div className="space-y-3">
-            <div className="text-xs text-cyan-400 font-semibold uppercase tracking-wider">SIGNAL INTELLIGENCE</div>
-            <h2 className="text-3xl font-bold text-white">What Are Buying Signals?</h2>
-            <p className="text-lg text-neutral-300 max-w-3xl">
-              Signals are <span className="text-emerald-400">real-world indicators</span> that a company needs automation — before they post an RFP or contact vendors.
+        <div id="signals" className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+          <div className="text-center space-y-4">
+            <div className="text-xs text-cyan-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">What Are Buying Signals?</h2>
+            <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
+              Real-world indicators that a company needs automation — before they post an RFP
             </p>
           </div>
 
           {/* Signal Categories */}
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="border border-red-800/30 bg-red-950/10 rounded-lg p-5 space-y-3">
               <div className="text-red-400 font-semibold text-lg">🔥 Labor Shortage Signals</div>
               <div className="text-sm text-neutral-300 space-y-2">
@@ -499,12 +490,14 @@ export default function Signals() {
             </div>
           </div>
 
-          <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-6 space-y-3">
-            <div className="font-semibold text-cyan-400">How We Score Leads</div>
-            <p className="text-sm text-neutral-300">
-              Every company gets a score (0-100) based on <span className="text-cyan-400">4 factors</span>:
-            </p>
-            <div className="grid md:grid-cols-4 gap-4 mt-3">
+          <div className="border border-neutral-800 rounded-lg p-8 space-y-6 mt-8">
+            <div className="text-center space-y-2">
+              <div className="text-lg font-semibold text-white">How We Score Leads</div>
+              <p className="text-neutral-400">
+                Every company gets a score (0-100) based on 4 factors:
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-emerald-400">35%</div>
                 <div className="text-xs text-neutral-400 mt-1">Labor Pain</div>
@@ -526,16 +519,16 @@ export default function Signals() {
         </div>
 
         {/* Success Stories */}
-        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
-          <div className="space-y-3">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SUCCESS STORIES</div>
-            <h2 className="text-3xl font-bold text-white">Real Signals → Real Deals</h2>
-            <p className="text-lg text-neutral-300 max-w-3xl">
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+          <div className="text-center space-y-4">
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SUCCESS STORIES</div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">Real Signals → Real Deals</h2>
+            <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
               How robotics companies are using signals to close deals before RFPs
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="border border-neutral-800 rounded-lg p-6 space-y-3">
               <div className="text-emerald-400 font-semibold">Regional Hotel Chain → AMR Deployment</div>
               <div className="text-sm text-neutral-300">
@@ -557,14 +550,14 @@ export default function Signals() {
         </div>
 
         {/* Clear Next Steps */}
-        <div className="max-w-6xl mx-auto px-4 py-12 space-y-6">
-          <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-8 space-y-6">
-            <div className="space-y-3">
-              <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">GET STARTED</div>
-              <h2 className="text-3xl font-bold text-white">Your Action Plan</h2>
+        <div className="bg-neutral-900/50 border-y border-neutral-800">
+          <div className="max-w-5xl mx-auto px-6 py-16 md:py-20 space-y-12">
+            <div className="text-center space-y-4">
+              <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">GET STARTED</div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white">Your Action Plan</h2>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-8">
               <div className="space-y-2">
                 <div className="text-emerald-400 font-bold text-xl">1. Try It Free</div>
                 <p className="text-sm text-neutral-300">
@@ -595,279 +588,10 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* RASS Scoring Algorithm */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">SCORING ENGINE</div>
-            <h2 className="text-2xl font-bold">Robot Adoption Signal Score (RASS)</h2>
-            <p className="text-neutral-400">
-              Our proprietary algorithm combines multiple signal types to predict automation readiness and deal timing.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
-              <div className="text-emerald-400 font-semibold">Labor Pain Score</div>
-              <div className="text-xs text-neutral-400">
-                Weighted combination of labor scarcity, turnover, cost pressure, and understaffing signals
-              </div>
-              <div className="text-2xl font-bold text-white">35%</div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
-              <div className="text-emerald-400 font-semibold">Expansion Score</div>
-              <div className="text-xs text-neutral-400">
-                Capacity expansion, new facilities, geographic growth, 24/7 operations needs
-              </div>
-              <div className="text-2xl font-bold text-white">30%</div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
-              <div className="text-emerald-400 font-semibold">Automation Fit</div>
-              <div className="text-xs text-neutral-400">
-                Industry benchmarks, use case match, technical feasibility, ROI potential
-              </div>
-              <div className="text-2xl font-bold text-white">25%</div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-2">
-              <div className="text-emerald-400 font-semibold">Timing Score</div>
-              <div className="text-xs text-neutral-400">
-                Budget cycles, executive hires, funding rounds, expansion timelines
-              </div>
-              <div className="text-2xl font-bold text-white">10%</div>
-            </div>
-          </div>
-
-          <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-5 space-y-3">
-            <div className="font-semibold text-cyan-400">Signal Velocity Tracking</div>
-            <p className="text-sm text-neutral-300">
-              We don't just count signals — we track their <span className="text-cyan-400">velocity and sequence</span>. Example progression:
-            </p>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-neutral-400">January:</span>
-              <span className="text-neutral-300">"Labor shortage" complaints in earnings call</span>
-              <span className="text-neutral-600">→</span>
-              <span className="text-neutral-400">March:</span>
-              <span className="text-neutral-300">Researching automation on LinkedIn</span>
-              <span className="text-neutral-600">→</span>
-              <span className="text-neutral-400">April:</span>
-              <span className="text-emerald-400 font-semibold">Request vendor demos</span>
-            </div>
-            <p className="text-xs text-cyan-400/80">
-              This 3-month signal progression indicates a buyer entering active evaluation mode. Companies showing this pattern convert at 4x the baseline rate.
-            </p>
-          </div>
-        </div>
-
-        {/* The 25 Strongest Buying Signals - Inline Text */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">The 25 Strongest Automation Buying Signals</h2>
-            <p className="text-neutral-400">
-              These signals appear in job listings, earnings calls, LinkedIn posts, and industry forums — they're the strongest predictors of automation adoption within 3-12 months.
-            </p>
-          </div>
-
-          {/* Inline Text Summaries by Category */}
-          <div className="space-y-6">
-            {signalCategories.map(category => {
-              const colors = getColorClasses(category.color);
-              return (
-                <div key={category.id} className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-1 w-12 ${colors.gradient} rounded`}></div>
-                    <h3 className={`text-lg font-bold ${colors.cardText}`}>{category.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded border ${colors.cardBorder} ${colors.cardBg} ${colors.cardText}`}>
-                      {category.strength}
-                    </span>
-                  </div>
-                  <div className="text-sm text-neutral-300 leading-relaxed">
-                    {category.signals.map((signal, idx) => (
-                      <span key={idx}>
-                        <span className="font-semibold text-white">{signal.name}</span>
-                        <span className="text-neutral-500"> ({signal.weight.toFixed(1)})</span>
-                        {idx < category.signals.length - 1 ? ' · ' : ''}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Data Sources */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">DATA SOURCES</div>
-            <h2 className="text-2xl font-bold">Where Signals Come From</h2>
-            <p className="text-neutral-400">
-              We monitor 140+ public data sources to detect automation buying signals in real-time.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">Job Listings (45 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• Indeed, LinkedIn, Glassdoor, ZipRecruiter</li>
-                <li>• Industry-specific job boards</li>
-                <li>• Company career pages (direct scraping)</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Labor shortage, automation hires, expansion hiring, executive movement
-              </div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">News & Earnings (32 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• Earnings call transcripts (public companies)</li>
-                <li>• Industry trade publications</li>
-                <li>• Business news (Reuters, Bloomberg)</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Expansion plans, labor pain mentions, CapEx increases, strategic priorities
-              </div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">Social & Forums (28 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• LinkedIn posts (executives discussing pain)</li>
-                <li>• Reddit (r/logistics, r/manufacturing)</li>
-                <li>• Industry-specific forums</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Pain point discussions, vendor research, peer recommendations
-              </div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">RFP Marketplaces (12 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• Government RFP databases</li>
-                <li>• Private RFP platforms</li>
-                <li>• Procurement networks</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Active automation projects, budget allocated, procurement timelines
-              </div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">Directories (18 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• Industry association directories</li>
-                <li>• Hotel/restaurant directories</li>
-                <li>• Logistics network databases</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Company profiles, facility locations, employee counts, equipment
-              </div>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 space-y-3">
-              <div className="text-emerald-400 font-semibold">Government (5 sources)</div>
-              <ul className="text-sm text-neutral-300 space-y-1">
-                <li>• OSHA safety reports</li>
-                <li>• SEC filings (expansion, CapEx)</li>
-                <li>• Building permits</li>
-              </ul>
-              <div className="text-xs text-neutral-500">
-                Signals: Safety incidents, facility construction, financial health
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Why This Matters */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">STRATEGIC ADVANTAGE</div>
-            <h2 className="text-2xl font-bold">Sell Before Your Competitors Know a Company Is Shopping</h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="border border-red-800/30 bg-red-950/20 rounded-lg p-5 space-y-3">
-              <div className="text-red-400 font-semibold text-lg">❌ Reactive Selling (Traditional)</div>
-              <ul className="text-sm text-neutral-300 space-y-2">
-                <li>• Wait for inbound RFP or demo request</li>
-                <li>• Buyer already has 3-5 vendors in evaluation</li>
-                <li>• Requirements written by competitor or consultant</li>
-                <li>• Forced into price-based competition</li>
-                <li>• 6-9 month sales cycle, 15-20% win rate</li>
-              </ul>
-              <div className="text-xs text-red-400/70 italic">
-                "By the time they call you, the deal is already half-lost."
-              </div>
-            </div>
-            <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-5 space-y-3">
-              <div className="text-emerald-400 font-semibold text-lg">✓ Proactive Selling (Signal-Based)</div>
-              <ul className="text-sm text-neutral-300 space-y-2">
-                <li>• Engage 3-6 months before procurement mode</li>
-                <li>• Only vendor in conversation (no competition)</li>
-                <li>• Shape requirements around your solution</li>
-                <li>• Build trust through consultative approach</li>
-                <li>• 3-4 month sales cycle, 40-50% win rate</li>
-              </ul>
-              <div className="text-xs text-emerald-400/70 italic">
-                "Become their trusted advisor before they start vendor evaluation."
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Real Buyer Quotes */}
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">VALIDATION</div>
-            <h2 className="text-2xl font-bold">What Buyers Actually Say</h2>
-            <p className="text-neutral-400">
-              These quotes appear in job listings, earnings calls, and LinkedIn posts — they're the language of automation adoption.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="border border-cyan-800/30 bg-cyan-950/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-1 w-8 bg-gradient-to-r from-cyan-500 to-cyan-400 rounded"></div>
-                <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wide">Labor Scarcity</span>
-              </div>
-              <div className="space-y-2 text-sm text-cyan-200/90">
-                <p>"We can't find enough workers to cover shifts anymore"</p>
-                <p>"Turnover is killing us — constant training cycles"</p>
-                <p>"We're constantly understaffed, running skeleton crews"</p>
-                <p>"Overtime spending is out of control"</p>
-              </div>
-              <p className="text-xs text-cyan-400/80 italic">Strongest automation trigger</p>
-            </div>
-            <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-1 w-8 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded"></div>
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Capacity Pressure</span>
-              </div>
-              <div className="space-y-2 text-sm text-emerald-200/90">
-                <p>"We need to increase throughput without adding headcount"</p>
-                <p>"This process is too slow, we're losing competitive edge"</p>
-                <p>"We need to run overnight shifts but can't staff them"</p>
-                <p>"We need to scale operations for new demand"</p>
-              </div>
-              <p className="text-xs text-emerald-400/80 italic">Growth-driven automation</p>
-            </div>
-            <div className="border border-amber-800/30 bg-amber-950/20 rounded-lg p-4 space-y-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-1 w-8 bg-gradient-to-r from-amber-500 to-orange-400 rounded"></div>
-                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Repetitive Work</span>
-              </div>
-              <div className="space-y-2 text-sm text-amber-200/90">
-                <p>"Our team spends too much time on repetitive tasks"</p>
-                <p>"This job has safety risks — heavy lifting, repetition"</p>
-                <p>"Manual errors are causing costly rework"</p>
-                <p>"We've had injuries doing this repetitive work"</p>
-              </div>
-              <p className="text-xs text-amber-400/80 italic">Safety + efficiency driver</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-neutral-800 mt-12">
-          <div className="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-neutral-500">
-            <p>Ready → Robots | Signal Intelligence for Robotics Sales</p>
+        {/* Footer - Simple one-liner */}
+        <div className="border-t border-neutral-800 py-8">
+          <div className="max-w-5xl mx-auto px-6 text-center text-sm text-neutral-500">
+            <p>© 2026 Ready → Robots. Signal intelligence for robotics sales.</p>
           </div>
         </div>
       </div>
