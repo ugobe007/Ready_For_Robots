@@ -4,25 +4,25 @@ import Link from 'next/link';
 
 export default function PipelineResults() {
   const router = useRouter();
-  const { company } = router.query;
+  const { url } = router.query;
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
-    if (company) {
+    if (url) {
       // Simulate analysis - in production, this would call your backend
       setTimeout(() => {
         fetchMatches();
       }, 1500);
     }
-  }, [company]);
+  }, [url]);
 
   const fetchMatches = async () => {
     try {
-      // Get top 5 HOT leads as matches
-      const res = await fetch('https://ready-2-robot.fly.dev/api/leads?limit=5&temp=hot');
+      // Get top 6 HOT leads as matches
+      const res = await fetch('https://ready-2-robot.fly.dev/api/leads?limit=6&temp=hot');
       const data = await res.json();
-      setMatches(Array.isArray(data) ? data.slice(0, 5) : []);
+      setMatches(Array.isArray(data) ? data.slice(0, 6) : []);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching matches:', err);
@@ -32,7 +32,7 @@ export default function PipelineResults() {
   };
 
   const getEngagementStrategy = () => {
-    if (!company) return [];
+    if (!url) return [];
     
     return [
       {
@@ -70,7 +70,7 @@ export default function PipelineResults() {
     ];
   };
 
-  if (!company) {
+  if (!url) {
     return (
       <div className="min-h-screen bg-neutral-950 text-neutral-300 flex items-center justify-center">
         <div className="text-center">
