@@ -118,25 +118,33 @@ export default function SignalIntelligencePage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="border-b border-neutral-800">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/">
-            <span className="text-xl font-bold text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors">
-              Ready for Robots
-            </span>
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/">
-              <span className="text-sm text-neutral-400 hover:text-cyan-400 transition-colors cursor-pointer">
-                Dashboard
-              </span>
-            </Link>
-            <Link href="/brief">
-              <span className="text-sm text-neutral-400 hover:text-cyan-400 transition-colors cursor-pointer">
-                Daily Brief
-              </span>
-            </Link>
-            <span className="text-sm text-cyan-400 font-medium">Signal Intelligence</span>
-          </nav>
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <Link href="/">
+                <h1 className="text-lg font-semibold cursor-pointer hover:text-emerald-400 transition-colors">
+                  <span className="text-white">READY</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
+                </h1>
+              </Link>
+              <nav className="hidden md:flex items-center gap-6 text-sm">
+                <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition-colors">Home</Link>
+                <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
+                <Link href="/search" className="text-neutral-400 hover:text-emerald-400 transition-colors">Search</Link>
+                <span className="text-cyan-400 font-medium">About</span>
+                <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calc</Link>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+              <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
+                Sign Up Free
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -163,6 +171,15 @@ export default function SignalIntelligencePage() {
             <span className="text-neutral-500">{stats.hot} HOT Opportunities</span>
             <span className="text-neutral-700">•</span>
             <span className="text-neutral-500">Real-Time Detection</span>
+          </div>
+          
+          {/* CTA to see signals in action */}
+          <div className="mt-8 flex justify-center">
+            <Link href="/dashboard" 
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-500/10 hover:border-emerald-400 transition-all group">
+              <span className="font-semibold">See Signal System in Action</span>
+              <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
           </div>
         </section>
 

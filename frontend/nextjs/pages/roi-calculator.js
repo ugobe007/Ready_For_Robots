@@ -190,7 +190,7 @@ export default function ROICalculator() {
         {/* Header */}
         <div className="mb-8">
           <Link href="/" className="text-xs text-emerald-600 hover:text-emerald-400 mb-4 inline-block">
-            ← Back to Dashboard
+            ← Home
           </Link>
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold text-neutral-100 mb-3">💰 Robot ROI Calculator</h1>
