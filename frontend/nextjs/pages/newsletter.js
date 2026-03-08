@@ -220,7 +220,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                 {!isSubscribed && (
                   <button
                     onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                    className="text-sm px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+                    className="text-sm px-4 py-2 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors"
                   >
                     Subscribe Free
                   </button>
@@ -332,7 +332,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black flex items-center justify-center">
                       <button
                         onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                        className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
+                        className="px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors font-semibold"
                       >
                         Subscribe to Read Full Story
                       </button>
@@ -442,7 +442,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                     <p className="text-neutral-400 mb-6">Unlock vendor tracking, ROI benchmarks, and technology trends</p>
                     <button
                       onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                      className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
+                      className="px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors font-semibold"
                     >
                       Subscribe Free
                     </button>
@@ -477,7 +477,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity font-semibold"
+                    className="px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors font-semibold whitespace-nowrap"
                   >
                     Subscribe
                   </button>
