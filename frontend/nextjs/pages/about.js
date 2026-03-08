@@ -218,7 +218,7 @@ export default function SignalIntelligencePage() {
                 </div>
                 <div className="h-1.5 bg-neutral-900 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-cyan-600 to-cyan-500 transition-all duration-1000 ease-out"
+                    className="h-full bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${(signal.value / signal.max) * 100}%` }}>
                   </div>
                 </div>

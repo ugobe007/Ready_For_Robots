@@ -641,14 +641,14 @@ export default function Signals() {
             <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
               Real-world indicators that a company needs automation — before they post an RFP
             </p>
-          </div>
-
-          {/* Signal Categories */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="border border-red-800/30 bg-red-950/10 rounded-lg p-5 space-y-3">
-              <div className="text-red-400 font-semibold text-lg">🔥 Labor Shortage Signals</div>
-              <div className="text-sm text-neutral-300 space-y-2">
-                <p>"We can't find enough workers to cover shifts"</p>
+            <div className="pt-2">
+              <Link 
+                href="/about" 
+                className="inline-block px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-500/10 transition-all font-semibold"
+              >
+                See Signal System in Action →
+              </Link>
+            </div>
                 <p>"Turnover is killing us — constant training"</p>
                 <p>"Wages up 30%, still can't fill positions"</p>
               </div>
