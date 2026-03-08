@@ -542,7 +542,7 @@ export default function SignalIntelligencePage() {
             Stop Chasing RFPs.<br />Start Leading the Conversation.
           </h2>
           <p className="text-lg text-neutral-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Find buyers <span className="text-emerald-400 font-semibold">6-12 months before competitors</span> by detecting intent signals they can't see. 
+            Reach buyers <span className="text-emerald-400 font-semibold">6-12 months before they talk to competitors</span> by detecting intent signals others miss. 
             Get access to the same intelligence platform used by leading robotics companies.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">

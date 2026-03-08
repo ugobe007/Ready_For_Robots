@@ -259,10 +259,10 @@ export default function Signals() {
           <div className="space-y-6">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              Find buyers <span className="text-emerald-400">before they know</span> they need automation
+              Sell robots to companies <span className="text-emerald-400">actively looking</span> to automate
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
-              Stop responding to RFPs when you're 1 of 5 vendors. Start conversations 6 months earlier — when you can shape requirements and win without competition.
+              Stop cold calling. We track 106 companies showing real buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
             </p>
             
             {/* Signal Intelligence Value */}
