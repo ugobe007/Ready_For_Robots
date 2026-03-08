@@ -103,6 +103,209 @@ DISCOVERY_QUERIES = [
     "warehouse automation startup series A B C 2026",
     "restaurant chain private equity acquisition 2026",
     "healthcare technology funding round investment",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🤖 ROBOT DEPLOYMENT & USE CASE INTELLIGENCE (New - March 2026)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    # Actual Robot Installations (TIER 1 - Highest Value)
+    "hotel deploys housekeeping robot 2026",
+    "warehouse implements AMR fleet 2026",
+    "hospital installs disinfection robot 2026",
+    "restaurant introduces service robot 2026",
+    "airport deploys cleaning robot 2026",
+    "manufacturing implements cobot production 2026",
+    "facility installs autonomous floor scrubber 2026",
+    
+    # ROI & Economics (Buyer Perspective)
+    "robot automation ROI case study 2026",
+    "warehouse automation payback period",
+    "labor cost savings robot deployment",
+    "automation reduces headcount",
+    "service robot saves money",
+    "robot investment return hospitality",
+    
+    # Success Stories & Pilot Expansions (Proof Points)
+    "successful robot pilot program 2026",
+    "automation pilot expands deployment",
+    "robot trial becomes permanent",
+    "automated warehouse success story 2026",
+    "robot deployment exceeds expectations",
+    
+    # Specific Vendor Deployments (Market Intelligence)
+    "Savioke Relay robot hotel deployment",
+    "MiR robot warehouse installation 2026",
+    "Universal Robots cobot manufacturing",
+    "Fetch Robotics warehouse automation",
+    "Bear Robotics restaurant robot deployed",
+    "Diligent Robotics Moxi hospital",
+    "Knightscope security robot patrol",
+    "Brain Corp autonomous floor scrubber",
+    "Locus Robotics warehouse picking",
+    "GreyOrange warehouse automation 2026",
+    
+    # Problem → Solution Narratives
+    "labor shortage solved by robots 2026",
+    "automation addresses staffing crisis",
+    "robots fill open positions",
+    "warehouse turnover reduced automation",
+    "24/7 operations enabled robots",
+    "robot eliminates repetitive tasks",
+    
+    # Technology Trends (Analyst Perspective)
+    "AI-powered warehouse robotics 2026",
+    "collaborative robots hospitality",
+    "autonomous mobile robot fleet management",
+    "computer vision warehouse picking 2026",
+    "LiDAR navigation service robots",
+    "robotics-as-a-service model 2026",
+    
+    # Competitive Pressure (Market Dynamics)
+    "competitor automates forces response",
+    "automation competitive advantage 2026",
+    "rivals deploy robots market pressure",
+    "industry peers adopt automation",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🏥 MEDICAL TECHNOLOGY AUTOMATION (New Categories - March 2026)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    # Laboratory Automation
+    "lab automation robot deployment 2026",
+    "laboratory automation investment funding 2026",
+    "clinical lab automation system installation",
+    "diagnostics lab automation expansion 2026",
+    "automated specimen processing lab 2026",
+    "lab technician shortage automation solution",
+    "pathology lab automation investment 2026",
+    "liquid handling robot lab deployment",
+    "automated sample testing laboratory 2026",
+    
+    # Pharmacy Automation
+    "pharmacy automation robot deployment 2026",
+    "hospital pharmacy automation investment 2026",
+    "automated dispensing system pharmacy 2026",
+    "retail pharmacy automation technology 2026",
+    "pharmacy robot medication dispensing 2026",
+    "pharmacy technician shortage automation 2026",
+    "automated prescription filling system 2026",
+    "IV compounding robot pharmacy 2026",
+    
+    # Surgical Robotics
+    "surgical robot deployment hospital 2026",
+    "robotic surgery program expansion 2026",
+    "surgical robotics investment funding 2026",
+    "da Vinci robot installation hospital 2026",
+    "robotic assisted surgery program launch 2026",
+    "surgical suite automation investment 2026",
+    
+    # Patient Care Automation
+    "patient care robot hospital deployment 2026",
+    "hospital automation patient monitoring 2026",
+    "nursing assistant robot healthcare 2026",
+    "patient transport automation hospital 2026",
+    "automated patient room cleaning 2026",
+    "telepresence robot patient care 2026",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🍔 FOOD AUTOMATION (Production & Service)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    # Food Preparation Automation
+    "robotic kitchen automation deployment 2026",
+    "automated food prep robot restaurant 2026",
+    "cooking robot installation kitchen 2026",
+    "food preparation automation investment 2026",
+    "robotic chef deployment restaurant 2026",
+    "automated fryer robot kitchen 2026",
+    "robotic pizza making deployment 2026",
+    "automated burger grill restaurant 2026",
+    
+    # Food Serving Automation
+    "restaurant service robot deployment 2026",
+    "automated food delivery robot restaurant 2026",
+    "server robot dining room deployment 2026",
+    "restaurant automation server shortage 2026",
+    "food runner robot deployment 2026",
+    
+    # Food Processing & Manufacturing
+    "food processing automation investment 2026",
+    "food manufacturing robot deployment 2026",
+    "meat processing automation system 2026",
+    "bakery automation robot deployment 2026",
+    "food packaging automation investment 2026",
+    "produce processing automation 2026",
+    "food safety automation inspection 2026",
+    "automated food sorting system 2026",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 💾 DATACENTER AUTOMATION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    "datacenter automation robot deployment 2026",
+    "data center robotics investment 2026",
+    "automated server maintenance datacenter 2026",
+    "datacenter infrastructure automation 2026",
+    "robotic datacenter operations 2026",
+    "automated cooling system datacenter 2026",
+    "datacenter technician shortage automation",
+    "lights-out datacenter automation 2026",
+    "AI datacenter automation investment 2026",
+    "hyperscale datacenter automation 2026",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # ✈️ AIRPORT AUTOMATION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    "airport automation robot deployment 2026",
+    "airport cleaning robot deployment 2026",
+    "airport baggage handling automation 2026",
+    "airport security automation technology 2026",
+    "automated shuttle airport transportation 2026",
+    "airport terminal cleaning automation 2026",
+    "airport operations automation investment 2026",
+    "airport labor shortage automation solution",
+    "automated boarding gate system airport 2026",
+    "airport disinfection robot deployment 2026",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🛍️ RETAIL AUTOMATION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    "retail store automation robot deployment 2026",
+    "retail automation investment technology 2026",
+    "automated inventory robot retail 2026",
+    "retail shelf scanning robot deployment 2026",
+    "grocery store automation robot 2026",
+    "retail cashier automation checkout 2026",
+    "retail fulfillment automation 2026",
+    "retail worker shortage automation solution",
+    "automated retail cleaning robot 2026",
+    "retail stockroom automation robot 2026",
+    "click-and-collect automation retail 2026",
+    "micro-fulfillment center retail automation",
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 👕 CLOTHING & APPAREL AUTOMATION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    # Apparel Manufacturing
+    "garment manufacturing automation robot 2026",
+    "apparel factory automation investment 2026",
+    "automated sewing robot clothing 2026",
+    "textile automation manufacturing 2026",
+    "clothing production automation robot 2026",
+    "fabric cutting automation apparel 2026",
+    "fashion manufacturing automation 2026",
+    
+    # Apparel Logistics & Distribution
+    "apparel warehouse automation robot 2026",
+    "clothing distribution automation 2026",
+    "fashion logistics automation investment 2026",
+    "automated garment sorting system 2026",
+    "apparel fulfillment automation robot 2026",
+    "clothing e-commerce automation 2026",
+    "automated apparel picking system 2026",
 ]
 
 # ── Company Entity Extraction Patterns ────────────────────────────────────────
@@ -160,7 +363,49 @@ SIGNAL_PATTERNS = {
     ],
     "news": [
         "announced", "reports", "statement", "press release"
-    ]
+    ],
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🤖 DEPLOYMENT-FOCUSED SIGNALS (New - March 2026)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    "robot_installation": [
+        "deployed robot", "installed robot", "implements robot", "robot deployment",
+        "fleet of robots", "robotic system", "automation system installed",
+        "robot went live", "robot operational", "robot in production"
+    ],
+    "pilot_success": [
+        "successful pilot", "pilot exceeded", "trial success", "pilot expands",
+        "pilot to production", "trial becomes permanent", "proof of concept success",
+        "pilot program positive results"
+    ],
+    "roi_documented": [
+        "roi", "return on investment", "payback period", "payback in",
+        "saves $", "cost savings", "reduced costs by", "labor savings",
+        "efficiency gains", "productivity increase", "% faster", "% reduction"
+    ],
+    "vendor_selection": [
+        "selected", "chose", "partnered with", "contracted with",
+        "working with vendor", "supplier chosen", "provider selected",
+        "signed agreement", "multi-year deal"
+    ],
+    "scale_expansion": [
+        "expanding from", "scaling to", "increasing fleet", "adding more robots",
+        "rollout to", "deploying across", "fleet expansion", "pilot to full deployment"
+    ],
+    "competitive_response": [
+        "following competitor", "in response to", "after rival", "matching competitor",
+        "keeping pace with", "competitive pressure", "industry peers adopting"
+    ],
+    "economics_driven": [
+        "labor cost", "cost per unit", "economics favor", "financially viable",
+        "business case", "justified by", "driven by costs", "return exceeds",
+        "cheaper than labor", "vs human cost"
+    ],
+    "problem_solution": [
+        "solves", "addresses", "eliminates", "fixes", "resolves",
+        "overcomes challenge", "tackles issue", "solution to", "fills gap"
+    ],
 }
 
 # ── Industry Detection Keywords ───────────────────────────────────────────────
@@ -181,6 +426,36 @@ INDUSTRY_KEYWORDS = {
         "hospital", "healthcare", "health system", "clinic", "patient",
         "senior living", "nursing home", "assisted living", "medical center"
     ],
+    "Medical Technology": [
+        "laboratory", "lab automation", "clinical lab", "diagnostics lab",
+        "pharmacy", "hospital pharmacy", "surgical robot", "surgical suite",
+        "patient care", "specimen processing", "pathology", "iv compounding",
+        "medication dispensing", "robotic surgery", "da vinci", "telepresence"
+    ],
+    "Food Processing & Manufacturing": [
+        "food processing", "food manufacturing", "meat processing",
+        "bakery", "produce processing", "food packaging", "food safety",
+        "food sorting", "food preparation", "cooking automation",
+        "robotic chef", "robotic kitchen"
+    ],
+    "Datacenters": [
+        "datacenter", "data center", "server", "hyperscale", "cloud infrastructure",
+        "colocation", "server farm", "datacenter operations", "datacenter maintenance"
+    ],
+    "Airports & Aviation": [
+        "airport", "terminal", "aviation", "baggage handling", "boarding gate",
+        "airport operations", "airport security", "airport shuttle"
+    ],
+    "Retail": [
+        "retail", "store", "shopping", "e-commerce", "grocery", "supermarket",
+        "shelf scanning", "inventory robot", "click-and-collect", "micro-fulfillment",
+        "retail fulfillment", "retail automation", "cashier", "checkout"
+    ],
+    "Apparel & Textiles": [
+        "garment", "apparel", "clothing", "fashion", "textile",
+        "sewing", "fabric cutting", "apparel factory", "apparel warehouse",
+        "clothing distribution", "fashion logistics", "garment sorting"
+    ],
     "Casinos & Gaming": [
         "casino", "gaming", "resort casino", "slot", "table games",
         "integrated resort", "tribal gaming"
@@ -198,9 +473,6 @@ INDUSTRY_KEYWORDS = {
     ],
     "Automotive Dealerships": [
         "dealership", "auto dealer", "car dealer", "automotive retail"
-    ],
-    "Retail": [
-        "retail", "store", "shopping", "e-commerce", "grocery"
     ],
 }
 
