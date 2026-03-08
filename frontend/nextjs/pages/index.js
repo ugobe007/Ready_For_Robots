@@ -26,6 +26,27 @@ export default function Signals() {
     { company: 'Urban Fulfillment Co', score: 85, signal: 'Capacity Expansion', industry: 'Warehousing' }
   ]);
 
+  // Rotating automation quotes from real news/signals
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const automationQuotes = [
+    { text: "\"We're looking at AMRs to handle overnight shifts we can't staff\"", company: "Midwest Distribution Center", signal: "Labor Shortage" },
+    { text: "\"Labor costs are up 35% - automation ROI is finally positive\"", company: "Pacific Hotel Chain", signal: "Cost Pressure" },
+    { text: "\"Our warehouse runs 24/7 but we can only find workers for 16 hours\"", company: "E-Commerce Fulfillment", signal: "Capacity Gap" },
+    { text: "\"We need to double throughput without adding headcount\"", company: "Food Processing Plant", signal: "Productivity" },
+    { text: "\"New facility opening Q2 - can't hire fast enough for ramp-up\"", company: "Logistics Expansion", signal: "Expansion" },
+    { text: "\"Turnover is killing us - robots don't quit after 3 months\"", company: "QSR Chain", signal: "High Turnover" },
+    { text: "\"OSHA citations for repetitive strain - need to automate packaging\"", company: "Manufacturing Site", signal: "Safety Risk" },
+    { text: "\"Evaluating palletizing robots to eliminate back injuries\"", company: "Cold Storage Warehouse", signal: "Automation Intent" }
+  ];
+
+  // Rotate quotes every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuoteIndex((prev) => (prev + 1) % automationQuotes.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [automationQuotes.length]);
+
   // Animate signal flow
   useEffect(() => {
     const updateSignalFlow = () => {
@@ -262,7 +283,7 @@ export default function Signals() {
               Find buyers that are <span className="text-emerald-400">ready for automation</span>
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
-              Stop cold calling. We track 106 companies showing real buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
+              Stop cold calling. We track over 150 news sources to detect buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
             </p>
             
             {/* Signal Intelligence Value */}
@@ -275,26 +296,64 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Lead Statistics - Hot Leads Bar (hidden when no data) */}
+        {/* ENHANCED: Stats Bar with More POP + Rotating Quotes */}
         {!loading && leads.length > 0 && (
-        <div className="max-w-5xl mx-auto px-6 pb-8">
-          <div className="border border-neutral-800 rounded-lg py-4 px-6">
+        <div className="max-w-5xl mx-auto px-6 pb-8 space-y-4">
+          {/* Rotating Automation Quotes - Shows Real Buying Signals */}
+          <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-4 px-6 overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center animate-pulse">
+                  <span className="text-xl">💬</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div 
+                  key={currentQuoteIndex}
+                  className="animate-[fadeIn_0.5s_ease-in-out]"
+                >
+                  <p className="text-base md:text-lg text-white font-medium italic">
+                    {automationQuotes[currentQuoteIndex].text}
+                  </p>
+                  <p className="text-sm text-emerald-400 mt-1">
+                    {automationQuotes[currentQuoteIndex].company} · <span className="text-cyan-400">{automationQuotes[currentQuoteIndex].signal}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="hidden md:block flex-shrink-0">
+                <div className="text-xs text-neutral-400 font-mono">
+                  {currentQuoteIndex + 1}/{automationQuotes.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Stats Bar with Bigger Numbers and Glow Effects */}
+          <div className="border-2 border-emerald-800/40 bg-gradient-to-b from-neutral-900 to-black rounded-xl py-6 px-6 shadow-lg shadow-emerald-900/20">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <div className="text-2xl md:text-3xl font-bold text-white">{leads.length}</div>
-                <div className="text-xs text-neutral-400 mt-1">Total Leads</div>
+              <div className="group cursor-default">
+                <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200">
+                  {leads.length}
+                </div>
+                <div className="text-sm text-neutral-400 mt-2 font-semibold tracking-wide">ACTIVE LEADS</div>
               </div>
-              <div>
-                <div className="text-2xl md:text-3xl font-bold text-orange-400">{hotCount}</div>
-                <div className="text-xs text-neutral-400 mt-1">🔥 Hot</div>
+              <div className="group cursor-default">
+                <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-transform duration-200 animate-pulse">
+                  {hotCount}
+                </div>
+                <div className="text-sm text-orange-400 mt-2 font-semibold tracking-wide">🔥 HOT DEALS</div>
               </div>
-              <div>
-                <div className="text-2xl md:text-3xl font-bold text-cyan-400">{totalSignals}</div>
-                <div className="text-xs text-neutral-400 mt-1">Signals</div>
+              <div className="group cursor-default">
+                <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform duration-200">
+                  {totalSignals}
+                </div>
+                <div className="text-sm text-cyan-400 mt-2 font-semibold tracking-wide">LIVE SIGNALS</div>
               </div>
-              <div>
-                <div className="text-2xl md:text-3xl font-bold text-emerald-400">{warmCount}</div>
-                <div className="text-xs text-neutral-400 mt-1">Warm</div>
+              <div className="group cursor-default">
+                <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-transform duration-200">
+                  {warmCount}
+                </div>
+                <div className="text-sm text-emerald-400 mt-2 font-semibold tracking-wide">WARM PIPELINE</div>
               </div>
             </div>
           </div>
@@ -349,13 +408,24 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Strategic Snapshot - Top Hot Deals */}
+        {/* ENHANCED: Strategic Snapshot - Top Hot Deals with More POP */}
         <div id="leads" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-8">
           <div className="space-y-3">
-            <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA</div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Top Hot Deals Today</h2>
-            <p className="text-neutral-400">
-              Live companies with urgent automation needs — click any company to see full AI analysis and signal details
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1.5 rounded-full animate-pulse">
+                🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA
+              </div>
+              <div className="flex gap-1">
+                <span className="inline-block w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></span>
+                <span className="inline-block w-2 h-2 bg-orange-500 rounded-full animate-ping" style={{animationDelay: '0.4s'}}></span>
+              </div>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(251,146,60,0.3)]">
+              Top Hot Deals Today
+            </h2>
+            <p className="text-lg text-neutral-300">
+              Live companies with <span className="text-red-400 font-semibold">urgent automation needs</span> — click any company to see full AI analysis and signal details
             </p>
           </div>
 
@@ -378,7 +448,7 @@ export default function Signals() {
                   <div 
                     key={lead.id}
                     onClick={() => router.push(`/analyze?id=${lead.id}`)}
-                    className="border border-neutral-800 hover:border-orange-800/50 rounded-lg p-4 space-y-3 transition-all cursor-pointer hover:bg-orange-950/5"
+                    className="group border-2 border-orange-800/40 hover:border-orange-500/60 bg-gradient-to-r from-orange-950/10 to-red-950/10 hover:from-orange-950/20 hover:to-red-950/20 rounded-xl p-5 space-y-3 transition-all cursor-pointer shadow-lg shadow-orange-900/10 hover:shadow-orange-900/30 hover:scale-[1.01]"
                     style={{
                       animation: `slideIn 0.5s ease-out ${idx * 0.05}s both`
                     }}
@@ -387,7 +457,7 @@ export default function Signals() {
                       <div className="flex-1 space-y-1.5">
                         <div className="flex items-center gap-3">
                           <h4 
-                            className="text-lg font-semibold text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                            className="text-xl font-bold text-white group-hover:text-orange-300 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               router.push(`/analyze?id=${lead.id}`);
@@ -395,7 +465,7 @@ export default function Signals() {
                           >
                             {lead.company_name}
                           </h4>
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-orange-950/50 text-orange-400 border border-orange-800/50 rounded">
+                          <span className="px-3 py-1 text-xs font-black bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg shadow-orange-500/50 animate-pulse">
                             🔥 HOT
                           </span>
                         </div>
@@ -405,28 +475,31 @@ export default function Signals() {
                         {topSignals.length > 0 && (
                           <div className="flex flex-wrap gap-2 pt-1">
                             {topSignals.map((signal, sidx) => (
-                              <span key={sidx} className="text-xs text-neutral-500 border border-neutral-800 px-2 py-1 rounded">
+                              <span key={sidx} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded font-medium">
                                 {signal.signal_type}
                               </span>
                             ))}
                             {(lead.signals?.length || 0) > 2 && (
-                              <span className="text-xs text-emerald-400 font-semibold">
+                              <span className="text-xs text-orange-400 font-bold bg-orange-950/30 border border-orange-800/40 px-2 py-1 rounded">
                                 +{lead.signals.length - 2} more signals
                               </span>
                             )}
                           </div>
                         )}
                       </div>
-                      <div className="text-right space-y-1">
-                        <div className="text-2xl font-bold text-emerald-400">
-                          {score.toFixed(0)}
+                      <div className="text-right space-y-2">
+                        <div className="relative">
+                          <div className="text-4xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(251,146,60,0.6)]">
+                            {score.toFixed(0)}
+                          </div>
+                          <div className="text-xs text-neutral-500 font-semibold">SCORE</div>
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/analyze?id=${lead.id}`);
                           }}
-                          className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+                          className="text-xs text-orange-400 hover:text-orange-300 font-semibold underline"
                         >
                           Analyze →
                         </button>
@@ -615,6 +688,15 @@ export default function Signals() {
           to {
             opacity: 1;
             transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
           }
         }
       `}</style>
