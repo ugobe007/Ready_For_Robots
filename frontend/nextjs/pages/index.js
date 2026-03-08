@@ -649,22 +649,14 @@ export default function Signals() {
                 See Signal System in Action →
               </Link>
             </div>
-                <p>"Turnover is killing us — constant training"</p>
-                <p>"Wages up 30%, still can't fill positions"</p>
-              </div>
-              <div className="text-xs text-red-400/80 italic">Strongest automation trigger (35% weight)</div>
-            </div>
+          </div>
 
-            <div className="border border-emerald-800/30 bg-emerald-950/10 rounded-lg p-5 space-y-3">
-              <div className="text-emerald-400 font-semibold text-lg">📈 Expansion Signals</div>
+          {/* Signal Categories */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="border border-red-800/30 bg-red-950/10 rounded-lg p-5 space-y-3">
+              <div className="text-red-400 font-semibold text-lg">🔥 Labor Shortage Signals</div>
               <div className="text-sm text-neutral-300 space-y-2">
-                <p>"Opening new facility next quarter"</p>
-                <p>"Need 24/7 operations but can't staff it"</p>
-                <p>"Scaling to meet new demand"</p>
-              </div>
-              <div className="text-xs text-emerald-400/80 italic">Growth-driven automation (25% weight)</div>
-            </div>
-
+                <p>"We can't find enough workers to cover shifts"</p>
             <div className="border border-amber-800/30 bg-amber-950/10 rounded-lg p-5 space-y-3">
               <div className="text-amber-400 font-semibold text-lg">⚠️ Safety Signals</div>
               <div className="text-sm text-neutral-300 space-y-2">
