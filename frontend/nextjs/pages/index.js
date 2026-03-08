@@ -10,6 +10,14 @@ export default function Signals() {
   const [loading, setLoading] = useState(true);
   const [temperatureFilter, setTemperatureFilter] = useState('all'); // 'all', 'hot', 'warm', 'cold'
   
+  // Stats ticker data - updates independently without re-rendering entire component
+  const [statsData, setStatsData] = useState({
+    activeLeads: 0,
+    hotDeals: 0,
+    liveSignals: 0,
+    warmPipeline: 0
+  });
+  
   // Live signal flow state (pythh.ai style)
   const [signalFlow, setSignalFlow] = useState({
     labor_shortage: { value: 0.67, delta: 0, prev: 0.67 },
@@ -17,14 +25,8 @@ export default function Signals() {
     safety: { value: 0.71, delta: 0, prev: 0.71 }
   });
 
-  // Hot leads state
-  const [hotLeads, setHotLeads] = useState([
-    { company: 'Metro Logistics Hub', score: 94, signal: 'Labor Shortage + Expansion', industry: 'Logistics' },
-    { company: 'Coastal Hotel Group', score: 91, signal: 'Staffing Crisis', industry: 'Hospitality' },
-    { company: 'Fresh Valley Foods', score: 89, signal: '24/7 Operations Need', industry: 'Food Service' },
-    { company: 'Regional Health Network', score: 87, signal: 'Safety + Turnover', industry: 'Healthcare' },
-    { company: 'Urban Fulfillment Co', score: 85, signal: 'Capacity Expansion', industry: 'Warehousing' }
-  ]);
+  // Hot leads state - will be fetched from API
+  const [hotLeads, setHotLeads] = useState([]);
 
   // Rotating automation quotes from real news/signals
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
@@ -79,9 +81,21 @@ export default function Signals() {
         const res = await fetch('https://ready-2-robot.fly.dev/api/leads');
         const data = await res.json();
         setLeads(Array.isArray(data) ? data : []);
+        
+        // Get top 5 HOT leads for the preview section
+        const hotOnly = (Array.isArray(data) ? data : [])
+          .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
+          .sort((a, b) => {
+            const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
+            const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
+            return scoreB - scoreA;
+          })
+          .slice(0, 5);
+        setHotLeads(hotOnly);
       } catch (err) {
         console.error('Error fetching leads:', err);
         setLeads([]);
+        setHotLeads([]);
       } finally {
         setLoading(false);
       }
@@ -99,6 +113,25 @@ export default function Signals() {
   
   // Calculate total signals and find hottest
   const totalSignals = leads.reduce((sum, lead) => sum + (lead.signals?.length || 0), 0);
+  
+  // Update stats ticker data every 15 seconds without re-rendering entire page
+  useEffect(() => {
+    const updateStats = () => {
+      setStatsData({
+        activeLeads: leads.length,
+        hotDeals: hotCount,
+        liveSignals: totalSignals,
+        warmPipeline: warmCount
+      });
+    };
+    
+    // Update immediately when leads change
+    updateStats();
+    
+    // Then update every 15 seconds
+    const interval = setInterval(updateStats, 15000);
+    return () => clearInterval(interval);
+  }, [leads.length, hotCount, totalSignals, warmCount]);
   const hottestSignal = leads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
@@ -259,17 +292,56 @@ export default function Signals() {
                   <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
                 </h1>
                 <nav className="hidden md:flex items-center gap-6 text-sm">
+                  <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
                   <a href="#leads" className="text-neutral-400 hover:text-emerald-400 transition-colors">Browse Leads</a>
-                  <a href="#signals" className="text-neutral-400 hover:text-emerald-400 transition-colors">How It Works</a>
-                  <Link href="/about" className="text-neutral-400 hover:text-emerald-400 transition-colors">About</Link>
+                  <Link href="/newsletter" className="text-neutral-400 hover:text-cyan-400 transition-colors flex items-center gap-1">
+                    📰 Newsletter
+                  </Link>
                   <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calculator</Link>
+                  <a href="#signals" className="text-neutral-400 hover:text-emerald-400 transition-colors">How It Works</a>
                 </nav>
               </div>
               <div className="flex items-center gap-4">
-                <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
-                <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
+                <Link href="/login" className="hidden md:inline text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+                <Link href="/login" className="hidden md:inline text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
                   Sign Up Free
                 </Link>
+                
+                {/* Mobile Menu */}
+                <div className="md:hidden relative">
+                  <button 
+                    onClick={() => {
+                      const menu = document.getElementById('mobile-menu');
+                      menu.classList.toggle('hidden');
+                    }}
+                    className="text-neutral-400 hover:text-white px-3 py-2 text-xl"
+                  >
+                    ☰
+                  </button>
+                  <div id="mobile-menu" className="hidden absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+                    <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      📊 Dashboard
+                    </Link>
+                    <a href="#leads" className="block px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      🔥 Browse Leads
+                    </a>
+                    <Link href="/newsletter" className="block px-4 py-3 text-sm text-cyan-300 hover:bg-neutral-900 border-b border-neutral-800">
+                      📰 Newsletter
+                    </Link>
+                    <Link href="/roi-calculator" className="block px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      💰 ROI Calculator
+                    </Link>
+                    <a href="#signals" className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      💡 How It Works
+                    </a>
+                    <Link href="/login" className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      🔐 Login
+                    </Link>
+                    <Link href="/login" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">
+                      ✨ Sign Up Free
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -286,27 +358,86 @@ export default function Signals() {
               Stop cold calling. We track over 150 news sources to detect buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
             </p>
             
-            {/* Signal Intelligence Value */}
-            <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-2">
-              <div className="text-sm font-semibold text-emerald-400">💡 Why Signals Matter</div>
-              <p className="text-base text-neutral-200">
-                <span className="text-emerald-400">Signals</span> are the breakthrough. We monitor <span className="text-white font-semibold">{leads.length} companies</span> showing automation buying signals right now — labor shortages, expansion plans, safety issues. These aren't leads "thinking about" robots someday. These are <span className="text-red-400 font-semibold">live opportunities</span> where automation solves urgent problems.
-              </p>
+            {/* Stats Ticker - Moved from below CTA */}
+            {!loading && leads.length > 0 && (
+            <div className="space-y-3">
+              {/* Rotating Automation Quotes */}
+              <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center animate-pulse">
+                      <span className="text-base">💬</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div 
+                      key={currentQuoteIndex}
+                      className="animate-[fadeIn_0.5s_ease-in-out]"
+                    >
+                      <p className="text-sm md:text-base text-white font-medium italic">
+                        {automationQuotes[currentQuoteIndex].text}
+                      </p>
+                      <p className="text-xs text-emerald-400 mt-0.5">
+                        {automationQuotes[currentQuoteIndex].company} · <span className="text-cyan-400">{automationQuotes[currentQuoteIndex].signal}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden md:block flex-shrink-0">
+                    <div className="text-xs text-neutral-400 font-mono">
+                      {currentQuoteIndex + 1}/{automationQuotes.length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Bar - Tighter, values update smoothly without re-rendering */}
+              <div className="border border-emerald-800/40 bg-gradient-to-b from-neutral-900 to-black rounded-lg py-2 px-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                  <div className="group cursor-default">
+                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-all duration-500">
+                      {statsData.activeLeads}
+                    </div>
+                    <div className="text-xs text-neutral-400 font-semibold tracking-wide">ACTIVE LEADS</div>
+                  </div>
+                  <div className="group cursor-default">
+                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-all duration-500">
+                      {statsData.hotDeals}
+                    </div>
+                    <div className="text-xs text-orange-400 font-semibold tracking-wide">🔥 HOT DEALS</div>
+                  </div>
+                  <div className="group cursor-default">
+                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-all duration-500">
+                      {statsData.liveSignals}
+                    </div>
+                    <div className="text-xs text-cyan-400 font-semibold tracking-wide">LIVE SIGNALS</div>
+                  </div>
+                  <div className="group cursor-default">
+                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-all duration-500">
+                      {statsData.warmPipeline}
+                    </div>
+                    <div className="text-xs text-emerald-400 font-semibold tracking-wide">WARM PIPELINE</div>
+                  </div>
+                </div>
+              </div>
             </div>
+            )}
           </div>
         </div>
 
-
-
         {/* CTA - Build Your Pipeline */}
-        <div id="cta" className="max-w-5xl mx-auto px-6 py-8">
-          <div className="border border-emerald-500 rounded-lg px-6 py-6">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h2 className="text-2xl md:text-3xl font-bold text-white">
+        <div id="cta" className="max-w-5xl mx-auto px-6 pt-4 pb-8">
+          <div className="relative border-2 border-neutral-600 rounded-xl px-8 py-8 bg-gradient-to-b from-neutral-900/50 to-black/50 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
+            
+            <div className="relative space-y-6">
+              <div className="space-y-3 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-800/50 border border-neutral-700 rounded-full">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wide">Free Pipeline Builder</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white">
                   Build Your Sales Pipeline
                 </h2>
-                <p className="text-lg text-neutral-300">
+                <p className="text-base md:text-lg text-neutral-400">
                   See your top 5 prospect matches instantly — with engagement strategy & buying signals
                 </p>
               </div>
@@ -324,94 +455,62 @@ export default function Signals() {
                     type="text"
                     name="robotUrl"
                     placeholder="Enter your robot company website (e.g., amplibotics.ai)"
-                    className="w-full px-4 py-3 bg-black border border-emerald-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-5 py-4 bg-black border-2 border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all"
                     required
                   />
                 </div>
                 
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 bg-transparent border border-emerald-500 text-emerald-400 rounded-lg font-semibold hover:border-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="w-full px-6 py-4 bg-transparent border-2 border-emerald-500 text-emerald-400 rounded-lg font-bold text-lg hover:border-emerald-400 hover:text-emerald-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-200"
                 >
                   Build Pipeline →
                 </button>
               </form>
 
-              <div className="flex items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800">
-                <span>✓ No signup required</span>
-                <span>✓ Instant results</span>
-                <span>✓ Free trial</span>
+              <div className="flex items-center justify-center md:justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800 flex-wrap gap-3">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  No signup required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  Instant results
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  Free trial
+                </span>
               </div>
             </div>
+          </div>
+          
+          {/* View All Leads CTA */}
+          <div className="pt-4">
+            <Link 
+              href="/dashboard" 
+              className="block text-center px-6 py-3 bg-transparent border border-neutral-600 text-neutral-300 rounded-lg hover:border-neutral-500 hover:text-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-200 font-medium"
+            >
+              Browse All {leads.length} Leads by Industry →
+            </Link>
           </div>
         </div>
 
-        {/* Stats Ticker - Thinner Version Below CTA */}
-        {!loading && leads.length > 0 && (
-        <div className="max-w-5xl mx-auto px-6 pb-8">
-          {/* Rotating Automation Quotes */}
-          <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center animate-pulse">
-                  <span className="text-base">💬</span>
-                </div>
+        {/* Link to Signals Page */}
+        <div className="max-w-5xl mx-auto px-6 pb-4">
+          <Link href="#signals" className="group block border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-5 hover:border-emerald-700/50 hover:bg-emerald-950/30 transition-all">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="text-sm font-semibold text-emerald-400">💡 Why Signals Matter</div>
+                <div className="text-xs text-neutral-500 hidden md:block">Learn how we identify buying intent</div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div 
-                  key={currentQuoteIndex}
-                  className="animate-[fadeIn_0.5s_ease-in-out]"
-                >
-                  <p className="text-sm md:text-base text-white font-medium italic">
-                    {automationQuotes[currentQuoteIndex].text}
-                  </p>
-                  <p className="text-xs text-emerald-400 mt-0.5">
-                    {automationQuotes[currentQuoteIndex].company} · <span className="text-cyan-400">{automationQuotes[currentQuoteIndex].signal}</span>
-                  </p>
-                </div>
-              </div>
-              <div className="hidden md:block flex-shrink-0">
-                <div className="text-xs text-neutral-400 font-mono">
-                  {currentQuoteIndex + 1}/{automationQuotes.length}
-                </div>
-              </div>
+              <div className="text-emerald-400 group-hover:translate-x-1 transition-transform">→</div>
             </div>
-          </div>
-
-          {/* Thinner Stats Bar */}
-          <div className="border border-emerald-800/40 bg-gradient-to-b from-neutral-900 to-black rounded-lg py-3 px-4 mt-3">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="group cursor-default">
-                <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-200">
-                  {leads.length}
-                </div>
-                <div className="text-xs text-neutral-400 mt-1 font-semibold tracking-wide">ACTIVE LEADS</div>
-              </div>
-              <div className="group cursor-default">
-                <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-transform duration-200">
-                  {hotCount}
-                </div>
-                <div className="text-xs text-orange-400 mt-1 font-semibold tracking-wide">🔥 HOT DEALS</div>
-              </div>
-              <div className="group cursor-default">
-                <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-transform duration-200">
-                  {totalSignals}
-                </div>
-                <div className="text-xs text-cyan-400 mt-1 font-semibold tracking-wide">LIVE SIGNALS</div>
-              </div>
-              <div className="group cursor-default">
-                <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-transform duration-200">
-                  {warmCount}
-                </div>
-                <div className="text-xs text-emerald-400 mt-1 font-semibold tracking-wide">WARM PIPELINE</div>
-              </div>
-            </div>
-          </div>
+          </Link>
         </div>
-        )}
 
         {/* ENHANCED: Strategic Snapshot - Top Hot Deals with More POP */}
-        <div id="leads" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-8">
+        <div id="leads" className="max-w-5xl mx-auto px-6 pt-6 pb-10 md:pb-12 space-y-8">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">
@@ -522,7 +621,7 @@ export default function Signals() {
             </p>
             <div className="pt-2">
               <Link 
-                href="/index_old_dashboard" 
+                href="/dashboard" 
                 className="inline-block px-8 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-950/30 transition-colors font-medium"
               >
                 View Full Dashboard →
@@ -654,7 +753,7 @@ export default function Signals() {
                 <p className="text-sm text-neutral-300">
                   View all {hotCount} HOT leads organized by industry — see signals, scores, and contact insights
                 </p>
-                <Link href="/index_old_dashboard" className="text-xs text-cyan-400 hover:text-cyan-300 underline inline-block mt-1">
+                <Link href="/dashboard" className="text-xs text-cyan-400 hover:text-cyan-300 underline inline-block mt-1">
                   View Dashboard →
                 </Link>
               </div>
