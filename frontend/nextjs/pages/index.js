@@ -38,7 +38,19 @@ export default function Signals() {
     { text: "\"New facility opening Q2 - can't hire fast enough for ramp-up\"", company: "Logistics Expansion", signal: "Expansion" },
     { text: "\"Turnover is killing us - robots don't quit after 3 months\"", company: "QSR Chain", signal: "High Turnover" },
     { text: "\"OSHA citations for repetitive strain - need to automate packaging\"", company: "Manufacturing Site", signal: "Safety Risk" },
-    { text: "\"Evaluating palletizing robots to eliminate back injuries\"", company: "Cold Storage Warehouse", signal: "Automation Intent" }
+    { text: "\"Evaluating palletizing robots to eliminate back injuries\"", company: "Cold Storage Warehouse", signal: "Automation Intent" },
+    { text: "\"Hospital lab can't find technicians - looking at automated specimen processing\"", company: "Regional Medical Center", signal: "Medical Tech" },
+    { text: "\"Pharmacy automation could cut dispensing errors by 99%\"", company: "Healthcare System", signal: "Patient Safety" },
+    { text: "\"Airport terminal cleaning requires 50 workers - only have 30\"", company: "International Airport", signal: "Staffing Crisis" },
+    { text: "\"Our retail stores need overnight shelf scanning but no staff available\"", company: "Grocery Chain", signal: "Retail Automation" },
+    { text: "\"Food processing line down 40% capacity due to worker shortage\"", company: "Food Manufacturing", signal: "Production Gap" },
+    { text: "\"Datacenter expansion needs 24/7 monitoring - can't staff night shifts\"", company: "Cloud Infrastructure", signal: "Operations Challenge" },
+    { text: "\"Apparel warehouse facing 80% turnover - need automated picking\"", company: "Fashion Logistics", signal: "Retention Crisis" },
+    { text: "\"Hotel housekeeping takes 45 min per room - need to cut to 30\"", company: "Boutique Hotel Group", signal: "Efficiency Target" },
+    { text: "\"Kitchen staff shortage forcing us to reduce menu and operating hours\"", company: "Restaurant Chain", signal: "Service Impact" },
+    { text: "\"Competitors automated - we're losing market share on delivery speed\"", company: "3PL Provider", signal: "Competitive Pressure" },
+    { text: "\"New minimum wage increase makes automation payback under 18 months\"", company: "Distribution Network", signal: "Economic Trigger" },
+    { text: "\"Surgical robot ROI proven - expanding program to 3 more hospitals\"", company: "Health Network", signal: "Deployment Success" }
   ];
 
   // Rotate quotes every 4 seconds
@@ -397,28 +409,28 @@ export default function Signals() {
               <div className="border border-emerald-800/40 bg-gradient-to-b from-neutral-900 to-black rounded-lg py-2 px-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                   <div className="group cursor-default">
-                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-all duration-500">
+                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-all duration-500">
                       {statsData.activeLeads}
                     </div>
-                    <div className="text-xs text-neutral-400 font-semibold tracking-wide">ACTIVE LEADS</div>
+                    <div className="text-sm text-neutral-400 font-semibold tracking-wide">ACTIVE LEADS</div>
                   </div>
                   <div className="group cursor-default">
-                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-all duration-500">
+                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-all duration-500">
                       {statsData.hotDeals}
                     </div>
-                    <div className="text-xs text-orange-400 font-semibold tracking-wide">🔥 HOT DEALS</div>
+                    <div className="text-sm text-orange-400 font-semibold tracking-wide">🔥 HOT DEALS</div>
                   </div>
                   <div className="group cursor-default">
-                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-all duration-500">
+                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-all duration-500">
                       {statsData.liveSignals}
                     </div>
-                    <div className="text-xs text-cyan-400 font-semibold tracking-wide">LIVE SIGNALS</div>
+                    <div className="text-sm text-cyan-400 font-semibold tracking-wide">LIVE SIGNALS</div>
                   </div>
                   <div className="group cursor-default">
-                    <div className="text-xl md:text-2xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-all duration-500">
+                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-all duration-500">
                       {statsData.warmPipeline}
                     </div>
-                    <div className="text-xs text-emerald-400 font-semibold tracking-wide">WARM PIPELINE</div>
+                    <div className="text-sm text-emerald-400 font-semibold tracking-wide">WARM PIPELINE</div>
                   </div>
                 </div>
               </div>
