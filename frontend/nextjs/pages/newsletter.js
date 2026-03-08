@@ -202,7 +202,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
       <div className="min-h-screen bg-black text-white">
         {/* Navigation Bar */}
         <div className="border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
                 <h1 className="text-lg font-semibold text-white">
@@ -231,40 +231,32 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         </div>
 
         {/* Hero Section */}
-        <div className="border-b border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-emerald-950/20">
-          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-            <div className="inline-block mb-4 px-3 py-1 border border-emerald-500/30 rounded-full text-xs text-emerald-400 bg-emerald-950/30">
+        <div className="border-b border-neutral-800">
+          <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+            <div className="mb-3 text-xs text-emerald-400">
               📰 ROBOT INTELLIGENCE BRIEF
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
               Daily Automation News & Analytics
             </h1>
-            <p className="text-lg text-neutral-400 mb-6 max-w-2xl mx-auto">
+            <p className="text-base text-neutral-400 mb-4 max-w-2xl mx-auto">
               Real-world robot deployments, ROI benchmarks, vendor market share, and technology trends. 
               The intelligence investors, buyers, and operators need.
             </p>
-            <div className="flex items-center justify-center gap-6 text-sm text-neutral-500">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400">✓</span> Daily Roundups
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400">✓</span> ROI Benchmarks
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400">✓</span> Market Intelligence
-              </div>
+            <div className="text-xs text-neutral-500">
+              <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Market Intelligence
             </div>
           </div>
         </div>
 
         {/* Latest Edition Header */}
         <div className="border-b border-neutral-800">
-          <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto px-4 py-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="text-xs text-neutral-500 mb-1">LATEST EDITION {latestEdition.edition}</div>
-                <h2 className="text-3xl font-bold text-white mb-2">{latestEdition.headline}</h2>
-                <p className="text-lg text-neutral-400">{latestEdition.subheadline}</p>
+                <h2 className="text-2xl font-bold text-white mb-1">{latestEdition.headline}</h2>
+                <p className="text-sm text-neutral-400">{latestEdition.subheadline}</p>
               </div>
               <div className="text-right">
                 <div className="text-xs text-neutral-500">Published</div>
@@ -275,16 +267,16 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         </div>
 
         {/* Top Stories */}
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <span className="text-2xl">🔥</span> Top Stories
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span className="text-xl">🔥</span> Top Stories
           </h3>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {topStories.map((story, idx) => (
-              <div key={idx} className="border border-neutral-800 rounded-lg p-6 hover:border-emerald-500/30 transition-colors">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="inline-block px-2 py-1 text-xs font-mono border border-cyan-500/30 rounded text-cyan-400 bg-cyan-950/20">
+              <div key={idx} className="border border-neutral-800 rounded-lg p-4 hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="text-xs font-mono text-cyan-400">
                     {story.category}
                   </div>
                   <div className="flex items-center gap-2">
@@ -293,25 +285,22 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                   </div>
                 </div>
 
-                <h4 className="text-xl font-bold text-white mb-2">{story.company}</h4>
-                <h5 className="text-lg text-emerald-400 mb-3">{story.headline}</h5>
+                <h4 className="text-lg font-bold text-white mb-1">{story.company}</h4>
+                <h5 className="text-base text-emerald-400 mb-2">{story.headline}</h5>
 
                 {/* Preview (always visible) */}
-                <p className="text-neutral-400 mb-4">{story.snippet}</p>
+                <p className="text-sm text-neutral-400 mb-3">{story.snippet}</p>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-neutral-900/50 rounded border border-neutral-800">
+                <div className="grid grid-cols-3 gap-3 mb-3 text-xs">
                   <div>
-                    <div className="text-xs text-neutral-500">ROI</div>
-                    <div className="text-sm font-semibold text-emerald-400">{story.roi}</div>
+                    <span className="text-neutral-500">ROI:</span> <span className="text-emerald-400">{story.roi}</span>
                   </div>
                   <div>
-                    <div className="text-xs text-neutral-500">Economics</div>
-                    <div className="text-sm font-semibold text-cyan-400">{story.economics}</div>
+                    <span className="text-neutral-500">Economics:</span> <span className="text-cyan-400">{story.economics}</span>
                   </div>
                   <div>
-                    <div className="text-xs text-neutral-500">Impact</div>
-                    <div className="text-sm font-semibold text-amber-400">{story.impact}</div>
+                    <span className="text-neutral-500">Impact:</span> <span className="text-amber-400">{story.impact}</span>
                   </div>
                 </div>
 
@@ -345,36 +334,36 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         </div>
 
         {/* Market Intelligence (Subscriber-Only) */}
-        <div className="border-t border-neutral-800 bg-neutral-950/50">
-          <div className="max-w-4xl mx-auto px-4 py-12">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <span className="text-2xl">📊</span> Market Intelligence
+        <div className="border-t border-neutral-800">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <span className="text-xl">📊</span> Market Intelligence
             </h3>
 
             {isSubscribed ? (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {/* Vendor Deployments */}
                 <div>
-                  <h4 className="text-lg font-semibold text-emerald-400 mb-4">Vendor Deployment Tracking</h4>
+                  <h4 className="text-base font-semibold text-emerald-400 mb-3">Vendor Deployment Tracking</h4>
                   <div className="border border-neutral-800 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-neutral-900 border-b border-neutral-800">
                         <tr>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Vendor</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Vertical</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Deployments</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Growth</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Market Share</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vendor</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Deployments</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Growth</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Market Share</th>
                         </tr>
                       </thead>
                       <tbody>
                         {marketInsights.deployments.map((item, idx) => (
                           <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
-                            <td className="p-3 text-white font-semibold">{item.vendor}</td>
-                            <td className="p-3 text-neutral-400">{item.vertical}</td>
-                            <td className="p-3 text-cyan-400">{item.count}</td>
-                            <td className="p-3 text-emerald-400">{item.growth}</td>
-                            <td className="p-3 text-amber-400">{item.marketShare}</td>
+                            <td className="p-2 text-sm text-white font-semibold">{item.vendor}</td>
+                            <td className="p-2 text-sm text-neutral-400">{item.vertical}</td>
+                            <td className="p-2 text-sm text-cyan-400">{item.count}</td>
+                            <td className="p-2 text-sm text-emerald-400">{item.growth}</td>
+                            <td className="p-2 text-sm text-amber-400">{item.marketShare}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -384,24 +373,24 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
 
                 {/* ROI Benchmarks */}
                 <div>
-                  <h4 className="text-lg font-semibold text-emerald-400 mb-4">ROI Benchmarking by Vertical</h4>
+                  <h4 className="text-base font-semibold text-emerald-400 mb-3">ROI Benchmarking by Vertical</h4>
                   <div className="border border-neutral-800 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-neutral-900 border-b border-neutral-800">
                         <tr>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Vertical</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Typical Payback</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Best Case</th>
-                          <th className="text-left p-3 text-neutral-400 font-semibold">Worst Case</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Typical Payback</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Best Case</th>
+                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Worst Case</th>
                         </tr>
                       </thead>
                       <tbody>
                         {marketInsights.roiBenchmarks.map((item, idx) => (
                           <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
-                            <td className="p-3 text-white font-semibold">{item.vertical}</td>
-                            <td className="p-3 text-cyan-400">{item.typical}</td>
-                            <td className="p-3 text-emerald-400">{item.best}</td>
-                            <td className="p-3 text-amber-400">{item.worst}</td>
+                            <td className="p-2 text-sm text-white font-semibold">{item.vertical}</td>
+                            <td className="p-2 text-sm text-cyan-400">{item.typical}</td>
+                            <td className="p-2 text-sm text-emerald-400">{item.best}</td>
+                            <td className="p-2 text-sm text-amber-400">{item.worst}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -411,12 +400,12 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
 
                 {/* Technology Trends */}
                 <div>
-                  <h4 className="text-lg font-semibold text-emerald-400 mb-4">Technology Adoption Trends</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-base font-semibold text-emerald-400 mb-3">Technology Adoption Trends</h4>
+                  <div className="space-y-2">
                     {marketInsights.trends.map((item, idx) => (
-                      <div key={idx} className="border border-neutral-800 rounded-lg p-4 hover:border-emerald-500/30 transition-colors">
-                        <div className="flex items-start justify-between mb-2">
-                          <h5 className="font-semibold text-white">{item.trend}</h5>
+                      <div key={idx} className="border border-neutral-800 rounded p-3 hover:border-emerald-500/30 transition-colors">
+                        <div className="flex items-start justify-between mb-1">
+                          <h5 className="text-sm font-semibold text-white">{item.trend}</h5>
                           <span className="text-sm text-cyan-400">{item.adoption}</span>
                         </div>
                         <p className="text-sm text-neutral-400">{item.impact}</p>
@@ -426,7 +415,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                 </div>
               </div>
             ) : (
-              <div className="relative h-96 border border-neutral-800 rounded-lg overflow-hidden">
+              <div className="relative h-80 border border-neutral-800 rounded-lg overflow-hidden">
                 <div className="absolute inset-0 blur-md bg-neutral-900 p-6">
                   <div className="space-y-4">
                     <div className="h-8 bg-neutral-800 rounded w-3/4"></div>
@@ -455,13 +444,13 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
 
         {/* Subscribe CTA */}
         {!isSubscribed && (
-          <div id="subscribe-form" className="border-t border-neutral-800 bg-gradient-to-br from-emerald-950/20 via-black to-cyan-950/20">
-            <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-              <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-3xl font-bold text-white mb-4">
+          <div id="subscribe-form" className="border-t border-neutral-800">
+            <div className="max-w-2xl mx-auto px-4 py-10 text-center">
+              <div className="text-3xl mb-3">🚀</div>
+              <h3 className="text-2xl font-bold text-white mb-3">
                 Get the Full Robot Intelligence Brief
               </h3>
-              <p className="text-lg text-neutral-400 mb-8">
+              <p className="text-base text-neutral-400 mb-6">
                 Free daily newsletter with deployment data, ROI benchmarks, vendor intelligence, and market trends.
               </p>
 
@@ -484,27 +473,16 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                 </div>
               </form>
 
-              <div className="grid grid-cols-2 gap-4 text-sm text-neutral-400">
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-emerald-400">✓</span> Daily deployment roundups
-                </div>
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-emerald-400">✓</span> ROI benchmarking
-                </div>
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-emerald-400">✓</span> Vendor market share
-                </div>
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-emerald-400">✓</span> Technology trends
-                </div>
+              <div className="text-xs text-neutral-500">
+                <span className="text-emerald-400">✓</span> Daily deployment roundups · <span className="text-emerald-400">✓</span> ROI benchmarking · <span className="text-emerald-400">✓</span> Vendor market share · <span className="text-emerald-400">✓</span> Technology trends
               </div>
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <div className="border-t border-neutral-800 bg-neutral-950">
-          <div className="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-neutral-500">
+        <div className="border-t border-neutral-800">
+          <div className="max-w-4xl mx-auto px-4 py-6 text-center text-xs text-neutral-500">
             <p className="mb-2">
               <span className="text-white">READY</span>
               {' '}
