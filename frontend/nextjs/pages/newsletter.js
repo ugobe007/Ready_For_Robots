@@ -304,141 +304,99 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                   </div>
                 </div>
 
-                {/* Full Story (subscriber-only) */}
-                {isSubscribed ? (
-                  <div className="space-y-3">
-                    {story.fullText.split('\n\n').map((para, pIdx) => (
-                      <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="blur-sm text-neutral-600 text-sm leading-relaxed">
-                      {story.fullText.substring(0, 200)}...
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black flex items-center justify-center">
-                      <button
-                        onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                        className="px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors font-semibold"
-                      >
-                        Subscribe to Read Full Story
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Full Story (now available to all) */}
+                <div className="space-y-3">
+                  {story.fullText.split('\n\n').map((para, pIdx) => (
+                    <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
+                      {para}
+                    </p>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Market Intelligence (Subscriber-Only) */}
+        {/* Market Intelligence (now available to all) */}
         <div className="border-t border-neutral-800">
           <div className="max-w-4xl mx-auto px-4 py-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <span className="text-xl">📊</span> Market Intelligence
             </h3>
 
-            {isSubscribed ? (
-              <div className="space-y-6">
-                {/* Vendor Deployments */}
-                <div>
-                  <h4 className="text-base font-semibold text-emerald-400 mb-3">Vendor Deployment Tracking</h4>
-                  <div className="border border-neutral-800 rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-neutral-900 border-b border-neutral-800">
-                        <tr>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vendor</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Deployments</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Growth</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Market Share</th>
+            <div className="space-y-6">
+              {/* Vendor Deployments */}
+              <div>
+                <h4 className="text-base font-semibold text-emerald-400 mb-3">Vendor Deployment Tracking</h4>
+                <div className="border border-neutral-800 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-900 border-b border-neutral-800">
+                      <tr>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vendor</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Deployments</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Growth</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Market Share</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {marketInsights.deployments.map((item, idx) => (
+                        <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
+                          <td className="p-2 text-sm text-white font-semibold">{item.vendor}</td>
+                          <td className="p-2 text-sm text-neutral-400">{item.vertical}</td>
+                          <td className="p-2 text-sm text-cyan-400">{item.count}</td>
+                          <td className="p-2 text-sm text-emerald-400">{item.growth}</td>
+                          <td className="p-2 text-sm text-amber-400">{item.marketShare}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {marketInsights.deployments.map((item, idx) => (
-                          <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
-                            <td className="p-2 text-sm text-white font-semibold">{item.vendor}</td>
-                            <td className="p-2 text-sm text-neutral-400">{item.vertical}</td>
-                            <td className="p-2 text-sm text-cyan-400">{item.count}</td>
-                            <td className="p-2 text-sm text-emerald-400">{item.growth}</td>
-                            <td className="p-2 text-sm text-amber-400">{item.marketShare}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
 
-                {/* ROI Benchmarks */}
-                <div>
-                  <h4 className="text-base font-semibold text-emerald-400 mb-3">ROI Benchmarking by Vertical</h4>
-                  <div className="border border-neutral-800 rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-neutral-900 border-b border-neutral-800">
-                        <tr>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Typical Payback</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Best Case</th>
-                          <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Worst Case</th>
+              {/* ROI Benchmarks */}
+              <div>
+                <h4 className="text-base font-semibold text-emerald-400 mb-3">ROI Benchmarking by Vertical</h4>
+                <div className="border border-neutral-800 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-900 border-b border-neutral-800">
+                      <tr>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Vertical</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Typical Payback</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Best Case</th>
+                        <th className="text-left p-2 text-xs text-neutral-400 font-semibold">Worst Case</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {marketInsights.roiBenchmarks.map((item, idx) => (
+                        <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
+                          <td className="p-2 text-sm text-white font-semibold">{item.vertical}</td>
+                          <td className="p-2 text-sm text-cyan-400">{item.typical}</td>
+                          <td className="p-2 text-sm text-emerald-400">{item.best}</td>
+                          <td className="p-2 text-sm text-amber-400">{item.worst}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {marketInsights.roiBenchmarks.map((item, idx) => (
-                          <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-900/50">
-                            <td className="p-2 text-sm text-white font-semibold">{item.vertical}</td>
-                            <td className="p-2 text-sm text-cyan-400">{item.typical}</td>
-                            <td className="p-2 text-sm text-emerald-400">{item.best}</td>
-                            <td className="p-2 text-sm text-amber-400">{item.worst}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
 
-                {/* Technology Trends */}
-                <div>
-                  <h4 className="text-base font-semibold text-emerald-400 mb-3">Technology Adoption Trends</h4>
-                  <div className="space-y-2">
-                    {marketInsights.trends.map((item, idx) => (
-                      <div key={idx} className="border border-neutral-800 rounded p-3 hover:border-emerald-500/30 transition-colors">
-                        <div className="flex items-start justify-between mb-1">
-                          <h5 className="text-sm font-semibold text-white">{item.trend}</h5>
-                          <span className="text-sm text-cyan-400">{item.adoption}</span>
-                        </div>
-                        <p className="text-sm text-neutral-400">{item.impact}</p>
+              {/* Technology Trends */}
+              <div>
+                <h4 className="text-base font-semibold text-emerald-400 mb-3">Technology Adoption Trends</h4>
+                <div className="space-y-2">
+                  {marketInsights.trends.map((item, idx) => (
+                    <div key={idx} className="border border-neutral-800 rounded p-3 hover:border-emerald-500/30 transition-colors">
+                      <div className="flex items-start justify-between mb-1">
+                        <h5 className="text-sm font-semibold text-white">{item.trend}</h5>
+                        <span className="text-sm text-cyan-400">{item.adoption}</span>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm text-neutral-400">{item.impact}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <div className="relative h-80 border border-neutral-800 rounded-lg overflow-hidden">
-                <div className="absolute inset-0 blur-md bg-neutral-900 p-6">
-                  <div className="space-y-4">
-                    <div className="h-8 bg-neutral-800 rounded w-3/4"></div>
-                    <div className="h-32 bg-neutral-800 rounded"></div>
-                    <div className="h-8 bg-neutral-800 rounded w-2/3"></div>
-                    <div className="h-32 bg-neutral-800 rounded"></div>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/70 to-black flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-4">🔒</div>
-                    <h4 className="text-xl font-bold text-white mb-2">Subscriber-Only Intelligence</h4>
-                    <p className="text-neutral-400 mb-6">Unlock vendor tracking, ROI benchmarks, and technology trends</p>
-                    <button
-                      onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                      className="px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors font-semibold"
-                    >
-                      Subscribe Free
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -448,10 +406,10 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
             <div className="max-w-2xl mx-auto px-4 py-10 text-center">
               <div className="text-3xl mb-3">🚀</div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                Get the Full Robot Intelligence Brief
+                Never Miss a Robot Intelligence Brief
               </h3>
               <p className="text-base text-neutral-400 mb-6">
-                Free daily newsletter with deployment data, ROI benchmarks, vendor intelligence, and market trends.
+                Get this delivered to your inbox daily. Free deployment data, ROI benchmarks, vendor intelligence, and market trends.
               </p>
 
               <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
