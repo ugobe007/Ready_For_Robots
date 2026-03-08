@@ -285,7 +285,7 @@ export default function Signals() {
                 <div className="text-xs text-neutral-400 mt-1">Total Leads</div>
               </div>
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-red-400">{hotCount}</div>
+                <div className="text-2xl md:text-3xl font-bold text-orange-400">{hotCount}</div>
                 <div className="text-xs text-neutral-400 mt-1">🔥 Hot</div>
               </div>
               <div>
@@ -352,7 +352,7 @@ export default function Signals() {
         {/* Strategic Snapshot - Top Hot Deals */}
         <div id="leads" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-8">
           <div className="space-y-3">
-            <div className="text-xs text-red-400 font-semibold uppercase tracking-widest">🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA</div>
+            <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">🔥 STRATEGIC SNAPSHOT — LIVE SIGNAL DATA</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Top Hot Deals Today</h2>
             <p className="text-neutral-400">
               Live companies with urgent automation needs — click any company to see full AI analysis and signal details
@@ -378,7 +378,7 @@ export default function Signals() {
                   <div 
                     key={lead.id}
                     onClick={() => router.push(`/analyze?id=${lead.id}`)}
-                    className="border border-neutral-800 hover:border-red-800/50 rounded-lg p-4 space-y-3 transition-all cursor-pointer hover:bg-red-950/5"
+                    className="border border-neutral-800 hover:border-orange-800/50 rounded-lg p-4 space-y-3 transition-all cursor-pointer hover:bg-orange-950/5"
                     style={{
                       animation: `slideIn 0.5s ease-out ${idx * 0.05}s both`
                     }}
@@ -395,7 +395,7 @@ export default function Signals() {
                           >
                             {lead.company_name}
                           </h4>
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-red-950/50 text-red-400 border border-red-800/50 rounded">
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-orange-950/50 text-orange-400 border border-orange-800/50 rounded">
                             🔥 HOT
                           </span>
                         </div>
