@@ -6,6 +6,7 @@ export default function Newsletter() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [email, setEmail] = useState('');
   const [showPreview, setShowPreview] = useState(true);
+  const [expandedStories, setExpandedStories] = useState({});
   
   // Mock subscription check (in production, check against backend/Supabase)
   useEffect(() => {
@@ -13,6 +14,13 @@ export default function Newsletter() {
     setIsSubscribed(subscribed);
     setShowPreview(!subscribed);
   }, []);
+
+  const toggleStory = (idx) => {
+    setExpandedStories(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -274,43 +282,82 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
 
           <div className="space-y-4">
             {topStories.map((story, idx) => (
-              <div key={idx} className="border border-neutral-800 rounded-lg p-4 hover:border-emerald-500/30 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="text-xs font-mono text-cyan-400">
-                    {story.category}
-                  </div>
+              <div 
+                key={idx} 
+                className={`border-2 rounded-lg p-4 transition-all duration-300 ${
+                  expandedStories[idx] 
+                    ? 'border-emerald-500 bg-emerald-950/20 shadow-lg shadow-emerald-500/10' 
+                    : 'border-neutral-800 hover:border-emerald-500/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <span className="text-xs text-neutral-500">Signal Strength: {story.signalStrength}/10</span>
+                    <span className="text-xs font-mono px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                      {story.category}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                      <span className="text-xs text-emerald-400 font-semibold">{story.signalStrength}/10</span>
+                    </div>
                   </div>
                 </div>
 
-                <h4 className="text-lg font-bold text-white mb-1">{story.company}</h4>
-                <h5 className="text-base text-emerald-400 mb-2">{story.headline}</h5>
-
-                {/* Preview (always visible) */}
-                <p className="text-sm text-neutral-400 mb-3">{story.snippet}</p>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-3 text-xs">
-                  <div>
-                    <span className="text-neutral-500">ROI:</span> <span className="text-emerald-400">{story.roi}</span>
+                <button
+                  onClick={() => toggleStory(idx)}
+                  className="w-full text-left group"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <h4 className="text-xl font-bold text-white mb-1 group-hover:text-emerald-400 transition-colors">
+                        {story.company}
+                      </h4>
+                      <h5 className="text-base text-emerald-400 mb-3 group-hover:text-cyan-400 transition-colors">
+                        {story.headline}
+                      </h5>
+                    </div>
+                    <div className={`text-emerald-400 text-2xl transition-transform duration-300 ${expandedStories[idx] ? 'rotate-180' : ''}`}>
+                      ▼
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-neutral-500">Economics:</span> <span className="text-cyan-400">{story.economics}</span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500">Impact:</span> <span className="text-amber-400">{story.impact}</span>
-                  </div>
-                </div>
 
-                {/* Full Story (now available to all) */}
-                <div className="space-y-3">
-                  {story.fullText.split('\n\n').map((para, pIdx) => (
-                    <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
-                      {para}
-                    </p>
-                  ))}
+                  {/* Preview (always visible) */}
+                  <p className="text-sm text-neutral-400 mb-3 italic">{story.snippet}</p>
+
+                  {/* Quick Stats - Enhanced with icons */}
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
+                      <div className="text-[10px] text-neutral-500 uppercase mb-0.5">💰 ROI</div>
+                      <div className="text-xs text-emerald-400 font-semibold">{story.roi}</div>
+                    </div>
+                    <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
+                      <div className="text-[10px] text-neutral-500 uppercase mb-0.5">💵 Economics</div>
+                      <div className="text-xs text-cyan-400 font-semibold">{story.economics}</div>
+                    </div>
+                    <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
+                      <div className="text-[10px] text-neutral-500 uppercase mb-0.5">📊 Impact</div>
+                      <div className="text-xs text-amber-400 font-semibold">{story.impact}</div>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Collapseable Full Story */}
+                <div 
+                  className={`overflow-hidden transition-all duration-500 ${
+                    expandedStories[idx] ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="pt-4 border-t border-emerald-500/30 space-y-3">
+                    {story.fullText.split('\n\n').map((para, pIdx) => (
+                      <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
+                        {para}
+                      </p>
+                    ))}
+                    
+                    <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center gap-2 text-xs text-neutral-500">
+                      <span>Click to collapse</span>
+                      <span className="text-emerald-400">▲</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
