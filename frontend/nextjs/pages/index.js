@@ -365,9 +365,11 @@ export default function Signals() {
         {/* Hero */}
         <div className="max-w-5xl mx-auto px-6 py-10 md:py-12">
           <div className="space-y-6">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE FOR ROBOTICS SALES</div>
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Powered by 14 Signal Types · 140+ Data Sources</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              Find buyers that are <span className="text-emerald-400">ready for automation</span>
+              <span className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+                Intent Signal Intelligence → Sales-Ready Leads
+              </span>
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
               Stop cold calling. We track over 150 news sources to detect buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
@@ -653,14 +655,6 @@ export default function Signals() {
             <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
               Real-world indicators that a company needs automation — before they post an RFP
             </p>
-            <div className="pt-2">
-              <Link 
-                href="/about" 
-                className="inline-block px-6 py-3 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-500/10 transition-all font-semibold"
-              >
-                See Signal System in Action →
-              </Link>
-            </div>
           </div>
 
           {/* Signal Categories */}
