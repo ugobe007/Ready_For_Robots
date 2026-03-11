@@ -53,6 +53,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
             "market_fit_score": round((s.robotics_fit_score    if s else 0), 1),
         },
         "signal_count": len(sigs),
+        "created_at":   c.created_at.isoformat() if c.created_at else None,
+        "updated_at":   c.updated_at.isoformat() if c.updated_at else None,
         "signals": [
             {
                 "signal_type":     sig.signal_type,

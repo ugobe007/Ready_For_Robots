@@ -29,6 +29,8 @@ export default function Signals() {
 
   // Hot leads state - will be fetched from API
   const [hotLeads, setHotLeads] = useState([]);
+  // Expanded deal for inline details
+  const [expandedDealId, setExpandedDealId] = useState(null);
 
   // Rotating automation quotes from real news/signals
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
@@ -577,12 +579,18 @@ export default function Signals() {
               {topHotDeals.map((lead, idx) => {
                 const score = typeof lead.score === 'object' ? (lead.score.overall_score || 0) : (lead.score || 0);
                 const topSignals = (lead.signals || []).slice(0, 2);
+                const isExpanded = expandedDealId === lead.id;
+                const allSignals = lead.signals || [];
                 
                 return (
                   <div 
                     key={lead.id}
-                    onClick={() => router.push(`/analyze?id=${lead.id}`)}
-                    className="group border border-orange-800/40 hover:border-orange-500/60 bg-orange-950/5 hover:bg-orange-950/10 rounded-lg p-4 space-y-3 transition-all cursor-pointer"
+                    onClick={() => setExpandedDealId(isExpanded ? null : lead.id)}
+                    className={`group border rounded-lg p-4 space-y-3 transition-all cursor-pointer ${
+                      isExpanded 
+                        ? 'border-orange-500/80 bg-orange-950/15 shadow-lg shadow-orange-500/5' 
+                        : 'border-orange-800/40 hover:border-orange-500/60 bg-orange-950/5 hover:bg-orange-950/10'
+                    }`}
                     style={{
                       animation: `slideIn 0.5s ease-out ${idx * 0.05}s both`
                     }}
@@ -590,18 +598,13 @@ export default function Signals() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <h4 
-                            className="text-lg font-semibold text-white group-hover:text-orange-300 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/analyze?id=${lead.id}`);
-                            }}
-                          >
+                          <h4 className="text-lg font-semibold text-white group-hover:text-orange-300 transition-colors">
                             {lead.company_name}
                           </h4>
                           <span className="px-2 py-0.5 text-xs font-semibold bg-orange-600 text-white rounded">
                             🔥 HOT
                           </span>
+                          <span className="text-neutral-500 text-sm">{isExpanded ? '▲' : '▼'}</span>
                         </div>
                         <div className="text-sm text-neutral-400">
                           {lead.industry} • {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
@@ -615,7 +618,7 @@ export default function Signals() {
                             ))}
                             {(lead.signals?.length || 0) > 2 && (
                               <span className="text-xs text-orange-400 font-bold bg-orange-950/30 border border-orange-800/40 px-2 py-1 rounded">
-                                +{lead.signals.length - 2} more signals
+                                +{lead.signals.length - 2} more
                               </span>
                             )}
                           </div>
@@ -628,17 +631,49 @@ export default function Signals() {
                           </div>
                           <div className="text-xs text-neutral-500 font-medium">SCORE</div>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/analyze?id=${lead.id}`);
-                          }}
-                          className="text-xs text-orange-400 hover:text-orange-300 font-semibold underline"
+                        <Link
+                          href={`/dashboard?analyze=${lead.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-block text-xs text-orange-400 hover:text-orange-300 font-semibold underline"
                         >
-                          Analyze →
-                        </button>
+                          Full analysis →
+                        </Link>
                       </div>
                     </div>
+
+                    {isExpanded && (
+                      <div 
+                        className="pt-4 mt-3 border-t border-orange-800/40 space-y-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="text-xs font-semibold text-neutral-400 uppercase">All signals</div>
+                        <div className="flex flex-wrap gap-2">
+                          {allSignals.map((signal, sidx) => (
+                            <span key={sidx} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded">
+                              {signal.signal_type}
+                            </span>
+                          ))}
+                        </div>
+                        {allSignals.some(s => s.raw_text) && (
+                          <div className="space-y-2">
+                            <div className="text-xs font-semibold text-neutral-400 uppercase">Signal details</div>
+                            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                              {allSignals.filter(s => s.raw_text).slice(0, 3).map((signal, sidx) => (
+                                <p key={sidx} className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                                  {signal.raw_text?.slice(0, 120)}{(signal.raw_text?.length || 0) > 120 ? '…' : ''}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <Link
+                          href={`/dashboard?analyze=${lead.id}`}
+                          className="inline-flex items-center gap-1 text-sm text-orange-400 hover:text-orange-300 font-semibold"
+                        >
+                          View full AI analysis →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 );
               })}

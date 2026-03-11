@@ -55,9 +55,10 @@ export default function SignalIntelligencePage() {
           const leads = await leadsRes.json();
           // Extract signals from recent leads
           const signals = leads.slice(0, 5).map(lead => ({
+            id: lead.id,
             company: lead.company_name,
-            signal: lead.detected_signals?.[0] || 'Unknown',
-            timestamp: lead.last_updated || lead.created_at,
+            signal: lead.signals?.[0]?.signal_type || 'Unknown',
+            timestamp: lead.updated_at || lead.created_at,
             priority: lead.priority_tier
           }));
           setRecentSignals(signals);
@@ -424,29 +425,34 @@ export default function SignalIntelligencePage() {
             </div>
           ) : recentSignals.length > 0 ? (
             <div className="space-y-3">
-              {recentSignals.map((sig, idx) => (
-                <div key={idx} 
-                  className="flex items-center justify-between p-4 rounded-lg bg-neutral-900/50 border border-neutral-800 hover:border-cyan-700 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`px-3 py-1 rounded text-xs font-medium ${
-                      sig.priority === 'HOT' ? 'bg-red-900/50 text-red-400 border border-red-800' :
-                      sig.priority === 'WARM' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-800' :
-                      'bg-cyan-900/50 text-cyan-400 border border-cyan-800'
-                    }`}>
-                      {sig.priority}
-                    </div>
-                    <div>
-                      <div className="font-medium text-neutral-200">{sig.company}</div>
-                      <div className="text-xs text-neutral-500 mt-0.5">
-                        Signal: <span className="text-emerald-400">{sig.signal}</span>
+              {recentSignals.map((sig, idx) => {
+                const ts = sig.timestamp ? new Date(sig.timestamp) : null;
+                const dateStr = ts && !isNaN(ts.getTime()) ? ts.toLocaleDateString() : '—';
+                return (
+                  <Link key={idx} href={`/dashboard?analyze=${sig.id}`}
+                    className="flex items-center justify-between p-4 rounded-lg bg-neutral-900/50 border border-neutral-800 hover:border-cyan-700 hover:bg-neutral-800/30 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                      <div className={`px-3 py-1 rounded text-xs font-medium ${
+                        sig.priority === 'HOT' ? 'bg-red-900/50 text-red-400 border border-red-800' :
+                        sig.priority === 'WARM' ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-800' :
+                        'bg-cyan-900/50 text-cyan-400 border border-cyan-800'
+                      }`}>
+                        {sig.priority}
+                      </div>
+                      <div>
+                        <div className="font-medium text-neutral-200">{sig.company}</div>
+                        <div className="text-xs text-neutral-500 mt-0.5">
+                          Signal: <span className="text-emerald-400">{sig.signal}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {new Date(sig.timestamp).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
+                    <div className="text-xs text-neutral-500 flex items-center gap-2">
+                      {dateStr}
+                      <span className="text-cyan-400">→</span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 text-neutral-500">
