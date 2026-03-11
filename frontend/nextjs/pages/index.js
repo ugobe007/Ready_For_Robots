@@ -299,7 +299,7 @@ export default function Signals() {
         <meta property="og:description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
         <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image:height" content="600" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />

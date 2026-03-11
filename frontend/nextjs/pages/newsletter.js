@@ -288,7 +288,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         <meta property="og:description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
         <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image:height" content="600" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
