@@ -19,10 +19,11 @@ def compute_scores(company, signals: List[Signal]) -> Dict:
     name = getattr(company, "name", "") or ""
 
     if signals:
-        signal_texts = [
-            f"{s.signal_type or ''} {s.signal_text or ''}"
-            for s in signals
-        ]
+        signal_texts = []
+        for s in signals:
+            if not hasattr(s, 'signal_type') or not hasattr(s, 'signal_text'):
+                continue  # skip malformed/corrupt entries
+            signal_texts.append(f"{s.signal_type or ''} {s.signal_text or ''}")
         result = analyze_signals(signal_texts, company_name=name, industry=industry)
         scores = result.to_score_dict()
     else:

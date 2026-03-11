@@ -13,6 +13,7 @@ GET /api/leads
     sort          str    score|name|signals  default score
 """
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 from app.database import get_db
@@ -143,7 +144,7 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts for the dashboard stat cards."""
+    """Pipeline counts for the dashboard stat cards and front-page ticker."""
     companies = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
@@ -161,9 +162,12 @@ def leads_summary(
         elif pri.tier == "WARM": warm += 1
         else: cold += 1
 
+    total_signals = db.query(func.count(Signal.id)).scalar() or 0
+
     return {
         "total": total, "hot": hot, "warm": warm, "cold": cold,
         "junk_filtered": junk_count,
+        "total_signals": total_signals,
     }
 
 

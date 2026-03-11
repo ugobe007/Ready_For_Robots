@@ -379,6 +379,62 @@ CONCEPTS: Dict[str, Concept] = {
         ],
         synonyms=["franchise chain", "multi-unit operator", "portfolio operator"],
     ),
+
+    # ═══ Robot deployment & automation opportunity signals (March 2026) ═══
+    "robot_installation": Concept(
+        name="robot_installation", domain="automation", base_weight=0.95,
+        patterns=[
+            "deploy.*robot", "robot.*deploy", "installed.*robot", "robot.*installed",
+            "implements.*robot", "robot.*implement", "fleet.*robot", "robot.*fleet",
+            "robot.*operational", "robot.*in production", "robot.*went live",
+            "AMR.*deploy", "AGV.*deploy", "cobot.*install", "service robot.*deploy",
+            "autonomous.*robot.*deploy", "cleaning robot.*deploy", "disinfection robot",
+        ],
+        synonyms=["robot deployment", "robot installation", "robot fleet", "AMR fleet"],
+    ),
+    "pilot_success": Concept(
+        name="pilot_success", domain="automation", base_weight=0.88,
+        patterns=[
+            "successful pilot", "pilot.*exceed", "trial success", "pilot.*expand",
+            "pilot.*production", "trial.*permanent", "proof of concept.*success",
+            "pilot program.*positive", "pilot.*rollout", "pilot.*full deployment",
+        ],
+        synonyms=["pilot expansion", "trial to production", "pilot to rollout"],
+    ),
+    "roi_documented": Concept(
+        name="roi_documented", domain="automation", base_weight=0.85,
+        patterns=[
+            "roi", "return on investment", "payback period", "payback in",
+            "saves \\$", "cost savings", "reduced costs by", "labor savings",
+            "efficiency gains", "productivity increase", r"\d+% faster", r"\d+% reduction",
+        ],
+        synonyms=["ROI", "payback", "cost savings", "labor savings"],
+    ),
+    "disinfection_robot": Concept(
+        name="disinfection_robot", domain="automation", base_weight=0.90,
+        patterns=[
+            "disinfection robot", "UV-C.*robot", "UV robot", "sanitization robot",
+            "hospital.*disinfection", "cleaning.*robot.*hospital",
+        ],
+        synonyms=["UV disinfection", "autonomous disinfection"],
+    ),
+    "floor_scrubber_automation": Concept(
+        name="floor_scrubber_automation", domain="automation", base_weight=0.82,
+        patterns=[
+            "autonomous floor scrubber", "floor scrubber.*robot",
+            "autonomous scrubber", "robotic floor cleaning",
+        ],
+        synonyms=["autonomous scrubber", "robot floor scrubber"],
+    ),
+    "vendor_selection": Concept(
+        name="vendor_selection", domain="expansion", base_weight=0.78,
+        patterns=[
+            "selected", "chose", "partnered with", "contracted with",
+            "working with.*vendor", "supplier chosen", "signed agreement",
+            "multi-year deal", "provider selected",
+        ],
+        synonyms=["vendor selection", "provider chosen"],
+    ),
 }
 
 
@@ -414,6 +470,13 @@ RELATIONSHIPS: List[Relationship] = [
     Relationship("franchise_operations",     "labor_shortage",           "associated_with", 0.55),
     Relationship("equipment_integration",    "warehouse_automation",     "associated_with", 0.60),
     Relationship("equipment_integration",    "automation_intent",        "associated_with", 0.65),
+    # Robot deployment concepts
+    Relationship("robot_installation",       "warehouse_automation",     "implies",         0.95),
+    Relationship("robot_installation",       "service_robot",            "implies",         0.85),
+    Relationship("pilot_success",            "automation_intent",        "implies",         0.90),
+    Relationship("roi_documented",           "automation_intent",        "implies",         0.80),
+    Relationship("disinfection_robot",       "healthcare_vertical",      "associated_with", 0.85),
+    Relationship("floor_scrubber_automation","service_robot",            "associated_with", 0.80),
 ]
 
 
@@ -570,6 +633,42 @@ INFERENCE_RULES: List[InferenceRule] = [
         boost=0.32,
         description="Multi-unit operator with staffing pain → high-ROI automation candidate"
     ),
+    # ═══ Robot deployment & opportunity rules (March 2026) ═══
+    InferenceRule(
+        name="robot_install_expansion_signal",
+        conditions=["robot_installation", "expansion"],
+        conclusion_domain="automation",
+        boost=0.40,
+        description="Robot deployment + expansion → peer pressure for others in industry"
+    ),
+    InferenceRule(
+        name="pilot_success_scale",
+        conditions=["pilot_success", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.38,
+        description="Successful pilot + labor pain → expansion-ready buyer"
+    ),
+    InferenceRule(
+        name="roi_proven_labor_pain",
+        conditions=["roi_documented", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="ROI case study + labor shortage → near-term buyer with proof"
+    ),
+    InferenceRule(
+        name="robot_install_industry",
+        conditions=["robot_installation", "hospitality_vertical"],
+        conclusion_domain="automation",
+        boost=0.32,
+        description="Hotel with robot deployment → service robot market validation"
+    ),
+    InferenceRule(
+        name="robot_install_logistics",
+        conditions=["robot_installation", "logistics_vertical"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="Warehouse with robot deployment → AMR market validation"
+    ),
 ]
 
 
@@ -581,12 +680,16 @@ INDUSTRY_PRIORS: Dict[str, float] = {
     "hospitality":   0.85,
     "hotel":         0.85,
     "healthcare":    0.80,
+    "medical tech":  0.82,
     "food service":  0.75,
     "restaurant":    0.72,
+    "food process":  0.76,
     "airport":       0.78,
     "casino":        0.70,
     "manufacturing": 0.68,
     "retail":        0.62,
+    "datacenter":    0.70,
+    "apparel":       0.65,
     "unknown":       0.40,
 }
 

@@ -10,7 +10,7 @@ export default function Signals() {
   const [loading, setLoading] = useState(true);
   const [temperatureFilter, setTemperatureFilter] = useState('all'); // 'all', 'hot', 'warm', 'cold'
   
-  // Stats ticker data - updates independently without re-rendering entire component
+  // Stats ticker data - from /api/leads/summary (full DB counts, not limited by leads list)
   const [statsData, setStatsData] = useState({
     activeLeads: 0,
     hotDeals: 0,
@@ -84,17 +84,38 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
+  const API_BASE = 'https://ready-2-robot.fly.dev';
+
+  // Fetch pipeline summary (full DB counts for ticker)
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/leads/summary`);
+        const data = await res.json();
+        setStatsData({
+          activeLeads: data.total ?? 0,
+          hotDeals: data.hot ?? 0,
+          liveSignals: data.total_signals ?? 0,
+          warmPipeline: data.warm ?? 0
+        });
+      } catch (err) {
+        console.error('Error fetching summary:', err);
+      }
+    };
+    fetchSummary();
+    const interval = setInterval(fetchSummary, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Fetch all leads - use production API
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         setLoading(true);
-        // Use production API that's connected to Supabase
-        const res = await fetch('https://ready-2-robot.fly.dev/api/leads');
+        const res = await fetch(`${API_BASE}/api/leads`);
         const data = await res.json();
         setLeads(Array.isArray(data) ? data : []);
         
-        // Get top 5 HOT leads for the preview section
         const hotOnly = (Array.isArray(data) ? data : [])
           .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
           .sort((a, b) => {
@@ -114,36 +135,17 @@ export default function Signals() {
     };
 
     fetchLeads();
-    const interval = setInterval(fetchLeads, 30000); // Update every 30s
+    const interval = setInterval(fetchLeads, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate lead counts by temperature
+  // Calculate lead counts by temperature (for leads list display)
   const hotCount = leads.filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT').length;
   const warmCount = leads.filter(l => l.temperature === 'warm' || l.priority_tier === 'WARM').length;
   const coldCount = leads.filter(l => l.temperature === 'cold' || l.priority_tier === 'COLD').length;
   
-  // Calculate total signals and find hottest
+  // Total signals from leads list (for fallback; ticker uses summary)
   const totalSignals = leads.reduce((sum, lead) => sum + (lead.signals?.length || 0), 0);
-  
-  // Update stats ticker data every 15 seconds without re-rendering entire page
-  useEffect(() => {
-    const updateStats = () => {
-      setStatsData({
-        activeLeads: leads.length,
-        hotDeals: hotCount,
-        liveSignals: totalSignals,
-        warmPipeline: warmCount
-      });
-    };
-    
-    // Update immediately when leads change
-    updateStats();
-    
-    // Then update every 15 seconds
-    const interval = setInterval(updateStats, 15000);
-    return () => clearInterval(interval);
-  }, [leads.length, hotCount, totalSignals, warmCount]);
   const hottestSignal = leads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
@@ -368,15 +370,15 @@ export default function Signals() {
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Powered by 14 Signal Types · 140+ Data Sources</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
               <span className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                Intent Signal Intelligence → Sales-Ready Leads
+                Robot Ready Sales Leads using Signal Intelligence
               </span>
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
               Stop cold calling. We track over 150 news sources to detect buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
             </p>
             
-            {/* Stats Ticker - Moved from below CTA */}
-            {!loading && leads.length > 0 && (
+            {/* Stats Ticker - uses /api/leads/summary for full DB counts */}
+            {(statsData.activeLeads > 0 || leads.length > 0) && (
             <div className="space-y-3">
               {/* Rotating Automation Quotes */}
               <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">

@@ -156,7 +156,7 @@ export default function SignalIntelligencePage() {
             ⚡ Powered by 14 Signal Types · 140+ Data Sources
           </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent leading-tight">
-            Intent Signal Intelligence<br />→ Sales-Ready Leads
+            Robot Ready Sales Leads<br />using Signal Intelligence
           </h1>
           <p className="text-xl text-neutral-400 max-w-3xl mx-auto leading-relaxed">
             We detect buying intent <span className="text-emerald-400 font-semibold">before companies even know they're ready to buy</span>. 
@@ -595,7 +595,7 @@ export default function SignalIntelligencePage() {
       {/* Footer */}
       <footer className="border-t border-neutral-800 mt-16">
         <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-neutral-500">
-          <p>© 2026 Ready for Robots · Intent Signal Intelligence for the Automation Industry</p>
+          <p>© 2026 Ready for Robots · Robot Ready Sales Leads using Signal Intelligence</p>
           <p className="mt-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-2"></span>
             Signal Engine operational · Monitoring 140+ sources · Last updated: {new Date().toLocaleTimeString()}

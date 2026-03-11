@@ -40,6 +40,7 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
+from app.services.signal_classifier import classify_signals_with_fallback
 
 logger = logging.getLogger(__name__)
 
@@ -476,12 +477,24 @@ INDUSTRY_KEYWORDS = {
     ],
 }
 
-# ── Noise Filter (exclude generic terms) ──────────────────────────────────────
+# ── Noise Filter (exclude generic terms, headline fragments, news orgs) ───────
 NOISE_WORDS = {
     "the", "a", "an", "this", "that", "these", "those", "said", "says",
     "according to", "new york", "los angeles", "san francisco", "united states",
     "north america", "wall street", "main street", "industry", "company",
-    "corporation", "inc", "llc", "ltd", "group", "international"
+    "corporation", "inc", "llc", "ltd", "group", "international",
+    # News publishers & headline fragments
+    "u.s. news", "world report", "& world", "& report", "criticize ",
+    "discusses", "what ", "how ", "trends", "know about", "pleas for",
+    "leaves door", "receives approval", "in stages", "in funding",
+    # Generic categories (not company names)
+    "chicken restaurant chain", "fast food industry", "restaurant chain",
+    "hotel group executive", "logistics park", "national park",
+    # Headline verbs & fragments (March 2026 - reduce false positives)
+    "alumni", "reportedly", "predicts", "nixes", "cancels", "kicks", "amid",
+    "women", "retailers", "nurses", "market", "outlook", "progress", "smoothies",
+    "police", "start-ups", "experts", "robots", "momentum",
+    "wildfires", "neuropsychology", "psychology",
 }
 
 
@@ -686,11 +699,12 @@ class IntelligenceNewsScraper:
         
         # Filter by confidence (prioritize high confidence)
         companies.sort(key=lambda x: x[1], reverse=True)
-        return companies[:3]  # Top 3 companies per article
+        return companies[:5]  # Top 5 companies per article (tuned for 30-50 leads/run)
     
     def _is_valid_company_name(self, name: str) -> bool:
-        """Filter out noise from extracted company names."""
+        """Filter out noise from extracted company names (headline fragments, etc.)."""
         name_lower = name.lower().strip()
+        words = name_lower.split()
         
         # Too short or too long
         if len(name) < 5 or len(name) > 50:
@@ -701,31 +715,88 @@ class IntelligenceNewsScraper:
             return False
         
         # Starts with noise word
-        if any(name_lower.startswith(word) for word in NOISE_WORDS):
+        if any(name_lower.startswith(word.strip()) for word in NOISE_WORDS):
+            return False
+        
+        # Contains specific noise phrases (news orgs, headline fragments)
+        noise_phrases = {"& world", "& report", "u.s. news", "world report",
+                        "criticize", "discusses", " in funding", "receives approval",
+                        "in stages", "leaves door", "chicken restaurant chain",
+                        "fast food industry", "logistics park", "national park",
+                        "market research", "market outlook", "market size",
+                        "labor shortage", "predicts a profit", "can you", "now it",
+                        "replacement route", "route 95", "route 9517",
+                        "launches ai and robotic", "launches ai and robot",
+                        "wildfires", "neuropsychology"}
+        if any(phrase in name_lower for phrase in noise_phrases):
             return False
         
         # Is just a noise word
         if name_lower in NOISE_WORDS:
             return False
         
-        # Contains verbs/prepositions (likely sentence fragment)
-        sentence_words = {"to", "for", "in", "on", "at", "with", "from", "but", 
+        # Truncated / sentence fragments: ends with " to", " -", " in", " for"
+        if re.search(r'\s(to|-\s|in|for)$', name_lower):
+            return False
+        
+        # News org pattern: "X & World", "X Report", "X - U.S."
+        if re.search(r'& (world|report)$|\s-\s*(u\.?s\.?|the)\b', name_lower):
+            return False
+        
+        # Contains verbs/prepositions/sentence fragments (whole-word match)
+        sentence_words = {"to", "for", "in", "on", "at", "with", "from", "but",
                          "receives", "approval", "stages", "funding", "staffing",
-                         "cuts", "leaves", "pleas", "trends", "know", "about"}
-        if any(word in name_lower for word in sentence_words):
+                         "cuts", "leaves", "pleas", "trends", "know", "about",
+                         "criticize", "discusses", "what", "how", "through",
+                         "will", "nixes", "cancels", "kicks", "amid", "alumni",
+                         "reportedly", "predicts", "some", "it"}
+        if any(re.search(r'\b' + re.escape(w) + r'\b', " " + name_lower + " ") for w in sentence_words):
+            return False
+        
+        # Headline structure: "Company verb" captured wrong → "X will", "X nixes", "X cancels"
+        if re.search(r'\s(will|nixes|cancels|kicks\s|kicks off|predicts)\s*$', name_lower):
+            return False
+        
+        # "New [number]" or "New [product descriptor]" (New 82, New surgical robot)
+        if name_lower.startswith("new "):
+            if len(words) >= 2 and (words[1].isdigit() or words[1] in {
+                    "surgical", "robot", "82", "mir", "software"}):
+                return False
+        
+        # Ends with " CEO", " robot" (product), " Market" (report title)
+        if re.search(r'\s(ceo|robot|market|market research|market outlook)\s*$', name_lower):
+            return False
+        
+        # Generic plural roles/categories as whole name
+        if name_lower in {"retailers", "nurses", "women", "robots", "experts"}:
+            return False
+        
+        # Starts with "Some " (Some cloud experts)
+        if name_lower.startswith("some "):
+            return False
+        
+        # Contains comma (sentence fragment: "Clover predicts a profit,")
+        if "," in name:
+            return False
+        
+        # "X and CTA" / "City and CTA" style headline fragments
+        if " and " in name_lower and any(w in name_lower for w in ("cta", " and robot", " and robotic")):
             return False
         
         # Contains only common words
-        words = name_lower.split()
         if all(word in NOISE_WORDS for word in words):
             return False
         
-        # Looks like a sentence fragment (too many words)
+        # Too many words (likely sentence)
         if len(words) > 5:
             return False
         
         # Starts with lowercase (likely mid-sentence)
         if name[0].islower():
+            return False
+        
+        # Location pattern: "N.J. X", "State X"
+        if re.match(r'^[a-z]{2}\.\s', name_lower) or name_lower.startswith("state "):
             return False
         
         return True
@@ -735,16 +806,15 @@ class IntelligenceNewsScraper:
     # ══════════════════════════════════════════════════════════════════════════
     
     def _detect_signal_types(self, text: str) -> List[str]:
-        """Detect all signal types present in article text."""
+        """Detect signal types using ontology (meaning/intent) + keyword patterns."""
+        # Ontology: extracts semantic intent from robotics concepts
+        signals = list(dict.fromkeys(classify_signals_with_fallback(text)))
+        # Merge with SIGNAL_PATTERNS for full coverage
         text_lower = text.lower()
-        detected = []
-        
         for signal_type, keywords in SIGNAL_PATTERNS.items():
-            if any(kw in text_lower for kw in keywords):
-                detected.append(signal_type)
-        
-        # Default to 'news' if no specific signal detected
-        return detected if detected else ["news"]
+            if signal_type not in signals and any(kw in text_lower for kw in keywords):
+                signals.append(signal_type)
+        return signals if signals else ["news"]
     
     def _infer_industry(self, text: str) -> str:
         """Infer industry from article text."""
@@ -832,8 +902,8 @@ class IntelligenceNewsScraper:
         # Score the signal using inference engine
         strength = self._score_signal(text, company.name, company.industry)
         
-        # Skip weak signals
-        if strength < 0.05:
+        # Skip weak signals (0.04 tuned for 30-50 leads/run; was 0.05)
+        if strength < 0.04:
             return
         
         signal = Signal(
