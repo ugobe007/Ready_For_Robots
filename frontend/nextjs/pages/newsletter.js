@@ -33,8 +33,8 @@ export default function Newsletter() {
 
   // Mock newsletter data (in production, fetch from backend/database)
   const latestEdition = {
-    date: 'March 8, 2026',
-    edition: '#47',
+    date: 'March 11, 2026',
+    edition: '#48',
     headline: 'Warehouse AMRs Hit 30% Deployment Growth YoY',
     subheadline: 'MiR and Locus lead market as ROI drops to 18-month payback average'
   };
@@ -245,14 +245,14 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
               📰 ROBOT INTELLIGENCE BRIEF
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
-              Daily Automation News & Analytics
+              Daily Automation News with Signal Intelligence
             </h1>
             <p className="text-base text-neutral-400 mb-4 max-w-2xl mx-auto">
               Real-world robot deployments, ROI benchmarks, vendor market share, and technology trends. 
-              The intelligence investors, buyers, and operators need.
+              Robot Ready Sales Leads with Signal Intelligence.
             </p>
             <div className="text-xs text-neutral-500">
-              <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Market Intelligence
+              <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Hot Deals · <span className="text-emerald-400">✓</span> Market Intelligence
             </div>
           </div>
         </div>
@@ -456,7 +456,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                 Never Miss a Robot Intelligence Brief
               </h3>
               <p className="text-base text-neutral-400 mb-6">
-                Get this delivered to your inbox daily. Free deployment data, ROI benchmarks, vendor intelligence, and market trends.
+                Get this delivered to your inbox daily. Free deployment data, hot deals, ROI benchmarks, and vendor intelligence with Signal Intelligence.
               </p>
 
               <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
@@ -495,9 +495,9 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
               {' '}
               <span className="text-emerald-400">ROBOTS</span>
               {' | '}
-              Automation Intelligence Platform
+              Robot Ready Sales Leads with Signal Intelligence
             </p>
-            <p>Tracking robot deployments, economics, and market trends across labor-intensive industries.</p>
+            <p>Daily deployment roundups, ROI benchmarks, and hot deals across labor-intensive industries.</p>
           </div>
         </div>
       </div>

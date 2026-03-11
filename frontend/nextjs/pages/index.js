@@ -370,7 +370,7 @@ export default function Signals() {
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Powered by 14 Signal Types · 140+ Data Sources</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
               <span className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                Robot Ready Sales Leads using Signal Intelligence
+                Robot Ready Sales Leads with Signal Intelligence
               </span>
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
@@ -533,7 +533,7 @@ export default function Signals() {
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">
-                🔥 STRATEGIC SNAPSHOT
+                🔥 DAILY HOT DEALS
               </div>
               <div className="flex gap-1">
                 <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
@@ -541,21 +541,21 @@ export default function Signals() {
               </div>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Hot Leads--Live
+              Daily Hot Deals
             </h2>
             <p className="text-lg text-neutral-300">
-              Live companies with <span className="text-red-400 font-semibold">urgent automation needs</span> — click any company to see full AI analysis and signal details
+              Live companies with <span className="text-red-400 font-semibold">urgent automation needs</span> — updated from our signal intelligence pipeline. Click any company for full AI analysis.
             </p>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-neutral-400 mt-4">Loading hot deals...</p>
+              <p className="text-neutral-400 mt-4">Loading daily hot deals...</p>
             </div>
           ) : topHotDeals.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-neutral-400">No hot deals available yet. Keep monitoring!</p>
+              <p className="text-neutral-400">No hot deals right now. Our scraper runs at 9am, 3pm & 9pm — check back soon!</p>
             </div>
           ) : (
             <div className="grid gap-3">
