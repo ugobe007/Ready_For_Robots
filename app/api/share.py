@@ -214,7 +214,7 @@ async def get_share_card(share_id: str):
                 </div>
                 
                 <div class="cta">
-                    <a href="https://ready-2-robot.fly.dev/roi-calculator">Calculate Your ROI →</a>
+                    <a href="https://readyforrobots.com/roi-calculator">Calculate Your ROI →</a>
                 </div>
             </div>
         </body>

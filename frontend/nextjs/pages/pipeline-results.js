@@ -20,7 +20,7 @@ export default function PipelineResults() {
   const fetchMatches = async () => {
     try {
       // Get top 6 HOT leads as matches
-      const res = await fetch('https://ready-2-robot.fly.dev/api/leads?limit=6&temp=hot');
+      const res = await fetch('https://readyforrobots.com/api/leads?limit=6&temp=hot');
       const data = await res.json();
       setMatches(Array.isArray(data) ? data.slice(0, 6) : []);
       setLoading(false);

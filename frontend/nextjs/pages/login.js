@@ -40,7 +40,7 @@ export default function LoginPage() {
     const redirectUrl =
       typeof window !== 'undefined'
         ? `${window.location.origin}/login`
-        : 'https://ready-2-robot.fly.dev/login';
+        : 'https://readyforrobots.com/login';
 
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),

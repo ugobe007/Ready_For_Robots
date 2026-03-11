@@ -2,6 +2,83 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 
+// Base URL for share links
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
+
+function ShareButtons({ url, title, description, compact = false, id }) {
+  const shareUrl = url || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : `${BASE_URL}/newsletter`);
+  const shareTitle = title || 'Daily Automation News with Signal Intelligence';
+  const shareText = description || `${shareTitle} — Robot Ready Sales Leads with Signal Intelligence`;
+  const copyId = id || 'share-copy';
+
+  const links = {
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+  };
+
+  const copyLink = () => {
+    navigator.clipboard?.writeText(shareUrl).then(() => {
+      const btn = document.getElementById(copyId) || document.getElementById(`${copyId}-full`);
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      }
+    });
+  };
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-neutral-500 uppercase tracking-wider">Share:</span>
+        <a href={links.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn"
+          className="p-1.5 rounded bg-neutral-800 hover:bg-[#0a66c2] text-neutral-400 hover:text-white transition-colors">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+        <a href={links.twitter} target="_blank" rel="noopener noreferrer" aria-label="Share on X"
+          className="p-1.5 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white transition-colors">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href={links.facebook} target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"
+          className="p-1.5 rounded bg-neutral-800 hover:bg-[#1877f2] text-neutral-400 hover:text-white transition-colors">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <button id={copyId} onClick={copyLink} aria-label="Copy link"
+          className="px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-[10px] font-medium transition-colors">
+          Link
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="text-sm text-neutral-400">Share this:</span>
+      <a href={links.linkedin} target="_blank" rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-800 hover:bg-[#0a66c2] text-neutral-300 hover:text-white transition-colors text-sm font-medium">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        LinkedIn
+      </a>
+      <a href={links.twitter} target="_blank" rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-800 hover:bg-black text-neutral-300 hover:text-white transition-colors text-sm font-medium">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        X
+      </a>
+      <a href={links.facebook} target="_blank" rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-800 hover:bg-[#1877f2] text-neutral-300 hover:text-white transition-colors text-sm font-medium">
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Facebook
+      </a>
+      <button id={`${copyId}-full`} onClick={copyLink}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-neutral-800 hover:bg-emerald-600 text-neutral-300 hover:text-white transition-colors text-sm font-medium">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+        Copy link
+      </button>
+    </div>
+  );
+}
+
 export default function Newsletter() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [email, setEmail] = useState('');
@@ -203,8 +280,20 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
   return (
     <>
       <Head>
-        <title>Robot Intelligence Brief | Daily Automation News & Analytics</title>
-        <meta name="description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Track automation adoption across hospitality, logistics, healthcare, and manufacturing." />
+        <title>Robot Intelligence Brief | Daily Automation News with Signal Intelligence</title>
+        <meta name="description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${BASE_URL}/newsletter`} />
+        <meta property="og:title" content="Robot Intelligence Brief | Daily Automation News with Signal Intelligence" />
+        <meta property="og:description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
+        <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Ready for Robots" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta name="twitter:title" content="Robot Intelligence Brief | Daily Automation News with Signal Intelligence" />
+        <meta name="twitter:description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
       </Head>
 
       <div className="min-h-screen bg-black text-white">
@@ -260,15 +349,18 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         {/* Latest Edition Header */}
         <div className="border-b border-neutral-800">
           <div className="max-w-4xl mx-auto px-4 py-6">
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-4 flex-wrap gap-4">
               <div>
                 <div className="text-xs text-neutral-500 mb-1">LATEST EDITION {latestEdition.edition}</div>
                 <h2 className="text-2xl font-bold text-white mb-1">{latestEdition.headline}</h2>
                 <p className="text-sm text-neutral-400">{latestEdition.subheadline}</p>
               </div>
-              <div className="text-right">
-                <div className="text-xs text-neutral-500">Published</div>
-                <div className="text-sm text-emerald-400">{latestEdition.date}</div>
+              <div className="flex flex-col items-end gap-2">
+                <div className="text-right">
+                  <div className="text-xs text-neutral-500">Published</div>
+                  <div className="text-sm text-emerald-400">{latestEdition.date}</div>
+                </div>
+                <ShareButtons title={latestEdition.headline} description={`${latestEdition.headline} — ${latestEdition.subheadline}`} />
               </div>
             </div>
           </div>
@@ -290,7 +382,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                     : 'border-neutral-800 hover:border-emerald-500/50'
                 }`}
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-3 gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                       {story.category}
@@ -299,6 +391,9 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                       <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
                       <span className="text-xs text-emerald-400 font-semibold">{story.signalStrength}/10</span>
                     </div>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <ShareButtons compact id={`share-story-${idx}`} title={`${story.company}: ${story.headline}`} description={`${story.company} — ${story.headline}. ${story.snippet}`} />
                   </div>
                 </div>
 
@@ -484,6 +579,35 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
             </div>
           </div>
         )}
+
+        {/* Share our banner */}
+        <div className="border-t border-neutral-800">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <span className="text-xl">📣</span> Share Ready For Robots
+            </h3>
+            <p className="text-sm text-neutral-400 mb-4">
+              Use our banner with any social post. The link is included — when shared, it drives visitors to the site.
+            </p>
+            <div className="border-2 border-neutral-800 rounded-lg overflow-hidden bg-neutral-900/50">
+              <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer" className="block">
+                <img
+                  src="/og-banner.png"
+                  alt="Ready For Robots - Robot Ready Sales Leads with Signal Intelligence"
+                  className="w-full h-auto"
+                  style={{ maxHeight: '320px', objectFit: 'cover' }}
+                />
+              </a>
+              <div className="p-4 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-800">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-500">Link:</span>
+                  <code className="text-sm text-emerald-400 bg-neutral-800 px-2 py-1 rounded">{BASE_URL.replace(/^https?:\/\//, '')}</code>
+                </div>
+                <ShareButtons url={BASE_URL} id="banner-share" title="Ready For Robots" description="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="border-t border-neutral-800">

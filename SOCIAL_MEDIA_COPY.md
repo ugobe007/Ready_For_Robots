@@ -40,7 +40,7 @@ Hotel chain posts 15 warehouse jobs + raises $50M + hires new COO = Labor pain +
 
 Stop struggling. Start selling to companies ready to buy.
 
-🔗 Free: https://ready-2-robot.fly.dev
+🔗 Free: https://readyforrobots.com
 
 ---
 
@@ -105,7 +105,7 @@ Daily briefings:
 
 Stop struggling to find customers.
 
-🆓 https://ready-2-robot.fly.dev
+🆓 https://readyforrobots.com
 
 ---
 
@@ -134,7 +134,7 @@ Daily intelligence tells you:
 • HOW to engage
 
 Free for robot companies 👇
-Link in bio: https://ready-2-robot.fly.dev
+Link in bio: https://readyforrobots.com
 
 #Robotics #Automation #CustomerAcquisition #RobotCompanies #WarehouseAutomation #B2BSales
 
@@ -152,7 +152,7 @@ We tell you WHO needs automation, WHAT problem they're solving, WHEN to contact 
 
 Daily briefings show your top opportunities with complete playbooks: ROI calculators, pilot sizing, decision makers, timing windows.
 
-Free at ready-2-robot.fly.dev
+Free at readyforrobots.com
 
 ---
 
@@ -173,7 +173,7 @@ Free at ready-2-robot.fly.dev
 ## 📧 Email Signature
 
 Stop struggling to find customers | Ready For Robots  
-🔗 https://ready-2-robot.fly.dev
+🔗 https://readyforrobots.com
 
 ---
 
@@ -198,7 +198,7 @@ Stop struggling to find customers | Ready For Robots
 "Daily briefings. Complete playbooks. Companies ready to buy."
 
 [Logo + URL]
-"Ready For Robots - Free at ready-2-robot.fly.dev"
+"Ready For Robots - Free at readyforrobots.com"
 
 ---
 
@@ -239,7 +239,7 @@ Stop struggling to find customers | Ready For Robots
 
 ## 📞 Calls to Action
 
-1. "Stop struggling to find customers → https://ready-2-robot.fly.dev"
+1. "Stop struggling to find customers → https://readyforrobots.com"
 2. "See who's ready to buy right now - free access"
 3. "Get daily intelligence on companies showing automation readiness"
 4. "Know WHO, WHAT, WHEN, and HOW - try free"

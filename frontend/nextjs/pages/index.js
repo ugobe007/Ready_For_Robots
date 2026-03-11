@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
+
 export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -84,7 +86,7 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
-  const API_BASE = 'https://ready-2-robot.fly.dev';
+  const API_BASE = 'https://readyforrobots.com';
 
   // Fetch pipeline summary (full DB counts for ticker)
   useEffect(() => {
@@ -290,6 +292,19 @@ export default function Signals() {
     <>
       <Head>
         <title>Signal Intelligence Framework | Ready → Robots</title>
+        <meta name="description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={BASE_URL} />
+        <meta property="og:title" content="Ready For Robots | Robot Ready Sales Leads with Signal Intelligence" />
+        <meta property="og:description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+        <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Ready for Robots" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta name="twitter:title" content="Ready For Robots | Robot Ready Sales Leads with Signal Intelligence" />
+        <meta name="twitter:description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
       </Head>
 
       <div className="min-h-screen bg-black text-white">

@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { useAuth } from './_app';
 
 const API = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://ready-2-robot.fly.dev')
-  : 'https://ready-2-robot.fly.dev';
+  ? (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://readyforrobots.com')
+  : 'https://readyforrobots.com';
 
 const SEARCH_CATEGORIES = [
   { key: 'funding',       label: 'Funding Round' },
@@ -98,20 +98,40 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1200px] mx-auto">
+    <div className="min-h-screen bg-[#080808]">
+      {/* Navigation Bar */}
+      <div className="border-b border-neutral-800">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <Link href="/">
+                <h1 className="text-lg font-semibold text-white cursor-pointer hover:text-emerald-400 transition-colors">
+                  <span className="text-white">READY</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
+                </h1>
+              </Link>
+              <nav className="hidden md:flex items-center gap-6 text-sm">
+                <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition-colors">Home</Link>
+                <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
+                <span className="text-cyan-400 font-medium">Search</span>
+                <Link href="/about" className="text-neutral-400 hover:text-emerald-400 transition-colors">About</Link>
+                <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calc</Link>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="px-4 py-6 md:px-8 md:py-8 max-w-[1200px] mx-auto">
       {/* Header */}
       <header className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <Link href="/">
-            <div className="inline-block border-2 border-cyan-600 rounded-lg px-4 py-2 cursor-pointer hover:border-cyan-500 transition-colors"
-              style={{ boxShadow: '0 0 12px rgba(34, 211, 238, 0.4), 0 0 24px rgba(34, 211, 238, 0.2)' }}>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 bg-clip-text text-transparent"
-                style={{ textShadow: '0 0 30px rgba(34, 211, 238, 0.3)' }}>
-                Ready for Robots
-              </h1>
-            </div>
-          </Link>
-          <span className="text-neutral-500">→</span>
           <h2 className="text-xl text-cyan-400">Intelligence Search</h2>
         </div>
         <p className="text-sm text-neutral-400">Find buyers by investment activity, M&A, labor trends & verticals</p>
@@ -258,6 +278,7 @@ export default function SearchPage() {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }
