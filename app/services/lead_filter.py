@@ -180,26 +180,31 @@ def priority_tier(
 
 
 # "Target" as common word (goal/benchmark) — when signals are about xAI, Anthropic, etc. saying "exceeds target"
+# "Target" as single word is almost always a false positive (common word in funding headlines)
+# Real Target Corporation would typically have "Target Corporation" or "Target stores"
 _TARGET_FALSE_POSITIVE_PHRASES = (
     "exceeds its target", "exceeding its target", "surpassing target", "surpassed target",
     "exceeds target", "exceeded target", "exceeding target", "xai", "anthropic",
     "elon musk", "billion target", "million target", "funding target", "revenue target",
+    "exceeds its own target", "surpassing initial target", "exceeding its $",
 )
 
 def _is_target_false_positive(company_name: str, signals) -> bool:
     """Target Corp vs common-word 'target' in funding headlines (xAI, Anthropic, etc.)."""
-    if not company_name or company_name.strip().lower() != "target":
+    name_lower = (company_name or "").strip().lower()
+    # Single-word "Target" only - "Target Corporation" stays
+    if not name_lower or name_lower != "target":
         return False
+    # Always filter single-word "Target" - nearly always false positive from "exceeds target" etc.
+    # Keep only if signals clearly reference Target Corporation (stores, retail, etc.)
     sigs = signals or []
-    if not sigs:
-        return False
-    # If most signal texts mention the common-word context, it's a false positive
-    suspect = 0
+    target_corp_phrases = ("target corporation", "target corp", "target stores", "target retail", "target.com")
     for s in sigs:
         text = (getattr(s, "signal_text", None) or getattr(s, "raw_text", None) or "").lower()
-        if any(phrase in text for phrase in _TARGET_FALSE_POSITIVE_PHRASES):
-            suspect += 1
-    return suspect >= max(1, len(sigs) * 0.5)  # Half or more signals suggest common-word use
+        if any(phrase in text for phrase in target_corp_phrases):
+            return False  # Real Target Corp - don't filter
+    # Single-word "Target" with no Target Corp context = always block (false positive from "exceeds target" etc.)
+    return True
 
 
 # ─── Convenience wrapper ──────────────────────────────────────────────────────
