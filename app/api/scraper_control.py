@@ -1,11 +1,11 @@
 """
 Scraper control API - Manual trigger and monitoring
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy import func, cast, Date
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from sqlalchemy.orm import Session
 from app.models.company import Company
 from app.models.signal import Signal
@@ -13,11 +13,47 @@ from app.models.signal import Signal
 router = APIRouter(prefix="/api/scraper", tags=["scraper-control"])
 
 
+def _run_intelligence_scraper_sync(articles_per_query: int = 15):
+    """Run intelligence scraper in-process (no Celery/Redis needed). Writes to same DB as app."""
+    from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+    db = SessionLocal()
+    try:
+        scraper = IntelligenceNewsScraper(db=db)
+        stats = scraper.discover_leads(max_articles_per_query=articles_per_query)
+        scraper.enrich_existing_companies(limit=30)
+        return stats
+    finally:
+        db.close()
+
+
+@router.post("/run-intelligence")
+async def run_intelligence_scraper(
+    background_tasks: BackgroundTasks,
+    articles_per_query: int = 15,
+) -> Dict[str, Any]:
+    """
+    Run the intelligence news scraper (discovers new leads from news).
+    Runs in the background so the request returns immediately.
+    No Redis/Celery required - writes directly to the app database.
+    """
+    def _task():
+        _run_intelligence_scraper_sync(articles_per_query=articles_per_query)
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "intelligence_scraper_started",
+        "message": "Intelligence scraper running in background (discovers new leads from 183 news queries). Check /api/leads/summary in 10–20 min.",
+        "articles_per_query": articles_per_query,
+        "check_leads": "/api/leads/summary",
+    }
+
+
 @router.post("/run-all")
 async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """
     Manually trigger all scrapers to run immediately.
     Returns task IDs and estimated completion time.
+    Note: Celery tasks require Redis. If no Redis, use POST /api/scraper/run-intelligence for lead discovery.
     """
     try:
         from worker.tasks import (
@@ -27,19 +63,22 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
             run_serp_scraper_task,
             run_logistics_scraper_task,
             run_rfp_marketplace_scraper_task,
+            run_intelligence_scraper_task,
         )
         
-        # Trigger all scraper tasks
+        # Trigger all scraper tasks (including intelligence = new lead discovery)
         job_task = run_job_scraper_task.delay()
         hotel_task = run_hotel_scraper_task.delay()
         news_task = run_news_scraper_task.delay()
         serp_task = run_serp_scraper_task.delay()
         logistics_task = run_logistics_scraper_task.delay()
         rfp_task = run_rfp_marketplace_scraper_task.delay()
+        intel_task = run_intelligence_scraper_task.delay(max_articles=15)
         
         return {
             "status": "scrapers_started",
             "tasks": {
+                "intelligence": intel_task.id,
                 "job_boards": job_task.id,
                 "hotel_directories": hotel_task.id,
                 "news_feeds": news_task.id,
@@ -51,14 +90,31 @@ async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
             "check_status": "/api/scraper/status",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start scrapers: {str(e)}")
+        # If Celery/Redis unavailable, suggest run-intelligence
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start scrapers: {str(e)}. Try POST /api/scraper/run-intelligence (no Redis needed)."
+        )
 
 
 @router.post("/run/{scraper_type}")
-async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
+async def run_specific_scraper(
+    scraper_type: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
     """
-    Run a specific scraper type: job_boards, hotels, news, serp, logistics, rfp_marketplace
+    Run a specific scraper: intelligence, job_boards, hotels, news, serp, logistics, rfp_marketplace.
+    For 'intelligence' runs in-process (no Redis). Others queue to Celery.
     """
+    if scraper_type == "intelligence":
+        background_tasks.add_task(_run_intelligence_scraper_sync, 15)
+        return {
+            "status": "scraper_started",
+            "scraper_type": "intelligence",
+            "message": "Intelligence scraper running in background. Check /api/leads/summary in 10–20 min.",
+            "check_leads": "/api/leads/summary",
+        }
     try:
         from worker.tasks import (
             run_job_scraper_task,
@@ -68,7 +124,6 @@ async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db))
             run_logistics_scraper_task,
             run_rfp_marketplace_scraper_task,
         )
-        
         task_map = {
             "job_boards": run_job_scraper_task,
             "hotels": run_hotel_scraper_task,
@@ -77,12 +132,12 @@ async def run_specific_scraper(scraper_type: str, db: Session = Depends(get_db))
             "logistics": run_logistics_scraper_task,
             "rfp_marketplace": run_rfp_marketplace_scraper_task,
         }
-        
         if scraper_type not in task_map:
-            raise HTTPException(status_code=400, detail=f"Unknown scraper type: {scraper_type}")
-        
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown scraper type: {scraper_type}. Use: intelligence, job_boards, hotels, news, serp, logistics, rfp_marketplace",
+            )
         task = task_map[scraper_type].delay()
-        
         return {
             "status": "scraper_started",
             "scraper_type": scraper_type,

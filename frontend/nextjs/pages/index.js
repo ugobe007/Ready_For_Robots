@@ -293,20 +293,20 @@ export default function Signals() {
   return (
     <>
       <Head>
-        <title>Signal Intelligence Framework | Ready → Robots</title>
-        <meta name="description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+        <title>Automation Sales Leads with Actionable Signals | Ready For Robots</title>
+        <meta name="description" content="Automation sales leads with actionable signals. Buying intent from 150+ sources — labor shortages, CapEx, new facilities. Each lead comes with signals you can act on." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={BASE_URL} />
-        <meta property="og:title" content="Ready For Robots | Robot Ready Sales Leads with Signal Intelligence" />
-        <meta property="og:description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+        <meta property="og:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
+        <meta property="og:description" content="Automation sales leads with actionable signals. We track buying intent across 150+ sources. Each lead comes with signals you can act on." />
         <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="600" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
-        <meta name="twitter:title" content="Ready For Robots | Robot Ready Sales Leads with Signal Intelligence" />
-        <meta name="twitter:description" content="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+        <meta name="twitter:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
+        <meta name="twitter:description" content="Automation sales leads with actionable signals. Each lead comes with signals you can act on." />
       </Head>
 
       <div className="min-h-screen bg-black text-white">
@@ -384,14 +384,14 @@ export default function Signals() {
         {/* Hero */}
         <div className="max-w-5xl mx-auto px-6 py-10 md:py-12">
           <div className="space-y-6">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Powered by 14 Signal Types · 140+ Data Sources</div>
+            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Curated lead lists · 14 signal types · 140+ sources</div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              <span className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-                Robot Ready Sales Leads with Signal Intelligence
+              <span className="bg-gradient-to-r from-violet-300 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
+                Automation Sales Leads with Actionable Signals
               </span>
             </h2>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
-              Stop cold calling. We track over 150 news sources to detect buying signals — labor shortages, new facilities, executive hires, CapEx budgets. You get warm leads, not dead ends.
+              We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
             </p>
             
             {/* Stats Ticker - uses /api/leads/summary for full DB counts */}
