@@ -304,12 +304,12 @@ export default function Newsletter() {
         <meta property="og:url" content={`${BASE_URL}/newsletter`} />
         <meta property="og:title" content="Robot Intelligence Brief | Automation Sales Leads with Actionable Signals" />
         <meta property="og:description" content="Daily automation news and hot leads. Real companies with buying signals. Automation Sales Leads with Actionable Signals." />
-        <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta property="og:image" content={`${BASE_URL}/og-logo.png`} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="600" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta name="twitter:image" content={`${BASE_URL}/og-logo.png`} />
         <meta name="twitter:title" content="Robot Intelligence Brief | Automation Sales Leads with Actionable Signals" />
         <meta name="twitter:description" content="Daily automation news and hot leads. Real companies with buying signals." />
       </Head>
@@ -614,7 +614,7 @@ export default function Newsletter() {
             <div className="border-2 border-neutral-800 rounded-lg overflow-hidden bg-neutral-900/50">
               <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer" className="block">
                 <img
-                  src="/og-banner.png"
+                  src="/og-logo.png"
                   alt="Ready For Robots - Automation Sales Leads with Actionable Signals"
                   className="w-full h-auto"
                   style={{ maxHeight: '320px', objectFit: 'cover' }}

@@ -299,12 +299,12 @@ export default function Signals() {
         <meta property="og:url" content={BASE_URL} />
         <meta property="og:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
         <meta property="og:description" content="Automation sales leads with actionable signals. We track buying intent across 150+ sources. Each lead comes with signals you can act on." />
-        <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta property="og:image" content={`${BASE_URL}/og-logo.png`} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="600" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
+        <meta name="twitter:image" content={`${BASE_URL}/og-logo.png`} />
         <meta name="twitter:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
         <meta name="twitter:description" content="Automation sales leads with actionable signals. Each lead comes with signals you can act on." />
       </Head>
@@ -388,18 +388,8 @@ export default function Signals() {
             {/* Logo + Headline: icon dominant (bigger than descriptor), Ready For Robots as descriptor */}
             <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10">
               <div className="flex-shrink-0">
-                <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center p-4 shadow-2xl shadow-emerald-500/10">
-                  <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
-                    <rect width="32" height="32" rx="6" fill="#171717"/>
-                    <path d="M9 24V8h4c2.2 0 4 1.8 4 4s-1.8 4-4 4H9m4-4l7 8" stroke="url(#heroLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M20 12l4 4-4 4" stroke="url(#heroLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <defs>
-                      <linearGradient id="heroLogoGrad" x1="9" y1="8" x2="24" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#34d399"/>
-                        <stop offset="1" stopColor="#22d3ee"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
+                <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center p-2 shadow-2xl shadow-emerald-500/10 overflow-hidden">
+                  <img src="/logo.png" alt="Ready For Robots" className="w-full h-full object-contain" />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
