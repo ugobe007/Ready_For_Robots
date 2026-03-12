@@ -7,8 +7,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com
 
 function ShareButtons({ url, title, description, compact = false, id }) {
   const shareUrl = url || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : `${BASE_URL}/newsletter`);
-  const shareTitle = title || 'Daily Automation News with Signal Intelligence';
-  const shareText = description || `${shareTitle} — Robot Ready Sales Leads with Signal Intelligence`;
+  const shareTitle = title || 'Daily Automation News | Automation Sales Leads with Actionable Signals';
+  const shareText = description || `${shareTitle} — Ready For Robots`;
   const copyId = id || 'share-copy';
 
   const links = {
@@ -79,44 +79,17 @@ function ShareButtons({ url, title, description, compact = false, id }) {
   );
 }
 
-export default function Newsletter() {
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [email, setEmail] = useState('');
-  const [showPreview, setShowPreview] = useState(true);
-  const [expandedStories, setExpandedStories] = useState({});
-  
-  // Mock subscription check (in production, check against backend/Supabase)
-  useEffect(() => {
-    const subscribed = localStorage.getItem('newsletter_subscribed') === 'true';
-    setIsSubscribed(subscribed);
-    setShowPreview(!subscribed);
-  }, []);
+const API_BASE = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_API_URL || 'https://readyforrobots.com');
 
-  const toggleStory = (idx) => {
-    setExpandedStories(prev => ({
-      ...prev,
-      [idx]: !prev[idx]
-    }));
-  };
+// Fallback stories when API returns empty
+const FALLBACK_EDITION = {
+  date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+  edition: `#${Math.floor(Date.now() / 86400000) % 365}`,
+  headline: 'Automation Sales Leads with Actionable Signals',
+  subheadline: 'Daily roundup of robot-ready companies and buying intent. Hot leads, real signals.'
+};
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    // In production: send to backend, create Supabase entry, send confirmation email
-    localStorage.setItem('newsletter_subscribed', 'true');
-    setIsSubscribed(true);
-    setShowPreview(false);
-    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily deployment roundups\n• ROI benchmarking data\n• Vendor market share tracking\n• Technology trend analysis`);
-  };
-
-  // Mock newsletter data (in production, fetch from backend/database)
-  const latestEdition = {
-    date: 'March 11, 2026',
-    edition: '#48',
-    headline: 'Warehouse AMRs Hit 30% Deployment Growth YoY',
-    subheadline: 'MiR and Locus lead market as ROI drops to 18-month payback average'
-  };
-
-  const topStories = [
+const FALLBACK_STORIES = [
     {
       category: 'DEPLOYMENT',
       company: 'Marriott International',
@@ -254,6 +227,51 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
     }
   ];
 
+export default function Newsletter() {
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [email, setEmail] = useState('');
+  const [showPreview, setShowPreview] = useState(true);
+  const [expandedStories, setExpandedStories] = useState({});
+  const [edition, setEdition] = useState(FALLBACK_EDITION);
+  const [topStories, setTopStories] = useState(FALLBACK_STORIES);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const subscribed = localStorage.getItem('newsletter_subscribed') === 'true';
+    setIsSubscribed(subscribed);
+    setShowPreview(!subscribed);
+  }, []);
+
+  useEffect(() => {
+    const fetchEdition = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/newsletter/edition?limit=8`);
+        const data = await res.json();
+        if (data?.latestEdition) setEdition(data.latestEdition);
+        if (data?.topStories?.length > 0) setTopStories(data.topStories);
+      } catch (err) {
+        console.error('Newsletter fetch:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEdition();
+  }, []);
+
+  const toggleStory = (idx) => {
+    setExpandedStories(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    localStorage.setItem('newsletter_subscribed', 'true');
+    setIsSubscribed(true);
+    setShowPreview(false);
+    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily automation leads\n• ROI benchmarking data\n• Hot deals with actionable signals`);
+  };
+
+  const latestEdition = edition;
+
   const marketInsights = {
     deployments: [
       { vendor: 'Savioke', vertical: 'Hospitality', count: '100+ properties', growth: '+45% YoY', marketShare: '~50%' },
@@ -280,20 +298,20 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
   return (
     <>
       <Head>
-        <title>Robot Intelligence Brief | Daily Automation News with Signal Intelligence</title>
-        <meta name="description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
+        <title>Robot Intelligence Brief | Automation Sales Leads with Actionable Signals</title>
+        <meta name="description" content="Daily automation news and hot leads. Real companies with buying signals — labor shortages, CapEx, expansion. Automation Sales Leads with Actionable Signals." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${BASE_URL}/newsletter`} />
-        <meta property="og:title" content="Robot Intelligence Brief | Daily Automation News with Signal Intelligence" />
-        <meta property="og:description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
+        <meta property="og:title" content="Robot Intelligence Brief | Automation Sales Leads with Actionable Signals" />
+        <meta property="og:description" content="Daily automation news and hot leads. Real companies with buying signals. Automation Sales Leads with Actionable Signals." />
         <meta property="og:image" content={`${BASE_URL}/og-banner.png`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="600" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={`${BASE_URL}/og-banner.png`} />
-        <meta name="twitter:title" content="Robot Intelligence Brief | Daily Automation News with Signal Intelligence" />
-        <meta name="twitter:description" content="Daily roundup of robot deployments, ROI data, market trends, and vendor intelligence. Robot Ready Sales Leads with Signal Intelligence." />
+        <meta name="twitter:title" content="Robot Intelligence Brief | Automation Sales Leads with Actionable Signals" />
+        <meta name="twitter:description" content="Daily automation news and hot leads. Real companies with buying signals." />
       </Head>
 
       <div className="min-h-screen bg-black text-white">
@@ -334,11 +352,10 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
               📰 ROBOT INTELLIGENCE BRIEF
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
-              Daily Automation News with Signal Intelligence
+              Daily Automation News
             </h1>
             <p className="text-base text-neutral-400 mb-4 max-w-2xl mx-auto">
-              Real-world robot deployments, ROI benchmarks, vendor market share, and technology trends. 
-              Robot Ready Sales Leads with Signal Intelligence.
+              Automation Sales Leads with Actionable Signals. Real companies, real buying intent — labor shortages, CapEx, expansion.
             </p>
             <div className="text-xs text-neutral-500">
               <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Hot Deals · <span className="text-emerald-400">✓</span> Market Intelligence
@@ -370,6 +387,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
         <div className="max-w-4xl mx-auto px-4 py-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <span className="text-xl">🔥</span> Top Stories
+            {loading && <span className="text-sm font-normal text-neutral-500">Loading fresh leads...</span>}
           </h3>
 
           <div className="space-y-4">
@@ -447,7 +465,11 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                         {para}
                       </p>
                     ))}
-                    
+                    {story.company_id && (
+                      <Link href={`/dashboard?analyze=${story.company_id}`} className="inline-flex items-center gap-2 mt-3 text-sm text-emerald-400 hover:text-emerald-300">
+                        View full AI analysis →
+                      </Link>
+                    )}
                     <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center gap-2 text-xs text-neutral-500">
                       <span>Click to collapse</span>
                       <span className="text-emerald-400">▲</span>
@@ -551,7 +573,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                 Never Miss a Robot Intelligence Brief
               </h3>
               <p className="text-base text-neutral-400 mb-6">
-                Get this delivered to your inbox daily. Free deployment data, hot deals, ROI benchmarks, and vendor intelligence with Signal Intelligence.
+                Get this delivered to your inbox daily. Free automation leads, hot deals, and actionable signals.
               </p>
 
               <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
@@ -593,7 +615,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
               <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer" className="block">
                 <img
                   src="/og-banner.png"
-                  alt="Ready For Robots - Robot Ready Sales Leads with Signal Intelligence"
+                  alt="Ready For Robots - Automation Sales Leads with Actionable Signals"
                   className="w-full h-auto"
                   style={{ maxHeight: '320px', objectFit: 'cover' }}
                 />
@@ -603,7 +625,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
                   <span className="text-xs text-neutral-500">Link:</span>
                   <code className="text-sm text-emerald-400 bg-neutral-800 px-2 py-1 rounded">{BASE_URL.replace(/^https?:\/\//, '')}</code>
                 </div>
-                <ShareButtons url={BASE_URL} id="banner-share" title="Ready For Robots" description="Robot Ready Sales Leads with Signal Intelligence. Daily automation news, hot deals, and market intelligence." />
+                <ShareButtons url={BASE_URL} id="banner-share" title="Ready For Robots" description="Automation Sales Leads with Actionable Signals. Daily automation news and hot leads." />
               </div>
             </div>
           </div>
@@ -619,7 +641,7 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
               {' '}
               <span className="text-emerald-400">ROBOTS</span>
               {' | '}
-              Robot Ready Sales Leads with Signal Intelligence
+              Automation Sales Leads with Actionable Signals
             </p>
             <p>Daily deployment roundups, ROI benchmarks, and hot deals across labor-intensive industries.</p>
           </div>

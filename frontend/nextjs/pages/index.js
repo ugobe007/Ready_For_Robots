@@ -385,11 +385,31 @@ export default function Signals() {
         <div className="max-w-5xl mx-auto px-6 py-10 md:py-12">
           <div className="space-y-6">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Curated lead lists · 14 signal types · 140+ sources</div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-              <span className="bg-gradient-to-r from-violet-300 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-                Automation Sales Leads with Actionable Signals
-              </span>
-            </h2>
+            {/* Logo + Headline: icon dominant (bigger than descriptor), Ready For Robots as descriptor */}
+            <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10">
+              <div className="flex-shrink-0">
+                <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center p-4 shadow-2xl shadow-emerald-500/10">
+                  <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
+                    <rect width="32" height="32" rx="6" fill="#171717"/>
+                    <path d="M8 16h12M20 12l4 4-4 4" stroke="url(#heroLogoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <defs>
+                      <linearGradient id="heroLogoGrad" x1="8" y1="16" x2="24" y2="16" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#34d399"/>
+                        <stop offset="1" stopColor="#22d3ee"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight text-white">
+                  Automation Sales Leads with Actionable Signals
+                </h2>
+                <p className="mt-2 md:mt-3 text-base md:text-lg text-neutral-400 font-medium">
+                  Ready For Robots
+                </p>
+              </div>
+            </div>
             <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
               We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
             </p>
