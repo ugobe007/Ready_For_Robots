@@ -391,9 +391,10 @@ export default function Signals() {
                 <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center p-4 shadow-2xl shadow-emerald-500/10">
                   <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
                     <rect width="32" height="32" rx="6" fill="#171717"/>
-                    <path d="M8 16h12M20 12l4 4-4 4" stroke="url(#heroLogoGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9 24V8h4c2.2 0 4 1.8 4 4s-1.8 4-4 4H9m4-4l7 8" stroke="url(#heroLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <path d="M20 12l4 4-4 4" stroke="url(#heroLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <defs>
-                      <linearGradient id="heroLogoGrad" x1="8" y1="16" x2="24" y2="16" gradientUnits="userSpaceOnUse">
+                      <linearGradient id="heroLogoGrad" x1="9" y1="8" x2="24" y2="20" gradientUnits="userSpaceOnUse">
                         <stop stopColor="#34d399"/>
                         <stop offset="1" stopColor="#22d3ee"/>
                       </linearGradient>
