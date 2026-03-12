@@ -179,6 +179,29 @@ def priority_tier(
     return PriorityResult("COLD", composite, reasons)
 
 
+# "Target" as common word (goal/benchmark) — when signals are about xAI, Anthropic, etc. saying "exceeds target"
+_TARGET_FALSE_POSITIVE_PHRASES = (
+    "exceeds its target", "exceeding its target", "surpassing target", "surpassed target",
+    "exceeds target", "exceeded target", "exceeding target", "xai", "anthropic",
+    "elon musk", "billion target", "million target", "funding target", "revenue target",
+)
+
+def _is_target_false_positive(company_name: str, signals) -> bool:
+    """Target Corp vs common-word 'target' in funding headlines (xAI, Anthropic, etc.)."""
+    if not company_name or company_name.strip().lower() != "target":
+        return False
+    sigs = signals or []
+    if not sigs:
+        return False
+    # If most signal texts mention the common-word context, it's a false positive
+    suspect = 0
+    for s in sigs:
+        text = (getattr(s, "signal_text", None) or getattr(s, "raw_text", None) or "").lower()
+        if any(phrase in text for phrase in _TARGET_FALSE_POSITIVE_PHRASES):
+            suspect += 1
+    return suspect >= max(1, len(sigs) * 0.5)  # Half or more signals suggest common-word use
+
+
 # ─── Convenience wrapper ──────────────────────────────────────────────────────
 
 def classify_lead(company, score, signals) -> tuple[bool, str, PriorityResult]:
@@ -193,6 +216,9 @@ def classify_lead(company, score, signals) -> tuple[bool, str, PriorityResult]:
     junk, junk_reason = is_junk(getattr(company, "name", None))
     if junk:
         return True, junk_reason, PriorityResult("COLD", 0.0, [junk_reason])
+    # Target false positive: "Target" from "exceeds its target" in xAI/Anthropic headlines
+    if _is_target_false_positive(getattr(company, "name", ""), signals):
+        return True, "target false positive (common-word in funding headlines)", PriorityResult("COLD", 0.0, ["target false positive"])
 
     overall = getattr(score, "overall_intent_score", 0.0) if score else 0.0
     sig_types = [s.signal_type for s in (signals or [])]

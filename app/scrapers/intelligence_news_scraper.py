@@ -326,6 +326,62 @@ COMPANY_CONTEXT = re.compile(
     re.IGNORECASE
 )
 
+# Words that can be company names OR common words - require disambiguating context in text
+# e.g. "Target" from "our target is..." (bad) vs "Target Corporation" or "Target's latest" (good)
+AMBIGUOUS_COMPANY_WORDS = {
+    "target", "apple", "shell", "general", "prime", "best", "first", "way",
+}
+# For each ambiguous word: regex patterns that indicate we mean the company, not the common word
+DISAMBIGUATING_PATTERNS = {
+    "target": [
+        r"\btarget\s+(?:corporation|corp\.?|inc\.?|company|stores?)\b",
+        r"\btarget'?s\s+(?:latest|move|earnings|report|announcement|expansion)\b",
+        r"\btarget\s+(?:just|announced|reported|published|said|plans|opens)\b",
+        r"(?:people|employees|workers|staff|team)\s+at\s+target\b",
+        r"\bthe\s+target\s+team\b",
+        r"\btarget\s+(?:employees|workers|staff|team)\b",
+    ],
+    "apple": [
+        r"\bapple\s+(?:inc\.?|corp\.?|computer|store)\b",
+        r"\bapple'?s\s+(?:latest|new|iphone|ceo)\b",
+    ],
+    "shell": [
+        r"\bshell\s+(?:oil|gas|energy|corporation)\b",
+        r"\bshell'?s\b",
+    ],
+    "general": [
+        r"\bgeneral\s+(?:motors|electric|dynamics|mills)\b",
+    ],
+    "prime": [
+        r"\bprime\s+(?:video|membership|amazon)\b",
+    ],
+    "best": [
+        r"\bbest\s+(?:buy|western)\b",
+    ],
+    "first": [
+        r"\bfirst\s+(?:republic|citizens|national)\b",
+    ],
+    "way": [
+        r"\bwayfair\b",
+        r"\bway\s+(?:mo|fair)\b",
+    ],
+}
+
+# When these patterns match, REJECT the ambiguous word as a company (common-word use)
+# e.g. "exceeds its target", "surpassing target" = goal/benchmark, not Target Corporation
+AMBIGUOUS_REJECTION_PATTERNS = {
+    "target": [
+        r"\b(?:exceeds?|exceeded|exceeding|surpasses?|surpassed|surpassing)\s+(?:its\s+)?(?:own\s+)?(?:initial\s+)?target\b",
+        r"\b(?:met|beat|missed|hit)\s+(?:its\s+)?(?:revenue\s+)?(?:funding\s+)?target\b",
+        r"\b(?:its|their|the)\s+(?:\$\d+[\w.]*\s+)?(?:billion|million)?\s*target\b",
+        r"\b(?:revenue|funding|growth|sales)\s+target\b",
+        r"\binitial\s+target\b",
+        r"\bown\s+target\b",
+        r"\btarget\s+(?:of|for)\s+\$",  # "target of $10B"
+        r"\btarget\s+(?:of|for)\s+\d+",  # "target of 100"
+    ],
+}
+
 # ── Signal Classification Keywords ────────────────────────────────────────────
 SIGNAL_PATTERNS = {
     "funding_round": [
@@ -682,21 +738,40 @@ class IntelligenceNewsScraper:
         """
         companies = []
         seen = set()
-        
+        text_lower = text.lower()
+
+        def _accept_company(name: str) -> bool:
+            if not self._is_valid_company_name(name) or name in seen:
+                return False
+            # For ambiguous single-word names (Target, Apple, etc.), require disambiguating context
+            words = name.strip().split()
+            if len(words) == 1:
+                w = words[0].lower()
+                if w in AMBIGUOUS_COMPANY_WORDS:
+                    # Reject if text uses the word as common meaning (e.g. "exceeds its target")
+                    reject_patterns = AMBIGUOUS_REJECTION_PATTERNS.get(w, [])
+                    if any(re.search(p, text_lower) for p in reject_patterns):
+                        return False
+                    # Require disambiguating context for company meaning
+                    patterns = DISAMBIGUATING_PATTERNS.get(w, [])
+                    if patterns and not any(re.search(p, text_lower) for p in patterns):
+                        return False  # Skip: likely common-word use, not the company
+            return True
+
         # Pattern 1: "Company X announces/invests/opens..."
         for match in COMPANY_PATTERN.finditer(text):
             name = match.group(1).strip()
-            if self._is_valid_company_name(name) and name not in seen:
+            if _accept_company(name):
                 companies.append((name, 0.9))
                 seen.add(name)
-        
+
         # Pattern 2: "at/for/with Company X"
         for match in COMPANY_CONTEXT.finditer(text):
             name = match.group(1).strip()
-            if self._is_valid_company_name(name) and name not in seen:
+            if _accept_company(name):
                 companies.append((name, 0.7))
                 seen.add(name)
-        
+
         # Filter by confidence (prioritize high confidence)
         companies.sort(key=lambda x: x[1], reverse=True)
         return companies[:5]  # Top 5 companies per article (tuned for 30-50 leads/run)
