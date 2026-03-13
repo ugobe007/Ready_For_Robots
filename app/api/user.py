@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.database import get_db
+from app.api.auth_deps import _is_admin
 
 router = APIRouter()
 
@@ -56,7 +57,14 @@ def _require_user(authorization: Optional[str] = Header(None)) -> dict:
             algorithms=["HS256"],
             options={"verify_aud": False},
         )
-        return {"uid": payload["sub"], "email": payload.get("email", "")}
+        # Supabase JWT: email is top-level; fallback to user_metadata for OAuth
+        email = (
+            payload.get("email")
+            or (payload.get("user_metadata") or {}).get("email")
+            or (payload.get("app_metadata") or {}).get("email")
+            or ""
+        )
+        return {"uid": payload["sub"], "email": email or ""}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired — please log in again")
     except Exception:
@@ -70,12 +78,12 @@ def _uid(user: dict) -> str:
 # ── Helpers: ensure profile exists ────────────────────────────────────────────
 
 def _ensure_profile(db: Session, uid: str, email: str):
-    """Upsert the user_profiles row (should already exist via trigger, but be safe)."""
+    """Upsert the user_profiles row — keep email in sync with JWT (OAuth can update it)."""
     db.execute(
         text("""
             INSERT INTO user_profiles (id, email)
             VALUES (:uid, :email)
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (id) DO UPDATE SET email = COALESCE(NULLIF(:email, ''), user_profiles.email)
         """),
         {"uid": uid, "email": email},
     )
@@ -167,6 +175,7 @@ def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
         "email":        row.email,
         "display_name": row.display_name,
         "created_at":   row.created_at.isoformat() if row.created_at else None,
+        "is_admin":     _is_admin(row.email),
     }
 
 

@@ -18,6 +18,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 
+const API = process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+
 export default function LoginPage() {
   const router = useRouter();
   const [email,   setEmail]   = useState('');
@@ -27,12 +30,44 @@ export default function LoginPage() {
   // If already logged in, or magic link / OAuth just completed, redirect to profile
   useEffect(() => {
     if (!supabase) return;
+
+    // Check for OAuth error in URL hash (Supabase redirects back with errors)
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      const err = params.get('error');
+      const desc = params.get('error_description');
+      if (err) {
+        setStatus('error');
+        setErrMsg(desc || err);
+        // Clear hash so it doesn't persist
+        window.history.replaceState(null, '', window.location.pathname);
+        return;
+      }
+    }
+
+    async function redirectAfterLogin(session) {
+      if (!session) return;
+      try {
+        const res = await fetch(`${API}/api/user/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const me = await res.json();
+          if (me?.is_admin) {
+            router.replace('/admin');
+            return;
+          }
+        }
+      } catch (_) { /* fallback to profile */ }
+      router.replace('/profile');
+    }
+
     supabase.auth.getSession().then(({ data }) => {
-      if (data?.session) router.replace('/profile');
+      if (data?.session) redirectAfterLogin(data.session);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) router.replace('/profile');
+      if (session) redirectAfterLogin(session);
     });
     return () => listener?.subscription?.unsubscribe();
   }, [router]);
