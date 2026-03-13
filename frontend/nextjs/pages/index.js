@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import LoginDropdown from '../components/LoginDropdown';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
@@ -332,9 +333,9 @@ export default function Signals() {
                   <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calculator</Link>
                 </nav>
               </div>
-              <div className="flex items-center gap-4">
-                <Link href="/login" className="hidden md:inline text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
-                <Link href="/login" className="hidden md:inline text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
+              <div className="hidden md:flex items-center gap-4">
+                <LoginDropdown className="text-neutral-400" />
+                <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
                   Sign Up Free
                 </Link>
                 
@@ -369,7 +370,7 @@ export default function Signals() {
                       💡 How It Works
                     </a>
                     <Link href="/login" className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      🔐 Login
+                      🔐 Sign in (Google, GitHub, Email)
                     </Link>
                     <Link href="/login" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">
                       ✨ Sign Up Free

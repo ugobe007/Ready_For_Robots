@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Ready for Robots -- Lead Intelligence Dashboard
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
+import LoginDropdown from '../components/LoginDropdown';
 
 // In production (Fly.io) frontend + API share the same origin — use relative URLs.
 // For local dev, point to the local uvicorn server.
@@ -2250,11 +2251,9 @@ export default function Dashboard() {
           {session
             ? <span className="label text-neutral-400 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
             : (
-              <Link href="/login"
-                className="btn-ghost text-xs border-neutral-800 text-neutral-400 hover:border-neutral-600"
-                title="Browse freely — sign in only to save companies and reports">
-                → sign in to save
-              </Link>
+              <div className="hidden md:block" title="Browse freely — sign in only to save companies and reports">
+                <LoginDropdown label="→ sign in to save" className="text-neutral-400 [&_button]:text-xs [&_button]:py-1.5 [&_button]:px-2 [&_button]:border-neutral-800" />
+              </div>
             )}
           
           {/* Hamburger Menu */}

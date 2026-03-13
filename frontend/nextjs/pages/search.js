@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
+import LoginDropdown from '../components/LoginDropdown';
 
 const API = typeof window !== 'undefined' 
   ? (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://readyforrobots.com')
@@ -122,7 +123,7 @@ export default function SearchPage() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+              <LoginDropdown className="text-neutral-400" />
             </div>
           </div>
         </div>

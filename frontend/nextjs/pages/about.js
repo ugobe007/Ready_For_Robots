@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import LoginDropdown from '../components/LoginDropdown';
 
 const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
@@ -140,7 +141,7 @@ export default function SignalIntelligencePage() {
               </nav>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/login" className="text-sm text-neutral-400 hover:text-white transition-colors">Login</Link>
+              <LoginDropdown className="text-neutral-400" />
               <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
                 Sign Up Free
               </Link>
