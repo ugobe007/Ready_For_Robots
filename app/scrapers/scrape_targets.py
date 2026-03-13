@@ -1,4 +1,4 @@
-﻿"""
+"""
 scrape_targets.py -- Scrape target registry for Ready for Robots.
 
 PURPOSE: Find companies that NEED robots, not companies that BUILD them.
@@ -909,6 +909,71 @@ RSS_FEED_TARGETS: List[ScrapeTarget] = [
         industries=["Logistics", "Hospitality", "Healthcare", "Food Service"],
         signal_types=["funding_round", "capex", "automation_intent"],
         notes="Official press releases from companies deploying or evaluating robots",
+    ),
+    # ── Industry news sources from user URL list (March 2026) ─────────────────
+    ScrapeTarget(
+        url="https://www.manufacturingdive.com/feeds/news/",
+        label="Manufacturing Dive",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["funding_round", "expansion", "capex", "ma_activity", "automation_intent"],
+        notes="Manufacturing ops, automation, labor, expansion coverage",
+    ),
+    ScrapeTarget(
+        url="https://www.retaildive.com/feeds/news/",
+        label="Retail Dive",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Food Service"],
+        signal_types=["funding_round", "expansion", "capex", "ma_activity"],
+        notes="Retail supply chain, logistics, store ops, e-commerce fulfillment",
+    ),
+    ScrapeTarget(
+        url="https://www.grocerydive.com/feeds/news/",
+        label="Grocery Dive",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics", "Food Service"],
+        signal_types=["funding_round", "expansion", "capex", "automation_intent"],
+        notes="Grocery DC, store automation, cold chain, labor",
+    ),
+    ScrapeTarget(
+        url="https://www.supplychainbrain.com/rss",
+        label="Supply Chain Brain",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["capex", "expansion", "automation_intent", "funding_round"],
+        notes="Supply chain news, logistics tech, warehousing",
+    ),
+    ScrapeTarget(
+        url="https://www.joc.com/api/rssfeed",
+        label="Journal of Commerce (JOC) - All News",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["expansion", "capex", "ma_activity", "funding_round"],
+        notes="Maritime, trucking, rail, ports, logistics technology",
+    ),
+    ScrapeTarget(
+        url="https://www.healthcareitnews.com/home/feed",
+        label="Healthcare IT News",
+        scraper="rss_feed", cadence="daily",
+        industries=["Healthcare"],
+        signal_types=["capex", "expansion", "automation_intent", "equipment_integration"],
+        notes="Hospital IT, clinical ops, facilities technology",
+    ),
+    ScrapeTarget(
+        url="https://www.hoteldive.com/feeds/news/",
+        label="Hotel Dive",
+        scraper="rss_feed", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["funding_round", "expansion", "capex", "ma_activity"],
+        notes="Hotel operations, technology, development",
+    ),
+    ScrapeTarget(
+        url="https://theloadstar.com/feed/",
+        label="The Loadstar",
+        scraper="rss_feed", cadence="daily",
+        industries=["Logistics"],
+        signal_types=["expansion", "capex", "ma_activity"],
+        notes="Supply chain, freight, shipping news",
     ),
 ]
 

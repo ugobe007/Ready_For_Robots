@@ -307,6 +307,40 @@ DISCOVERY_QUERIES = [
     "apparel fulfillment automation robot 2026",
     "clothing e-commerce automation 2026",
     "automated apparel picking system 2026",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 📰 TRADE PRESS SIGNALS (Manufacturing Dive, JOC, Retail Dive, etc.)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Manufacturing & Industrial
+    "US manufacturing facility expansion 2026",
+    "manufacturing plant automation investment 2026",
+    "industrial automation CapEx spending 2026",
+    "factory modernization robotics 2026",
+    "manufacturing labor crisis automation solution",
+
+    # Logistics & Supply Chain (JOC, The Loadstar, Supply Chain Brain)
+    "port terminal automation investment 2026",
+    "drayage trucking capacity expansion 2026",
+    "logistics technology investment 2026",
+    "3PL warehouse expansion new facility 2026",
+    "freight forwarding automation 2026",
+
+    # Retail & Grocery (Retail Dive, Grocery Dive)
+    "retail distribution center automation 2026",
+    "grocery fulfillment automation 2026",
+    "supermarket automation investment 2026",
+    "retail store technology upgrade 2026",
+
+    # Hotel & Hospitality (Hotel Dive)
+    "hotel technology upgrade investment 2026",
+    "hospitality automation pilot 2026",
+    "resort property technology 2026",
+
+    # Healthcare (Healthcare IT News)
+    "hospital technology investment 2026",
+    "healthcare facility automation 2026",
+    "health system capital expenditure 2026",
 ]
 
 # ── Company Entity Extraction Patterns ────────────────────────────────────────
