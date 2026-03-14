@@ -72,21 +72,108 @@ def run_intelligence_scraper_task(self, max_articles=10):
     """
     Intelligence News Scraper — discovers new companies from news.
     FREE alternative to LinkedIn, Pitchbook, CB Insights.
+    Uses Redis lock to prevent duplicate runs when Beat fires multiple schedules at once.
+    """
+    import redis
+    from worker.celery_worker import celery_app as app
+    redis_url = getattr(app.conf, 'broker_url', None) or os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    lock_key = "intelligence_scraper_lock"
+    lock_ttl = 7200  # 2 hours max (task takes ~10 min)
+
+    r = redis.from_url(redis_url)
+    acquired = r.set(lock_key, "1", nx=True, ex=lock_ttl)
+    if not acquired:
+        logger.info("Intelligence scraper already running (lock held), skipping duplicate task")
+        return {"skipped": True, "reason": "another instance is running"}
+
+    try:
+        from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+        db = get_db()
+        try:
+            scraper = IntelligenceNewsScraper(db=db)
+            stats = scraper.discover_leads(max_articles_per_query=max_articles)
+            logger.info(
+                "Intelligence scraper completed: %d new companies, %d enriched, %d signals",
+                stats['companies_discovered'],
+                stats['companies_enriched'],
+                stats['signals_created']
+            )
+            return stats
+        except Exception as exc:
+            logger.error("Intelligence scraper failed: %s", exc)
+            raise self.retry(exc=exc)
+        finally:
+            db.close()
+    finally:
+        r.delete(lock_key)
+
+
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def run_company_news_task(self, limit=80):
+    """
+    Company → News: Search news for each company (DB + KNOWN_COMPANIES).
+    Correlates XYZ company with news about XYZ. Runs 2x daily.
+    """
+    from sqlalchemy import func
+    from app.scrapers.news_scraper import NewsScraper, KNOWN_COMPANIES
+    from app.models.company import Company
+    from app.models.signal import Signal
+
+    db = get_db()
+    try:
+        # Companies from DB (prioritize those with signals = real leads)
+        db_companies = (
+            db.query(Company.name)
+            .outerjoin(Signal)
+            .group_by(Company.id, Company.name)
+            .order_by(func.count(Signal.id).desc())
+            .limit(limit)
+            .all()
+        )
+        company_names = list(dict.fromkeys(c[0] for c in db_companies))
+
+        # Add KNOWN_COMPANIES canonical names we might not have in DB yet
+        known_names = set(v[0] for v in KNOWN_COMPANIES.values())
+        for name in known_names:
+            if name not in company_names:
+                company_names.append(name)
+            if len(company_names) >= limit + 50:  # Cap total
+                break
+
+        if not company_names:
+            logger.info("Company news task: no companies to query")
+            return {"companies_queried": 0}
+
+        scraper = NewsScraper(db=db)
+        scraper.run_company_queries(company_names[:limit], max_per_company=5)
+        logger.info("Company news task completed for %d companies", len(company_names[:limit]))
+        return {"companies_queried": len(company_names[:limit])}
+    except Exception as exc:
+        logger.error("Company news task failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def run_enrich_companies_task(self, limit=50):
+    """
+    Enrich existing companies by searching news for their names.
+    Finds recent signals we may have missed. Run daily.
     """
     from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
     db = get_db()
     try:
         scraper = IntelligenceNewsScraper(db=db)
-        stats = scraper.discover_leads(max_articles_per_query=max_articles)
+        stats = scraper.enrich_existing_companies(limit=limit)
         logger.info(
-            "Intelligence scraper completed: %d new companies, %d enriched, %d signals",
-            stats['companies_discovered'],
+            "Enrichment completed: %d enriched, %d signals",
             stats['companies_enriched'],
             stats['signals_created']
         )
         return stats
     except Exception as exc:
-        logger.error("Intelligence scraper failed: %s", exc)
+        logger.error("Enrich companies failed: %s", exc)
         raise self.retry(exc=exc)
     finally:
         db.close()
@@ -142,18 +229,43 @@ def run_logistics_scraper_task(self, queries=None):
         db.close()
 
 
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
+def generate_newsletter_edition_task(self, limit=8):
+    """
+    Generate and cache the daily newsletter edition.
+    Runs every 24 hours. Content is used for posting and social sharing.
+    """
+    from app.services.newsletter_service import generate_edition, write_cached_edition
+
+    db = get_db()
+    try:
+        data = generate_edition(db, limit=limit)
+        write_cached_edition(data)
+        count = data.get("summary", {}).get("total_leads", 0)
+        logger.info("Newsletter edition generated: %d stories cached", count)
+        return {"stories": count, "edition": data.get("latestEdition", {}).get("edition")}
+    except Exception as exc:
+        logger.error("Newsletter edition failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=1, default_retry_delay=30)
 def run_all_scrapers_task(self):
     """Trigger all active scraper tasks in sequence."""
     try:
         run_intelligence_scraper_task.delay(max_articles=10)  # FREE lead discovery
         run_news_scraper_task.delay()
+        run_company_news_task.delay(limit=80)  # XYZ company → news on XYZ
+        run_enrich_companies_task.delay(limit=80)  # Enrich existing companies
+        generate_newsletter_edition_task.delay(limit=8)  # Daily newsletter for posting
         run_rss_scraper_task.delay()
         run_serp_scraper_task.delay()
         run_logistics_scraper_task.delay()
         run_job_scraper_task.delay()
         run_hotel_scraper_task.delay()
-        logger.info("All scraper tasks queued (including intelligence scraper)")
+        logger.info("All scraper tasks queued (including intelligence, company news, enrich)")
     except Exception as exc:
         logger.error("Failed to queue scraper tasks: %s", exc)
         raise self.retry(exc=exc)
@@ -254,14 +366,13 @@ def run_rfp_marketplace_scraper_task(self):
                     db.add(company)
                     db.flush()
                 
-                # Create signal
+                # Create signal (Signal model: source_url, created_at, signal_strength)
                 signal = Signal(
                     company_id=company.id,
                     signal_type=signal_data['signal_type'],
                     signal_text=signal_data['signal_text'],
-                    url=signal_data['url'],
-                    detected_at=signal_data['detected_at'],
-                    confidence=signal_data.get('confidence', 0.85)
+                    source_url=signal_data.get('url', ''),
+                    signal_strength=float(signal_data.get('confidence', 0.85)),
                 )
                 db.add(signal)
                 
@@ -331,7 +442,6 @@ def rescore_all_companies_task(self):
     from app.models.signal import Signal
     from app.models.score import Score
     from app.services.scoring_engine import compute_scores
-    from app.services.lead_filter import classify_lead
     
     db = get_db()
     try:
@@ -346,42 +456,55 @@ def rescore_all_companies_task(self):
                     score = Score(company_id=company.id)
                     db.add(score)
                 
-                score.overall_score = score_data.get('overall_score', 0)
+                # Score model uses overall_intent_score, robotics_fit_score (no tier - computed at query time)
+                score.overall_intent_score = score_data.get('overall_intent_score', 0)
                 score.automation_score = score_data.get('automation_score', 0)
                 score.labor_pain_score = score_data.get('labor_pain_score', 0)
                 score.expansion_score = score_data.get('expansion_score', 0)
-                score.market_fit_score = score_data.get('market_fit_score', 0)
+                score.robotics_fit_score = score_data.get('robotics_fit_score', 0)
                 
-                tier_data = classify_lead(company, signals, score_data)
-                score.tier = tier_data.get('tier', 'COLD')
-                
+                db.commit()
             except Exception as e:
                 logger.warning(f"Failed to score company {company.id}: {e}")
+                db.rollback()
                 continue
         
-        db.commit()
         logger.info(f"Re-scored {len(companies)} companies")
     except Exception as exc:
         logger.error(f"Rescore task failed: {exc}")
+        db.rollback()
     finally:
         db.close()
 
 
 @celery_app.task(bind=True)
 def cleanup_junk_leads_task(self):
-    """Remove leads marked as junk or with very low scores"""
+    """Remove obvious junk: companies with score < 3 and 0 signals. Company has no is_junk column."""
     from app.models.company import Company
+    from app.models.score import Score
+    from app.models.signal import Signal
     
     db = get_db()
     try:
-        # Delete companies marked as junk
-        deleted = db.query(Company).filter(Company.is_junk == True).delete()
+        low_score_ids = [r[0] for r in db.query(Score.company_id).filter(Score.overall_intent_score < 3).all()]
+        junk_ids = [cid for cid in low_score_ids if db.query(Signal).filter(Signal.company_id == cid).count() == 0]
+        if not junk_ids:
+            logger.info("Cleanup: no junk leads to remove")
+            return
+        deleted = db.query(Company).filter(Company.id.in_(junk_ids)).delete(synchronize_session=False)
         db.commit()
-        logger.info(f"Cleanup task deleted {deleted} junk leads")
+        logger.info(f"Cleanup task deleted {deleted} junk leads (0 signals, score < 3)")
     except Exception as exc:
         logger.error(f"Cleanup task failed: {exc}")
     finally:
         db.close()
+
+
+@celery_app.task(bind=True)
+def scheduler_heartbeat_task(self):
+    """Runs every 2 min. Proves scheduler + worker pipeline is alive. No-op otherwise."""
+    logger.info("[HEARTBEAT] Scheduler alive — next scrapers will run at their scheduled times")
+    return {"ok": True}
 
 
 @celery_app.task(bind=True)
@@ -427,11 +550,13 @@ def daily_scraper_report_task(self):
             'daily_scraper_report.py'
         )
         
+        import sys
         result = subprocess.run(
-            ['python3', script_path],
+            [sys.executable, script_path],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=60,
+            cwd=os.path.dirname(os.path.dirname(__file__)),
         )
         
         if result.returncode == 0:
@@ -445,3 +570,38 @@ def daily_scraper_report_task(self):
             
     except Exception as e:
         logger.error(f"[REPORT] Error generating daily report: {e}")
+
+
+@celery_app.task(bind=True)
+def daily_analytics_report_task(self, days: int = 1):
+    """
+    Daily opportunity analytics report - automation types, robot needs, ROI, tasks.
+    Runs at 9:15am UTC daily (after scrapers + newsletter).
+    """
+    logger.info("[ANALYTICS] Generating daily opportunity analytics report...")
+    try:
+        from app.services.daily_analytics_service import get_daily_analytics, format_report_markdown
+        from datetime import datetime, timezone
+
+        db = get_db()
+        try:
+            analytics = get_daily_analytics(db, days=days)
+            report_md = format_report_markdown(analytics)
+        finally:
+            db.close()
+
+        reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'reports')
+        os.makedirs(reports_dir, exist_ok=True)
+        filename = f"daily_analytics_{datetime.now(timezone.utc).strftime('%Y%m%d')}.md"
+        filepath = os.path.join(reports_dir, filename)
+        with open(filepath, 'w') as f:
+            f.write(report_md)
+
+        latest_path = os.path.join(reports_dir, 'daily_analytics_latest.md')
+        with open(latest_path, 'w') as f:
+            f.write(report_md)
+
+        totals = analytics.get('totals', {})
+        logger.info(f"[ANALYTICS] Report saved to {filepath} | Signals: {totals.get('signals', 0)}, Companies: {totals.get('companies_with_signals', 0)}")
+    except Exception as e:
+        logger.error(f"[ANALYTICS] Error generating daily analytics report: {e}")

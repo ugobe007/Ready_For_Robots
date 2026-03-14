@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import PlainTextResponse
 from sqlalchemy import func, and_, or_, desc, text
 from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
+from app.services.daily_analytics_service import get_daily_analytics, format_report_markdown
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -225,3 +227,31 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
         'cost_buckets': cost_bucket_list,
         'insights': insights
     }
+
+
+@router.get("/daily-report")
+async def get_daily_opportunity_report(
+    days: int = Query(1, ge=1, le=90, description="Number of days to analyze"),
+    format: str = Query("json", regex="^(json|markdown)$"),
+):
+    """
+    Daily analytics report from opportunity postings.
+    
+    Answers:
+    - What type of automation is required or inferred?
+    - What type of robots are needed and what specs?
+    - Is there expected ROI or schedule for running trials?
+    - What are the most common tasks to automate?
+    - Industry, geography, top companies, signal breakdown.
+    """
+    db = SessionLocal()
+    try:
+        analytics = get_daily_analytics(db, days=days)
+        if format == "markdown":
+            return PlainTextResponse(
+                format_report_markdown(analytics),
+                media_type="text/markdown",
+            )
+        return analytics
+    finally:
+        db.close()

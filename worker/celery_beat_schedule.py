@@ -86,7 +86,7 @@ CELERYBEAT_SCHEDULE = {
     
     # ── RFP MARKETPLACE ── Run daily at 5am UTC
     'rfp-marketplace-daily': {
-        'task': 'worker.tasks.run_rfp_scraper_task',
+        'task': 'worker.tasks.run_rfp_marketplace_scraper_task',
         'schedule': crontab(hour=5, minute=0),
     },
     
@@ -102,6 +102,23 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.tasks.rescore_all_companies_task',
         'schedule': crontab(hour=6, minute=0),
     },
+    # ── COMPANY → NEWS ── Search news for each company (XYZ → news on XYZ)
+    'company-news-morning': {
+        'task': 'worker.tasks.run_company_news_task',
+        'schedule': crontab(hour=8, minute=30),
+        'kwargs': {'limit': 80},
+    },
+    'company-news-afternoon': {
+        'task': 'worker.tasks.run_company_news_task',
+        'schedule': crontab(hour=16, minute=30),
+        'kwargs': {'limit': 80},
+    },
+    # ── ENRICH EXISTING ── Add signals to companies with fewest (daily 7am UTC)
+    'enrich-existing-companies': {
+        'task': 'worker.tasks.run_enrich_companies_task',
+        'schedule': crontab(hour=7, minute=0),
+        'kwargs': {'limit': 80},
+    },
     
     # ── CLEANUP ── Remove old/junk leads weekly
     'cleanup-junk-leads': {
@@ -109,6 +126,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(day_of_week=1, hour=2, minute=0),  # Monday 2am
     },
     
+    # ── HEARTBEAT ── Proves scheduler is alive (every 2 min). Prevents "stuck" appearance.
+    'scheduler-heartbeat': {
+        'task': 'worker.tasks.scheduler_heartbeat_task',
+        'schedule': 120.0,  # Every 2 minutes (seconds)
+    },
     # ── HEALTH CHECK ── Monitor scraper health every hour
     'scraper-health-check': {
         'task': 'worker.tasks.scraper_health_check_task',
@@ -119,6 +141,18 @@ CELERYBEAT_SCHEDULE = {
     'daily-scraper-report': {
         'task': 'worker.tasks.daily_scraper_report_task',
         'schedule': crontab(hour=8, minute=0),  # Daily at 8am UTC
+    },
+    # ── NEWSLETTER ── Generate daily edition for posting (every 24h at 9am UTC)
+    'newsletter-daily': {
+        'task': 'worker.tasks.generate_newsletter_edition_task',
+        'schedule': crontab(hour=9, minute=0),
+        'kwargs': {'limit': 8},
+    },
+    # ── DAILY OPPORTUNITY ANALYTICS ── Automation types, robots needed, ROI, tasks (9:15am UTC)
+    'daily-analytics-report': {
+        'task': 'worker.tasks.daily_analytics_report_task',
+        'schedule': crontab(hour=9, minute=15),
+        'kwargs': {'days': 1},
     },
 }
 

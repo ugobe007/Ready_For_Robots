@@ -51,6 +51,9 @@ export default function Analytics() {
               <span className="text-xs px-2 py-1 border border-red-700 text-red-400 rounded">ADMIN ONLY</span>
             </div>
             <nav className="flex items-center space-x-4">
+              <Link href="/market-insights" className="text-neutral-400 hover:text-emerald-400 transition">
+                Market Insights
+              </Link>
               <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition">
                 Dashboard
               </Link>
@@ -232,34 +235,38 @@ export default function Analytics() {
 
         </div>
 
-        {/* Insights & Recommendations */}
+        {/* Insights & Recommendations — Clickable cards */}
         <div className="border border-emerald-800 rounded-lg p-6 bg-neutral-900/50">
           <h3 className="text-lg font-semibold text-emerald-400 mb-4">📊 Strategic Insights</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30">
+            <Link href="/search" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">🔥 Hottest Trend</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.hottest_trend || 'Not enough data yet'}
               </p>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30">
+              <span className="text-xs text-emerald-500 mt-2 inline-block">Search leads →</span>
+            </Link>
+            <Link href="/dashboard" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">💡 Opportunity</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.opportunity || 'Gather more data to reveal opportunities'}
               </p>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30">
+              <span className="text-xs text-emerald-500 mt-2 inline-block">View pipeline →</span>
+            </Link>
+            <Link href="/market-insights" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">📈 Growth Area</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.growth_area || 'Continue monitoring user behavior'}
               </p>
-            </div>
-            <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30">
+              <span className="text-xs text-emerald-500 mt-2 inline-block">Full report →</span>
+            </Link>
+            <Link href="/roi-calculator" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">🎯 Action Item</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.action_item || 'Build features users are requesting'}
               </p>
-            </div>
+              <span className="text-xs text-emerald-500 mt-2 inline-block">ROI Calculator →</span>
+            </Link>
           </div>
         </div>
 

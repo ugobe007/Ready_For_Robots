@@ -1,6 +1,6 @@
 /**
  * Ready for Robots — Admin Panel
- * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
+ * Requires login + email in ADMIN_EMAILS.
  *
  * Tabs:
  *  Overview       — stats: companies, signals, scored + breakdowns
@@ -8,10 +8,18 @@
  *  Import Companies — bulk-import company records (JSON)
  *  Scraper        — trigger scraper runs, view registered targets
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useAuth } from './_app';
+import { authHeader } from '../lib/supabase';
 
 const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+
+const AdminAuthContext = createContext({ authHeaders: {}, adminFetch: (url, opts) => fetch(url, opts), onAccessDenied: () => {} });
+function useAdminAuth() {
+  return useContext(AdminAuthContext);
+}
 
 // ── tiny helpers ───────────────────────────────────────────────────────────
 
@@ -65,25 +73,197 @@ const SIGNAL_TYPES = [
 
 // ── Analytics ──────────────────────────────────────────────────────────────
 
+const ANALYTICS_MODES = ['Platform', 'Opportunity'];
+
+function OpportunityReport() {
+  const { adminFetch } = useAdminAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(7);
+
+  const fetchReport = useCallback(() => {
+    setLoading(true);
+    adminFetch(`${API}/api/daily-report?days=${days}&format=json`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { console.error('Opportunity report error:', e); setLoading(false); });
+  }, [days, adminFetch]);
+
+  useEffect(() => { fetchReport(); }, [fetchReport]);
+
+  if (loading) return <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading opportunity report…</div>;
+  if (!data) return <Notice type="err">No opportunity data available</Notice>;
+
+  const totals = data.totals || {};
+  const maxVal = (obj) => obj && Object.values(obj).length ? Math.max(...Object.values(obj)) : 1;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-100">Opportunity Analytics</h2>
+          <p className="text-xs text-neutral-600 mt-1">Automation types, robot needs, ROI expectations, common tasks — from scraped signals</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {[1, 7, 30].map((d) => (
+            <button
+              key={d}
+              onClick={() => setDays(d)}
+              className={`px-3 py-1.5 text-xs border transition-colors ${days === d ? 'border-cyan-600 text-cyan-400' : 'border-neutral-800 text-neutral-500 hover:border-neutral-700'}`}
+            >
+              {d}d
+            </button>
+          ))}
+          <button onClick={fetchReport} className="px-3 py-1.5 text-xs border border-neutral-700 text-neutral-400 hover:text-cyan-400">🔄</button>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <StatCard label="Signals Analyzed" value={totals.signals} />
+        <StatCard label="Companies w/ Opportunities" value={totals.companies_with_signals} />
+        <StatCard label="ROI Mentions" value={data.roi_mentions || 0} sub="In signal text" />
+        <StatCard label="Pilot/Trial Mentions" value={data.trial_pilot_mentions || 0} sub="In signal text" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Automation Types Inferred */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Automation Types Inferred</div>
+          <div className="space-y-3">
+            {Object.entries(data.automation_types_inferred || {}).slice(0, 8).map(([k, v]) => (
+              <div key={k}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{k.replace(/_/g, ' ')}</span>
+                  <span className="text-neutral-500 tabular-nums">{v}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: `${(v / maxVal(data.automation_types_inferred)) * 100}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs">No data</p>}
+          </div>
+        </div>
+
+        {/* Robot Types Needed */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Robot Types Needed</div>
+          <div className="space-y-3">
+            {Object.entries(data.robot_types_needed || {}).slice(0, 8).map(([k, v]) => (
+              <div key={k}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{k}</span>
+                  <span className="text-neutral-500 tabular-nums">{v}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${(v / maxVal(data.robot_types_needed)) * 100}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs">No data</p>}
+          </div>
+        </div>
+
+        {/* Common Tasks to Automate */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Most Common Tasks</div>
+          <div className="space-y-3">
+            {Object.entries(data.common_tasks_to_automate || {}).slice(0, 8).map(([k, v]) => (
+              <div key={k}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className="text-neutral-300">{k.replace(/_/g, ' ')}</span>
+                  <span className="text-neutral-500 tabular-nums">{v}</span>
+                </div>
+                <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                  <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${(v / maxVal(data.common_tasks_to_automate)) * 100}%` }}></div>
+                </div>
+              </div>
+            )) || <p className="text-neutral-600 text-xs">No data</p>}
+          </div>
+        </div>
+
+        {/* Industries */}
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Industries</div>
+          <div className="space-y-2">
+            {Object.entries(data.industries || {}).slice(0, 8).map(([k, v]) => (
+              <div key={k} className="flex justify-between text-xs">
+                <span className="text-neutral-300">{k}</span>
+                <span className="text-neutral-500 tabular-nums">{v}</span>
+              </div>
+            )) || <p className="text-neutral-600 text-xs">No data</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Companies + Specs */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="border border-neutral-800 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-4">Top Companies by Signals</div>
+          <div className="space-y-2">
+            {(data.top_companies_by_signals || []).slice(0, 5).map((c, i) => (
+              <div key={i} className="flex justify-between text-xs">
+                <span className="text-neutral-300 truncate flex-1">{c.name}</span>
+                <span className="text-neutral-500 tabular-nums ml-2">{c.signals}</span>
+              </div>
+            )) || <p className="text-neutral-600 text-xs">No data</p>}
+          </div>
+        </div>
+        <div className="border border-cyan-900/50 p-5">
+          <div className="text-[10px] uppercase tracking-widest text-cyan-500 mb-4">Specs Mentioned in Signals</div>
+          {Object.keys(data.specs_mentioned_in_signals || {}).length > 0 ? (
+            <div className="space-y-2 text-xs">
+              {Object.entries(data.specs_mentioned_in_signals).map(([k, v]) => (
+                <div key={k}><span className="text-neutral-400">{k}:</span> <span className="text-cyan-400">{v}</span></div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-neutral-600 text-xs">No specs extracted from signal text yet</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Analytics() {
+  const { adminFetch } = useAdminAuth();
+  const [analyticsMode, setAnalyticsMode] = useState('Platform');
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d');
 
   const fetchAnalytics = useCallback(() => {
     setLoading(true);
-    fetch(`${API}/api/analytics?range=${timeRange}`)
+    adminFetch(`${API}/api/analytics?range=${timeRange}`)
       .then(r => r.json())
       .then(d => { setAnalytics(d); setLoading(false); })
       .catch(e => { console.error('Analytics error:', e); setLoading(false); });
-  }, [timeRange]);
+  }, [timeRange, adminFetch]);
 
-  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
-
-  if (loading) return <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading analytics…</div>;
-  if (!analytics) return <Notice type="err">No analytics data available</Notice>;
+  useEffect(() => { if (analyticsMode === 'Platform') fetchAnalytics(); }, [fetchAnalytics, analyticsMode]);
 
   return (
+    <div className="space-y-6">
+      {/* Mode Toggle */}
+      <div className="flex gap-2 border-b border-neutral-800 pb-2">
+        {ANALYTICS_MODES.map((m) => (
+          <button
+            key={m}
+            onClick={() => setAnalyticsMode(m)}
+            className={`px-4 py-2 text-sm -mb-px transition-colors border-b-2 ${
+              analyticsMode === m ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-neutral-600 hover:text-neutral-400'
+            }`}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {analyticsMode === 'Opportunity' && <OpportunityReport />}
+      {analyticsMode === 'Platform' && (
+        <>
+  {loading ? <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading analytics…</div> :
+  !analytics ? <Notice type="err">No analytics data available</Notice> : (
     <div className="space-y-8">
       {/* Time Range Selector */}
       <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
@@ -196,28 +376,36 @@ function Analytics() {
         </div>
       </div>
 
-      {/* Strategic Insights */}
+      {/* Strategic Insights — Clickable */}
       <div className="border border-emerald-900 p-5">
         <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-4">📊 Strategic Insights</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="border border-neutral-800 p-3">
+          <Link href="/search" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">🔥 Hottest Trend</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.hottest_trend || 'Not enough data yet'}</p>
-          </div>
-          <div className="border border-neutral-800 p-3">
+            <span className="text-[10px] text-emerald-500 mt-1 inline-block">Search leads →</span>
+          </Link>
+          <Link href="/dashboard" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">💡 Opportunity</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.opportunity || 'Gather more data'}</p>
-          </div>
-          <div className="border border-neutral-800 p-3">
+            <span className="text-[10px] text-emerald-500 mt-1 inline-block">View pipeline →</span>
+          </Link>
+          <Link href="/market-insights" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">📈 Growth Area</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.growth_area || 'Monitor user behavior'}</p>
-          </div>
-          <div className="border border-neutral-800 p-3">
+            <span className="text-[10px] text-emerald-500 mt-1 inline-block">Full report →</span>
+          </Link>
+          <Link href="/roi-calculator" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">🎯 Action Item</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.action_item || 'Build requested features'}</p>
-          </div>
+            <span className="text-[10px] text-emerald-500 mt-1 inline-block">ROI Calculator →</span>
+          </Link>
         </div>
       </div>
+    </div>
+  )}
+        </>
+      )}
     </div>
   );
 }
@@ -225,6 +413,7 @@ function Analytics() {
 // ── Users ──────────────────────────────────────────────────────────────────
 
 function Users() {
+  const { adminFetch } = useAdminAuth();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -235,8 +424,8 @@ function Users() {
   const loadUsers = useCallback(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/api/admin/users`).then(r => r.json()),
-      fetch(`${API}/api/admin/users/stats`).then(r => r.json())
+      adminFetch(`${API}/api/admin/users`).then(r => r.json()),
+      adminFetch(`${API}/api/admin/users/stats`).then(r => r.json())
     ])
       .then(([usersData, statsData]) => {
         setUsers(usersData.users || []);
@@ -244,14 +433,14 @@ function Users() {
         setLoading(false);
       })
       .catch(e => { console.error(e); setLoading(false); });
-  }, []);
+  }, [adminFetch]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
   const viewActivity = (userId) => {
     setSelectedUser(userId);
     setLoadingActivity(true);
-    fetch(`${API}/api/admin/users/${userId}/activity`)
+    adminFetch(`${API}/api/admin/users/${userId}/activity`)
       .then(r => r.json())
       .then(d => { setUserActivity(d); setLoadingActivity(false); })
       .catch(e => { console.error(e); setLoadingActivity(false); });
@@ -259,7 +448,7 @@ function Users() {
 
   const deleteUser = (userId, email) => {
     if (!confirm(`Delete user ${email} and ALL their data? This cannot be undone.`)) return;
-    fetch(`${API}/api/admin/users/${userId}`, { method: 'DELETE' })
+    adminFetch(`${API}/api/admin/users/${userId}`, { method: 'DELETE' })
       .then(r => r.json())
       .then(d => {
         if (d.status === 'success') {
@@ -409,31 +598,50 @@ function Users() {
 // ── Overview ───────────────────────────────────────────────────────────────
 
 function Dashboard() {
+  const { adminFetch, onAccessDenied } = useAdminAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadStats = useCallback(() => {
+  const loadStats = useCallback((on403) => {
     setLoading(true);
-    fetch(`${API}/api/admin/stats`)
-      .then(r => r.json())
-      .then(d => { setStats(d); setLoading(false); setRefreshing(false); })
+    setErr('');
+    adminFetch(`${API}/api/admin/stats`)
+      .then(r => {
+        if (r.status === 403) {
+          on403?.();
+          throw new Error('Admin access required');
+        }
+        if (!r.ok) return r.json().then(d => { throw new Error(d?.detail || `HTTP ${r.status}`); });
+        return r.json();
+      })
+      .then(d => {
+        if (d?.detail && !d?.totals) throw new Error(d.detail);
+        setStats(d);
+        setLoading(false);
+        setRefreshing(false);
+      })
       .catch(e => { setErr(e.message); setLoading(false); setRefreshing(false); });
-  }, []);
+  }, [adminFetch]);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
+  useEffect(() => { loadStats(onAccessDenied); }, [loadStats, onAccessDenied]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadStats();
+    loadStats(onAccessDenied);
   };
 
   if (loading) return <div className="text-neutral-500 text-sm py-8 flex gap-2 items-center"><Spinner /> Loading dashboard…</div>;
   if (err)     return <Notice type="err">Error: {err}</Notice>;
   if (!stats)  return null;
 
-  const { totals, by_industry, by_signal_type, recent_companies, pipeline_value, conversion_metrics } = stats;
+  const totals = stats?.totals ?? {};
+  const by_industry = stats?.by_industry ?? [];
+  const by_signal_type = stats?.by_signal_type ?? [];
+  const recent_companies = stats?.recent_companies ?? [];
+  const pipeline_value = stats?.pipeline_value;
+  const conversion_metrics = stats?.conversion_metrics ?? {};
 
   return (
     <div className="space-y-8">
@@ -457,8 +665,8 @@ function Dashboard() {
         <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Business Metrics</div>
         <div className="flex flex-wrap gap-3">
           <StatCard label="Total Pipeline" value={`$${pipeline_value?.toLocaleString() || 0}`} sub="Estimated value" />
-          <StatCard label="Hot Leads" value={totals.scored.toLocaleString()} sub={`${conversion_metrics?.hot_rate || 0}% conversion`} />
-          <StatCard label="Companies" value={totals.companies.toLocaleString()} sub={`${totals.signals} signals`} />
+          <StatCard label="Hot Leads" value={(totals?.scored ?? 0).toLocaleString()} sub={`${conversion_metrics?.hot_rate || 0}% conversion`} />
+          <StatCard label="Companies" value={(totals?.companies ?? 0).toLocaleString()} sub={`${totals?.signals ?? 0} signals`} />
           <StatCard label="Avg Score" value={conversion_metrics?.avg_score || '—'} sub="Quality indicator" />
         </div>
       </div>
@@ -539,6 +747,7 @@ function Dashboard() {
 // ── Import URLs ────────────────────────────────────────────────────────────
 
 function ImportUrls() {
+  const { adminFetch } = useAdminAuth();
   const [text, setText]       = useState('');
   const [industry, setIndustry]   = useState('');
   const [sigType, setSigType]     = useState('');
@@ -552,7 +761,7 @@ function ImportUrls() {
     if (!urls.length) return;
     setLoading(true); setResult(null); setErr('');
     try {
-      const r = await fetch(`${API}/api/admin/import/urls`, {
+      const r = await adminFetch(`${API}/api/admin/import/urls`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -570,7 +779,7 @@ function ImportUrls() {
     } finally {
       setLoading(false);
     }
-  }, [text, industry, sigType, scrapeNow]);
+  }, [text, industry, sigType, scrapeNow, adminFetch]);
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -674,6 +883,7 @@ const COMPANY_EXAMPLE = JSON.stringify([
 ], null, 2);
 
 function ImportCompanies() {
+  const { adminFetch } = useAdminAuth();
   const [text, setText]     = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult]   = useState(null);
@@ -689,7 +899,7 @@ function ImportCompanies() {
     }
     setLoading(true); setResult(null); setErr('');
     try {
-      const r = await fetch(`${API}/api/admin/import/companies`, {
+      const r = await adminFetch(`${API}/api/admin/import/companies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companies }),
@@ -702,7 +912,7 @@ function ImportCompanies() {
     } finally {
       setLoading(false);
     }
-  }, [text]);
+  }, [text, adminFetch]);
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -757,6 +967,7 @@ function ImportCompanies() {
 // ── Scraper Panel ──────────────────────────────────────────────────────────
 
 function ScraperPanel() {
+  const { adminFetch } = useAdminAuth();
   const [targets, setTargets]       = useState(null);
   const [loadingTargets, setLT]     = useState(true);
   const [filterScraper, setFS]      = useState('');
@@ -772,18 +983,18 @@ function ScraperPanel() {
     const params = new URLSearchParams();
     if (filterScraper)  params.set('scraper', filterScraper);
     if (filterIndustry) params.set('industry', filterIndustry);
-    fetch(`${API}/api/admin/scrape/targets?${params}`)
+    adminFetch(`${API}/api/admin/scrape/targets?${params}`)
       .then(r => r.json())
       .then(d => { setTargets(d); setLT(false); })
       .catch(() => setLT(false));
-  }, [filterScraper, filterIndustry]);
+  }, [filterScraper, filterIndustry, adminFetch]);
 
   useEffect(() => { loadTargets(); }, [loadTargets]);
 
   const triggerScrape = useCallback(async () => {
     setTriggering(true); setTR(null); setTE('');
     try {
-      const r = await fetch(`${API}/api/admin/scrape/trigger`, {
+      const r = await adminFetch(`${API}/api/admin/scrape/trigger`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scraper: triggerScraper, industry: triggerIndustry || null }),
@@ -796,7 +1007,7 @@ function ScraperPanel() {
     } finally {
       setTriggering(false);
     }
-  }, [triggerScraper, triggerIndustry]);
+  }, [triggerScraper, triggerIndustry, adminFetch]);
 
   const summary = targets?.summary;
 
@@ -908,6 +1119,7 @@ function ScraperPanel() {
 
 // Companies Manager Component
 function CompaniesManager() {
+  const { adminFetch } = useAdminAuth();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -915,17 +1127,17 @@ function CompaniesManager() {
   const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/api/admin/companies/search?q=${searchTerm}&industry=${filterIndustry}&limit=100`)
+    adminFetch(`${API}/api/admin/companies/search?q=${searchTerm}&industry=${filterIndustry}&limit=100`)
       .then(r => r.json())
       .then(d => { setCompanies(d.companies || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [searchTerm, filterIndustry]);
+  }, [searchTerm, filterIndustry, adminFetch]);
 
   const deleteCompany = async (id) => {
     if (!confirm('Delete this company and all its signals?')) return;
     setDeleting(id);
     try {
-      await fetch(`${API}/api/admin/companies/${id}`, { method: 'DELETE' });
+      await adminFetch(`${API}/api/admin/companies/${id}`, { method: 'DELETE' });
       setCompanies(companies.filter(c => c.id !== id));
     } catch (e) {
       alert('Failed to delete: ' + e.message);
@@ -1000,6 +1212,7 @@ function CompaniesManager() {
 
 // System Controls Component
 function SystemControls() {
+  const { adminFetch } = useAdminAuth();
   const [clearing, setClearing] = useState(false);
   const [reindexing, setReindexing] = useState(false);
   const [result, setResult] = useState('');
@@ -1008,7 +1221,7 @@ function SystemControls() {
     if (!confirm('Clear all cache data?')) return;
     setClearing(true);
     try {
-      await fetch(`${API}/api/admin/system/cache/clear`, { method: 'POST' });
+      await adminFetch(`${API}/api/admin/system/cache/clear`, { method: 'POST' });
       setResult('✅ Cache cleared successfully');
     } catch (e) {
       setResult('❌ Error: ' + e.message);
@@ -1020,7 +1233,7 @@ function SystemControls() {
     if (!confirm('Reindex database? This may take several minutes.')) return;
     setReindexing(true);
     try {
-      await fetch(`${API}/api/admin/system/reindex`, { method: 'POST' });
+      await adminFetch(`${API}/api/admin/system/reindex`, { method: 'POST' });
       setResult('✅ Database reindexed successfully');
     } catch (e) {
       setResult('❌ Error: ' + e.message);
@@ -1115,8 +1328,48 @@ function SystemControls() {
 
 export default function AdminPage() {
   const [tab, setTab] = useState('Dashboard');
+  const { session, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  const authHeaders = session ? authHeader(session.access_token) : {};
+  const adminFetch = useCallback((url, opts = {}) => {
+    return fetch(url, {
+      ...opts,
+      headers: { ...authHeaders, ...(opts.headers || {}) },
+    });
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!session) {
+      router.replace('/login');
+      return;
+    }
+    // Quick check: if we get 403 on admin stats, user is not admin
+    const h = authHeader(session.access_token);
+    fetch(`${API}/api/admin/stats`, { headers: h })
+      .then(r => { if (r.status === 403) setAccessDenied(true); })
+      .catch(() => {});
+  }, [session, authLoading, router]);
+
+  if (authLoading || (!session && typeof window !== 'undefined')) {
+    return <div className="min-h-screen bg-[#080808]" />;
+  }
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <div className="border border-red-900 rounded-lg px-8 py-10 text-center max-w-md">
+          <h1 className="text-lg font-semibold text-red-400 mb-2">Access denied</h1>
+          <p className="text-sm text-neutral-400 mb-6">Admin access is required. Contact your administrator.</p>
+          <Link href="/" className="text-sm text-cyan-400 hover:text-cyan-300">← Back to dashboard</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
+    <AdminAuthContext.Provider value={{ authHeaders, adminFetch, onAccessDenied: () => setAccessDenied(true) }}>
     <div style={{ backgroundColor: '#080808' }} className="min-h-screen text-neutral-300">
       {/* Top bar */}
       <header className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
@@ -1126,6 +1379,9 @@ export default function AdminPage() {
           <span className="text-sm text-neutral-500">Admin</span>
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/profile" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
+            Profile
+          </Link>
           <Link href="/analytics" className="text-xs text-neutral-600 hover:text-emerald-400 transition-colors">
             📊 Analytics
           </Link>
@@ -1162,6 +1418,7 @@ export default function AdminPage() {
         {tab === 'Robot Companies' && <RobotCompaniesLink />}
       </main>
     </div>
+    </AdminAuthContext.Provider>
   );
 }
 

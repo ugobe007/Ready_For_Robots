@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Ready for Robots — User Profile Page
  * Route: /profile
  *
@@ -304,6 +304,7 @@ export default function ProfilePage() {
   const [lists,         setLists]         = useState([]);
   const [userInfo,      setUserInfo]      = useState(null);
   const [dataLoading,   setDataLoading]   = useState(true);
+  const [loadError,     setLoadError]      = useState(null);
   const [activeSection, setActiveSection] = useState('reports');
   const [viewReport,    setViewReport]    = useState(null);
   const [newListName,   setNewListName]   = useState('');
@@ -328,9 +329,11 @@ export default function ProfilePage() {
     return res.json();
   }, [token]);
 
+  const [isAdmin, setIsAdmin] = useState(false);
   const loadAll = useCallback(async () => {
     if (!token) return;
     setDataLoading(true);
+    setLoadError(null);
     try {
       const [me, r, s, l] = await Promise.all([
         apiFetch('/api/user/me'),
@@ -340,7 +343,16 @@ export default function ProfilePage() {
       ]);
       setUserInfo(me); setDispName(me.display_name || '');
       setReports(r); setSaved(s); setLists(l);
-    } catch (e) { console.error('profile load:', e); }
+      setIsAdmin(me.is_admin === true);
+    } catch (e) {
+      console.error('profile load:', e);
+      let msg = e?.message || 'Failed to load profile.';
+      try {
+        const j = JSON.parse(msg);
+        if (j.detail) msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+      } catch (_) {}
+      setLoadError(msg);
+    }
     finally { setDataLoading(false); }
   }, [apiFetch, token]);
 
@@ -416,18 +428,45 @@ export default function ProfilePage() {
 
       <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
 
-        <header className="mb-8 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-1.5">
-              <h1 className="text-2xl font-bold tracking-tight text-white">
-                {userInfo?.display_name || userInfo?.email?.split('@')[0] || 'My Profile'}
-              </h1>
+        <header className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-600 to-cyan-700 flex items-center justify-center text-xl font-bold text-white shrink-0">
+                {(userInfo?.display_name || userInfo?.email || '?').slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  {userInfo?.display_name || userInfo?.email?.split('@')[0] || 'My Profile'}
+                </h1>
+                <p className="text-xs text-neutral-500 mt-0.5">{userInfo?.email}</p>
+                {session?.user?.app_metadata?.provider && (
+                  <p className="text-[10px] text-neutral-600 mt-1">
+                    Signed in with {session.user.app_metadata.provider === 'google' ? 'Google' : session.user.app_metadata.provider === 'github' ? 'GitHub' : 'Email'}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-3 mt-3 text-xs text-neutral-500">
+                  <span>{saved.length} saved</span>
+                  <span>·</span>
+                  <span>{reports.length} reports</span>
+                  <span>·</span>
+                  <span>{lists.length} lists</span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-neutral-600">{userInfo?.email}</p>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link href="/" className="btn-ghost text-xs border-neutral-700 text-neutral-500 hover:border-neutral-500">← dashboard</Link>
+              <button onClick={handleSignOut} className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500">sign out</button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/" className="btn-ghost text-xs border-neutral-700 text-neutral-500 hover:border-neutral-500">← dashboard</Link>
-            <button onClick={handleSignOut} className="btn-ghost text-xs border-neutral-800 text-neutral-600 hover:border-red-900 hover:text-red-500">sign out</button>
+
+          {/* Quick links */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link href="/" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-emerald-700 hover:text-emerald-400 transition-colors">Dashboard</Link>
+            <Link href="/market-insights" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-emerald-700 hover:text-emerald-400 transition-colors">Market Insights</Link>
+            <Link href="/search" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-cyan-700 hover:text-cyan-400 transition-colors">Search</Link>
+            <Link href="/newsletter" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-emerald-700 hover:text-emerald-400 transition-colors">Newsletter</Link>
+            <Link href="/roi-calculator" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-yellow-700 hover:text-yellow-400 transition-colors">ROI Calculator</Link>
+            {isAdmin && <Link href="/admin" className="text-xs border border-amber-800 text-amber-400 rounded px-3 py-1.5 hover:border-amber-600 transition-colors">Admin</Link>}
           </div>
         </header>
 
@@ -440,6 +479,15 @@ export default function ProfilePage() {
               }`}>{s.label}</button>
           ))}
         </div>
+
+        {loadError && (
+          <div className="mb-6 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-3 flex items-center justify-between gap-4">
+            <p className="text-sm text-amber-200">{loadError}</p>
+            <button onClick={() => { setLoadError(null); loadAll(); }} className="btn-ghost text-xs border-amber-700 text-amber-400 hover:border-amber-500 shrink-0">
+              Retry
+            </button>
+          </div>
+        )}
 
         {dataLoading ? (
           <div className="space-y-2">

@@ -68,8 +68,8 @@ def analyze_metrics(metrics):
     new_signals = metrics['new_signals_24h']
     scores = metrics['scores_24h']
     
-    # Count by data source
-    sources = Counter([c.data_source for c in new_companies if c.data_source])
+    # Count by data source (Company uses 'source' not 'data_source')
+    sources = Counter([c.source for c in new_companies if c.source])
     
     # Count by signal type
     signal_types = Counter([s.signal_type for s in new_signals])
@@ -91,10 +91,10 @@ def analyze_metrics(metrics):
     daily_avg_7d = days_7_count / 7.0
     
     # Automated vs seeded
-    automated_sources = ['job_news', 'news_scraper', 'logistics_directory_scraper', 
+    automated_sources = ['job_news', 'news_scraper', 'news_discovery', 'logistics_directory_scraper', 
                         'serp_scraper', 'job_board_scraper', 'rfp_marketplace_scraper',
                         'hotel_directory_scraper']
-    automated_count = sum(1 for c in new_companies if c.data_source in automated_sources)
+    automated_count = sum(1 for c in new_companies if c.source in automated_sources)
     seeded_count = len(new_companies) - automated_count
     
     return {

@@ -325,6 +325,7 @@ export default function Signals() {
                 </h1>
                 <nav className="hidden md:flex items-center gap-6 text-sm">
                   <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
+                  <Link href="/market-insights" className="text-neutral-400 hover:text-emerald-400 transition-colors">Market Insights</Link>
                   <Link href="/about" className="text-neutral-400 hover:text-cyan-400 transition-colors">Signals</Link>
                   <a href="#leads" className="text-neutral-400 hover:text-emerald-400 transition-colors">Browse Leads</a>
                   <Link href="/newsletter" className="text-neutral-400 hover:text-cyan-400 transition-colors flex items-center gap-1">
@@ -353,6 +354,9 @@ export default function Signals() {
                   <div id="mobile-menu" className="hidden absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
                     <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
                       📊 Dashboard
+                    </Link>
+                    <Link href="/market-insights" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      📈 Market Insights
                     </Link>
                     <Link href="/about" className="block px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 border-b border-neutral-800">
                       ⚡ Signal Intelligence

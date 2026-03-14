@@ -2242,6 +2242,7 @@ export default function Dashboard() {
           <Link href="/" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Home</Link>
           <button onClick={fetchData} className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">&#8635; Refresh</button>
           <Link href="/search" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Search</Link>
+          <Link href="/market-insights" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Market Insights</Link>
           <Link href="/about" className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">Signals</Link>
           <Link href="/newsletter" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Newsletter</Link>
           <Link href="/roi-calculator" className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors">ROI Calc</Link>
@@ -2273,6 +2274,11 @@ export default function Dashboard() {
                 <Link href="/search" onClick={() => setShowMenu(false)}>
                   <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
                     🔍 Intelligence Search
+                  </div>
+                </Link>
+                <Link href="/market-insights" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    📈 Market Insights
                   </div>
                 </Link>
                 <Link href="/admin" onClick={() => setShowMenu(false)}>
