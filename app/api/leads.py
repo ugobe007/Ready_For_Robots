@@ -146,13 +146,14 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts for the dashboard stat cards and front-page ticker."""
+    """Pipeline counts for the dashboard stat cards and front-page ticker. Includes leads per industry."""
     companies = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
         .all()
     )
     total = hot = warm = cold = junk_count = 0
+    by_industry = {}
     for c in companies:
         j, _, pri = classify_lead(c, c.scores, c.signals)
         if j:
@@ -163,6 +164,8 @@ def leads_summary(
         if pri.tier == "HOT":  hot  += 1
         elif pri.tier == "WARM": warm += 1
         else: cold += 1
+        industry_key = (c.industry or "Unknown").strip()
+        by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
 
     total_signals = db.query(func.count(Signal.id)).scalar() or 0
 
@@ -170,6 +173,7 @@ def leads_summary(
         "total": total, "hot": hot, "warm": warm, "cold": cold,
         "junk_filtered": junk_count,
         "total_signals": total_signals,
+        "by_industry": by_industry,
     }
 
 

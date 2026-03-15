@@ -239,14 +239,14 @@ export default function Analytics() {
         <div className="border border-emerald-800 rounded-lg p-6 bg-neutral-900/50">
           <h3 className="text-lg font-semibold text-emerald-400 mb-4">📊 Strategic Insights</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/search" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
+            <Link href="/search?category=robot_automation" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">🔥 Hottest Trend</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.hottest_trend || 'Not enough data yet'}
               </p>
               <span className="text-xs text-emerald-500 mt-2 inline-block">Search leads →</span>
             </Link>
-            <Link href="/dashboard" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
+            <Link href="/search?category=expansion" className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/30 hover:border-emerald-700 hover:bg-neutral-900/50 transition block">
               <div className="text-neutral-300 font-medium mb-2">💡 Opportunity</div>
               <p className="text-neutral-400 text-sm">
                 {analytics?.insights?.opportunity || 'Gather more data to reveal opportunities'}

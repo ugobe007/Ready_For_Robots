@@ -20,6 +20,8 @@ export default function Signals() {
     liveSignals: 0,
     warmPipeline: 0
   });
+  // Leads per industry (e.g. { Logistics: 400, Hospitality: 275 })
+  const [leadsByIndustry, setLeadsByIndustry] = useState({});
   
   // Live signal flow state (pythh.ai style)
   const [signalFlow, setSignalFlow] = useState({
@@ -103,6 +105,7 @@ export default function Signals() {
           liveSignals: data.total_signals ?? 0,
           warmPipeline: data.warm ?? 0
         });
+        setLeadsByIndustry(data.by_industry ?? {});
       } catch (err) {
         console.error('Error fetching summary:', err);
       }
@@ -471,6 +474,23 @@ export default function Signals() {
                   </div>
                 </div>
               </div>
+
+              {/* Leads per industry */}
+              {Object.keys(leadsByIndustry).length > 0 && (
+                <div className="border border-neutral-800 rounded-lg py-3 px-4 bg-neutral-900/50">
+                  <div className="text-xs text-neutral-500 font-semibold uppercase tracking-widest mb-2">Leads by industry</div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    {Object.entries(leadsByIndustry)
+                      .sort((a, b) => (b[1] || 0) - (a[1] || 0))
+                      .map(([industry, count]) => (
+                        <span key={industry} className="text-sm text-neutral-300">
+                          <span className="text-white font-medium">{industry}</span>
+                          <span className="text-emerald-400/90 font-semibold ml-1.5">{count}</span>
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
             )}
           </div>

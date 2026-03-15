@@ -26,6 +26,7 @@ Usage:
     scraper.enrich_existing_companies()  # Enrich companies already in DB
 """
 import logging
+import random
 import re
 import time
 import urllib.request
@@ -341,6 +342,41 @@ DISCOVERY_QUERIES = [
     "hospital technology investment 2026",
     "healthcare facility automation 2026",
     "health system capital expenditure 2026",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🎯 COMPANY-NAMED HEADLINES (more “X does Y” articles = more extraction)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "companies expanding warehouse 2026",
+    "companies opening distribution center 2026",
+    "companies investing automation 2026",
+    "warehouse automation companies expansion 2026",
+    "hotel chains robot automation 2026",
+    "restaurant chains automation robot 2026",
+    "retailers automation investment 2026",
+    "3PL companies expansion new facility",
+    "hospital systems automation investment",
+    "logistics companies new warehouse 2026",
+    "food distributors automation 2026",
+    "grocery chains fulfillment automation",
+    "manufacturing companies robotics 2026",
+    "which companies deploying robots 2026",
+    "companies pilot robot program 2026",
+
+    # 2025 + “recent” (catch late-2025 / early-2026 news)
+    "warehouse automation investment 2025",
+    "distribution center expansion 2025",
+    "hotel labor shortage 2025",
+    "restaurant automation robot 2025",
+    "hospital automation investment 2025",
+    "robot deployment warehouse 2025",
+    "labor shortage automation solution 2025",
+
+    # Geographic variety (US/UK/Canada often name companies)
+    "US warehouse automation expansion 2026",
+    "UK logistics automation investment 2026",
+    "Canada distribution center expansion",
+    "US manufacturing automation 2026",
 ]
 
 # ── Company Entity Extraction Patterns ────────────────────────────────────────
@@ -357,6 +393,52 @@ COMPANY_PATTERN = re.compile(
 COMPANY_CONTEXT = re.compile(
     r'(?:at|for|with|from)\s+([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)'
     r'(?:\s+(?:is|said|says|has|will|plans|faces|struggles)|\'s|\,)',
+    re.IGNORECASE
+)
+
+# Pattern 3: "Company X to expand/build/open" or "Company X partners/secures/completes"
+COMPANY_PATTERN_EXTRA = re.compile(
+    r'\b([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)\s+'
+    r'(?:to\s+(?:expand|build|open|deploy|invest)|partners?\s+with|teams?\s+up\s+with|'
+    r'secures?\s+(?:funding|\$)|completes?\s+(?:acquisition|deal|pilot)|'
+    r'rolls?\s+out|adds?\s+\d+|installs?|chooses?)\b',
+    re.IGNORECASE
+)
+
+# Pattern 4: "Investment in X" / "funding for X" / "deal with X"
+# Stop before trailing verb; (?-i:[a-z]) = case-sensitive lowercase (IGNORECASE would match "R")
+COMPANY_AFTER_PREP = re.compile(
+    r'(?:investment\s+in|funding\s+for|deal\s+with|partnership\s+with|contract\s+with)\s+'
+    r'([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)(?=\s+(?-i:[a-z])|\s*[\,\.]|\s*$)',
+    re.IGNORECASE
+)
+
+# Pattern 5: "X said" / "X reported" / "X has announced" / "X is building" (common news lead)
+COMPANY_SAID_REPORTED = re.compile(
+    r'\b([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)\s+'
+    r'(?:said|reported|reports|has\s+announced|has\s+reported|is\s+building|'
+    r'is\s+expanding|is\s+opening|is\s+investing|will\s+open|will\s+expand)\b',
+    re.IGNORECASE
+)
+
+# Pattern 6: "according to X" / "X, which operates" / "X, the company"
+COMPANY_ACCORDING_TO = re.compile(
+    r'(?:according\s+to|at\s+)([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)(?=\s*[\,\.]|\s+which|\s+the\s+|\s*$)',
+    re.IGNORECASE
+)
+
+# Pattern 7: Start-of-headline "X opens/builds/announces/breaks ground" (strong company-in-news)
+COMPANY_LEAD_VERB = re.compile(
+    r'^([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)\s+'
+    r'(?:opens?|builds?|announces?|breaks?\s+ground|launches?|deploys?|'
+    r'installs?|partners?|invests?|raises?|acquires?|plans?\s+to\s+(?:open|build|expand)|'
+    r'to\s+(?:open|build|expand|deploy|install)|unveils?|reveals?)\b',
+    re.IGNORECASE
+)
+
+# Pattern 8: "X, the [industry] company/leader" or "X — a [industry] firm"
+COMPANY_APPOSITIVE = re.compile(
+    r'\b([A-Z][A-Za-z0-9&\.\'\-\, ]{2,50}?)\s*[\,\—\-]\s*(?:the\s+)?(?:\w+\s+)?(?:company|firm|group|chain|corporation|inc\.?|corp\.?)\b',
     re.IGNORECASE
 )
 
@@ -611,18 +693,34 @@ class IntelligenceNewsScraper:
     # PUBLIC API
     # ══════════════════════════════════════════════════════════════════════════
     
-    def discover_leads(self, max_articles_per_query: int = 10) -> Dict:
+    def discover_leads(
+        self,
+        max_articles_per_query: int = 10,
+        max_queries: Optional[int] = None,
+    ) -> Dict:
         """
         Main discovery mode: search news for buying intent signals,
         extract company names, create new leads or enrich existing.
         
+        Args:
+            max_articles_per_query: Max articles to process per query
+            max_queries: If set, only run first N queries (for quick runs)
+        
         Returns: stats dict with discoveries
         """
         logger.info("🎣 Starting lead discovery from news...")
-        
-        for query in DISCOVERY_QUERIES:
+        if max_queries:
+            # Shuffle so short runs hit diverse industries (not just first 20 = warehouse heavy)
+            shuffled = DISCOVERY_QUERIES.copy()
+            random.shuffle(shuffled)
+            queries = shuffled[:max_queries]
+        else:
+            queries = DISCOVERY_QUERIES
+        logger.info(f"Running {len(queries)} queries (max_articles_per_query={max_articles_per_query})")
+
+        for query in queries:
             self.stats["queries_run"] += 1
-            logger.info(f"Query {self.stats['queries_run']}/{len(DISCOVERY_QUERIES)}: {query}")
+            logger.info(f"Query {self.stats['queries_run']}/{len(queries)}: {query}")
             
             articles = self._fetch_google_news(query)
             for article in articles[:max_articles_per_query]:
@@ -806,17 +904,87 @@ class IntelligenceNewsScraper:
                 companies.append((name, 0.7))
                 seen.add(name)
 
+        # Pattern 3: "Company X to expand" / "Company X partners with" / "Company X secures funding"
+        for match in COMPANY_PATTERN_EXTRA.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.8))
+                seen.add(name)
+
+        # Pattern 4: "Investment in X" / "funding for X"
+        for match in COMPANY_AFTER_PREP.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.7))
+                seen.add(name)
+
+        # Pattern 5: "X said" / "X reported" / "X is building"
+        for match in COMPANY_SAID_REPORTED.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.75))
+                seen.add(name)
+
+        # Pattern 6: "according to X" / "at X"
+        for match in COMPANY_ACCORDING_TO.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.65))
+                seen.add(name)
+
+        # Pattern 7: "X opens/builds/announces" at start of headline (strong signal)
+        for match in COMPANY_LEAD_VERB.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.85))
+                seen.add(name)
+
+        # Pattern 8: "X, the company" / "X — a logistics firm"
+        for match in COMPANY_APPOSITIVE.finditer(text):
+            name = match.group(1).strip()
+            if _accept_company(name):
+                companies.append((name, 0.75))
+                seen.add(name)
+
+        # Fallback: no pattern matched — take first title-case phrase (2–5 words) from start
+        if not companies and len(text) > 25:
+            fallback = self._extract_leading_company_phrase(text)
+            if fallback and _accept_company(fallback):
+                companies.append((fallback, 0.5))
+                seen.add(fallback)
+
         # Filter by confidence (prioritize high confidence)
         companies.sort(key=lambda x: x[1], reverse=True)
-        return companies[:5]  # Top 5 companies per article (tuned for 30-50 leads/run)
+        return companies[:15]  # Top 15 per article to surface more new leads
+
+    def _extract_leading_company_phrase(self, text: str) -> Optional[str]:
+        """Fallback: extract first title-case phrase (2–5 words) from start of headline."""
+        text = text.strip()
+        if not text or len(text) < 15:
+            return None
+        # Tokenize on spaces; take words that look like a name (start with upper, alphanumeric/&.')
+        words = []
+        for w in re.findall(r"[A-Za-z0-9&\.\'\-]+", text):
+            if len(words) >= 5:
+                break
+            if w and w[0].isupper() and w.lower() not in NOISE_WORDS and len(w) > 1:
+                words.append(w)
+            elif words:
+                # Stop at first non-name word after we have at least 2
+                if len(words) >= 2:
+                    break
+                words = []
+        if 2 <= len(words) <= 5:
+            return " ".join(words)
+        return None
     
     def _is_valid_company_name(self, name: str) -> bool:
         """Filter out noise from extracted company names (headline fragments, etc.)."""
         name_lower = name.lower().strip()
         words = name_lower.split()
         
-        # Too short or too long
-        if len(name) < 5 or len(name) > 50:
+        # Too short or too long (min 3 allows NCR, IBM, P&G, HPE, etc.)
+        if len(name) < 3 or len(name) > 60:
             return False
         
         # Must contain at least one uppercase letter (proper noun)
@@ -896,8 +1064,8 @@ class IntelligenceNewsScraper:
         if all(word in NOISE_WORDS for word in words):
             return False
         
-        # Too many words (likely sentence)
-        if len(words) > 5:
+        # Too many words (likely sentence); 8 allows "X Y Z Corporation" / longer legal names
+        if len(words) > 8:
             return False
         
         # Starts with lowercase (likely mid-sentence)
@@ -1011,9 +1179,16 @@ class IntelligenceNewsScraper:
         # Score the signal using inference engine
         strength = self._score_signal(text, company.name, company.industry)
         
-        # Skip weak signals (0.04 tuned for 30-50 leads/run; was 0.05)
-        if strength < 0.04:
-            return
+        # Skip weak signals (0.02 allows more new leads; was 0.03)
+        company_signal_count = self.db.query(Signal).filter(Signal.company_id == company.id).count()
+        if strength < 0.02:
+            # Ensure every new company gets at least one signal so the lead is usable
+            if company_signal_count == 0:
+                strength = 0.1
+            else:
+                return
+        elif company_signal_count == 0 and strength < 0.05:
+            strength = max(strength, 0.1)  # floor for first signal on new lead
         
         signal = Signal(
             company_id=company.id,

@@ -193,7 +193,7 @@ export default function MarketInsights() {
         <div className="border border-emerald-800 rounded-lg p-6 bg-emerald-950/20">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2">Explore leads matching these opportunities</h3>
           <p className="text-neutral-400 text-sm mb-4">Search by industry, signal type, or company name to find hot prospects.</p>
-          <Link href="/search" className="inline-block px-6 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-500/10 transition">
+          <Link href="/search?category=robot_automation" className="inline-block px-6 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-500/10 transition">
             Search Leads →
           </Link>
         </div>

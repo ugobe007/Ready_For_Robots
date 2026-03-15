@@ -380,12 +380,12 @@ function Analytics() {
       <div className="border border-emerald-900 p-5">
         <div className="text-[10px] uppercase tracking-widest text-emerald-500 mb-4">📊 Strategic Insights</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/search" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
+          <Link href="/search?category=robot_automation" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">🔥 Hottest Trend</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.hottest_trend || 'Not enough data yet'}</p>
             <span className="text-[10px] text-emerald-500 mt-1 inline-block">Search leads →</span>
           </Link>
-          <Link href="/dashboard" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
+          <Link href="/search?category=expansion" className="border border-neutral-800 p-3 hover:border-emerald-700 hover:bg-neutral-900/30 transition block">
             <div className="text-xs text-neutral-400 mb-1">💡 Opportunity</div>
             <p className="text-xs text-neutral-500">{analytics?.insights?.opportunity || 'Gather more data'}</p>
             <span className="text-[10px] text-emerald-500 mt-1 inline-block">View pipeline →</span>

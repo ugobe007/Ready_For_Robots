@@ -194,12 +194,26 @@ CATEGORY_KEYWORDS: dict = {
         "store replenishment", "back-of-store", "backroom",
         "store-level inventory", "retail distribution",
     ],
+    "expansion": [
+        "expansion", "new facility", "new warehouse", "new distribution center",
+        "breaking ground", "square feet", "sf facility", "construction",
+        "groundbreaking", "opening", "development", "capacity expansion",
+        "facility expansion", "geographic expansion", "new location",
+        "new property", "new build", "capital expenditure", "capex",
+    ],
+    "strategic_hire": [
+        "VP ", "SVP ", "COO", "Chief Operating", "Vice President",
+        "Director of", "Head of", "appointed", "hired", "joins as",
+        "new executive", "Chief ", "executive vice president", "EVP ",
+    ],
 }
 
 CATEGORY_LABELS: dict = {
     "automation_investment": "Automation Investments",
     "acquisitions":          "Acquisitions & M&A",
     "labor_downsizing":      "Labor Downsizing",
+    "expansion":             "Expansion / CapEx",
+    "strategic_hire":        "Executive Hire",
     "intra_logistics":       "Intra-Logistics",
     "pack_work":             "Pack In / Pack Out",
     "kitting":               "Kitting & Assembly",
@@ -207,6 +221,17 @@ CATEGORY_LABELS: dict = {
     "inventory_management":  "Inventory Management",
     "healthcare_automation": "Healthcare Automation",
     "retail_automation":     "Retail Automation",
+}
+
+# Frontend Quick Search keys → API category
+CATEGORY_ALIASES: dict = {
+    "funding": "automation_investment",
+    "expansion": "expansion",
+    "labor": "labor_downsizing",
+    "exec": "strategic_hire",
+    "ma": "acquisitions",
+    "warehouse_logistics": "intra_logistics",
+    "robot_automation": "automation_investment",
 }
 
 
@@ -322,9 +347,10 @@ def search(
     Full-text search across signal texts.
     Combine a preset category (keyword seed list) with optional free-text.
     """
+    resolved = CATEGORY_ALIASES.get(category, category) if category else None
     keywords: List[str] = []
-    if category and category in CATEGORY_KEYWORDS:
-        keywords = CATEGORY_KEYWORDS[category]
+    if resolved and resolved in CATEGORY_KEYWORDS:
+        keywords = CATEGORY_KEYWORDS[resolved]
 
     results = _run_keyword_search(db, keywords, q, limit)
 
@@ -332,8 +358,8 @@ def search(
         "results": results,
         "total": len(results),
         "query": q,
-        "category": category,
-        "category_label": CATEGORY_LABELS.get(category) if category else None,
+        "category": resolved or category,
+        "category_label": CATEGORY_LABELS.get(resolved or category) if (resolved or category) else None,
     }
 
 

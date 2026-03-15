@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import LoginDropdown from '../components/LoginDropdown';
 
-const API = typeof window !== 'undefined' 
-  ? (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://readyforrobots.com')
-  : 'https://readyforrobots.com';
+const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
 const SEARCH_CATEGORIES = [
   { key: 'funding',       label: 'Funding Round' },
@@ -45,12 +44,27 @@ function ScoreNum({ value }) {
 
 export default function SearchPage() {
   const { session } = useAuth();
+  const router = useRouter();
   const searchRef = useRef(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(null);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
+
+  // Read URL params on load and run search (avoids blank pages from links)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query.q;
+    const cat = router.query.category;
+    if (q != null || cat != null) {
+      const qVal = typeof q === 'string' ? q : (q?.[0] ?? '');
+      const catVal = typeof cat === 'string' ? cat : (cat?.[0] ?? null);
+      setQuery(qVal);
+      setCategory(catVal);
+      runSearch(qVal, catVal);
+    }
+  }, [router.isReady, router.query.q, router.query.category]);
 
   // '/' keyboard shortcut to focus search
   useEffect(() => {
@@ -76,6 +90,11 @@ export default function SearchPage() {
       if (r.ok) {
         setResults(await r.json());
       }
+      // Sync URL so links are shareable and back/forward work
+      const next = {};
+      if (q && q.trim()) next.q = q.trim();
+      if (cat) next.category = cat;
+      router.replace({ pathname: '/search', query: Object.keys(next).length ? next : {} }, undefined, { shallow: true });
     } catch {}
     setLoading(false);
   }
@@ -96,6 +115,7 @@ export default function SearchPage() {
     setQuery('');
     setCategory(null);
     setResults(null);
+    router.replace('/search', undefined, { shallow: true });
   }
 
   return (
