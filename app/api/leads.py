@@ -273,8 +273,17 @@ def leads_summary(
             Company.industry.label("industry"),
             Company.employee_estimate.label("employee_estimate"),
             func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
+            func.count(Signal.id).label("signal_count"),
         )
         .outerjoin(Score, Score.company_id == Company.id)
+        .outerjoin(Signal, Signal.company_id == Company.id)
+        .group_by(
+            Company.id,
+            Company.name,
+            Company.industry,
+            Company.employee_estimate,
+            Score.overall_intent_score,
+        )
         .all()
     )
     total = hot = warm = cold = junk_count = 0
