@@ -9,7 +9,6 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com
 export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [temperatureFilter, setTemperatureFilter] = useState('all'); // 'all', 'hot', 'warm', 'cold'
   
@@ -18,7 +17,8 @@ export default function Signals() {
     activeLeads: 0,
     hotDeals: 0,
     liveSignals: 0,
-    warmPipeline: 0
+    warmPipeline: 0,
+    cold: 0
   });
   // Leads per industry (e.g. { Logistics: 400, Hospitality: 275 })
   const [leadsByIndustry, setLeadsByIndustry] = useState({});
@@ -105,7 +105,7 @@ export default function Signals() {
 
   const API_BASE = 'https://readyforrobots.com';
 
-  // Fetch pipeline summary (full DB counts for ticker)
+  // Fetch pipeline summary (full DB counts for ticker) — light request, refresh every 2 min
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -115,7 +115,8 @@ export default function Signals() {
           activeLeads: data.total ?? 0,
           hotDeals: data.hot ?? 0,
           liveSignals: data.total_signals ?? 0,
-          warmPipeline: data.warm ?? 0
+          warmPipeline: data.warm ?? 0,
+          cold: data.cold ?? 0
         });
         setLeadsByIndustry(data.by_industry ?? {});
       } catch (err) {
@@ -123,20 +124,20 @@ export default function Signals() {
       }
     };
     fetchSummary();
-    const interval = setInterval(fetchSummary, 30000);
+    const interval = setInterval(fetchSummary, 120000);
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch all leads - use production API
+  // Fetch only top 5 hot deals for Daily Hot Deals — one request, no polling
   useEffect(() => {
-    const fetchLeads = async () => {
+    let cancelled = false;
+    setLoading(true);
+    const fetchHotDeals = async () => {
       try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE}/api/leads`);
+        const res = await fetch(`${API_BASE}/api/leads?tier=HOT&limit=5&sort=score`);
         const data = await res.json();
-        setLeads(Array.isArray(data) ? data : []);
-        
-        const hotOnly = (Array.isArray(data) ? data : [])
+        const list = Array.isArray(data) ? data : [];
+        const hotOnly = list
           .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
           .sort((a, b) => {
             const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
@@ -144,41 +145,29 @@ export default function Signals() {
             return scoreB - scoreA;
           })
           .slice(0, 5);
-        setHotLeads(hotOnly);
+        if (!cancelled) setHotLeads(hotOnly);
       } catch (err) {
-        console.error('Error fetching leads:', err);
-        setLeads([]);
-        setHotLeads([]);
+        console.error('Error fetching hot deals:', err);
+        if (!cancelled) setHotLeads([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-
-    fetchLeads();
-    const interval = setInterval(fetchLeads, 30000);
-    return () => clearInterval(interval);
+    fetchHotDeals();
+    return () => { cancelled = true; };
   }, []);
 
-  // Calculate lead counts by temperature (for leads list display)
-  const hotCount = leads.filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT').length;
-  const warmCount = leads.filter(l => l.temperature === 'warm' || l.priority_tier === 'WARM').length;
-  const coldCount = leads.filter(l => l.temperature === 'cold' || l.priority_tier === 'COLD').length;
-  
-  // Total signals from leads list (for fallback; ticker uses summary)
-  const totalSignals = leads.reduce((sum, lead) => sum + (lead.signals?.length || 0), 0);
-  const hottestSignal = leads
+  // Use summary for counts (no full leads fetch)
+  const hotCount = statsData.hotDeals ?? 0;
+  const warmCount = statsData.warmPipeline ?? 0;
+  const coldCount = statsData.cold ?? 0;
+  const totalSignals = statsData.liveSignals ?? 0;
+  const hottestSignal = hotLeads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
 
-  // Get top HOT deals for Strategic Snapshot
-  const topHotDeals = leads
-    .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
-    .sort((a, b) => {
-      const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
-      const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
-      return scoreB - scoreA;
-    })
-    .slice(0, 5);
+  // Daily Hot Deals: already fetched as top 5 HOT (topHotDeals = hotLeads)
+  const topHotDeals = hotLeads;
 
   const getColorClasses = (color) => {
     const colors = {
@@ -426,7 +415,7 @@ export default function Signals() {
             </p>
             
             {/* Stats Ticker - uses /api/leads/summary for full DB counts */}
-            {(statsData.activeLeads > 0 || leads.length > 0) && (
+            {statsData.activeLeads > 0 && (
             <div className="space-y-3">
               {/* Rotating Automation Quotes */}
               <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">
@@ -582,7 +571,7 @@ export default function Signals() {
               href="/dashboard" 
               className="block text-center px-6 py-3 bg-transparent border border-neutral-600 text-neutral-300 rounded-lg hover:border-neutral-500 hover:text-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-200 font-medium"
             >
-              Browse All {leads.length} Leads by Industry →
+              Browse All {statsData.activeLeads} Leads by Industry →
             </Link>
           </div>
         </div>
@@ -627,7 +616,7 @@ export default function Signals() {
             </div>
           ) : topHotDeals.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-neutral-400">No hot deals right now. Our scraper runs at 9am, 3pm & 9pm — check back soon!</p>
+              <p className="text-neutral-400">No hot deals right now. New leads appear throughout the day — check back soon!</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -806,7 +795,7 @@ export default function Signals() {
         {/* Browse All Leads by Industry */}
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="border border-neutral-800 rounded-lg p-8 text-center space-y-4">
-            <h3 className="text-2xl font-semibold text-white">Browse All {leads.length} Leads by Industry</h3>
+            <h3 className="text-2xl font-semibold text-white">Browse All {statsData.activeLeads} Leads by Industry</h3>
             <p className="text-neutral-400 max-w-2xl mx-auto">
               View complete database organized by Logistics, Hospitality, Healthcare, Food Service, and more
             </p>

@@ -81,12 +81,12 @@ function ShareButtons({ url, title, description, compact = false, id }) {
 
 const API_BASE = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_API_URL || 'https://readyforrobots.com');
 
-// Fallback stories when API returns empty
+// Fallback edition when API returns empty
 const FALLBACK_EDITION = {
   date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
   edition: `#${Math.floor(Date.now() / 86400000) % 365}`,
   headline: 'Automation Sales Leads with Actionable Signals',
-  subheadline: 'Daily roundup of robot-ready companies and buying intent. Hot leads, real signals.'
+  subheadline: 'Daily roundup of robot-ready companies and buying intent. 14 signal types · 150+ sources.'
 };
 
 const FALLBACK_STORIES = [
@@ -267,7 +267,7 @@ export default function Newsletter() {
     localStorage.setItem('newsletter_subscribed', 'true');
     setIsSubscribed(true);
     setShowPreview(false);
-    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily automation leads\n• ROI benchmarking data\n• Hot deals with actionable signals`);
+    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily automation leads\n• ROI benchmarking data\n• Hot deals with actionable signals (share to X, LinkedIn)\n• Deployment roundups & vendor insights`);
   };
 
   const latestEdition = edition;
@@ -355,10 +355,10 @@ export default function Newsletter() {
               Daily Automation News
             </h1>
             <p className="text-base text-neutral-400 mb-4 max-w-2xl mx-auto">
-              Automation Sales Leads with Actionable Signals. Real companies, real buying intent — labor shortages, CapEx, expansion.
+              Automation Sales Leads with Actionable Signals. We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires.
             </p>
             <div className="text-xs text-neutral-500">
-              <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Hot Deals · <span className="text-emerald-400">✓</span> Market Intelligence
+              <span className="text-emerald-400">✓</span> 14 Signal Types · <span className="text-emerald-400">✓</span> Daily Roundups · <span className="text-emerald-400">✓</span> ROI Benchmarks · <span className="text-emerald-400">✓</span> Hot Deals · <span className="text-emerald-400">✓</span> Share to social
             </div>
           </div>
         </div>
@@ -444,7 +444,7 @@ export default function Newsletter() {
                     </div>
                     <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
                       <div className="text-[10px] text-neutral-500 uppercase mb-0.5">💵 Economics</div>
-                      <div className="text-xs text-cyan-400 font-semibold">{story.economics}</div>
+                      <div className="text-xs text-cyan-400 font-semibold">{(story.economics || '').replace(/\bUnknown\b/gi, 'Other')}</div>
                     </div>
                     <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
                       <div className="text-[10px] text-neutral-500 uppercase mb-0.5">📊 Impact</div>
@@ -609,7 +609,7 @@ export default function Newsletter() {
               <span className="text-xl">📣</span> Share Ready For Robots
             </h3>
             <p className="text-sm text-neutral-400 mb-4">
-              Use our banner with any social post. The link is included — when shared, it drives visitors to the site.
+              Use our banner with any social post. On the homepage, every hot lead has a Share button — post to X or LinkedIn with one click.
             </p>
             <div className="border-2 border-neutral-800 rounded-lg overflow-hidden bg-neutral-900/50">
               <a href={`${BASE_URL}`} target="_blank" rel="noopener noreferrer" className="block">
