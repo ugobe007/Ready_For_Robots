@@ -1,23 +1,21 @@
 #!/bin/bash
 # Start all services: FastAPI app + Celery worker + Celery beat
+# DB is not touched at deploy; first connection happens when a request needs it (browser/API).
 
-set -e  # Exit on error
+set -e
 
-# Start Celery beat in background
-echo "Starting Celery beat scheduler..."
+# Run migrations in background so app starts immediately. No blocking on DB at deploy.
+if [ -n "$DATABASE_URL" ]; then
+  echo "Running database migrations in background..."
+  (timeout 120 alembic upgrade head 2>&1 && echo "Migrations completed.") || echo "Migrations failed or skipped; run 'alembic upgrade head' if needed." &
+fi
+
+# Start Celery (non-blocking)
+echo "Starting Celery beat..."
 celery -A worker.celery_worker beat --loglevel=info &
-BEAT_PID=$!
-echo "Celery beat started with PID $BEAT_PID"
-
-# Start Celery worker in background
 echo "Starting Celery worker..."
 celery -A worker.celery_worker worker --loglevel=info --concurrency=2 &
-WORKER_PID=$!
-echo "Celery worker started with PID $WORKER_PID"
 
-# Give workers a moment to start
-sleep 2
-
-# Start uvicorn in foreground (keeps container running)
-echo "Starting FastAPI application on 0.0.0.0:8080..."
+# Start uvicorn immediately — health checks and static pages work without DB
+echo "Starting FastAPI on 0.0.0.0:8080..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8080

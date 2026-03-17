@@ -2,11 +2,11 @@ import logging
 import subprocess
 import os
 from worker.celery_worker import celery_app
-from app.database import SessionLocal, Base, engine
+from app.database import SessionLocal
 import app.models
 from app.scrapers.scrape_targets import get_urls, get_news_queries
 
-Base.metadata.create_all(bind=engine)
+# DB schema is managed by Alembic; no create_all at worker startup.
 logger = logging.getLogger(__name__)
 
 

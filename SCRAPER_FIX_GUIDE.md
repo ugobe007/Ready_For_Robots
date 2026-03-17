@@ -24,10 +24,12 @@ cd ~/Desktop/Ready_For_Robots
 
 If this works, you'll see "New Companies Found" and "Signals Created". Your DB connection and scraper logic are fine.
 
-**Want more new leads?** Run the full query set (no `--max-queries`). The first 20 queries skew toward warehouse/logistics — if your DB already has many of those, you'll get more "enriched" than "new". Full run hits 70+ diverse industries (medical, airport, retail, food, etc.) for better discovery:
+**Want more new leads?** Run the full query set (no `--max-queries`). The first 20 queries skew toward warehouse/logistics — if your DB already has many of those, you'll get more "enriched" than "new". Full run hits 200+ diverse industries (medical, airport, retail, food, etc.) for better discovery:
 ```bash
 .venv_new/bin/python scripts/run_intelligence_scraper.py --mode discover --limit 15
 ```
+
+If you still see low "New Companies Found" (e.g. only 2): the scraper extracts company names from article text; most articles may match companies you already have (counted as "Enriched"). Running with **no --max-queries** and a higher **--limit** (e.g. 20–25) processes more articles across more industries and increases the chance of discovering companies not yet in your DB.
 
 ---
 
@@ -140,3 +142,13 @@ Check `companies_last_24h` and `signals_last_24h`. If they're still 0 after a ru
 | **Manual run-all** | Medium | POST /api/scraper/run-all — in-process quick scrape runs even without Celery |
 
 **Recommended**: Set up **local cron** (step 2) for reliable daily leads. Use **run-all** or **cron-job.org** as backup.
+
+---
+
+## 8. Deploy & startup (no DB at deploy)
+
+The app **does not connect to the database at deploy or at process start**. The DB is used only when a request needs it (e.g. first time someone loads a page that calls `/api/leads/summary` or any API that uses the DB).
+
+- **Startup**: No `create_all()` or DB connection in `app.main` or `worker.tasks`. Health check (`/health`) returns immediately without touching the DB.
+- **Migrations**: Run in the background in `scripts/start_all.sh` so uvicorn starts right away. If migrations fail, run `alembic upgrade head` manually (e.g. `fly ssh console -a ready-2-robot` then `alembic upgrade head`).
+- **Streamline**: `fly deploy` → build → start container → uvicorn listens on 8080; first browser/API request that needs data will open the DB connection.

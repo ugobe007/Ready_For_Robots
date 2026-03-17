@@ -1,8 +1,11 @@
 import os
-from fastapi import FastAPI
+import re
+import time
+from collections import defaultdict
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from app.api import leads, companies, scoring
 from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
@@ -21,11 +24,12 @@ from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
-from app.database import Base, engine
+from app.database import get_db
 import app.models
 import app.models.shared_calculation
 
-Base.metadata.create_all(bind=engine)
+# DB is not touched at startup — first connection happens when an API that uses get_db() is called (browser/request).
+# Schema is managed by Alembic migrations (run in release or background).
 
 app = FastAPI(title="Ready for Robots", docs_url="/api/docs", redoc_url="/api/redoc")
 
@@ -36,6 +40,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Rate limit + 404 for probe paths (reduces bot log noise) ─────────────────
+_PROBE_PATTERNS = re.compile(
+    r"\.(php|asp|aspx|jsp|cgi|pl|py|sh|env)$|"
+    r"(wp-|xmlrpc|wp_content|wp_includes|wp_admin|wp_login|"
+    r"shell|filemanager|backup|config\.|\.git|admin\.php)",
+    re.I,
+)
+# In-memory: {ip: [(ts, count), ...]} — prune when checking
+_RATE_LIMIT: dict[str, list[tuple[float, int]]] = defaultdict(list)
+_RATE_WINDOW = 60  # seconds
+_RATE_MAX = 300   # requests per window per IP (generous for real users)
+
+
+@app.middleware("http")
+async def rate_limit_and_block_probes(request: Request, call_next):
+    path = request.url.path
+    # 404 immediately for obvious scanner probes
+    if _PROBE_PATTERNS.search(path):
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+    # Rate limit by IP (only for catch-all paths; exclude API, health, root, static assets)
+    if (
+        not path.startswith("/api/")
+        and not path.startswith("/_next/")
+        and path != "/health"
+        and path != "/"
+    ):
+        ip = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        # Prune old entries
+        _RATE_LIMIT[ip] = [(t, c) for t, c in _RATE_LIMIT[ip] if now - t < _RATE_WINDOW]
+        total = sum(c for _, c in _RATE_LIMIT[ip])
+        if total >= _RATE_MAX:
+            return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+        _RATE_LIMIT[ip].append((now, 1))
+    return await call_next(request)
 
 # ── API routes (must come before catch-all) ────────────────────────────────
 app.include_router(leads.router, prefix="/api/leads", tags=["leads"])
@@ -74,6 +114,9 @@ if os.path.exists(STATIC_DIR):
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_frontend(full_path: str):
+        # 0. 404 for probe-like paths (middleware also catches, but belt-and-suspenders)
+        if _PROBE_PATTERNS.search(full_path):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
         # 1. Exact file (e.g. favicon.ico)
         candidate = os.path.join(STATIC_DIR, full_path)
         if os.path.isfile(candidate):
@@ -86,7 +129,7 @@ if os.path.exists(STATIC_DIR):
         html = os.path.join(STATIC_DIR, full_path + ".html")
         if os.path.isfile(html):
             return FileResponse(html)
-        # 4. Root
+        # 4. Root (SPA fallback)
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 else:
     @app.get("/")
