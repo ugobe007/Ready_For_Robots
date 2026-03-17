@@ -103,8 +103,8 @@ def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
 
 def _row_priority(row) -> object:
     signal_count = int(row.signal_count or 0)
-    hot_hits = int(row.hot_hits or 0)
-    warm_hits = int(row.warm_hits or 0)
+    hot_hits = int(getattr(row, "hot_hits", 0) or 0)
+    warm_hits = int(getattr(row, "warm_hits", 0) or 0)
     pseudo_signal_types = (["funding_round"] * hot_hits) + (["news"] * warm_hits)
     return priority_tier(
         float(row.overall_score or 0),
