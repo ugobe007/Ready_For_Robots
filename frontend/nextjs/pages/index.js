@@ -20,6 +20,7 @@ export default function Signals() {
     warmPipeline: 0,
     cold: 0
   });
+  const [statsLoaded, setStatsLoaded] = useState(false);
   // Leads per industry (e.g. { Logistics: 400, Hospitality: 275 })
   const [leadsByIndustry, setLeadsByIndustry] = useState({});
   
@@ -127,6 +128,7 @@ export default function Signals() {
         }
       } finally {
         clearTimeout(timeout);
+        setStatsLoaded(true);
       }
     };
     const start = setTimeout(fetchSummary, 1200);
@@ -424,7 +426,6 @@ export default function Signals() {
             </p>
             
             {/* Stats Ticker - uses /api/leads/summary for full DB counts */}
-            {statsData.activeLeads > 0 && (
             <div className="space-y-3">
               {/* Rotating Automation Quotes */}
               <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">
@@ -462,7 +463,9 @@ export default function Signals() {
                     <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-all duration-500">
                       {statsData.activeLeads}
                     </div>
-                    <div className="text-sm text-neutral-400 font-semibold tracking-wide">ACTIVE LEADS</div>
+                    <div className="text-sm text-neutral-400 font-semibold tracking-wide">
+                      {statsLoaded ? 'ACTIVE LEADS' : 'LOADING...'}
+                    </div>
                   </div>
                   <div className="group cursor-default">
                     <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-all duration-500">
@@ -509,7 +512,6 @@ export default function Signals() {
                 );
               })()}
             </div>
-            )}
           </div>
         </div>
 
