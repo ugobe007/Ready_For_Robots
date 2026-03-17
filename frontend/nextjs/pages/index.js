@@ -475,12 +475,18 @@ export default function Signals() {
                 </div>
               </div>
 
-              {/* Leads per industry */}
-              {Object.keys(leadsByIndustry).length > 0 && (
+              {/* Leads per industry — never show "Unknown"; merge into "Other" */}
+              {Object.keys(leadsByIndustry).length > 0 && (() => {
+                const merged = {};
+                Object.entries(leadsByIndustry).forEach(([industry, count]) => {
+                  const key = (industry || '').trim().toLowerCase() === 'unknown' ? 'Other' : (industry || 'Other');
+                  merged[key] = (merged[key] || 0) + (count || 0);
+                });
+                return (
                 <div className="border border-neutral-800 rounded-lg py-3 px-4 bg-neutral-900/50">
                   <div className="text-xs text-neutral-500 font-semibold uppercase tracking-widest mb-2">Leads by industry</div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {Object.entries(leadsByIndustry)
+                    {Object.entries(merged)
                       .sort((a, b) => (b[1] || 0) - (a[1] || 0))
                       .map(([industry, count]) => (
                         <span key={industry} className="text-sm text-neutral-300">
@@ -490,7 +496,8 @@ export default function Signals() {
                       ))}
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
             )}
           </div>
