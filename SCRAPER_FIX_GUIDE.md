@@ -4,6 +4,20 @@ If scrapers aren't producing leads, follow these steps.
 
 ---
 
+## 0. In-App Scheduler (Fly.io — No Setup Required)
+
+**On Fly.io** the web app now runs the intelligence scraper automatically:
+
+- When `FLY_APP_NAME` is set (default on Fly), a background thread starts on app startup.
+- **First run:** 5 minutes after deploy (configurable: `SCRAPER_FIRST_RUN_DELAY_MINUTES`).
+- **Then every 6 hours** (configurable: `RUN_SCRAPER_EVERY_HOURS=6`).
+- Each run is a quick pass: 20 queries, ~3–5 min, plus enrichment.
+- No Redis or Celery required. To disable: `ENABLE_SCHEDULED_SCRAPER=0` or set `RUN_SCRAPER_EVERY_HOURS=0`.
+
+So after deploy, leads should start flowing within ~10–15 minutes and then every 6 hours. Check `/api/scraper/stats/daily?days=1` and `/api/leads/summary` to confirm.
+
+---
+
 ## 1. Run a Quick Test (In-Process, No Celery)
 
 **From your Mac** — the script auto-loads `DATABASE_URL` from `.env`:
@@ -136,12 +150,13 @@ Check `companies_last_24h` and `signals_last_24h`. If they're still 0 after a ru
 
 | Option | Reliability | Setup |
 |--------|-------------|-------|
+| **Fly in-app scheduler** | High | Automatic on Fly (every 6h); no setup |
 | **Local cron** | Highest | Add crontab, set DATABASE_URL in .env |
 | **cron-job.org** | High | Create job, set SCRAPER_CRON_TOKEN |
 | **Fly + Celery** | Medium | Need REDIS_URL (Upstash) |
 | **Manual run-all** | Medium | POST /api/scraper/run-all — in-process quick scrape runs even without Celery |
 
-**Recommended**: Set up **local cron** (step 2) for reliable daily leads. Use **run-all** or **cron-job.org** as backup.
+**Recommended**: On Fly, the **in-app scheduler** (step 0) runs automatically. For more leads, add **local cron** (step 2) or **cron-job.org** as backup.
 
 ---
 

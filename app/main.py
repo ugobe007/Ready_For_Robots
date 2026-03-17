@@ -1,8 +1,12 @@
 import os
 import re
 import time
+import threading
+import logging
 from collections import defaultdict
 from fastapi import FastAPI, Request
+
+logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -99,9 +103,52 @@ app.include_router(playbook_router, prefix="/api", tags=["playbook"])
 app.include_router(robot_companies_router, tags=["robot-companies"])
 app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newsletter"])
 
+
+@app.on_event("startup")
+def startup():
+    _start_scheduled_scraper()
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# ── In-app scheduled scraper (no Redis/Celery required) ─────────────────────
+# On Fly.io we only run the web process; Celery beat/worker are not deployed.
+# This thread runs the intelligence scraper every N hours so leads keep flowing.
+
+def _scheduled_scraper_loop():
+    """Run intelligence scraper on an interval. Catches and logs errors so one failure doesn't stop the loop."""
+    from app.api.scraper_control import _run_intelligence_scraper_sync
+    first_delay_min = int(os.getenv("SCRAPER_FIRST_RUN_DELAY_MINUTES", "5"))
+    interval_hours = float(os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
+    if interval_hours <= 0:
+        return
+    # Quick run: 20 queries, ~3–5 min, so we don't block the process long
+    articles_per_query = 15
+    max_queries = 20
+    time.sleep(first_delay_min * 60)
+    while True:
+        try:
+            logger.info("Scheduled intelligence scraper starting (in-app thread)")
+            _run_intelligence_scraper_sync(
+                articles_per_query=articles_per_query,
+                max_queries=max_queries,
+                enrich=True,
+            )
+            logger.info("Scheduled intelligence scraper finished")
+        except Exception as e:
+            logger.exception("Scheduled intelligence scraper failed: %s", e)
+        time.sleep(max(3600, int(interval_hours * 3600)))
+
+
+def _start_scheduled_scraper():
+    """Start the in-app scraper loop only when running on Fly (or when explicitly enabled)."""
+    if os.getenv("FLY_APP_NAME") or os.getenv("ENABLE_SCHEDULED_SCRAPER", "").lower() in ("1", "true", "yes"):
+        t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
+        t.start()
+        logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
 
 # ── Static frontend (Next.js export) ──────────────────────────────────────
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")

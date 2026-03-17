@@ -1,8 +1,8 @@
 """
 Scraper control API - Manual trigger and monitoring
 """
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from typing import Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy import func, cast, Date
 from app.database import get_db, SessionLocal
@@ -13,17 +13,61 @@ from app.models.signal import Signal
 router = APIRouter(prefix="/api/scraper", tags=["scraper-control"])
 
 
-def _run_intelligence_scraper_sync(articles_per_query: int = 15):
+def _run_intelligence_scraper_sync(
+    articles_per_query: int = 15,
+    max_queries: Optional[int] = None,
+    enrich: bool = True,
+):
     """Run intelligence scraper in-process (no Celery/Redis needed). Writes to same DB as app."""
+    import logging
+    log = logging.getLogger(__name__)
     from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
     db = SessionLocal()
     try:
         scraper = IntelligenceNewsScraper(db=db)
-        stats = scraper.discover_leads(max_articles_per_query=articles_per_query)
-        scraper.enrich_existing_companies(limit=30)
+        stats = scraper.discover_leads(
+            max_articles_per_query=articles_per_query,
+            max_queries=max_queries,
+        )
+        if enrich:
+            enrich_stats = scraper.enrich_existing_companies(limit=20)
+            stats["companies_enriched"] = enrich_stats.get("companies_enriched", 0)
+            stats["signals_created"] = stats.get("signals_created", 0) + enrich_stats.get("signals_created", 0)
+        log.info(
+            "Intelligence scraper completed: discovered=%s enriched=%s signals=%s",
+            stats.get("companies_discovered", 0),
+            stats.get("companies_enriched", 0),
+            stats.get("signals_created", 0),
+        )
         return stats
+    except Exception as e:
+        log.exception("Intelligence scraper failed: %s", e)
+        raise
     finally:
         db.close()
+
+
+@router.get("/cron/run-intelligence")
+async def cron_run_intelligence(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger endpoint for external schedulers (cron-job.org, GitHub Actions).
+    GET /api/scraper/cron/run-intelligence?token=YOUR_SECRET
+    Set SCRAPER_CRON_TOKEN in Fly secrets. Runs quick scrape (20 queries, ~3 min).
+    """
+    import os
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    background_tasks.add_task(
+        _run_intelligence_scraper_sync,
+        articles_per_query=15,
+        max_queries=20,
+        enrich=True,
+    )
+    return {"status": "started", "message": "Quick scrape running (20 queries)"}
 
 
 @router.post("/run-intelligence")
@@ -49,52 +93,64 @@ async def run_intelligence_scraper(
 
 
 @router.post("/run-all")
-async def run_all_scrapers(db: Session = Depends(get_db)) -> Dict[str, Any]:
+async def run_all_scrapers(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
     """
     Manually trigger all scrapers to run immediately.
-    Returns task IDs and estimated completion time.
-    Note: Celery tasks require Redis. If no Redis, use POST /api/scraper/run-intelligence for lead discovery.
+    ALWAYS runs intelligence scraper in-process (no Redis needed) — guarantees new leads.
+    Also queues Celery tasks for job boards, news, RSS, company→news, enrich, etc.
     """
+    # 1. ALWAYS run intelligence scraper in-process — quick mode (20 queries, ~3 min)
+    background_tasks.add_task(
+        _run_intelligence_scraper_sync,
+        articles_per_query=15,
+        max_queries=20,
+        enrich=True,
+    )
+
+    # 2. Queue Celery tasks (job boards, news, RSS, company→news, enrich, etc.)
+    tasks = {}
     try:
         from worker.tasks import (
             run_job_scraper_task,
             run_hotel_scraper_task,
             run_news_scraper_task,
+            run_rss_scraper_task,
+            run_company_news_task,
+            run_enrich_companies_task,
             run_serp_scraper_task,
             run_logistics_scraper_task,
             run_rfp_marketplace_scraper_task,
             run_intelligence_scraper_task,
+            generate_newsletter_edition_task,
         )
-        
-        # Trigger all scraper tasks (including intelligence = new lead discovery)
-        job_task = run_job_scraper_task.delay()
-        hotel_task = run_hotel_scraper_task.delay()
-        news_task = run_news_scraper_task.delay()
-        serp_task = run_serp_scraper_task.delay()
-        logistics_task = run_logistics_scraper_task.delay()
-        rfp_task = run_rfp_marketplace_scraper_task.delay()
-        intel_task = run_intelligence_scraper_task.delay(max_articles=15)
-        
-        return {
-            "status": "scrapers_started",
-            "tasks": {
-                "intelligence": intel_task.id,
-                "job_boards": job_task.id,
-                "hotel_directories": hotel_task.id,
-                "news_feeds": news_task.id,
-                "search_engines": serp_task.id,
-                "logistics_directories": logistics_task.id,
-                "rfp_marketplaces": rfp_task.id,
-            },
-            "estimated_completion": "20-30 minutes",
-            "check_status": "/api/scraper/status",
+        tasks = {
+            "intelligence": run_intelligence_scraper_task.delay(max_articles=15).id,
+            "company_news": run_company_news_task.delay(limit=80).id,
+            "enrich_companies": run_enrich_companies_task.delay(limit=80).id,
+            "job_boards": run_job_scraper_task.delay().id,
+            "hotel_directories": run_hotel_scraper_task.delay().id,
+            "news_feeds": run_news_scraper_task.delay().id,
+            "rss_feeds": run_rss_scraper_task.delay().id,
+            "search_engines": run_serp_scraper_task.delay().id,
+            "logistics_directories": run_logistics_scraper_task.delay().id,
+            "rfp_marketplaces": run_rfp_marketplace_scraper_task.delay().id,
+            "newsletter": generate_newsletter_edition_task.delay(limit=8).id,
         }
-    except Exception as e:
-        # If Celery/Redis unavailable, suggest run-intelligence
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start scrapers: {str(e)}. Try POST /api/scraper/run-intelligence (no Redis needed)."
-        )
+    except Exception:
+        # Celery/Redis may be down — intelligence still runs in-process
+        tasks = {"celery": "unavailable"}
+
+    return {
+        "status": "scrapers_started",
+        "intelligence": "running_in_process",
+        "tasks": tasks,
+        "estimated_completion": "20-30 minutes",
+        "check_status": "/api/scraper/status",
+        "check_leads": "/api/leads/summary",
+    }
 
 
 @router.post("/run/{scraper_type}")
@@ -124,20 +180,29 @@ async def run_specific_scraper(
             run_logistics_scraper_task,
             run_rfp_marketplace_scraper_task,
         )
+        from worker.tasks import (
+            run_company_news_task,
+            run_enrich_companies_task,
+            generate_newsletter_edition_task,
+        )
         task_map = {
-            "job_boards": run_job_scraper_task,
-            "hotels": run_hotel_scraper_task,
-            "news": run_news_scraper_task,
-            "serp": run_serp_scraper_task,
-            "logistics": run_logistics_scraper_task,
-            "rfp_marketplace": run_rfp_marketplace_scraper_task,
+            "job_boards": (run_job_scraper_task, {}),
+            "hotels": (run_hotel_scraper_task, {}),
+            "news": (run_news_scraper_task, {}),
+            "company_news": (run_company_news_task, {"limit": 80}),
+            "enrich_companies": (run_enrich_companies_task, {"limit": 80}),
+            "newsletter": (generate_newsletter_edition_task, {"limit": 8}),
+            "serp": (run_serp_scraper_task, {}),
+            "logistics": (run_logistics_scraper_task, {}),
+            "rfp_marketplace": (run_rfp_marketplace_scraper_task, {}),
         }
         if scraper_type not in task_map:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown scraper type: {scraper_type}. Use: intelligence, job_boards, hotels, news, serp, logistics, rfp_marketplace",
+                detail=f"Unknown scraper type: {scraper_type}. Use: intelligence, job_boards, hotels, news, company_news, enrich_companies, newsletter, serp, logistics, rfp_marketplace",
             )
-        task = task_map[scraper_type].delay()
+        task_fn, kwargs = task_map[scraper_type]
+        task = task_fn.delay(**kwargs)
         return {
             "status": "scraper_started",
             "scraper_type": scraper_type,
@@ -171,14 +236,14 @@ async def get_daily_stats(days: int = 7, db: Session = Depends(get_db)) -> Dict[
     
     # Daily signal counts
     daily_signals = db.query(
-        cast(Signal.detected_at, Date).label('date'),
+        cast(Signal.created_at, Date).label('date'),
         func.count(Signal.id).label('count')
     ).filter(
-        Signal.detected_at >= cutoff
+        Signal.created_at >= cutoff
     ).group_by(
-        cast(Signal.detected_at, Date)
+        cast(Signal.created_at, Date)
     ).order_by(
-        cast(Signal.detected_at, Date).desc()
+        cast(Signal.created_at, Date).desc()
     ).all()
     
     # Total stats
@@ -188,7 +253,7 @@ async def get_daily_stats(days: int = 7, db: Session = Depends(get_db)) -> Dict[
         Company.created_at >= datetime.utcnow() - timedelta(hours=24)
     ).scalar()
     signals_last_24h = db.query(func.count(Signal.id)).filter(
-        Signal.detected_at >= datetime.utcnow() - timedelta(hours=24)
+        Signal.created_at >= datetime.utcnow() - timedelta(hours=24)
     ).scalar()
     
     return {
