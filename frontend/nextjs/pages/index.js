@@ -105,11 +105,13 @@ export default function Signals() {
 
   const API_BASE = 'https://readyforrobots.com';
 
-  // Fetch pipeline summary (full DB counts for ticker) — light request, refresh every 2 min
+  // Fetch pipeline summary (full DB counts for ticker) — defer briefly so the page can paint first.
   useEffect(() => {
     const fetchSummary = async () => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2500);
       try {
-        const res = await fetch(`${API_BASE}/api/leads/summary`);
+        const res = await fetch(`${API_BASE}/api/leads/summary`, { signal: controller.signal });
         const data = await res.json();
         setStatsData({
           activeLeads: data.total ?? 0,
@@ -120,12 +122,19 @@ export default function Signals() {
         });
         setLeadsByIndustry(data.by_industry ?? {});
       } catch (err) {
-        console.error('Error fetching summary:', err);
+        if (err?.name !== 'AbortError') {
+          console.error('Error fetching summary:', err);
+        }
+      } finally {
+        clearTimeout(timeout);
       }
     };
-    fetchSummary();
+    const start = setTimeout(fetchSummary, 1200);
     const interval = setInterval(fetchSummary, 120000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(start);
+      clearInterval(interval);
+    };
   }, []);
 
   // Fetch only top 5 hot deals for Daily Hot Deals — one request, no polling
