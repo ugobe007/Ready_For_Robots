@@ -79,6 +79,34 @@ function ShareButtons({ url, title, description, compact = false, id }) {
   );
 }
 
+function CopyStoryButton({ story, buttonId }) {
+  const [copied, setCopied] = useState(false);
+  const copyContent = () => {
+    const subtitle = story.subheadline || story.snippet || '';
+    const body = (story.fullText || '').trim();
+    const text = [
+      `${story.company}: ${story.headline}`,
+      subtitle ? `\n${subtitle}` : '',
+      body ? `\n\n${body}` : '',
+    ].filter(Boolean).join('');
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      id={buttonId}
+      type="button"
+      onClick={copyContent}
+      aria-label="Copy full content for social"
+      className="px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-[10px] font-medium transition-colors whitespace-nowrap"
+    >
+      {copied ? 'Copied!' : 'Copy content'}
+    </button>
+  );
+}
+
 const API_BASE = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_API_URL || 'https://readyforrobots.com');
 
 // Fallback edition when API returns empty
@@ -410,8 +438,9 @@ export default function Newsletter() {
                       <span className="text-xs text-emerald-400 font-semibold">{story.signalStrength}/10</span>
                     </div>
                   </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <ShareButtons compact id={`share-story-${idx}`} title={`${story.company}: ${story.headline}`} description={`${story.company} — ${story.headline}. ${story.snippet}`} />
+                  <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
+                    <ShareButtons compact id={`share-story-${idx}`} title={`${story.company}: ${story.headline}`} description={`${story.company} — ${story.headline}. ${(story.subheadline || story.snippet)}`} />
+                    <CopyStoryButton story={story} buttonId={`copy-story-${idx}`} />
                   </div>
                 </div>
 
@@ -460,18 +489,23 @@ export default function Newsletter() {
                   }`}
                 >
                   <div className="pt-4 border-t border-emerald-500/30 space-y-3">
-                    {story.fullText.split('\n\n').map((para, pIdx) => (
-                      <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
-                        {para}
-                      </p>
-                    ))}
-                    {story.company_id && (
-                      <Link href={`/dashboard?analyze=${story.company_id}`} className="inline-flex items-center gap-2 mt-3 text-sm text-emerald-400 hover:text-emerald-300">
-                        View full AI analysis →
-                      </Link>
-                    )}
+                    <div className="select-text rounded bg-neutral-900/50 p-3 border border-neutral-800" role="article">
+                      {story.fullText.split('\n\n').map((para, pIdx) => (
+                        <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
+                          {para}
+                        </p>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CopyStoryButton story={story} buttonId={`copy-story-expanded-${idx}`} />
+                      {story.company_id && (
+                        <Link href={`/dashboard?analyze=${story.company_id}`} className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300">
+                          View full AI analysis →
+                        </Link>
+                      )}
+                    </div>
                     <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center gap-2 text-xs text-neutral-500">
-                      <span>Click to collapse</span>
+                      <span>Select text to copy, or use Copy content above. Click to collapse</span>
                       <span className="text-emerald-400">▲</span>
                     </div>
                   </div>
