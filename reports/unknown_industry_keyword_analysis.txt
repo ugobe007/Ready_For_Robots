@@ -1,0 +1,205 @@
+# Keyword analysis for 384 Other leads (via API)
+
+## Top 120 words
+    358  2026
+    251  robotics
+    162  best
+     89  market
+     63  report
+     61  humanoid
+     61  hyundai
+     58  world
+     58  group
+     55  global
+     52  manufacturing
+     50  trends
+     49  business
+     48  raises
+     48  investment
+     44  motor
+     43  stocks
+     42  automated
+     42  industry
+     40  first
+     39  announces
+     39  industrial
+     38  autonomous
+     38  plans
+     38  york
+     37  2025
+     35  system
+     34  deploy
+     33  billion
+     31  handling
+     31  expands
+     30  outlook
+     29  china
+     28  food
+     28  opens
+     28  2035
+     27  today
+     27  future
+     27  dive
+     26  size
+     26  national
+     26  technology
+     25  launches
+     25  expansion
+     25  unveils
+     24  startups
+     24  modern
+     24  materials
+     24  factory
+     24  intelligence
+     23  funding
+     23  magazine
+     23  engineering
+     22  insights
+     22  says
+     22  analysis
+     21  series
+     21  operations
+     21  invest
+     21  growth
+     21  california
+     20  america
+     20  stock
+     20  indexbox
+     20  forecast
+     19  hires
+     19  daily
+     19  tech
+     19  vacuums
+     19  health
+     19  etfs
+     18  international
+     18  teradyne
+     18  metro
+     18  wirecutter
+     17  million
+     17  medical
+     17  pass
+     17  equipment
+     17  nvidia
+     17  tested
+     16  deployment
+     16  assembly
+     16  facility
+     16  north
+     16  newswire
+     16  platform
+     16  labor
+     16  insider
+     16  deploys
+     16  vegas
+     15  physical
+     15  real
+     15  time
+     15  make
+     15  football
+     15  tesla
+     15  churchill
+     15  home
+     15  service
+     15  after
+     15  strategy
+     15  surgical
+     14  chef
+     14  expand
+     14  shortages
+     14  invests
+     14  over
+     14  surgery
+     14  research
+     14  work
+     14  cleaning
+     14  elon
+     14  musk
+     14  finance
+     14  telehealth
+     14  post
+     14  jobs
+     14  management
+     14  secures
+
+## Top 80 bigrams (suggest new industries)
+     89  2026 -
+     82  - the
+     53  ces 2026
+     47  <a href="
+     47  in 2026
+     44  hyundai motor
+     42  at ces
+     39  humanoid robots
+     38  the new
+     38  new york
+     37  motor group
+     33  of 2026
+     32  the motley
+     28  the best
+     27  to deploy
+     24  modern materials
+     24  robot at
+     24  2026 |
+     22  to buy
+     22  for 2026
+     21  global robotics
+     21  york times
+     21  ai robotics
+     20  how to
+     20  system report:
+     20  robotics stocks
+     19  ai robot
+     19  to invest
+     19  - market
+     18  | reviews
+     18  reviews by
+     18  by wirecutter
+     17  york times.
+     16  motley fool.
+     16  motley fool
+     16  in the
+     16  deploy humanoid
+     16  buy in
+     15  physical ai
+     15  future of
+     15  robotics strategy
+     15  best robot
+     14  elon musk
+     14  robots at
+     14  group to
+     14  stocks to
+     14  and how
+     13  humanoid robot
+     13  market size,
+     13  texprocess 2026
+     13  robots in
+     13  industrial automation
+     13  plans to
+     13  robot vacuums
+     13  times. the
+     13  times best
+     13  himss 2026
+     13  indexbox -
+     12  chef robotics
+     12  the robot
+     12  robotics raises
+     12  hub in
+     12  embodied ai
+     12  north america
+     12  invests in
+     12  - modern
+     12  materials handling.
+     12  materials handling
+     12  for the
+     12  the future
+     12  to watch
+     12  vsee unveils
+     12  unveils world's
+     12  world's first
+     12  first autonomous
+     12  autonomous telehealth
+     12  telehealth ai
+     12  at himss
+     12  market intelligence
+     11  naver d2sf
