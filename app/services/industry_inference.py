@@ -7,7 +7,8 @@ from typing import Dict
 INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Logistics": [
         "warehouse", "logistics", "fulfillment", "distribution", "supply chain",
-        "3pl", "cold storage", "freight", "shipping", "delivery"
+        "3pl", "third party logistics", "fulfillment center", "fulfillment centre",
+        "cold storage", "freight", "shipping", "delivery"
     ],
     "Hospitality": [
         "hotel", "resort", "hospitality", "lodging", "motel", "inn",
@@ -67,7 +68,9 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     ],
     "Real Estate & Facilities": [
         "facilities management", "property management", "commercial real estate",
-        "building services", "janitorial", "facility services"
+        "building services", "janitorial", "facility services",
+        "corporate office", "corporate offices", "office building", "headquarters",
+        "enterprise", "office campus", "office tower", "corporate campus"
     ],
     "Automotive Dealerships": [
         "dealership", "auto dealer", "car dealer", "automotive retail"
@@ -82,6 +85,15 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "manufacturing dive", "motley fool", "new york times", "reuters",
         "business wire", "pr newswire", "financial times", "investing.com",
         "wirecutter", "magazine", "post.", "times.", "dive."
+    ],
+    "Laundry & Linen Services": [
+        "laundry", "linen", "commercial laundry", "industrial laundry",
+        "uniform cleaning", "linen service", "laundry service", "laundromat",
+        "textile cleaning", "flatwork", "wash dry fold"
+    ],
+    "Car Wash": [
+        "car wash", "carwash", "express wash", "tunnel wash", "conveyor wash",
+        "automated car wash", "car wash chain", "quick wash"
     ],
 }
 

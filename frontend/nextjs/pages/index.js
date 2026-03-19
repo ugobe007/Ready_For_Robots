@@ -488,11 +488,11 @@ export default function Signals() {
                 </div>
               </div>
 
-              {/* Leads per industry — never show "Unknown"; merge into "Other" */}
+              {/* Leads per industry — never show "Unknown"; merge into "New" */}
               {Object.keys(leadsByIndustry).length > 0 && (() => {
                 const merged = {};
                 Object.entries(leadsByIndustry).forEach(([industry, count]) => {
-                  const key = (industry || '').trim().toLowerCase() === 'unknown' ? 'Other' : (industry || 'Other');
+                  const key = (industry || '').trim().toLowerCase() === 'unknown' ? 'New' : (industry || 'New');
                   merged[key] = (merged[key] || 0) + (count || 0);
                 });
                 return (

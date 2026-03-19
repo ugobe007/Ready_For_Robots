@@ -17,7 +17,7 @@ export default function PilotCalculator() {
     'Food Service',
     'Guest Services',
     'Warehouse Operations',
-    'Other'
+    'New'
   ];
 
   function calculatePilot(e) {

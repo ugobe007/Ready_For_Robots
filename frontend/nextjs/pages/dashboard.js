@@ -2759,7 +2759,7 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-8">
           {INDUSTRIES.filter(ind => ind !== 'All').map(ind => {
-            const group = displayedLeads.filter(l => (l.industry || 'Unknown') === ind);
+            const group = displayedLeads.filter(l => (l.industry || 'New') === ind);
             if (group.length === 0) return null;
             const hotCount  = group.filter(l => l.priority_tier === 'HOT').length;
             const warmCount = group.filter(l => l.priority_tier === 'WARM').length;

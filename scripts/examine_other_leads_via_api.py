@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Examine 'Other' (unknown) industry leads using the public API (no DB needed).
-Fetches leads, filters to industry=Other, runs keyword/bigram analysis,
+Examine 'New' (unclassified) industry leads using the public API (no DB needed).
+Fetches leads, filters to industry=New, runs keyword/bigram analysis,
 writes reports to reports/ for adjusting industry list.
 """
 import json
@@ -30,9 +30,9 @@ def fetch_leads():
     return list(by_id.values())
 
 
-def is_other(c):
+def is_new_unclassified(c):
     ind = (c.get("industry") or "").strip().lower()
-    return ind in ("", "other", "unknown")
+    return ind in ("", "other", "unknown", "new")
 
 
 def strip_html(text):
@@ -69,16 +69,16 @@ def ngram_freq(text_lower, n=2):
 def main():
     print("Fetching leads from API...")
     all_leads = fetch_leads()
-    other_leads = [c for c in all_leads if is_other(c)]
-    print(f"Total leads fetched: {len(all_leads)}, industry=Other: {len(other_leads)}")
+    new_leads = [c for c in all_leads if is_new_unclassified(c)]
+    print(f"Total leads fetched: {len(all_leads)}, industry=New (unclassified): {len(new_leads)}")
 
-    if not other_leads:
-        print("No Other leads in this sample. Try increasing limit or check API.")
+    if not new_leads:
+        print("No New (unclassified) leads in this sample. Try increasing limit or check API.")
         return
 
     # Build combined text per lead and full corpus
     combined_list = []
-    for c in other_leads:
+    for c in new_leads:
         name = c.get("company_name") or ""
         texts = [s.get("raw_text") or "" for s in c.get("signals") or []]
         raw_combined = name + " " + " ".join(texts)
@@ -102,15 +102,15 @@ def main():
     # Sample for manual review
     by_signals = sorted(combined_list, key=lambda x: -x["signal_count"])
     with open(sample_path, "w") as f:
-        f.write(f"# Unknown-industry (Other) leads sample — {len(other_leads)} from API\n")
+        f.write(f"# New (unclassified) industry leads sample — {len(new_leads)} from API\n")
         f.write("# Company name | signal_count | first 400 chars of name + signal text\n\n")
-        for i, row in enumerate(by_signals[:350]):
+        for i, row in enumerate(by_signals[:350]):  # new_leads sorted by signal count
             f.write(f"{i+1}. {row['name']} | signals:{row['signal_count']} | {row['combined'][:400]}\n\n")
     print(f"Wrote {sample_path}")
 
     # Keyword analysis
     with open(keyword_path, "w") as f:
-        f.write(f"# Keyword analysis for {len(other_leads)} Other leads (via API)\n\n")
+        f.write(f"# Keyword analysis for {len(new_leads)} New (unclassified) leads (via API)\n\n")
         f.write("## Top 120 words\n")
         for word, count in word_counts.most_common(120):
             f.write(f"  {count:5d}  {word}\n")

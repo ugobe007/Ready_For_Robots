@@ -118,7 +118,7 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
     # Top industries
     industry_counts = {}
     for calc in filtered_calcs:
-        industry = calc.get('industry', 'Other')
+        industry = calc.get('industry', 'New')
         industry_counts[industry] = industry_counts.get(industry, 0) + 1
     
     for search in filtered_searches:

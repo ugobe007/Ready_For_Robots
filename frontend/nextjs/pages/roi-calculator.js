@@ -29,7 +29,7 @@ export default function ROICalculator() {
     'Retail': { avgCost: 25000, avgPayback: 10.2, adoptionRate: 31 },
     'Manufacturing': { avgCost: 52000, avgPayback: 6.5, adoptionRate: 67 },
     'Real Estate/Facilities': { avgCost: 30000, avgPayback: 9.5, adoptionRate: 35 },
-    'Other': { avgCost: 30000, avgPayback: 9.0, adoptionRate: 40 }
+    'New': { avgCost: 30000, avgPayback: 9.0, adoptionRate: 40 }
   };
 
   const ROBOT_TYPES = [
@@ -40,7 +40,7 @@ export default function ROICalculator() {
     'Medical/Healthcare',
     'Food Service',
     'Security/Patrol',
-    'Other'
+    'New'
   ];
 
   const INDUSTRIES = [
@@ -52,7 +52,7 @@ export default function ROICalculator() {
     'Retail',
     'Manufacturing',
     'Real Estate/Facilities',
-    'Other'
+    'New'
   ];
 
   function calculateROI() {

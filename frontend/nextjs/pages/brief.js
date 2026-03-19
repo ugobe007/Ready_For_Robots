@@ -40,7 +40,7 @@ export default function StrategyBrief() {
 
   // Top industries
   const industryCount = leads.reduce((acc, l) => {
-    const ind = l.industry || 'Unknown';
+    const ind = l.industry || 'New';
     acc[ind] = (acc[ind] || 0) + 1;
     return acc;
   }, {});

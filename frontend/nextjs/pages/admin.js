@@ -690,7 +690,7 @@ function Dashboard() {
             <tbody>
               {by_industry.map(r => (
                 <tr key={r.industry} className="border-b border-neutral-800/50">
-                  <td className="py-1.5 text-neutral-300">{r.industry || 'Unknown'}</td>
+                  <td className="py-1.5 text-neutral-300">{r.industry || 'New'}</td>
                   <td className="py-1.5 text-right tabular-nums text-neutral-500">{r.count}</td>
                 </tr>
               ))}

@@ -316,11 +316,14 @@ def _run_keyword_search(
             key=lambda x: x["strength"],
             reverse=True,
         )
+        ind = (c.industry or "").strip()
+        if not ind or ind.lower() in ("unknown", "other"):
+            ind = "New"
         results.append(
             {
                 "id": c.id,
                 "company_name": c.name,
-                "industry": c.industry,
+                "industry": ind,
                 "location_city": c.location_city,
                 "location_state": c.location_state,
                 "website": c.website,

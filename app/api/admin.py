@@ -20,8 +20,15 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
+from app.api.auth_deps import require_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
+
+
+def _industry_display(raw):
+    """Public-facing: never expose 'Unknown'; use 'New' (unclassified)."""
+    s = (raw or "").strip()
+    return s if s and s.lower() not in ("unknown", "other") else "New"
 
 
 # ── Stats ─────────────────────────────────────────────────────────────────────
@@ -85,7 +92,7 @@ def get_stats(db: Session = Depends(get_db)):
             "cache_hit_rate": 85,
         },
         "by_industry": [
-            {"industry": r[0] or "Unknown", "count": r[1]} for r in industries
+            {"industry": _industry_display(r[0]), "count": r[1]} for r in industries
         ],
         "by_signal_type": [
             {"signal_type": r[0], "count": r[1]} for r in sig_types
@@ -94,7 +101,7 @@ def get_stats(db: Session = Depends(get_db)):
             {
                 "id":       c.id,
                 "name":     c.name,
-                "industry": c.industry,
+                "industry": _industry_display(c.industry),
                 "source":   c.source,
                 "created_at": c.created_at.isoformat() if c.created_at else None,
             }

@@ -473,7 +473,7 @@ export default function Newsletter() {
                     </div>
                     <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
                       <div className="text-[10px] text-neutral-500 uppercase mb-0.5">💵 Economics</div>
-                      <div className="text-xs text-cyan-400 font-semibold">{(story.economics || '').replace(/\bUnknown\b/gi, 'Other')}</div>
+                      <div className="text-xs text-cyan-400 font-semibold">{(story.economics || '').replace(/\bUnknown\b/gi, 'New')}</div>
                     </div>
                     <div className="bg-neutral-900/50 rounded px-2 py-1.5 border border-neutral-800">
                       <div className="text-[10px] text-neutral-500 uppercase mb-0.5">📊 Impact</div>

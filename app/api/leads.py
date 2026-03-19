@@ -118,10 +118,10 @@ def _row_priority(row) -> object:
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
     sigs = c.signals or []
-    # Public-facing: never expose "Unknown" — use "Other"
+    # Public-facing: never expose "Unknown" — use "New" (unclassified)
     industry_display = (c.industry or "").strip()
-    if not industry_display or industry_display.lower() == "unknown":
-        industry_display = "Other"
+    if not industry_display or industry_display.lower() in ("unknown", "other"):
+        industry_display = "New"
 
     return {
         "id":             c.id,
@@ -299,9 +299,9 @@ def leads_summary(
         if pri.tier == "HOT":  hot  += 1
         elif pri.tier == "WARM": warm += 1
         else: cold += 1
-        # Public-facing: never show "Unknown" — use "Other" so the site doesn't look broken
+        # Public-facing: never show "Unknown" — use "New" (unclassified)
         raw = (row.industry or "").strip()
-        industry_key = raw if raw and raw.lower() != "unknown" else "Other"
+        industry_key = raw if raw and raw.lower() not in ("unknown", "other") else "New"
         by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
 
     total_signals = db.query(func.count(Signal.id)).scalar() or 0
@@ -324,7 +324,11 @@ def reclassify_unknown_industries(db: Session = Depends(get_db)):
         db.query(Company)
         .options(joinedload(Company.signals))
         .filter(
-            (Company.industry == None) | (Company.industry == "") | (func.lower(Company.industry) == "unknown")
+            (Company.industry == None)
+            | (Company.industry == "")
+            | (func.lower(Company.industry) == "unknown")
+            | (func.lower(Company.industry) == "other")
+            | (func.lower(Company.industry) == "new")
         )
         .all()
     )
