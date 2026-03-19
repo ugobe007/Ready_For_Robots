@@ -261,6 +261,98 @@ def get_leads(
     return final   # plain list — dashboard iterates it directly
 
 
+@router.get("/homepage")
+def leads_homepage(db: Session = Depends(get_db)):
+    """
+    Batched endpoint for homepage: summary + top 5 hot leads in one response.
+    Reduces round trips and improves mobile load (single DB session).
+    """
+    # 1. Summary (same logic as leads_summary)
+    rows = (
+        db.query(
+            Company.name.label("name"),
+            Company.industry.label("industry"),
+            Company.employee_estimate.label("employee_estimate"),
+            func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
+            func.count(Signal.id).label("signal_count"),
+        )
+        .outerjoin(Score, Score.company_id == Company.id)
+        .outerjoin(Signal, Signal.company_id == Company.id)
+        .group_by(
+            Company.id,
+            Company.name,
+            Company.industry,
+            Company.employee_estimate,
+            Score.overall_intent_score,
+        )
+        .all()
+    )
+    total = hot = warm = cold = junk_count = 0
+    by_industry = {}
+    for row in rows:
+        j, _ = _row_is_junk(row.name)
+        if j:
+            junk_count += 1
+            continue
+        pri = _row_priority(row)
+        total += 1
+        if pri.tier == "HOT":  hot += 1
+        elif pri.tier == "WARM": warm += 1
+        else: cold += 1
+        raw = (row.industry or "").strip()
+        industry_key = raw if raw and raw.lower() not in ("unknown", "other") else "New"
+        by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
+    total_signals = db.query(func.count(Signal.id)).scalar() or 0
+    summary = {
+        "total": total, "hot": hot, "warm": warm, "cold": cold,
+        "junk_filtered": junk_count,
+        "total_signals": total_signals,
+        "by_industry": by_industry,
+    }
+
+    # 2. Top 5 HOT leads (lightweight query, then full load)
+    candidates = _lead_rows_query(db).order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+    candidate_rows = candidates.limit(120).all()
+    hot_results = []
+    for row in candidate_rows:
+        junk, _ = _row_is_junk(row.name)
+        if junk:
+            continue
+        pri = _row_priority(row)
+        if pri.tier != "HOT":
+            continue
+        hot_results.append({
+            "id": row.id, "company_name": row.name, "priority_tier": pri.tier,
+            "priority_score": round(pri.score, 1), "signal_count": int(row.signal_count or 0),
+        })
+        if len(hot_results) >= 5:
+            break
+    hot_results.sort(key=lambda x: -x["priority_score"])
+    hot_results = hot_results[:5]
+
+    if not hot_results:
+        return {"summary": summary, "hotLeads": []}
+
+    ids = [r["id"] for r in hot_results]
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+    order = {i: idx for idx, i in enumerate(ids)}
+    hot_leads = []
+    for r in hot_results:
+        c = company_map.get(r["id"])
+        if not c:
+            continue
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        hot_leads.append((order[r["id"]], _fmt_company(c, junk, junk_reason, pri)))
+    hot_leads.sort(key=lambda x: x[0])
+    return {"summary": summary, "hotLeads": [x[1] for x in hot_leads]}
+
+
 @router.get("/summary")
 def leads_summary(
     exclude_junk: bool = Query(True),

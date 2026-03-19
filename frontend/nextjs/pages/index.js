@@ -104,68 +104,61 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
-  const API_BASE = 'https://readyforrobots.com';
-
-  // Fetch pipeline summary (full DB counts for ticker) — defer briefly so the page can paint first.
+  // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile)
   useEffect(() => {
-    const fetchSummary = async () => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 2500);
-      try {
-        const res = await fetch(`${API_BASE}/api/leads/summary`, { signal: controller.signal });
-        const data = await res.json();
-        setStatsData({
-          activeLeads: data.total ?? 0,
-          hotDeals: data.hot ?? 0,
-          liveSignals: data.total_signals ?? 0,
-          warmPipeline: data.warm ?? 0,
-          cold: data.cold ?? 0
-        });
-        setLeadsByIndustry(data.by_industry ?? {});
-      } catch (err) {
-        if (err?.name !== 'AbortError') {
-          console.error('Error fetching summary:', err);
-        }
-      } finally {
-        clearTimeout(timeout);
-        setStatsLoaded(true);
-      }
-    };
-    const start = setTimeout(fetchSummary, 1200);
-    const interval = setInterval(fetchSummary, 120000);
-    return () => {
-      clearTimeout(start);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Fetch only top 5 hot deals for Daily Hot Deals — one request, no polling
-  useEffect(() => {
+    const apiBase = typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com');
     let cancelled = false;
-    setLoading(true);
-    const fetchHotDeals = async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s for mobile/slow networks
+    const fetchHomepage = async () => {
+      setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/leads?tier=HOT&limit=5&sort=score`);
+        const res = await fetch(`${apiBase}/api/leads/homepage`, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const list = Array.isArray(data) ? data : [];
+        if (cancelled) return;
+        const s = data.summary || {};
+        setStatsData({
+          activeLeads: s.total ?? 0,
+          hotDeals: s.hot ?? 0,
+          liveSignals: s.total_signals ?? 0,
+          warmPipeline: s.warm ?? 0,
+          cold: s.cold ?? 0
+        });
+        setLeadsByIndustry(s.by_industry ?? {});
+        const list = data.hotLeads || [];
         const hotOnly = list
-          .filter(l => l.temperature === 'hot' || l.priority_tier === 'HOT')
+          .filter(l => l.priority_tier === 'HOT')
           .sort((a, b) => {
             const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
             const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
             return scoreB - scoreA;
           })
           .slice(0, 5);
-        if (!cancelled) setHotLeads(hotOnly);
+        setHotLeads(hotOnly);
       } catch (err) {
-        console.error('Error fetching hot deals:', err);
-        if (!cancelled) setHotLeads([]);
+        if (err?.name !== 'AbortError' && !cancelled) {
+          console.error('Error fetching homepage data:', err);
+          setHotLeads([]);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        clearTimeout(timeout);
+        if (!cancelled) {
+          setStatsLoaded(true);
+          setLoading(false);
+        }
       }
     };
-    fetchHotDeals();
-    return () => { cancelled = true; };
+    fetchHomepage();
+    const interval = setInterval(fetchHomepage, 120000); // refresh every 2 min
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   // Use summary for counts (no full leads fetch)
