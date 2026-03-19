@@ -294,7 +294,8 @@ function Analytics() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatCard label="Site Visits" value={analytics?.site_visits ?? 0} sub={`+${analytics?.visit_growth ?? 0}% growth`} />
         <StatCard label="Total Calculations" value={analytics?.total_calculations || 0} sub={`+${analytics?.calculation_growth || 0}% growth`} />
         <StatCard label="Robot Searches" value={analytics?.robot_searches || 0} sub={`${analytics?.avg_matches_per_search || 0} avg matches`} />
         <StatCard label="Avg Payback" value={`${analytics?.avg_payback_months || 0}mo`} sub={`$${(analytics?.avg_robot_cost || 0).toLocaleString()} avg cost`} />
@@ -1123,15 +1124,26 @@ function CompaniesManager() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
-    adminFetch(`${API}/api/admin/companies/search?q=${searchTerm}&industry=${filterIndustry}&limit=100`)
-      .then(r => r.json())
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const q = encodeURIComponent(debouncedSearch || '');
+    const ind = encodeURIComponent(filterIndustry || '');
+    adminFetch(`${API}/api/admin/companies/search?q=${q}&industry=${ind}&limit=100`)
+      .then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
       .then(d => { setCompanies(d.companies || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [searchTerm, filterIndustry, adminFetch]);
+      .catch((e) => { console.error('Companies search error:', e); setCompanies([]); setLoading(false); });
+  }, [debouncedSearch, filterIndustry, adminFetch]);
 
   const deleteCompany = async (id) => {
     if (!confirm('Delete this company and all its signals?')) return;

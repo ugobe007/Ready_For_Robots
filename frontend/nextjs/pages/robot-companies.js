@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
+const API_BASE = typeof window !== 'undefined'
+  ? window.location.origin
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+
 export default function RobotCompanies() {
   const [companies, setCompanies] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [workflowModal, setWorkflowModal] = useState(null);
   const [workflowForm, setWorkflowForm] = useState({
     workflow_stage: '',
@@ -23,11 +28,11 @@ export default function RobotCompanies() {
   useEffect(() => {
     loadStats();
     loadCompanies();
-  }, [filter]);
+  }, [filter, search]);
 
   async function loadStats() {
     try {
-      const res = await fetch('http://localhost:8000/api/robot-companies/stats');
+      const res = await fetch(`${API_BASE}/api/robot-companies/stats`);
       const data = await res.json();
       setStats(data);
     } catch (error) {
@@ -38,16 +43,19 @@ export default function RobotCompanies() {
   async function loadCompanies() {
     setLoading(true);
     try {
-      let url = 'http://localhost:8000/api/robot-companies/';
-      
+      let url = `${API_BASE}/api/robot-companies/`;
+      const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : '';
+
       if (filter === 'hot') {
-        url = 'http://localhost:8000/api/robot-companies/hot-leads';
+        url = `${API_BASE}/api/robot-companies/hot-leads`;
       } else if (filter === 'chinese-no-us') {
-        url = 'http://localhost:8000/api/robot-companies/chinese-companies?us_presence=none';
+        url = `${API_BASE}/api/robot-companies/chinese-companies?us_presence=none`;
       } else if (filter === 'needs-distribution') {
-        url = 'http://localhost:8000/api/robot-companies/needs-distribution';
+        url = `${API_BASE}/api/robot-companies/needs-distribution`;
       } else if (filter === 'wave_2') {
-        url = 'http://localhost:8000/api/robot-companies/?market_entry_wave=wave_2';
+        url = `${API_BASE}/api/robot-companies/?market_entry_wave=wave_2${searchParam}`;
+      } else {
+        url += debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : '';
       }
 
       const res = await fetch(url);
@@ -84,7 +92,7 @@ export default function RobotCompanies() {
     if (!workflowModal) return;
     
     try {
-      const res = await fetch(`http://localhost:8000/api/robot-companies/${workflowModal.id}/workflow`, {
+      const res = await fetch(`${API_BASE}/api/robot-companies/${workflowModal.id}/workflow`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(workflowForm)
@@ -105,7 +113,7 @@ export default function RobotCompanies() {
     setEmailContent(null);
     
     try {
-      const res = await fetch(`http://localhost:8000/api/robot-companies/${company.id}/email?template_type=${templateType}`);
+      const res = await fetch(`${API_BASE}/api/robot-companies/${company.id}/email?template_type=${templateType}`);
       const data = await res.json();
       setEmailContent(data.email);
     } catch (error) {

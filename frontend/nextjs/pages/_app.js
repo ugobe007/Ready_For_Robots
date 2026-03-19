@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import Head from 'next/head';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 
 // ── Auth Context ─────────────────────────────────────────────────────────────
@@ -40,9 +41,33 @@ function AuthProvider({ children }) {
   );
 }
 
+function VisitTracker({ children }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const track = (path) => {
+      fetch('/api/track/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: path || '/',
+          referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+        }),
+      }).catch(() => {});
+    };
+
+    track(router.pathname);
+    router.events?.on('routeChangeComplete', track);
+    return () => router.events?.off('routeChangeComplete', track);
+  }, [router]);
+
+  return children;
+}
+
 export default function App({ Component, pageProps }) {
   return (
     <AuthProvider>
+      <VisitTracker>
       <Head>
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -54,6 +79,7 @@ export default function App({ Component, pageProps }) {
         />
       </Head>
       <Component {...pageProps} />
+      </VisitTracker>
     </AuthProvider>
   );
 }

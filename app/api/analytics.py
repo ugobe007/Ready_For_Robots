@@ -14,6 +14,18 @@ router = APIRouter()
 # Track calculator usage
 calculator_usage = []
 robot_searches = []
+site_visits = []
+
+
+@router.post("/track/visit")
+async def track_visit(data: dict):
+    """Track site visits (page views)"""
+    site_visits.append({
+        **data,
+        "timestamp": datetime.now().isoformat(),
+    })
+    return {"status": "tracked"}
+
 
 @router.post("/track/roi-calculation")
 async def track_roi_calculation(data: dict):
@@ -49,12 +61,14 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
         cutoff = datetime.min
     
     # Filter data by date range
-    filtered_calcs = [c for c in calculator_usage if datetime.fromisoformat(c['timestamp']) >= cutoff]
-    filtered_searches = [s for s in robot_searches if datetime.fromisoformat(s['timestamp']) >= cutoff]
-    
+    filtered_calcs = [c for c in calculator_usage if datetime.fromisoformat(c["timestamp"]) >= cutoff]
+    filtered_searches = [s for s in robot_searches if datetime.fromisoformat(s["timestamp"]) >= cutoff]
+    filtered_visits = [v for v in site_visits if datetime.fromisoformat(v["timestamp"]) >= cutoff]
+
     # Calculate metrics
     total_calculations = len(filtered_calcs)
     total_robot_searches = len(filtered_searches)
+    total_site_visits = len(filtered_visits)
     
     # Previous period for growth calculation
     if range == '7d':
@@ -70,9 +84,11 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
         prev_cutoff = datetime.min
         prev_end = now - timedelta(days=365)
     
-    prev_calcs = [c for c in calculator_usage 
-                  if prev_cutoff <= datetime.fromisoformat(c['timestamp']) < prev_end]
-    
+    prev_calcs = [c for c in calculator_usage
+                  if prev_cutoff <= datetime.fromisoformat(c["timestamp"]) < prev_end]
+    prev_visits = [v for v in site_visits
+                   if prev_cutoff <= datetime.fromisoformat(v["timestamp"]) < prev_end]
+
     calculation_growth = 0
     if len(prev_calcs) > 0:
         calculation_growth = round(((total_calculations - len(prev_calcs)) / len(prev_calcs)) * 100)
@@ -213,9 +229,11 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
         insights['action_item'] = "Add more lead capture opportunities to convert visitors"
     
     return {
-        'total_calculations': total_calculations,
-        'calculation_growth': calculation_growth,
-        'robot_searches': total_robot_searches,
+        "total_calculations": total_calculations,
+        "calculation_growth": calculation_growth,
+        "robot_searches": total_robot_searches,
+        "site_visits": total_site_visits,
+        "visit_growth": visit_growth,
         'avg_matches_per_search': avg_matches_per_search,
         'avg_payback_months': avg_payback_months,
         'avg_robot_cost': avg_robot_cost,

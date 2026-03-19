@@ -13,8 +13,9 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
+from app.api.auth_deps import require_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 # ── Company Management ────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ def search_companies(
         )
     
     if industry:
-        query = query.filter(Company.industry == industry)
+        query = query.filter(Company.industry.ilike(f"%{industry}%"))
     
     companies = query.order_by(desc(Company.created_at)).limit(limit).all()
     
