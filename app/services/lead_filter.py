@@ -88,6 +88,8 @@ SIGNAL_TYPES_HOT = frozenset({
     "capex",
     "ma_activity",
     "labor_pain",
+    "labor_shortage",          # can't staff = direct robotics buyer
+    "expansion",               # capital deployment = budget for automation
     "automation_intent",       # internal / job-board style
     "quality_bottleneck",
     "safety_incident",
@@ -95,7 +97,8 @@ SIGNAL_TYPES_HOT = frozenset({
     "warehouse_throughput",
     "packaging_automation",
     "repetitive_process",
-    # Deployment & procurement (often missing before — same deals always surfaced)
+    "material_handling",       # physical throughput problem
+    # Deployment & procurement
     "robot_installation",
     "pilot_success",
     "scale_expansion",
@@ -108,13 +111,10 @@ SIGNAL_TYPES_HOT = frozenset({
     "rfp_posted",
 })
 SIGNAL_TYPES_WARM = frozenset({
-    "expansion",
     "job_posting",
-    "labor_shortage",
     "news",
     "service_consistency",
     "equipment_integration",
-    "material_handling",
     # Classifier emits automation_interest widely — treat as explore/nurture, not max HOT
     "automation_interest",
 })
@@ -129,32 +129,32 @@ DEPLOYMENT_SIGNAL_TYPES = frozenset({
 })
 
 # ─── Priority scoring knobs (Hot / Warm / Emerging) — also surfaced on /api/leads/scoring-system ───
-# Tuned looser (Mar 2025): more accounts reach Hot/Warm without drowning in duplicate-type noise.
+# Tuned looser (Mar 2026 v2): lower composite floors, higher boosts, broader HOT signal set.
 PRIORITY_COMPOSITE_CAP = 100.0
-PRIORITY_INDUSTRY_FIT_BOOST = 6.0
+PRIORITY_INDUSTRY_FIT_BOOST = 8.0         # was 6.0 — high-fit industry is a strong buy signal
 # Volume tiers: first matching tier applies (not cumulative)
 PRIORITY_SIGNAL_VOLUME_TIERS = (
-    (8, 3.5, True),   # (min_signal_count, boost_points, append_reason_to_priority_reasons)
-    (5, 2.5, False),
-    (3, 1.5, False),
+    (8, 4.5, True),   # (min_signal_count, boost_points, append_reason_to_priority_reasons)
+    (5, 3.0, False),
+    (3, 2.0, False),
 )
 PRIORITY_ENTERPRISE_MIN_EMPLOYEES = 5000
-PRIORITY_ENTERPRISE_BOOST = 5.0
+PRIORITY_ENTERPRISE_BOOST = 6.0           # was 5.0
 PRIORITY_MIDMARKET_MIN_EMPLOYEES = 1000
-PRIORITY_MIDMARKET_BOOST = 2.0
+PRIORITY_MIDMARKET_BOOST = 3.0            # was 2.0
 # Tier cutoffs on composite = min(PRIORITY_COMPOSITE_CAP, ml_base + boosts)
-PRIORITY_HOT_COMPOSITE_MIN = 78.0
-PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS = 72.0
-PRIORITY_WARM_COMPOSITE_MIN = 47.0
-PRIORITY_WARM_BASE_WITH_INDUSTRY = 40.0
-# "hot_enough" gates: still block composite-only HOT with zero buying-intent types
-PRIORITY_HOT_DISTINCT_TYPES_MIN = 2
-PRIORITY_HOT_BASE_WITH_TWO_HITS = 55.0
-PRIORITY_HOT_BASE_WITH_ONE_HIT = 62.0
-PRIORITY_HOT_BASE_WITH_DEPLOYMENT = 45.0
+PRIORITY_HOT_COMPOSITE_MIN = 70.0         # was 78.0
+PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS = 62.0  # was 72.0
+PRIORITY_WARM_COMPOSITE_MIN = 42.0        # was 47.0
+PRIORITY_WARM_BASE_WITH_INDUSTRY = 35.0   # was 40.0
+# "hot_enough" gates: a single distinct hot type is sufficient
+PRIORITY_HOT_DISTINCT_TYPES_MIN = 1       # was 2 — one real buying signal is enough
+PRIORITY_HOT_BASE_WITH_TWO_HITS = 45.0   # was 55.0
+PRIORITY_HOT_BASE_WITH_ONE_HIT = 52.0    # was 62.0
+PRIORITY_HOT_BASE_WITH_DEPLOYMENT = 38.0  # was 45.0
 # Sublinear hot/warm boost caps (see _hot_signal_boost / _warm_signal_boost)
-HOT_SIGNAL_BOOST_CAP = 18.0
-WARM_SIGNAL_BOOST_CAP = 9.0
+HOT_SIGNAL_BOOST_CAP = 24.0              # was 18.0
+WARM_SIGNAL_BOOST_CAP = 12.0             # was 9.0
 
 
 @dataclass
@@ -181,10 +181,10 @@ def _hot_signal_boost(hot_types: List[str]) -> float:
         return 0.0
     n = len(hot_types)
     u = len(set(hot_types))
-    # Diversity: up to +10 for 2+ distinct hot types; volume: sublinear, capped
-    diversity = min(10.0, 5.5 * min(2, u))
+    # Diversity: up to +14 for 2+ distinct hot types; volume: sublinear, capped
+    diversity = min(14.0, 7.0 * min(2, u))
     extra_same = max(0, n - u)
-    volume = min(8.5, 1.3 * min(6, extra_same) + 0.85 * min(3, u))
+    volume = min(10.0, 1.6 * min(6, extra_same) + 1.1 * min(3, u))
     return min(HOT_SIGNAL_BOOST_CAP, diversity + volume)
 
 
@@ -193,7 +193,7 @@ def _warm_signal_boost(warm_types: List[str]) -> float:
         return 0.0
     n = len(warm_types)
     u = len(set(warm_types))
-    return min(WARM_SIGNAL_BOOST_CAP, 2.2 * min(3, u) + 0.65 * min(5, max(0, n - u)))
+    return min(WARM_SIGNAL_BOOST_CAP, 3.0 * min(3, u) + 0.9 * min(5, max(0, n - u)))
 
 
 def priority_tier(
