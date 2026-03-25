@@ -9,10 +9,9 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   [build.args]
     NEXT_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
-    # Set to your public HTTPS origin(s) so the static UI calls the right API (no trailing slash).
-    # Example: "https://ready-2-robot.fly.dev" or your custom domain.
-    NEXT_PUBLIC_API_URL   = ""
-    NEXT_PUBLIC_SITE_URL  = ""
+    # Public HTTPS origin the browser uses (no trailing slash). Change if you use a custom domain.
+    NEXT_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
+    NEXT_PUBLIC_SITE_URL  = "https://ready-2-robot.fly.dev"
 
 [env]
   PORT = "8080"
