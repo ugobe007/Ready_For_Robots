@@ -1,0 +1,15 @@
+# Redis for Celery scraper scheduler
+# Run: docker compose -f docker-compose.redis.yml up -d
+# Then: ./scripts/start_scraper_scheduler.sh
+# (Set REDIS_URL=redis://localhost:6379/0 in .env)
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

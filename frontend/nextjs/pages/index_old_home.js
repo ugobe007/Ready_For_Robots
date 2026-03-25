@@ -5,8 +5,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
+import { getApiBase } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 const SIGNAL_META = {
   funding_round: { label: 'Funding', color: 'violet' },

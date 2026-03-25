@@ -363,5 +363,11 @@ def format_report_markdown(analytics: Dict[str, Any]) -> str:
         for state, count in list(analytics["top_states"].items())[:5]:
             lines.append(f"- **{state}:** {count}")
         lines.append("")
-    
+
+    brief = analytics.get("industry_brief")
+    if brief:
+        from app.services.industry_brief_service import format_brief_markdown
+
+        lines.append(format_brief_markdown(brief))
+
     return "\n".join(lines)

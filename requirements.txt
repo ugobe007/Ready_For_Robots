@@ -15,5 +15,5 @@ pytest
 alembic
 uvicorn
 tailwindcss
-PyJWT
+PyJWT[crypto]>=2.8.0
 reportlab

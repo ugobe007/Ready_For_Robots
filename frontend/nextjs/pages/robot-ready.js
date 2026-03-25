@@ -2,11 +2,12 @@
  * Robot Ready - Lead Generation for Robot Companies
  * Submit your robot URL, get matched with ideal customers
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 export default function RobotReady() {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export default function RobotReady() {
   const FREE_LIMIT = 5;
 
   // Load usage count on mount
-  useState(() => {
+  useEffect(() => {
     try {
       const stored = localStorage.getItem('rfr_usage_count');
       setUsageCount(parseInt(stored || '0', 10));
@@ -73,7 +74,7 @@ export default function RobotReady() {
     setStep('loading');
 
     try {
-      const response = await fetch(`${API}/api/robot-ready/submit`, {
+      const response = await fetch(`${API}/api/robot-ready/submit`, liveFetchInit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,7 +85,7 @@ export default function RobotReady() {
           target_industries: targetIndustries.length > 0 ? targetIndustries : null,
           target_regions: targetRegions.length > 0 ? targetRegions : null,
         }),
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to analyze robot');
@@ -98,7 +99,7 @@ export default function RobotReady() {
       trackUsage();
 
       // Track robot search for analytics
-      fetch('/api/track/robot-search', {
+      fetch(`${getApiBase()}/api/track/robot-search`, liveFetchInit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,7 +109,7 @@ export default function RobotReady() {
           target_regions: targetRegions,
           matches_found: data.matched_companies?.length || 0
         })
-      }).catch(err => console.error('Analytics tracking failed:', err));
+      })).catch(err => console.error('Analytics tracking failed:', err));
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setStep('form');
@@ -119,7 +120,7 @@ export default function RobotReady() {
     if (!results) return;
     
     try {
-      const response = await fetch('/api/generate-playbook', {
+      const response = await fetch(`${getApiBase()}/api/generate-playbook`, liveFetchInit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export default function RobotReady() {
           target_industries: targetIndustries,
           target_regions: targetRegions
         })
-      });
+      }));
 
       if (!response.ok) {
         throw new Error('Failed to generate playbook');

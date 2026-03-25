@@ -5,8 +5,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import LoginDropdown from '../components/LoginDropdown';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 // The 14 signal types we detect
 const SIGNAL_TYPES = [
@@ -44,14 +45,14 @@ export default function SignalIntelligencePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`${API}/api/leads/summary`);
+        const res = await fetch(`${API}/api/leads/summary`, liveFetchInit());
         if (res.ok) {
           const data = await res.json();
           setStats(data);
         }
 
         // Fetch recent leads to show signal activity
-        const leadsRes = await fetch(`${API}/api/leads?limit=10`);
+        const leadsRes = await fetch(`${API}/api/leads?limit=10`, liveFetchInit());
         if (leadsRes.ok) {
           const leads = await leadsRes.json();
           // Extract signals from recent leads

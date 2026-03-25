@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 export default function Analytics() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function Analytics() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/analytics?range=${timeRange}`);
+      const response = await fetch(`${getApiBase()}/api/analytics?range=${timeRange}`, liveFetchInit());
       const data = await response.json();
       setAnalytics(data);
     } catch (error) {

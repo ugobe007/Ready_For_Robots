@@ -6,6 +6,7 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
 from app.services.daily_analytics_service import get_daily_analytics, format_report_markdown
+from app.services.industry_brief_service import build_industry_brief_payload
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -227,7 +228,13 @@ async def get_analytics(range: str = Query('7d', regex='^(7d|30d|90d|all)$')):
         insights['action_item'] = f"Capitalize on {conversion_rate}% conversion rate with targeted email campaigns"
     else:
         insights['action_item'] = "Add more lead capture opportunities to convert visitors"
-    
+
+    visit_growth = 0
+    if len(prev_visits) > 0:
+        visit_growth = round(((total_site_visits - len(prev_visits)) / len(prev_visits)) * 100)
+    elif total_site_visits > 0:
+        visit_growth = 100
+
     return {
         "total_calculations": total_calculations,
         "calculation_growth": calculation_growth,
@@ -265,6 +272,13 @@ async def get_daily_opportunity_report(
     db = SessionLocal()
     try:
         analytics = get_daily_analytics(db, days=days)
+        analytics["industry_brief"] = build_industry_brief_payload(
+            db,
+            days=days,
+            analytics=analytics,
+            use_cache=True,
+            force_refresh=False,
+        )
         if format == "markdown":
             return PlainTextResponse(
                 format_report_markdown(analytics),

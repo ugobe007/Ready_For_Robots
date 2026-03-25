@@ -16,6 +16,8 @@ If scrapers aren't producing leads, follow these steps.
 
 So after deploy, leads should start flowing within ~10–15 minutes and then every 6 hours. Check `/api/scraper/stats/daily?days=1` and `/api/leads/summary` to confirm.
 
+**Static Next.js frontend (`output: 'export'`):** the UI has no server-side `/api` routes. All browser calls use `getApiBase()` from `frontend/nextjs/lib/apiBase.js`. Set **`NEXT_PUBLIC_API_URL`** at build time to your FastAPI origin (e.g. `https://readyforrobots.com` or your Fly app URL) so the homepage, admin scraper controls, and analytics hit the live API. Local dev without that var uses `http://localhost:8000` when `NODE_ENV=development` or the hostname is localhost.
+
 ---
 
 ## 1. Run a Quick Test (In-Process, No Celery)
@@ -160,7 +162,27 @@ Check `companies_last_24h` and `signals_last_24h`. If they're still 0 after a ru
 
 ---
 
-## 8. Deploy & startup (no DB at deploy)
+## 8. Playwright (hotel / job-board / Yellow Pages scrapers)
+
+RSS-based scrapers (intelligence news, news, SERP) only need Python + `DATABASE_URL`. **Browser-based** scrapers also need a **downloaded Chromium** via Playwright:
+
+- `HotelDirectoryScraper` (Yellow Pages)
+- `JobBoardScraper` (and enhanced variants)
+- Anything in the orchestrator that launches Chromium
+
+**One-time setup** (use the same venv as the guide, e.g. `.venv_new`):
+
+```bash
+cd ~/Desktop/Ready_For_Robots
+.venv_new/bin/pip install playwright   # if not already in requirements
+.venv_new/bin/playwright install chromium
+```
+
+If you see `Executable doesn't exist at ... ms-playwright/chromium...`, run `playwright install chromium` again after any Playwright package upgrade. `scraper_health.json` will show browser launch failures until this is done.
+
+---
+
+## 9. Deploy & startup (no DB at deploy)
 
 The app **does not connect to the database at deploy or at process start**. The DB is used only when a request needs it (e.g. first time someone loads a page that calls `/api/leads/summary` or any API that uses the DB).
 

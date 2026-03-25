@@ -14,7 +14,8 @@ import { useRouter } from 'next/router';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
+const API = getApiBase();
 
 const AdminAuthContext = createContext({ authHeaders: {}, adminFetch: (url, opts) => fetch(url, opts), onAccessDenied: () => {} });
 function useAdminAuth() {
@@ -1346,10 +1347,10 @@ export default function AdminPage() {
 
   const authHeaders = session ? authHeader(session.access_token) : {};
   const adminFetch = useCallback((url, opts = {}) => {
-    return fetch(url, {
+    return fetch(url, liveFetchInit({
       ...opts,
       headers: { ...authHeaders, ...(opts.headers || {}) },
-    });
+    }));
   }, [session?.access_token]);
 
   useEffect(() => {
@@ -1360,7 +1361,7 @@ export default function AdminPage() {
     }
     // Quick check: if we get 403 on admin stats, user is not admin
     const h = authHeader(session.access_token);
-    fetch(`${API}/api/admin/stats`, { headers: h })
+    fetch(`${API}/api/admin/stats`, liveFetchInit({ headers: h }))
       .then(r => { if (r.status === 403) setAccessDenied(true); })
       .catch(() => {});
   }, [session, authLoading, router]);

@@ -138,6 +138,24 @@ def _scheduled_scraper_loop():
                 enrich=True,
             )
             logger.info("Scheduled intelligence scraper finished")
+            try:
+                from app.database import SessionLocal
+                from app.services.newsletter_service import generate_edition, write_cached_edition
+                from app.services.industry_brief_service import build_industry_brief_payload
+
+                ndb = SessionLocal()
+                try:
+                    # Refresh strategic brief first so newsletter embed matches post-scrape data.
+                    build_industry_brief_payload(
+                        ndb, days=1, analytics=None, use_cache=True, force_refresh=True
+                    )
+                    edition = generate_edition(ndb, limit=8)
+                    write_cached_edition(edition)
+                    logger.info("Newsletter edition refreshed after scraper run")
+                finally:
+                    ndb.close()
+            except Exception as ne:
+                logger.warning("Newsletter refresh after scraper skipped: %s", ne)
         except Exception as e:
             logger.exception("Scheduled intelligence scraper failed: %s", e)
         time.sleep(max(3600, int(interval_hours * 3600)))

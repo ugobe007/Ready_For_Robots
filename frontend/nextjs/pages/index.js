@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import LoginDropdown from '../components/LoginDropdown';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
@@ -106,16 +107,16 @@ export default function Signals() {
 
   // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile)
   useEffect(() => {
-    const apiBase = typeof window !== 'undefined'
-      ? window.location.origin
-      : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com');
+    const apiBase = getApiBase();
     let cancelled = false;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000); // 10s for mobile/slow networks
     const fetchHomepage = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${apiBase}/api/leads/homepage`, { signal: controller.signal });
+        const res = await fetch(`${apiBase}/api/leads/homepage`, liveFetchInit({
+          signal: controller.signal,
+        }));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (cancelled) return;
@@ -128,16 +129,14 @@ export default function Signals() {
           cold: s.cold ?? 0
         });
         setLeadsByIndustry(s.by_industry ?? {});
+        // API already returns HOT-first then WARM fill; do not re-filter by tier
         const list = data.hotLeads || [];
-        const hotOnly = list
-          .filter(l => l.priority_tier === 'HOT')
-          .sort((a, b) => {
-            const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
-            const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
-            return scoreB - scoreA;
-          })
-          .slice(0, 5);
-        setHotLeads(hotOnly);
+        const spotlight = [...list].sort((a, b) => {
+          const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
+          const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
+          return scoreB - scoreA;
+        }).slice(0, 5);
+        setHotLeads(spotlight);
       } catch (err) {
         if (err?.name !== 'AbortError' && !cancelled) {
           console.error('Error fetching homepage data:', err);
@@ -152,7 +151,7 @@ export default function Signals() {
       }
     };
     fetchHomepage();
-    const interval = setInterval(fetchHomepage, 120000); // refresh every 2 min
+    const interval = setInterval(fetchHomepage, 90000); // refresh every 90s
     return () => {
       cancelled = true;
       controller.abort();
@@ -609,7 +608,7 @@ export default function Signals() {
               Daily Hot Deals
             </h2>
             <p className="text-lg text-neutral-300">
-              Live companies with <span className="text-red-400 font-semibold">urgent automation needs</span> — updated from our signal intelligence pipeline. Click any company for full AI analysis.
+              Top <span className="text-orange-400 font-semibold">HOT</span> leads first, then <span className="text-amber-400 font-semibold">WARM</span> to fill five spots — refreshed from live signals. Click a card for details and shareable summary.
             </p>
           </div>
 
@@ -649,14 +648,19 @@ export default function Signals() {
                           <h4 className="text-lg font-semibold text-white group-hover:text-orange-300 transition-colors">
                             {lead.company_name}
                           </h4>
-                          <span className="px-2 py-0.5 text-xs font-semibold bg-orange-600 text-white rounded">
-                            🔥 HOT
+                          <span className={`px-2 py-0.5 text-xs font-semibold rounded text-white ${lead.priority_tier === 'WARM' ? 'bg-amber-600' : 'bg-orange-600'}`}>
+                            {lead.priority_tier === 'WARM' ? '⚡ WARM' : '🔥 HOT'}
                           </span>
                           <span className="text-neutral-500 text-sm">{isExpanded ? '▲' : '▼'}</span>
                         </div>
                         <div className="text-sm text-neutral-400">
                           {lead.industry} • {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
                         </div>
+                        {lead.share_summary && (
+                          <p className="text-sm text-neutral-300 leading-snug pt-1 border-l-2 border-orange-600/50 pl-3">
+                            {lead.share_summary}
+                          </p>
+                        )}
                         {topSignals.length > 0 && (
                           <div className="flex flex-wrap gap-2 pt-1">
                             {topSignals.map((signal, sidx) => (
@@ -692,8 +696,7 @@ export default function Signals() {
                             </button>
                             {shareMenuLeadId === lead.id && (() => {
                               const shareUrl = `${BASE_URL}/#leads`;
-                              const firstSignal = (lead.signals && lead.signals[0]) ? (lead.signals[0].raw_text?.slice(0, 80) || lead.signals[0].signal_type || 'automation signals') : 'automation signals';
-                              const shareText = `${lead.company_name} (${lead.industry || 'Automation'}) — ${firstSignal}${firstSignal.length >= 80 ? '…' : ''}. Hot lead from Ready For Robots`;
+                              const shareText = lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
                               const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                               const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
                               const copyShare = () => {
@@ -758,8 +761,7 @@ export default function Signals() {
                           <span className="text-xs text-neutral-500">Share:</span>
                           {(() => {
                             const shareUrl = `${BASE_URL}/#leads`;
-                            const firstSignal = (lead.signals && lead.signals[0]) ? (lead.signals[0].raw_text?.slice(0, 80) || lead.signals[0].signal_type || 'automation signals') : 'automation signals';
-                            const shareText = `${lead.company_name} (${lead.industry || 'Automation'}) — ${firstSignal}${firstSignal.length >= 80 ? '…' : ''}. Hot lead from Ready For Robots`;
+                            const shareText = lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
                             return (
                               <>
                                 <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">

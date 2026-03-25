@@ -120,6 +120,31 @@ def _industry_fits(industry: Optional[str]) -> bool:
     return any(k in low for k in _HIGH_FIT_INDUSTRIES)
 
 
+def _hot_signal_boost(hot_types: List[str]) -> float:
+    """
+    Cap how much raw signal *count* can inflate the tier. Previously every row in
+    `signals` repeated the same type (e.g. many `news` mis-tagged as hot bucket
+    in SQL rollups) and added +5 each → composite pegged at 100 and HOT flooded.
+    """
+    if not hot_types:
+        return 0.0
+    n = len(hot_types)
+    u = len(set(hot_types))
+    # Diversity: up to +10 for 2+ distinct hot types; volume: sublinear, capped
+    diversity = min(10.0, 5.0 * min(2, u))
+    extra_same = max(0, n - u)
+    volume = min(8.0, 1.2 * min(6, extra_same) + 0.8 * min(3, u))
+    return min(16.0, diversity + volume)
+
+
+def _warm_signal_boost(warm_types: List[str]) -> float:
+    if not warm_types:
+        return 0.0
+    n = len(warm_types)
+    u = len(set(warm_types))
+    return min(8.0, 2.0 * min(3, u) + 0.6 * min(5, max(0, n - u)))
+
+
 def priority_tier(
     overall_score: float,
     industry: Optional[str],
@@ -137,31 +162,32 @@ def priority_tier(
     # Base: ML inference score drives the tier
     base = overall_score
 
-    # Industry fit boost
+    # Industry fit boost (was 8 — too many WARM/HOT via industry alone)
     if _industry_fits(industry):
-        boost += 8.0
+        boost += 5.0
         reasons.append(f"high-fit industry ({industry})")
 
-    # Signal type boosters
+    # Signal type boosters (capped — do not let N duplicate rows max out composite)
     hot_hits = [s for s in signal_types if s in _HOT_SIGNAL_TYPES]
     warm_hits = [s for s in signal_types if s in _WARM_SIGNAL_TYPES]
     if hot_hits:
-        boost += 5.0 * len(hot_hits)
-        # Show unique signal types with count instead of listing all instances
-        unique_hot = list(dict.fromkeys(hot_hits))[:5]  # max 5 types
+        boost += _hot_signal_boost(hot_hits)
+        unique_hot = list(dict.fromkeys(hot_hits))[:5]
         if len(hot_hits) > 5:
-            reasons.append(f"{len(hot_hits)} intent signals ({', '.join(unique_hot)}, ...)")
+            reasons.append(f"{len(hot_hits)} hot-type signals ({', '.join(unique_hot)}, ...)")
         else:
-            reasons.append(f"{len(hot_hits)} intent signals ({', '.join(unique_hot)})")
+            reasons.append(f"{len(hot_hits)} hot-type signals ({', '.join(unique_hot)})")
     if warm_hits:
-        boost += 2.0 * len(warm_hits)
+        boost += _warm_signal_boost(warm_hits)
 
-    # Signal volume boost
-    if signal_count >= 5:
-        boost += 4.0
+    # Signal volume boost (mild — type boosts already reflect volume somewhat)
+    if signal_count >= 8:
+        boost += 3.0
         reasons.append(f"{signal_count} signals")
-    elif signal_count >= 3:
+    elif signal_count >= 5:
         boost += 2.0
+    elif signal_count >= 3:
+        boost += 1.0
 
     # Employee size boost (enterprise = more budget)
     if employee_estimate and employee_estimate >= 5000:
@@ -172,9 +198,17 @@ def priority_tier(
 
     composite = min(100.0, base + boost)
 
-    if composite >= 75 or (base >= 65 and hot_hits):
+    # HOT: stricter. Duplicate rows of one hot type (e.g. RSS noise) must not
+    # qualify on composite alone — need distinct intent types OR strong base score.
+    distinct_hot = len(set(hot_hits))
+    hot_enough = (
+        distinct_hot >= 2
+        or (len(hot_hits) >= 2 and base >= 70)
+        or (len(hot_hits) >= 1 and base >= 75)
+    )
+    if composite >= 84 or (composite >= 78 and hot_enough):
         return PriorityResult("HOT", composite, reasons)
-    if composite >= 50 or (base >= 40 and _industry_fits(industry)):
+    if composite >= 52 or (base >= 44 and _industry_fits(industry)):
         return PriorityResult("WARM", composite, reasons)
     return PriorityResult("COLD", composite, reasons)
 

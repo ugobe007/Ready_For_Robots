@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import IndustryBriefBlock from '../components/IndustryBriefBlock';
 
 // Base URL for share links
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
@@ -107,7 +109,7 @@ function CopyStoryButton({ story, buttonId }) {
   );
 }
 
-const API_BASE = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_API_URL || 'https://readyforrobots.com');
+const API_BASE = getApiBase();
 
 // Fallback edition when API returns empty
 const FALLBACK_EDITION = {
@@ -262,6 +264,7 @@ export default function Newsletter() {
   const [expandedStories, setExpandedStories] = useState({});
   const [edition, setEdition] = useState(FALLBACK_EDITION);
   const [topStories, setTopStories] = useState(FALLBACK_STORIES);
+  const [industryBrief, setIndustryBrief] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -273,10 +276,11 @@ export default function Newsletter() {
   useEffect(() => {
     const fetchEdition = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/newsletter/edition?limit=8`);
+        const res = await fetch(`${API_BASE}/api/newsletter/edition?limit=8`, liveFetchInit());
         const data = await res.json();
         if (data?.latestEdition) setEdition(data.latestEdition);
         if (data?.topStories?.length > 0) setTopStories(data.topStories);
+        if (data?.industryBrief) setIndustryBrief(data.industryBrief);
       } catch (err) {
         console.error('Newsletter fetch:', err);
       } finally {
@@ -410,6 +414,14 @@ export default function Newsletter() {
             </div>
           </div>
         </div>
+
+        {industryBrief && (
+          <div className="border-b border-neutral-800">
+            <div className="max-w-4xl mx-auto px-4 py-6">
+              <IndustryBriefBlock brief={industryBrief} />
+            </div>
+          </div>
+        )}
 
         {/* Top Stories */}
         <div className="max-w-4xl mx-auto px-4 py-6">

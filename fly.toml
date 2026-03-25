@@ -6,26 +6,32 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 
 [build]
   dockerfile = "Dockerfile"
-  # Supabase public keys (anon key is safe to commit — it is not a secret)
-  # Replace the placeholder values with your Supabase project URL and anon key
   [build.args]
     NEXT_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
+    # Set to your public HTTPS origin(s) so the static UI calls the right API (no trailing slash).
+    # Example: "https://ready-2-robot.fly.dev" or your custom domain.
+    NEXT_PUBLIC_API_URL   = ""
+    NEXT_PUBLIC_SITE_URL  = ""
 
 [env]
   PORT = "8080"
+  # Admin emails (comma-separated) — users with access to /admin
+  ADMIN_EMAILS = "ugobe07@gmail.com"
+  # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)
+  SUPABASE_URL = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
 
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ["app"]
 
   [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
+    grace_period = "60s"
+    interval = "10s"
     method = "GET"
     path = "/health"
     timeout = "5s"

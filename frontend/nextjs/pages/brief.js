@@ -5,23 +5,40 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import IndustryBriefBlock from '../components/IndustryBriefBlock';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 export default function StrategyBrief() {
   const { user } = useAuth();
   const [leads, setLeads] = useState([]);
+  const [industryBrief, setIndustryBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [date] = useState(new Date());
 
   useEffect(() => {
-    fetch(`${API}/api/leads?limit=500`)
-      .then(r => r.json())
-      .then(data => {
-        setLeads(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const [leadsRes, reportRes] = await Promise.all([
+          fetch(`${API}/api/leads?limit=500`, liveFetchInit()),
+          fetch(`${API}/api/daily-report?days=1&format=json`, liveFetchInit()),
+        ]);
+        const leadsData = await leadsRes.json();
+        const reportData = await reportRes.json();
+        if (cancelled) return;
+        setLeads(Array.isArray(leadsData) ? leadsData : []);
+        setIndustryBrief(reportData?.industry_brief ?? null);
+      } catch {
+        if (!cancelled) setLeads([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Removed auth requirement - public access for demos
@@ -63,8 +80,8 @@ export default function StrategyBrief() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-neutral-600 animate-pulse">Loading strategy brief...</p>
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <p className="text-neutral-500 animate-pulse">Loading strategy brief...</p>
       </div>
     );
   }
@@ -117,6 +134,8 @@ export default function StrategyBrief() {
             </div>
           </div>
         </div>
+
+        <IndustryBriefBlock brief={industryBrief} className="mb-6" />
 
         <div className="grid lg:grid-cols-3 gap-6">
           

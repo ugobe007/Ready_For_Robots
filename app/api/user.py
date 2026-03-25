@@ -28,47 +28,16 @@ import os
 from typing import Optional, Any
 from datetime import datetime
 
-import jwt
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from app.database import get_db
-from app.api.auth_deps import _is_admin
+from app.api.auth_deps import _is_admin, _require_user, _verify_jwt, _extract_email
 
 router = APIRouter()
-
-# ── JWT verification ──────────────────────────────────────────────────────────
-
-_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
-
-
-def _require_user(authorization: Optional[str] = Header(None)) -> dict:
-    """Verify Supabase Bearer token and return {uid, email}."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization: Bearer <token> required")
-    token = authorization.split(" ", 1)[1]
-    if not _JWT_SECRET:
-        raise HTTPException(status_code=503, detail="SUPABASE_JWT_SECRET not configured on server")
-    try:
-        payload = jwt.decode(
-            token, _JWT_SECRET,
-            algorithms=["HS256"],
-            options={"verify_aud": False},
-        )
-        # Supabase JWT: email is top-level; fallback to user_metadata for OAuth
-        email = (
-            payload.get("email")
-            or (payload.get("user_metadata") or {}).get("email")
-            or (payload.get("app_metadata") or {}).get("email")
-            or ""
-        )
-        return {"uid": payload["sub"], "email": email or ""}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired — please log in again")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 def _uid(user: dict) -> str:
@@ -161,22 +130,61 @@ class SaveReportIn(BaseModel):
 
 # ── /api/user/me ──────────────────────────────────────────────────────────────
 
+def _handle_db_schema_not_ready(ex: Exception):
+    """Raise 503 when user tables are missing (migrations not run yet)."""
+    raise HTTPException(
+        status_code=503,
+        detail="Database initializing. Please retry in a moment.",
+    )
+
+
 @router.get("/me")
 def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
-    _ensure_profile(db, _uid(user), user["email"])
-    row = db.execute(
-        text("SELECT id, email, display_name, created_at FROM user_profiles WHERE id = :uid"),
-        {"uid": _uid(user)},
-    ).fetchone()
+    try:
+        _ensure_profile(db, _uid(user), user["email"])
+        row = db.execute(
+            text("SELECT id, email, display_name, created_at FROM user_profiles WHERE id = :uid"),
+            {"uid": _uid(user)},
+        ).fetchone()
+    except (OperationalError, ProgrammingError) as e:
+        _handle_db_schema_not_ready(e)
     if not row:
         raise HTTPException(status_code=404, detail="Profile not found")
+    # Prefer JWT email for admin check (source of truth at login); fallback to DB
+    email_for_admin = (user.get("email") or "").strip() or (row.email or "").strip()
     return {
         "id":           str(row.id),
         "email":        row.email,
         "display_name": row.display_name,
         "created_at":   row.created_at.isoformat() if row.created_at else None,
-        "is_admin":     _is_admin(row.email),
+        "is_admin":     _is_admin(email_for_admin),
     }
+
+
+@router.get("/auth-debug")
+def auth_debug(authorization: Optional[str] = Header(None)):
+    """
+    Debug endpoint: returns what the server sees for your token.
+    Helps troubleshoot admin redirect. Call from browser console when logged in:
+      fetch('/api/user/auth-debug', {headers: {Authorization: 'Bearer '+session.access_token}}).then(r=>r.json()).then(console.log)
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"ok": False, "error": "No Authorization header or missing Bearer prefix"}
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = _verify_jwt(token)
+        email = _extract_email(payload) or ""
+        return {
+            "ok": True,
+            "email": email,
+            "email_preview": f"{email[:3]}***{email[email.find('@'):]}" if email and "@" in email else "(empty)",
+            "is_admin": _is_admin(email),
+            "uid": payload.get("sub", "")[:8] + "...",
+        }
+    except HTTPException as e:
+        return {"ok": False, "error": e.detail, "status": e.status_code}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 @router.put("/me")
@@ -203,8 +211,9 @@ def update_me(
 
 @router.get("/saved")
 def list_saved(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
-    _ensure_profile(db, _uid(user), user["email"])
-    rows = db.execute(
+    try:
+        _ensure_profile(db, _uid(user), user["email"])
+        rows = db.execute(
         text("""
             SELECT id, company_id, company_name, industry, tier, score,
                    website, notes, saved_at
@@ -214,6 +223,8 @@ def list_saved(user: dict = Depends(_require_user), db: Session = Depends(get_db
         """),
         {"uid": _uid(user)},
     ).fetchall()
+    except (OperationalError, ProgrammingError):
+        _handle_db_schema_not_ready(None)
     return [
         {
             "id":           r.id,
@@ -284,8 +295,9 @@ def unsave_company(
 
 @router.get("/lists")
 def get_lists(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
-    _ensure_profile(db, _uid(user), user["email"])
-    rows = db.execute(
+    try:
+        _ensure_profile(db, _uid(user), user["email"])
+        rows = db.execute(
         text("""
             SELECT l.id, l.name, l.description, l.created_at,
                    count(lc.company_id) as company_count
@@ -297,6 +309,8 @@ def get_lists(user: dict = Depends(_require_user), db: Session = Depends(get_db)
         """),
         {"uid": _uid(user)},
     ).fetchall()
+    except (OperationalError, ProgrammingError):
+        _handle_db_schema_not_ready(None)
 
     result = []
     for r in rows:
@@ -441,8 +455,9 @@ def remove_from_list(
 
 @router.get("/reports")
 def list_reports(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
-    _ensure_profile(db, _uid(user), user["email"])
-    rows = db.execute(
+    try:
+        _ensure_profile(db, _uid(user), user["email"])
+        rows = db.execute(
         text("""
             SELECT id, company_id, company_name, title, summary_card, created_at, updated_at
             FROM ai_reports
@@ -451,6 +466,8 @@ def list_reports(user: dict = Depends(_require_user), db: Session = Depends(get_
         """),
         {"uid": _uid(user)},
     ).fetchall()
+    except (OperationalError, ProgrammingError):
+        _handle_db_schema_not_ready(None)
     return [
         {
             "id":           str(r.id),

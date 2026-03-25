@@ -13,6 +13,7 @@ build/
 # Virtual environments
 venv/
 .venv/
+.venv_new/
 env/
 .env/
 
@@ -46,6 +47,9 @@ Thumbs.db
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+# Runtime cache (newsletter edition, etc.)
+data/
 
 # Coverage
 .coverage

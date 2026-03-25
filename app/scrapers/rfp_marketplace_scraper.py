@@ -30,10 +30,11 @@ logger = logging.getLogger(__name__)
 class RFPMarketplaceScraper(BaseScraper):
     """
     Scrapes RFP/project marketplaces for automation buyer intent.
+    Uses requests/BeautifulSoup (not Playwright). parse() is a no-op to satisfy BaseScraper.
     """
     
-    def __init__(self):
-        super().__init__(name="rfp_marketplace")
+    def __init__(self, db=None):
+        super().__init__(db=db)
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
@@ -252,6 +253,10 @@ class RFPMarketplaceScraper(BaseScraper):
         else:
             logger.warning(f"Unknown RFP marketplace: {url}")
             return []
+
+    def parse(self, html: str, url: str):
+        """No-op: RFP scraper uses scrape() + requests, not Playwright. Required by BaseScraper."""
+        pass
 
 
 def scrape_rfp_marketplaces() -> List[Dict[str, Any]]:

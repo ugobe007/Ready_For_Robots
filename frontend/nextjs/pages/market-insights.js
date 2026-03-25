@@ -5,8 +5,10 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import IndustryBriefBlock from '../components/IndustryBriefBlock';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 function StatCard({ label, value, sub }) {
   return (
@@ -26,7 +28,7 @@ export default function MarketInsights() {
   const fetchReport = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/api/daily-report?days=${days}&format=json`);
+      const res = await fetch(`${API}/api/daily-report?days=${days}&format=json`, liveFetchInit());
       const d = await res.json();
       setData(d);
     } catch (e) {
@@ -68,6 +70,7 @@ export default function MarketInsights() {
               <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition">Home</Link>
               <Link href="/search" className="text-neutral-400 hover:text-emerald-400 transition">Search</Link>
               <Link href="/newsletter" className="text-neutral-400 hover:text-emerald-400 transition">Newsletter</Link>
+              <Link href="/brief" className="text-neutral-400 hover:text-emerald-400 transition">Strategy brief</Link>
               <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition">ROI Calculator</Link>
               <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition">Dashboard</Link>
             </nav>
@@ -106,6 +109,8 @@ export default function MarketInsights() {
           <StatCard label="ROI Mentions" value={data?.roi_mentions || 0} sub="In signal text" />
           <StatCard label="Pilot/Trial Mentions" value={data?.trial_pilot_mentions || 0} sub="In signal text" />
         </div>
+
+        <IndustryBriefBlock brief={data?.industry_brief} className="mb-8" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Automation Types */}

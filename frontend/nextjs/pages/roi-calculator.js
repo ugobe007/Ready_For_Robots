@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 export default function ROICalculator() {
   const [robotType, setRobotType] = useState('');
@@ -102,7 +103,7 @@ export default function ROICalculator() {
     });
 
     // Track calculation for analytics
-    fetch('/api/track/roi-calculation', {
+    fetch(`${getApiBase()}/api/track/roi-calculation`, liveFetchInit({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -112,7 +113,7 @@ export default function ROICalculator() {
         payback_months: paybackMonths,
         annual_savings: annualSavings
       })
-    }).catch(err => console.error('Analytics tracking failed:', err));
+    })).catch(err => console.error('Analytics tracking failed:', err));
   }
 
   function downloadBenchmarkReport() {
@@ -122,7 +123,7 @@ export default function ROICalculator() {
     }
     
     // Track email capture for analytics
-    fetch('/api/track/roi-calculation', {
+    fetch(`${getApiBase()}/api/track/roi-calculation`, liveFetchInit({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -133,7 +134,7 @@ export default function ROICalculator() {
         annual_savings: results?.annualSavings,
         email: benchmarkEmail
       })
-    }).catch(err => console.error('Analytics tracking failed:', err));
+    })).catch(err => console.error('Analytics tracking failed:', err));
     
     alert(`✅ Industry Benchmark Report sent to ${benchmarkEmail}!\n\nCheck your inbox in a few minutes.`);
     setShowBenchmarkDownload(false);
@@ -144,7 +145,7 @@ export default function ROICalculator() {
     if (!results) return;
     
     try {
-      const response = await fetch('/api/share-calculation', {
+      const response = await fetch(`${getApiBase()}/api/share-calculation`, liveFetchInit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -157,7 +158,7 @@ export default function ROICalculator() {
           roi_3_year: results.roi3Year,
           total_savings_3_year: results.totalSavings3Year
         })
-      });
+      }));
       
       const data = await response.json();
       const fullUrl = `${window.location.origin}${data.share_url}`;

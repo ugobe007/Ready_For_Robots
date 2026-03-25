@@ -86,7 +86,14 @@ In **Authentication** → **URL Configuration** → **Redirect URLs**, ensure th
 
 | Issue | Fix |
 |-------|-----|
+| **GitHub: "redirect_uri_mismatch"** | In [GitHub OAuth App](https://github.com/settings/developers) → your app → Authorization callback URL must be exactly `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback` (no trailing slash) |
+| **"Redirect URL not allowed"** (Supabase) | Add ALL of these to Supabase **URL Configuration** → **Redirect URLs**: `https://readyforrobots.com/login`, `https://readyforrobots.com/**`, `https://ready-2-robot.fly.dev/login`, `https://ready-2-robot.fly.dev/**`, `http://localhost:3000/login` |
 | "Invalid redirect URI" (Google) | Add `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback` to Authorized redirect URIs in Google Cloud Console |
-| "Redirect URL not allowed" | Add your site URL to Supabase **URL Configuration** → **Redirect URLs** |
 | Provider not working | Enable the provider in Supabase **Providers** and save Client ID and secret |
 | Auth not configured | Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` |
+
+### GitHub-specific checklist
+
+1. **GitHub OAuth App** → Authorization callback URL: `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback`
+2. **Supabase** → Authentication → Providers → GitHub: Enabled, Client ID and Secret saved
+3. **Supabase** → URL Configuration → Redirect URLs: Include `https://readyforrobots.com/**` and `https://ready-2-robot.fly.dev/**`

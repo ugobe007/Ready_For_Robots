@@ -16,9 +16,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from './_app';
 import { supabase, authHeader } from '../lib/supabase';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
@@ -321,10 +321,10 @@ export default function ProfilePage() {
 
   const apiFetch = useCallback(async (path, opts = {}) => {
     if (!token) throw new Error('Not authenticated');
-    const res = await fetch(`${API}${path}`, {
+    const res = await fetch(`${API}${path}`, liveFetchInit({
       ...opts,
       headers: { 'Content-Type': 'application/json', ...authHeader(token), ...(opts.headers || {}) },
-    });
+    }));
     if (!res.ok) { const t = await res.text().catch(() => ''); throw new Error(t || res.statusText); }
     return res.json();
   }, [token]);

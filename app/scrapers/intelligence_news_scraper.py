@@ -997,7 +997,8 @@ class IntelligenceNewsScraper:
         
         # Contains specific noise phrases (news orgs, headline fragments)
         noise_phrases = {"& world", "& report", "u.s. news", "world report",
-                        "criticize", "discusses", " in funding", "receives approval",
+                        "criticize", "discusses", " in funding", "in funding",
+                        "receives approval",
                         "in stages", "leaves door", "chicken restaurant chain",
                         "fast food industry", "logistics park", "national park",
                         "market research", "market outlook", "market size",
@@ -1006,6 +1007,12 @@ class IntelligenceNewsScraper:
                         "launches ai and robotic", "launches ai and robot",
                         "wildfires", "neuropsychology"}
         if any(phrase in name_lower for phrase in noise_phrases):
+            return False
+        
+        # Headline debris: "… in funding - The Robot", "… - U.S. News"
+        if re.search(r"\bin funding\b.*\bthe robot\b$", name_lower):
+            return False
+        if "state leaders" in name_lower and "criticize" in name_lower:
             return False
         
         # Is just a noise word

@@ -12,7 +12,7 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional
@@ -115,6 +115,29 @@ def _row_priority(row) -> object:
     )
 
 
+def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
+    """
+    Social-ready copy: (share_blurb ~200c, share_summary longer for cards).
+    Not raw SEO spam — one clear line for LinkedIn/X.
+    """
+    ind = (c.industry or "").strip()
+    if not ind or ind.lower() in ("unknown", "other"):
+        ind = "New"
+    tier = pri.tier
+    name = c.name or "Company"
+    if not sigs:
+        summary = f"{name} ({ind}) — {tier} automation-buying signals on Ready For Robots."
+        return summary[:220], summary
+    top = max(sigs, key=lambda s: float(s.signal_strength or 0))
+    raw = (top.signal_text or "").replace("\n", " ").strip()
+    st = (top.signal_type or "signal").replace("_", " ")
+    if len(raw) > 130:
+        raw = raw[:127].rsplit(" ", 1)[0] + "…"
+    summary = f"{name} ({ind}) — {tier}: {st}. {raw}"
+    blurb = f"{name} ({ind}): {raw[:95]}{'…' if len(raw) > 95 else ''} · {tier} lead · readyforrobots.com"
+    return blurb[:220], summary[:420]
+
+
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
     sigs = c.signals or []
@@ -122,6 +145,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     industry_display = (c.industry or "").strip()
     if not industry_display or industry_display.lower() in ("unknown", "other"):
         industry_display = "New"
+
+    share_blurb, share_summary = _build_share_blurb(c, pri, sigs)
 
     return {
         "id":             c.id,
@@ -159,6 +184,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
             }
             for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
         ],
+        "share_blurb": share_blurb,
+        "share_summary": share_summary,
     }
 
 
@@ -262,11 +289,16 @@ def get_leads(
 
 
 @router.get("/homepage")
-def leads_homepage(db: Session = Depends(get_db)):
+def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
-    Batched endpoint for homepage: summary + top 5 hot leads in one response.
-    Reduces round trips and improves mobile load (single DB session).
+    Batched endpoint for homepage: summary + spotlight leads in one response.
+    Spotlight picks use classify_lead (full signals) so tier matches the JSON —
+    the old path used SQL aggregates (_row_priority) then re-classified, which
+    dropped leads when the frontend filtered priority_tier == 'HOT'.
+    Fills with top WARM if fewer than 5 HOT so the section stays fresh.
     """
+    response.headers["Cache-Control"] = "public, max-age=90, stale-while-revalidate=120"
+
     # 1. Summary (same logic as leads_summary)
     rows = (
         db.query(
@@ -310,47 +342,77 @@ def leads_homepage(db: Session = Depends(get_db)):
         "by_industry": by_industry,
     }
 
-    # 2. Top 5 HOT leads (lightweight query, then full load)
-    candidates = _lead_rows_query(db).order_by(func.coalesce(Score.overall_intent_score, 0).desc())
-    candidate_rows = candidates.limit(120).all()
-    hot_results = []
+    # 2. Spotlight: same ordering as high-intent pipeline, tier from classify_lead
+    candidate_rows = (
+        _lead_rows_query(db)
+        .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+        .limit(280)
+        .all()
+    )
+    ordered_ids = []
+    seen = set()
     for row in candidate_rows:
-        junk, _ = _row_is_junk(row.name)
-        if junk:
+        if _row_is_junk(row.name)[0]:
             continue
-        pri = _row_priority(row)
-        if pri.tier != "HOT":
+        if row.id in seen:
             continue
-        hot_results.append({
-            "id": row.id, "company_name": row.name, "priority_tier": pri.tier,
-            "priority_score": round(pri.score, 1), "signal_count": int(row.signal_count or 0),
-        })
-        if len(hot_results) >= 5:
-            break
-    hot_results.sort(key=lambda x: -x["priority_score"])
-    hot_results = hot_results[:5]
+        if int(row.signal_count or 0) < 1:
+            continue
+        seen.add(row.id)
+        ordered_ids.append(row.id)
 
-    if not hot_results:
+    if not ordered_ids:
         return {"summary": summary, "hotLeads": []}
 
-    ids = [r["id"] for r in hot_results]
     companies = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
-        .filter(Company.id.in_(ids))
+        .filter(Company.id.in_(ordered_ids[:220]))
         .all()
     )
-    company_map = {c.id: c for c in companies}
-    order = {i: idx for idx, i in enumerate(ids)}
-    hot_leads = []
-    for r in hot_results:
-        c = company_map.get(r["id"])
-        if not c:
+    id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
+    companies.sort(key=lambda c: id_rank.get(c.id, 9999))
+
+    hot_pick = []
+    warm_pick = []
+    for c in companies:
+        junk, _, pri = classify_lead(c, c.scores, c.signals)
+        if junk or not c.signals:
             continue
+        item = (pri.score, c.id, c)
+        if pri.tier == "HOT":
+            hot_pick.append(item)
+        elif pri.tier == "WARM":
+            warm_pick.append(item)
+
+    hot_pick.sort(key=lambda x: -x[0])
+    warm_pick.sort(key=lambda x: -x[0])
+
+    spotlight_limit = 5
+    chosen = []
+    used = set()
+    for _, cid, c in hot_pick:
+        if cid in used:
+            continue
+        used.add(cid)
+        chosen.append(c)
+        if len(chosen) >= spotlight_limit:
+            break
+    if len(chosen) < spotlight_limit:
+        for _, cid, c in warm_pick:
+            if cid in used:
+                continue
+            used.add(cid)
+            chosen.append(c)
+            if len(chosen) >= spotlight_limit:
+                break
+
+    hot_leads = []
+    for c in chosen:
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-        hot_leads.append((order[r["id"]], _fmt_company(c, junk, junk_reason, pri)))
-    hot_leads.sort(key=lambda x: x[0])
-    return {"summary": summary, "hotLeads": [x[1] for x in hot_leads]}
+        hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
+
+    return {"summary": summary, "hotLeads": hot_leads}
 
 
 @router.get("/summary")

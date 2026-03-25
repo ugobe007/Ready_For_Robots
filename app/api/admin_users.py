@@ -2,13 +2,15 @@
 Admin User Management API
 ========================
 Endpoints for managing users, viewing activity, and account stats.
+Requires admin (email in ADMIN_EMAILS).
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
+from app.api.auth_deps import require_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 @router.get("/users")
@@ -34,7 +36,7 @@ def list_users(db: Session = Depends(get_db)):
         ) saved ON up.id = saved.user_id
         LEFT JOIN (
             SELECT user_id, COUNT(*) as count 
-            FROM user_reports 
+            FROM ai_reports 
             GROUP BY user_id
         ) reports ON up.id = reports.user_id
         LEFT JOIN (
@@ -68,22 +70,21 @@ def get_user_activity(user_id: str, db: Session = Depends(get_db)):
     Get detailed activity for a specific user.
     Returns: { saved_companies, reports, lists }
     """
-    # Saved companies
+    # Saved companies (user_saved_companies has company_id, company_name, industry)
     saved_query = text("""
-        SELECT c.id, c.company_name, c.industry, usc.created_at
-        FROM user_saved_companies usc
-        JOIN companies c ON c.id = usc.company_id
-        WHERE usc.user_id = :user_id
-        ORDER BY usc.created_at DESC
+        SELECT company_id, company_name, industry, saved_at
+        FROM user_saved_companies
+        WHERE user_id = :user_id
+        ORDER BY saved_at DESC
         LIMIT 50
     """)
     saved_rows = db.execute(saved_query, {"user_id": user_id}).fetchall()
     saved_companies = [
         {
-            "company_id": row.id,
+            "company_id": row.company_id,
             "name": row.company_name,
             "industry": row.industry,
-            "saved_at": row.created_at.isoformat() if row.created_at else None
+            "saved_at": row.saved_at.isoformat() if row.saved_at else None
         }
         for row in saved_rows
     ]
@@ -91,7 +92,7 @@ def get_user_activity(user_id: str, db: Session = Depends(get_db)):
     # Reports
     reports_query = text("""
         SELECT id, company_id, created_at
-        FROM user_reports
+        FROM ai_reports
         WHERE user_id = :user_id
         ORDER BY created_at DESC
         LIMIT 50
@@ -142,7 +143,7 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
         db.execute(text("DELETE FROM user_saved_companies WHERE user_id = :user_id"), {"user_id": user_id})
         
         # Delete user's reports
-        db.execute(text("DELETE FROM user_reports WHERE user_id = :user_id"), {"user_id": user_id})
+        db.execute(text("DELETE FROM ai_reports WHERE user_id = :user_id"), {"user_id": user_id})
         
         # Delete user's list companies first
         db.execute(text("""
@@ -179,7 +180,7 @@ def get_user_stats(db: Session = Depends(get_db)):
             COUNT(DISTINCT ul.id) as total_lists
         FROM user_profiles up
         LEFT JOIN user_saved_companies usc ON up.id = usc.user_id
-        LEFT JOIN user_reports ur ON up.id = ur.user_id
+        LEFT JOIN ai_reports ur ON up.id = ur.user_id
         LEFT JOIN user_lists ul ON up.id = ul.user_id
     """)
     

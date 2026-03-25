@@ -6,10 +6,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
+import { getApiBase } from '../lib/apiBase';
 
-// In production (Fly.io) frontend + API share the same origin — use relative URLs.
-// For local dev, point to the local uvicorn server.
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 // -- helpers ----------------------------------------------------------------
 

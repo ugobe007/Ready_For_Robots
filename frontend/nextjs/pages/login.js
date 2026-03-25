@@ -17,9 +17,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
+import { getApiBase } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,18 +47,26 @@ export default function LoginPage() {
 
     async function redirectAfterLogin(session) {
       if (!session) return;
+      const apiBase = API;
       try {
-        const res = await fetch(`${API}/api/user/me`, {
+        // Use auth-debug (no DB) for redirect — works even when profile tables aren't ready
+        const res = await fetch(`${apiBase}/api/user/auth-debug`, {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (res.ok) {
-          const me = await res.json();
-          if (me?.is_admin) {
+          const data = await res.json();
+          if (data?.is_admin) {
             router.replace('/admin');
             return;
           }
+        } else if (process.env.NODE_ENV === 'development') {
+          console.warn('[Login] /api/user/auth-debug returned', res.status, await res.text().catch(() => ''));
         }
-      } catch (_) { /* fallback to profile */ }
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Login] /api/user/auth-debug failed:', e?.message || e);
+        }
+      }
       router.replace('/profile');
     }
 

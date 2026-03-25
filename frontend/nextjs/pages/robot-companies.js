@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-const API_BASE = typeof window !== 'undefined'
-  ? window.location.origin
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
+const API_BASE = getApiBase();
 
 export default function RobotCompanies() {
   const [companies, setCompanies] = useState([]);
@@ -32,7 +31,7 @@ export default function RobotCompanies() {
 
   async function loadStats() {
     try {
-      const res = await fetch(`${API_BASE}/api/robot-companies/stats`);
+      const res = await fetch(`${API_BASE}/api/robot-companies/stats`, liveFetchInit());
       const data = await res.json();
       setStats(data);
     } catch (error) {
@@ -58,7 +57,7 @@ export default function RobotCompanies() {
         url += debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : '';
       }
 
-      const res = await fetch(url);
+      const res = await fetch(url, liveFetchInit());
       const data = await res.json();
       
       if (data.companies) {
@@ -92,11 +91,11 @@ export default function RobotCompanies() {
     if (!workflowModal) return;
     
     try {
-      const res = await fetch(`${API_BASE}/api/robot-companies/${workflowModal.id}/workflow`, {
+      const res = await fetch(`${API_BASE}/api/robot-companies/${workflowModal.id}/workflow`, liveFetchInit({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(workflowForm)
-      });
+      }));
       
       if (res.ok) {
         setWorkflowModal(null);
@@ -113,7 +112,10 @@ export default function RobotCompanies() {
     setEmailContent(null);
     
     try {
-      const res = await fetch(`${API_BASE}/api/robot-companies/${company.id}/email?template_type=${templateType}`);
+      const res = await fetch(
+        `${API_BASE}/api/robot-companies/${company.id}/email?template_type=${templateType}`,
+        liveFetchInit()
+      );
       const data = await res.json();
       setEmailContent(data.email);
     } catch (error) {

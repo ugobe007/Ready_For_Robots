@@ -24,7 +24,7 @@ celery_app.conf.update(
         "worker.tasks.*": {"queue": "scrapers"}
     },
     
-    # Production-grade automated schedule (pythh.ai style)
+    # Beat schedule (scheduler_heartbeat every 2 min proves pipeline is alive)
     beat_schedule=CELERYBEAT_SCHEDULE,
     
     # Task execution settings
@@ -33,7 +33,7 @@ celery_app.conf.update(
     task_time_limit=3600,  # 1 hour max
     task_soft_time_limit=3000,  # 50 minutes soft limit
     worker_prefetch_multiplier=1,  # One task at a time
-    worker_max_tasks_per_child=50,  # Restart worker after 50 tasks
+    worker_max_tasks_per_child=25,  # Restart worker after 25 tasks (helps avoid SIGSEGV on macOS)
 )
 
 if __name__ == "__main__":

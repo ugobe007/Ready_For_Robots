@@ -1,4 +1,11 @@
+import os
+import sys
 from logging.config import fileConfig
+
+# Ensure project root is on path (for app.* imports when run via alembic CLI)
+_src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _src not in sys.path:
+    sys.path.insert(0, _src)
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -8,6 +15,13 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Use DATABASE_URL from environment when set (production/Fly)
+_db_url = os.getenv("DATABASE_URL")
+if _db_url:
+    if _db_url.startswith("postgres://"):
+        _db_url = _db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    config.set_main_option("sqlalchemy.url", _db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

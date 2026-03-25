@@ -21,7 +21,15 @@ import argparse
 from pathlib import Path
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# Load .env so DATABASE_URL is available (avoids needing export/source before run)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass
 
 from app.database import SessionLocal
 from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
@@ -53,6 +61,12 @@ def main():
         default=10,
         help='Max articles per query (default: 10)'
     )
+    parser.add_argument(
+        '--max-queries',
+        type=int,
+        default=None,
+        help='Max queries to run (default: all). Use 20 for quick ~3 min run.'
+    )
     
     args = parser.parse_args()
     
@@ -69,7 +83,10 @@ def main():
     try:
         if args.mode in ['discover', 'both']:
             logger.info("\n🔍 Starting lead discovery...")
-            stats = scraper.discover_leads(max_articles_per_query=args.limit)
+            stats = scraper.discover_leads(
+                max_articles_per_query=args.limit,
+                max_queries=args.max_queries,
+            )
             
             # Print summary
             print("\n" + "="*60)

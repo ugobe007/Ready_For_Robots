@@ -25,30 +25,56 @@ Usage:
 import logging
 import re
 import time
+import random
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Set
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
+from app.services.ontology import CONCEPTS
 
 logger = logging.getLogger(__name__)
 
-# ── Signal-worthy keywords — article must contain at least one ────────────────
-RELEVANCE_KEYWORDS = [
-    "automat", "robot", "AGV", "AMR", "warehouse", "logistics", "fulfillment",
-    "funding", "series", "raised", "invest", "acqui", "merger",
-    "expansion", "opening", "new facilit", "new propert",
-    "labor shortage", "staffing", "workforce", "turnover",
-    "capex", "capital expenditure", "growth plan", "strategic hire",
-    "VP of", "Director of", "Head of", "Chief ", "appoint",
-    "supply chain", "distribution center", "hospitality", "hotel",
+# ── Rate Limiting & Anti-Bot ──────────────────────────────────────────────────
+USER_AGENTS = [
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
 ]
+MIN_DELAY = 2.0  # seconds between requests
+MAX_DELAY = 5.0
+MAX_RETRIES = 3
+RETRY_BACKOFF = 2.0  # exponential backoff multiplier
+
+# ── Relevancy Scoring (Ontology-Based) ────────────────────────────────────────
+# Extract buying-intent keywords from ontology
+RELEVANCE_KEYWORDS = []
+for concept_name, concept in CONCEPTS.items():
+    if concept.domain in ['automation', 'labor_pain', 'expansion', 'capex']:
+        RELEVANCE_KEYWORDS.extend(concept.patterns)
+        RELEVANCE_KEYWORDS.extend(concept.synonyms)
+
+# Fallback basic keywords if ontology is empty
+if not RELEVANCE_KEYWORDS:
+    RELEVANCE_KEYWORDS = [
+        "automat", "robot", "AGV", "AMR", "warehouse", "logistics", "fulfillment",
+        "funding", "series", "raised", "invest", "acqui", "merger",
+        "expansion", "opening", "new facilit", "new propert",
+        "labor shortage", "staffing", "workforce", "turnover",
+        "capex", "capital expenditure", "growth plan", "strategic hire",
+        "VP of", "Director of", "Head of", "Chief ", "appoint",
+        "supply chain", "distribution center", "hospitality", "hotel",
+    ]
+
+# ── Duplicate Detection ───────────────────────────────────────────────────────
+_SEEN_URLS: Set[str] = set()  # Track URLs we've already processed
+_SEEN_TITLES: Set[str] = set()  # Track article titles (normalized)
 
 # ── Known company → (canonical name, industry) for entity extraction ──────────
 KNOWN_COMPANIES: dict = {
@@ -292,8 +318,10 @@ class NewsScraper:
         """
         Run open-market intent queries to discover new companies showing buying intent.
         Pass a custom `queries` list or defaults to the built-in INTENT_QUERIES.
+        Uses KNOWN_COMPANIES + DB companies for entity extraction (broader recognition).
         """
         effective_queries = queries if queries is not None else INTENT_QUERIES
+        self._db_company_lookup = self._build_db_company_lookup()
         for query in effective_queries:
             logger.info("Intent query: %s", query)
             articles = self._fetch_rss(query)
@@ -449,22 +477,46 @@ class NewsScraper:
 
     # ── Entity extraction ─────────────────────────────────────────────────────
 
+    def _build_db_company_lookup(self, max_companies: int = 400) -> dict:
+        """Build {name_lower: (canonical_name, industry)} from DB for entity extraction."""
+        try:
+            rows = (
+                self.db.query(Company.name, Company.industry)
+                .limit(max_companies)
+                .all()
+            )
+            lookup = {}
+            for name, industry in rows:
+                if name and len(name) >= 3:
+                    key = name.lower()
+                    if key not in lookup:  # Prefer first (canonical) form
+                        lookup[key] = (name, industry or "Unknown")
+            return lookup
+        except Exception as e:
+            logger.warning("DB company lookup failed: %s", e)
+            return {}
+
     def _extract_company_from_text(self, text: str) -> tuple[Optional[str], Optional[str]]:
         """
         Try to identify a known company in the article text.
         Returns (canonical_name, industry) or (None, None).
-        Priority: longer matches first (so 'dhl supply chain' beats 'dhl').
+        Priority: KNOWN_COMPANIES > DB companies > regex. Longer matches first.
         """
         lower = text.lower()
-        # Sort keys longest-first to prefer specific names over abbreviations
+        # 1. KNOWN_COMPANIES (longest-first)
         for key in sorted(KNOWN_COMPANIES.keys(), key=len, reverse=True):
             if key in lower:
                 return KNOWN_COMPANIES[key]
-        # Regex fallback: look for "Company Name announces/invests/opens ..."
+        # 2. DB companies (discovered by intelligence scraper, etc.)
+        db_lookup = getattr(self, "_db_company_lookup", None) or self._build_db_company_lookup()
+        for key in sorted(db_lookup.keys(), key=len, reverse=True):
+            if key in lower:
+                return db_lookup[key]
+        # 3. Regex fallback: "Company Name announces/invests/opens ..."
         match = _COMPANY_ANNOUNCE_RE.search(text)
         if match:
             extracted = match.group(1).strip()
-            if len(extracted) > 2 and not extracted.lower() in ("the", "a", "an", "this"):
+            if len(extracted) > 2 and extracted.lower() not in ("the", "a", "an", "this"):
                 industry = self._infer_industry_from_text(text)
                 return extracted, industry
         return None, None

@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-// In production (Fly.io) frontend + API share the same origin — use relative URLs.
-// For local dev, point to the local uvicorn server.
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+// Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
+const API = getApiBase();
 
 // -- helpers ----------------------------------------------------------------
 
@@ -118,7 +118,7 @@ const SEARCH_CATEGORIES = [
 function TrendingTicker() {
   const [items, setItems] = useState([]);
   useEffect(() => {
-    fetch(`${API}/api/trending`)
+    fetch(`${API}/api/trending`, liveFetchInit())
       .then(r => r.ok ? r.json() : { items: [] })
       .then(d => setItems(d.items || []))
       .catch(() => {});
@@ -420,11 +420,11 @@ function QuickScrape({ onDone }) {
     if (!urls.trim()) return;
     setStatus('loading');
     try {
-      const r = await fetch(`${API}/api/agent/scrape/quick`, {
+      const r = await fetch(`${API}/api/agent/scrape/quick`, liveFetchInit({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ urls, industry: ind || null, scrape_now: now }),
-      });
+      }));
       const data = await r.json();
       setResult(data);
       setStatus('done');
@@ -503,7 +503,7 @@ function AgentInsightsPanel() {
     if (data) return;
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/agent/insights`);
+      const r = await fetch(`${API}/api/agent/insights`, liveFetchInit());
       if (r.ok) setData(await r.json());
     } catch {}
     setLoading(false);
@@ -724,7 +724,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
       setSaved(!!(store.companies || []).find(c => c.id === lead.id));
     } catch {}
 
-    fetch(`${API}/api/agent/profile/${lead.id}`)
+    fetch(`${API}/api/agent/profile/${lead.id}`, liveFetchInit())
       .then(r => r.ok ? r.json() : null)
       .then(d => { setProfile(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -755,11 +755,11 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           signals:       lead.signals || [],
         },
       };
-      const res = await fetch(`${API}/api/user/reports`, {
+      const res = await fetch(`${API}/api/user/reports`, liveFetchInit({
         method:  'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
         body:    JSON.stringify(reportData),
-      });
+      }));
       if (res.ok) setReportSaved(true);
       else throw new Error(await res.text());
     } catch (e) { alert('Save failed: ' + e.message); }
@@ -1665,7 +1665,7 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
       if (q && q.trim())  params.set('q', q.trim());
       if (cat)            params.set('category', cat);
       params.set('limit', '30');
-      const r = await fetch(`${API}/api/search?${params}`);
+      const r = await fetch(`${API}/api/search?${params}`, liveFetchInit());
       if (r.ok) {
         setResults(await r.json());
         trackUsage(); // Track successful search
@@ -1997,7 +1997,7 @@ export default function Dashboard() {
   // Fetch live signals for ticker
   const fetchLiveSignals = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/leads?limit=20&sort=signals_detected_at`);
+      const res = await fetch(`${API}/api/leads?limit=20&sort=signals_detected_at`, liveFetchInit());
       if (res.ok) {
         const allLeads = await res.json();
         // Extract unique signals from recent leads
@@ -2024,9 +2024,9 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     try {
       const [leadsRes, summaryRes, healthRes] = await Promise.all([
-        fetch(`${API}/api/leads?${buildQuery()}`),
-        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}`),
-        fetch(`${API}/api/scraper-health`),
+        fetch(`${API}/api/leads?${buildQuery()}`, liveFetchInit()),
+        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}`, liveFetchInit()),
+        fetch(`${API}/api/scraper-health`, liveFetchInit()),
       ]);
       if (leadsRes.ok)   setLeads(await leadsRes.json());
       if (summaryRes.ok) setSummary(await summaryRes.json());
@@ -2072,7 +2072,7 @@ export default function Dashboard() {
 
   async function handleResetAll() {
     setResetting(true);
-    await fetch(`${API}/api/scraper-health/reset-all`, { method: 'POST' });
+    await fetch(`${API}/api/scraper-health/reset-all`, liveFetchInit({ method: 'POST' }));
     await fetchData();
     setResetting(false);
   }

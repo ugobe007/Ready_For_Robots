@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
+import { getApiBase } from '../lib/apiBase';
 
 // ── Auth Context ─────────────────────────────────────────────────────────────
 export const AuthContext = createContext({ session: null, loading: true });
@@ -46,7 +47,7 @@ function VisitTracker({ children }) {
 
   useEffect(() => {
     const track = (path) => {
-      fetch('/api/track/visit', {
+      fetch(`${getApiBase()}/api/track/visit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -8,10 +8,14 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.company import Company
+from app.models.score import Score
+from app.models.signal import Signal
 from app.services.lead_filter import classify_lead
+from app.services.industry_brief_service import build_industry_brief_payload
 
 def _industry_display(raw) -> str:
     """Never expose 'Unknown' in newsletter content."""
@@ -85,12 +89,28 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
     date_str = now.strftime("%B %d, %Y")
     edition = f"#{now.strftime('%j')}"
 
-    companies = (
-        db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .limit(500)
+    # Highest-intent companies with at least one signal (not an arbitrary first-500 slice)
+    ranked_ids = (
+        db.query(Company.id)
+        .join(Signal, Signal.company_id == Company.id)
+        .outerjoin(Score, Score.company_id == Company.id)
+        .group_by(Company.id)
+        .order_by(func.coalesce(func.max(Score.overall_intent_score), 0).desc())
+        .limit(900)
         .all()
     )
+    id_list = [r[0] for r in ranked_ids]
+    if not id_list:
+        companies = []
+    else:
+        companies = (
+            db.query(Company)
+            .options(joinedload(Company.scores), joinedload(Company.signals))
+            .filter(Company.id.in_(id_list))
+            .all()
+        )
+        rank = {cid: i for i, cid in enumerate(id_list)}
+        companies.sort(key=lambda c: rank.get(c.id, 9999))
 
     stories: List[Dict] = []
     for c in companies:
@@ -170,6 +190,14 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         main_headline = "Automation Sales Leads with Actionable Signals"
         subheadline = "Daily roundup of robot-ready companies and buying intent. Subscribe for fresh leads."
 
+    industry_brief = build_industry_brief_payload(
+        db,
+        days=1,
+        analytics=None,
+        use_cache=True,
+        force_refresh=False,
+    )
+
     return {
         "latestEdition": {
             "date": date_str,
@@ -177,6 +205,7 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             "headline": main_headline,
             "subheadline": subheadline,
         },
+        "industryBrief": industry_brief,
         "topStories": stories,
         "summary": {
             "total_leads": len(stories),

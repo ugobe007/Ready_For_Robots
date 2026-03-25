@@ -1,10 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
+
+function displayHost(raw) {
+  if (!raw || typeof raw !== 'string') return 'your company';
+  try {
+    const s = decodeURIComponent(raw);
+    const href = s.startsWith('http://') || s.startsWith('https://') ? s : `https://${s}`;
+    const h = new URL(href).hostname;
+    return h || 'your company';
+  } catch {
+    return 'your company';
+  }
+}
 
 export default function PipelineResults() {
   const router = useRouter();
   const { url } = router.query;
+  const urlStr = Array.isArray(url) ? url[0] : url;
+  const company = useMemo(() => displayHost(urlStr), [urlStr]);
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
 
@@ -20,7 +35,10 @@ export default function PipelineResults() {
   const fetchMatches = async () => {
     try {
       // Get top 6 HOT leads as matches
-      const res = await fetch('https://readyforrobots.com/api/leads?limit=6&temp=hot');
+      const res = await fetch(
+        `${getApiBase()}/api/leads?limit=6&tier=HOT&sort=score`,
+        liveFetchInit()
+      );
       const data = await res.json();
       setMatches(Array.isArray(data) ? data.slice(0, 6) : []);
       setLoading(false);

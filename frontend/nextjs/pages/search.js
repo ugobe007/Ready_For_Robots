@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import LoginDropdown from '../components/LoginDropdown';
+import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
-const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
+const API = getApiBase();
 
 const SEARCH_CATEGORIES = [
   { key: 'funding',       label: 'Funding Round' },
@@ -86,7 +87,7 @@ export default function SearchPage() {
       if (q && q.trim()) params.set('q', q.trim());
       if (cat) params.set('category', cat);
       params.set('limit', '50');
-      const r = await fetch(`${API}/api/search?${params}`);
+      const r = await fetch(`${API}/api/search?${params}`, liveFetchInit());
       if (r.ok) {
         setResults(await r.json());
       }

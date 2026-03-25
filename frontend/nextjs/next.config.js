@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',       // static HTML/CSS/JS — fast, no Node server needed
+  // Static export: no Next.js /api routes. Client code must use getApiBase() + NEXT_PUBLIC_API_URL.
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true,
