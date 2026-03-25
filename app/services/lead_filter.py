@@ -19,29 +19,92 @@ from typing import List, Optional
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
-# Exact / partial strings that always mean the record is garbage
+# Substrings that always mean the record is scraper garbage (checked on lowercased name)
 _JUNK_SUBSTRINGS = [
+    # HTTP / browser errors
     "404", "not found", "page not found", "error", "access denied",
     "forbidden", "503 service", "502 bad gateway", "just a moment",
     "attention required", "cloudflare", "captcha", "enable javascript",
     "loading…", "loading...", "please wait", "robot check",
+    # Placeholder / test records
     "test company", "test lead", "sample company", "demo company",
     "n/a", "unknown", "unnamed", "placeholder", "no name",
     "untitled", "company name", "your company",
+    # Statistic / headline fragments — never a real company name
+    "two-thirds", "three-quarters", "two thirds", "three quarters",
+    "of hotels", "of companies", "of workers", "of employees",
+    "of operators", "of businesses", "of respondents", "of travelers",
+    "of guests", "of consumers", "of customers", "of managers",
+    "of brands", "of chains", "of locations", "of properties",
+    "of restaurants", "of warehouses", "of facilities",
+    # Article / survey language
+    "survey finds", "report finds", "study finds", "survey shows",
+    "report shows", "data shows", "according to", "says report",
+    "says study", "per report", "per survey",
 ]
 
-# Regex patterns on the raw name (lowercased)
+# Regex patterns on the raw (original-case) name
 _JUNK_PATTERNS = [
-    r"^\s*$",                          # blank / whitespace only
-    r"^[\W\d_]+$",                     # no letters at all
-    r"^.{1,2}$",                       # too short (1-2 chars)
-    r"^(inc|llc|corp|ltd|co|company)\.?$",   # generic legal suffixes alone
-    r"https?://",                      # accidentally captured a URL
-    r"<[^>]+>",                        # HTML tags leaked in
-    r"^\d+$",                          # all digits
-    r"[^\x00-\x7F]{3,}",              # more than 2 non-ASCII chars (encoding garbage)
+    r"^\s*$",                                          # blank / whitespace only
+    r"^[\W\d_]+$",                                     # no letters at all
+    r"^.{1,2}$",                                       # too short (1-2 chars)
+    r"^(inc|llc|corp|ltd|co|company|the)\.?\s*$",     # generic legal suffix or article alone
+    r"https?://",                                      # accidentally captured a URL
+    r"<[^>]+>",                                        # HTML tags leaked in
+    r"^\d+$",                                          # all digits
+    r"[^\x00-\x7F]{3,}",                              # encoding garbage
+
+    # ── Headline / article fragment patterns ──────────────────────────────────
+    # Starts with a quantifier or statistical phrase (never a company name)
+    r"^(nearly|almost|about|roughly|approximately|upwards?\s+of|over|more\s+than|"
+    r"less\s+than|most|many|several|some|a\s+few|majority\s+of|"
+    r"a\s+majority|a\s+third|a\s+quarter|a\s+half|half\s+of)\s+",
+
+    # Starts with a number + unit/fraction combo
+    r"^\d+\s*(percent|%|in\s+\d+|of\s+\d+|tips|ways|reasons|steps|things|facts)\b",
+
+    # Starts with ordinal / superlative
+    r"^(top|best|worst|biggest|largest|smallest|leading|growing|rising|"
+    r"fastest|slowest|new|latest|recent|upcoming)\s+\d*\s*(hotel|restaurant|"
+    r"chain|brand|company|operator|brand|employer|employer)\b",
+
+    # Generic single-word industry terms (not proper nouns)
+    r"^(trending|industry|the\s+industry|market|the\s+market|sector|the\s+sector|"
+    r"report|the\s+report|study|the\s+study|survey|the\s+survey|"
+    r"statistics|insights|analysis|the\s+analysis|update|the\s+update|"
+    r"news|breaking|alert|exclusive|source|weekly|monthly|daily|annual|quarterly)\s*$",
+
+    # Standalone Co-op / Cooperative without a proper name qualifier
+    r"^(the\s+)?co-?ops?\s*$",
+
+    # Names that are clearly job titles scraped as company names
+    r"^(vp|vice\s+president|ceo|coo|cfo|cto|chief|president|director|manager|"
+    r"head|svp|evp)\s+(of\s+)?\w+",
+
+    # Looks like a sentence: more than 7 words → almost certainly a headline
+    r"^(\S+\s+){7,}\S+$",
+
+    # "The" + generic category word (no proper noun)
+    r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"
+    r"company|companies|operator|operators|warehouse|warehouses|industry|"
+    r"market|sector|report|study|survey|data|analysis)\s*$",
+
+    # Possessive headlines: "Hotels' challenge", "Workers' concerns"
+    r"^[a-z].*'s?\s+(challenge|problem|concern|issue|struggle|need|demand|"
+    r"opportunity|trend|future|rise|growth|decline|shift|impact|role)\b",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
+
+# Names that should always be treated as junk regardless of other rules
+# (exact match, case-insensitive)
+_JUNK_EXACT = frozenset({
+    "trending", "co-op", "co op", "cooperative", "industry", "market",
+    "the market", "brands", "hotels", "operators", "chains", "companies",
+    "businesses", "employers", "workers", "travelers", "guests", "consumers",
+    "managers", "respondents", "report", "study", "survey", "data", "news",
+    "update", "alert", "source", "analysis", "insights", "statistics",
+    "the", "a", "an", "and", "or", "inc", "llc", "corp", "ltd", "co",
+})
 
 
 def is_junk(name: Optional[str]) -> tuple[bool, str]:
@@ -52,15 +115,22 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
     if not name:
         return True, "empty name"
 
-    low = name.strip().lower()
+    stripped = name.strip()
+    low = stripped.lower()
 
+    # Exact match against known-bad generic words
+    if low in _JUNK_EXACT:
+        return True, f"generic non-company word: '{stripped}'"
+
+    # Substring check
     for sub in _JUNK_SUBSTRINGS:
         if sub in low:
             return True, f"junk substring: '{sub}'"
 
+    # Regex pattern check
     for rx in _JUNK_RE:
-        if rx.search(name.strip()):
-            return True, f"junk pattern: {rx.pattern}"
+        if rx.search(stripped):
+            return True, f"junk pattern: {rx.pattern[:60]}"
 
     return False, ""
 
