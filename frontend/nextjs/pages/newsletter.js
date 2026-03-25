@@ -7,15 +7,31 @@ import IndustryBriefBlock from '../components/IndustryBriefBlock';
 // Base URL for share links
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
-function ShareButtons({ url, title, description, compact = false, id }) {
+function buildTweetText(headline, description) {
+  // X posts: headline first (fresh/relevant), then first 2 sentences of summary.
+  // Total budget ~250 chars (URL adds ~23, leaving room).
+  const head = (headline || '').trim();
+  const body = (description || '').trim();
+  if (!head && !body) return 'Automation buying signals — Ready For Robots';
+  if (!head) return body.slice(0, 240);
+  if (!body) return head.slice(0, 240);
+  // Combine: headline\n\nbody — truncate body so total fits
+  const maxBody = 240 - head.length - 2;
+  const truncBody = maxBody > 30 ? (body.length > maxBody ? body.slice(0, maxBody - 1) + '…' : body) : '';
+  return truncBody ? `${head}\n\n${truncBody}` : head;
+}
+
+function ShareButtons({ url, title, headline, description, compact = false, id }) {
   const shareUrl = url || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : `${BASE_URL}/newsletter`);
   const shareTitle = title || 'Daily Automation News | Automation Sales Leads with Actionable Signals';
-  const shareText = description || `${shareTitle} — Ready For Robots`;
+  // LinkedIn gets the full description; X gets headline-first text
+  const linkedInText = description || `${shareTitle} — Ready For Robots`;
+  const tweetText = buildTweetText(headline || shareTitle, description);
   const copyId = id || 'share-copy';
 
   const links = {
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(tweetText)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
   };
 
@@ -354,7 +370,8 @@ export default function Newsletter() {
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={`${BASE_URL}/og-logo.png`} />
+        {/* Pythia glyph used for all @pythh X posts — drop delphi-pythia-icon-glyph-dark.jpg into public/images/ */}
+        <meta name="twitter:image" content={`${BASE_URL}/images/delphi-pythia-icon-glyph-dark.jpg`} />
         <meta name="twitter:title" content="Robot Intelligence Brief | Automation Sales Leads with Actionable Signals" />
         <meta name="twitter:description" content="Daily automation news and hot leads. Real companies with buying signals." />
       </Head>
@@ -422,7 +439,11 @@ export default function Newsletter() {
                   <div className="text-xs text-neutral-500">Published</div>
                   <div className="text-sm text-emerald-400">{latestEdition.date}</div>
                 </div>
-                <ShareButtons title={latestEdition.headline} description={`${latestEdition.headline} — ${latestEdition.subheadline}`} />
+                <ShareButtons
+                  headline={latestEdition.headline}
+                  title={latestEdition.headline}
+                  description={`${latestEdition.headline} — ${latestEdition.subheadline}`}
+                />
               </div>
             </div>
           </div>
@@ -467,6 +488,7 @@ export default function Newsletter() {
                     <ShareButtons
                       compact
                       id={`share-story-${idx}`}
+                      headline={`${story.company}: ${story.headline}`}
                       title={`${story.company}: ${story.headline}`}
                       description={story.summary || story.snippet || `${story.company} — ${story.headline}`}
                     />
@@ -530,6 +552,7 @@ export default function Newsletter() {
                           <ShareButtons
                             compact
                             id={`share-summary-${idx}`}
+                            headline={`${story.company}: ${story.headline}`}
                             title={`${story.company}: ${story.headline}`}
                             description={story.summary}
                           />

@@ -53,9 +53,16 @@ export default function IndustryBriefBlock({ brief, className = '' }) {
       : 'Signal-based summary';
 
   const shareUrl = `${SITE_URL}/newsletter/`;
-  // Social share text: executive summary paragraph — the intelligence, not raw signal lists
-  const shareText = (brief.executive_take || '').trim();
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const execTake = (brief.executive_take || '').trim();
+
+  // X post: headline first, then first sentence of executive_take — fresh & relevant
+  const briefHeadline = 'Strategic Industry Brief: Today\'s Automation Intelligence';
+  const firstSentence = execTake.split('. ')[0] + '.';
+  const maxBody = 240 - briefHeadline.length - 2;
+  const tweetBody = firstSentence.length <= maxBody ? firstSentence : firstSentence.slice(0, maxBody - 1) + '…';
+  const tweetText = `${briefHeadline}\n\n${tweetBody}`;
+
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
   const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
 

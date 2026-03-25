@@ -312,7 +312,8 @@ export default function Signals() {
         <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Ready for Robots" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={`${BASE_URL}/og-logo.png`} />
+        {/* Pythia glyph used for all @pythh X posts — drop delphi-pythia-icon-glyph-dark.jpg into public/images/ */}
+        <meta name="twitter:image" content={`${BASE_URL}/images/delphi-pythia-icon-glyph-dark.jpg`} />
         <meta name="twitter:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
         <meta name="twitter:description" content="Automation sales leads with actionable signals. Each lead comes with signals you can act on." />
       </Head>
@@ -737,9 +738,17 @@ export default function Signals() {
                             </button>
                             {shareMenuLeadId === lead.id && (() => {
                               const shareUrl = `${BASE_URL}/#leads`;
-                              // share_summary is the 4-5 sentence intelligence paragraph — use as social post header
-                              const shareText = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
-                              const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+                              // Headline for X: "Company — Signal Type | HOT Lead" — fresh and specific
+                              const topSignalLabel = (lead.signals && lead.signals[0]?.signal_label) || (lead.signals && lead.signals[0]?.signal_type?.replace(/_/g, ' ')) || 'Automation Signal';
+                              const xHeadline = `${lead.company_name} — ${topSignalLabel} | ${lead.priority_tier === 'HOT' ? '🔥 Hot' : lead.priority_tier === 'WARM' ? '⚡ Warm' : '✦ Emerging'} Lead`;
+                              const summaryBody = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
+                              // X post: headline first, then first sentence of summary (~250 char budget)
+                              const maxBody = 240 - xHeadline.length - 2;
+                              const firstSentence = summaryBody.split('. ')[0] + '.';
+                              const tweetBody = firstSentence.length <= maxBody ? firstSentence : firstSentence.slice(0, maxBody - 1) + '…';
+                              const tweetText = `${xHeadline}\n\n${tweetBody}`;
+                              const shareText = summaryBody; // LinkedIn/copy gets full summary
+                              const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
                               const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
                               const copyShare = () => {
                                 navigator.clipboard?.writeText(`${shareText}\n\n${shareUrl}`);
@@ -872,10 +881,16 @@ export default function Signals() {
                             <div className="flex flex-wrap items-center gap-2">
                               {(() => {
                                 const shareUrl = `${BASE_URL}/#leads`;
-                                const shareText = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
+                                const topSignalLabel = (lead.signals && lead.signals[0]?.signal_label) || (lead.signals && lead.signals[0]?.signal_type?.replace(/_/g, ' ')) || 'Automation Signal';
+                                const xHeadline = `${lead.company_name} — ${topSignalLabel} | ${lead.priority_tier === 'HOT' ? '🔥 Hot' : lead.priority_tier === 'WARM' ? '⚡ Warm' : '✦ Emerging'} Lead`;
+                                const fullSummary = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
+                                const maxBody = 240 - xHeadline.length - 2;
+                                const firstSentence = fullSummary.split('. ')[0] + '.';
+                                const tweetBody = firstSentence.length <= maxBody ? firstSentence : firstSentence.slice(0, maxBody - 1) + '…';
+                                const tweetText = `${xHeadline}\n\n${tweetBody}`;
                                 return (
                                   <>
-                                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">
+                                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">
                                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                                       Share on X
                                     </a>
@@ -885,7 +900,7 @@ export default function Signals() {
                                     </a>
                                     <button
                                       type="button"
-                                      onClick={() => navigator.clipboard?.writeText(`${shareText}\n\n${shareUrl}`)}
+                                      onClick={() => navigator.clipboard?.writeText(`${tweetText}\n\n${shareUrl}`)}
                                       className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-xs"
                                     >
                                       Copy post
