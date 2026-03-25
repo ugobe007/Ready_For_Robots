@@ -7,6 +7,10 @@
 # From project root — one command does everything
 flyctl deploy
 ```
+If the command hangs on **“Waiting for depot builder…”** (Depot capacity/timeouts), use the legacy builder instead:
+```bash
+flyctl deploy --depot=false
+```
 The Dockerfile builds the Next.js frontend and packages the FastAPI backend. No separate `npm run build` needed.
 
 ---
