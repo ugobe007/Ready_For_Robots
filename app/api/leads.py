@@ -36,9 +36,45 @@ from app.services.scoring_public import get_scoring_system_public
 
 router = APIRouter()
 
-# Embedded `signals` in JSON are capped (total count remains in `signal_count`).
-# Keeps payloads small and fixes static-export sites that may serve cached JS.
-LEAD_RESPONSE_MAX_SIGNALS = 10
+# Embedded `signals` in JSON are capped + deduplicated by signal_type.
+# Top-scoring representative per unique type; then top N overall.
+# `signal_count` still holds the true DB total.
+LEAD_RESPONSE_MAX_SIGNALS = 5
+
+# Human-friendly labels for every signal type surfaced on cards
+SIGNAL_TYPE_LABELS: dict[str, str] = {
+    "strategic_hire":      "Leadership Hire",
+    "capex":               "CapEx Budget",
+    "quality_bottleneck":  "Quality Problem",
+    "safety_incident":     "Safety Incident",
+    "labor_shortage":      "Labor Shortage",
+    "production_capacity": "At Capacity",
+    "warehouse_throughput":"Warehouse Bottleneck",
+    "packaging_automation":"Packaging Automation",
+    "repetitive_process":  "Repetitive Tasks",
+    "expansion":           "Expansion",
+    "material_handling":   "Material Handling",
+    "funding_round":       "Funding Round",
+    "ma_activity":         "M&A Activity",
+    "job_posting":         "Job Posting",
+    "news":                "News Signal",
+    "automation_interest": "Automation Interest",
+    "automation_intent":   "Automation Intent",
+    "robot_installation":  "Robot Install",
+    "pilot_success":       "Pilot Success",
+    "scale_expansion":     "Scale Expansion",
+    "vendor_selection":    "Vendor Selection",
+    "roi_documented":      "ROI Documented",
+    "economics_driven":    "Economics Trigger",
+    "competitive_response":"Competitive Pressure",
+    "problem_solution":    "Problem/Solution",
+    "government_contract": "Gov Contract",
+    "rfp_posted":          "RFP Posted",
+    "labor_pain":          "Labor Pain",
+    "labor_signal":        "Labor Signal",
+    "service_consistency": "Service Consistency",
+    "equipment_integration":"Equipment Integration",
+}
 
 # Tuple for SQLAlchemy .in_() — must match classify_lead / SIGNAL_TYPES_* in lead_filter
 _SQL_HOT_TYPES = tuple(SIGNAL_TYPES_HOT)
@@ -162,39 +198,84 @@ def _take_rotated(companies: List[Company], count: int, seed: int) -> List[Compa
     return [companies[(start + i) % n] for i in range(min(count, n))]
 
 
+def _signal_label(signal_type: str) -> str:
+    return SIGNAL_TYPE_LABELS.get(signal_type, signal_type.replace("_", " ").title())
+
+
+def _dedup_top_signals(sigs: list, n: int = LEAD_RESPONSE_MAX_SIGNALS) -> list:
+    """
+    Return at most `n` signals, one per unique signal_type, strongest first.
+    Guarantees zero duplicates by type — a lead with 200 `news` rows shows ONE.
+    """
+    seen_types: set = set()
+    deduped = []
+    for s in sorted(sigs, key=lambda x: float(getattr(x, "signal_strength", None) or 0), reverse=True):
+        t = getattr(s, "signal_type", None) or "unknown"
+        if t not in seen_types:
+            seen_types.add(t)
+            deduped.append(s)
+        if len(deduped) >= n:
+            break
+    return deduped
+
+
 def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
     """
-    Social-ready copy: (share_blurb ~200c, share_summary longer for cards).
-    Not raw SEO spam — one clear line for LinkedIn/X.
+    Returns (share_blurb ~200c for social, share_summary rich card paragraph).
+    Summary reads like human intelligence: what signals, what they mean, score context.
     """
     ind = (c.industry or "").strip()
     if not ind or ind.lower() in ("unknown", "other"):
         ind = "New"
     tier = pri.tier
     name = c.name or "Company"
+
     if not sigs:
-        summary = f"{name} ({ind}) — {tier} automation-buying signals on Ready For Robots."
+        summary = f"{name} ({ind}) — showing automation buying-intent signals."
         return summary[:220], summary
-    top = max(sigs, key=lambda s: float(s.signal_strength or 0))
-    raw = (top.signal_text or "").replace("\n", " ").strip()
-    st = (top.signal_type or "signal").replace("_", " ")
-    if len(raw) > 130:
-        raw = raw[:127].rsplit(" ", 1)[0] + "…"
-    summary = f"{name} ({ind}) — {tier}: {st}. {raw}"
-    blurb = f"{name} ({ind}): {raw[:95]}{'…' if len(raw) > 95 else ''} · {tier} lead · readyforrobots.com"
-    return blurb[:220], summary[:420]
+
+    # Pick unique-type top signals for the summary
+    deduped = _dedup_top_signals(sigs, 5)
+
+    # Signal type labels list
+    type_labels = [_signal_label(getattr(s, "signal_type", "")) for s in deduped]
+    types_str = ", ".join(type_labels[:3])
+    if len(type_labels) > 3:
+        types_str += f" + {len(type_labels) - 3} more"
+
+    # Pull best excerpt (longest clean snippet from top 3 signals)
+    excerpt = ""
+    for s in deduped[:3]:
+        raw = (getattr(s, "signal_text", None) or "").replace("\n", " ").strip()
+        if len(raw) > len(excerpt):
+            excerpt = raw
+    if len(excerpt) > 180:
+        excerpt = excerpt[:177].rsplit(" ", 1)[0] + "…"
+
+    # Score interpretation
+    reasons = pri.reasons or []
+    reason_note = f" — {reasons[0]}" if reasons else ""
+
+    # Compose the card summary
+    tier_word = {"HOT": "active buyer", "WARM": "in-market", "COLD": "emerging opportunity"}.get(tier, tier.lower())
+    summary_parts = [f"{name} is a {tier_word} in {ind}."]
+    summary_parts.append(f"Signals: {types_str}.")
+    if excerpt:
+        summary_parts.append(f'Latest: "{excerpt}"')
+    if reason_note:
+        summary_parts.append(f"Why it ranks: {reasons[0]}.")
+    summary = " ".join(summary_parts)
+
+    # Short blurb for social share
+    blurb = f"{name} ({ind}): {types_str}. {excerpt[:80]}{'…' if len(excerpt) > 80 else ''} · readyforrobots.com"
+    return blurb[:220], summary[:600]
 
 
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
     sigs = c.signals or []
     signal_count_total = len(sigs)
-    sigs_sorted = sorted(
-        sigs,
-        key=lambda x: float(getattr(x, "signal_strength", None) or 0),
-        reverse=True,
-    )
-    sigs_for_response = sigs_sorted[:LEAD_RESPONSE_MAX_SIGNALS]
+    sigs_for_response = _dedup_top_signals(sigs, LEAD_RESPONSE_MAX_SIGNALS)
     # Public-facing: never expose "Unknown" — use "New" (unclassified)
     industry_display = (c.industry or "").strip()
     if not industry_display or industry_display.lower() in ("unknown", "other"):
@@ -231,6 +312,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "signals": [
             {
                 "signal_type":     sig.signal_type,
+                "signal_label":    _signal_label(sig.signal_type),
                 "strength":        sig.signal_strength,
                 "weighted_score":  compute_weighted_score(sig),
                 "raw_text":        sig.signal_text,
