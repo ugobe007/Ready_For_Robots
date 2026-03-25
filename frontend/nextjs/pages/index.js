@@ -11,7 +11,6 @@ export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [temperatureFilter, setTemperatureFilter] = useState('all'); // 'all', 'hot', 'warm', 'cold'
   
   // Stats ticker data - from /api/leads/summary (full DB counts, not limited by leads list)
   const [statsData, setStatsData] = useState({
@@ -34,6 +33,7 @@ export default function Signals() {
 
   // Hot leads state - will be fetched from API
   const [hotLeads, setHotLeads] = useState([]);
+  const [tierLegend, setTierLegend] = useState(null);
   // Expanded deal for inline details
   const [expandedDealId, setExpandedDealId] = useState(null);
   // Which hot lead card has share menu open (for social share dropdown)
@@ -129,14 +129,9 @@ export default function Signals() {
           cold: s.cold ?? 0
         });
         setLeadsByIndustry(s.by_industry ?? {});
-        // API already returns HOT-first then WARM fill; do not re-filter by tier
-        const list = data.hotLeads || [];
-        const spotlight = [...list].sort((a, b) => {
-          const scoreA = typeof a.score === 'object' ? (a.score.overall_score || 0) : (a.score || 0);
-          const scoreB = typeof b.score === 'object' ? (b.score.overall_score || 0) : (b.score || 0);
-          return scoreB - scoreA;
-        }).slice(0, 5);
-        setHotLeads(spotlight);
+        // Preserve API order: recency-ranked + daily rotation (3 hot + 2 warm); do not re-sort by score
+        setTierLegend(data.tierLegend || null);
+        setHotLeads(Array.isArray(data.hotLeads) ? data.hotLeads : []);
       } catch (err) {
         if (err?.name !== 'AbortError' && !cancelled) {
           console.error('Error fetching homepage data:', err);
@@ -163,7 +158,7 @@ export default function Signals() {
   // Use summary for counts (no full leads fetch)
   const hotCount = statsData.hotDeals ?? 0;
   const warmCount = statsData.warmPipeline ?? 0;
-  const coldCount = statsData.cold ?? 0;
+  const emergingCount = statsData.cold ?? 0;
   const totalSignals = statsData.liveSignals ?? 0;
   const hottestSignal = hotLeads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
@@ -478,6 +473,13 @@ export default function Signals() {
                     <div className="text-sm text-emerald-400 font-semibold tracking-wide">WARM PIPELINE</div>
                   </div>
                 </div>
+                {emergingCount > 0 && (
+                  <p className="text-[11px] text-neutral-500 text-center mt-2 px-1">
+                    <span className="text-cyan-500/90 font-medium">Emerging</span>
+                    {' · '}
+                    {emergingCount.toLocaleString()} opportunities in the full pipeline (watchlist / early signals — see legend below)
+                  </p>
+                )}
               </div>
 
               {/* Leads per industry — never show "Unknown"; merge into "New" */}
@@ -597,7 +599,7 @@ export default function Signals() {
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">
-                🔥 DAILY HOT DEALS
+                ⚡ DAILY SPOTLIGHT
               </div>
               <div className="flex gap-1">
                 <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
@@ -605,21 +607,44 @@ export default function Signals() {
               </div>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Daily Hot Deals
+              Daily spotlight deals
             </h2>
             <p className="text-lg text-neutral-300">
-              Top <span className="text-orange-400 font-semibold">HOT</span> leads first, then <span className="text-amber-400 font-semibold">WARM</span> to fill five spots — refreshed from live signals. Click a card for details and shareable summary.
+              Five accounts rotate each day: <span className="text-orange-400 font-semibold">three Hot</span> and{' '}
+              <span className="text-amber-400 font-semibold">two Warm</span>, ranked by{' '}
+              <span className="text-neutral-200">newest signal activity</span> first so the list refreshes. Same high scorers will not dominate every visit.
             </p>
+            {tierLegend && (
+              <div className="mt-5 grid md:grid-cols-3 gap-3 text-left">
+                {['HOT', 'WARM', 'COLD'].map((key) => {
+                  const block = tierLegend[key];
+                  if (!block) return null;
+                  const accent =
+                    key === 'HOT' ? 'border-orange-700/50 bg-orange-950/20' :
+                    key === 'WARM' ? 'border-amber-700/50 bg-amber-950/15' :
+                    'border-cyan-800/50 bg-cyan-950/15';
+                  return (
+                    <div key={key} className={`rounded-lg border px-4 py-3 ${accent}`}>
+                      <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-0.5">
+                        {block.label}
+                        <span className="text-neutral-500 font-normal normal-case"> — {block.tagline}</span>
+                      </div>
+                      <p className="text-xs text-neutral-400 leading-snug">{block.description}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-neutral-400 mt-4">Loading daily hot deals...</p>
+              <p className="text-neutral-400 mt-4">Loading spotlight deals...</p>
             </div>
           ) : topHotDeals.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-neutral-400">No hot deals right now. New leads appear throughout the day — check back soon!</p>
+              <p className="text-neutral-400">No spotlight deals right now. New signals land throughout the day — check back soon!</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -648,8 +673,20 @@ export default function Signals() {
                           <h4 className="text-lg font-semibold text-white group-hover:text-orange-300 transition-colors">
                             {lead.company_name}
                           </h4>
-                          <span className={`px-2 py-0.5 text-xs font-semibold rounded text-white ${lead.priority_tier === 'WARM' ? 'bg-amber-600' : 'bg-orange-600'}`}>
-                            {lead.priority_tier === 'WARM' ? '⚡ WARM' : '🔥 HOT'}
+                          <span
+                            className={`px-2 py-0.5 text-xs font-semibold rounded text-white ${
+                              lead.priority_tier === 'WARM'
+                                ? 'bg-amber-600'
+                                : lead.priority_tier === 'COLD'
+                                  ? 'bg-cyan-700'
+                                  : 'bg-orange-600'
+                            }`}
+                          >
+                            {lead.priority_tier === 'WARM'
+                              ? '⚡ Warm'
+                              : lead.priority_tier === 'COLD'
+                                ? '✦ Emerging'
+                                : '🔥 Hot'}
                           </span>
                           <span className="text-neutral-500 text-sm">{isExpanded ? '▲' : '▼'}</span>
                         </div>

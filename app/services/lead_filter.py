@@ -78,32 +78,55 @@ _HIGH_FIT_INDUSTRIES = {
     "warehouse", "fulfillment",
 }
 
-# Signal types that are strong buying-intent signals
-# HOT  → company has budget + mandate → priority outreach
-# WARM → confirmed pain or expansion → nurture / sequence
-_HOT_SIGNAL_TYPES  = {
-    "funding_round",         # money just raised
-    "strategic_hire",        # ops decision-maker just hired
-    "capex",                 # active technology spend
-    "ma_activity",           # M&A = new leadership + integration need
-    "labor_pain",            # mass hiring of manual workers = pain to automate
-    "automation_intent",     # company running lean / process-improvement programs
-    "quality_bottleneck",    # quality/scrap issues = immediate automation need
-    "safety_incident",       # worker safety problems = urgent automation driver
-    "production_capacity",   # running at max capacity = need to scale
-    "warehouse_throughput",  # pick/pack/ship constraints = clear automation ROI
-    "packaging_automation",  # packaging line pain = proven robot application
-    "repetitive_process",    # repetitive manual work = automation ready
-}
-_WARM_SIGNAL_TYPES = {
-    "expansion",             # new facility — needs equipment
-    "job_posting",           # general ops posting
-    "labor_shortage",        # urgency language in postings
-    "news",                  # general press mention
-    "service_consistency",   # franchise / brand standard drive
-    "equipment_integration", # WMS / ERP rollout — robot-ready infra
-    "material_handling",     # forklift/internal logistics = AMR opportunity
-}
+# Signal types — exported for SQL rollups (leads API) so summary/homepage match classify_lead.
+# HOT  → budget / mandate / deployment — priority outreach
+# WARM → pain, expansion, exploration — nurture & watch
+# API still emits tier COLD internally; product copy calls it "Emerging" (all have potential).
+SIGNAL_TYPES_HOT = frozenset({
+    "funding_round",
+    "strategic_hire",
+    "capex",
+    "ma_activity",
+    "labor_pain",
+    "automation_intent",       # internal / job-board style
+    "quality_bottleneck",
+    "safety_incident",
+    "production_capacity",
+    "warehouse_throughput",
+    "packaging_automation",
+    "repetitive_process",
+    # Deployment & procurement (often missing before — same deals always surfaced)
+    "robot_installation",
+    "pilot_success",
+    "scale_expansion",
+    "vendor_selection",
+    "roi_documented",
+    "economics_driven",
+    "competitive_response",
+    "problem_solution",
+    "government_contract",
+    "rfp_posted",
+})
+SIGNAL_TYPES_WARM = frozenset({
+    "expansion",
+    "job_posting",
+    "labor_shortage",
+    "news",
+    "service_consistency",
+    "equipment_integration",
+    "material_handling",
+    # Classifier emits automation_interest widely — treat as explore/nurture, not max HOT
+    "automation_interest",
+})
+
+# Aliases for membership checks in priority_tier (frozenset supports `in`)
+_HOT_SIGNAL_TYPES = SIGNAL_TYPES_HOT
+_WARM_SIGNAL_TYPES = SIGNAL_TYPES_WARM
+
+# One strong deployment/procurement hit can justify HOT with moderate ML score
+_DEPLOYMENT_SIGNAL_TYPES = frozenset({
+    "robot_installation", "pilot_success", "scale_expansion", "vendor_selection", "rfp_posted",
+})
 
 
 @dataclass
@@ -201,12 +224,14 @@ def priority_tier(
     # HOT: stricter. Duplicate rows of one hot type (e.g. RSS noise) must not
     # qualify on composite alone — need distinct intent types OR strong base score.
     distinct_hot = len(set(hot_hits))
+    has_deployment_signal = any(s in _DEPLOYMENT_SIGNAL_TYPES for s in signal_types)
     hot_enough = (
         distinct_hot >= 2
-        or (len(hot_hits) >= 2 and base >= 70)
-        or (len(hot_hits) >= 1 and base >= 75)
+        or (len(hot_hits) >= 2 and base >= 68)
+        or (len(hot_hits) >= 1 and base >= 72)
+        or (has_deployment_signal and len(hot_hits) >= 1 and base >= 52)
     )
-    if composite >= 84 or (composite >= 78 and hot_enough):
+    if composite >= 82 or (composite >= 76 and hot_enough):
         return PriorityResult("HOT", composite, reasons)
     if composite >= 52 or (base >= 44 and _industry_fits(industry)):
         return PriorityResult("WARM", composite, reasons)

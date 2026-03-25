@@ -12,53 +12,41 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
+from datetime import datetime, timezone, date
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional
+from typing import Optional, List
+
 from app.database import get_db
 from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead, is_junk, priority_tier
+from app.services.lead_filter import (
+    classify_lead,
+    is_junk,
+    priority_tier,
+    SIGNAL_TYPES_HOT,
+    SIGNAL_TYPES_WARM,
+)
 from app.services.signal_ranker import compute_weighted_score
 from app.services.industry_inference import infer_industry_from_text
 
 router = APIRouter()
 
-_HOT_SIGNAL_TYPES = [
-    "funding_round",
-    "strategic_hire",
-    "capex",
-    "ma_activity",
-    "labor_pain",
-    "automation_intent",
-    "quality_bottleneck",
-    "safety_incident",
-    "production_capacity",
-    "warehouse_throughput",
-    "packaging_automation",
-    "repetitive_process",
-]
-
-_WARM_SIGNAL_TYPES = [
-    "expansion",
-    "job_posting",
-    "labor_shortage",
-    "news",
-    "service_consistency",
-    "equipment_integration",
-    "material_handling",
-]
+# Tuple for SQLAlchemy .in_() — must match classify_lead / SIGNAL_TYPES_* in lead_filter
+_SQL_HOT_TYPES = tuple(SIGNAL_TYPES_HOT)
+_SQL_WARM_TYPES = tuple(SIGNAL_TYPES_WARM)
 
 
 def _lead_rows_query(db: Session):
     """Lightweight aggregate query used by both list and summary endpoints."""
     hot_hits = func.sum(
-        case((Signal.signal_type.in_(_HOT_SIGNAL_TYPES), 1), else_=0)
+        case((Signal.signal_type.in_(_SQL_HOT_TYPES), 1), else_=0)
     ).label("hot_hits")
     warm_hits = func.sum(
-        case((Signal.signal_type.in_(_WARM_SIGNAL_TYPES), 1), else_=0)
+        case((Signal.signal_type.in_(_SQL_WARM_TYPES), 1), else_=0)
     ).label("warm_hits")
 
     return (
@@ -113,6 +101,60 @@ def _row_priority(row) -> object:
         signal_count,
         row.employee_estimate,
     )
+
+
+HOMEPAGE_TIER_LEGEND = {
+    "HOT": {
+        "label": "Hot",
+        "tagline": "Act this week",
+        "description": (
+            "Strong buying-intent signals—funding, leadership moves, capex, M&A, robotics pilots "
+            "or installs, vendor selection, RFPs—and high automation fit. Prioritize direct outreach."
+        ),
+    },
+    "WARM": {
+        "label": "Warm",
+        "tagline": "Nurture & sequence",
+        "description": (
+            "Solid operational signals: expansion, hiring, labor pressure, automation interest, "
+            "newsflow, integrations. Worth a research pass and a structured follow-up sequence."
+        ),
+    },
+    "COLD": {
+        "label": "Emerging",
+        "tagline": "Explore & watchlist",
+        "description": (
+            "Earlier or lighter signals in our model—still real opportunities. Add to watchlists, "
+            "monitor for new signals; tier moves up as intent sharpens."
+        ),
+    },
+}
+
+
+def _utc_aware(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _latest_signal_ts(company: Company) -> float:
+    best: Optional[datetime] = None
+    for s in company.signals or []:
+        ca = _utc_aware(getattr(s, "created_at", None))
+        if ca and (best is None or ca > best):
+            best = ca
+    return best.timestamp() if best else 0.0
+
+
+def _take_rotated(companies: List[Company], count: int, seed: int) -> List[Company]:
+    """Circular slice: daily `seed` rotates which high-ranked rows surface first."""
+    n = len(companies)
+    if n == 0 or count <= 0:
+        return []
+    start = seed % n
+    return [companies[(start + i) % n] for i in range(min(count, n))]
 
 
 def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
@@ -292,10 +334,11 @@ def get_leads(
 def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
     Batched endpoint for homepage: summary + spotlight leads in one response.
-    Spotlight picks use classify_lead (full signals) so tier matches the JSON —
-    the old path used SQL aggregates (_row_priority) then re-classified, which
-    dropped leads when the frontend filtered priority_tier == 'HOT'.
-    Fills with top WARM if fewer than 5 HOT so the section stays fresh.
+
+    Spotlight uses classify_lead on full signals (aligned with list views).
+    Selection: sort by newest signal time, then score; take 3 HOT + 2 WARM with a
+    daily + hourly rotating window so the same top-score rows do not monopolize the list.
+    Includes tierLegend for UI copy (COLD band documented as "Emerging").
     """
     response.headers["Cache-Control"] = "public, max-age=90, stale-while-revalidate=120"
 
@@ -373,46 +416,79 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
     companies.sort(key=lambda c: id_rank.get(c.id, 9999))
 
-    hot_pick = []
-    warm_pick = []
+    hot_pool: List[tuple[float, float, Company]] = []
+    warm_pool: List[tuple[float, float, Company]] = []
     for c in companies:
         junk, _, pri = classify_lead(c, c.scores, c.signals)
         if junk or not c.signals:
             continue
-        item = (pri.score, c.id, c)
+        ts = _latest_signal_ts(c)
         if pri.tier == "HOT":
-            hot_pick.append(item)
+            hot_pool.append((ts, pri.score, c))
         elif pri.tier == "WARM":
-            warm_pick.append(item)
+            warm_pool.append((ts, pri.score, c))
 
-    hot_pick.sort(key=lambda x: -x[0])
-    warm_pick.sort(key=lambda x: -x[0])
+    hot_pool.sort(key=lambda x: (-x[0], -x[1]))
+    warm_pool.sort(key=lambda x: (-x[0], -x[1]))
+    hot_ordered = [t[2] for t in hot_pool]
+    warm_ordered = [t[2] for t in warm_pool]
 
     spotlight_limit = 5
-    chosen = []
-    used = set()
-    for _, cid, c in hot_pick:
-        if cid in used:
-            continue
-        used.add(cid)
-        chosen.append(c)
-        if len(chosen) >= spotlight_limit:
-            break
-    if len(chosen) < spotlight_limit:
-        for _, cid, c in warm_pick:
-            if cid in used:
-                continue
-            used.add(cid)
+    hot_slots = 3
+    warm_slots = 2
+    now = datetime.now(timezone.utc)
+    day_o = now.date().toordinal()
+    hour = now.hour
+    # Hour term shifts the window a few times per day so repeat visits are not frozen
+    h_seed = day_o * 7919 + 203 + hour * 17
+    w_seed = day_o * 9283 + 411 + hour * 23
+
+    chosen: List[Company] = []
+    used_ids = set()
+
+    for c in _take_rotated(hot_ordered, hot_slots, h_seed):
+        if c.id not in used_ids:
             chosen.append(c)
+            used_ids.add(c.id)
+    warm_avail = [c for c in warm_ordered if c.id not in used_ids]
+    for c in _take_rotated(warm_avail, warm_slots, w_seed):
+        if c.id not in used_ids:
+            chosen.append(c)
+            used_ids.add(c.id)
+
+    if len(chosen) < spotlight_limit:
+        for c in hot_ordered:
+            if c.id not in used_ids:
+                chosen.append(c)
+                used_ids.add(c.id)
             if len(chosen) >= spotlight_limit:
                 break
+    if len(chosen) < spotlight_limit:
+        for c in warm_ordered:
+            if c.id not in used_ids:
+                chosen.append(c)
+                used_ids.add(c.id)
+            if len(chosen) >= spotlight_limit:
+                break
+
+    chosen = chosen[:spotlight_limit]
 
     hot_leads = []
     for c in chosen:
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
         hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
 
-    return {"summary": summary, "hotLeads": hot_leads}
+    return {
+        "summary": summary,
+        "hotLeads": hot_leads,
+        "tierLegend": HOMEPAGE_TIER_LEGEND,
+        "spotlightMix": {
+            "hot_slots": hot_slots,
+            "warm_slots": warm_slots,
+            "rotation_day": str(now.date()),
+            "rotation_hour_utc": hour,
+        },
+    }
 
 
 @router.get("/summary")
