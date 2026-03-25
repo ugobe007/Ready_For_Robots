@@ -83,6 +83,91 @@ function HealthDot({ open }) {
   );
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
+
+// Builds the X tweet text: headline first, then first sentence of summary
+function buildTweetText(lead) {
+  const topSig = (lead.signals || [])[0];
+  const sigLabel = topSig?.signal_label || (topSig?.signal_type || '').replace(/_/g, ' ');
+  const tierEmoji = lead.priority_tier === 'HOT' ? '🔥' : lead.priority_tier === 'WARM' ? '⚡' : '✦';
+  const headline = `${lead.company_name}${sigLabel ? ` — ${sigLabel}` : ''} | ${tierEmoji} ${lead.priority_tier || 'Lead'}`;
+  const summary = lead.share_summary || lead.share_blurb || '';
+  const firstSentence = summary.split('. ')[0] + (summary.includes('. ') ? '.' : '');
+  const maxBody = 240 - headline.length - 2;
+  const body = firstSentence && firstSentence.length <= maxBody
+    ? firstSentence
+    : firstSentence.slice(0, Math.max(30, maxBody - 1)) + '…';
+  return body ? `${headline}\n\n${body}` : headline;
+}
+
+// Compact share bar used on lead rows and drawer
+function LeadShareBar({ lead, compact = false }) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = `${SITE_URL}/#leads`;
+  const tweetText = buildTweetText(lead);
+  const fullSummary = lead.share_summary || lead.share_blurb || `${lead.company_name} — automation signals`;
+
+  const copyPost = (e) => {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(`${tweetText}\n\n${shareUrl}`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  };
+
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <a href={twitterUrl} target="_blank" rel="noopener noreferrer" title="Share on X"
+          className="p-1 rounded hover:bg-neutral-800 text-neutral-600 hover:text-white transition-colors">
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" title="Share on LinkedIn"
+          className="p-1 rounded hover:bg-neutral-800 text-neutral-600 hover:text-[#0a66c2] transition-colors">
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+        <button onClick={copyPost} title="Copy post"
+          className="p-1 rounded hover:bg-neutral-800 text-neutral-600 hover:text-emerald-400 transition-colors text-[9px] font-mono">
+          {copied ? '✓' : '⧉'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2" onClick={e => e.stopPropagation()}>
+      {/* Intelligence summary paragraph */}
+      {fullSummary && (
+        <div className="rounded border border-cyan-900/40 bg-cyan-950/10 p-3">
+          <div className="text-[10px] font-semibold text-cyan-500 uppercase tracking-wider mb-1.5">Intelligence Summary</div>
+          <p className="text-xs text-neutral-300 leading-relaxed">{fullSummary}</p>
+        </div>
+      )}
+      {/* Share row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[10px] text-neutral-500 uppercase tracking-wider">Share:</span>
+        <a href={twitterUrl} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-neutral-700 bg-neutral-900 hover:bg-black text-neutral-400 hover:text-white text-[10px] font-medium transition-colors">
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X (Twitter)
+        </a>
+        <a href={linkedInUrl} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-neutral-700 bg-neutral-900 hover:bg-[#0a66c2] text-neutral-400 hover:text-white text-[10px] font-medium transition-colors">
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+        <button onClick={copyPost}
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-neutral-700 bg-neutral-900 hover:bg-emerald-900 text-neutral-400 hover:text-emerald-300 text-[10px] font-medium transition-colors">
+          {copied ? '✓ Copied!' : 'Copy post'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ScoreNum({ value }) {
   const v = Math.round(value ?? 0);
   let badgeClass = 'score-badge-poor border-red-700 text-red-400';
@@ -392,8 +477,9 @@ function StrategicSnapshot({ leads, onSelect }) {
                 <ScoreNum value={lead.score?.overall_score ?? 0} />
               </div>
 
-              {/* CTA */}
-              <div className="flex items-center justify-end pr-3 py-2">
+              {/* CTA + compact share */}
+              <div className="flex items-center justify-end gap-2 pr-3 py-2">
+                <LeadShareBar lead={lead} compact />
                 <button
                   onClick={() => onSelect(lead)}
                   className="text-[10px] text-emerald-800 hover:text-emerald-400 transition-colors whitespace-nowrap font-medium">
@@ -2893,6 +2979,9 @@ export default function Dashboard() {
                         {savedIds.has(lead.id) ? '★ saved' : '☆ save'}
                       </button>
                     </div>
+
+                    {/* Intelligence summary + social share */}
+                    <LeadShareBar lead={lead} />
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                       {lead.website && (
                         <a href={lead.website} target="_blank" rel="noreferrer"
