@@ -23,26 +23,210 @@ def _industry_display(raw) -> str:
     return s if s and s.lower() not in ("unknown", "other") else "New"
 
 SIGNAL_CATEGORIES = {
-    "labor_shortage": "LABOR SHORTAGE",
-    "expansion": "EXPANSION",
-    "strategic_hire": "STRATEGIC HIRE",
-    "capex": "CAPEX",
-    "funding_round": "FUNDING",
-    "ma_activity": "M&A",
-    "job_posting": "JOB POSTING",
-    "news": "DEPLOYMENT",
-    "automation_interest": "AUTOMATION INTEREST",
-    "labor_signal": "LABOR",
-    "hospitality_fit": "HOSPITALITY",
-    "pilot_success": "PILOT SUCCESS",
-    "robot_installation": "ROBOT DEPLOYMENT",
-    "roi_documented": "ROI",
-    "vendor_selection": "VENDOR SELECTION",
-    "scale_expansion": "SCALE-UP",
-    "competitive_response": "COMPETITIVE",
-    "economics_driven": "ECONOMICS",
-    "problem_solution": "PROBLEM-SOLUTION",
+    "labor_shortage": "Labor Shortage",
+    "expansion": "Expansion",
+    "strategic_hire": "Leadership Hire",
+    "capex": "CapEx Budget",
+    "funding_round": "Funding Round",
+    "ma_activity": "M&A Activity",
+    "job_posting": "Job Posting",
+    "news": "News Signal",
+    "automation_interest": "Automation Interest",
+    "automation_intent": "Automation Intent",
+    "labor_signal": "Labor Signal",
+    "labor_pain": "Labor Pain",
+    "pilot_success": "Pilot Success",
+    "robot_installation": "Robot Deployment",
+    "roi_documented": "ROI Documented",
+    "vendor_selection": "Vendor Selection",
+    "scale_expansion": "Scale-Up",
+    "competitive_response": "Competitive Pressure",
+    "economics_driven": "Economics Trigger",
+    "problem_solution": "Problem-Solution",
+    "quality_bottleneck": "Quality Problem",
+    "safety_incident": "Safety Incident",
+    "production_capacity": "At Capacity",
+    "warehouse_throughput": "Warehouse Bottleneck",
+    "packaging_automation": "Packaging Automation",
+    "repetitive_process": "Repetitive Tasks",
+    "material_handling": "Material Handling",
+    "service_consistency": "Service Consistency",
+    "equipment_integration": "Equipment Integration",
+    "rfp_posted": "RFP Posted",
+    "government_contract": "Gov Contract",
 }
+
+# Industry-specific automation framing used in summaries
+_INDUSTRY_AUTOMATION_CONTEXT = {
+    "logistics": ("autonomous mobile robots (AMRs), conveyor systems, and warehouse automation", "labor-intensive picking, packing, and last-mile delivery"),
+    "supply chain": ("AMRs and warehouse orchestration software", "throughput bottlenecks and labor shortages"),
+    "warehouse": ("AMRs, AS/RS, and goods-to-person systems", "picking efficiency and labor replacement"),
+    "fulfillment": ("goods-to-person robots and automated conveyor systems", "order fulfillment speed and accuracy"),
+    "hospitality": ("room service robots, housekeeping assist, and front-desk automation", "labor vacancies and guest experience consistency"),
+    "hotel": ("delivery robots and back-of-house automation", "housekeeping labor shortages and service consistency"),
+    "healthcare": ("hospital logistics robots, medication dispensing, and disinfection bots", "staff walking time and infection control"),
+    "hospital": ("logistics robots and UV disinfection systems", "staff redeployment and patient safety"),
+    "food service": ("kitchen automation, prep robots, and order fulfillment systems", "labor shortages and food consistency"),
+    "restaurant": ("kitchen automation and front-of-house robots", "staff turnover and order accuracy"),
+    "manufacturing": ("collaborative robots (cobots), welding automation, and assembly systems", "labor costs and quality control"),
+    "food & beverage": ("packaging automation and processing robots", "labor costs and production throughput"),
+}
+
+def _industry_automation_context(industry: str) -> tuple:
+    """Returns (automation_type, pain_point) for the given industry."""
+    low = (industry or "").lower()
+    for key, val in _INDUSTRY_AUTOMATION_CONTEXT.items():
+        if key in low:
+            return val
+    return ("robotic automation", "operational efficiency and labor costs")
+
+
+def _sig_label(signal_type: str) -> str:
+    return SIGNAL_CATEGORIES.get(signal_type, signal_type.replace("_", " ").title())
+
+
+def _company_size_descriptor(employee_estimate: Optional[int]) -> str:
+    if not employee_estimate:
+        return ""
+    if employee_estimate >= 10000:
+        return "large enterprise"
+    if employee_estimate >= 5000:
+        return "enterprise"
+    if employee_estimate >= 1000:
+        return "mid-market"
+    if employee_estimate >= 200:
+        return "growth-stage"
+    return "small-to-mid-size"
+
+
+def _tier_buy_window(tier: str, score: float) -> str:
+    if tier == "HOT":
+        return (
+            f"With a composite score of {round(score)}/100, this is a high-confidence buyer — "
+            "likely evaluating automation vendors within the next 60–90 days."
+        )
+    if tier == "WARM":
+        return (
+            f"Scoring {round(score)}/100, this account is in active exploration — "
+            "a well-timed outreach now can shape the vendor shortlist before a decision is made."
+        )
+    return f"At {round(score)}/100, this is an early-stage opportunity worth monitoring for escalating signals."
+
+
+def _intelligence_summary(
+    name: str,
+    industry: str,
+    location_city: Optional[str],
+    location_state: Optional[str],
+    employee_estimate: Optional[int],
+    pri,
+    sigs: list,
+    deduped_sigs: list,
+) -> str:
+    """
+    Generates a 4-5 sentence analyst-style intelligence paragraph.
+    Avoids reconstituting raw scraper text; instead synthesizes *what it means*.
+    """
+    ind = _industry_display(industry)
+    loc = ""
+    if location_city and location_state:
+        loc = f", based in {location_city}, {location_state}"
+    elif location_state:
+        loc = f", based in {location_state}"
+
+    size = _company_size_descriptor(employee_estimate)
+    size_str = f"{size} " if size else ""
+
+    # Sentence 1 — company context
+    s1 = f"{name} is a {size_str}{ind} company{loc}."
+
+    # Sentence 2 — what signals and what they mean
+    unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped_sigs]))[:4]
+    labels = [_sig_label(t) for t in unique_types if t]
+    sig_count = len(sigs)
+    automation_type, pain_point = _industry_automation_context(industry)
+
+    if labels:
+        types_str = ", ".join(labels[:3])
+        s2 = (
+            f"Our signal engine picked up {sig_count} buying indicator{'s' if sig_count != 1 else ''} "
+            f"across {len(labels)} signal type{'s' if len(labels) != 1 else ''} — "
+            f"including {types_str} — pointing to active pain around {pain_point}."
+        )
+    else:
+        s2 = (
+            f"Our system detected {sig_count} automation buying signal{'s' if sig_count != 1 else ''}, "
+            f"indicating active pain around {pain_point}."
+        )
+
+    # Sentence 3 — strongest evidence excerpt (the signal, not the raw text dumped wholesale)
+    top = deduped_sigs[0] if deduped_sigs else None
+    s3 = ""
+    if top:
+        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
+        label = _sig_label(getattr(top, "signal_type", ""))
+        if raw:
+            excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
+            s3 = f'The strongest signal is a {label}: "{excerpt}"'
+        else:
+            s3 = f"The leading indicator is a {label}, consistent with companies actively exploring {automation_type}."
+
+    # Sentence 4 — buy window / scoring context
+    s4 = _tier_buy_window(pri.tier, pri.score)
+
+    # Sentence 5 — qualifying factors from reasons
+    reasons = pri.reasons or []
+    s5 = ""
+    if reasons:
+        s5 = f"Key qualifying factors: {'; '.join(reasons[:2])}."
+
+    parts = [s1, s2]
+    if s3:
+        parts.append(s3)
+    parts.append(s4)
+    if s5:
+        parts.append(s5)
+    return " ".join(parts)
+
+
+def _intelligence_fulltext(
+    name: str,
+    industry: str,
+    website: Optional[str],
+    pri,
+    sigs: list,
+    deduped_sigs: list,
+    summary: str,
+) -> str:
+    """
+    Full expanded story body: intelligence paragraph + structured signal breakdown.
+    """
+    ind = _industry_display(industry)
+    automation_type, _ = _industry_automation_context(industry)
+
+    lines = [f"**{name}** ({ind})\n", summary, ""]
+
+    # Signal breakdown
+    if deduped_sigs:
+        lines.append("**Buying signals detected:**")
+        for s in deduped_sigs[:5]:
+            label = _sig_label(getattr(s, "signal_type", "signal"))
+            raw = (getattr(s, "signal_text", None) or "").replace("\n", " ").strip()
+            excerpt = (raw[:200] + "…" if len(raw) > 200 else raw) if raw else "(no text)"
+            strength = getattr(s, "signal_strength", None)
+            strength_str = f" [{int((strength or 0) * 100)}% strength]" if strength else ""
+            lines.append(f"• **{label}**{strength_str}: {excerpt}")
+        lines.append("")
+
+    # Automation fit note
+    lines.append(f"**Automation fit:** {name} matches the profile for {automation_type}.")
+    if pri.reasons:
+        lines.append(f"**Qualifiers:** {' · '.join(pri.reasons[:3])}")
+
+    if website:
+        lines.append(f"\n🔗 {website}")
+
+    return "\n".join(lines)
 
 
 def _truncate(text: str, max_len: int) -> str:
@@ -121,44 +305,79 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             continue
 
         sigs = sorted(c.signals, key=lambda s: (s.signal_strength or 0), reverse=True)
-        top_sig = sigs[0]
         latest_at = max(
             (getattr(s, "created_at", None) for s in c.signals if getattr(s, "created_at", None)),
             default=None,
         )
+
+        # Deduplicate by signal type (best per type, strongest first)
+        seen_types: set = set()
+        deduped: list = []
+        for s in sigs:
+            t = getattr(s, "signal_type", None) or "unknown"
+            if t not in seen_types:
+                seen_types.add(t)
+                deduped.append(s)
+            if len(deduped) >= 5:
+                break
+
+        top_sig = deduped[0] if deduped else sigs[0]
         sig_type = top_sig.signal_type or "news"
-        category = SIGNAL_CATEGORIES.get(sig_type, sig_type.upper().replace("_", " "))
+        category = SIGNAL_CATEGORIES.get(sig_type, sig_type.replace("_", " ").title())
 
-        raw = (top_sig.signal_text or "").strip()
-        if len(raw) > 60:
-            headline = _truncate(raw, 80)
-        else:
-            headline = f"{c.name or 'Company'}: {_truncate(raw, 70)}" if raw else f"{c.name} — {category}"
-
-        snippet = _truncate(raw, 120) if raw else f"Buying signal detected for {c.name} in {_industry_display(c.industry) or 'automation'}."
-
-        full_parts = [f"**{c.name}** ({_industry_display(c.industry)})"]
-        for s in sigs[:5]:
-            txt = (s.signal_text or "").strip()
-            if txt:
-                full_parts.append(f"• [{s.signal_type or 'signal'}]: {txt}")
-        if c.website:
-            full_parts.append(f"\n🔗 {c.website}")
-        fullText = "\n\n".join(full_parts)
-
+        # Build intelligence summary (4-5 sentences — the key upgrade)
+        name = c.name or "Company"
+        ind = _industry_display(c.industry)
         score = (c.scores.overall_intent_score if c.scores else 0) or pri.score
-        signal_strength = min(10, max(1, int(score / 10)))
 
+        summary = _intelligence_summary(
+            name=name,
+            industry=c.industry or "",
+            location_city=c.location_city,
+            location_state=c.location_state,
+            employee_estimate=c.employee_estimate,
+            pri=pri,
+            sigs=sigs,
+            deduped_sigs=deduped,
+        )
+
+        fullText = _intelligence_fulltext(
+            name=name,
+            industry=c.industry or "",
+            website=c.website,
+            pri=pri,
+            sigs=sigs,
+            deduped_sigs=deduped,
+            summary=summary,
+        )
+
+        # Headline: company name + leading signal type — not raw scraped text
+        automation_type, pain_point = _industry_automation_context(c.industry or "")
+        headline = f"{name}: {_sig_label(sig_type)} Signal Detected"
+
+        # Snippet: first 2 sentences of summary (shows under headline in collapsed view)
+        sentences = summary.split(". ")
+        snippet = ". ".join(sentences[:2]).strip()
+        if not snippet.endswith("."):
+            snippet += "."
+
+        signal_strength = min(10, max(1, int(score / 10)))
         base_score = (2 if pri.tier == "HOT" else 1) * score
         recency_key = _recency_sort_key(latest_at)
+
+        # roi/economics/impact — contextual, not generic
+        unique_label_str = ", ".join([_sig_label(getattr(s, "signal_type", "")) for s in deduped[:2]])
+        tier_label = "High intent" if pri.tier == "HOT" else "In-market"
+
         stories.append({
             "category": category,
-            "company": c.name or "Company",
+            "company": name,
             "headline": headline,
             "snippet": snippet,
-            "roi": "High intent" if pri.tier == "HOT" else "Warm lead",
-            "economics": f"{_industry_display(c.industry)} · {len(sigs)} signals",
-            "impact": f"Score {round(score, 0)}/100",
+            "summary": summary,           # ← 4-5 sentence intelligence paragraph
+            "roi": tier_label,
+            "economics": f"{ind} · {len(sigs)} signals",
+            "impact": f"Score {round(score)}/100",
             "signalStrength": signal_strength,
             "fullText": fullText,
             "company_id": c.id,

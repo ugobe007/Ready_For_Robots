@@ -219,56 +219,126 @@ def _dedup_top_signals(sigs: list, n: int = LEAD_RESPONSE_MAX_SIGNALS) -> list:
     return deduped
 
 
+# Industry-to-automation-context map (mirrors newsletter_service logic)
+_INDUSTRY_AUTOMATION_CTX: dict[str, tuple[str, str]] = {
+    "logistics": ("autonomous mobile robots and warehouse automation", "labor-intensive picking and last-mile delivery"),
+    "supply chain": ("AMRs and warehouse orchestration software", "throughput bottlenecks and labor shortages"),
+    "warehouse": ("AMRs, AS/RS, and goods-to-person systems", "picking efficiency and labor replacement"),
+    "fulfillment": ("goods-to-person robots and automated conveyors", "order fulfillment speed and accuracy"),
+    "hospitality": ("room service robots and housekeeping automation", "labor vacancies and service consistency"),
+    "hotel": ("delivery robots and back-of-house automation", "housekeeping labor shortages and service consistency"),
+    "healthcare": ("hospital logistics robots and disinfection bots", "staff walking time and infection control"),
+    "hospital": ("logistics robots and UV disinfection systems", "staff redeployment and patient safety"),
+    "food service": ("kitchen automation and order fulfillment systems", "labor shortages and food consistency"),
+    "restaurant": ("kitchen automation and front-of-house robots", "staff turnover and order accuracy"),
+    "manufacturing": ("collaborative robots (cobots) and assembly automation", "labor costs and quality control"),
+    "food & beverage": ("packaging automation and processing robots", "labor costs and production throughput"),
+}
+
+
+def _automation_ctx(industry: str) -> tuple[str, str]:
+    low = (industry or "").lower()
+    for key, val in _INDUSTRY_AUTOMATION_CTX.items():
+        if key in low:
+            return val
+    return ("robotic automation", "operational efficiency and labor costs")
+
+
+def _company_size_word(emp: int | None) -> str:
+    if not emp:
+        return ""
+    if emp >= 10000:
+        return "large enterprise "
+    if emp >= 5000:
+        return "enterprise "
+    if emp >= 1000:
+        return "mid-market "
+    if emp >= 200:
+        return "growth-stage "
+    return ""
+
+
 def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
     """
-    Returns (share_blurb ~200c for social, share_summary rich card paragraph).
-    Summary reads like human intelligence: what signals, what they mean, score context.
+    Returns (share_blurb ~220c for Twitter/copy, share_summary 4-5 sentence intelligence paragraph).
+    The summary is used on deal cards AND as the header text for social posts.
     """
-    ind = (c.industry or "").strip()
-    if not ind or ind.lower() in ("unknown", "other"):
-        ind = "New"
-    tier = pri.tier
+    raw_ind = (c.industry or "").strip()
+    ind = raw_ind if raw_ind and raw_ind.lower() not in ("unknown", "other") else "New"
     name = c.name or "Company"
+    tier = pri.tier
+    score = pri.score
 
     if not sigs:
-        summary = f"{name} ({ind}) — showing automation buying-intent signals."
+        summary = f"{name} is a {ind} company showing early automation buying signals on Ready For Robots."
         return summary[:220], summary
 
-    # Pick unique-type top signals for the summary
     deduped = _dedup_top_signals(sigs, 5)
+    automation_type, pain_point = _automation_ctx(raw_ind)
+    size_word = _company_size_word(c.employee_estimate)
 
-    # Signal type labels list
-    type_labels = [_signal_label(getattr(s, "signal_type", "")) for s in deduped]
-    types_str = ", ".join(type_labels[:3])
-    if len(type_labels) > 3:
-        types_str += f" + {len(type_labels) - 3} more"
+    # Build location snippet
+    loc = ""
+    if c.location_city and c.location_state:
+        loc = f", based in {c.location_city}, {c.location_state}"
+    elif c.location_state:
+        loc = f", based in {c.location_state}"
 
-    # Pull best excerpt (longest clean snippet from top 3 signals)
-    excerpt = ""
-    for s in deduped[:3]:
-        raw = (getattr(s, "signal_text", None) or "").replace("\n", " ").strip()
-        if len(raw) > len(excerpt):
-            excerpt = raw
-    if len(excerpt) > 180:
-        excerpt = excerpt[:177].rsplit(" ", 1)[0] + "…"
+    # S1 — company identity
+    s1 = f"{name} is a {size_word}{ind} company{loc}."
 
-    # Score interpretation
+    # S2 — what signals and what they signal
+    unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped]))[:4]
+    labels = [_signal_label(t) for t in unique_types if t]
+    sig_count = len(sigs)
+    if labels:
+        types_str = ", ".join(labels[:3])
+        s2 = (
+            f"Our system detected {sig_count} buying indicator{'s' if sig_count != 1 else ''} "
+            f"across {len(labels)} signal type{'s' if len(labels) != 1 else ''} — "
+            f"including {types_str} — indicating active pain around {pain_point}."
+        )
+    else:
+        s2 = f"Our system detected {sig_count} automation signal{'s' if sig_count != 1 else ''} pointing to interest in {automation_type}."
+
+    # S3 — strongest evidence, paraphrased not dumped raw
+    top = deduped[0] if deduped else None
+    s3 = ""
+    if top:
+        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
+        top_label = _signal_label(getattr(top, "signal_type", ""))
+        if raw:
+            excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
+            s3 = f'Strongest signal ({top_label}): "{excerpt}"'
+        else:
+            s3 = f"The leading indicator is a {top_label}, consistent with companies actively evaluating {automation_type}."
+
+    # S4 — buy window / confidence level
+    tier_sentences = {
+        "HOT": f"With a score of {round(score)}/100, this is a high-confidence buyer — likely evaluating automation vendors within the next 60–90 days.",
+        "WARM": f"Scoring {round(score)}/100, this account is in active exploration — well-timed outreach now can shape the vendor shortlist.",
+        "COLD": f"At {round(score)}/100, this is an early-stage opportunity worth monitoring for escalating signals.",
+    }
+    s4 = tier_sentences.get(tier, f"Composite score: {round(score)}/100.")
+
+    # S5 — qualifying reasons
     reasons = pri.reasons or []
-    reason_note = f" — {reasons[0]}" if reasons else ""
+    s5 = f"Key qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
 
-    # Compose the card summary
-    tier_word = {"HOT": "active buyer", "WARM": "in-market", "COLD": "emerging opportunity"}.get(tier, tier.lower())
-    summary_parts = [f"{name} is a {tier_word} in {ind}."]
-    summary_parts.append(f"Signals: {types_str}.")
-    if excerpt:
-        summary_parts.append(f'Latest: "{excerpt}"')
-    if reason_note:
-        summary_parts.append(f"Why it ranks: {reasons[0]}.")
-    summary = " ".join(summary_parts)
+    parts = [s1, s2]
+    if s3:
+        parts.append(s3)
+    parts.append(s4)
+    if s5:
+        parts.append(s5)
+    summary = " ".join(parts)
 
-    # Short blurb for social share
-    blurb = f"{name} ({ind}): {types_str}. {excerpt[:80]}{'…' if len(excerpt) > 80 else ''} · readyforrobots.com"
-    return blurb[:220], summary[:600]
+    # Short blurb for character-limited contexts (Twitter preview text)
+    blurb = (
+        f"{name} ({ind}): {', '.join(labels[:2])} signals detected. "
+        f"Score {round(score)}/100 — {tier.lower()} lead · readyforrobots.com"
+    )
+    return blurb[:220], summary[:700]
 
 
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:

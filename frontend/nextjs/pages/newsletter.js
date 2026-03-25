@@ -81,16 +81,25 @@ function ShareButtons({ url, title, description, compact = false, id }) {
   );
 }
 
-function CopyStoryButton({ story, buttonId }) {
+function CopyStoryButton({ story, buttonId, socialMode = false }) {
   const [copied, setCopied] = useState(false);
   const copyContent = () => {
-    const subtitle = story.subheadline || story.snippet || '';
-    const body = (story.fullText || '').trim();
-    const text = [
-      `${story.company}: ${story.headline}`,
-      subtitle ? `\n${subtitle}` : '',
-      body ? `\n\n${body}` : '',
-    ].filter(Boolean).join('');
+    let text;
+    if (socialMode) {
+      // Social mode: just the intelligence summary + URL — perfect header for a post
+      const summary = story.summary || story.snippet || `${story.company}: ${story.headline}`;
+      text = `${summary}\n\n🤖 More at readyforrobots.com/newsletter/`;
+    } else {
+      // Full content mode: summary as header, then body
+      const summary = story.summary || story.snippet || '';
+      const body = (story.fullText || '').trim();
+      text = [
+        `${story.company}: ${story.headline}`,
+        summary ? `\n\n${summary}` : '',
+        body ? `\n\n${body}` : '',
+        '\n\n🤖 readyforrobots.com/newsletter/',
+      ].filter(Boolean).join('');
+    }
     navigator.clipboard?.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -101,10 +110,14 @@ function CopyStoryButton({ story, buttonId }) {
       id={buttonId}
       type="button"
       onClick={copyContent}
-      aria-label="Copy full content for social"
-      className="px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-[10px] font-medium transition-colors whitespace-nowrap"
+      aria-label={socialMode ? 'Copy for social post' : 'Copy full content'}
+      className={`px-2 py-1 rounded text-[10px] font-medium transition-colors whitespace-nowrap ${
+        socialMode
+          ? 'bg-emerald-900/40 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-800/50'
+          : 'bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white'
+      }`}
     >
-      {copied ? 'Copied!' : 'Copy content'}
+      {copied ? 'Copied!' : socialMode ? 'Copy for social' : 'Copy content'}
     </button>
   );
 }
@@ -451,8 +464,13 @@ export default function Newsletter() {
                     </div>
                   </div>
                   <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
-                    <ShareButtons compact id={`share-story-${idx}`} title={`${story.company}: ${story.headline}`} description={`${story.company} — ${story.headline}. ${(story.subheadline || story.snippet)}`} />
-                    <CopyStoryButton story={story} buttonId={`copy-story-${idx}`} />
+                    <ShareButtons
+                      compact
+                      id={`share-story-${idx}`}
+                      title={`${story.company}: ${story.headline}`}
+                      description={story.summary || story.snippet || `${story.company} — ${story.headline}`}
+                    />
+                    <CopyStoryButton story={story} buttonId={`copy-story-${idx}`} socialMode />
                   </div>
                 </div>
 
@@ -497,17 +515,38 @@ export default function Newsletter() {
                 {/* Collapseable Full Story */}
                 <div 
                   className={`overflow-hidden transition-all duration-500 ${
-                    expandedStories[idx] ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'
+                    expandedStories[idx] ? 'max-h-[3000px] opacity-100 mt-4' : 'max-h-0 opacity-0'
                   }`}
                 >
-                  <div className="pt-4 border-t border-emerald-500/30 space-y-3">
+                  <div className="pt-4 border-t border-emerald-500/30 space-y-4">
+
+                    {/* Intelligence summary — prominent, social-ready */}
+                    {story.summary && (
+                      <div className="rounded-lg bg-neutral-900/70 border border-emerald-900/50 p-4 space-y-3">
+                        <div className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Intelligence Summary</div>
+                        <p className="text-sm text-neutral-200 leading-relaxed">{story.summary}</p>
+                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-neutral-800">
+                          <span className="text-[10px] text-neutral-500">Post this to social:</span>
+                          <ShareButtons
+                            compact
+                            id={`share-summary-${idx}`}
+                            title={`${story.company}: ${story.headline}`}
+                            description={story.summary}
+                          />
+                          <CopyStoryButton story={story} buttonId={`copy-social-${idx}`} socialMode />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Full signal breakdown */}
                     <div className="select-text rounded bg-neutral-900/50 p-3 border border-neutral-800" role="article">
-                      {story.fullText.split('\n\n').map((para, pIdx) => (
-                        <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line">
+                      {(story.fullText || '').split('\n\n').map((para, pIdx) => (
+                        <p key={pIdx} className="text-neutral-300 text-sm leading-relaxed whitespace-pre-line mb-3 last:mb-0">
                           {para}
                         </p>
                       ))}
                     </div>
+
                     <div className="flex flex-wrap items-center gap-2">
                       <CopyStoryButton story={story} buttonId={`copy-story-expanded-${idx}`} />
                       {story.company_id && (
@@ -516,8 +555,9 @@ export default function Newsletter() {
                         </Link>
                       )}
                     </div>
-                    <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center gap-2 text-xs text-neutral-500">
-                      <span>Select text to copy, or use Copy content above. Click to collapse</span>
+
+                    <div className="pt-3 border-t border-neutral-800 flex items-center gap-2 text-xs text-neutral-500">
+                      <span>Select text to copy, or use buttons above. Click to collapse</span>
                       <span className="text-emerald-400">▲</span>
                     </div>
                   </div>

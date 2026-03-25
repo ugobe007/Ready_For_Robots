@@ -737,11 +737,12 @@ export default function Signals() {
                             </button>
                             {shareMenuLeadId === lead.id && (() => {
                               const shareUrl = `${BASE_URL}/#leads`;
-                              const shareText = lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
+                              // share_summary is the 4-5 sentence intelligence paragraph — use as social post header
+                              const shareText = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
                               const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                               const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
                               const copyShare = () => {
-                                navigator.clipboard?.writeText(`${shareText} ${shareUrl}`);
+                                navigator.clipboard?.writeText(`${shareText}\n\n${shareUrl}`);
                                 setShareMenuLeadId(null);
                               };
                               return (
@@ -859,40 +860,47 @@ export default function Signals() {
                           </div>
                         )}
 
-                        {/* Share + CTA row */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs text-neutral-500">Share:</span>
-                            {(() => {
-                              const shareUrl = `${BASE_URL}/#leads`;
-                              const shareText = lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
-                              return (
-                                <>
-                                  <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                                    X
-                                  </a>
-                                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-[#0a66c2] text-neutral-400 hover:text-white text-xs">
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                    LinkedIn
-                                  </a>
-                                  <button
-                                    type="button"
-                                    onClick={() => navigator.clipboard?.writeText(`${shareText} ${shareUrl}`)}
-                                    className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-xs"
-                                  >
-                                    Copy
-                                  </button>
-                                </>
-                              );
-                            })()}
+                        {/* Share + CTA row — share_summary is the social post header */}
+                        <div className="space-y-2 pt-1">
+                          {lead.share_summary && (
+                            <div className="rounded bg-neutral-900/60 border border-orange-900/40 p-3 space-y-2">
+                              <div className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">Post this to social</div>
+                              <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3">{lead.share_summary}</p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {(() => {
+                                const shareUrl = `${BASE_URL}/#leads`;
+                                const shareText = lead.share_summary || lead.share_blurb || `${lead.company_name} (${lead.industry || 'Automation'}) — automation signals · Ready For Robots`;
+                                return (
+                                  <>
+                                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">
+                                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                      Share on X
+                                    </a>
+                                    <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-[#0a66c2] text-neutral-400 hover:text-white text-xs">
+                                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                      LinkedIn
+                                    </a>
+                                    <button
+                                      type="button"
+                                      onClick={() => navigator.clipboard?.writeText(`${shareText}\n\n${shareUrl}`)}
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-emerald-600 text-neutral-400 hover:text-white text-xs"
+                                    >
+                                      Copy post
+                                    </button>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            <Link
+                              href={`/dashboard?analyze=${lead.id}`}
+                              className="inline-flex items-center gap-1 text-sm text-orange-400 hover:text-orange-300 font-semibold whitespace-nowrap"
+                            >
+                              Full AI analysis →
+                            </Link>
                           </div>
-                          <Link
-                            href={`/dashboard?analyze=${lead.id}`}
-                            className="inline-flex items-center gap-1 text-sm text-orange-400 hover:text-orange-300 font-semibold whitespace-nowrap"
-                          >
-                            Full AI analysis →
-                          </Link>
                         </div>
                       </div>
                     )}
