@@ -70,7 +70,7 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
 TIERS = ("HOT", "WARM", "COLD")
 
 # Industries where automation robots have the strongest fit
-_HIGH_FIT_INDUSTRIES = {
+HIGH_FIT_INDUSTRIES = {
     "hospitality", "hotel", "hotel & hospitality",
     "logistics", "supply chain", "3pl", "distribution",
     "healthcare", "hospital", "senior living", "assisted living",
@@ -124,9 +124,37 @@ _HOT_SIGNAL_TYPES = SIGNAL_TYPES_HOT
 _WARM_SIGNAL_TYPES = SIGNAL_TYPES_WARM
 
 # One strong deployment/procurement hit can justify HOT with moderate ML score
-_DEPLOYMENT_SIGNAL_TYPES = frozenset({
+DEPLOYMENT_SIGNAL_TYPES = frozenset({
     "robot_installation", "pilot_success", "scale_expansion", "vendor_selection", "rfp_posted",
 })
+
+# ─── Priority scoring knobs (Hot / Warm / Emerging) — also surfaced on /api/leads/scoring-system ───
+# Tuned looser (Mar 2025): more accounts reach Hot/Warm without drowning in duplicate-type noise.
+PRIORITY_COMPOSITE_CAP = 100.0
+PRIORITY_INDUSTRY_FIT_BOOST = 6.0
+# Volume tiers: first matching tier applies (not cumulative)
+PRIORITY_SIGNAL_VOLUME_TIERS = (
+    (8, 3.5, True),   # (min_signal_count, boost_points, append_reason_to_priority_reasons)
+    (5, 2.5, False),
+    (3, 1.5, False),
+)
+PRIORITY_ENTERPRISE_MIN_EMPLOYEES = 5000
+PRIORITY_ENTERPRISE_BOOST = 5.0
+PRIORITY_MIDMARKET_MIN_EMPLOYEES = 1000
+PRIORITY_MIDMARKET_BOOST = 2.0
+# Tier cutoffs on composite = min(PRIORITY_COMPOSITE_CAP, ml_base + boosts)
+PRIORITY_HOT_COMPOSITE_MIN = 78.0
+PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS = 72.0
+PRIORITY_WARM_COMPOSITE_MIN = 47.0
+PRIORITY_WARM_BASE_WITH_INDUSTRY = 40.0
+# "hot_enough" gates: still block composite-only HOT with zero buying-intent types
+PRIORITY_HOT_DISTINCT_TYPES_MIN = 2
+PRIORITY_HOT_BASE_WITH_TWO_HITS = 55.0
+PRIORITY_HOT_BASE_WITH_ONE_HIT = 62.0
+PRIORITY_HOT_BASE_WITH_DEPLOYMENT = 45.0
+# Sublinear hot/warm boost caps (see _hot_signal_boost / _warm_signal_boost)
+HOT_SIGNAL_BOOST_CAP = 18.0
+WARM_SIGNAL_BOOST_CAP = 9.0
 
 
 @dataclass
@@ -140,7 +168,7 @@ def _industry_fits(industry: Optional[str]) -> bool:
     if not industry:
         return False
     low = industry.lower()
-    return any(k in low for k in _HIGH_FIT_INDUSTRIES)
+    return any(k in low for k in HIGH_FIT_INDUSTRIES)
 
 
 def _hot_signal_boost(hot_types: List[str]) -> float:
@@ -154,10 +182,10 @@ def _hot_signal_boost(hot_types: List[str]) -> float:
     n = len(hot_types)
     u = len(set(hot_types))
     # Diversity: up to +10 for 2+ distinct hot types; volume: sublinear, capped
-    diversity = min(10.0, 5.0 * min(2, u))
+    diversity = min(10.0, 5.5 * min(2, u))
     extra_same = max(0, n - u)
-    volume = min(8.0, 1.2 * min(6, extra_same) + 0.8 * min(3, u))
-    return min(16.0, diversity + volume)
+    volume = min(8.5, 1.3 * min(6, extra_same) + 0.85 * min(3, u))
+    return min(HOT_SIGNAL_BOOST_CAP, diversity + volume)
 
 
 def _warm_signal_boost(warm_types: List[str]) -> float:
@@ -165,7 +193,7 @@ def _warm_signal_boost(warm_types: List[str]) -> float:
         return 0.0
     n = len(warm_types)
     u = len(set(warm_types))
-    return min(8.0, 2.0 * min(3, u) + 0.6 * min(5, max(0, n - u)))
+    return min(WARM_SIGNAL_BOOST_CAP, 2.2 * min(3, u) + 0.65 * min(5, max(0, n - u)))
 
 
 def priority_tier(
@@ -187,7 +215,7 @@ def priority_tier(
 
     # Industry fit boost (was 8 — too many WARM/HOT via industry alone)
     if _industry_fits(industry):
-        boost += 5.0
+        boost += PRIORITY_INDUSTRY_FIT_BOOST
         reasons.append(f"high-fit industry ({industry})")
 
     # Signal type boosters (capped — do not let N duplicate rows max out composite)
@@ -204,36 +232,43 @@ def priority_tier(
         boost += _warm_signal_boost(warm_hits)
 
     # Signal volume boost (mild — type boosts already reflect volume somewhat)
-    if signal_count >= 8:
-        boost += 3.0
-        reasons.append(f"{signal_count} signals")
-    elif signal_count >= 5:
-        boost += 2.0
-    elif signal_count >= 3:
-        boost += 1.0
+    for min_cnt, pts, with_reason in PRIORITY_SIGNAL_VOLUME_TIERS:
+        if signal_count >= min_cnt:
+            boost += pts
+            if with_reason:
+                reasons.append(f"{signal_count} signals")
+            break
 
     # Employee size boost (enterprise = more budget)
-    if employee_estimate and employee_estimate >= 5000:
-        boost += 5.0
+    if employee_estimate and employee_estimate >= PRIORITY_ENTERPRISE_MIN_EMPLOYEES:
+        boost += PRIORITY_ENTERPRISE_BOOST
         reasons.append(f"enterprise ({employee_estimate:,} employees)")
-    elif employee_estimate and employee_estimate >= 1000:
-        boost += 2.0
+    elif employee_estimate and employee_estimate >= PRIORITY_MIDMARKET_MIN_EMPLOYEES:
+        boost += PRIORITY_MIDMARKET_BOOST
 
-    composite = min(100.0, base + boost)
+    composite = min(PRIORITY_COMPOSITE_CAP, base + boost)
 
     # HOT: stricter. Duplicate rows of one hot type (e.g. RSS noise) must not
     # qualify on composite alone — need distinct intent types OR strong base score.
     distinct_hot = len(set(hot_hits))
-    has_deployment_signal = any(s in _DEPLOYMENT_SIGNAL_TYPES for s in signal_types)
+    has_deployment_signal = any(s in DEPLOYMENT_SIGNAL_TYPES for s in signal_types)
     hot_enough = (
-        distinct_hot >= 2
-        or (len(hot_hits) >= 2 and base >= 68)
-        or (len(hot_hits) >= 1 and base >= 72)
-        or (has_deployment_signal and len(hot_hits) >= 1 and base >= 52)
+        distinct_hot >= PRIORITY_HOT_DISTINCT_TYPES_MIN
+        or (len(hot_hits) >= 2 and base >= PRIORITY_HOT_BASE_WITH_TWO_HITS)
+        or (len(hot_hits) >= 1 and base >= PRIORITY_HOT_BASE_WITH_ONE_HIT)
+        or (
+            has_deployment_signal
+            and len(hot_hits) >= 1
+            and base >= PRIORITY_HOT_BASE_WITH_DEPLOYMENT
+        )
     )
-    if composite >= 82 or (composite >= 76 and hot_enough):
+    if composite >= PRIORITY_HOT_COMPOSITE_MIN or (
+        composite >= PRIORITY_HOT_COMPOSITE_WITH_HOT_SIGNALS and hot_enough
+    ):
         return PriorityResult("HOT", composite, reasons)
-    if composite >= 52 or (base >= 44 and _industry_fits(industry)):
+    if composite >= PRIORITY_WARM_COMPOSITE_MIN or (
+        base >= PRIORITY_WARM_BASE_WITH_INDUSTRY and _industry_fits(industry)
+    ):
         return PriorityResult("WARM", composite, reasons)
     return PriorityResult("COLD", composite, reasons)
 

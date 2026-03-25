@@ -3,12 +3,27 @@
  * Automation types, robot needs, ROI expectations, common tasks from scraped signals.
  * Available to all users (no admin required).
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import IndustryBriefBlock from '../components/IndustryBriefBlock';
 
 const API = getApiBase();
+
+function displayIndustryName(k) {
+  const s = String(k || '').trim();
+  if (!s || ['unknown', 'other', 'uncategorized', 'n/a'].includes(s.toLowerCase())) return 'Emerging';
+  return k;
+}
+
+function mergeIndustryCounts(obj) {
+  const m = {};
+  Object.entries(obj || {}).forEach(([k, v]) => {
+    const lab = displayIndustryName(k);
+    m[lab] = (m[lab] || 0) + Number(v);
+  });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
 
 function StatCard({ label, value, sub }) {
   return (
@@ -39,6 +54,11 @@ export default function MarketInsights() {
   }, [days]);
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
+
+  const industryRows = useMemo(
+    () => mergeIndustryCounts(data?.industries),
+    [data?.industries],
+  );
 
   if (loading) {
     return (
@@ -82,7 +102,7 @@ export default function MarketInsights() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">Opportunity Analytics</h2>
-            <p className="text-neutral-400">What automation is inferred? What robots are needed? ROI expectations? Common tasks — from scraped signals</p>
+            <p className="text-neutral-400">Automation themes from signals, trending robot categories, ROI and trial language, tasks to automate — updated from live opportunity data</p>
           </div>
           <div className="flex items-center gap-2">
             {[1, 7, 30].map((d) => (
@@ -104,7 +124,7 @@ export default function MarketInsights() {
 
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard label="Signals Analyzed" value={totals.signals} />
+          <StatCard label="Signals discovered" value={totals.signals} sub="In selected window" />
           <StatCard label="Companies w/ Opportunities" value={totals.companies_with_signals} />
           <StatCard label="ROI Mentions" value={data?.roi_mentions || 0} sub="In signal text" />
           <StatCard label="Pilot/Trial Mentions" value={data?.trial_pilot_mentions || 0} sub="In signal text" />
@@ -115,7 +135,7 @@ export default function MarketInsights() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Automation Types */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Automation Types Inferred</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Automation themes (inferred)</h3>
             <div className="space-y-3">
               {Object.entries(data?.automation_types_inferred || {}).slice(0, 8).map(([k, v]) => (
                 <div key={k}>
@@ -131,9 +151,10 @@ export default function MarketInsights() {
             </div>
           </div>
 
-          {/* Robot Types Needed */}
+          {/* Robot categories trending */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Robot Types Needed</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Robot categories trending</h3>
+            <p className="text-xs text-neutral-500 mb-3">Categories most mentioned with automation opportunities in this window — not a procurement forecast.</p>
             <div className="space-y-3">
               {Object.entries(data?.robot_types_needed || {}).slice(0, 8).map(([k, v]) => (
                 <div key={k}>
@@ -170,13 +191,15 @@ export default function MarketInsights() {
           {/* Industries */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
             <h3 className="text-lg font-semibold text-white mb-4">Industries</h3>
+            <p className="text-xs text-neutral-500 mb-3">Unclassified companies are grouped as Emerging.</p>
             <div className="space-y-2">
-              {Object.entries(data?.industries || {}).slice(0, 8).map(([k, v]) => (
+              {industryRows.slice(0, 8).map(([k, v]) => (
                 <div key={k} className="flex justify-between text-sm">
                   <span className="text-neutral-300">{k}</span>
                   <span className="text-neutral-500">{v}</span>
                 </div>
-              )) || <p className="text-neutral-500">No data</p>}
+              ))}
+              {industryRows.length === 0 && <p className="text-neutral-500">No data</p>}
             </div>
           </div>
         </div>

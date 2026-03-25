@@ -32,8 +32,13 @@ from app.services.lead_filter import (
 )
 from app.services.signal_ranker import compute_weighted_score
 from app.services.industry_inference import infer_industry_from_text
+from app.services.scoring_public import get_scoring_system_public
 
 router = APIRouter()
+
+# Embedded `signals` in JSON are capped (total count remains in `signal_count`).
+# Keeps payloads small and fixes static-export sites that may serve cached JS.
+LEAD_RESPONSE_MAX_SIGNALS = 10
 
 # Tuple for SQLAlchemy .in_() — must match classify_lead / SIGNAL_TYPES_* in lead_filter
 _SQL_HOT_TYPES = tuple(SIGNAL_TYPES_HOT)
@@ -183,6 +188,13 @@ def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     s = c.scores
     sigs = c.signals or []
+    signal_count_total = len(sigs)
+    sigs_sorted = sorted(
+        sigs,
+        key=lambda x: float(getattr(x, "signal_strength", None) or 0),
+        reverse=True,
+    )
+    sigs_for_response = sigs_sorted[:LEAD_RESPONSE_MAX_SIGNALS]
     # Public-facing: never expose "Unknown" — use "New" (unclassified)
     industry_display = (c.industry or "").strip()
     if not industry_display or industry_display.lower() in ("unknown", "other"):
@@ -213,7 +225,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
             "expansion_score":  round((s.expansion_score       if s else 0), 1),
             "market_fit_score": round((s.robotics_fit_score    if s else 0), 1),
         },
-        "signal_count": len(sigs),
+        "signal_count": signal_count_total,
         "created_at":   c.created_at.isoformat() if c.created_at else None,
         "updated_at":   c.updated_at.isoformat() if c.updated_at else None,
         "signals": [
@@ -224,7 +236,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
                 "raw_text":        sig.signal_text,
                 "source_url":      sig.source_url,
             }
-            for sig in sorted(sigs, key=lambda x: x.signal_strength, reverse=True)
+            for sig in sigs_for_response
         ],
         "share_blurb": share_blurb,
         "share_summary": share_summary,
@@ -488,7 +500,17 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
             "rotation_day": str(now.date()),
             "rotation_hour_utc": hour,
         },
+        "scoringSystem": get_scoring_system_public(),
     }
+
+
+@router.get("/scoring-system")
+def leads_scoring_system():
+    """
+    Full Hot/Warm/Emerging + per-signal weights (for UI copy and tuning).
+    Same payload embedded in GET /api/leads/homepage under `scoringSystem`.
+    """
+    return get_scoring_system_public()
 
 
 @router.get("/summary")

@@ -30,9 +30,24 @@ SIGNAL_TYPE_WEIGHTS: dict[str, float] = {
     "funding_round":       0.80,  # has capital + growth phase
     "ma_activity":         0.75,  # integration disruption creates openings
     "job_posting":         0.65,  # indirect but ongoing need
-    "news":                0.45,  # awareness only
+    "news":                0.52,  # awareness — slightly less punishing for tiering context
 }
-DEFAULT_TYPE_WEIGHT = 0.50
+DEFAULT_TYPE_WEIGHT = 0.55
+
+# Age decay: (max_age_days_inclusive, multiplier). Gentler than before for older-but-valid signals.
+SIGNAL_AGE_DECAY_BRACKETS = (
+    (7, 1.00),
+    (30, 0.88),
+    (90, 0.75),
+    (180, 0.60),
+)
+SIGNAL_AGE_DECAY_OLDEST_MULTIPLIER = 0.45
+SIGNAL_AGE_UNKNOWN_MULTIPLIER = 0.80
+
+# Multipliers when signal_text matches keyword patterns (stack multiplicatively)
+SIGNAL_TEXT_BOOST_ROBOT = 1.15
+SIGNAL_TEXT_BOOST_PROBLEM = 1.10
+SIGNAL_TEXT_BOOST_ROI = 1.08
 
 # ---------------------------------------------------------------------------
 # Keyword regexes
@@ -66,21 +81,15 @@ ROI_RE = re.compile(
 # ---------------------------------------------------------------------------
 def _age_factor(created_at) -> float:
     if not created_at:
-        return 0.75  # unknown age — moderate penalty
+        return SIGNAL_AGE_UNKNOWN_MULTIPLIER
     now = datetime.now(timezone.utc)
     if created_at.tzinfo is None:
         created_at = created_at.replace(tzinfo=timezone.utc)
     age_days = max((now - created_at).days, 0)
-    if age_days <= 7:
-        return 1.00
-    elif age_days <= 30:
-        return 0.85
-    elif age_days <= 90:
-        return 0.70
-    elif age_days <= 180:
-        return 0.55
-    else:
-        return 0.40
+    for max_days, mult in SIGNAL_AGE_DECAY_BRACKETS:
+        if age_days <= max_days:
+            return mult
+    return SIGNAL_AGE_DECAY_OLDEST_MULTIPLIER
 
 
 # ---------------------------------------------------------------------------
@@ -103,9 +112,9 @@ def compute_weighted_score(signal) -> float:
     age_w = _age_factor(created_at)
 
     text = getattr(signal, "signal_text", "") or ""
-    robot_boost   = 1.15 if ROBOT_RE.search(text) else 1.0
-    problem_boost = 1.10 if PROBLEM_RE.search(text) else 1.0
-    roi_boost     = 1.08 if ROI_RE.search(text) else 1.0
+    robot_boost = SIGNAL_TEXT_BOOST_ROBOT if ROBOT_RE.search(text) else 1.0
+    problem_boost = SIGNAL_TEXT_BOOST_PROBLEM if PROBLEM_RE.search(text) else 1.0
+    roi_boost = SIGNAL_TEXT_BOOST_ROI if ROI_RE.search(text) else 1.0
 
     weighted = base * type_w * age_w * robot_boost * problem_boost * roi_boost
     return round(min(weighted * 100, 100.0), 1)

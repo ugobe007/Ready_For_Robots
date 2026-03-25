@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -48,6 +49,79 @@ def _write_cache(payload: Dict[str, Any]) -> None:
     p.write_text(json.dumps(payload, indent=2))
 
 
+def _normalize_industry_label(raw: Optional[str]) -> str:
+    """Public-facing: never show Unknown/Other as industry — align with pipeline copy."""
+    s = (raw or "").strip()
+    if not s or s.lower() in ("unknown", "other", "uncategorized", "n/a", "na"):
+        return "Emerging"
+    return s
+
+
+def _rollup_industry_counts(industries: Optional[Dict[str, Any]], limit: int = 5) -> List[Tuple[str, int]]:
+    merged: Dict[str, int] = {}
+    for k, v in (industries or {}).items():
+        lab = _normalize_industry_label(str(k))
+        try:
+            n = int(v)
+        except (TypeError, ValueError):
+            n = 0
+        merged[lab] = merged.get(lab, 0) + n
+    ranked = sorted(merged.items(), key=lambda x: -x[1])
+    return ranked[:limit]
+
+
+def _signals_window_phrase(period_days: int, signal_count: int) -> str:
+    """Harmonized opening line for heuristic and prompt guidance."""
+    n = int(signal_count or 0)
+    if period_days <= 1:
+        return f"In the past 24 hours we discovered **{n}** opportunity signals."
+    if period_days == 7:
+        return f"In the past week we discovered **{n}** opportunity signals."
+    return f"Over the last {period_days} days we discovered **{n}** opportunity signals."
+
+
+def _theme_label(key: str) -> str:
+    """Readable automation-theme labels (matches analytics keys)."""
+    k = (key or "").replace("_", " ").strip()
+    aliases = {
+        "general awareness": "Awareness & news",
+        "evaluation": "Evaluation & buying journey",
+        "new facility": "New facilities & expansion",
+        "labor replacement": "Labor & staffing pressure",
+        "deployment": "Deployments & rollouts",
+        "procurement": "Procurement & vendor moves",
+        "budget allocated": "Budget & capex",
+    }
+    low = k.lower()
+    return aliases.get(low, k.title() if k else key)
+
+
+def _harmonize_executive_take(text: str) -> str:
+    if not text or not text.strip():
+        return text
+    t = re.sub(r"\bUnknown\b", "Emerging", text, flags=re.IGNORECASE)
+    t = re.sub(r"\bprocessed\b", "discovered", t, count=1, flags=re.IGNORECASE)
+    t = re.sub(
+        r"Robot categories most implied by text",
+        "Robot categories trending",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(
+        r"In the last\s+1\s+day\(s\)\s+we\s+",
+        "In the past 24 hours we ",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(
+        r"In the last\s+(\d+)\s+day\(s\)\s+we\s+processed",
+        r"Over the last \1 days we discovered",
+        t,
+        flags=re.IGNORECASE,
+    )
+    return t
+
+
 def _gather_snippets(db: Session, days: int, limit: int = 100) -> List[Dict[str, Any]]:
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     rows = (
@@ -77,31 +151,34 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
     """Rule-based brief when no LLM — still useful for dashboards."""
     totals = analytics.get("totals") or {}
     sig_n = totals.get("signals") or 0
+    period_days = int(analytics.get("period_days") or 1)
     top_auto = list((analytics.get("automation_types_inferred") or {}).items())[:3]
     top_robot = list((analytics.get("robot_types_needed") or {}).items())[:3]
-    top_ind = list((analytics.get("industries") or {}).items())[:5]
-    lines = [
-        f"In the last {analytics.get('period_days', 1)} day(s) we processed **{sig_n}** opportunity signals.",
-    ]
+    top_ind = _rollup_industry_counts(analytics.get("industries"), limit=5)
+    lines = [_signals_window_phrase(period_days, sig_n)]
     if top_auto:
         lines.append(
-            "Strongest automation themes: "
-            + ", ".join(f"{k.replace('_', ' ')} ({v})" for k, v in top_auto)
+            "Top automation themes we're seeing: "
+            + ", ".join(f"{_theme_label(k)} ({v})" for k, v in top_auto)
             + "."
         )
     if top_robot:
         lines.append(
-            "Robot categories most implied by text: " + ", ".join(f"{k} ({v})" for k, v in top_robot) + "."
+            "Robot categories trending: " + ", ".join(f"{k} ({v})" for k, v in top_robot) + "."
         )
     if top_ind:
-        lines.append("Most active industries: " + ", ".join(f"{k} ({v})" for k, v in top_ind) + ".")
+        lines.append(
+            "Industries most active in this window: "
+            + ", ".join(f"{lab} ({v})" for lab, v in top_ind)
+            + "."
+        )
 
     macro = []
     for k, v in top_auto[:4]:
         macro.append(
             {
-                "title": k.replace("_", " ").title(),
-                "detail": f"{v} signals in-window suggest continued focus on {k.replace('_', ' ')}.",
+                "title": _theme_label(k),
+                "detail": f"{v} signals in this window point to sustained activity in this theme.",
             }
         )
     strategic = [
@@ -123,7 +200,7 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
         )
 
     return {
-        "executive_take": " ".join(lines),
+        "executive_take": _harmonize_executive_take(" ".join(lines)),
         "macro_trends": macro[:5] or [{"title": "Building dataset", "detail": "Run scrapers to populate strategic trends."}],
         "strategic_implications": strategic,
         "risks_and_unknowns": [
@@ -151,16 +228,35 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
     client = OpenAI(api_key=key)
     model = os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini")
     totals = analytics.get("totals") or {}
+    ind_rolled = dict(_rollup_industry_counts(analytics.get("industries"), limit=12))
     digest = {
         "period_days": analytics.get("period_days"),
         "signal_count": totals.get("signals"),
         "top_automation_types": dict(list((analytics.get("automation_types_inferred") or {}).items())[:8]),
         "top_robot_types": dict(list((analytics.get("robot_types_needed") or {}).items())[:8]),
-        "top_industries": dict(list((analytics.get("industries") or {}).items())[:10]),
+        "top_industries": ind_rolled,
         "top_signal_types": dict(list((analytics.get("signal_types") or {}).items())[:10]),
         "sample_headlines": snippets[:24],
+        "language_rules": {
+            "opening": (
+                "If period_days is 1, start executive_take with exactly: "
+                "'In the past 24 hours we discovered [signal_count] opportunity signals.' "
+                "If period_days is 7: 'In the past week we discovered …'. "
+                "Otherwise: 'Over the last N days we discovered …'. "
+                "Never say 'processed' — use discovered."
+            ),
+            "robot_line": "Refer to robot type counts as 'Robot categories trending:' not 'implied by text'.",
+            "industries": (
+                "Never use the word Unknown for industry. "
+                "The JSON already merges unclassified into 'Emerging' — use that label only."
+            ),
+            "automation_themes": "Call them 'Top automation themes we're seeing:' (not 'Strongest automation themes').",
+            "industry_line": "Use 'Industries most active in this window:' for the industry sentence.",
+        },
     }
     prompt = """You are a senior industry analyst (McKinsey/CB Insights style). Using ONLY the JSON data below — aggregated opportunity signals for robotics / physical automation buyers — write a concise strategic brief for B2B robotics vendors and enterprise automation buyers.
+
+Follow language_rules in the JSON exactly for tone and vocabulary.
 
 Return valid JSON with this exact shape:
 {
@@ -212,8 +308,9 @@ DATA:
                 )
             elif isinstance(s, str):
                 impl.append({"audience": "Stakeholders", "insight": s})
+        exec_take = _harmonize_executive_take(data.get("executive_take", "") or "")
         return {
-            "executive_take": data.get("executive_take", ""),
+            "executive_take": exec_take,
             "macro_trends": trends,
             "strategic_implications": impl,
             "risks_and_unknowns": data.get("risks_and_unknowns") or [],

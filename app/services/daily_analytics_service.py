@@ -228,11 +228,14 @@ def get_daily_analytics(db: Session, days: int = 1) -> Dict[str, Any]:
     # ── 6. Signal type breakdown ──
     signal_type_counts = Counter(s.signal_type for s in signals)
     
-    # ── 7. Industry breakdown ──
+    # ── 7. Industry breakdown (raw keys merged to public labels in output) ──
     industry_counts = Counter()
     for c in companies_with_signals:
         ind = c.industry or "Unknown"
         industry_counts[ind] += 1
+    industry_public = Counter()
+    for raw, cnt in industry_counts.items():
+        industry_public[_industry_public_label(raw)] += cnt
     
     # ── 8. Top companies by signal count ──
     company_signal_counts = (
@@ -278,7 +281,7 @@ def get_daily_analytics(db: Session, days: int = 1) -> Dict[str, Any]:
         "trial_pilot_mentions": trial_mention_count,
         "common_tasks_to_automate": dict(task_counts.most_common(15)),
         "signal_types": dict(signal_type_counts.most_common(15)),
-        "industries": dict(industry_counts.most_common(15)),
+        "industries": dict(industry_public.most_common(15)),
         "top_companies_by_signals": [{"name": n, "signals": c} for n, c in company_signal_counts],
         "top_states": dict(state_counts.most_common(10)),
         "top_countries": dict(country_counts.most_common(10)),
@@ -291,29 +294,42 @@ def get_daily_analytics(db: Session, days: int = 1) -> Dict[str, Any]:
     }
 
 
+def _industry_public_label(raw: Optional[str]) -> str:
+    s = (raw or "").strip()
+    if not s or s.lower() in ("unknown", "other", "uncategorized", "n/a", "na"):
+        return "Emerging"
+    return s
+
+
 def format_report_markdown(analytics: Dict[str, Any]) -> str:
     """Format analytics as a human-readable markdown report."""
     lines = []
     lines.append("# Daily Opportunity Analytics Report")
-    lines.append(f"**Period:** Last {analytics['period_days']} day(s)")
+    pd = int(analytics.get("period_days") or 1)
+    if pd <= 1:
+        lines.append("**Period:** Past 24 hours")
+    elif pd == 7:
+        lines.append("**Period:** Past week")
+    else:
+        lines.append(f"**Period:** Last {pd} days")
     lines.append(f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
     lines.append("")
     
     totals = analytics["totals"]
     lines.append("## Summary")
-    lines.append(f"- **Signals analyzed:** {totals['signals']}")
+    lines.append(f"- **Opportunity signals discovered:** {totals['signals']}")
     lines.append(f"- **Companies with opportunities:** {totals['companies_with_signals']}")
     lines.append("")
     
-    lines.append("## Automation Types Inferred")
-    lines.append("What type of automation is required or inferred from opportunity postings:")
+    lines.append("## Automation types (inferred)")
+    lines.append("Themes we infer from opportunity text and signal types:")
     for atype, count in list(analytics.get("automation_types_inferred", {}).items())[:10]:
         pct = (count / totals["signals"] * 100) if totals["signals"] else 0
         lines.append(f"- **{atype.replace('_', ' ').title()}:** {count} ({pct:.1f}%)")
     lines.append("")
     
-    lines.append("## Robot Types Needed")
-    lines.append("What type of robots are implied by the opportunities:")
+    lines.append("## Robot categories trending")
+    lines.append("Categories most mentioned alongside automation opportunities in this window:")
     for rtype, count in list(analytics.get("robot_types_needed", {}).items())[:10]:
         pct = (count / totals["signals"] * 100) if totals["signals"] else 0
         lines.append(f"- **{rtype}:** {count} ({pct:.1f}%)")
@@ -349,7 +365,11 @@ def format_report_markdown(analytics: Dict[str, Any]) -> str:
     lines.append("")
     
     lines.append("## Industries")
-    for ind, count in list(analytics.get("industries", {}).items())[:10]:
+    ind_merged: Dict[str, int] = {}
+    for ind, count in (analytics.get("industries") or {}).items():
+        lab = _industry_public_label(str(ind))
+        ind_merged[lab] = ind_merged.get(lab, 0) + int(count)
+    for ind, count in sorted(ind_merged.items(), key=lambda x: -x[1])[:10]:
         lines.append(f"- **{ind}:** {count}")
     lines.append("")
     

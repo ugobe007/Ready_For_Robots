@@ -8,6 +8,7 @@ import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
 
 // Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
 const API = getApiBase();
@@ -1597,10 +1598,19 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           )}
 
           {/* ── SIGNALS tab ── */}
-          {activeTab === 'signals' && (
+          {activeTab === 'signals' && (() => {
+            const allSigs = (profile?.signals?.length ? profile.signals : lead.signals) || [];
+            const showSigs = topSignalsForDisplay(allSigs, MAX_SIGNALS_DISPLAY);
+            const total = lead.signal_count || profile?.signal_count || allSigs.length || 0;
+            return (
             <div className="space-y-2">
-              <p className="label mb-3">signals &middot; {lead.signal_count || profile?.signal_count || 0}</p>
-              {((profile?.signals?.length ? profile.signals : lead.signals) || []).map((s, i) => (
+              <p className="label mb-1">signals &middot; {total}</p>
+              {total > MAX_SIGNALS_DISPLAY && (
+                <p className="text-[11px] text-neutral-500 mb-2">
+                  Showing top {MAX_SIGNALS_DISPLAY} by weighted score ({total - MAX_SIGNALS_DISPLAY} more not listed).
+                </p>
+              )}
+              {showSigs.map((s, i) => (
                 <div key={i} className="flex items-start gap-3 border border-neutral-800 rounded px-4 py-3">
                   <SignalBadge type={s.signal_type} />
                   <span className="text-sm text-neutral-400 flex-1 leading-relaxed">{s.text || s.raw_text}</span>
@@ -1617,11 +1627,12 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   </div>
                 </div>
               ))}
-              {(profile?.signals?.length === 0 && (lead.signals || []).length === 0) && (
+              {(allSigs.length === 0) && (
                 <p className="text-sm text-neutral-500">No signals recorded yet.</p>
               )}
             </div>
-          )}
+            );
+          })()}
 
         </div>
       </div>
@@ -2899,9 +2910,17 @@ export default function Dashboard() {
                       </span>
                     </div>
 
-                    {(lead.signals || []).length > 0 && (
+                    {(lead.signals || []).length > 0 && (() => {
+                      const drawerSignals = topSignalsForDisplay(lead.signals || [], MAX_SIGNALS_DISPLAY);
+                      const nTotal = lead.signal_count || (lead.signals || []).length;
+                      return (
                       <div>
-                        <p className="label mb-2">signals &middot; {lead.signal_count}</p>
+                        <p className="label mb-2">signals &middot; {nTotal}</p>
+                        {nTotal > MAX_SIGNALS_DISPLAY && (
+                          <p className="text-[10px] text-neutral-500 mb-2">
+                            Showing top {MAX_SIGNALS_DISPLAY} by weighted score.
+                          </p>
+                        )}
                         <table className="w-full text-xs">
                           <thead>
                             <tr className="border-b border-neutral-800 text-left">
@@ -2912,16 +2931,18 @@ export default function Dashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {(lead.signals || []).map((s, si) => (
+                            {drawerSignals.map((s, si) => {
+                              const str = Number(s.strength ?? 0);
+                              return (
                               <tr key={si} className="border-b border-neutral-900 align-top">
                                 <td className="py-1.5 pr-4"><SignalBadge type={s.signal_type} /></td>
                                 <td className="py-1.5 pr-4 tabular-nums">
                                   <span className={`font-mono ${
-                                    s.strength >= 0.7 ? 'text-emerald-400'
-                                    : s.strength >= 0.4 ? 'text-cyan-500'
+                                    str >= 0.7 ? 'text-emerald-400'
+                                    : str >= 0.4 ? 'text-cyan-500'
                                     : 'text-neutral-600'
                                   }`}>
-                                    {(s.strength * 100).toFixed(0)}%
+                                    {(str * 100).toFixed(0)}%
                                   </span>
                                 </td>
                                 <td className="py-1.5 pr-4">
@@ -2934,11 +2955,13 @@ export default function Dashboard() {
                                   {s.raw_text || '—'}
                                 </td>
                               </tr>
-                            ))}
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </div>

@@ -3,7 +3,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import LoginDropdown from '../components/LoginDropdown';
+import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { topSignalsForDisplay, sortSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
@@ -34,6 +36,7 @@ export default function Signals() {
   // Hot leads state - will be fetched from API
   const [hotLeads, setHotLeads] = useState([]);
   const [tierLegend, setTierLegend] = useState(null);
+  const [scoringSystem, setScoringSystem] = useState(null);
   // Expanded deal for inline details
   const [expandedDealId, setExpandedDealId] = useState(null);
   // Which hot lead card has share menu open (for social share dropdown)
@@ -131,11 +134,13 @@ export default function Signals() {
         setLeadsByIndustry(s.by_industry ?? {});
         // Preserve API order: recency-ranked + daily rotation (3 hot + 2 warm); do not re-sort by score
         setTierLegend(data.tierLegend || null);
+        setScoringSystem(data.scoringSystem || null);
         setHotLeads(Array.isArray(data.hotLeads) ? data.hotLeads : []);
       } catch (err) {
         if (err?.name !== 'AbortError' && !cancelled) {
           console.error('Error fetching homepage data:', err);
           setHotLeads([]);
+          setScoringSystem(null);
         }
       } finally {
         clearTimeout(timeout);
@@ -635,6 +640,9 @@ export default function Signals() {
                 })}
               </div>
             )}
+            <div className="mt-6">
+              <HotDealsScoringExplainer data={scoringSystem} />
+            </div>
           </div>
 
           {loading ? (
@@ -650,9 +658,11 @@ export default function Signals() {
             <div className="grid gap-3">
               {topHotDeals.map((lead, idx) => {
                 const score = typeof lead.score === 'object' ? (lead.score.overall_score || 0) : (lead.score || 0);
-                const topSignals = (lead.signals || []).slice(0, 2);
+                const sortedSignals = sortSignalsForDisplay(lead.signals || []);
+                const topSignals = sortedSignals.slice(0, 2);
                 const isExpanded = expandedDealId === lead.id;
-                const allSignals = lead.signals || [];
+                const totalSignalCount = (lead.signals || []).length;
+                const expandedSignals = topSignalsForDisplay(lead.signals || [], MAX_SIGNALS_DISPLAY);
                 
                 return (
                   <div 
@@ -705,9 +715,9 @@ export default function Signals() {
                                 {signal.signal_type}
                               </span>
                             ))}
-                            {(lead.signals?.length || 0) > 2 && (
+                            {totalSignalCount > 2 && (
                               <span className="text-xs text-orange-400 font-bold bg-orange-950/30 border border-orange-800/40 px-2 py-1 rounded">
-                                +{lead.signals.length - 2} more
+                                +{totalSignalCount - 2} more
                               </span>
                             )}
                           </div>
@@ -774,20 +784,26 @@ export default function Signals() {
                         className="pt-4 mt-3 border-t border-orange-800/40 space-y-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="text-xs font-semibold text-neutral-400 uppercase">All signals</div>
+                        <div className="text-xs font-semibold text-neutral-400 uppercase">Top signals</div>
+                        <p className="text-[11px] text-neutral-500">
+                          Showing {expandedSignals.length} of {totalSignalCount} (strongest first by weighted score).
+                          {totalSignalCount > MAX_SIGNALS_DISPLAY && (
+                            <> Full list in <Link href={`/dashboard?analyze=${lead.id}`} className="text-orange-400 hover:text-orange-300 underline" onClick={(e) => e.stopPropagation()}>dashboard analysis</Link>.</>
+                          )}
+                        </p>
                         <div className="flex flex-wrap gap-2">
-                          {allSignals.map((signal, sidx) => (
-                            <span key={sidx} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded">
+                          {expandedSignals.map((signal, sidx) => (
+                            <span key={`${lead.id}-sig-${sidx}`} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded">
                               {signal.signal_type}
                             </span>
                           ))}
                         </div>
-                        {allSignals.some(s => s.raw_text) && (
+                        {expandedSignals.some(s => s.raw_text) && (
                           <div className="space-y-2">
                             <div className="text-xs font-semibold text-neutral-400 uppercase">Signal details</div>
-                            <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                              {allSignals.filter(s => s.raw_text).slice(0, 3).map((signal, sidx) => (
-                                <p key={sidx} className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                              {expandedSignals.filter(s => s.raw_text).map((signal, sidx) => (
+                                <p key={`${lead.id}-dtl-${sidx}`} className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
                                   {signal.raw_text?.slice(0, 120)}{(signal.raw_text?.length || 0) > 120 ? '…' : ''}
                                 </p>
                               ))}
