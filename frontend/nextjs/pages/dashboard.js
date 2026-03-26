@@ -2342,6 +2342,7 @@ export default function Dashboard() {
           <Link href="/market-insights" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Market Insights</Link>
           <Link href="/about" className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">Signals</Link>
           <Link href="/newsletter" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Newsletter</Link>
+          <Link href="/social" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Content Studio</Link>
           <Link href="/roi-calculator" className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors">ROI Calc</Link>
           <Link href="/pilot-calculator" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Pilot Calc</Link>
           <Link href="/robot-ready" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Robot Ready</Link>

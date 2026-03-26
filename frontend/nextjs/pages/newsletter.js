@@ -394,6 +394,9 @@ export default function Newsletter() {
                 <Link href="/" className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors">
                   ← Back to Home
                 </Link>
+                <Link href="/social" className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+                  Content Studio
+                </Link>
                 {!isSubscribed && (
                   <button
                     onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
