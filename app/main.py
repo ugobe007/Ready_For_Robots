@@ -28,6 +28,7 @@ from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
+from app.api.admin_purge import router as admin_purge_router
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
@@ -91,6 +92,7 @@ app.include_router(scraper_control_router, tags=["scraper-control"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
 app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
 app.include_router(search_router, prefix="/api/search", tags=["search"])
 app.include_router(trending_router, prefix="/api/trending", tags=["trending"])
