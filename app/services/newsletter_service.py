@@ -124,8 +124,9 @@ def _intelligence_summary(
     deduped_sigs: list,
 ) -> str:
     """
-    Generates a 4-5 sentence analyst-style intelligence paragraph.
-    Avoids reconstituting raw scraper text; instead synthesizes *what it means*.
+    Generates a 4-5 sentence intelligence paragraph leading with:
+    '[Company] is targeting automation for their [use_case] due to [pain_point]
+    which align with our signals [types]. The timing of the project is [X] months.'
     """
     ind = _industry_display(industry)
     loc = ""
@@ -136,57 +137,50 @@ def _intelligence_summary(
 
     size = _company_size_descriptor(employee_estimate)
     size_str = f"{size} " if size else ""
-
-    # Sentence 1 — company context
-    s1 = f"{name} is a {size_str}{ind} company{loc}."
-
-    # Sentence 2 — what signals and what they mean
-    unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped_sigs]))[:4]
-    labels = [_sig_label(t) for t in unique_types if t]
-    sig_count = len(sigs)
     automation_type, pain_point = _industry_automation_context(industry)
 
-    if labels:
-        types_str = ", ".join(labels[:3])
-        s2 = (
-            f"Our signal engine picked up {sig_count} buying indicator{'s' if sig_count != 1 else ''} "
-            f"across {len(labels)} signal type{'s' if len(labels) != 1 else ''} — "
-            f"including {types_str} — pointing to active pain around {pain_point}."
-        )
-    else:
-        s2 = (
-            f"Our system detected {sig_count} automation buying signal{'s' if sig_count != 1 else ''}, "
-            f"indicating active pain around {pain_point}."
-        )
+    # Signal labels
+    unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped_sigs]))[:4]
+    labels = [_sig_label(t) for t in unique_types if t]
+    signals_str = ", ".join(labels[:3]) if labels else "automation interest"
 
-    # Sentence 3 — strongest evidence excerpt (the signal, not the raw text dumped wholesale)
+    buy_months = "60–90" if pri.tier == "HOT" else "90–120"
+
+    # Sentence 1 — the intelligence-led hook (user's requested template)
+    s1 = (
+        f"{name} is targeting automation for their {automation_type} "
+        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
+        f"The timing of this project is within {buy_months} days."
+    )
+
+    # Sentence 2 — company context + location
+    loc_str = f" {loc.strip(',').strip()}" if loc else ""
+    s2 = f"{name} is a {size_str}{ind} company{loc} with {len(sigs)} active buying indicators in our database."
+
+    # Sentence 3 — strongest evidence (clean, no raw HTML)
     top = deduped_sigs[0] if deduped_sigs else None
     s3 = ""
     if top:
+        import re as _re
         raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
+        raw = _re.sub(r"<[^>]+>", "", raw).strip()
         label = _sig_label(getattr(top, "signal_type", ""))
-        if raw:
+        if raw and len(raw) > 20:
             excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
-            s3 = f'The strongest signal is a {label}: "{excerpt}"'
+            s3 = f'Key evidence — {label}: "{excerpt}"'
         else:
-            s3 = f"The leading indicator is a {label}, consistent with companies actively exploring {automation_type}."
+            s3 = f"The leading indicator is a {label}, consistent with companies actively evaluating {automation_type}."
 
-    # Sentence 4 — buy window / scoring context
-    s4 = _tier_buy_window(pri.tier, pri.score)
-
-    # Sentence 5 — qualifying factors from reasons
+    # Sentence 4 — qualifying reasons
     reasons = pri.reasons or []
-    s5 = ""
-    if reasons:
-        s5 = f"Key qualifying factors: {'; '.join(reasons[:2])}."
+    s4 = f"Qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
 
     parts = [s1, s2]
     if s3:
         parts.append(s3)
-    parts.append(s4)
-    if s5:
-        parts.append(s5)
-    return " ".join(parts)
+    if s4:
+        parts.append(s4)
+    return " ".join(p for p in parts if p)
 
 
 def _intelligence_fulltext(

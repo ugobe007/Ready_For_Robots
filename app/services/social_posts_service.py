@@ -187,74 +187,63 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
     ind_display = _industry_display(industry)
     score = (company.scores.overall_intent_score if company.scores else 0) or pri.score
     automation_type, pain_point = _industry_automation_context(industry)
-    size = _company_size_descriptor(company.employee_estimate)
-    size_str = f"{size} " if size else ""
     hashtags = _industry_hashtags(industry)
 
-    sig_count = len(sigs)
     top_sig = deduped[0] if deduped else (sigs[0] if sigs else None)
-    top_sig_type = getattr(top_sig, "signal_type", "news") if top_sig else "news"
-    top_sig_label = _sig_label(top_sig_type)
+    unique_labels = [_sig_label(getattr(s, "signal_type", "")) for s in deduped[:4]]
+    signals_str = ", ".join(unique_labels[:3]) if unique_labels else "automation interest"
+
     top_sig_excerpt = ""
     if top_sig:
         raw = (getattr(top_sig, "signal_text", None) or "").replace("\n", " ").strip()
+        # Strip HTML tags and truncate
+        raw = re.sub(r"<[^>]+>", "", raw).strip()
         if raw:
-            top_sig_excerpt = raw[:160] + ("…" if len(raw) > 160 else "")
+            top_sig_excerpt = raw[:200] + ("…" if len(raw) > 200 else "")
 
-    unique_labels = [_sig_label(getattr(s, "signal_type", "")) for s in deduped[:3]]
+    buy_months = "60–90" if pri.tier == "HOT" else "90–120"
+    emoji = "🔥" if rank == 1 else "📊"
+
+    # ── Core intelligence sentence (the template the user asked for) ──────────
+    # "[Company] is targeting automation for their [use_case] due to [pain_point]
+    #  which aligns with our signals [signals]. The timing of the project is [X] months."
+    core = (
+        f"{name} is targeting automation for their {automation_type} "
+        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
+        f"The timing of this project is within {buy_months} days."
+    )
 
     # ── Twitter ──────────────────────────────────────────────────────────────
-    if rank == 1:
-        tw_headline = f"🔥 {name} is showing automation buying signals"
-    else:
-        tw_headline = f"📊 Automation buying signal: {name}"
-
-    tw_body_parts = [f"{size_str.strip()}{ind_display} sector · {sig_count} signals detected"]
-    if unique_labels:
-        tw_body_parts.append(f"Top indicators: {', '.join(unique_labels[:2])}")
-    tw_body_parts.append(f"Score: {round(score)}/100")
-    tw_body = " · ".join(tw_body_parts)
-
     tw_tags = _format_hashtags(hashtags)
-    tw_core = f"{tw_headline}\n\n{tw_body}"
+    tw_hook = f"{emoji} {ind_display} | {name}"
+    tw_core = f"{tw_hook}\n\n{core}"
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     # ── LinkedIn ─────────────────────────────────────────────────────────────
-    if rank == 1:
-        li_hook = f"🔥 High-Intent Lead Alert: {name}"
-    else:
-        li_hook = f"📊 Automation Buying Signal Detected: {name}"
+    li_hook = f"{emoji} Automation Intelligence: {name}"
 
-    li_context = (
-        f"{name} is a {size_str}{ind_display} company showing {sig_count} active "
-        f"buying signal{'s' if sig_count != 1 else ''} for automation — "
-        f"specifically around {pain_point}."
-    )
-
-    li_signals_str = "\n".join(f"  • {lbl}" for lbl in unique_labels[:4]) if unique_labels else ""
-    li_signals_block = f"\nTop signals detected:\n{li_signals_str}" if li_signals_str else ""
+    li_body = core
 
     li_evidence = ""
     if top_sig_excerpt:
-        li_evidence = f'\nKey evidence: "{top_sig_excerpt}"'
+        li_evidence = f'\n\nKey evidence: "{top_sig_excerpt}"'
 
-    buy_window = (
-        f"With a composite score of {round(score)}/100, this company is likely evaluating "
-        "automation vendors in the next 60–90 days."
-        if pri.tier == "HOT"
-        else f"Scoring {round(score)}/100, this account is in active exploration mode."
+    # Qualifying context
+    li_qualify = (
+        f"\n\nWith {len(sigs)} buying signals in our database and a priority score of "
+        f"{round(score)}/100, this account is likely to evaluate and select a vendor "
+        f"within {buy_months} days. First-mover outreach wins here."
     )
 
-    li_cta = f"\n\n🔗 See the full dossier + signal breakdown → {SITE_URL}"
+    li_cta = f"\n\n🔗 Full dossier + signal breakdown → {SITE_URL}"
     li_hashtag_str = "\n\n" + _format_hashtags(hashtags)
 
     linkedin = (
         f"{li_hook}\n\n"
-        f"{li_context}"
-        f"{li_signals_block}"
-        f"{li_evidence}\n\n"
-        f"{buy_window}"
+        f"{li_body}"
+        f"{li_evidence}"
+        f"{li_qualify}"
         f"{li_cta}"
         f"{li_hashtag_str}"
     )

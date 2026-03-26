@@ -261,82 +261,79 @@ def _company_size_word(emp: int | None) -> str:
 def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
     """
     Returns (share_blurb ~220c for Twitter/copy, share_summary 4-5 sentence intelligence paragraph).
-    The summary is used on deal cards AND as the header text for social posts.
+    Format: '[Company] is targeting automation for their [use_case] due to [pain_point]
+    which aligns with our signals [types]. The timing of the project is [X] months.'
     """
+    import re as _re
     raw_ind = (c.industry or "").strip()
     ind = raw_ind if raw_ind and raw_ind.lower() not in ("unknown", "other") else "New"
     name = c.name or "Company"
     tier = pri.tier
     score = pri.score
+    automation_type, pain_point = _automation_ctx(raw_ind)
 
     if not sigs:
-        summary = f"{name} is a {ind} company showing early automation buying signals on Ready For Robots."
+        summary = (
+            f"{name} is targeting automation for their {automation_type} "
+            f"due to {pain_point}. Signals detected on Ready For Robots suggest early buying intent."
+        )
         return summary[:220], summary
 
     deduped = _dedup_top_signals(sigs, 5)
-    automation_type, pain_point = _automation_ctx(raw_ind)
     size_word = _company_size_word(c.employee_estimate)
 
-    # Build location snippet
-    loc = ""
-    if c.location_city and c.location_state:
-        loc = f", based in {c.location_city}, {c.location_state}"
-    elif c.location_state:
-        loc = f", based in {c.location_state}"
-
-    # S1 — company identity
-    s1 = f"{name} is a {size_word}{ind} company{loc}."
-
-    # S2 — what signals and what they signal
     unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped]))[:4]
     labels = [_signal_label(t) for t in unique_types if t]
+    signals_str = ", ".join(labels[:3]) if labels else "automation interest"
     sig_count = len(sigs)
-    if labels:
-        types_str = ", ".join(labels[:3])
-        s2 = (
-            f"Our system detected {sig_count} buying indicator{'s' if sig_count != 1 else ''} "
-            f"across {len(labels)} signal type{'s' if len(labels) != 1 else ''} — "
-            f"including {types_str} — indicating active pain around {pain_point}."
-        )
-    else:
-        s2 = f"Our system detected {sig_count} automation signal{'s' if sig_count != 1 else ''} pointing to interest in {automation_type}."
 
-    # S3 — strongest evidence, paraphrased not dumped raw
+    buy_months = "60–90" if tier == "HOT" else "90–120"
+
+    loc = ""
+    if c.location_city and c.location_state:
+        loc = f" based in {c.location_city}, {c.location_state},"
+    elif c.location_state:
+        loc = f" based in {c.location_state},"
+
+    # S1 — intelligence-led hook (user's template)
+    s1 = (
+        f"{name} is targeting automation for their {automation_type} "
+        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
+        f"The timing of this project is within {buy_months} days."
+    )
+
+    # S2 — company context
+    s2 = f"{name} is a {size_word}{ind} company{loc} with {sig_count} active buying indicators in our database."
+
+    # S3 — strongest evidence (HTML-stripped)
     top = deduped[0] if deduped else None
     s3 = ""
     if top:
         raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
+        raw = _re.sub(r"<[^>]+>", "", raw).strip()
         top_label = _signal_label(getattr(top, "signal_type", ""))
-        if raw:
+        if raw and len(raw) > 20:
             excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
-            s3 = f'Strongest signal ({top_label}): "{excerpt}"'
+            s3 = f'Key evidence — {top_label}: "{excerpt}"'
         else:
             s3 = f"The leading indicator is a {top_label}, consistent with companies actively evaluating {automation_type}."
 
-    # S4 — buy window / confidence level
-    tier_sentences = {
-        "HOT": f"With a score of {round(score)}/100, this is a high-confidence buyer — likely evaluating automation vendors within the next 60–90 days.",
-        "WARM": f"Scoring {round(score)}/100, this account is in active exploration — well-timed outreach now can shape the vendor shortlist.",
-        "COLD": f"At {round(score)}/100, this is an early-stage opportunity worth monitoring for escalating signals.",
-    }
-    s4 = tier_sentences.get(tier, f"Composite score: {round(score)}/100.")
-
-    # S5 — qualifying reasons
+    # S4 — qualifying reasons
     reasons = pri.reasons or []
-    s5 = f"Key qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
+    s4 = f"Qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
 
     parts = [s1, s2]
     if s3:
         parts.append(s3)
-    parts.append(s4)
-    if s5:
-        parts.append(s5)
-    summary = " ".join(parts)
+    if s4:
+        parts.append(s4)
+    summary = " ".join(p for p in parts if p)
 
-    # Short blurb for character-limited contexts (Twitter preview text)
+    # Short blurb for Twitter character limit
     blurb = (
-        f"{name} ({ind}): {', '.join(labels[:2])} signals detected. "
-        f"Score {round(score)}/100 — {tier.lower()} lead · readyforrobots.com"
+        f"{name} is targeting automation for their {automation_type} "
+        f"due to {pain_point}. Signals: {signals_str}. "
+        f"Project window: {buy_months} days."
     )
     return blurb[:220], summary[:700]
 
