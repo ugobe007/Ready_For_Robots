@@ -189,6 +189,7 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
     automation_type, pain_point = _industry_automation_context(industry)
     hashtags = _industry_hashtags(industry)
 
+    sig_count = len(sigs)
     top_sig = deduped[0] if deduped else (sigs[0] if sigs else None)
     unique_labels = [_sig_label(getattr(s, "signal_type", "")) for s in deduped[:4]]
     signals_str = ", ".join(unique_labels[:3]) if unique_labels else "automation interest"
