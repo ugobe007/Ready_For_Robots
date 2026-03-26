@@ -41,6 +41,8 @@ _JUNK_SUBSTRINGS = [
     "survey finds", "report finds", "study finds", "survey shows",
     "report shows", "data shows", "according to", "says report",
     "says study", "per report", "per survey",
+    # SEC / financial filings scraped as company names
+    "sec 10-k", "sec 10-q", "10-k filing", "10-q filing", "annual report sec",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -81,8 +83,27 @@ _JUNK_PATTERNS = [
     r"^(vp|vice\s+president|ceo|coo|cfo|cto|chief|president|director|manager|"
     r"head|svp|evp)\s+(of\s+)?\w+",
 
-    # Looks like a sentence: more than 7 words → almost certainly a headline
-    r"^(\S+\s+){7,}\S+$",
+    # Numbered-list items scraped from "Top N" articles (e.g. "24.Joanna Vargas …")
+    r"^\d+\.\s*\S",
+
+    # Looks like a sentence: 10+ words → almost certainly a headline/sentence
+    r"^(\S+\s+){9,}\S+$",
+
+    # Starts with "Former/Ex/Outgoing" — scraped person descriptions, not companies
+    r"^(former|ex-?|outgoing|incoming|new|current)\s+\w",
+
+    # Trailing news-source attribution: "Hospital - FOX 13 Tampa Bay", "Casino - CDC Gaming"
+    r"\s[-–—]\s*(fox|abc|cbs|nbc|cnn|bbc|msnbc|sky\s+news|bloomberg|reuters|ap\s+news|"
+    r"cdc\s+gaming|skyhighnews|skyhinews)\b",
+
+    # Calendar date embedded in a company name → event/article, not company
+    r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|jun(?:e)?|jul(?:y)?|"
+    r"aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}\b",
+
+    # 5-9 word news headlines: subject + action verb (allow symbols like & in subject)
+    r"^(?:\S+\s+){1,5}(?:unveil|reinforc|knock|launch|announc|reveal|partner|acquir|hire|"
+    r"expand|open|clos|shut|file|report|say|show|grow|rise|fall|win|lose|sign|earn|"
+    r"post|cut|raise|drop|spike|surge|plunge|soar|slip|gain|shed)\w*\b",
 
     # "The" + generic category word (no proper noun)
     r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"

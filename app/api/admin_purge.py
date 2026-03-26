@@ -68,13 +68,15 @@ def purge_junk(
             "message": "Set dry_run=false to delete these records.",
         }
 
-    # Delete
+    # Delete — must remove child rows first to satisfy FK constraints
+    from sqlalchemy import text
+    ids_to_delete = [r["id"] for r in junk_found]
     deleted = 0
-    for r in junk_found:
-        c = db.get(Company, r["id"])
-        if c:
-            db.delete(c)
-            deleted += 1
+    for cid in ids_to_delete:
+        db.execute(text("DELETE FROM scores  WHERE company_id = :cid"), {"cid": cid})
+        db.execute(text("DELETE FROM signals WHERE company_id = :cid"), {"cid": cid})
+        db.execute(text("DELETE FROM companies WHERE id = :cid"), {"cid": cid})
+        deleted += 1
     db.commit()
 
     return {
