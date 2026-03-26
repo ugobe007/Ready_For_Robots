@@ -214,7 +214,7 @@ export default function SocialContentStudio() {
       else setLoading(true);
       setError(null);
 
-      const url = `${API}/social/daily-posts${force ? '?refresh=true' : ''}`;
+      const url = `${API}/api/social/daily-posts${force ? '?refresh=true' : ''}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
