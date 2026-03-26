@@ -90,7 +90,10 @@ _JUNK_PATTERNS = [
     r"^(\S+\s+){9,}\S+$",
 
     # Starts with "Former/Ex/Outgoing" — scraped person descriptions, not companies
-    r"^(former|ex-?|outgoing|incoming|new|current)\s+\w",
+    # "new" only fires when followed by a digit or lowercase word (avoids "New Paltz", "New York", etc.)
+    r"^(former|ex-?|outgoing|incoming|current)\s+\w",
+    r"^new\s+(\d|\d+\s|\b(humanoid|robot|ai|model|version|feature|update|release|tool|product|"
+    r"system|platform|software|hardware|solution|service|app|device|sensor|chip|module)\b)",
 
     # Trailing news-source attribution: "Hospital - FOX 13 Tampa Bay", "Casino - CDC Gaming"
     r"\s[-–—]\s*(fox|abc|cbs|nbc|cnn|bbc|msnbc|sky\s+news|bloomberg|reuters|ap\s+news|"
@@ -101,9 +104,10 @@ _JUNK_PATTERNS = [
     r"aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}\b",
 
     # 5-9 word news headlines: subject + action verb (allow symbols like & in subject)
-    r"^(?:\S+\s+){1,5}(?:unveil|reinforc|knock|launch|announc|reveal|partner|acquir|hire|"
-    r"expand|open|clos|shut|file|report|say|show|grow|rise|fall|win|lose|sign|earn|"
-    r"post|cut|raise|drop|spike|surge|plunge|soar|slip|gain|shed)\w*\b",
+    # NOTE: omit "partner/post/open/sign/report/show/earn/cut/raise/gain" — too common in real names
+    r"^(?:\S+\s+){1,5}(?:unveil|reinforc|knock|launch|announc|reveal|acquir|hire|"
+    r"expand|clos|shut|file|say|grow|rise|fall|win|lose|"
+    r"drop|spike|surge|plunge|soar|slip|shed)\w*\b",
 
     # "The" + generic category word (no proper noun)
     r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"
