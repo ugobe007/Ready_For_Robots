@@ -2,8 +2,9 @@
  * Content Studio — Daily Social Media Post Generator
  * Pulls 5 ready-to-post items from /api/social/daily-posts.
  * Each post has Twitter (X) and LinkedIn variants with editable text + copy/share.
+ * "Get New Posts" skips already-posted leads so content stays fresh.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { getApiBase } from '../lib/apiBase';
@@ -11,14 +12,14 @@ import { getApiBase } from '../lib/apiBase';
 const API = getApiBase();
 
 const POST_TYPE_META = {
-  hot_lead:           { label: '🔥 Hot Lead Spotlight',   border: 'border-red-800',    text: 'text-red-400',     bg: 'bg-red-950/30' },
-  signal_alert:       { label: '📊 Signal Alert',         border: 'border-amber-800',  text: 'text-amber-400',   bg: 'bg-amber-950/30' },
+  hot_lead:           { label: '🔥 Hot Lead Spotlight',    border: 'border-red-800',    text: 'text-red-400',     bg: 'bg-red-950/30' },
+  signal_alert:       { label: '📊 Signal Alert',          border: 'border-amber-800',  text: 'text-amber-400',   bg: 'bg-amber-950/30' },
   industry_insight:   { label: '🧠 Industry Intelligence', border: 'border-cyan-800',   text: 'text-cyan-400',    bg: 'bg-cyan-950/20' },
-  market_trend:       { label: '📈 Market Trend',         border: 'border-violet-800', text: 'text-violet-400',  bg: 'bg-violet-950/20' },
-  thought_leadership: { label: '🤖 Thought Leadership',   border: 'border-emerald-800',text: 'text-emerald-400', bg: 'bg-emerald-950/20' },
+  market_trend:       { label: '📈 Market Trend',          border: 'border-violet-800', text: 'text-violet-400',  bg: 'bg-violet-950/20' },
+  thought_leadership: { label: '🤖 Thought Leadership',    border: 'border-emerald-800',text: 'text-emerald-400', bg: 'bg-emerald-950/20' },
 };
 
-const TWITTER_SOFT_LIMIT = 257; // URL counts ~23 chars on platform side
+const TWITTER_SOFT_LIMIT = 257;
 
 function charColor(len) {
   if (len <= 200) return 'text-emerald-400';
@@ -76,22 +77,31 @@ function LinkedInShareButton({ url }) {
   );
 }
 
-function PostCard({ post, index }) {
+function PostCard({ post, index, onMarkPosted, isPosted }) {
   const meta = POST_TYPE_META[post.type] || POST_TYPE_META.thought_leadership;
   const [activeTab, setActiveTab] = useState('twitter');
   const [twitterText, setTwitterText] = useState(post.twitter || '');
   const [linkedinText, setLinkedinText] = useState(post.linkedin || '');
+  const [marking, setMarking] = useState(false);
 
   const twitterLen = twitterText.length;
   const shareUrl = post.share_url || 'https://readyforrobots.com';
 
+  const handleMarkPosted = async () => {
+    setMarking(true);
+    await onMarkPosted(post);
+    setMarking(false);
+  };
+
   return (
-    <div className={`border ${meta.border} rounded-xl overflow-hidden`}>
+    <div className={`border ${isPosted ? 'border-neutral-800 opacity-60' : meta.border} rounded-xl overflow-hidden transition-opacity`}>
       {/* Card header */}
-      <div className={`${meta.bg} border-b ${meta.border} px-4 py-3 flex items-center justify-between gap-3 flex-wrap`}>
+      <div className={`${isPosted ? 'bg-neutral-900/20' : meta.bg} border-b ${isPosted ? 'border-neutral-800' : meta.border} px-4 py-3 flex items-center justify-between gap-3 flex-wrap`}>
         <div className="flex items-center gap-3">
           <span className="text-neutral-500 font-mono text-xs tabular-nums">#{index + 1}</span>
-          <span className={`text-sm font-semibold ${meta.text}`}>{meta.label}</span>
+          <span className={`text-sm font-semibold ${isPosted ? 'text-neutral-500' : meta.text}`}>
+            {isPosted ? '✓ Posted — ' : ''}{meta.label}
+          </span>
           {post.source_name && (
             <span className="text-xs text-neutral-400 truncate max-w-[200px]">{post.source_name}</span>
           )}
@@ -107,10 +117,14 @@ function PostCard({ post, index }) {
               Score {post.score}/100
             </span>
           )}
-          {post.signal_count != null && (
-            <span className="text-[10px] border border-neutral-700 text-neutral-500 px-2 py-0.5 rounded font-mono">
-              {post.signal_count} signals
-            </span>
+          {!isPosted && post.company_id && (
+            <button
+              onClick={handleMarkPosted}
+              disabled={marking}
+              className="text-[10px] px-2 py-0.5 rounded border border-emerald-900 text-emerald-600 hover:border-emerald-700 hover:text-emerald-400 transition-colors font-mono disabled:opacity-50"
+            >
+              {marking ? '…' : '✓ Mark as posted'}
+            </button>
           )}
         </div>
       </div>
@@ -202,37 +216,102 @@ function PostCard({ post, index }) {
 
 export default function SocialContentStudio() {
   const [posts, setPosts] = useState(null);
+  const [postedIds, setPostedIds] = useState(new Set());
+  const [currentCompanyIds, setCurrentCompanyIds] = useState([]);
+  const [currentTrendOffset, setCurrentTrendOffset] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
   const [date, setDate] = useState('');
   const [generatedAt, setGeneratedAt] = useState('');
+  const [batchPosted, setBatchPosted] = useState(false);
 
-  const fetchPosts = async (force = false) => {
+  const applyData = (data) => {
+    setPosts(data.posts || []);
+    setCurrentCompanyIds(data.posted_company_ids || []);
+    setCurrentTrendOffset(data.trend_offset || 0);
+    setDate(data.date || '');
+    if (data.generated_at) {
+      const d = new Date(data.generated_at);
+      setGeneratedAt(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }
+    setBatchPosted(false);
+    setPostedIds(new Set());
+  };
+
+  const fetchPosts = useCallback(async () => {
     try {
-      if (force) setRefreshing(true);
-      else setLoading(true);
+      setLoading(true);
       setError(null);
-
-      const url = `${API}/api/social/daily-posts${force ? '?refresh=true' : ''}`;
-      const res = await fetch(url);
+      const res = await fetch(`${API}/api/social/daily-posts`);
       if (!res.ok) throw new Error(`API error ${res.status}`);
-      const data = await res.json();
-      setPosts(data.posts || []);
-      setDate(data.date || '');
-      if (data.generated_at) {
-        const d = new Date(data.generated_at);
-        setGeneratedAt(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      }
+      applyData(await res.json());
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const getNewPosts = async () => {
+    try {
+      setRefreshing(true);
+      setError(null);
+
+      // Mark current lead posts before skipping them
+      const leadIds = currentCompanyIds.filter(id => id != null);
+      if (leadIds.length > 0) {
+        await fetch(`${API}/api/social/daily-posts/mark-posted`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company_ids: leadIds }),
+        });
+      }
+
+      const res = await fetch(`${API}/api/social/daily-posts/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exclude_ids: leadIds,
+          trend_offset: currentTrendOffset + 1,
+        }),
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      applyData(await res.json());
+    } catch (e) {
+      setError(e.message);
+    } finally {
       setRefreshing(false);
     }
   };
 
-  useEffect(() => { fetchPosts(); }, []);
+  const markAllPosted = async () => {
+    const leadIds = currentCompanyIds.filter(id => id != null);
+    if (leadIds.length > 0) {
+      await fetch(`${API}/api/social/daily-posts/mark-posted`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_ids: leadIds }),
+      });
+    }
+    setPostedIds(new Set(currentCompanyIds));
+    setBatchPosted(true);
+  };
+
+  const handleMarkOnePosted = async (post) => {
+    if (!post.company_id) return;
+    await fetch(`${API}/api/social/daily-posts/mark-posted`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_ids: [post.company_id], post_types: [post.type] }),
+    });
+    setPostedIds(prev => new Set([...prev, post.company_id]));
+  };
+
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  const postedCount = postedIds.size;
+  const totalLeadPosts = (posts || []).filter(p => p.company_id != null).length;
 
   return (
     <>
@@ -251,11 +330,9 @@ export default function SocialContentStudio() {
             </Link>
             <span className="text-neutral-600">|</span>
             <h1 className="text-sm font-semibold text-neutral-200">Content Studio</h1>
-            {date && (
-              <span className="text-xs text-neutral-500 font-mono">{date}</span>
-            )}
+            {date && <span className="text-xs text-neutral-500 font-mono">{date}</span>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {generatedAt && (
               <span className="text-[10px] text-neutral-600 font-mono">Generated {generatedAt}</span>
             )}
@@ -265,41 +342,60 @@ export default function SocialContentStudio() {
             <Link href="/newsletter" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
               Newsletter
             </Link>
-            <button
-              onClick={() => fetchPosts(false)}
-              disabled={loading || refreshing}
-              className="text-xs border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300 px-3 py-1.5 rounded transition-colors disabled:opacity-50"
-            >
-              {loading || refreshing ? '…' : '↺ Refresh'}
-            </button>
           </div>
         </header>
 
         <main className="max-w-4xl mx-auto px-4 py-8">
           {/* Page header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
                 <h2 className="text-2xl font-bold text-neutral-100 mb-1">Daily Content Queue</h2>
                 <p className="text-sm text-neutral-500">
-                  5 posts generated from today's hot leads, market trends, and strategic insights.
-                  Edit any post before copying or publishing.
+                  5 posts from today's hot leads and strategic insights. Edit any post, then copy or share.
+                  Mark posts as shared to get a fresh batch with different companies.
                 </p>
-              </div>
-              <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex gap-1.5">
-                  {Object.entries(POST_TYPE_META).map(([key, m]) => (
-                    <span key={key} className={`text-[10px] font-mono border ${m.border} ${m.text} px-2 py-0.5 rounded`}>
-                      {m.label.split(' ').slice(0, 2).join(' ')}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
 
+          {/* Action bar */}
+          {!loading && !error && posts && posts.length > 0 && (
+            <div className="mb-6 flex items-center justify-between gap-3 flex-wrap p-4 border border-neutral-800 rounded-xl bg-neutral-900/30">
+              <div className="flex items-center gap-3">
+                {batchPosted ? (
+                  <span className="text-xs text-emerald-400 font-mono">✓ All posts marked as shared</span>
+                ) : postedCount > 0 ? (
+                  <span className="text-xs text-neutral-400 font-mono">
+                    {postedCount} of {totalLeadPosts} lead posts marked
+                  </span>
+                ) : (
+                  <span className="text-xs text-neutral-500">
+                    Share your posts, then get a fresh batch with new companies
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={markAllPosted}
+                  disabled={batchPosted || refreshing}
+                  className="text-xs px-3 py-1.5 rounded border border-emerald-900 text-emerald-500 hover:border-emerald-700 hover:text-emerald-400 transition-colors disabled:opacity-40"
+                >
+                  ✓ Mark all as posted
+                </button>
+                <button
+                  onClick={getNewPosts}
+                  disabled={refreshing || loading}
+                  className="text-xs px-4 py-1.5 rounded border border-violet-700 text-violet-400 hover:border-violet-500 hover:text-violet-300 transition-colors disabled:opacity-50 font-semibold"
+                >
+                  {refreshing ? '⟳ Generating…' : '⟳ Get New Posts'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Loading state */}
-          {loading && (
+          {(loading || refreshing) && (
             <div className="space-y-4">
               {[1, 2, 3, 4, 5].map(i => (
                 <div key={i} className="border border-neutral-800 rounded-xl h-48 animate-pulse bg-neutral-900/40" />
@@ -308,11 +404,11 @@ export default function SocialContentStudio() {
           )}
 
           {/* Error state */}
-          {error && !loading && (
+          {error && !loading && !refreshing && (
             <div className="border border-red-900 rounded-xl p-6 text-center">
               <p className="text-red-400 text-sm mb-3">Failed to load posts: {error}</p>
               <button
-                onClick={() => fetchPosts()}
+                onClick={fetchPosts}
                 className="text-xs border border-neutral-700 text-neutral-400 hover:border-neutral-500 px-3 py-1.5 rounded"
               >
                 Try again
@@ -321,27 +417,32 @@ export default function SocialContentStudio() {
           )}
 
           {/* Posts */}
-          {!loading && !error && posts && (
+          {!loading && !refreshing && !error && posts && (
             <div className="space-y-6">
               {posts.length === 0 ? (
                 <div className="border border-neutral-800 rounded-xl p-8 text-center">
                   <p className="text-neutral-500 text-sm mb-2">No posts generated yet.</p>
-                  <p className="text-neutral-600 text-xs">Make sure the scrapers have run and there are HOT leads in the database.</p>
+                  <p className="text-neutral-600 text-xs">Make sure the scrapers have run and there are leads in the database.</p>
                 </div>
               ) : (
                 posts.map((post, i) => (
-                  <PostCard key={i} post={post} index={i} />
+                  <PostCard
+                    key={`${post.company_id || post.type}-${i}`}
+                    post={post}
+                    index={i}
+                    onMarkPosted={handleMarkOnePosted}
+                    isPosted={post.company_id != null && postedIds.has(post.company_id)}
+                  />
                 ))
               )}
 
-              {/* Footer tip */}
               {posts.length > 0 && (
-                <div className="border border-neutral-800 rounded-xl p-4 text-center">
+                <div className="border border-neutral-800 rounded-xl p-4 text-center space-y-2">
                   <p className="text-xs text-neutral-600">
-                    Posts refresh automatically every 4 hours as new signals come in.
-                    Edit any post above before publishing — the text is fully customizable.
+                    Posts refresh automatically every 4 hours. Click <span className="text-violet-400">Get New Posts</span> any time to skip current companies and pull fresh leads.
+                    Companies are excluded from reappearing for 7 days after being marked as posted.
                   </p>
-                  <div className="mt-3 flex justify-center gap-4">
+                  <div className="flex justify-center gap-4">
                     <Link href="/" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
                       View Lead Intelligence →
                     </Link>

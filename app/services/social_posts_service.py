@@ -40,10 +40,16 @@ from app.services.newsletter_service import (
 
 # ── Cache ─────────────────────────────────────────────────────────────────────
 
-def _cache_path() -> Path:
+def _data_dir() -> Path:
     base = Path(__file__).resolve().parent.parent.parent / "data"
     base.mkdir(parents=True, exist_ok=True)
-    return base / "social_posts_latest.json"
+    return base
+
+def _cache_path() -> Path:
+    return _data_dir() / "social_posts_latest.json"
+
+def _history_path() -> Path:
+    return _data_dir() / "social_posts_history.json"
 
 
 def read_cached_posts(max_age_hours: float = 4.0) -> Optional[Dict[str, Any]]:
@@ -67,6 +73,63 @@ def write_cached_posts(data: Dict[str, Any]) -> None:
     p = _cache_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, indent=2, default=str))
+
+
+# ── Posted history (7-day rolling window per company) ─────────────────────────
+
+def _load_history() -> Dict[str, Any]:
+    p = _history_path()
+    if not p.exists():
+        return {"entries": []}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {"entries": []}
+
+
+def _save_history(history: Dict[str, Any]) -> None:
+    p = _history_path()
+    p.write_text(json.dumps(history, indent=2, default=str))
+
+
+def get_recently_posted_ids(days: int = 7) -> List[int]:
+    """Return company IDs posted within the last `days` days."""
+    history = _load_history()
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    return [
+        e["company_id"]
+        for e in history.get("entries", [])
+        if e.get("company_id") and _parse_dt(e.get("posted_at", "")) > cutoff
+    ]
+
+
+def mark_companies_posted(company_ids: List[int], post_types: Optional[List[str]] = None) -> None:
+    """Record that these company IDs were just posted (for history tracking)."""
+    history = _load_history()
+    now_str = datetime.now(timezone.utc).isoformat()
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+
+    # Prune entries older than 30 days to keep the file small
+    history["entries"] = [
+        e for e in history.get("entries", [])
+        if _parse_dt(e.get("posted_at", "")) > cutoff
+    ]
+
+    for i, cid in enumerate(company_ids):
+        history["entries"].append({
+            "company_id": cid,
+            "post_type": (post_types or [])[i] if post_types and i < len(post_types) else "unknown",
+            "posted_at": now_str,
+        })
+
+    _save_history(history)
+
+
+def _parse_dt(s: str) -> datetime:
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:
+        return datetime.min.replace(tzinfo=timezone.utc)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -204,6 +267,7 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
         "source_tier": pri.tier,
         "score": round(score),
         "signal_count": sig_count,
+        "company_id": company.id,
         "twitter": twitter.strip(),
         "linkedin": linkedin.strip(),
         "hashtags": hashtags,
@@ -330,20 +394,31 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
 
 # ── Main generator ────────────────────────────────────────────────────────────
 
-def generate_daily_posts(db: Session) -> Dict[str, Any]:
-    """Generate 5 daily social posts and return the full payload."""
+def generate_daily_posts(
+    db: Session,
+    exclude_ids: Optional[List[int]] = None,
+    trend_offset: int = 0,
+) -> Dict[str, Any]:
+    """
+    Generate 5 daily social posts.
+    exclude_ids: company IDs to skip (already-posted leads).
+    trend_offset: rotate which macro trend is used for post #4.
+    """
     from app.services.industry_brief_service import build_industry_brief_payload
-    from app.services.newsletter_service import _recency_sort_key
 
     now = datetime.now(timezone.utc)
 
-    # Pull top HOT leads (score desc, fresh signals preferred)
+    # Merge caller-provided excludes with 7-day history
+    history_ids = get_recently_posted_ids(days=7)
+    skip_ids = set((exclude_ids or []) + history_ids)
+
+    # Pull a wide pool of leads (score desc)
     ranked_ids = (
         db.query(Company.id)
         .outerjoin(Score, Score.company_id == Company.id)
         .group_by(Company.id)
         .order_by(func.coalesce(func.max(Score.overall_intent_score), 0).desc())
-        .limit(200)
+        .limit(500)
         .all()
     )
     id_list = [r[0] for r in ranked_ids]
@@ -357,11 +432,7 @@ def generate_daily_posts(db: Session) -> Dict[str, Any]:
     rank_map = {cid: i for i, cid in enumerate(id_list)}
     companies.sort(key=lambda c: rank_map.get(c.id, 9999))
 
-    hot_leads = []
-    for c in companies:
-        junk, _, pri = classify_lead(c, c.scores, c.signals)
-        if junk or pri.tier != "HOT" or not c.signals:
-            continue
+    def _build_lead_tuple(c):
         sigs = sorted(c.signals, key=lambda s: (s.signal_strength or 0), reverse=True)
         seen: set = set()
         deduped: list = []
@@ -372,9 +443,39 @@ def generate_daily_posts(db: Session) -> Dict[str, Any]:
                 deduped.append(s)
             if len(deduped) >= 5:
                 break
-        hot_leads.append((c, pri, sigs, deduped))
+        return (c, sigs, deduped)
+
+    # Collect fresh HOT leads first, then WARM as fallback
+    hot_leads = []
+    warm_leads = []
+    for c in companies:
+        if c.id in skip_ids:
+            continue
+        junk, _, pri = classify_lead(c, c.scores, c.signals)
+        if junk or not c.signals:
+            continue
+        if pri.tier == "HOT":
+            hot_leads.append((pri, *_build_lead_tuple(c)))
+        elif pri.tier == "WARM" and len(warm_leads) < 10:
+            warm_leads.append((pri, *_build_lead_tuple(c)))
         if len(hot_leads) >= 5:
             break
+
+    candidates = hot_leads[:5] + warm_leads
+    selected: list = candidates[:2]
+
+    # If we exhausted fresh leads, fall back to history-excluded companies only
+    if len(selected) < 2:
+        for c in companies:
+            if any(s[1].id == c.id for s in selected):
+                continue
+            junk, _, pri = classify_lead(c, c.scores, c.signals)
+            if junk or not c.signals:
+                continue
+            if pri.tier in ("HOT", "WARM"):
+                selected.append((pri, *_build_lead_tuple(c)))
+            if len(selected) >= 2:
+                break
 
     # Industry brief for insight + trend posts
     brief = build_industry_brief_payload(db, days=1, analytics=None, use_cache=True, force_refresh=False)
@@ -383,49 +484,23 @@ def generate_daily_posts(db: Session) -> Dict[str, Any]:
 
     posts = []
 
-    # Post 1 & 2: hot lead spotlights
-    for rank, lead_data in enumerate(hot_leads[:2], start=1):
-        c, pri, sigs, deduped = lead_data
+    # Posts 1 & 2: lead spotlights
+    for rank, lead_data in enumerate(selected[:2], start=1):
+        pri, c, sigs, deduped = lead_data
         post = _build_hot_lead_post(c, pri, sigs, deduped, rank)
         posts.append(post)
-
-    # If < 2 hot leads, fill with WARM leads
-    if len(posts) < 2:
-        warm_leads = []
-        for c in companies:
-            junk, _, pri = classify_lead(c, c.scores, c.signals)
-            if junk or pri.tier not in ("HOT", "WARM") or not c.signals:
-                continue
-            if any(p["source_name"] == c.name for p in posts):
-                continue
-            sigs = sorted(c.signals, key=lambda s: (s.signal_strength or 0), reverse=True)
-            seen: set = set()
-            deduped: list = []
-            for s in sigs:
-                t = getattr(s, "signal_type", None) or "unknown"
-                if t not in seen:
-                    seen.add(t)
-                    deduped.append(s)
-                if len(deduped) >= 5:
-                    break
-            warm_leads.append((c, pri, sigs, deduped))
-            if len(warm_leads) >= 2 - len(posts):
-                break
-        for rank, lead_data in enumerate(warm_leads, start=len(posts) + 1):
-            c, pri, sigs, deduped = lead_data
-            posts.append(_build_hot_lead_post(c, pri, sigs, deduped, rank))
 
     # Post 3: industry insight
     insight = _build_industry_insight_post(executive_take)
     if insight:
         posts.append(insight)
 
-    # Post 4: market trend
+    # Post 4: market trend — rotate through available trends using trend_offset
     trend_post = None
-    for t in macro_trends:
-        trend_post = _build_market_trend_post(t)
-        if trend_post:
-            break
+    valid_trends = [t for t in macro_trends if _build_market_trend_post(t)]
+    if valid_trends:
+        idx = trend_offset % len(valid_trends)
+        trend_post = _build_market_trend_post(valid_trends[idx])
     if trend_post:
         posts.append(trend_post)
 
@@ -435,10 +510,17 @@ def generate_daily_posts(db: Session) -> Dict[str, Any]:
     # Ensure exactly 5
     posts = [p for p in posts if p][:5]
 
+    # Embed posted company IDs so the frontend can send them back on next refresh
+    posted_company_ids = [
+        p["company_id"] for p in posts if p.get("company_id") is not None
+    ]
+
     return {
         "date": now.strftime("%B %d, %Y"),
         "date_iso": now.date().isoformat(),
         "posts": posts,
+        "posted_company_ids": posted_company_ids,
+        "trend_offset": trend_offset,
         "total": len(posts),
         "generated_at": now.isoformat(),
     }
