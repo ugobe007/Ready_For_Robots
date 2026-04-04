@@ -5,6 +5,7 @@ import threading
 import logging
 from collections import defaultdict
 from fastapi import FastAPI, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,6 +57,44 @@ def _cors_allowed_origins() -> list[str]:
     ]
 
 
+def _cors_headers_for_request(request: Request) -> dict[str, str]:
+    origin = request.headers.get("origin")
+    if not origin:
+        return {}
+    o = origin.rstrip("/")
+    if o not in _cors_allowed_origins():
+        return {}
+    return {
+        "access-control-allow-origin": origin,
+        "access-control-allow-credentials": "true",
+    }
+
+
+class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
+    """
+    CORSMiddleware does not always attach headers to error bodies (e.g. plain-text 500 from
+    unhandled exceptions). Browsers then report a CORS failure even when the real issue is 500.
+    This outer layer adds Allow-Origin for allowed origins when missing, and wraps uncaught errors.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.exception("Unhandled exception in ASGI stack")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal server error"},
+                headers=_cors_headers_for_request(request),
+            )
+        origin = request.headers.get("origin")
+        if origin and "access-control-allow-origin" not in response.headers:
+            hdr = _cors_headers_for_request(request)
+            for k, v in hdr.items():
+                response.headers[k] = v
+        return response
+
+
 app = FastAPI(title="Ready for Robots", docs_url="/api/docs", redoc_url="/api/redoc")
 
 app.add_middleware(
@@ -65,6 +104,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(EnsureCORSHeadersMiddleware)
 
 # ── Rate limit + 404 for probe paths (reduces bot log noise) ─────────────────
 _PROBE_PATTERNS = re.compile(
