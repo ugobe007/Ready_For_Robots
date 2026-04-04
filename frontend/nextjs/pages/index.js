@@ -356,7 +356,7 @@ export default function Signals() {
             <div className="hidden md:flex items-center gap-3">
               <LoginDropdown className="[&_button]:rr-btn-signin" />
               <Link href="/login" className="rr-btn-signup">
-                Sign Up Free
+                Sign Up
               </Link>
             </div>
                 <div className="md:hidden relative">
@@ -401,7 +401,7 @@ export default function Signals() {
                       🔐 Sign in (Google, GitHub, Email)
                     </Link>
                     <Link href="/login" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">
-                      ✨ Sign Up Free
+                      ✨ Sign Up
                     </Link>
                   </div>
                 </div>
@@ -424,9 +424,8 @@ export default function Signals() {
                 <p className="rr-hero-lead">
                   We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
                 </p>
-                <p className="text-sm mt-3 max-w-xl leading-relaxed text-neutral-400 border-l-2 border-emerald-600/40 pl-3">
-                  Beyond lists: build a <strong className="text-neutral-300 font-medium">pipeline</strong> in your dashboard;{' '}
-                  <strong className="text-neutral-300 font-medium">customizable account plans</strong> and workflow help are on the way.
+                <p className="text-sm mt-3 max-w-xl leading-relaxed font-medium text-emerald-400 border-l-2 border-emerald-500/70 pl-3">
+                  Let&apos;s build your customer engagement pipeline and workflow with our CRM system.
                 </p>
                 <div className="rr-hero-cta">
                   <button
@@ -434,7 +433,7 @@ export default function Signals() {
                     className="rr-btn-hero-primary"
                     onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
                   >
-                    Build Your Pipeline →
+                    Build CRM pipeline →
                   </button>
                   <Link href="/dashboard" className="rr-btn-hero-secondary inline-block text-center">
                     Browse All Leads
@@ -476,6 +475,26 @@ export default function Signals() {
                     <span className="l">Warm</span>
                   </div>
                 </div>
+                <div
+                  className="rr-hero-crm-strip"
+                  title="Pipeline tiers you can track and work in the CRM workspace (same live counts as the platform)"
+                >
+                  <div className="rr-hero-crm-strip-label">CRM pipeline</div>
+                  <div className="rr-hero-crm-strip-stats">
+                    <div className="rr-hero-crm-cell">
+                      <span className="rr-hero-crm-num tabular-nums">{statsLoaded ? formatHeroStat(statsData.activeLeads) : '—'}</span>
+                      <span className="rr-hero-crm-lbl">active projects</span>
+                    </div>
+                    <div className="rr-hero-crm-cell">
+                      <span className="rr-hero-crm-num tabular-nums" style={{ color: 'var(--rr-orange)' }}>{statsLoaded ? formatHeroStat(statsData.hotDeals) : '—'}</span>
+                      <span className="rr-hero-crm-lbl">hot</span>
+                    </div>
+                    <div className="rr-hero-crm-cell">
+                      <span className="rr-hero-crm-num tabular-nums" style={{ color: 'var(--rr-green)' }}>{statsLoaded ? formatHeroStat(statsData.warmPipeline) : '—'}</span>
+                      <span className="rr-hero-crm-lbl">warm</span>
+                    </div>
+                  </div>
+                </div>
                 {emergingCount > 0 && (
                   <p className="rr-emerging-note rr-emerging-note--inline">
                     Emerging · <span className="tabular-nums">{emergingCount.toLocaleString('en-US')}</span> in pipeline
@@ -513,13 +532,13 @@ export default function Signals() {
               })()}
         </div>
 
-        {/* CTA - Build Your Pipeline (layout aligned with dashboard pipeline card) */}
+        {/* CTA — CRM / pipeline builder (layout aligned with dashboard pipeline card) */}
         <div id="cta" className="rr-section !pt-2">
           <div className="rr-pipeline-section rr-pipeline-home-cta border-emerald-900/30 bg-gradient-to-br from-emerald-950/25 to-[var(--rr-surface)]">
-            <div className="rr-pipeline-eyebrow">● Free Pipeline Builder</div>
+            <div className="rr-pipeline-eyebrow">● Free CRM builder</div>
             <div className="rr-pipeline-card-title-row">
               <h2 className="rr-pipeline-card-title text-2xl sm:text-[1.75rem] md:text-3xl font-extrabold tracking-tight text-[var(--rr-text)] !mb-0">
-                Build Your Pipeline
+                Start Building your Customer CRM
               </h2>
               {!loading && hotLeads.length > 0 && (
                 <div className="rr-home-spotlight-inline" aria-label="Spotlight companies">
@@ -541,9 +560,14 @@ export default function Signals() {
                 </div>
               )}
             </div>
-            <p className="rr-pipeline-card-lead mt-2 mb-4">
-              See your top 5 prospect matches instantly — with engagement strategy &amp; buying signals
-            </p>
+            <div className="rr-pipeline-card-lead mt-2 mb-4 space-y-2.5">
+              <p>
+                Automation projects are difficult to discover and plan for without great data. We deliver great data that is live, not stale.
+              </p>
+              <p>
+                Then we help you shape your timing and strategy for each one so opportunities turn into PoCs (Proof of Concept) and projects.
+              </p>
+            </div>
 
               <form 
                 onSubmit={(e) => {
@@ -561,7 +585,7 @@ export default function Signals() {
                     required
                   />
                 <button type="submit" className="rr-btn-build rr-btn-build-compact">
-                  Build Pipeline →
+                  Build CRM pipeline →
                 </button>
               </form>
 

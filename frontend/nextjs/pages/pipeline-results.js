@@ -243,7 +243,7 @@ export default function PipelineResults() {
               <div className="flex items-center justify-center gap-3">
                 <Link href="/login">
                   <button className="px-6 py-3 rounded text-sm font-semibold border border-emerald-700 bg-emerald-900/20 text-emerald-400 hover:border-emerald-600 hover:bg-emerald-900/30 transition-colors">
-                    Sign Up Free
+                    Sign Up
                   </button>
                 </Link>
                 <Link href="/">

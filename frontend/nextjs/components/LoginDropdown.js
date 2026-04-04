@@ -39,7 +39,7 @@ export default function LoginDropdown({ variant = 'default', label, className = 
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-1 ${triggerClass}`}
       >
-        {label ?? (isPrimary ? 'Sign Up Free' : 'Sign in')}
+        {label ?? (isPrimary ? 'Sign Up' : 'Sign in')}
         <span className="text-[10px] opacity-70">▼</span>
       </button>
 

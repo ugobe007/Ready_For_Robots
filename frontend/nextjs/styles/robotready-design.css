@@ -1028,6 +1028,63 @@
   max-width: 100%;
 }
 
+/* CRM framing row — under signal stats, same live numbers, workspace-oriented labels */
+.rr-hero-crm-strip {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(16, 185, 129, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.rr-hero-crm-strip-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(52, 211, 153, 0.95);
+  text-align: center;
+}
+
+.rr-hero-crm-strip-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rr-hero-crm-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: 8px;
+  background: rgba(6, 78, 59, 0.22);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.rr-hero-crm-num {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #a7f3d0;
+}
+
+.rr-hero-crm-lbl {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--rr-muted);
+  text-transform: lowercase;
+  text-align: center;
+  line-height: 1.2;
+}
+
 .rr-emerging-note {
   margin-top: 12px;
   font-size: 12px;
@@ -1157,6 +1214,10 @@
   font-size: 13px;
   color: var(--rr-muted2);
   line-height: 1.55;
+}
+
+.rr-pipeline-home-cta .rr-pipeline-card-lead p {
+  margin: 0;
 }
 
 /* Spotlight chips to the right of headline (md+) */

@@ -185,7 +185,7 @@ export default function RobotReady() {
               <div className="space-y-3">
                 <Link href="/login" 
                   className="block w-full py-3 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded transition-colors text-center">
-                  Sign Up Free →
+                  Sign Up →
                 </Link>
                 <button onClick={() => setShowPaywall(false)}
                   className="block w-full py-2 px-6 border border-neutral-700 hover:border-neutral-500 text-neutral-400 hover:text-neutral-300 rounded transition-colors">

@@ -55,7 +55,7 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
             <div className="hidden md:flex items-center gap-3">
               <LoginDropdown className="[&_button]:rr-btn-signin" />
               <Link href="/login" className="rr-btn-signup">
-                Sign Up Free
+                Sign Up
               </Link>
             </div>
             <div className="md:hidden relative">
@@ -142,7 +142,7 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
                   🔐 Sign in
                 </Link>
                 <Link href="/login" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">
-                  ✨ Sign Up Free
+                  ✨ Sign Up
                 </Link>
               </div>
             </div>
