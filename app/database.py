@@ -12,6 +12,20 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite:///./ready_for_robots.db")
 _raw_url = (_raw_url or "").strip().strip('"').strip("'")
+# Fly secrets must be a full URI — not a host, not base64. Otherwise we fall through to SQLite and APIs 500.
+if _raw_url and not (
+    _raw_url.startswith("postgres://")
+    or _raw_url.startswith("postgresql://")
+    or _raw_url.startswith("postgresql+")
+    or _raw_url.startswith("sqlite:")
+):
+    print(
+        "ERROR: DATABASE_URL must start with postgresql:// or postgres:// (or sqlite:). "
+        "Copy the full connection string from Supabase → Database (URI). "
+        "Falling back to local SQLite; production APIs will fail.",
+        file=sys.stderr,
+    )
+    _raw_url = "sqlite:///./ready_for_robots.db"
 if _raw_url and _raw_url.startswith("postgres://"):
     _raw_url = _raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
 elif _raw_url and _raw_url.startswith("postgresql://"):
