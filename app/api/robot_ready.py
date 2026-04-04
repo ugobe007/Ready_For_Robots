@@ -29,7 +29,7 @@ from bs4 import BeautifulSoup
 from app.database import get_db
 from app.models.company import Company
 from app.services.ontology import get_industry_prior
-from app.services.lead_filter import classify_lead
+from app.services.lead_filter import classify_lead, pick_primary_score
 
 router = APIRouter()
 
@@ -148,7 +148,7 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
     }
     
     for company in companies:
-        if not company.scores:
+        if not pick_primary_score(company.scores):
             continue
         
         # Filter by industry if specified
@@ -172,7 +172,7 @@ def match_companies(robot_caps: Dict, db: Session, target_industries: List[str] 
             if not matches_region:
                 continue
         
-        score = company.scores
+        score = pick_primary_score(company.scores)
         signals = company.signals or []
         
         # Calculate match score based on:

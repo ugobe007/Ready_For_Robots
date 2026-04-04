@@ -382,13 +382,7 @@ export default function Newsletter() {
           <div className="max-w-6xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-white">
-                  <span className="text-white">READY</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
-                </h1>
+                <img src="/logo-r.png" alt="Ready For Robots" className="w-12 h-12 object-contain" />
               </Link>
               <div className="flex items-center gap-4">
                 <Link href="/" className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors">
@@ -746,14 +740,9 @@ export default function Newsletter() {
         {/* Footer */}
         <div className="border-t border-neutral-800">
           <div className="max-w-4xl mx-auto px-4 py-6 text-center text-xs text-neutral-500">
-            <p className="mb-2">
-              <span className="text-white">READY</span>
-              {' '}
-              <span className="text-emerald-400">→</span>
-              {' '}
-              <span className="text-emerald-400">ROBOTS</span>
-              {' | '}
-              Automation Sales Leads with Actionable Signals
+            <p className="mb-2 flex items-center justify-center gap-2">
+              <img src="/logo-r.png" alt="Ready For Robots" className="w-6 h-6 object-contain" />
+              <span>Robot Automation Sales Leads with Actionable Signals</span>
             </p>
             <p>Daily deployment roundups, ROI benchmarks, and hot deals across labor-intensive industries.</p>
           </div>

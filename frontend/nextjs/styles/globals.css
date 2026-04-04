@@ -252,9 +252,15 @@
     transition: transform 0.15s ease-out;
   }
 
-  /* Strategic Snapshot gradient background */
+  /* Strategic Snapshot — slate / cyan (legacy pages; matches rr-theme tokens) */
   .strategic-snapshot-bg {
-    background: linear-gradient(135deg, rgba(6, 78, 59, 0.08) 0%, rgba(8, 8, 8, 0.95) 50%, rgba(22, 78, 99, 0.08) 100%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 1px rgba(34, 211, 238, 0.2);
+    background: linear-gradient(
+      135deg,
+      rgba(17, 24, 39, 0.98) 0%,
+      rgba(10, 15, 26, 0.99) 45%,
+      rgba(26, 34, 53, 0.98) 100%
+    );
+    border: 1px solid rgba(31, 45, 66, 0.95);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 1px rgba(34, 211, 238, 0.12);
   }
 }

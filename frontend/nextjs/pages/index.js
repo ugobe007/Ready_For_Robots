@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
+import Image from 'next/image';
 import LoginDropdown from '../components/LoginDropdown';
 import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
@@ -9,12 +10,20 @@ import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
+/** Hero + stat tiles — consistent integers, en-US grouping, em dash when loading */
+function formatHeroStat(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return Math.round(n).toLocaleString('en-US');
+}
+
 export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   
-  // Stats ticker data - from /api/leads/summary (full DB counts, not limited by leads list)
+  // Stats from GET /api/leads/homepage — summary uses same tiering as dashboard (junk excluded)
   const [statsData, setStatsData] = useState({
     activeLeads: 0,
     hotDeals: 0,
@@ -117,9 +126,12 @@ export default function Signals() {
     const fetchHomepage = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${apiBase}/api/leads/homepage`, liveFetchInit({
-          signal: controller.signal,
-        }));
+        const res = await fetch(
+          `${apiBase}/api/leads/homepage?cb=${Date.now()}`,
+          liveFetchInit({
+            signal: controller.signal,
+          }),
+        );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (cancelled) return;
@@ -318,44 +330,42 @@ export default function Signals() {
         <meta name="twitter:description" content="Automation sales leads with actionable signals. Each lead comes with signals you can act on." />
       </Head>
 
-      <div className="min-h-screen bg-black text-white">
-        {/* Navigation Bar */}
-        <div className="border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-8">
-                <h1 className="text-lg font-semibold text-white">
-                  <span className="text-white">READY</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
-                </h1>
-                <nav className="hidden md:flex items-center gap-6 text-sm">
-                  <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
-                  <Link href="/market-insights" className="text-neutral-400 hover:text-emerald-400 transition-colors">Market Insights</Link>
-                  <Link href="/about" className="text-neutral-400 hover:text-cyan-400 transition-colors">Signals</Link>
-                  <a href="#leads" className="text-neutral-400 hover:text-emerald-400 transition-colors">Browse Leads</a>
-                  <Link href="/newsletter" className="text-neutral-400 hover:text-cyan-400 transition-colors flex items-center gap-1">
-                    📰 Newsletter
-                  </Link>
-                  <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calculator</Link>
-                </nav>
-              </div>
-              <div className="hidden md:flex items-center gap-4">
-                <LoginDropdown className="text-neutral-400" />
-                <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
-                  Sign Up Free
-                </Link>
-                
-                {/* Mobile Menu */}
+      <div className="rr-theme min-h-screen">
+        {/* Navigation — docs/design/homepage_design.html */}
+        <div className="rr-navbar w-full">
+          <div className="rr-navbar-inner">
+          <div className="rr-nav-brand">
+            {/* No whitespace inside .rr-brand-logo — avoids stray text nodes / hydration mismatch */}
+            <div className="rr-brand-logo">
+              <Image src="/logo-r.png" alt="" width={36} height={36} className="object-contain p-0.5" priority />
+            </div>
+            <Link href="/" className="rr-brand-name hidden sm:inline">Ready For Robots</Link>
+          </div>
+          <nav className="rr-nav-links">
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/market-insights">Market Insights</Link>
+            <Link href="/about">Signals</Link>
+            <a href="#leads">Browse Leads</a>
+            <Link href="/newsletter">📰 Newsletter</Link>
+            <Link href="/roi-calculator">ROI Calculator</Link>
+          </nav>
+          <div className="rr-nav-right">
+            <div className="hidden md:flex items-center gap-3">
+              <LoginDropdown className="[&_button]:rr-btn-signin" />
+              <Link href="/login" className="rr-btn-signup">
+                Sign Up Free
+              </Link>
+            </div>
                 <div className="md:hidden relative">
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => {
                       const menu = document.getElementById('mobile-menu');
-                      menu.classList.toggle('hidden');
+                      menu?.classList.toggle('hidden');
                     }}
                     className="text-neutral-400 hover:text-white px-3 py-2 text-xl"
+                    aria-expanded="false"
+                    aria-controls="mobile-menu"
                   >
                     ☰
                   </button>
@@ -389,106 +399,87 @@ export default function Signals() {
                     </Link>
                   </div>
                 </div>
+          </div>
+          </div>
+        </div>
+
+        {/* Hero — headline left, compact quote + inline stats right (md+) */}
+        <div className="rr-hero">
+          <div className="rr-hero-inner">
+            <div className="rr-hero-headline-row">
+              <div className="rr-hero-headline-block">
+                <div className="rr-hero-eyebrow">
+                  ⚡ Curated Lead Lists <span>·</span> 14 Signal Types <span>·</span> 140+ Sources
+                </div>
+                <h1>
+                  Robot Automation Projects<br />
+                  <em>With Signal Intelligence</em>
+                </h1>
+                <p className="rr-hero-lead">
+                  We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
+                </p>
+                <div className="rr-hero-cta">
+                  <button
+                    type="button"
+                    className="rr-btn-hero-primary"
+                    onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Build Your Pipeline →
+                  </button>
+                  <Link href="/dashboard" className="rr-btn-hero-secondary inline-block text-center">
+                    Browse All Leads
+                  </Link>
+                </div>
               </div>
+              <aside className="rr-hero-ticker-panel" aria-label="Signal feed and pipeline stats">
+                <div className="rr-testimonial-bar rr-testimonial-bar--compact">
+                  <span className="rr-testimonial-ico shrink-0" aria-hidden>💬</span>
+                  <div className="flex-1 min-w-0">
+                    <div key={currentQuoteIndex} className="rr-testimonial-text">
+                      {automationQuotes[currentQuoteIndex].text}
+                    </div>
+                    <div className="rr-testimonial-source">
+                      {automationQuotes[currentQuoteIndex].company}
+                      <span className="rr-testimonial-sep">·</span>
+                      <span className="rr-cost-tag">{automationQuotes[currentQuoteIndex].signal}</span>
+                    </div>
+                  </div>
+                  <span className="rr-testimonial-counter tabular-nums">
+                    {currentQuoteIndex + 1}/{automationQuotes.length}
+                  </span>
+                </div>
+                <div className="rr-hero-stat-strip">
+                  <div className="rr-hero-stat-inline">
+                    <span className="n text-[var(--rr-text)] tabular-nums">{statsLoaded ? formatHeroStat(statsData.activeLeads) : '—'}</span>
+                    <span className="l">{statsLoaded ? 'Active' : '…'}</span>
+                  </div>
+                  <div className="rr-hero-stat-inline">
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-orange)' }}>{statsLoaded ? formatHeroStat(statsData.hotDeals) : '—'}</span>
+                    <span className="l">Hot</span>
+                  </div>
+                  <div className="rr-hero-stat-inline" title="Signals on pipeline leads (excludes junk)">
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-cyan)' }}>{statsLoaded ? formatHeroStat(statsData.liveSignals) : '—'}</span>
+                    <span className="l">Signals</span>
+                  </div>
+                  <div className="rr-hero-stat-inline">
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-green)' }}>{statsLoaded ? formatHeroStat(statsData.warmPipeline) : '—'}</span>
+                    <span className="l">Warm</span>
+                  </div>
+                </div>
+                {emergingCount > 0 && (
+                  <p className="rr-emerging-note rr-emerging-note--inline">
+                    Emerging · <span className="tabular-nums">{emergingCount.toLocaleString('en-US')}</span> in pipeline
+                  </p>
+                )}
+                <Link href="/dashboard" className="rr-hero-explore-btn">
+                  Explore
+                </Link>
+              </aside>
             </div>
           </div>
         </div>
 
-        {/* Hero */}
-        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12">
-          <div className="space-y-6">
-            <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">⚡ Curated lead lists · 14 signal types · 140+ sources</div>
-            {/* Logo + Headline: icon dominant (bigger than descriptor), Ready For Robots as descriptor */}
-            <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10">
-              <div className="flex-shrink-0">
-                <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-center p-2 shadow-2xl shadow-emerald-500/10 overflow-hidden">
-                  <img src="/logo.png" alt="Ready For Robots" className="w-full h-full object-contain" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight leading-tight text-white">
-                  Automation Sales Leads with Actionable Signals
-                </h2>
-                <p className="mt-2 md:mt-3 text-base md:text-lg text-neutral-400 font-medium">
-                  Ready For Robots
-                </p>
-              </div>
-            </div>
-            <p className="text-lg md:text-xl text-neutral-300 max-w-3xl">
-              We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
-            </p>
-            
-            {/* Stats Ticker - uses /api/leads/summary for full DB counts */}
-            <div className="space-y-3">
-              {/* Rotating Automation Quotes */}
-              <div className="border border-emerald-800/30 bg-gradient-to-r from-emerald-950/30 to-cyan-950/30 rounded-lg py-3 px-5 overflow-hidden">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center animate-pulse">
-                      <span className="text-base">💬</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div 
-                      key={currentQuoteIndex}
-                      className="animate-[fadeIn_0.5s_ease-in-out]"
-                    >
-                      <p className="text-sm md:text-base text-white font-medium italic">
-                        {automationQuotes[currentQuoteIndex].text}
-                      </p>
-                      <p className="text-xs text-emerald-400 mt-0.5">
-                        {automationQuotes[currentQuoteIndex].company} · <span className="text-cyan-400">{automationQuotes[currentQuoteIndex].signal}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="hidden md:block flex-shrink-0">
-                    <div className="text-xs text-neutral-400 font-mono">
-                      {currentQuoteIndex + 1}/{automationQuotes.length}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Bar - Tighter, values update smoothly without re-rendering */}
-              <div className="border border-emerald-800/40 bg-gradient-to-b from-neutral-900 to-black rounded-lg py-2 px-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                  <div className="group cursor-default">
-                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-transparent group-hover:scale-110 transition-all duration-500">
-                      {statsData.activeLeads}
-                    </div>
-                    <div className="text-sm text-neutral-400 font-semibold tracking-wide">
-                      {statsLoaded ? 'ACTIVE LEADS' : 'LOADING...'}
-                    </div>
-                  </div>
-                  <div className="group cursor-default">
-                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-all duration-500">
-                      {statsData.hotDeals}
-                    </div>
-                    <div className="text-sm text-orange-400 font-semibold tracking-wide">🔥 HOT DEALS</div>
-                  </div>
-                  <div className="group cursor-default">
-                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.4)] group-hover:scale-110 transition-all duration-500">
-                      {statsData.liveSignals}
-                    </div>
-                    <div className="text-sm text-cyan-400 font-semibold tracking-wide">LIVE SIGNALS</div>
-                  </div>
-                  <div className="group cursor-default">
-                    <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-emerald-400 to-green-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-all duration-500">
-                      {statsData.warmPipeline}
-                    </div>
-                    <div className="text-sm text-emerald-400 font-semibold tracking-wide">WARM PIPELINE</div>
-                  </div>
-                </div>
-                {emergingCount > 0 && (
-                  <p className="text-[11px] text-neutral-500 text-center mt-2 px-1">
-                    <span className="text-cyan-500/90 font-medium">Emerging</span>
-                    {' · '}
-                    {emergingCount.toLocaleString()} opportunities in the full pipeline (watchlist / early signals — see legend below)
-                  </p>
-                )}
-              </div>
-
-              {/* Leads per industry — never show "Unknown"; merge into "New" */}
+        <div className="rr-section !pt-0">
               {Object.keys(leadsByIndustry).length > 0 && (() => {
                 const merged = {};
                 Object.entries(leadsByIndustry).forEach(([industry, count]) => {
@@ -496,42 +487,53 @@ export default function Signals() {
                   merged[key] = (merged[key] || 0) + (count || 0);
                 });
                 return (
-                <div className="border border-neutral-800 rounded-lg py-3 px-4 bg-neutral-900/50">
-                  <div className="text-xs text-neutral-500 font-semibold uppercase tracking-widest mb-2">Leads by industry</div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                <div className="rr-industry-cloud">
+                  <div className="rr-industry-cloud-label">Leads by Industry</div>
+                  <div className="rr-industry-tags">
                     {Object.entries(merged)
                       .sort((a, b) => (b[1] || 0) - (a[1] || 0))
                       .map(([industry, count]) => (
-                        <span key={industry} className="text-sm text-neutral-300">
-                          <span className="text-white font-medium">{industry}</span>
-                          <span className="text-emerald-400/90 font-semibold ml-1.5">{count}</span>
+                        <span key={industry} className="rr-ind-tag">
+                          {industry} <span className="cnt">{count}</span>
                         </span>
                       ))}
                   </div>
                 </div>
                 );
               })()}
-            </div>
-          </div>
         </div>
 
-        {/* CTA - Build Your Pipeline */}
-        <div id="cta" className="max-w-5xl mx-auto px-6 pt-4 pb-8">
-          <div className="relative border-2 border-neutral-600 rounded-xl px-8 py-8 bg-gradient-to-b from-neutral-900/50 to-black/50 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
-            
-            <div className="relative space-y-6">
-              <div className="space-y-3 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-800/50 border border-neutral-700 rounded-full">
-                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                  <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wide">Free Pipeline Builder</span>
+        {/* CTA - Build Your Pipeline (layout aligned with dashboard pipeline card) */}
+        <div id="cta" className="rr-section !pt-2">
+          <div className="rr-pipeline-section rr-pipeline-home-cta border-emerald-900/30 bg-gradient-to-br from-emerald-950/25 to-[var(--rr-surface)]">
+            <div className="rr-pipeline-eyebrow">● Free Pipeline Builder</div>
+            <div className="rr-pipeline-card-title-row">
+              <h2 className="rr-pipeline-card-title text-2xl sm:text-[1.75rem] md:text-3xl font-extrabold tracking-tight text-[var(--rr-text)] !mb-0">
+                Build Your Pipeline
+              </h2>
+              {!loading && hotLeads.length > 0 && (
+                <div className="rr-home-spotlight-inline" aria-label="Spotlight companies">
+                  <span className="rr-ticker-inline-label">
+                    <span className="inline-block h-1 w-1 rounded-full bg-emerald-500" aria-hidden />
+                    Spotlight
+                  </span>
+                  <div className="rr-home-spotlight-chips">
+                    {hotLeads.slice(0, 6).map((lead) => (
+                      <Link
+                        key={lead.id}
+                        href="#leads"
+                        className="rr-home-spotlight-chip"
+                      >
+                        {lead.company_name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white">
-                  Build Your Sales Pipeline
-                </h2>
-                <p className="text-base md:text-lg text-neutral-400">
-                  See your top 5 prospect matches instantly — with engagement strategy & buying signals
-                </p>
-              </div>
+              )}
+            </div>
+            <p className="rr-pipeline-card-lead mt-2 mb-4">
+              See your top 5 prospect matches instantly — with engagement strategy &amp; buying signals
+            </p>
 
               <form 
                 onSubmit={(e) => {
@@ -539,86 +541,60 @@ export default function Signals() {
                   const url = e.target.robotUrl.value;
                   router.push(`/pipeline-results?url=${encodeURIComponent(url)}`);
                 }}
-                className="space-y-4"
+                className="space-y-2"
               >
-                <div>
                   <input
                     type="text"
                     name="robotUrl"
                     placeholder="Enter your robot company website (e.g., amplibotics.ai)"
-                    className="w-full px-5 py-4 bg-black border-2 border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 focus:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all"
+                    className="rr-pipeline-input !mb-2 !py-3"
                     required
                   />
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full px-6 py-4 bg-transparent border-2 border-emerald-500 text-emerald-400 rounded-lg font-bold text-lg hover:border-emerald-400 hover:text-emerald-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-200"
-                >
+                <button type="submit" className="rr-btn-build rr-btn-build-compact">
                   Build Pipeline →
                 </button>
               </form>
 
-              <div className="flex items-center justify-center md:justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-800 flex-wrap gap-3">
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  No signup required
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  Instant results
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  Free trial
-                </span>
+              <div className="rr-pipeline-checks">
+                <span className="rr-pipeline-check">No signup required</span>
+                <span className="rr-pipeline-check">Instant results</span>
+                <span className="rr-pipeline-check">Free trial</span>
               </div>
-            </div>
           </div>
-          
-          {/* View All Leads CTA */}
-          <div className="pt-4">
-            <Link 
-              href="/dashboard" 
-              className="block text-center px-6 py-3 bg-transparent border border-neutral-600 text-neutral-300 rounded-lg hover:border-neutral-500 hover:text-white hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-200 font-medium"
-            >
-              Browse All {statsData.activeLeads} Leads by Industry →
-            </Link>
-          </div>
+
+          <Link href="/dashboard" className="rr-browse-all-btn">
+            Browse All {statsData.activeLeads} Leads by Industry →
+          </Link>
         </div>
 
-        {/* Link to Signals Page */}
-        <div className="max-w-5xl mx-auto px-6 pb-4">
-          <Link href="#signals" className="group block border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-5 hover:border-emerald-700/50 hover:bg-emerald-950/30 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-sm font-semibold text-emerald-400">💡 Why Signals Matter</div>
-                <div className="text-xs text-neutral-500 hidden md:block">Learn how we identify buying intent</div>
+        <div className="rr-section !pt-2 !pb-6">
+          <Link href="#signals" className="rr-why-signals group block rounded-[var(--rr-radius-lg)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-lg shrink-0">💡</span>
+                <div>
+                  <div className="font-semibold text-[var(--rr-green)]">Why Signals Matter</div>
+                  <div className="text-sm text-[var(--rr-muted2)] hidden sm:block">Learn how we identify buying intent</div>
+                </div>
               </div>
-              <div className="text-emerald-400 group-hover:translate-x-1 transition-transform">→</div>
+              <span className="text-[var(--rr-green)] group-hover:translate-x-1 transition-transform shrink-0">→</span>
             </div>
           </Link>
         </div>
 
         {/* ENHANCED: Strategic Snapshot - Top Hot Deals with More POP */}
-        <div id="leads" className="max-w-5xl mx-auto px-6 pt-6 pb-10 md:pb-12 space-y-8">
+        <div id="leads" className="max-w-7xl mx-auto px-6 pt-6 pb-10 md:pb-12 space-y-8">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-orange-400 font-semibold uppercase tracking-widest">
-                ⚡ DAILY SPOTLIGHT
-              </div>
-              <div className="flex gap-1">
-                <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
-                <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" style={{animationDelay: '0.3s'}}></span>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-neutral-400 font-semibold uppercase tracking-widest border border-neutral-800 px-2 py-0.5 rounded">
+                Daily Spotlight
               </div>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
               Daily spotlight deals
             </h2>
-            <p className="text-lg text-neutral-300">
-              Five accounts rotate each day: <span className="text-orange-400 font-semibold">three Hot</span> and{' '}
-              <span className="text-amber-400 font-semibold">two Warm</span>, ranked by{' '}
-              <span className="text-neutral-200">newest signal activity</span> first so the list refreshes. Same high scorers will not dominate every visit.
+            <p className="text-lg text-neutral-400">
+              Five accounts rotate each day: three Hot and two Warm, ranked by newest signal activity first.
             </p>
             {tierLegend && (
               <div className="mt-5 grid md:grid-cols-3 gap-3 text-left">
@@ -668,14 +644,9 @@ export default function Signals() {
                   <div 
                     key={lead.id}
                     onClick={() => setExpandedDealId(isExpanded ? null : lead.id)}
-                    className={`group border rounded-lg p-4 space-y-3 transition-all cursor-pointer ${
-                      isExpanded 
-                        ? 'border-orange-500/80 bg-orange-950/15 shadow-lg shadow-orange-500/5' 
-                        : 'border-orange-800/40 hover:border-orange-500/60 bg-orange-950/5 hover:bg-orange-950/10'
+                    className={`rr-deal-card group space-y-3 transition-all cursor-pointer ${
+                      isExpanded ? 'rr-deal-card-expanded' : ''
                     }`}
-                    style={{
-                      animation: `slideIn 0.5s ease-out ${idx * 0.05}s both`
-                    }}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-1.5">
@@ -785,7 +756,7 @@ export default function Signals() {
 
                     {isExpanded && (
                       <div 
-                        className="pt-4 mt-3 border-t border-orange-800/40 space-y-4"
+                        className="pt-4 mt-3 border-t border-neutral-800 space-y-4"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* Score sub-breakdown */}
@@ -797,8 +768,8 @@ export default function Signals() {
                               { label: 'Expansion', val: lead.score.expansion_score },
                               { label: 'Market Fit', val: lead.score.market_fit_score },
                             ].map(({ label, val }) => (
-                              <div key={label} className="bg-neutral-900/60 rounded p-2 text-center">
-                                <div className="text-base font-bold text-orange-300">{(val || 0).toFixed(0)}</div>
+                              <div key={label} className="bg-[#101010] border border-neutral-800/50 rounded p-2 text-center">
+                                <div className="text-base font-bold text-neutral-200">{(val || 0).toFixed(0)}</div>
                                 <div className="text-[10px] text-neutral-500 mt-0.5">{label}</div>
                               </div>
                             ))}
@@ -927,7 +898,7 @@ export default function Signals() {
         </div>
 
         {/* Browse All Leads by Industry */}
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="border border-neutral-800 rounded-lg p-8 text-center space-y-4">
             <h3 className="text-2xl font-semibold text-white">Browse All {statsData.activeLeads} Leads by Industry</h3>
             <p className="text-neutral-400 max-w-2xl mx-auto">
@@ -945,7 +916,7 @@ export default function Signals() {
         </div>
 
         {/* What Are Buying Signals? */}
-        <div id="signals" className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
+        <div id="signals" className="max-w-7xl mx-auto px-6 py-10 md:py-12 space-y-10">
           <div className="text-center space-y-4">
             <div className="text-xs text-cyan-400 font-semibold uppercase tracking-widest">SIGNAL INTELLIGENCE</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">What Are Buying Signals?</h2>
@@ -1016,7 +987,7 @@ export default function Signals() {
         </div>
 
         {/* Success Stories */}
-        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
+        <div className="max-w-7xl mx-auto px-6 py-10 md:py-12 space-y-10">
           <div className="text-center space-y-4">
             <div className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">SUCCESS STORIES</div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Real Signals → Real Deals</h2>
@@ -1047,7 +1018,7 @@ export default function Signals() {
         </div>
 
         {/* Clear Next Steps */}
-        <div className="max-w-5xl mx-auto px-6 py-10 md:py-12 space-y-10">
+        <div className="max-w-7xl mx-auto px-6 py-10 md:py-12 space-y-10">
           <div className="border border-emerald-800/30 bg-emerald-950/20 rounded-lg p-6 space-y-6">
             <div className="space-y-3">
               <div className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">GET STARTED</div>
@@ -1085,12 +1056,12 @@ export default function Signals() {
           </div>
         </div>
 
-        {/* Footer - Simple one-liner */}
-        <div className="border-t border-neutral-800 py-8">
-          <div className="max-w-5xl mx-auto px-6 text-center text-sm text-neutral-500">
-            <p>© 2026 Ready → Robots. Signal intelligence for robotics sales.</p>
+        <footer className="rr-footer">
+          <div className="flex justify-center mb-3">
+            <Image src="/logo-r.png" alt="" width={40} height={40} className="h-10 w-10 opacity-90" />
           </div>
-        </div>
+          <p>© 2026 Signal intelligence for robotics sales.</p>
+        </footer>
       </div>
 
       <style jsx>{`

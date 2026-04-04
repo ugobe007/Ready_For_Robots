@@ -27,9 +27,9 @@ router = APIRouter()
 
 def _cache_max_age_hours() -> float:
     try:
-        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "1.5"))
+        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "24.0"))
     except ValueError:
-        return 1.5
+        return 24.0
 
 
 @router.get("/edition")

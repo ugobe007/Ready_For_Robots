@@ -17,6 +17,7 @@ from typing import Optional, List
 from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
+from app.services.lead_filter import pick_primary_score
 
 router = APIRouter()
 
@@ -310,7 +311,8 @@ def _run_keyword_search(
 
     results = []
     for c in companies:
-        score = round(float(c.scores.overall_intent_score), 1) if c.scores else 0.0
+        ps = pick_primary_score(c.scores)
+        score = round(float(ps.overall_intent_score), 1) if ps else 0.0
         matched = sorted(
             company_signals.get(c.id, []),
             key=lambda x: x["strength"],

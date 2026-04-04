@@ -15,7 +15,8 @@ Usage
 
 import re
 from dataclasses import dataclass, field
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Any
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ _JUNK_SUBSTRINGS = [
     "says study", "per report", "per survey",
     # SEC / financial filings scraped as company names
     "sec 10-k", "sec 10-q", "10-k filing", "10-q filing", "annual report sec",
+    # Specific known-bad junk from user feedback
+    "how ai ", "pro-level", "yegor traiman", "travel market", "tourism market", "ops 202", "how to ",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -61,6 +64,9 @@ _JUNK_PATTERNS = [
     r"^(nearly|almost|about|roughly|approximately|upwards?\s+of|over|more\s+than|"
     r"less\s+than|most|many|several|some|a\s+few|majority\s+of|"
     r"a\s+majority|a\s+third|a\s+quarter|a\s+half|half\s+of)\s+",
+
+    # Questions / Article headings
+    r"^(how|why|what|when|where|who)\s+(can|is|are|will|do|does|to|we|they|you)\b",
 
     # Starts with a number + unit/fraction combo
     r"^\d+\s*(percent|%|in\s+\d+|of\s+\d+|tips|ways|reasons|steps|things|facts)\b",
@@ -398,9 +404,32 @@ def _is_target_false_positive(company_name: str, signals) -> bool:
 
 # ─── Convenience wrapper ──────────────────────────────────────────────────────
 
-def classify_lead(company, score, signals) -> tuple[bool, str, PriorityResult]:
+def pick_primary_score(scores_or_one: Any):
+    """
+    ORM may return one Score (uselist=False) or multiple rows in Postgres (duplicates / migrations).
+    SQLAlchemy raises MultipleResultsFound for uselist=False when >1 row exists — use uselist=True
+    and pick the latest score row here.
+    """
+    if scores_or_one is None:
+        return None
+    if isinstance(scores_or_one, list):
+        if not scores_or_one:
+            return None
+        return max(
+            scores_or_one,
+            key=lambda s: (
+                getattr(s, "last_calculated_at", None) or datetime.min.replace(tzinfo=timezone.utc),
+                getattr(s, "id", 0) or 0,
+            ),
+        )
+    return scores_or_one
+
+
+def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityResult]:
     """
     Full classification for a single lead.
+
+    `scores_or_one` may be a single Score, a list[Score], or None (relationship).
 
     Returns:
         (junk: bool, junk_reason: str, priority: PriorityResult)
@@ -414,6 +443,7 @@ def classify_lead(company, score, signals) -> tuple[bool, str, PriorityResult]:
     if _is_target_false_positive(getattr(company, "name", ""), signals):
         return True, "target false positive (common-word in funding headlines)", PriorityResult("COLD", 0.0, ["target false positive"])
 
+    score = pick_primary_score(scores_or_one)
     overall = getattr(score, "overall_intent_score", 0.0) if score else 0.0
     sig_types = [s.signal_type for s in (signals or [])]
     sig_count = len(signals or [])

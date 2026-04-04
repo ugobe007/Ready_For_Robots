@@ -1,6 +1,14 @@
 import os
+import sys
+from pathlib import Path
+from urllib.parse import urlparse
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+# Load repo-root .env before reading DATABASE_URL (uvicorn does not load .env by default)
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite:///./ready_for_robots.db")
 _raw_url = (_raw_url or "").strip().strip('"').strip("'")
@@ -10,6 +18,52 @@ elif _raw_url and _raw_url.startswith("postgresql://"):
     _raw_url = _raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 DATABASE_URL = _raw_url or "sqlite:///./ready_for_robots.db"
+
+
+def _ensure_pg_sslmode(url: str) -> str:
+    """Supabase direct connections require SSL; pooler often does too."""
+    if not url or "postgresql" not in url or "sqlite" in url:
+        return url
+    if "sslmode=" in url:
+        return url
+    if "supabase.co" not in url and "supabase.com" not in url:
+        return url
+    sep = "&" if "?" in url else "?"
+    return f"{url}{sep}sslmode=require"
+
+
+DATABASE_URL = _ensure_pg_sslmode(DATABASE_URL)
+
+# Literal "HOST" / docs examples — DNS fails with "could not translate host name \"HOST\""
+_PLACEHOLDER_PG_HOSTS = frozenset(
+    {
+        "host",
+        "hostname",
+        "your-host",
+        "your_host",
+        "db.host",
+        "db.example.com",
+    }
+)
+
+
+def _postgres_url_has_placeholder_host(url: str) -> bool:
+    if not url or "postgresql" not in url:
+        return False
+    host = (urlparse(url).hostname or "").strip().lower()
+    if not host:
+        return True
+    return host in _PLACEHOLDER_PG_HOSTS
+
+
+if DATABASE_URL and "postgresql" in DATABASE_URL and _postgres_url_has_placeholder_host(DATABASE_URL):
+    print(
+        "WARNING: DATABASE_URL looks like a template (hostname is a placeholder, e.g. HOST). "
+        "Set the real Supabase host (db.xxxxx.supabase.co) in .env or use sqlite:///./ready_for_robots.db. "
+        "Falling back to local SQLite.",
+        file=sys.stderr,
+    )
+    DATABASE_URL = "sqlite:///./ready_for_robots.db"
 
 try:
     if DATABASE_URL and "postgresql" in DATABASE_URL:
@@ -22,9 +76,9 @@ try:
             pool_recycle=300,
         )
     else:
-        engine = create_engine("sqlite:///./ready_for_robots.db", connect_args={"check_same_thread": False})
+        # Respect DATABASE_URL for SQLite (e.g. sqlite:///./ready_for_robots.db or absolute path)
+        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 except Exception as e:
-    import sys
     print(f"WARNING: DATABASE_URL invalid ({e}), using SQLite fallback. DB features may not work.", file=sys.stderr)
     engine = create_engine("sqlite:///./ready_for_robots.db", connect_args={"check_same_thread": False})
 

@@ -4,6 +4,8 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
+import Image from 'next/image';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
@@ -27,8 +29,8 @@ function ScoreBar({ value = 0, label }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between">
-        <span className="label">{label}</span>
-        <span className="text-[9px] tabular-nums text-neutral-500">{pct}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{label}</span>
+        <span className="text-xs tabular-nums text-zinc-500">{pct}</span>
       </div>
       <div className="bar-track">
         <div className={`bar-fill ${barColor(pct)}`} style={{ width: `${pct}%` }} />
@@ -176,7 +178,7 @@ function ScoreNum({ value }) {
   else if (v >= 30) badgeClass = 'score-badge-low border-yellow-700 text-yellow-400';
   
   return (
-    <span className={`inline-flex items-center border rounded px-1.5 leading-none tabular-nums font-mono font-semibold text-[10px] ${badgeClass}`} style={{ paddingTop: '0.2rem', paddingBottom: '0.2rem' }}>
+    <span className={`inline-flex items-center border rounded-md px-2 leading-none tabular-nums font-mono font-bold text-xs ${badgeClass}`} style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}>
       {v}
     </span>
   );
@@ -202,53 +204,7 @@ const SEARCH_CATEGORIES = [
 ];
 
 function TrendingTicker() {
-  const [items, setItems] = useState([]);
-  useEffect(() => {
-    fetch(`${API}/api/trending`, liveFetchInit())
-      .then(r => r.ok ? r.json() : { items: [] })
-      .then(d => setItems(d.items || []))
-      .catch(() => {});
-  }, []);
-  if (!items.length) return null;
-
-  const TYPE_COLOR = {
-    strategic_hire:        'text-blue-400',
-    capex:                 'text-cyan-400',
-    labor_shortage:        'text-red-400',
-    expansion:             'text-emerald-400',
-    funding_round:         'text-violet-400',
-    job_posting:           'text-amber-400',
-    ma_activity:           'text-pink-400',
-    quality_bottleneck:    'text-orange-400',
-    safety_incident:       'text-red-300',
-    production_capacity:   'text-yellow-400',
-    warehouse_throughput:  'text-teal-400',
-    packaging_automation:  'text-indigo-400',
-    repetitive_process:    'text-purple-400',
-    material_handling:     'text-lime-400',
-    news:                  'text-neutral-400',
-  };
-
-  const doubled = [...items, ...items];
-
-  return (
-    <div className="ticker-wrap border-b border-neutral-800 bg-neutral-950 py-1.5 w-screen relative left-1/2 -translate-x-1/2">
-      <div className="ticker-inner flex items-center">
-        {doubled.map((item, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 px-5 shrink-0">
-            <span className={`text-[10px] font-semibold uppercase tracking-wide ${TYPE_COLOR[item.signal_type] || 'text-neutral-400'}`}>
-              {SIGNAL_META[item.signal_type]?.label || item.signal_type}
-            </span>
-            <span className="text-[10px] font-semibold text-white">{item.company_name}</span>
-            <span className="text-[10px] text-neutral-400 max-w-[24rem] truncate">
-              {item.signal_text}
-            </span>
-            <span className="text-[10px] text-neutral-400 mx-2">&bull;</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function uniqueSignalTypes(signals = []) {
@@ -311,163 +267,87 @@ function strategicFit(lead) {
 }
 
 function StrategicSnapshot({ leads, onSelect }) {
-  const [rotationIndex, setRotationIndex] = useState(0);
-  const [prevVisible, setPrevVisible] = useState([]);
   const sorted = [...leads]
     .filter(l => l.score?.overall_score != null)
-    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
+    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0))
+    .slice(0, 10);
   
-  // Rotate through leads every 5 seconds, showing 5 at a time
-  useEffect(() => {
-    if (sorted.length <= 5) return; // No need to rotate if we have 5 or fewer
-    
-    const interval = setInterval(() => {
-      setRotationIndex(prev => {
-        const maxIndex = sorted.length - 5;
-        return prev >= maxIndex ? 0 : prev + 1;
-      });
-    }, 5000); // 5 seconds
-
-    return () => clearInterval(interval);
-  }, [sorted.length]);
-
-  // Get 5 leads starting from rotationIndex
-  const visible = sorted.slice(rotationIndex, rotationIndex + 5);
-
-  // Track previous visible leads for animation
-  useEffect(() => {
-    if (visible.length > 0) {
-      setPrevVisible(visible.map(l => l.id));
-    }
-  }, [rotationIndex]);
-
   if (!sorted.length) return null;
 
-  // Determine which leads are entering (new in visible, not in prevVisible)
-  const enteringIds = new Set(
-    visible.filter(l => !prevVisible.includes(l.id)).map(l => l.id)
-  );
-  // Determine which leads are exiting (in prevVisible, not in visible)
-  const exitingIds = new Set(
-    prevVisible.filter(id => !visible.some(l => l.id === id))
-  );
-
-  // Helper to check if lead was updated recently (last hour)
-  const isRecentlyUpdated = (lead) => {
-    const updated = new Date(lead.updated_at || lead.created_at);
-    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    return updated > hourAgo;
-  };
-
-  // Helper to check if lead has new signals (last 24h)
-  const hasNewSignals = (lead) => {
-    if (!lead.signals || lead.signals.length === 0) return false;
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    return lead.signals.some(s => {
-      const detected = new Date(s.detected_at || s.created_at);
-      return detected > dayAgo;
-    });
-  };
-
   return (
-    <div className="mb-6 strategic-snapshot-bg rounded-lg p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-bold uppercase tracking-wider text-cyan-400" style={{ textShadow: '0 0 12px rgba(34, 211, 238, 0.6), 0 0 24px rgba(34, 211, 238, 0.4)' }}>⚡ Strategic Snapshot</span>
-          <div className="hidden sm:flex items-center gap-3 text-[10px] text-neutral-400">
-            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />buyer</span>
-            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-500" />eval</span>
-            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-neutral-600" />watch</span>
-          </div>
+    <div className="rr-strategic-snapshot rr-strategic-snapshot--tight">
+      <div className="rr-strategic-snapshot-hdr">
+        <div className="rr-strategic-snapshot-title">
+          <span className="rr-snapshot-bolt" aria-hidden>⚡</span>
+          <span>Strategic Snapshot</span>
         </div>
-        <div className="text-[10px] text-neutral-500">
-          Showing 5 of {sorted.length} leads {sorted.length > 5 && '• Rotating every 5s'}
+        <div className="rr-strategic-snapshot-meta tabular-nums">
+          Showing top {sorted.length} deals
         </div>
       </div>
 
-      <div className="border border-neutral-800 rounded overflow-hidden">
-        {/* col headers */}
-        <div className="hidden md:grid border-b border-neutral-800/60 bg-neutral-950"
-          style={{gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem'}}>
+      <div className="rr-strategic-snapshot-table-wrap">
+        <div
+          className="rr-strategic-snapshot-thead hidden md:grid"
+          style={{gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 4.5rem 6.5rem'}}>
           <span />
-          <span className="label px-3 py-2">company</span>
-          <span className="label px-2 py-2">signal</span>
-          <span className="label px-2 py-2">readiness</span>
-          <span className="label px-2 py-2">deal</span>
-          <span className="label px-2 py-2 text-right">score</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-3 py-2.5">company</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">signal</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">readiness</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">deal size</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5 text-right">score</span>
           <span />
         </div>
 
-        {visible.map((lead, i) => {
+        {sorted.map((lead, i) => {
           const sig   = topSignal(lead);
           const ready = READINESS[lead.priority_tier] || READINESS.COLD;
           const deal  = dealLabel(lead.employee_estimate);
-          const fit   = strategicFit(lead);
           const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
           const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
-          const recentlyUpdated = isRecentlyUpdated(lead);
-          const newSignal = hasNewSignals(lead);
-          
-          // Determine animation based on position and rotation state
-          const isEntering = enteringIds.has(lead.id);
-          const animationStyle = isEntering
-            ? `slideInFromTop 0.4s ease-out both` // New leads enter from top
-            : `slideInFromLeft 0.3s ease-out ${i * 0.05}s both`; // Initial cascade effect
 
           return (
             <div key={lead.id}
-              className={`grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-neutral-900 last:border-0
-                         hover:bg-neutral-900/40 transition-all group items-center
-                         ${recentlyUpdated ? 'bg-emerald-950/10 animate-pulse-slow' : ''}`}
+              className="grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-[var(--rr-border)] last:border-0 hover:bg-white/[0.02] transition-colors group items-center"
               style={{
-                gridTemplateColumns:'1.5rem 1fr 6rem 7rem 6rem 4.5rem 6rem',
-                animation: animationStyle
+                gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 4.5rem 6.5rem'
               }}>
 
               {/* rank */}
-              <span className="text-[10px] text-neutral-800 pl-3 group-hover:text-neutral-600 transition-colors tabular-nums">{i + 1}</span>
+              <span className="text-[10px] text-neutral-600 pl-3 group-hover:text-neutral-500 transition-colors tabular-nums">{i + 1}</span>
 
-              {/* company — name + dim metadata inline - CLICKABLE */}
-              <button onClick={() => onSelect(lead)} className="px-3 py-2 min-w-0 text-left w-full">
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-[11px] font-medium text-cyan-400 group-hover:text-cyan-300 transition-colors leading-tight cursor-pointer">
-                    {lead.company_name}
-                  </span>
-                  {newSignal && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-700 text-cyan-400 font-semibold uppercase">
-                      New
+              {/* company */}
+              <button onClick={() => onSelect(lead)} className="px-3 py-3 min-w-0 text-left w-full">
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-semibold text-emerald-500 group-hover:text-emerald-400 transition-colors leading-tight cursor-pointer">
+                      {lead.company_name}
                     </span>
-                  )}
-                  {recentlyUpdated && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded border border-emerald-700 text-emerald-400 font-semibold">
-                      ↗ Active
-                    </span>
-                  )}
+                  </div>
                   <span className="text-[10px] text-neutral-500 truncate hidden sm:inline">
                     {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
                   </span>
+                  {excerpt && (
+                    <p className="text-[10px] text-neutral-400 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
+                      {excerpt}{excerpt.length === 55 ? '…' : ''}
+                    </p>
+                  )}
                 </div>
-                {excerpt && (
-                  <p className="text-[10px] text-neutral-400 truncate mt-0.5 max-w-[24rem]" title={sig?.raw_text}>
-                    {excerpt}{excerpt.length === 55 ? '…' : ''}
-                  </p>
-                )}
               </button>
 
-              {/* signal badge only */}
+              {/* signal badge */}
               <div className="hidden md:flex items-center px-2 py-2">
                 {sigM
-                  ? <span className={`badge ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
+                  ? <span className={`text-[10px] px-2 py-0.5 rounded border bg-transparent ${sigM.border} ${sigM.text}`}>{sigM.label}</span>
                   : <span className="text-[10px] text-neutral-800">—</span>}
               </div>
 
               {/* readiness */}
               <div className="hidden md:flex items-center gap-1.5 px-2 py-2">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${ready.dot}`} />
-                <span className={`text-[11px] ${ready.color}`}>{ready.label}</span>
+                <span className={`text-[11px] font-medium ${ready.color}`}>{ready.label}</span>
               </div>
 
-              {/* deal tier only */}
+              {/* deal */}
               <div className="hidden md:flex items-center px-2 py-2">
                 <span className="text-[11px] text-neutral-400">{deal.tier}</span>
               </div>
@@ -477,12 +357,11 @@ function StrategicSnapshot({ leads, onSelect }) {
                 <ScoreNum value={lead.score?.overall_score ?? 0} />
               </div>
 
-              {/* CTA + compact share */}
-              <div className="flex items-center justify-end gap-2 pr-3 py-2">
-                <LeadShareBar lead={lead} compact />
+              {/* Action */}
+              <div className="flex items-center justify-end pr-3 py-2">
                 <button
                   onClick={() => onSelect(lead)}
-                  className="text-[10px] text-emerald-800 hover:text-emerald-400 transition-colors whitespace-nowrap font-medium">
+                  className="px-2 py-1 text-[10px] border border-emerald-800 text-emerald-500 hover:border-emerald-500 hover:bg-emerald-950/30 transition-colors rounded">
                   Analyze →
                 </button>
               </div>
@@ -2122,18 +2001,38 @@ export default function Dashboard() {
     try {
       const [leadsRes, summaryRes, healthRes] = await Promise.all([
         fetch(`${API}/api/leads?${buildQuery()}`, liveFetchInit()),
-        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}`, liveFetchInit()),
+        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}&cb=${Date.now()}`, liveFetchInit()),
         fetch(`${API}/api/scraper-health`, liveFetchInit()),
       ]);
-      if (leadsRes.ok)   setLeads(await leadsRes.json());
+      if (!leadsRes.ok) {
+        let hint = await leadsRes.text().catch(() => '');
+        try {
+          const j = JSON.parse(hint);
+          if (j.detail != null) {
+            hint = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+          }
+        } catch {
+          /* keep raw body */
+        }
+        setError(
+          hint
+            ? `API ${leadsRes.status}: ${hint.slice(0, 280)}`
+            : `API ${leadsRes.status}: ${leadsRes.statusText}. Check that FastAPI is running and DATABASE_URL is correct.`,
+        );
+        setLeads([]);
+      } else {
+        setLeads(await leadsRes.json());
+        setError(null);
+      }
       if (summaryRes.ok) setSummary(await summaryRes.json());
-      if (healthRes.ok)  setHealth(await healthRes.json());
-      setError(null);
-      
-      // Also fetch live signals
+      if (healthRes.ok) setHealth(await healthRes.json());
+
       await fetchLiveSignals();
     } catch (e) {
-      setError('Cannot reach API -- start the server: python -m uvicorn app.main:app --reload');
+      setError(
+        'Cannot reach API. For localhost:3000, run FastAPI on :8000 (next dev proxies /api → :8000). ' +
+          'Command: python -m uvicorn app.main:app --reload',
+      );
     } finally {
       setLoading(false);
       setLast(new Date().toLocaleTimeString());
@@ -2208,7 +2107,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#080808] px-4 py-6 md:px-8 md:py-8 max-w-[1400px] mx-auto">
+      <Head>
+        <title>Automation Projects Ready For Robots · Signal Intelligence</title>
+        <meta name="description" content="Lead intelligence dashboard — automation projects with buying signals." />
+      </Head>
+      <div className="rr-theme rr-page-wrap text-[15px] sm:text-base antialiased [font-feature-settings:'ss01'_1,'cv01'_1]">
 
       {/* Paywall Modal */}
       <PaywallModal 
@@ -2231,45 +2134,25 @@ export default function Dashboard() {
         />
       )}
 
-      {/* header */}
-      <header className="mb-6 md:mb-10">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="mb-2">
-              {/* READY → ROBOTS Wordmark - Option 4 */}
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1">
-                <span className="text-white">READY</span>
-                <span className="mx-2"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}>
-                  →
-                </span>
-                <span
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textShadow: '0 0 30px rgba(16, 185, 129, 0.3)',
-                    fontWeight: '900',
-                    letterSpacing: '0.02em'
-                  }}>
-                  ROBOTS
-                </span>
-              </h1>
-              <p className="text-xs md:text-sm text-neutral-400">Intent Signal Intelligence → Sales-Ready Leads</p>
-            </div>
+      {/* Top nav — docs/design/dashboard_design.html (inner centered to max-w main column) */}
+      <header className="rr-topnav w-full">
+        <div className="rr-topnav-inner">
+        <Link href="/" className="rr-topnav-brand group min-w-0">
+          <div className="rr-brand-logo overflow-hidden">
+            <Image src="/logo-r.png" alt="" width={34} height={34} className="!p-0.5 object-contain" priority />
           </div>
-          
-          {/* Mobile: Just hamburger menu */}
-          <div className="md:hidden relative">
+          <div className="min-w-0 hidden sm:block">
+            <div className="rr-brand-name leading-tight">Automation Projects Ready For Robots</div>
+            <div className="rr-brand-sub">with Signal Intelligence</div>
+          </div>
+        </Link>
+
+          {/* Mobile: hamburger */}
+          <div className="md:hidden relative ml-auto shrink-0">
             <button 
               onClick={() => setShowMenu(!showMenu)}
-              className="btn-ghost border-neutral-700 text-neutral-400 hover:border-neutral-500 px-3 text-xl">
+              type="button"
+              className="rr-btn-signin px-3 text-lg leading-none">
               ☰
             </button>
             {showMenu && (
@@ -2326,177 +2209,71 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
-        
-        {/* Desktop: Full nav bar */}
-        <div className="hidden md:flex items-center gap-4 flex-wrap">
+
+        <nav className="rr-topnav-links" aria-label="Dashboard">
           {!session && usageCount < FREE_LIMIT && (
-            <span className="text-[10px] border border-emerald-800 text-emerald-400 px-2 py-1 rounded">
-              {FREE_LIMIT - usageCount} free searches left
-            </span>
+            <span className="rr-badge-free">{FREE_LIMIT - usageCount} free searches left</span>
           )}
-          {lastRefresh && <span className="label text-neutral-500">{lastRefresh}</span>}
-          <Link href="/" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Home</Link>
-          <button onClick={fetchData} className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">&#8635; Refresh</button>
-          <Link href="/search" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Search</Link>
-          <Link href="/market-insights" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Market Insights</Link>
-          <Link href="/about" className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">Signals</Link>
-          <Link href="/newsletter" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Newsletter</Link>
-          <Link href="/social" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Content Studio</Link>
-          <Link href="/roi-calculator" className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors">ROI Calc</Link>
-          <Link href="/pilot-calculator" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Pilot Calc</Link>
-          <Link href="/robot-ready" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">Robot Ready</Link>
-          <Link href="/profile" className="text-xs text-neutral-400 hover:text-neutral-300 transition-colors">Profile</Link>
+          {lastRefresh && <span className="rr-topnav-time tabular-nums">{lastRefresh}</span>}
+          <Link href="/">Home</Link>
+          <button type="button" onClick={fetchData}>Refresh</button>
+          <Link href="/search">Search</Link>
+          <Link href="/market-insights">Market</Link>
+          <Link href="/about">Signals</Link>
+          <Link href="/newsletter">Newsletter</Link>
+          <Link href="/social">Studio</Link>
+          <Link href="/roi-calculator">ROI</Link>
+          <Link href="/pilot-calculator">Pilot</Link>
+          <Link href="/robot-ready">Robot Ready</Link>
+          <Link href="/brief">Brief</Link>
+          <Link href="/admin">Admin</Link>
+          <Link href="/profile">Profile</Link>
+        </nav>
+        <div className="rr-topnav-right hidden md:flex items-center">
           {session
-            ? <span className="label text-neutral-400 text-xs hidden md:inline">{session.user.email.split('@')[0]}</span>
+            ? <span className="text-sm text-[var(--rr-muted2)] max-w-[10rem] truncate">{session.user.email.split('@')[0]}</span>
             : (
-              <div className="hidden md:block" title="Browse freely — sign in only to save companies and reports">
-                <LoginDropdown label="→ sign in to save" className="text-neutral-400 [&_button]:text-xs [&_button]:py-1.5 [&_button]:px-2 [&_button]:border-neutral-800" />
+              <div title="Browse freely — sign in only to save companies and reports">
+                <LoginDropdown
+                  label="sign in to save"
+                  className="[&_button]:rounded-md [&_button]:border [&_button]:border-[#1f2d42] [&_button]:px-3 [&_button]:py-1.5 [&_button]:text-sm [&_button]:text-[#94a3b8] [&_button]:hover:border-[#10b981] [&_button]:hover:text-[#10b981]"
+                />
               </div>
             )}
-          
-          {/* Hamburger Menu */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              className="btn-ghost border-neutral-700 text-neutral-400 hover:border-neutral-500 px-3">
-              ☰
-            </button>
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
-                <Link href="/" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🏠 Home
-                  </div>
-                </Link>
-                <Link href="/search" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🔍 Intelligence Search
-                  </div>
-                </Link>
-                <Link href="/market-insights" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    📈 Market Insights
-                  </div>
-                </Link>
-                <Link href="/admin" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    ⚙️ Admin Panel
-                  </div>
-                </Link>
-                <Link href="/brief" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    📋 Strategy Brief
-                  </div>
-                </Link>
-                <Link href="/about" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer">
-                    ⚡ Signal Intelligence
-                  </div>
-                </Link>
-              </div>
-            )}
-          </div>
+        </div>
         </div>
       </header>
 
-      {/* error */}
       {error && (
-        <div className="mb-6 border border-red-900 rounded px-4 py-3 text-red-400 text-xs">
-          &#9888; {error}
+        <div className="rr-error-strip max-w-[1400px] mx-auto w-full">
+          {error}
         </div>
       )}
 
-      {/* Mobile filter button (visible on small screens) */}
-      <div className="lg:hidden mb-6">
-        <button onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="w-full flex items-center justify-between px-4 py-3 border border-neutral-800 rounded hover:border-neutral-700 transition-colors">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-neutral-300">Filters & Stats</span>
-            {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
-              <span className="px-2 py-0.5 bg-emerald-900/50 border border-emerald-700 rounded text-[10px] text-emerald-400 font-semibold">
-                {[tier !== 'ALL', industry !== 'All', sigType, search, minScore > 0].filter(Boolean).length} active
-              </span>
-            )}
-          </div>
-          <span className="text-neutral-500">{showMobileFilters ? '▼' : '▶'}</span>
-        </button>
-
-        {/* Mobile filters dropdown */}
-        {showMobileFilters && (
-          <div className="mt-4 border border-neutral-800 rounded-lg p-4 space-y-4 bg-neutral-900/50">
-            {/* Stats summary */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="border border-neutral-800 rounded p-3">
-                <span className="label block mb-1">Total</span>
-                <span className="text-2xl font-bold text-neutral-200">{summary.total ?? leads.length}</span>
-              </div>
-              <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); setShowMobileFilters(false); }}
-                className="border border-red-900 rounded p-3 text-left hover:bg-red-900/10 transition-colors">
-                <span className="label block mb-1 text-neutral-500">HOT</span>
-                <span className="text-2xl font-bold text-red-400">{summary.hot ?? 0}</span>
-              </button>
-            </div>
-
-            {/* Filters */}
-            <div>
-              <label className="label block mb-2">Search</label>
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="company name..."
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:border-emerald-600" />
-            </div>
-
-            <div>
-              <label className="label block mb-2">Priority: <span className="text-emerald-400">{tier}</span></label>
-              <div className="grid grid-cols-4 gap-2">
-                {TIERS.map(t => (
-                  <button key={t} onClick={() => setTier(t)}
-                    className={`px-3 py-2 rounded text-xs font-medium ${tier === t ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' : 'border border-neutral-800 text-neutral-400'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="label block mb-2">Industry</label>
-              <select value={industry} onChange={e => setIndustry(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-300">
-                {INDUSTRIES.map(ind => (<option key={ind} value={ind}>{ind}</option>))}
-              </select>
-            </div>
-
-            {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
-              <button onClick={() => {
-                setTier('ALL'); setIndustry('All'); setSigType(''); setSearch(''); setMinScore(0);
-              }} className="w-full text-xs text-neutral-400 hover:text-emerald-400 py-2 border border-neutral-800 rounded">
-                ✕ Clear all
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Two-column layout */}
-      <div className="flex gap-6">
+      <div className="rr-body-layout w-full max-w-[1600px] mx-auto">
         
         {/* Mobile filter toggle button */}
-        <button 
+        <button
+          type="button"
           onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="lg:hidden fixed bottom-6 right-6 z-40 bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-3 rounded-full shadow-lg border-2 border-emerald-500 flex items-center gap-2">
-          <span className="text-sm font-semibold">Filters</span>
-          <span className="text-xs">({tier !== 'ALL' || industry !== 'All' || search ? '●' : '○'})</span>
+          className="lg:hidden fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-900/95 px-4 py-3 text-sm font-medium text-neutral-200 shadow-xl backdrop-blur-sm hover:border-neutral-500 hover:bg-neutral-900"
+        >
+          <span>Filters</span>
+          {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+          )}
         </button>
 
         {/* LEFT COLUMN - Filters & Controls */}
         <aside className={`
-          w-80 shrink-0 space-y-6 
-          lg:sticky lg:top-6 lg:self-start lg:block lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto sidebar-scroll
+          rr-sidebar flex flex-col shrink-0 space-y-6
+          lg:sticky lg:top-[56px] lg:self-start lg:max-h-[calc(100vh-3.5rem)] lg:overflow-y-auto sidebar-scroll
           ${
             showMobileFilters 
-              ? 'fixed inset-0 z-50 bg-[#080808] p-4 overflow-y-auto block' 
+              ? 'fixed inset-0 z-50 !flex bg-[var(--rr-bg)] p-4 overflow-y-auto' 
               : 'hidden'
           }
+          lg:flex
         `}>
           
           {/* Mobile close button */}
@@ -2506,92 +2283,30 @@ export default function Dashboard() {
             ✕ Close Filters
           </button>
           
-          {/* Quick Stats */}
-          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-400">Pipeline Overview</h3>
-              <span className="text-[9px] text-neutral-600 border border-neutral-800 px-2 py-0.5 rounded">Live</span>
-            </div>
-            
-            <div className="bg-gradient-to-br from-neutral-900/50 to-transparent border border-neutral-800 rounded p-3">
-              <span className="label block mb-1 text-emerald-400 font-semibold">Total Leads</span>
-              <span className="text-3xl font-bold text-white tabular-nums">
-                {summary.total ?? leads.length}
-              </span>
-              <p className="text-[9px] text-neutral-600 mt-1">Active opportunities in database</p>
-            </div>
-
-            <div className="flex items-center gap-2 text-[9px] text-neutral-600 px-1">
-              <span className="inline-block h-1 w-1 rounded-full bg-cyan-500 animate-pulse"></span>
-              <span>Auto-refreshes every 30 seconds</span>
-            </div>
-
-            <div className="h-px bg-neutral-800" />
-            
-            <button onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
-              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-red-800 transition-colors group bg-gradient-to-br from-red-950/10 to-transparent hover:from-red-950/20">
-              <div className="flex items-center justify-between">
-                <span className="label text-emerald-400 font-semibold group-hover:text-red-400 transition-colors">HOT</span>
-                <span className="text-2xl font-bold text-red-400 tabular-nums">{summary.hot ?? 0}</span>
-              </div>
-            </button>
-
-            <button onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
-              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-yellow-800 transition-colors group">
-              <div className="flex items-center justify-between">
-                <span className="label text-emerald-400 font-semibold group-hover:text-yellow-400 transition-colors">WARM</span>
-                <span className="text-2xl font-bold text-yellow-500 tabular-nums">{summary.warm ?? 0}</span>
-              </div>
-            </button>
-
-            <button onClick={() => { setTier('COLD'); setIndustry('All'); setSearch(''); }}
-              className="w-full text-left p-3 border border-neutral-800 rounded hover:border-cyan-900 transition-colors group">
-              <div className="flex items-center justify-between">
-                <span className="label text-emerald-400 font-semibold group-hover:text-cyan-400 transition-colors">COLD</span>
-                <span className="text-2xl font-bold text-cyan-500 tabular-nums">{summary.cold ?? 0}</span>
-              </div>
-            </button>
-
-            <div className="h-px bg-neutral-800" />
-
-            <div className="flex items-center justify-between">
-              <span className="label">Junk filtered</span>
-              <span className="text-lg font-semibold text-neutral-500 tabular-nums">{summary.junk_filtered ?? 0}</span>
-            </div>
-
-            {openCircuits > 0 && (
-              <>
-                <div className="h-px bg-neutral-800" />
-                <div className="flex items-center justify-between p-2 border border-red-900 rounded">
-                  <span className="label text-red-400">Open circuits</span>
-                  <span className="text-lg font-semibold text-red-500 tabular-nums">&#9889; {openCircuits}</span>
-                </div>
-              </>
-            )}
-          </div>
+          {/* Quick Stats moved to main column */}
 
           {/* Filters */}
-          <div className="border border-neutral-800 rounded-lg p-4 space-y-4">
-            <h3 className="text-xs font-semibold tracking-widest uppercase text-neutral-300 mb-3">Filters</h3>
+          <div className="rr-filters-card space-y-4">
+            <h3 className="rr-sidebar-section-label !mb-0">Filters</h3>
             
             <div>
-              <label className="label block mb-2 text-neutral-300">Search Companies</label>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">Search Companies</label>
               <input type="text" value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="company name..."
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
-                           text-neutral-100 placeholder-neutral-600
+                className="w-full bg-zinc-950 border border-zinc-600 rounded-lg px-3 py-2.5 text-base
+                           text-zinc-100 placeholder-zinc-500
                            focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-900
                            transition-colors" />
             </div>
 
             <div>
-              <label className="label block mb-2">
-                Min Score <span className="text-emerald-400 font-semibold">{minScore}</span>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">
+                Min Score <span className="text-emerald-400 font-semibold tabular-nums">{minScore}</span>
               </label>
               <input type="range" min={0} max={100} value={minScore}
                 onChange={e => setMinScore(Number(e.target.value))}
                 className="w-full accent-emerald-500" />
-              <div className="flex justify-between text-[10px] text-neutral-500 mt-1">
+              <div className="flex justify-between text-xs text-zinc-500 mt-1.5 font-medium tabular-nums">
                 <span>0</span>
                 <span>50</span>
                 <span>100</span>
@@ -2599,14 +2314,14 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="label block mb-2">Priority Tier</label>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">Priority Tier</label>
               <div className="grid grid-cols-2 gap-2">
                 {TIERS.map(t => (
                   <button key={t} onClick={() => setTier(t)}
-                    className={`px-3 py-2 rounded text-xs font-medium transition-all ${
+                    className={`px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                       tier === t 
-                        ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-400' 
-                        : 'border border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                        ? 'bg-emerald-900/50 border border-emerald-600 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
+                        : 'border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:bg-white/5'
                     }`}>
                     {t}
                   </button>
@@ -2615,10 +2330,10 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="label block mb-2">Industry</label>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">Industry</label>
               <select value={industry} onChange={e => setIndustry(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
-                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                className="w-full bg-zinc-950 border border-zinc-600 rounded-lg px-3 py-2.5 text-base
+                           text-zinc-100 focus:outline-none focus:border-emerald-600">
                 {INDUSTRIES.map(ind => (
                   <option key={ind} value={ind}>{ind}</option>
                 ))}
@@ -2626,10 +2341,10 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="label block mb-2">Signal Type</label>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">Signal Type</label>
               <select value={sigType} onChange={e => setSigType(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
-                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                className="w-full bg-zinc-950 border border-zinc-600 rounded-lg px-3 py-2.5 text-base
+                           text-zinc-100 focus:outline-none focus:border-emerald-600">
                 <option value="">All Signals</option>
                 {SIGNAL_TYPES.filter(Boolean).map(st => (
                   <option key={st} value={st}>{SIGNAL_META[st]?.label || st}</option>
@@ -2638,32 +2353,32 @@ export default function Dashboard() {
             </div>
 
             <div>
-              <label className="label block mb-2">Sort By</label>
+              <label className="block mb-2 text-sm font-medium text-zinc-300">Sort By</label>
               <select value={sort} onChange={e => setSort(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm
-                           text-neutral-300 focus:outline-none focus:border-emerald-600">
+                className="w-full bg-zinc-950 border border-zinc-600 rounded-lg px-3 py-2.5 text-base
+                           text-zinc-100 focus:outline-none focus:border-emerald-600">
                 <option value="score">Score (High → Low)</option>
                 <option value="signals">Signal Count</option>
                 <option value="name">Company Name</option>
               </select>
             </div>
 
-            <div className="h-px bg-neutral-800" />
+            <div className="h-px bg-zinc-700/80" />
 
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input type="checkbox" checked={excludeJunk} onChange={e => setExcludeJunk(e.target.checked)}
                 className="sr-only peer" />
-              <div className="w-10 h-5 bg-neutral-800 rounded-full peer-checked:bg-emerald-900 transition-colors relative">
-                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-neutral-600 peer-checked:bg-emerald-500 rounded-full transition-all ${excludeJunk ? 'translate-x-5' : ''}`} />
+              <div className="w-10 h-5 bg-zinc-800 rounded-full peer-checked:bg-emerald-900 transition-colors relative">
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-zinc-500 peer-checked:bg-emerald-400 rounded-full transition-all ${excludeJunk ? 'translate-x-5' : ''}`} />
               </div>
-              <span className="text-xs text-neutral-400">
+              <span className="text-sm text-zinc-200">
                 {excludeJunk ? 'Hiding junk leads' : 'Showing all leads'}
               </span>
             </label>
 
             {(tier !== 'ALL' || industry !== 'All' || sigType || search || minScore > 0) && (
               <>
-                <div className="h-px bg-neutral-800" />
+                <div className="h-px bg-zinc-700/80" />
                 <button onClick={() => {
                   setTier('ALL');
                   setIndustry('All');
@@ -2671,7 +2386,7 @@ export default function Dashboard() {
                   setSearch('');
                   setMinScore(0);
                 }}
-                  className="w-full text-xs text-neutral-400 hover:text-emerald-400 transition-colors py-2 border border-neutral-800 rounded hover:border-neutral-700">
+                  className="w-full text-sm text-zinc-300 hover:text-emerald-300 transition-colors py-2.5 border border-zinc-700 rounded-lg hover:border-emerald-700/80 hover:bg-white/5">
                   ✕ Clear all filters
                 </button>
               </>
@@ -2684,154 +2399,117 @@ export default function Dashboard() {
         </aside>
 
         {/* RIGHT COLUMN - Main Content */}
-        <main className="flex-1 min-w-0 space-y-6">
-          
-          {/* Recent Activity - Inline text only */}
-          {!loading && leads.length > 0 && (() => {
-            const hotLead = leads.filter(l => l.priority_tier === 'HOT').sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))[0];
-            const warmLead = leads.filter(l => l.priority_tier === 'WARM')[0];
-            const signalLead = leads.filter(l => l.signals && l.signals.length > 0).sort((a, b) => b.signal_count - a.signal_count)[0];
-            
-            return (
-              <div className="text-sm text-neutral-500 flex items-center gap-3 flex-wrap">
-                {hotLead && (
-                  <span>
-                    Latest HOT: <button onClick={() => setSelectedLead(hotLead)} className="text-red-400 hover:text-red-300 underline">{hotLead.company_name}</button>
-                  </span>
-                )}
-                {warmLead && (
-                  <span>
-                    Latest WARM: <button onClick={() => setSelectedLead(warmLead)} className="text-yellow-400 hover:text-yellow-300 underline">{warmLead.company_name}</button>
-                  </span>
-                )}
-                {signalLead && (
-                  <span>
-                    Latest signal: <button onClick={() => setSelectedLead(signalLead)} className="text-cyan-400 hover:text-cyan-300 underline">{signalLead.company_name}</button>
-                  </span>
-                )}
-                <span>·</span>
-                <span>{summary.total} total</span>
-              </div>
-            );
-          })()}
+        <main className="rr-main rr-main--tight flex-1 min-w-0 !p-4 md:!p-6">
 
-          {/* Live Signal Ticker - horizontal scrolling stream */}
-          {!loading && liveSignals.length > 0 && (
-            <div className="border-t border-b border-neutral-800 py-2.5 px-4 bg-neutral-950/50 overflow-hidden">
-              <div className="flex items-center gap-3 text-xs">
-                <span className="shrink-0 flex items-center gap-1.5 text-neutral-500 font-medium">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Live Signals:
-                </span>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex gap-3 animate-ticker whitespace-nowrap">
-                    {liveSignals.concat(liveSignals).map((sig, idx) => {
-                      const sigMeta = SIGNAL_META[sig.type] || { label: sig.type, text: 'text-neutral-400' };
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedLead(sig.lead)}
-                          className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-                        >
-                          <span className="text-cyan-400 hover:text-cyan-300 underline decoration-dotted">
-                            {sig.company}
-                          </span>
-                          <span className={`${sigMeta.text} font-semibold`}>({sigMeta.label})</span>
-                          <span className="text-neutral-700">→</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+          {/* Headline + compact inline metrics (replaces large stat grid + recent-activity links) */}
+          <header className="rr-dashboard-intro">
+            <div className="rr-dashboard-intro-head">
+              <h1 className="rr-dashboard-title">
+                Automation Projects <span className="rr-dashboard-title-accent">Ready For Robots</span>
+              </h1>
+              <p className="rr-dashboard-deck">
+                Live pipeline — filter on the left, prioritize by tier, act on signals.
+              </p>
             </div>
-          )}
-          
-          {/* CTA - Enhanced Visual Design */}
-          <div className="mb-6 rounded-lg overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              boxShadow: '0 0 30px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-            }}>
-            <div className="px-6 py-5 md:px-8 md:py-6">
-              {/* Headline with stronger copy */}
-              <div className="mb-4">
-                <h2 className="text-3xl md:text-4xl font-bold mb-2"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #06B6D4 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    letterSpacing: '-0.02em'
-                  }}>
-                  Find Your Next 5 Customers
+            <div className="rr-dashboard-metrics-inline" aria-label="Pipeline summary">
+              <div className="rr-dash-metric">
+                <span className="n tabular-nums text-[var(--rr-text)]">{(summary.total ?? 0).toLocaleString('en-US')}</span>
+                <span className="l">Active</span>
+              </div>
+              <button
+                type="button"
+                className="rr-dash-metric rr-dash-metric--btn"
+                onClick={() => { setTier('HOT'); setIndustry('All'); setSearch(''); }}
+              >
+                <span className="n tabular-nums text-[var(--rr-orange)]">{(summary.hot ?? 0).toLocaleString('en-US')}</span>
+                <span className="l">Hot</span>
+              </button>
+              <div className="rr-dash-metric">
+                <span className="n tabular-nums text-[var(--rr-cyan)]">{(summary.total_signals ?? 0).toLocaleString('en-US')}</span>
+                <span className="l">Signals</span>
+              </div>
+              <button
+                type="button"
+                className="rr-dash-metric rr-dash-metric--btn"
+                onClick={() => { setTier('WARM'); setIndustry('All'); setSearch(''); }}
+              >
+                <span className="n tabular-nums text-[var(--rr-green)]">{(summary.warm ?? 0).toLocaleString('en-US')}</span>
+                <span className="l">Warm</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Pipeline CTA — headline + compact live ticker on one row (md+) */}
+          <div className="rr-pipeline-card mb-0 border-emerald-900/30 bg-gradient-to-br from-emerald-950/25 to-[var(--rr-surface)]">
+            <div className="mb-3">
+              <div className="rr-pipeline-card-title-row">
+                <h2 className="rr-pipeline-card-title text-2xl sm:text-[1.75rem] md:text-3xl font-extrabold tracking-tight">
+                  Find your next customers
                 </h2>
-                <p className="text-base md:text-lg text-neutral-300 leading-relaxed">
-                  Get instant access to automation-ready prospects with active buying signals — in 30 seconds.
-                </p>
+                {!loading && liveSignals.length > 0 && (
+                  <div className="rr-ticker-inline" aria-label="Live signals">
+                    <span className="rr-ticker-inline-label">
+                      <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
+                      Live
+                    </span>
+                    <div className="rr-ticker-inline-scroll">
+                      <div className="rr-ticker-inline-track">
+                        {liveSignals.concat(liveSignals).map((sig, idx) => {
+                          const sigMeta = SIGNAL_META[sig.type] || { label: sig.type, text: 'text-neutral-400' };
+                          return (
+                            <button
+                              type="button"
+                              key={idx}
+                              onClick={() => setSelectedLead(sig.lead)}
+                              className="rr-ticker-inline-item"
+                            >
+                              <span className="text-cyan-400/95 hover:text-cyan-300 underline decoration-dotted underline-offset-2">
+                                {sig.company}
+                              </span>
+                              <span className={`${sigMeta.text} font-medium`}>{sigMeta.label}</span>
+                              <span className="text-zinc-600 opacity-80">·</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Benefits Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-                <div className="flex items-start gap-2">
-                  <div className="text-emerald-400 text-lg mt-0.5">⚡</div>
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-200">Instant Results</div>
-                    <div className="text-xs text-neutral-400">5 qualified prospects in seconds</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="text-cyan-400 text-lg mt-0.5">🎯</div>
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-200">Active Intent Signals</div>
-                    <div className="text-xs text-neutral-400">Funding, hiring, expansion alerts</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="text-emerald-400 text-lg mt-0.5">📋</div>
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-200">Engagement Playbook</div>
-                    <div className="text-xs text-neutral-400">8-week outreach strategy included</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Input + Button with better hierarchy */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  placeholder="Enter your robotics company URL..."
-                  className="flex-1 px-5 py-3 rounded-lg text-sm bg-neutral-900/80 border border-neutral-700/50 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-emerald-500/50 focus:bg-neutral-900 transition-all"
-                  style={{ boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)' }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const url = e.target.value.trim();
-                      if (url) {
-                        window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
-                      }
-                    }
-                  }}
-                />
-                <button
-                  onClick={(e) => {
-                    const input = e.target.closest('div').querySelector('input');
-                    const url = input.value.trim();
+              <p className="rr-pipeline-card-lead">
+                Paste your site URL — see matched prospects with signals in seconds.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pipeline-input-row">
+              <input
+                id="dashboard-pipeline-url"
+                type="text"
+                placeholder="https://your-robotics-company.com"
+                className="rr-filter-input flex-1 min-w-0 !py-2.5 sm:!py-3 text-base"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const url = e.target.value.trim();
                     if (url) {
                       window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
                     }
-                  }}
-                  className="px-8 py-3 rounded-lg font-semibold text-sm sm:text-base border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 transition-all duration-200 whitespace-nowrap bg-transparent"
-                >
-                  Get My Pipeline →
-                </button>
-              </div>
-
-              {/* Social proof */}
-              <p className="text-xs text-neutral-500 mt-3 text-center sm:text-left">
-                ✓ No signup required · ✓ See results instantly · ✓ Free to try
-              </p>
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const el = typeof document !== 'undefined' ? document.getElementById('dashboard-pipeline-url') : null;
+                  const url = (el?.value || '').trim();
+                  if (url) {
+                    window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                  }
+                }}
+                className="rr-btn-primary rr-btn-primary-compact shrink-0 !px-3.5 !py-2 text-xs sm:text-sm"
+              >
+                View pipeline →
+              </button>
             </div>
+            <p className="rr-pipeline-meta">No signup required · Results open on the next page</p>
           </div>
 
           {/* strategic snapshot */}
@@ -2844,13 +2522,18 @@ export default function Dashboard() {
 
       {/* lead list */}
       {loading ? (
-        <p className="py-16 text-center text-neutral-700 text-sm animate-pulse">loading...</p>
+        <p className="py-16 text-center text-zinc-300 text-lg font-medium animate-pulse">Loading leads…</p>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center text-neutral-700 text-sm">
-          no leads match your filters
+        <div className="py-16 text-center rounded-xl border border-zinc-800 bg-zinc-950/40 px-6">
+          <p className="text-zinc-200 text-lg font-medium">No leads match your filters</p>
+          <p className="mt-2 text-zinc-500 text-base">Try clearing filters or lowering the minimum score.</p>
           {leads.length === 0 && (
-            <p className="mt-2 text-xs text-neutral-800">
-              run <code className="border border-neutral-800 rounded px-1 text-neutral-600">python scripts/test_scraper.py --clear</code> to seed
+            <p className="mt-4 text-sm text-zinc-500">
+              Empty database — run{' '}
+              <code className="rounded border border-zinc-600 bg-zinc-900 px-2 py-0.5 text-zinc-300 font-mono text-sm">
+                python scripts/test_scraper.py --clear
+              </code>{' '}
+              to seed
             </p>
           )}
         </div>
@@ -2869,13 +2552,13 @@ export default function Dashboard() {
                 {/* industry section header - clickable to expand */}
                 <button
                   onClick={() => setCollapsedSections(p => ({ ...p, [ind]: !isExpanded }))}
-                  className="w-full flex items-center gap-2 py-2 mb-1 border-b border-neutral-700 group hover:border-neutral-500 transition-colors text-left cursor-pointer">
-                  <span className="text-[11px] font-semibold tracking-widest uppercase text-neutral-400 group-hover:text-white transition-colors">
+                  className="w-full flex items-center gap-2 py-3 mb-1 border-b border-zinc-700 group hover:border-emerald-800/60 transition-colors text-left cursor-pointer">
+                  <span className="text-sm font-bold tracking-wide uppercase text-zinc-200 group-hover:text-white transition-colors">
                     {ind}
                   </span>
-                  {hotCount  > 0 && <span className="label text-red-400 tabular-nums">{hotCount} hot</span>}
-                  {warmCount > 0 && <span className="label text-yellow-500 tabular-nums">{warmCount} warm</span>}
-                  <span className="label text-neutral-700 ml-auto tabular-nums">
+                  {hotCount  > 0 && <span className="text-xs font-semibold uppercase tracking-wide text-red-400 tabular-nums">{hotCount} hot</span>}
+                  {warmCount > 0 && <span className="text-xs font-semibold uppercase tracking-wide text-amber-400 tabular-nums">{warmCount} warm</span>}
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 ml-auto tabular-nums">
                     {group.length} {group.length === 1 ? 'lead' : 'leads'}
                     {hasMore && <span className="ml-2 text-cyan-400">{isExpanded ? '(showing all)' : '(top 3)'}</span>}
                     &nbsp; {isExpanded ? '\u25bc' : '\u25b6'}
@@ -2899,20 +2582,20 @@ export default function Dashboard() {
                   role="button" tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setExpanded(p => ({...p, [lead.id]: !p[lead.id]}))  }>
 
-        <span className="label w-6 text-right shrink-0 mt-0.5">#{i+1}</span>
+        <span className="text-sm font-mono font-semibold text-zinc-500 w-8 text-right shrink-0 mt-0.5">#{i+1}</span>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-lg font-semibold text-neutral-100">{lead.company_name}</span>
+                      <span className="text-xl font-semibold text-zinc-50">{lead.company_name}</span>
                       <TierBadge tier={lead.priority_tier} />
                       {/* Signal count badge instead of individual badges */}
                       {(lead.signals || []).length > 0 && (
-                        <span className="text-[10px] border border-cyan-800 text-cyan-400 px-2 py-0.5 rounded">
+                        <span className="text-xs border border-cyan-700 text-cyan-300 px-2 py-0.5 rounded-md font-medium">
                           {lead.signal_count} signal{lead.signal_count !== 1 ? 's' : ''}
                         </span>
                       )}
                       {lead.location_city && (
-                        <span className="text-[10px] text-neutral-500">
+                        <span className="text-sm text-zinc-400">
                           {lead.location_city}{lead.location_state ? `, ${lead.location_state}` : ''}
                         </span>
                       )}
@@ -2920,7 +2603,7 @@ export default function Dashboard() {
                     {/* Move AI Analysis button to separate line for cleaner layout */}
                     <div className="flex gap-2 mt-1.5">
                       <button
-                        className="text-xs text-emerald-400 hover:text-emerald-300 underline decoration-dotted transition-colors"
+                        className="text-sm text-emerald-400 hover:text-emerald-300 underline decoration-dotted transition-colors"
                         onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>
                         → View Analysis
                       </button>
@@ -2930,18 +2613,18 @@ export default function Dashboard() {
                   {/* score -- text only, no pill bg */}
                   <div className="shrink-0 text-right">
                     <ScoreNum value={sc.overall_score ?? 0} />
-                    <span className="label block">score</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 block mt-1">score</span>
                   </div>
 
                   {/* Click indicator */}
                   <button 
-                    className="shrink-0 px-3 py-1 text-[10px] border border-cyan-700 text-cyan-400 
-                               rounded hover:border-cyan-500 hover:text-cyan-300 transition-colors"
+                    className="shrink-0 px-3 py-1.5 text-xs font-medium border border-cyan-600 text-cyan-300 
+                               rounded-lg hover:border-cyan-400 hover:text-cyan-200 transition-colors"
                     onClick={(e) => { e.stopPropagation(); setExpanded(p => ({ ...p, [lead.id]: !p[lead.id] })); }}>
                     {isOpen ? 'close' : 'click here'}
                   </button>
 
-                  <span className={`label mt-1 ${tm.text}`}>{isOpen ? 'v' : '>'}</span>
+                  <span className={`text-xs font-semibold mt-1 ${tm.text}`}>{isOpen ? 'v' : '>'}</span>
                 </div>
 
                 {/* score bars */}
@@ -2955,7 +2638,7 @@ export default function Dashboard() {
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
-                  <p className="mt-2 pl-10 text-[10px] text-neutral-500">
+                  <p className="mt-2 pl-10 text-sm text-zinc-400 leading-relaxed">
                     {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
@@ -3129,18 +2812,18 @@ export default function Dashboard() {
 
       {/* scraper health */}
       {health && (
-        <div className="mt-12 border-t border-neutral-800 pt-6">
+        <div className="mt-12 border-t border-zinc-700/80 pt-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="label">scraper health</span>
+            <span className="text-sm font-bold uppercase tracking-wider text-zinc-300">Scraper health</span>
             <button onClick={handleResetAll} disabled={resetting || openCircuits === 0}
               className="btn-danger">
               {resetting ? 'resetting...' : 'reset circuits'}
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs mb-4 text-neutral-600">
-            <span>tracked &mdash; <span className="text-neutral-400">{health.summary?.total_urls_tracked ?? 0}</span></span>
-            <span>healthy &mdash; <span className="text-emerald-500">{health.summary?.healthy_urls ?? 0}</span></span>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mb-4 text-zinc-400">
+            <span>tracked — <span className="text-zinc-200 font-medium">{health.summary?.total_urls_tracked ?? 0}</span></span>
+            <span>healthy — <span className="text-emerald-400 font-medium">{health.summary?.healthy_urls ?? 0}</span></span>
             {openCircuits > 0 && <span className="text-red-500">open &mdash; {openCircuits}</span>}
             {health.summary?.last_run_scraper && (
               <span>
@@ -3153,11 +2836,11 @@ export default function Dashboard() {
           </div>
 
           {Object.keys(health.url_health || {}).length > 0 ? (
-            <table className="w-full text-xs">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-neutral-800">
+                <tr className="border-b border-zinc-700/80">
                   {['', 'url', 'failures', 'restarts', 'last seen'].map(h => (
-                    <th key={h} className="label pb-2 pr-6 text-left font-normal">{h}</th>
+                    <th key={h} className="pb-2 pr-6 text-left text-xs font-bold uppercase tracking-wide text-zinc-400">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -3165,12 +2848,12 @@ export default function Dashboard() {
                 {Object.entries(health.url_health).map(([url, info]) => (
                   <tr key={url} className="border-b border-neutral-900">
                     <td className="py-1.5 pr-4"><HealthDot open={info.circuit_open} /></td>
-                    <td className="py-1.5 pr-6 max-w-[14rem] truncate text-neutral-600" title={url}>
+                    <td className="py-1.5 pr-6 max-w-[14rem] truncate text-zinc-300" title={url}>
                       {url.replace(/^https?:\/\//, '').substring(0, 45)}
                     </td>
-                    <td className="py-1.5 pr-6 tabular-nums text-neutral-600">{info.consecutive_failures}</td>
-                    <td className="py-1.5 pr-6 tabular-nums text-neutral-600">{info.restart_count}</td>
-                    <td className="py-1.5 text-neutral-700">
+                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.consecutive_failures}</td>
+                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.restart_count}</td>
+                    <td className="py-1.5 text-zinc-400">
                       {info.last_success
                         ? new Date(info.last_success * 1000).toLocaleTimeString()
                         : 'never'}
@@ -3180,7 +2863,7 @@ export default function Dashboard() {
               </tbody>
             </table>
           ) : (
-            <p className="text-xs text-neutral-800">no urls tracked -- run a scraper first</p>
+            <p className="text-sm text-zinc-500">No URLs tracked — run a scraper first</p>
           )}
         </div>
       )}
@@ -3188,8 +2871,8 @@ export default function Dashboard() {
         </main>
       </div>
 
-      <footer className="mt-16 text-center label">
-        ready for robots &middot; automation signal platform &middot; refreshes every 30s
+      <footer className="rr-footer mt-auto">
+        Refreshes every 30s · automation signal platform
       </footer>
     </div>
     </>

@@ -22,4 +22,5 @@ class Company(Base):
 
     contacts = relationship("Contact", back_populates="company", cascade="all, delete-orphan")
     signals = relationship("Signal", back_populates="company", cascade="all, delete-orphan")
-    scores = relationship("Score", back_populates="company", uselist=False, cascade="all, delete-orphan")
+    # One-to-many: multiple score rows can exist after re-runs / sync; use pick_primary_score() when reading
+    scores = relationship("Score", back_populates="company", cascade="all, delete-orphan")

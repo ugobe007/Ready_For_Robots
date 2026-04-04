@@ -19,6 +19,7 @@ from app.models.signal import Signal
 from app.models.score import Score
 from app.models.robot import Robot
 from app.services.ml_agent import MLAgent, _build_strategy, insights_to_dict
+from app.services.lead_filter import pick_primary_score
 
 router = APIRouter()
 
@@ -206,7 +207,7 @@ def get_strategy(company_id: int, db: Session = Depends(get_db)):
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    score = company.scores
+    score = pick_primary_score(company.scores)
     if not score:
         raise HTTPException(status_code=422, detail="Company has no score data yet")
 
@@ -239,7 +240,7 @@ def get_profile(company_id: int, db: Session = Depends(get_db)):
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
 
-    score = company.scores
+    score = pick_primary_score(company.scores)
     sigs  = company.signals or []
 
     # Strategy (falls back gracefully if no score)

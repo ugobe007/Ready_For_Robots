@@ -28,7 +28,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.company import Company
 from app.models.score import Score
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead
+from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.newsletter_service import (
     SIGNAL_CATEGORIES,
     _industry_automation_context,
@@ -185,7 +185,8 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
     name = company.name or "Company"
     industry = company.industry or "industrial"
     ind_display = _industry_display(industry)
-    score = (company.scores.overall_intent_score if company.scores else 0) or pri.score
+    ps = pick_primary_score(company.scores)
+    score = (ps.overall_intent_score if ps else 0) or pri.score
     automation_type, pain_point = _industry_automation_context(industry)
     hashtags = _industry_hashtags(industry)
 

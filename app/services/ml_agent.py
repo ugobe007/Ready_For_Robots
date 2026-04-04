@@ -26,6 +26,7 @@ from sqlalchemy import func
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
+from app.services.lead_filter import pick_primary_score
 
 
 # ── Types ──────────────────────────────────────────────────────────────────────
@@ -233,7 +234,7 @@ class MLAgent:
         score_lookup: Dict[int, float] = {}
         industry_lookup: Dict[int, str] = {}
         for c in companies:
-            s = c.scores
+            s = pick_primary_score(c.scores)
             score_lookup[c.id]    = s.overall_intent_score if s else 0.0
             industry_lookup[c.id] = c.industry or "Unknown"
 
@@ -286,7 +287,7 @@ class MLAgent:
         score_map: Dict[int, float] = {}
         ind_map:   Dict[int, str]   = {}
         for c in companies:
-            s = c.scores
+            s = pick_primary_score(c.scores)
             score_map[c.id] = s.overall_intent_score if s else 0.0
             ind_map[c.id]   = c.industry or "Unknown"
 
@@ -340,7 +341,7 @@ class MLAgent:
 
         strategies: List[ApproachStrategy] = []
         for c in companies:
-            s = c.scores
+            s = pick_primary_score(c.scores)
             if not s:
                 continue
             overall = s.overall_intent_score  # already 0-100
@@ -435,7 +436,11 @@ class MLAgent:
             )
 
         # Score distribution
-        scores = [c.scores.overall_intent_score for c in companies if c.scores]
+        scores = []
+        for c in companies:
+            ps = pick_primary_score(c.scores)
+            if ps:
+                scores.append(ps.overall_intent_score)
         if scores:
             hot  = sum(1 for s in scores if s >= 75)
             warm = sum(1 for s in scores if 40 <= s < 75)

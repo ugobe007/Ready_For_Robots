@@ -124,14 +124,8 @@ export default function SignalIntelligencePage() {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link href="/">
-                <h1 className="text-lg font-semibold cursor-pointer hover:text-emerald-400 transition-colors">
-                  <span className="text-white">READY</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">→</span>
-                  {' '}
-                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">ROBOTS</span>
-                </h1>
+              <Link href="/" className="flex items-center">
+                <img src="/logo-r.png" alt="Ready For Robots" className="w-12 h-12 object-contain" />
               </Link>
               <nav className="hidden md:flex items-center gap-6 text-sm">
                 <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition-colors">Home</Link>

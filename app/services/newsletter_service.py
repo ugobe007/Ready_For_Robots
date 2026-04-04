@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.company import Company
 from app.models.score import Score
 from app.models.signal import Signal
-from app.services.lead_filter import classify_lead
+from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
 def _industry_display(raw) -> str:
@@ -322,7 +322,8 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         # Build intelligence summary (4-5 sentences — the key upgrade)
         name = c.name or "Company"
         ind = _industry_display(c.industry)
-        score = (c.scores.overall_intent_score if c.scores else 0) or pri.score
+        ps = pick_primary_score(c.scores)
+        score = (ps.overall_intent_score if ps else 0) or pri.score
 
         summary = _intelligence_summary(
             name=name,

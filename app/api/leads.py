@@ -26,6 +26,7 @@ from app.models.signal import Signal
 from app.services.lead_filter import (
     classify_lead,
     is_junk,
+    pick_primary_score,
     priority_tier,
     SIGNAL_TYPES_HOT,
     SIGNAL_TYPES_WARM,
@@ -81,6 +82,34 @@ _SQL_HOT_TYPES = tuple(SIGNAL_TYPES_HOT)
 _SQL_WARM_TYPES = tuple(SIGNAL_TYPES_WARM)
 
 
+def _primary_score_subquery(db: Session):
+    """
+    One score row per company. Multiple DB rows in `scores` for the same company_id used to
+    duplicate GROUP BY rows and inflate /api/leads/summary totals vs reality.
+
+    Tie-break: max(last_calculated_at), then max(id) — aligned with pick_primary_score().
+    """
+    max_ts = (
+        db.query(Score.company_id, func.max(Score.last_calculated_at).label("md"))
+        .group_by(Score.company_id)
+        .subquery()
+    )
+    # Among rows at max timestamp, take highest id (stable tie-break).
+    return (
+        db.query(Score.company_id, func.max(Score.id).label("score_id"))
+        .join(
+            max_ts,
+            (Score.company_id == max_ts.c.company_id)
+            & (
+                (Score.last_calculated_at == max_ts.c.md)
+                | (max_ts.c.md.is_(None) & Score.last_calculated_at.is_(None))
+            ),
+        )
+        .group_by(Score.company_id)
+        .subquery()
+    )
+
+
 def _lead_rows_query(db: Session):
     """Lightweight aggregate query used by both list and summary endpoints."""
     hot_hits = func.sum(
@@ -89,6 +118,8 @@ def _lead_rows_query(db: Session):
     warm_hits = func.sum(
         case((Signal.signal_type.in_(_SQL_WARM_TYPES), 1), else_=0)
     ).label("warm_hits")
+
+    ps = _primary_score_subquery(db)
 
     return (
         db.query(
@@ -105,7 +136,8 @@ def _lead_rows_query(db: Session):
             hot_hits,
             warm_hits,
         )
-        .outerjoin(Score, Score.company_id == Company.id)
+        .outerjoin(ps, ps.c.company_id == Company.id)
+        .outerjoin(Score, Score.id == ps.c.score_id)
         .outerjoin(Signal, Signal.company_id == Company.id)
         .group_by(
             Company.id,
@@ -142,6 +174,37 @@ def _row_priority(row) -> object:
         signal_count,
         row.employee_estimate,
     )
+
+
+def _aggregate_lead_rows(rows, exclude_junk: bool):
+    """
+    Count tiers + industry + signal rows for the same companies included in `total`.
+
+    `total_signals` sums per-company signal counts for those rows only (not a global
+    SELECT COUNT(signals), which includes junk companies and drifted from pipeline totals).
+    """
+    total = hot = warm = cold = junk_count = 0
+    total_signals = 0
+    by_industry: dict = {}
+    for row in rows:
+        j, _ = _row_is_junk(row.name)
+        if j:
+            junk_count += 1
+            if exclude_junk:
+                continue
+        pri = _row_priority(row)
+        total += 1
+        total_signals += int(row.signal_count or 0)
+        if pri.tier == "HOT":
+            hot += 1
+        elif pri.tier == "WARM":
+            warm += 1
+        else:
+            cold += 1
+        raw = (row.industry or "").strip()
+        industry_key = raw if raw and raw.lower() not in ("unknown", "other") else "New"
+        by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
+    return total, hot, warm, cold, junk_count, by_industry, total_signals
 
 
 HOMEPAGE_TIER_LEGEND = {
@@ -244,7 +307,7 @@ def _automation_ctx(industry: str) -> tuple[str, str]:
     return ("robotic automation", "operational efficiency and labor costs")
 
 
-def _company_size_word(emp: int | None) -> str:
+def _company_size_word(emp: Optional[int]) -> str:
     if not emp:
         return ""
     if emp >= 10000:
@@ -339,7 +402,7 @@ def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
 
 
 def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
-    s = c.scores
+    s = pick_primary_score(c.scores)
     sigs = c.signals or []
     signal_count_total = len(sigs)
     sigs_for_response = _dedup_top_signals(sigs, LEAD_RESPONSE_MAX_SIGNALS)
@@ -501,44 +564,15 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     daily + hourly rotating window so the same top-score rows do not monopolize the list.
     Includes tierLegend for UI copy (COLD band documented as "Emerging").
     """
-    response.headers["Cache-Control"] = "public, max-age=90, stale-while-revalidate=120"
+    # Dynamic DB counts — do not cache (was max-age=90; browsers kept stale totals after deploys)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
 
-    # 1. Summary (same logic as leads_summary)
-    rows = (
-        db.query(
-            Company.name.label("name"),
-            Company.industry.label("industry"),
-            Company.employee_estimate.label("employee_estimate"),
-            func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
-            func.count(Signal.id).label("signal_count"),
-        )
-        .outerjoin(Score, Score.company_id == Company.id)
-        .outerjoin(Signal, Signal.company_id == Company.id)
-        .group_by(
-            Company.id,
-            Company.name,
-            Company.industry,
-            Company.employee_estimate,
-            Score.overall_intent_score,
-        )
-        .all()
+    # 1. Summary — must use _lead_rows_query so hot_hits/warm_hits match list + classify_lead tier logic
+    rows = _lead_rows_query(db).all()
+    total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
+        rows, exclude_junk=True
     )
-    total = hot = warm = cold = junk_count = 0
-    by_industry = {}
-    for row in rows:
-        j, _ = _row_is_junk(row.name)
-        if j:
-            junk_count += 1
-            continue
-        pri = _row_priority(row)
-        total += 1
-        if pri.tier == "HOT":  hot += 1
-        elif pri.tier == "WARM": warm += 1
-        else: cold += 1
-        raw = (row.industry or "").strip()
-        industry_key = raw if raw and raw.lower() not in ("unknown", "other") else "New"
-        by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
-    total_signals = db.query(func.count(Signal.id)).scalar() or 0
     summary = {
         "total": total, "hot": hot, "warm": warm, "cold": cold,
         "junk_filtered": junk_count,
@@ -664,48 +698,18 @@ def leads_scoring_system():
 
 @router.get("/summary")
 def leads_summary(
+    response: Response,
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
     """Pipeline counts for the dashboard stat cards and front-page ticker. Includes leads per industry."""
-    rows = (
-        db.query(
-            Company.name.label("name"),
-            Company.industry.label("industry"),
-            Company.employee_estimate.label("employee_estimate"),
-            func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
-            func.count(Signal.id).label("signal_count"),
-        )
-        .outerjoin(Score, Score.company_id == Company.id)
-        .outerjoin(Signal, Signal.company_id == Company.id)
-        .group_by(
-            Company.id,
-            Company.name,
-            Company.industry,
-            Company.employee_estimate,
-            Score.overall_intent_score,
-        )
-        .all()
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    # Same row shape as GET /api/leads — hot_hits/warm_hits rollups required for _row_priority tiers
+    rows = _lead_rows_query(db).all()
+    total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
+        rows, exclude_junk=exclude_junk
     )
-    total = hot = warm = cold = junk_count = 0
-    by_industry = {}
-    for row in rows:
-        j, _ = _row_is_junk(row.name)
-        if j:
-            junk_count += 1
-            if exclude_junk:
-                continue
-        pri = _row_priority(row)
-        total += 1
-        if pri.tier == "HOT":  hot  += 1
-        elif pri.tier == "WARM": warm += 1
-        else: cold += 1
-        # Public-facing: never show "Unknown" — use "New" (unclassified)
-        raw = (row.industry or "").strip()
-        industry_key = raw if raw and raw.lower() not in ("unknown", "other") else "New"
-        by_industry[industry_key] = by_industry.get(industry_key, 0) + 1
-
-    total_signals = db.query(func.count(Signal.id)).scalar() or 0
 
     return {
         "total": total, "hot": hot, "warm": warm, "cold": cold,
