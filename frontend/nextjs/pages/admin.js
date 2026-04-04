@@ -8,13 +8,14 @@
  *  Import Companies — bulk-import company records (JSON)
  *  Scraper        — trigger scraper runs, view registered targets
  */
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import SiteTopNav from '../components/SiteTopNav';
 const API = getApiBase();
 
 const AdminAuthContext = createContext({ authHeaders: {}, adminFetch: (url, opts) => fetch(url, opts), onAccessDenied: () => {} });
@@ -1345,13 +1346,16 @@ export default function AdminPage() {
   const router = useRouter();
   const [accessDenied, setAccessDenied] = useState(false);
 
-  const authHeaders = session ? authHeader(session.access_token) : {};
+  const authHeaders = useMemo(
+    () => (session ? authHeader(session.access_token) : {}),
+    [session]
+  );
   const adminFetch = useCallback((url, opts = {}) => {
     return fetch(url, liveFetchInit({
       ...opts,
       headers: { ...authHeaders, ...(opts.headers || {}) },
     }));
-  }, [session?.access_token]);
+  }, [authHeaders]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -1371,11 +1375,14 @@ export default function AdminPage() {
   }
   if (accessDenied) {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
-        <div className="border border-red-900 rounded-lg px-8 py-10 text-center max-w-md">
-          <h1 className="text-lg font-semibold text-red-400 mb-2">Access denied</h1>
-          <p className="text-sm text-neutral-400 mb-6">Admin access is required. Contact your administrator.</p>
-          <Link href="/" className="text-sm text-cyan-400 hover:text-cyan-300">← Back to dashboard</Link>
+      <div className="min-h-screen bg-[#080808] text-neutral-300">
+        <SiteTopNav session={session} />
+        <div className="flex items-center justify-center px-4 py-16">
+          <div className="border border-red-900 rounded-lg px-8 py-10 text-center max-w-md">
+            <h1 className="text-lg font-semibold text-red-400 mb-2">Access denied</h1>
+            <p className="text-sm text-neutral-400 mb-6">Admin access is required. Contact your administrator.</p>
+            <Link href="/" className="text-sm text-cyan-400 hover:text-cyan-300">← Back to home</Link>
+          </div>
         </div>
       </div>
     );
@@ -1384,25 +1391,13 @@ export default function AdminPage() {
   return (
     <AdminAuthContext.Provider value={{ authHeaders, adminFetch, onAccessDenied: () => setAccessDenied(true) }}>
     <div style={{ backgroundColor: '#080808' }} className="min-h-screen text-neutral-300">
-      {/* Top bar */}
-      <header className="border-b border-neutral-800 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-5">
-          <span className="text-sm font-medium tracking-wide text-neutral-200">Ready for Robots</span>
-          <span className="text-neutral-700">|</span>
-          <span className="text-sm text-neutral-500">Admin</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/profile" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
-            Profile
-          </Link>
-          <Link href="/analytics" className="text-xs text-neutral-600 hover:text-emerald-400 transition-colors">
-            📊 Analytics
-          </Link>
-          <Link href="/" className="text-xs text-neutral-600 hover:text-cyan-400 transition-colors">
-            ← Dashboard
-          </Link>
-        </div>
-      </header>
+      <SiteTopNav session={session} />
+      <div className="border-b border-neutral-800 px-6 py-2 flex items-center justify-between max-w-5xl mx-auto">
+        <span className="text-xs uppercase tracking-widest text-neutral-500">Admin</span>
+        <Link href="/analytics" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
+          Platform analytics
+        </Link>
+      </div>
 
       <main className="px-6 pt-6 pb-16 max-w-5xl mx-auto">
         {/* Tab bar */}
