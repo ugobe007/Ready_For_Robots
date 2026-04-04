@@ -9,12 +9,15 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   [build.args]
     NEXT_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
-    # Public HTTPS origin the browser uses (no trailing slash). Change if you use a custom domain.
+    # API host (FastAPI on Fly). Custom domain can point here; CORS must list the static site origin too.
     NEXT_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
-    NEXT_PUBLIC_SITE_URL  = "https://ready-2-robot.fly.dev"
+    # Canonical marketing site (og:url, links). Static HTML may be served from CDN on this host.
+    NEXT_PUBLIC_SITE_URL  = "https://readyforrobots.com"
 
 [env]
   PORT = "8080"
+  # Browsers require explicit origins when cookies/credentials are used — not "*"
+  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,http://localhost:3000,http://127.0.0.1:3000"
   # Admin emails (comma-separated) — users with access to /admin
   ADMIN_EMAILS = "ugobe07@gmail.com"
   # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)

@@ -37,11 +37,30 @@ import app.models.shared_calculation
 # DB is not touched at startup — first connection happens when an API that uses get_db() is called (browser/request).
 # Schema is managed by Alembic migrations (run in release or background).
 
+
+def _cors_allowed_origins() -> list[str]:
+    """
+    Browsers reject allow_origins=['*'] together with allow_credentials=True (Fetch + CORS spec).
+    Static site on readyforrobots.com calling API on ready-2-robot.fly.dev requires both origins listed.
+    Override with CORS_ORIGINS=comma,separated,urls (no trailing slashes).
+    """
+    raw = (os.getenv("CORS_ORIGINS") or "").strip()
+    if raw:
+        return [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
+    return [
+        "https://readyforrobots.com",
+        "https://www.readyforrobots.com",
+        "https://ready-2-robot.fly.dev",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+
 app = FastAPI(title="Ready for Robots", docs_url="/api/docs", redoc_url="/api/redoc")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
