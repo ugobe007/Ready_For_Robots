@@ -343,6 +343,9 @@ export default function Signals() {
           </div>
           <nav className="rr-nav-links">
             <Link href="/dashboard">Dashboard</Link>
+            <Link href="/dashboard" title="Lead pipeline and sales workspace">
+              Pipeline
+            </Link>
             <Link href="/market-insights">Market Insights</Link>
             <Link href="/about">Signals</Link>
             <a href="#leads">Browse Leads</a>
@@ -372,6 +375,9 @@ export default function Signals() {
                   <div id="mobile-menu" className="hidden absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
                     <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
                       📊 Dashboard
+                    </Link>
+                    <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      🧭 Pipeline
                     </Link>
                     <Link href="/market-insights" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
                       📈 Market Insights
@@ -417,6 +423,10 @@ export default function Signals() {
                 </h1>
                 <p className="rr-hero-lead">
                   We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
+                </p>
+                <p className="text-sm mt-3 max-w-xl leading-relaxed text-neutral-400 border-l-2 border-emerald-600/40 pl-3">
+                  Beyond lists: build a <strong className="text-neutral-300 font-medium">pipeline</strong> in your dashboard;{' '}
+                  <strong className="text-neutral-300 font-medium">customizable account plans</strong> and workflow help are on the way.
                 </p>
                 <div className="rr-hero-cta">
                   <button
