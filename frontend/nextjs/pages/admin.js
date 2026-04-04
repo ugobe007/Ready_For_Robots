@@ -18,6 +18,18 @@ import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import SiteTopNav from '../components/SiteTopNav';
 const API = getApiBase();
 
+/** FastAPI Swagger — marketing static host has no /docs; prefer env, then API base, then Fly. */
+function apiDocsBaseUrl() {
+  const env =
+    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
+      ? String(process.env.NEXT_PUBLIC_API_URL).replace(/\/$/, '')
+      : '';
+  if (env) return env;
+  const b = getApiBase();
+  if (b && b.length > 0) return b;
+  return 'https://ready-2-robot.fly.dev';
+}
+
 const AdminAuthContext = createContext({ authHeaders: {}, adminFetch: (url, opts) => fetch(url, opts), onAccessDenied: () => {} });
 function useAdminAuth() {
   return useContext(AdminAuthContext);
@@ -25,12 +37,31 @@ function useAdminAuth() {
 
 // ── tiny helpers ───────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub }) {
+function StatCard({ label, value, sub, variant }) {
+  const emerald = variant === 'emerald';
   return (
-    <div className="border border-neutral-800 px-5 py-4 min-w-[140px]">
-      <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{label}</div>
-      <div className="text-2xl tabular-nums text-neutral-100">{value ?? '—'}</div>
-      {sub && <div className="text-[11px] text-neutral-600 mt-1">{sub}</div>}
+    <div
+      className={`border px-5 py-4 min-w-[140px] ${
+        emerald ? 'border-emerald-900/60 bg-emerald-950/10' : 'border-neutral-800'
+      }`}
+    >
+      <div
+        className={`text-[10px] uppercase tracking-widest mb-1 ${
+          emerald ? 'text-emerald-600' : 'text-neutral-500'
+        }`}
+      >
+        {label}
+      </div>
+      <div
+        className={`text-2xl tabular-nums ${emerald ? 'text-emerald-400' : 'text-neutral-100'}`}
+      >
+        {value ?? '—'}
+      </div>
+      {sub && (
+        <div className={`text-[11px] mt-1 ${emerald ? 'text-emerald-500/95' : 'text-neutral-600'}`}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
@@ -63,7 +94,16 @@ function Spinner() {
   return <span className="inline-block w-3 h-3 border border-neutral-500 border-t-cyan-400 rounded-full animate-spin" />;
 }
 
-const TABS = ['Dashboard', 'Users', 'Companies', 'Scrapers', 'Analytics', 'System', 'Robot Companies'];
+const TABS = [
+  'Dashboard',
+  'Users',
+  'Companies',
+  'Scrapers',
+  'Analytics',
+  'System',
+  'CRM',
+  'Robot Companies',
+];
 
 const SCRAPERS  = ['all', 'job_board', 'hotel_dir', 'rss_feed', 'news'];
 const INDUSTRIES = ['', 'Logistics', 'Hospitality', 'Food Service', 'Healthcare'];
@@ -667,10 +707,10 @@ function Dashboard() {
       <div>
         <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Business Metrics</div>
         <div className="flex flex-wrap gap-3">
-          <StatCard label="Total Pipeline" value={`$${pipeline_value?.toLocaleString() || 0}`} sub="Estimated value" />
-          <StatCard label="Hot Leads" value={(totals?.scored ?? 0).toLocaleString()} sub={`${conversion_metrics?.hot_rate || 0}% conversion`} />
-          <StatCard label="Companies" value={(totals?.companies ?? 0).toLocaleString()} sub={`${totals?.signals ?? 0} signals`} />
-          <StatCard label="Avg Score" value={conversion_metrics?.avg_score || '—'} sub="Quality indicator" />
+          <StatCard variant="emerald" label="Total Pipeline" value={`$${pipeline_value?.toLocaleString() || 0}`} sub="Estimated value" />
+          <StatCard variant="emerald" label="Hot Leads" value={(totals?.scored ?? 0).toLocaleString()} sub={`${conversion_metrics?.hot_rate || 0}% conversion`} />
+          <StatCard variant="emerald" label="Companies" value={(totals?.companies ?? 0).toLocaleString()} sub={`${totals?.signals ?? 0} signals`} />
+          <StatCard variant="emerald" label="Avg Score" value={conversion_metrics?.avg_score || '—'} sub="Quality indicator" />
         </div>
       </div>
 
@@ -678,10 +718,10 @@ function Dashboard() {
       <div>
         <div className="text-[10px] uppercase tracking-widest text-neutral-500 mb-3">System Health</div>
         <div className="flex flex-wrap gap-3">
-          <StatCard label="Scrapers" value={stats.scraper_health?.active || 0} sub={`${stats.scraper_health?.success_rate || 0}% success`} />
-          <StatCard label="API Uptime" value="99.9%" sub="Last 30 days" />
-          <StatCard label="DB Size" value={stats.database?.size_mb ? `${stats.database.size_mb}MB` : '—'} sub={`${stats.database?.tables || 0} tables`} />
-          <StatCard label="Cache Hit" value={`${stats.performance?.cache_hit_rate || 85}%`} sub="Performance" />
+          <StatCard variant="emerald" label="Scrapers" value={stats.scraper_health?.active || 0} sub={`${stats.scraper_health?.success_rate || 0}% success`} />
+          <StatCard variant="emerald" label="API Uptime" value="99.9%" sub="Last 30 days" />
+          <StatCard variant="emerald" label="DB Size" value={stats.database?.size_mb ? `${stats.database.size_mb}MB` : '—'} sub={`${stats.database?.tables || 0} tables`} />
+          <StatCard variant="emerald" label="Cache Hit" value={`${stats.performance?.cache_hit_rate || 85}%`} sub="Performance" />
         </div>
       </div>
 
@@ -1392,11 +1432,22 @@ export default function AdminPage() {
     <AdminAuthContext.Provider value={{ authHeaders, adminFetch, onAccessDenied: () => setAccessDenied(true) }}>
     <div style={{ backgroundColor: '#080808' }} className="min-h-screen text-neutral-300">
       <SiteTopNav session={session} />
-      <div className="border-b border-neutral-800 px-6 py-2 flex items-center justify-between max-w-5xl mx-auto">
-        <span className="text-xs uppercase tracking-widest text-neutral-500">Admin</span>
-        <Link href="/analytics" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
-          Platform analytics
-        </Link>
+      <div className="border-b border-neutral-800 px-6 py-2 flex flex-wrap items-center justify-between gap-3 max-w-5xl mx-auto">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-xs text-emerald-500 hover:text-emerald-300">
+            ← Home
+          </Link>
+          <span className="text-neutral-700">|</span>
+          <span className="text-xs uppercase tracking-widest text-neutral-500">Admin</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
+            Pipeline
+          </Link>
+          <Link href="/analytics" className="text-xs text-neutral-500 hover:text-emerald-400 transition-colors">
+            Platform analytics
+          </Link>
+        </div>
       </div>
 
       <main className="px-6 pt-6 pb-16 max-w-5xl mx-auto">
@@ -1423,10 +1474,79 @@ export default function AdminPage() {
         {tab === 'Scrapers'    && <ScraperPanel />}
         {tab === 'Analytics'   && <Analytics />}
         {tab === 'System'      && <SystemControls />}
+        {tab === 'CRM'         && <CrmAdminPanel />}
         {tab === 'Robot Companies' && <RobotCompaniesLink />}
       </main>
     </div>
     </AdminAuthContext.Provider>
+  );
+}
+
+function CrmAdminPanel() {
+  const { adminFetch } = useAdminAuth();
+  const [probe, setProbe] = useState(null);
+  const [probeErr, setProbeErr] = useState('');
+  const docs = `${apiDocsBaseUrl()}/docs`;
+
+  useEffect(() => {
+    let cancelled = false;
+    adminFetch(`${API}/api/crm/teams`)
+      .then(async (r) => {
+        if (cancelled) return;
+        if (!r.ok) {
+          const t = await r.text().catch(() => '');
+          setProbeErr(`HTTP ${r.status} ${t}`.trim());
+          return;
+        }
+        setProbe(await r.json());
+      })
+      .catch((e) => {
+        if (!cancelled) setProbeErr(e?.message || 'Request failed');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminFetch]);
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold text-emerald-400">CRM (teams & accounts)</h2>
+        <p className="text-sm text-neutral-500 mt-1">
+          Use the{' '}
+          <Link href="/crm/" className="text-emerald-400 hover:underline">
+            CRM workspace
+          </Link>{' '}
+          page to manage workspaces and accounts in the browser (same API). Swagger remains useful for debugging.
+        </p>
+      </div>
+      <div className="border border-emerald-900/50 bg-emerald-950/10 px-5 py-4 space-y-3 text-sm">
+        <p className="text-neutral-300">
+          <span className="text-emerald-500 font-medium">Open Swagger</span>{' '}
+          <a href={docs} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">
+            {docs}
+          </a>
+          {' — '}
+          Authorize with <code className="text-emerald-600/90">Bearer &lt;access_token&gt;</code>, then try{' '}
+          <code className="text-neutral-400">GET /api/crm/teams</code> and <code className="text-neutral-400">GET /api/crm/accounts</code>.
+        </p>
+        <p className="text-neutral-500 text-xs">
+          Base URL for fetches from this app: <code className="text-neutral-400">{API || '(same origin / see NEXT_PUBLIC_API_URL)'}</code>
+        </p>
+      </div>
+      <div className="border border-neutral-800 px-5 py-4 text-sm">
+        <div className="text-[10px] uppercase tracking-widest text-neutral-600 mb-2">Live probe (your session)</div>
+        {probeErr && <div className="text-red-400">{probeErr}</div>}
+        {!probeErr && probe === null && (
+          <div className="text-neutral-500 flex items-center gap-2">
+            <Spinner /> Loading…
+          </div>
+        )}
+        {!probeErr && probe !== null && (
+          <pre className="text-xs text-emerald-500/90 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(probe, null, 2)}</pre>
+        )}
+      </div>
+    </div>
   );
 }
 

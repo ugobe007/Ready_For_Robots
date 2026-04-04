@@ -29,6 +29,9 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
             <Link href="/dashboard" className={navCls('pipeline')} title="Lead pipeline and sales workspace">
               Pipeline
             </Link>
+            <Link href="/crm/" className={navCls('crm')} title="CRM workspaces and buyer accounts">
+              CRM
+            </Link>
             <Link href="/market-insights" className={navCls('market-insights')}>
               Market Insights
             </Link>
@@ -86,6 +89,12 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
                   className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800"
                 >
                   🧭 Pipeline
+                </Link>
+                <Link
+                  href="/crm/"
+                  className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800"
+                >
+                  🗂️ CRM
                 </Link>
                 <Link
                   href="/market-insights"

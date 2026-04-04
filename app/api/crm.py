@@ -9,15 +9,22 @@ CRM API — teams + accounts (Bearer JWT). Prefix: /api/crm
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError, ProgrammingError, StatementError
 
 from app.database import get_db
+
+logger = logging.getLogger(__name__)
+
+CRM_MIGRATION_HINT = (
+    "CRM database tables are missing. Run migration c7d8e9f0a1b2 (see docs/crm_migrations.md), then retry."
+)
 from app.api.auth_deps import _require_user
 from app.api.user import _ensure_profile
 from app.models.company import Company
@@ -134,10 +141,14 @@ def list_teams(
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
-    uid = _uid_uuid(user)
-    _ensure_default_team(db, uid, user.get("email") or "")
-    rows = _team_rows_for_user(db, uid)
-    return [_serialize_team_row(t, role) for t, role in rows]
+    try:
+        uid = _uid_uuid(user)
+        _ensure_default_team(db, uid, user.get("email") or "")
+        rows = _team_rows_for_user(db, uid)
+        return [_serialize_team_row(t, role) for t, role in rows]
+    except (OperationalError, ProgrammingError, StatementError) as e:
+        logger.warning("CRM list_teams: %s", e)
+        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
 
 
 @router.post("/teams", response_model=TeamOut)
@@ -146,19 +157,23 @@ def create_team(
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
-    uid = _uid_uuid(user)
-    _ensure_profile(db, str(uid), user.get("email") or "")
-    team = Team(name=body.name.strip(), slug=body.slug.strip() if body.slug else None)
-    db.add(team)
-    db.flush()
-    db.add(TeamMember(team_id=team.id, user_id=uid, role="owner"))
     try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Slug already in use or conflict")
-    db.refresh(team)
-    return _serialize_team_row(team, "owner")
+        uid = _uid_uuid(user)
+        _ensure_profile(db, str(uid), user.get("email") or "")
+        team = Team(name=body.name.strip(), slug=body.slug.strip() if body.slug else None)
+        db.add(team)
+        db.flush()
+        db.add(TeamMember(team_id=team.id, user_id=uid, role="owner"))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="Slug already in use or conflict")
+        db.refresh(team)
+        return _serialize_team_row(team, "owner")
+    except (OperationalError, ProgrammingError) as e:
+        logger.warning("CRM create_team: %s", e)
+        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
 
 
 @router.get("/accounts", response_model=list[CrmAccountOut])
@@ -167,12 +182,21 @@ def list_accounts(
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
-    uid = _uid_uuid(user)
-    default = _ensure_default_team(db, uid, user.get("email") or "")
-    tid = team_id or default.id
-    _require_team_member(db, uid, tid)
-    accounts = db.query(CrmAccount).filter(CrmAccount.team_id == tid).order_by(CrmAccount.created_at.desc()).all()
-    return [_serialize_account(a) for a in accounts]
+    try:
+        uid = _uid_uuid(user)
+        default = _ensure_default_team(db, uid, user.get("email") or "")
+        tid = team_id or default.id
+        _require_team_member(db, uid, tid)
+        accounts = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.team_id == tid)
+            .order_by(CrmAccount.created_at.desc())
+            .all()
+        )
+        return [_serialize_account(a) for a in accounts]
+    except (OperationalError, ProgrammingError, StatementError) as e:
+        logger.warning("CRM list_accounts: %s", e)
+        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
 
 
 @router.post("/accounts", response_model=CrmAccountOut)
@@ -181,44 +205,50 @@ def create_account(
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
-    uid = _uid_uuid(user)
-    _ensure_profile(db, str(uid), user.get("email") or "")
-    default = _ensure_default_team(db, uid, user.get("email") or "")
-    tid = body.team_id or default.id
-    _require_team_member(db, uid, tid)
-
-    name = (body.name or "").strip() or None
-    website = body.website
-    industry = body.industry
-
-    if body.company_id is not None:
-        co = db.get(Company, body.company_id)
-        if not co:
-            raise HTTPException(status_code=404, detail="company_id not found")
-        name = name or (co.name or "Account")
-        if website is None:
-            website = co.website
-        if industry is None:
-            industry = co.industry
-    if not name:
-        raise HTTPException(status_code=400, detail="name is required when company_id is omitted")
-
-    row = CrmAccount(
-        team_id=tid,
-        company_id=body.company_id,
-        name=name,
-        website=website,
-        industry=industry,
-        owner_user_id=uid,
-    )
-    db.add(row)
     try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail="An account for this company already exists in this team",
+        uid = _uid_uuid(user)
+        _ensure_profile(db, str(uid), user.get("email") or "")
+        default = _ensure_default_team(db, uid, user.get("email") or "")
+        tid = body.team_id or default.id
+        _require_team_member(db, uid, tid)
+
+        name = (body.name or "").strip() or None
+        website = body.website
+        industry = body.industry
+
+        if body.company_id is not None:
+            co = db.get(Company, body.company_id)
+            if not co:
+                raise HTTPException(status_code=404, detail="company_id not found")
+            name = name or (co.name or "Account")
+            if website is None:
+                website = co.website
+            if industry is None:
+                industry = co.industry
+        if not name:
+            raise HTTPException(status_code=400, detail="name is required when company_id is omitted")
+
+        row = CrmAccount(
+            team_id=tid,
+            company_id=body.company_id,
+            name=name,
+            website=website,
+            industry=industry,
+            owner_user_id=uid,
         )
-    db.refresh(row)
-    return _serialize_account(row)
+        db.add(row)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="An account for this company already exists in this team",
+            )
+        db.refresh(row)
+        return _serialize_account(row)
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError) as e:
+        logger.warning("CRM create_account: %s", e)
+        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e

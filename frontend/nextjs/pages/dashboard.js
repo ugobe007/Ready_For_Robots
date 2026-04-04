@@ -2209,6 +2209,11 @@ export default function Dashboard() {
                     🤖 Robot Ready
                   </div>
                 </Link>
+                <Link href="/crm/" onClick={() => setShowMenu(false)}>
+                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
+                    🗂️ CRM
+                  </div>
+                </Link>
                 <Link href="/profile" onClick={() => setShowMenu(false)}>
                   <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
                     ♡ Profile
@@ -2249,6 +2254,7 @@ export default function Dashboard() {
           <Link href="/pilot-calculator">Pilot</Link>
           <Link href="/robot-ready">Robot Ready</Link>
           <Link href="/brief">Brief</Link>
+          <Link href="/crm/">CRM</Link>
           <Link href="/admin">Admin</Link>
           <Link href="/profile">Profile</Link>
         </nav>

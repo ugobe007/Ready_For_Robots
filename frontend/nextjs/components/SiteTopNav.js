@@ -41,6 +41,9 @@ export default function SiteTopNav({ session }) {
               <Link href="/dashboard" onClick={() => setShowMenu(false)}>
                 <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">📊 Dashboard</div>
               </Link>
+              <Link href="/crm/" onClick={() => setShowMenu(false)}>
+                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🗂️ CRM</div>
+              </Link>
               <Link href="/search" onClick={() => setShowMenu(false)}>
                 <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🔍 Intelligence Search</div>
               </Link>
@@ -78,6 +81,7 @@ export default function SiteTopNav({ session }) {
         <nav className="rr-topnav-links" aria-label="Site">
           <Link href="/">Home</Link>
           <Link href="/dashboard">Pipeline</Link>
+          <Link href="/crm/">CRM</Link>
           <Link href="/search">Search</Link>
           <Link href="/market-insights">Market</Link>
           <Link href="/about">Signals</Link>
