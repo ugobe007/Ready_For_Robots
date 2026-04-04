@@ -25,6 +25,10 @@ export function getApiBase() {
     if (h === 'localhost' || h === '127.0.0.1') {
       return 'http://localhost:8000';
     }
+    // Static export served from the same FastAPI host (e.g. Fly): API is same origin.
+    // Without this, production builds with no NEXT_PUBLIC_API_URL fall back to readyforrobots.com
+    // and every metric fetch fails (UI shows 0).
+    return window.location.origin.replace(/\/$/, '');
   }
   const site =
     (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SITE_URL) ||

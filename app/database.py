@@ -65,6 +65,21 @@ if DATABASE_URL and "postgresql" in DATABASE_URL and _postgres_url_has_placehold
     )
     DATABASE_URL = "sqlite:///./ready_for_robots.db"
 
+# Fly.io / many cloud hosts cannot reach Supabase *direct* DB (db.*.supabase.co:5432) reliably
+# (IPv6 / routing → "connection refused"). Use the Transaction pooler URI on port 6543 from the
+# Supabase dashboard: Settings → Database → Connection pooling.
+if os.getenv("FLY_APP_NAME") and DATABASE_URL and "postgresql" in DATABASE_URL:
+    _pr = urlparse(DATABASE_URL)
+    _h = (_pr.hostname or "").lower()
+    _p = _pr.port or 5432
+    if _h.endswith(".supabase.co") and _h.startswith("db.") and _p == 5432:
+        print(
+            "WARNING: DATABASE_URL uses Supabase direct port 5432. On Fly.io this often fails with "
+            "connection refused. Set DATABASE_URL to the Transaction pooler string (port 6543, "
+            "user postgres.PROJECT_REF, host aws-0-REGION.pooler.supabase.com) from the Supabase dashboard.",
+            file=sys.stderr,
+        )
+
 try:
     if DATABASE_URL and "postgresql" in DATABASE_URL:
         engine = create_engine(
