@@ -4,7 +4,8 @@
  */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import LoginDropdown from '../components/LoginDropdown';
+import Head from 'next/head';
+import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const API = getApiBase();
@@ -118,34 +119,13 @@ export default function SignalIntelligencePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="border-b border-neutral-800">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center">
-                <img src="/logo-r.png" alt="Ready For Robots" className="w-12 h-12 object-contain" />
-              </Link>
-              <nav className="hidden md:flex items-center gap-6 text-sm">
-                <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition-colors">Home</Link>
-                <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
-                <Link href="/search" className="text-neutral-400 hover:text-emerald-400 transition-colors">Search</Link>
-                <span className="text-cyan-400 font-medium">About</span>
-                <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calc</Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-4">
-              <LoginDropdown className="text-neutral-400" />
-              <Link href="/login" className="text-sm px-4 py-2 border border-emerald-500 text-emerald-400 rounded hover:bg-emerald-950/30 transition-colors">
-                Sign Up Free
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-12 space-y-16">
+    <>
+      <Head>
+        <title>Signal Intelligence | Ready For Robots</title>
+        <meta name="description" content="How we detect buying intent across 140+ sources — 14 signal types, HOT/WARM/Emerging tiers, and real-time lead intelligence." />
+      </Head>
+      <RrSiteLayout active="about">
+      <main className="max-w-7xl mx-auto px-6 py-10 md:py-14 space-y-16 text-[var(--rr-text)]">
         
         {/* Hero Section */}
         <section className="text-center space-y-6 py-8">
@@ -593,17 +573,7 @@ export default function SignalIntelligencePage() {
         </section>
 
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-neutral-800 mt-16">
-        <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-neutral-500">
-          <p>© 2026 Ready for Robots · Robot Ready Sales Leads with Signal Intelligence</p>
-          <p className="mt-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-2"></span>
-            Signal Engine operational · Monitoring 140+ sources · Last updated: {new Date().toLocaleTimeString()}
-          </p>
-        </div>
-      </footer>
-    </div>
+      </RrSiteLayout>
+    </>
   );
 }

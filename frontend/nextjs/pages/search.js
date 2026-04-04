@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Head from 'next/head';
 import { useAuth } from './_app';
-import LoginDropdown from '../components/LoginDropdown';
+import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const API = getApiBase();
@@ -120,31 +121,13 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808]">
-      {/* Navigation Bar */}
-      <div className="border-b border-neutral-800">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center">
-                <img src="/logo-r.png" alt="Ready For Robots" className="w-12 h-12 object-contain" />
-              </Link>
-              <nav className="hidden md:flex items-center gap-6 text-sm">
-                <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition-colors">Home</Link>
-                <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition-colors">Dashboard</Link>
-                <span className="text-cyan-400 font-medium">Search</span>
-                <Link href="/about" className="text-neutral-400 hover:text-emerald-400 transition-colors">About</Link>
-                <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition-colors">ROI Calc</Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-4">
-              <LoginDropdown className="text-neutral-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="px-4 py-6 md:px-8 md:py-8 max-w-[1200px] mx-auto">
+    <>
+      <Head>
+        <title>Intelligence Search | Ready For Robots</title>
+        <meta name="description" content="Search companies by funding, expansion, labor signals, M&amp;A, and automation intent." />
+      </Head>
+      <RrSiteLayout active="search">
+      <div className="px-4 py-8 md:px-8 md:py-10 max-w-7xl mx-auto text-[var(--rr-text)]">
       {/* Header */}
       <header className="mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -295,6 +278,7 @@ export default function SearchPage() {
         </div>
       )}
       </div>
-    </div>
+      </RrSiteLayout>
+    </>
   );
 }

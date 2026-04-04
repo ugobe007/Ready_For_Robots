@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import IndustryBriefBlock from '../components/IndustryBriefBlock';
+import RrSiteLayout from '../components/RrSiteLayout';
 
 // Base URL for share links
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
@@ -376,44 +377,34 @@ export default function Newsletter() {
         <meta name="twitter:description" content="Daily automation news and hot leads. Real companies with buying signals." />
       </Head>
 
-      <div className="min-h-screen bg-black text-white">
-        {/* Navigation Bar */}
-        <div className="border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2">
-                <img src="/logo-r.png" alt="Ready For Robots" className="w-12 h-12 object-contain" />
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link href="/" className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors">
-                  ← Back to Home
-                </Link>
-                <Link href="/social" className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
-                  Content Studio
-                </Link>
-                {!isSubscribed && (
-                  <button
-                    onClick={() => document.getElementById('subscribe-form').scrollIntoView({ behavior: 'smooth' })}
-                    className="text-sm px-4 py-2 border-2 border-emerald-500 text-emerald-400 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-colors"
-                  >
-                    Subscribe Free
-                  </button>
-                )}
+      <RrSiteLayout
+        active="newsletter"
+        subNav={
+          !isSubscribed ? (
+            <div className="border-b border-[var(--rr-border)] bg-[var(--rr-surface)]/95">
+              <div className="max-w-6xl mx-auto px-4 py-2.5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('subscribe-form')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="rr-btn-signup text-xs py-2 px-4"
+                >
+                  Subscribe Free
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-
+          ) : null
+        }
+      >
         {/* Hero Section */}
-        <div className="border-b border-neutral-800">
+        <div className="border-b border-[var(--rr-border)]">
           <div className="max-w-4xl mx-auto px-4 py-8 text-center">
-            <div className="mb-3 text-xs text-emerald-400">
-              📰 ROBOT INTELLIGENCE BRIEF
+            <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--rr-green)]">
+              Robot Intelligence Brief
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3 text-[var(--rr-text)]">
               Daily Automation News
             </h1>
-            <p className="text-base text-neutral-400 mb-4 max-w-2xl mx-auto">
+            <p className="text-base text-[var(--rr-muted2)] mb-4 max-w-2xl mx-auto">
               Automation Sales Leads with Actionable Signals. We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires.
             </p>
             <div className="text-xs text-neutral-500">
@@ -737,17 +728,7 @@ export default function Newsletter() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-neutral-800">
-          <div className="max-w-4xl mx-auto px-4 py-6 text-center text-xs text-neutral-500">
-            <p className="mb-2 flex items-center justify-center gap-2">
-              <img src="/logo-r.png" alt="Ready For Robots" className="w-6 h-6 object-contain" />
-              <span>Robot Automation Sales Leads with Actionable Signals</span>
-            </p>
-            <p>Daily deployment roundups, ROI benchmarks, and hot deals across labor-intensive industries.</p>
-          </div>
-        </div>
-      </div>
+      </RrSiteLayout>
     </>
   );
 }

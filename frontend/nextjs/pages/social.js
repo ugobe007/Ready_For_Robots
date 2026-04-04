@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { getApiBase } from '../lib/apiBase';
+import RrSiteLayout from '../components/RrSiteLayout';
 
 const API = getApiBase();
 
@@ -321,42 +322,21 @@ export default function SocialContentStudio() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="min-h-screen bg-neutral-950 text-neutral-100">
-        {/* Top nav */}
-        <header className="border-b border-neutral-800 px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-mono">
-              ← Home
-            </Link>
-            <span className="text-neutral-600">|</span>
-            <h1 className="text-sm font-semibold text-neutral-200">Content Studio</h1>
-            {date && <span className="text-xs text-neutral-500 font-mono">{date}</span>}
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {generatedAt && (
-              <span className="text-[10px] text-neutral-600 font-mono">Generated {generatedAt}</span>
-            )}
-            <Link href="/dashboard" className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/newsletter" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-              Newsletter
-            </Link>
-          </div>
-        </header>
-
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          {/* Page header */}
-          <div className="mb-6">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <h2 className="text-2xl font-bold text-neutral-100 mb-1">Daily Content Queue</h2>
-                <p className="text-sm text-neutral-500">
-                  5 posts from today's hot leads and strategic insights. Edit any post, then copy or share.
-                  Mark posts as shared to get a fresh batch with different companies.
-                </p>
+      <RrSiteLayout active="social">
+        <main className="max-w-4xl mx-auto px-4 py-8 text-[var(--rr-text)]">
+          <div className="mb-8">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--rr-green)]">Content Studio</p>
+              <div className="text-[11px] text-[var(--rr-muted)] font-mono flex flex-wrap gap-x-3">
+                {date && <span>{date}</span>}
+                {generatedAt && <span>Generated {generatedAt}</span>}
               </div>
             </div>
+            <h1 className="text-2xl font-bold text-[var(--rr-text)] mb-2">Daily Content Queue</h1>
+            <p className="text-sm text-[var(--rr-muted2)] max-w-2xl">
+              Five posts from today&apos;s hot leads and strategic insights. Edit any post, then copy or share.
+              Mark posts as shared to get a fresh batch with different companies.
+            </p>
           </div>
 
           {/* Action bar */}
@@ -455,7 +435,7 @@ export default function SocialContentStudio() {
             </div>
           )}
         </main>
-      </div>
+      </RrSiteLayout>
     </>
   );
 }

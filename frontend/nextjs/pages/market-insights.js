@@ -5,8 +5,10 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import IndustryBriefBlock from '../components/IndustryBriefBlock';
+import RrSiteLayout from '../components/RrSiteLayout';
 
 const API = getApiBase();
 
@@ -27,10 +29,10 @@ function mergeIndustryCounts(obj) {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="border border-neutral-800 rounded-lg p-5 bg-neutral-900/50">
-      <div className="text-neutral-400 text-sm mb-1">{label}</div>
-      <div className="text-2xl font-bold text-white">{value ?? '—'}</div>
-      {sub && <div className="text-xs text-neutral-500 mt-1">{sub}</div>}
+    <div className="rr-card rounded-lg p-5">
+      <div className="text-[var(--rr-muted)] text-sm mb-1">{label}</div>
+      <div className="text-2xl font-bold text-[var(--rr-text)]">{value ?? '—'}</div>
+      {sub && <div className="text-xs text-[var(--rr-muted)] mt-1">{sub}</div>}
     </div>
   );
 }
@@ -62,12 +64,19 @@ export default function MarketInsights() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-neutral-400">Loading market insights...</p>
-        </div>
-      </div>
+      <>
+        <Head>
+          <title>Market Insights | Ready For Robots</title>
+        </Head>
+        <RrSiteLayout active="market-insights">
+          <div className="flex flex-1 items-center justify-center py-32 min-h-[50vh]">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-[var(--rr-border)] border-t-[var(--rr-green)] mb-4" />
+              <p className="text-[var(--rr-muted)]">Loading market insights...</p>
+            </div>
+          </div>
+        </RrSiteLayout>
+      </>
     );
   }
 
@@ -75,34 +84,18 @@ export default function MarketInsights() {
   const maxVal = (obj) => obj && Object.values(obj).length ? Math.max(...Object.values(obj)) : 1;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
-      <header className="border-b border-neutral-800 bg-neutral-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-2xl font-bold text-emerald-400">
-                Ready For Robots
-              </Link>
-              <span className="text-neutral-600">/</span>
-              <h1 className="text-xl font-semibold text-neutral-200">Market Insights</h1>
-            </div>
-            <nav className="flex items-center space-x-4">
-              <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition">Home</Link>
-              <Link href="/search" className="text-neutral-400 hover:text-emerald-400 transition">Search</Link>
-              <Link href="/newsletter" className="text-neutral-400 hover:text-emerald-400 transition">Newsletter</Link>
-              <Link href="/brief" className="text-neutral-400 hover:text-emerald-400 transition">Strategy brief</Link>
-              <Link href="/roi-calculator" className="text-neutral-400 hover:text-emerald-400 transition">ROI Calculator</Link>
-              <Link href="/dashboard" className="text-neutral-400 hover:text-emerald-400 transition">Dashboard</Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
+    <>
+      <Head>
+        <title>Market Insights | Ready For Robots</title>
+        <meta name="description" content="Opportunity analytics from live signals — automation themes, robot categories, ROI language, and industries." />
+      </Head>
+      <RrSiteLayout active="market-insights">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-[var(--rr-text)]">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Opportunity Analytics</h2>
-            <p className="text-neutral-400">Automation themes from signals, trending robot categories, ROI and trial language, tasks to automate — updated from live opportunity data</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--rr-green)] mb-2">Market intelligence</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--rr-text)] mb-2">Opportunity analytics</h1>
+            <p className="text-[var(--rr-muted2)] max-w-2xl">Automation themes from signals, trending robot categories, ROI and trial language, and tasks to automate — updated from live opportunity data.</p>
           </div>
           <div className="flex items-center gap-2">
             {[1, 7, 30].map((d) => (
@@ -134,8 +127,8 @@ export default function MarketInsights() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Automation Types */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Automation themes (inferred)</h3>
+          <div className="rr-card rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-[var(--rr-text)] mb-4">Automation themes (inferred)</h3>
             <div className="space-y-3">
               {Object.entries(data?.automation_types_inferred || {}).slice(0, 8).map(([k, v]) => (
                 <div key={k}>
@@ -152,8 +145,8 @@ export default function MarketInsights() {
           </div>
 
           {/* Robot categories trending */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Robot categories trending</h3>
+          <div className="rr-card rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-[var(--rr-text)] mb-4">Robot categories trending</h3>
             <p className="text-xs text-neutral-500 mb-3">Categories most mentioned with automation opportunities in this window — not a procurement forecast.</p>
             <div className="space-y-3">
               {Object.entries(data?.robot_types_needed || {}).slice(0, 8).map(([k, v]) => (
@@ -171,8 +164,8 @@ export default function MarketInsights() {
           </div>
 
           {/* Common Tasks */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Most Common Tasks to Automate</h3>
+          <div className="rr-card rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-[var(--rr-text)] mb-4">Most Common Tasks to Automate</h3>
             <div className="space-y-3">
               {Object.entries(data?.common_tasks_to_automate || {}).slice(0, 8).map(([k, v]) => (
                 <div key={k}>
@@ -189,8 +182,8 @@ export default function MarketInsights() {
           </div>
 
           {/* Industries */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Industries</h3>
+          <div className="rr-card rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-[var(--rr-text)] mb-4">Industries</h3>
             <p className="text-xs text-neutral-500 mb-3">Unclassified companies are grouped as Emerging.</p>
             <div className="space-y-2">
               {industryRows.slice(0, 8).map(([k, v]) => (
@@ -205,8 +198,8 @@ export default function MarketInsights() {
         </div>
 
         {/* Top Companies */}
-        <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50 mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">Top Companies by Signals</h3>
+        <div className="rr-card rounded-lg p-6 mb-8">
+          <h3 className="text-lg font-semibold text-[var(--rr-text)] mb-4">Top Companies by Signals</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {(data?.top_companies_by_signals || []).slice(0, 6).map((c, i) => (
               <Link key={i} href={`/search?q=${encodeURIComponent(c.name)}`} className="block border border-neutral-800 rounded-lg p-4 hover:border-emerald-700 hover:bg-neutral-900/50 transition">
@@ -226,6 +219,7 @@ export default function MarketInsights() {
           </Link>
         </div>
       </main>
-    </div>
+      </RrSiteLayout>
+    </>
   );
 }

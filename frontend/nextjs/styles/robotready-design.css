@@ -697,6 +697,22 @@
   color: var(--rr-text);
 }
 
+.rr-nav-links a.rr-nav-active {
+  color: var(--rr-green);
+  font-weight: 600;
+}
+
+.rr-nav-links a.rr-nav-active:hover {
+  color: var(--rr-green);
+}
+
+/* Content panels — match dashboard / homepage cards */
+.rr-card {
+  border: 1px solid var(--rr-border);
+  border-radius: var(--rr-radius-lg);
+  background: rgba(17, 24, 39, 0.55);
+}
+
 .rr-nav-right {
   display: flex;
   align-items: center;

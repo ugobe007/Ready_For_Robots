@@ -4,6 +4,8 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
+import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 export default function ROICalculator() {
@@ -185,33 +187,36 @@ export default function ROICalculator() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950">
-      <div className="max-w-5xl mx-auto p-8">
+    <>
+      <Head>
+        <title>Robot ROI Calculator | Ready For Robots</title>
+        <meta name="description" content="Estimate payback period, annual savings, and multi-year ROI for service and warehouse robots." />
+      </Head>
+      <RrSiteLayout active="roi">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-10 text-[var(--rr-text)]">
         
         {/* Header */}
         <div className="mb-8">
-          <Link href="/" className="text-xs text-emerald-600 hover:text-emerald-400 mb-4 inline-block">
-            ← Home
-          </Link>
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-neutral-100 mb-3">💰 Robot ROI Calculator</h1>
-            <p className="text-lg text-neutral-400 mb-2">Calculate Your Payback Period in 30 Seconds</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--rr-green)] mb-3">Free tool</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-[var(--rr-text)] mb-3">Robot ROI Calculator</h1>
+            <p className="text-lg text-[var(--rr-muted2)] mb-2">Calculate your payback period in under a minute</p>
           </div>
 
           {/* How it Works */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50 mb-6">
-            <h2 className="text-sm font-semibold text-emerald-400 mb-3">How This Works</h2>
-            <div className="text-sm text-neutral-400 space-y-2">
+          <div className="rr-card rounded-lg p-6 mb-6">
+            <h2 className="text-sm font-semibold text-[var(--rr-green)] mb-3">How this works</h2>
+            <div className="text-sm text-[var(--rr-muted2)] space-y-2">
               <p>
-                <strong className="text-neutral-300">1. Enter your robot details</strong> - Cost, type, and industry
+                <strong className="text-[var(--rr-text)]">1. Enter your robot details</strong> — cost, type, and industry
               </p>
               <p>
-                <strong className="text-neutral-300">2. Input labor costs</strong> - Either hourly wage + hours/day OR annual labor cost
+                <strong className="text-[var(--rr-text)]">2. Input labor costs</strong> — hourly + hours/day or annual labor cost
               </p>
               <p>
-                <strong className="text-neutral-300">3. Get instant results</strong> - Payback period, annual savings, 3-year ROI
+                <strong className="text-[var(--rr-text)]">3. Get instant results</strong> — payback, annual savings, 3-year ROI
               </p>
-              <p className="pt-2 border-t border-neutral-800 text-xs text-neutral-500">
+              <p className="pt-2 border-t border-[var(--rr-border)] text-xs text-[var(--rr-muted)]">
                 💡 <strong>Want to save your calculations?</strong> Sign up for a free account to track multiple robots, 
                 compare scenarios, and generate shareable reports. (Coming soon)
               </p>
@@ -222,8 +227,8 @@ export default function ROICalculator() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Calculator Form */}
-          <div className="border border-neutral-800 rounded-lg p-6 space-y-6">
-            <h2 className="text-xl font-bold text-neutral-100">Calculator Inputs</h2>
+          <div className="rr-card rounded-lg p-6 space-y-6">
+            <h2 className="text-xl font-bold text-[var(--rr-text)]">Calculator inputs</h2>
 
             {/* Robot Type */}
             <div>
@@ -365,8 +370,8 @@ export default function ROICalculator() {
           </div>
 
           {/* Results Panel */}
-          <div className="border border-neutral-800 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-neutral-100 mb-6">Results</h2>
+          <div className="rr-card rounded-lg p-6">
+            <h2 className="text-xl font-bold text-[var(--rr-text)] mb-6">Results</h2>
 
             {!results ? (
               <div className="text-center py-12 text-neutral-600">
@@ -534,6 +539,7 @@ export default function ROICalculator() {
           </p>
         </div>
       </div>
+      </RrSiteLayout>
 
       {/* Share Modal */}
       {showShareModal && (
@@ -583,6 +589,6 @@ export default function ROICalculator() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
