@@ -7,8 +7,10 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Load repo-root .env before reading DATABASE_URL (uvicorn does not load .env by default)
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+# Load repo-root .env, then Next.js .env.local (override) so DATABASE_URL matches Alembic / local dev
+_root = Path(__file__).resolve().parents[1]
+load_dotenv(_root / ".env")
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite:///./ready_for_robots.db")
 _raw_url = (_raw_url or "").strip().strip('"').strip("'")

@@ -29,6 +29,7 @@ from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
+from app.api.crm import router as crm_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.social_posts import router as social_posts_router
 from app.database import get_db
@@ -165,6 +166,7 @@ app.include_router(share_router, prefix="/api", tags=["share"])
 app.include_router(playbook_router, prefix="/api", tags=["playbook"])
 app.include_router(robot_companies_router, tags=["robot-companies"])
 app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newsletter"])
+app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
 
 
 @app.on_event("startup")

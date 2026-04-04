@@ -1,11 +1,18 @@
 import os
 import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Ensure project root is on path (for app.* imports when run via alembic CLI)
 _src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _src not in sys.path:
     sys.path.insert(0, _src)
+
+# Repo-root .env, then Next.js .env.local (override) — DATABASE_URL is often only in .env.local during dev
+load_dotenv(Path(_src) / ".env")
+load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local", override=True)
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -16,11 +23,16 @@ from alembic import context
 # access to the values within the .ini file in use.
 config = context.config
 
-# Use DATABASE_URL from environment when set (production/Fly)
-_db_url = os.getenv("DATABASE_URL")
+# DATABASE_URL from environment or .env; normalize for psycopg2 + Supabase SSL
+_db_url = (os.getenv("DATABASE_URL") or "").strip().strip('"').strip("'")
 if _db_url:
     if _db_url.startswith("postgres://"):
         _db_url = _db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif _db_url.startswith("postgresql://") and not _db_url.startswith("postgresql+"):
+        _db_url = _db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    if "supabase.co" in _db_url and "sslmode=" not in _db_url:
+        sep = "&" if "?" in _db_url else "?"
+        _db_url = f"{_db_url}{sep}sslmode=require"
     config.set_main_option("sqlalchemy.url", _db_url)
 
 # Interpret the config file for Python logging.

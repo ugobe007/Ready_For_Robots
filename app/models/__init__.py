@@ -3,3 +3,4 @@ from app.models.contact import Contact
 from app.models.signal import Signal
 from app.models.score import Score
 from app.models.robot import Robot
+from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement
