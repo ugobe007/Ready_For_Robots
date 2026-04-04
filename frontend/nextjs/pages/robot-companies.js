@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
@@ -24,12 +24,7 @@ export default function RobotCompanies() {
   const [emailContent, setEmailContent] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
 
-  useEffect(() => {
-    loadStats();
-    loadCompanies();
-  }, [filter, search]);
-
-  async function loadStats() {
+  const loadStats = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/api/robot-companies/stats`, liveFetchInit());
       const data = await res.json();
@@ -37,9 +32,9 @@ export default function RobotCompanies() {
     } catch (error) {
       console.error('Failed to load stats:', error);
     }
-  }
+  }, []);
 
-  async function loadCompanies() {
+  const loadCompanies = useCallback(async () => {
     setLoading(true);
     try {
       let url = `${API_BASE}/api/robot-companies/`;
@@ -69,7 +64,12 @@ export default function RobotCompanies() {
       console.error('Failed to load companies:', error);
     }
     setLoading(false);
-  }
+  }, [filter, debouncedSearch]);
+
+  useEffect(() => {
+    loadStats();
+    loadCompanies();
+  }, [loadStats, loadCompanies]);
 
   const filteredCompanies = companies.filter(comp => 
     search ? comp.company_name.toLowerCase().includes(search.toLowerCase()) : true

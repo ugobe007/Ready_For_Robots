@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
@@ -9,11 +9,7 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d, all
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [timeRange]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${getApiBase()}/api/analytics?range=${timeRange}`, liveFetchInit());
@@ -24,7 +20,11 @@ export default function Analytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
     return (

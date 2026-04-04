@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useAuth } from './_app';
-import { authHeader } from '../lib/supabase';
+import { authHeader, supabase } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
@@ -1902,6 +1902,29 @@ export default function Dashboard() {
       const stored = localStorage.getItem('rfr_usage_count');
       setUsageCount(parseInt(stored || '0', 10));
     } catch {}
+  }, []);
+
+  // Dev / opt-in: log access_token for API testing (curl). Add ?debug_auth=1 or use npm run dev.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !supabase) return;
+    const debug =
+      process.env.NODE_ENV === 'development' ||
+      new URLSearchParams(window.location.search).get('debug_auth') === '1';
+    if (!debug) return;
+
+    (async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('[debug_auth] session error:', error.message);
+        return;
+      }
+      const accessToken = data.session?.access_token;
+      if (accessToken) {
+        console.info('[debug_auth] access_token (for Authorization: Bearer …):', accessToken);
+      } else {
+        console.info('[debug_auth] no session — sign in first');
+      }
+    })();
   }, []);
 
   // Check if user can perform action

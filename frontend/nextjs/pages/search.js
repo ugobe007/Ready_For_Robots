@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -54,33 +54,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
 
-  // Read URL params on load and run search (avoids blank pages from links)
-  useEffect(() => {
-    if (!router.isReady) return;
-    const q = router.query.q;
-    const cat = router.query.category;
-    if (q != null || cat != null) {
-      const qVal = typeof q === 'string' ? q : (q?.[0] ?? '');
-      const catVal = typeof cat === 'string' ? cat : (cat?.[0] ?? null);
-      setQuery(qVal);
-      setCategory(catVal);
-      runSearch(qVal, catVal);
-    }
-  }, [router.isReady, router.query.q, router.query.category]);
-
-  // '/' keyboard shortcut to focus search
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  async function runSearch(q, cat) {
+  const runSearch = useCallback(async (q, cat) => {
     setLoading(true);
     setResults(null);
     try {
@@ -99,7 +73,33 @@ export default function SearchPage() {
       router.replace({ pathname: '/search', query: Object.keys(next).length ? next : {} }, undefined, { shallow: true });
     } catch {}
     setLoading(false);
-  }
+  }, [router]);
+
+  // Read URL params on load and run search (avoids blank pages from links)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query.q;
+    const cat = router.query.category;
+    if (q != null || cat != null) {
+      const qVal = typeof q === 'string' ? q : (q?.[0] ?? '');
+      const catVal = typeof cat === 'string' ? cat : (cat?.[0] ?? null);
+      setQuery(qVal);
+      setCategory(catVal);
+      runSearch(qVal, catVal);
+    }
+  }, [router.isReady, router.query.q, router.query.category, runSearch]);
+
+  // '/' keyboard shortcut to focus search
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   function selectCategory(key) {
     const next = category === key ? null : key;

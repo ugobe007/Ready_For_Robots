@@ -33,6 +33,24 @@ function AuthProvider({ children }) {
       setLoading(false);
     });
 
+    // Opt-in console helper: add ?debug_auth=1 to the URL, reload, then run:
+    //   (await window.__supabase.auth.getSession()).data.session?.access_token
+    // (User JWT for curl /api/... — not the anon key.)
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('debug_auth') === '1') {
+          window.__supabase = supabase;
+          console.info(
+            '[debug_auth] window.__supabase ready. Paste in console:\n' +
+              '(await __supabase.auth.getSession()).data.session?.access_token'
+          );
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    }
+
     return () => listener?.subscription?.unsubscribe();
   }, []);
 

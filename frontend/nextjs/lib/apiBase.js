@@ -2,8 +2,9 @@
  * Backend base URL for static export (`output: 'export'`).
  *
  * - **`NEXT_PUBLIC_API_URL`:** use when set (local or production).
- * - **next dev:** defaults to `http://127.0.0.1:8000` so the browser calls FastAPI directly
- *   (avoids `rewrites`, which Next does not apply to static export builds and warns about).
+ * - **next dev:** browser uses same-origin `''` so fetches hit `/api/...` on :3000; `next.config.js`
+ *   rewrites proxy to `http://127.0.0.1:8000/api/...`. Run FastAPI on :8000 from repo root.
+ *   Server-side code in dev uses `http://127.0.0.1:8000` directly.
  * - **Production static / other hosts:** set `NEXT_PUBLIC_API_URL`, or rely on `NEXT_PUBLIC_SITE_URL`
  *   when the API is on the same host as the site.
  */
@@ -18,6 +19,9 @@ export function getApiBase() {
   const isDev =
     typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
   if (isDev) {
+    if (typeof window !== 'undefined') {
+      return '';
+    }
     return 'http://127.0.0.1:8000';
   }
   if (typeof window !== 'undefined') {
