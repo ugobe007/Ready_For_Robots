@@ -616,11 +616,6 @@ export default function Signals() {
                     <div key={currentQuoteIndex} className="rr-testimonial-text">
                       {automationQuotes[currentQuoteIndex].text}
                     </div>
-                    <div className="rr-testimonial-source">
-                      {automationQuotes[currentQuoteIndex].company}
-                      <span className="rr-testimonial-sep">·</span>
-                      <span className="rr-cost-tag">{automationQuotes[currentQuoteIndex].signal}</span>
-                    </div>
                   </div>
                   <span className="rr-testimonial-counter tabular-nums">
                     {currentQuoteIndex + 1}/{automationQuotes.length}
