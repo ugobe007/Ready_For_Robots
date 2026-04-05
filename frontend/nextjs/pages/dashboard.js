@@ -11,6 +11,8 @@ import { authHeader, supabase } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
+import { AutomationSpecBlock } from '../lib/automationProfile';
+import SiteNavPrimaryLinks from '../components/SiteNavPrimaryLinks';
 
 // Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
 const API = getApiBase();
@@ -681,6 +683,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
   const [saved,        setSaved]        = useState(false);
   const [reportSaved,  setReportSaved]  = useState(false);
   const [savingReport, setSavingReport] = useState(false);
+  const [automationProfileExtra, setAutomationProfileExtra] = useState(null);
 
   // load profile + check saved state
   useEffect(() => {
@@ -695,6 +698,18 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
       .then(d => { setProfile(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [lead.id]);
+
+  // When modal opened from search, list payload may omit automation_profile — hydrate from API
+  useEffect(() => {
+    setAutomationProfileExtra(null);
+    if (lead?.automation_profile || !lead?.id) return;
+    fetch(`${API}/api/leads/by-id/${lead.id}`, liveFetchInit())
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.automation_profile) setAutomationProfileExtra(d.automation_profile);
+      })
+      .catch(() => {});
+  }, [lead.id, lead.automation_profile]);
 
   // close on Escape
   useEffect(() => {
@@ -765,13 +780,19 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
   const emp    = comp.employee_estimate || lead.employee_estimate;
   const site   = comp.website || lead.website;
 
+  const automationProfile = lead.automation_profile || automationProfileExtra;
+  const engagementSignals = lead.signals || [];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[4vh]"
-      onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <div className="absolute inset-0 bg-black/80" />
       <div
-        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0c0c0c] border border-neutral-700 rounded-lg shadow-2xl flex flex-col"
-        onClick={e => e.stopPropagation()}>
+        className="relative w-full max-w-3xl max-h-[min(90vh,920px)] my-4 overflow-y-auto bg-[#0c0c0c] border border-neutral-700 rounded-lg shadow-2xl flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
 
         {/* ── HEADER ── */}
         <div className={`flex items-start justify-between px-6 py-4 border-b ${tm.border} shrink-0`}>
@@ -781,8 +802,8 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               <TierBadge tier={lead.priority_tier} />
               {sc.overall_score != null && <ScoreNum value={sc.overall_score} />}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
-              {lead.industry && <span className="text-neutral-400">{lead.industry}</span>}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+              {lead.industry && <span className="text-neutral-300">{lead.industry}</span>}
               {city && <span>{city}{state ? `, ${state}` : ''}</span>}
               {emp && <span>{emp.toLocaleString()} employees</span>}
               {site && (
@@ -854,6 +875,8 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               {loading && (
                 <p className="text-sm text-neutral-400 animate-pulse py-3">generating AI analysis&hellip;</p>
               )}
+
+              <AutomationSpecBlock profile={automationProfile} theme="dashboard" />
 
               {!loading && strat && um && (
                 <div className={`border ${um.border} rounded p-5 space-y-4`}>
@@ -1241,7 +1264,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
-                    <span><span className="font-semibold text-neutral-200">Signal-based timing:</span> Their {signals.length >= 3 ? 'hot signals' : 'signals'} show they're in market RIGHT NOW — strike while iron is hot with relevant solutions</span>
+                    <span><span className="font-semibold text-neutral-200">Signal-based timing:</span> Their {engagementSignals.length >= 3 ? 'hot signals' : 'signals'} show they're in market RIGHT NOW — strike while iron is hot with relevant solutions</span>
                   </p>
                 </div>
               </div>
@@ -1251,9 +1274,21 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
           {/* ── ROBOT MATCH tab ── */}
           {activeTab === 'robot match' && (
             <div className="space-y-4">
-              {loading && <p className="text-sm text-neutral-400 animate-pulse py-3">matching robots&hellip;</p>}
+              <div className="border border-violet-800/50 rounded-lg p-4 bg-violet-950/20">
+                <p className="text-xs font-semibold text-violet-300 uppercase tracking-wide mb-2">
+                  Automation spec (signal + industry model)
+                </p>
+                <p className="text-sm text-neutral-300 mb-3 leading-relaxed">
+                  Rule-based fit: deployment context, application areas, and robot categories to emphasize before vendor shortlist.
+                </p>
+                <AutomationSpecBlock profile={automationProfile} theme="dashboard" />
+              </div>
+
+              {loading && <p className="text-sm text-neutral-400 animate-pulse py-3">Loading agent vendor matches&hellip;</p>}
               {!loading && (profile?.robot_match || []).length === 0 && (
-                <p className="text-sm text-neutral-500">No robot recommendations available.</p>
+                <p className="text-sm text-neutral-300 leading-relaxed">
+                  No linked vendor catalog matches from the AI agent yet — use the automation spec above for outreach and discovery.
+                </p>
               )}
               {(profile?.robot_match || []).map((robot, i) => (
                 <div key={i} className={`border ${i === 0 ? 'border-emerald-900' : 'border-neutral-800'} rounded p-5 space-y-3`}>
@@ -1269,7 +1304,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                   </div>
                   <p className="text-sm text-neutral-300 leading-relaxed">{robot.use_cases?.[0]}</p>
                   {robot.use_cases?.slice(1).map((uc, j) => (
-                    <p key={j} className="text-xs text-neutral-500 leading-relaxed">▸ {uc}</p>
+                    <p key={j} className="text-xs text-neutral-300 leading-relaxed">▸ {uc}</p>
                   ))}
                   {robot.roi_stat && (
                     <div className="border border-cyan-900 rounded px-3 py-2">
@@ -2265,85 +2300,90 @@ export default function Dashboard() {
               ☰
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
-                <Link href="/" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🏠 Home
-                  </div>
-                </Link>
-                <button onClick={() => { fetchData(); setShowMenu(false); }}
-                  className="w-full text-left px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                  &#8635; Refresh Data
-                </button>
-                <Link href="/search" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🔍 Intelligence Search
-                  </div>
-                </Link>
-                <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    💰 ROI Calculator
-                  </div>
-                </Link>
-                <Link href="/pilot-calculator" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🧪 Pilot Calculator
-                  </div>
-                </Link>
-                <Link href="/robot-ready" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🤖 Robot Ready
-                  </div>
-                </Link>
-                <Link href="/crm/" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    🗂️ CRM
-                  </div>
-                </Link>
-                <Link href="/profile" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    ♡ Profile
-                  </div>
-                </Link>
-                <Link href="/admin" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    ⚙️ Admin Panel
-                  </div>
-                </Link>
-                <Link href="/brief" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">
-                    📋 Strategy Brief
-                  </div>
-                </Link>
-                <Link href="/about" onClick={() => setShowMenu(false)}>
-                  <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer">
-                    ⚡ Signal Intelligence
-                  </div>
-                </Link>
+              <div className="absolute right-0 top-full mt-2 w-64 max-h-[min(80vh,520px)] overflow-y-auto border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+                <div className="border-b border-neutral-800">
+                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Main</div>
+                  <Link href="/" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🏠 Home</div>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => { fetchData(); setShowMenu(false); }}
+                    className="w-full text-left px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 border-t border-neutral-800"
+                  >
+                    &#8635; Refresh data
+                  </button>
+                  <Link href="/dashboard" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer border-t border-neutral-800">📊 Pipeline</div>
+                  </Link>
+                </div>
+                <div className="border-b border-neutral-800">
+                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Pipeline</div>
+                  <Link href="/crm/" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🗂️ CRM</div>
+                  </Link>
+                </div>
+                <div className="border-b border-neutral-800">
+                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Discover</div>
+                  <Link href="/search" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">🔍 Search</div>
+                  </Link>
+                  <Link href="/market-insights" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">📈 Market</div>
+                  </Link>
+                  <Link href="/about" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">⚡ Signals</div>
+                  </Link>
+                  <Link href="/newsletter" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer">📰 Newsletter</div>
+                  </Link>
+                  <Link href="/social" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer">🎨 Studio</div>
+                  </Link>
+                </div>
+                <div>
+                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Tools</div>
+                  <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-yellow-400 hover:bg-neutral-900 cursor-pointer">💰 ROI</div>
+                  </Link>
+                  <Link href="/pilot-calculator" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">🧪 Pilot</div>
+                  </Link>
+                  <Link href="/robot-ready" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🤖 Robot Ready</div>
+                  </Link>
+                  <Link href="/brief" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">📋 Brief</div>
+                  </Link>
+                  <Link href="/admin" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">⚙️ Admin</div>
+                  </Link>
+                  <Link href="/profile" onClick={() => setShowMenu(false)}>
+                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer pb-3">♡ Profile</div>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
 
-        <nav className="rr-topnav-links" aria-label="Dashboard">
-          {!session && usageCount < FREE_LIMIT && (
-            <span className="rr-badge-free">{FREE_LIMIT - usageCount} free searches left</span>
-          )}
-          {lastRefresh && <span className="rr-topnav-time tabular-nums">{lastRefresh}</span>}
-          <Link href="/">Home</Link>
-          <button type="button" onClick={fetchData}>Refresh</button>
-          <Link href="/search">Search</Link>
-          <Link href="/market-insights">Market</Link>
-          <Link href="/about">Signals</Link>
-          <Link href="/newsletter">Newsletter</Link>
-          <Link href="/social">Studio</Link>
-          <Link href="/roi-calculator">ROI</Link>
-          <Link href="/pilot-calculator">Pilot</Link>
-          <Link href="/robot-ready">Robot Ready</Link>
-          <Link href="/brief">Brief</Link>
-          <Link href="/crm/">CRM</Link>
-          <Link href="/admin">Admin</Link>
-          <Link href="/profile">Profile</Link>
-        </nav>
+        <SiteNavPrimaryLinks
+          ariaLabel="Dashboard"
+          prepend={
+            <>
+              {!session && usageCount < FREE_LIMIT && (
+                <span className="rr-badge-free">{FREE_LIMIT - usageCount} free searches left</span>
+              )}
+              {lastRefresh && (
+                <span className="rr-topnav-time tabular-nums">{lastRefresh}</span>
+              )}
+            </>
+          }
+          extraAfterHome={
+            <button type="button" className="rr-nav-refresh" onClick={fetchData}>
+              Refresh
+            </button>
+          }
+        />
         <div className="rr-topnav-right hidden md:flex items-center">
           {session
             ? <span className="text-sm text-[var(--rr-muted2)] max-w-[10rem] truncate">{session.user.email.split('@')[0]}</span>
@@ -2827,6 +2867,9 @@ export default function Dashboard() {
                     {lead.priority_reasons.join('  ·  ')}
                   </p>
                 )}
+                <div className="mt-2 pl-10">
+                  <AutomationSpecBlock profile={lead.automation_profile} compact theme="dashboard" />
+                </div>
 
                 {/* expanded drawer */}
                 {isOpen && (
@@ -2851,6 +2894,7 @@ export default function Dashboard() {
 
                     {/* Intelligence summary + social share */}
                     <LeadShareBar lead={lead} />
+                    <AutomationSpecBlock profile={lead.automation_profile} theme="dashboard" />
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
                       {lead.website && (
                         <a href={lead.website} target="_blank" rel="noreferrer"

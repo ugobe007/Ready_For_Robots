@@ -1,14 +1,13 @@
 import os
-import socket
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Load repo-root .env, then Next.js .env.local (override) so DATABASE_URL matches Alembic / local dev
+# Load repo-root .env, then Next.js .env.local (override) — same order as migrations/env.py
 _root = Path(__file__).resolve().parents[1]
 load_dotenv(_root / ".env")
 load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
@@ -50,47 +49,6 @@ def _ensure_pg_sslmode(url: str) -> str:
 
 
 DATABASE_URL = _ensure_pg_sslmode(DATABASE_URL)
-
-
-def _prefer_ipv4_hostaddr_for_fly(url: str) -> str:
-    """
-    Fly.io outbound to db.*.supabase.co often picks IPv6 first; port 6543 then returns
-    'Connection refused' (see fly logs: psycopg2 OperationalError to ... port 6543 failed).
-    libpq can connect via IPv4 literal using hostaddr= while keeping host= for TLS name.
-    """
-    if not url or "sqlite" in url or "postgresql" not in url:
-        return url
-    if "hostaddr=" in url.lower():
-        return url
-    try:
-        pr = urlparse(url)
-        host = (pr.hostname or "").lower()
-    except Exception:
-        return url
-    if not (host.startswith("db.") and host.endswith(".supabase.co")):
-        return url
-    try:
-        infos = socket.getaddrinfo(host, None, socket.AF_INET, socket.SOCK_STREAM)
-        if not infos:
-            print(
-                f"WARNING: No IPv4 address for {host}; using default DNS (may use IPv6 on Fly).",
-                file=sys.stderr,
-            )
-            return url
-        ipv4 = infos[0][4][0]
-    except OSError as e:
-        print(f"WARNING: IPv4 resolve for {host} failed ({e}); not setting hostaddr.", file=sys.stderr)
-        return url
-    sep = "&" if "?" in url else "?"
-    print(
-        f"INFO: Fly.io + Supabase: using hostaddr={ipv4} for {host} (avoid IPv6 connection refused).",
-        file=sys.stderr,
-    )
-    return f"{url}{sep}hostaddr={ipv4}"
-
-
-if os.getenv("FLY_APP_NAME"):
-    DATABASE_URL = _prefer_ipv4_hostaddr_for_fly(DATABASE_URL)
 
 # Literal "HOST" / docs examples — DNS fails with "could not translate host name \"HOST\""
 _PLACEHOLDER_PG_HOSTS = frozenset(
@@ -138,39 +96,6 @@ if os.getenv("FLY_APP_NAME") and DATABASE_URL and "postgresql" in DATABASE_URL:
             file=sys.stderr,
         )
 
-def _pg_connect_args(url: str) -> dict:
-    """
-    Extra libpq/psycopg2 options for cloud Postgres (esp. Supabase pooler from Fly.io).
-
-    - connect_timeout: fail fast instead of hanging.
-    - gssencmode=disable: avoids rare GSSAPI negotiation failures on Linux (Fly VMs).
-    """
-    args: dict = {"connect_timeout": 15}
-    if "supabase" in url.lower():
-        args["gssencmode"] = "disable"
-    return args
-
-
-def _pooler_disables_prepared_statements(url: str) -> bool:
-    """Supabase transaction pooler (6543 / pooler.supabase.com) cannot use prepared statements."""
-    if not url or "postgresql" not in url:
-        return False
-    u = url.lower()
-    return "pooler.supabase.com" in u or ":6543" in url
-
-
-def _register_pooler_psycopg2(engine, dsn_url: str) -> None:
-    """Disable psycopg2 prepared statements for PgBouncer/Supavisor transaction pool (port 6543)."""
-    if not _pooler_disables_prepared_statements(dsn_url):
-        return
-
-    @event.listens_for(engine, "connect")
-    def _on_connect(dbapi_conn, connection_record):
-        # psycopg2: None disables prepared statements; 0 does NOT (see Connection.prepare_threshold docs).
-        if hasattr(dbapi_conn, "prepare_threshold"):
-            dbapi_conn.prepare_threshold = None
-
-
 try:
     if DATABASE_URL and "postgresql" in DATABASE_URL:
         engine = create_engine(
@@ -180,9 +105,7 @@ try:
             pool_timeout=30,
             pool_pre_ping=True,
             pool_recycle=300,
-            connect_args=_pg_connect_args(DATABASE_URL),
         )
-        _register_pooler_psycopg2(engine, DATABASE_URL)
     else:
         # Respect DATABASE_URL for SQLite (e.g. sqlite:///./ready_for_robots.db or absolute path)
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

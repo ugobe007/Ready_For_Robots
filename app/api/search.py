@@ -17,7 +17,8 @@ from typing import Optional, List
 from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
-from app.services.lead_filter import pick_primary_score
+from app.services.lead_filter import classify_lead, pick_primary_score
+from app.services.automation_profile import profile_from_company_api_dict
 
 router = APIRouter()
 
@@ -304,7 +305,7 @@ def _run_keyword_search(
 
     companies = (
         db.query(Company)
-        .options(joinedload(Company.scores))
+        .options(joinedload(Company.scores), joinedload(Company.signals))
         .filter(Company.id.in_(list(company_signals.keys())))
         .all()
     )
@@ -321,6 +322,17 @@ def _run_keyword_search(
         ind = (c.industry or "").strip()
         if not ind or ind.lower() in ("unknown", "other"):
             ind = "New"
+        _, _, pri = classify_lead(c, c.scores, c.signals)
+        automation_profile = profile_from_company_api_dict(
+            {
+                "company_name": c.name,
+                "industry": c.industry,
+                "signals": [
+                    {"signal_type": s.signal_type, "raw_text": s.signal_text or ""}
+                    for s in (c.signals or [])
+                ],
+            }
+        ).to_dict()
         results.append(
             {
                 "id": c.id,
@@ -333,6 +345,8 @@ def _run_keyword_search(
                 "overall_score": score,
                 "matched_signals": matched[:5],
                 "match_source": company_match_source.get(c.id, "signal"),
+                "priority_tier": pri.tier,
+                "automation_profile": automation_profile,
             }
         )
 

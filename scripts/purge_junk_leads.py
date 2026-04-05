@@ -19,8 +19,13 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from pathlib import Path
+
 from dotenv import load_dotenv
-load_dotenv()
+
+_root = Path(__file__).resolve().parents[1]
+load_dotenv(_root / ".env")
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
 
 from app.database import SessionLocal
 from app.models.company import Company

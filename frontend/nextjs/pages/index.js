@@ -6,6 +6,7 @@ import Image from 'next/image';
 import LoginDropdown from '../components/LoginDropdown';
 import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { AutomationSpecBlock } from '../lib/automationProfile';
 // signalsDisplay helpers used in dashboard; index.js relies on API-side dedup/cap
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
@@ -774,7 +775,11 @@ export default function Signals() {
                   Emerging ·{' '}
                   <span className="tabular-nums">{formatHeroCount(statsData.cold, statsLoaded)}</span> in pipeline
                 </p>
-                <Link href="/dashboard" className="rr-hero-explore-btn" title="Open the live pipeline dashboard">
+                <Link
+                  href="/market-insights/"
+                  className="rr-hero-explore-btn"
+                  title="Market insights — industry context and timing"
+                >
                   Explore
                 </Link>
               </aside>
@@ -996,6 +1001,9 @@ export default function Signals() {
                             ))}
                           </div>
                         )}
+                        {!isExpanded && (
+                          <AutomationSpecBlock profile={lead.automation_profile} compact theme="home" />
+                        )}
                       </div>
                       <div className="text-right space-y-2 flex flex-col items-end">
                         <div className="relative">
@@ -1098,6 +1106,8 @@ export default function Signals() {
                             </ul>
                           </div>
                         )}
+
+                        <AutomationSpecBlock profile={lead.automation_profile} theme="home" />
 
                         {/* Signal intelligence cards — top 5 unique types */}
                         {cardSignals.length > 0 && (

@@ -14,7 +14,7 @@ GET /api/leads
 """
 from datetime import datetime, timezone, date
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
@@ -34,6 +34,7 @@ from app.services.lead_filter import (
 from app.services.signal_ranker import compute_weighted_score
 from app.services.industry_inference import infer_industry_from_text
 from app.services.scoring_public import get_scoring_system_public
+from app.services.automation_profile import profile_from_company_api_dict
 
 router = APIRouter()
 
@@ -413,6 +414,17 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
 
     share_blurb, share_summary = _build_share_blurb(c, pri, sigs)
 
+    automation_profile = profile_from_company_api_dict(
+        {
+            "company_name": c.name,
+            "industry": c.industry,
+            "signals": [
+                {"signal_type": sig.signal_type, "raw_text": sig.signal_text or ""}
+                for sig in (c.signals or [])
+            ],
+        }
+    ).to_dict()
+
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -452,6 +464,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         ],
         "share_blurb": share_blurb,
         "share_summary": share_summary,
+        "automation_profile": automation_profile,
     }
 
 
@@ -552,6 +565,21 @@ def get_leads(
         final.append(_fmt_company(c, junk, junk_reason, pri))
 
     return final   # plain list — dashboard iterates it directly
+
+
+@router.get("/by-id/{company_id}")
+def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
+    """Single lead payload (same shape as list rows) — for modals / deep links when `automation_profile` is needed."""
+    c = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id == company_id)
+        .first()
+    )
+    if not c:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+    return _fmt_company(c, junk, junk_reason, pri)
 
 
 @router.get("/homepage")

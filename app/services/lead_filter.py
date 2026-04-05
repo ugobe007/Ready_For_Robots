@@ -46,6 +46,21 @@ _JUNK_SUBSTRINGS = [
     "sec 10-k", "sec 10-q", "10-k filing", "10-q filing", "annual report sec",
     # Specific known-bad junk from user feedback
     "how ai ", "pro-level", "yegor traiman", "travel market", "tourism market", "ops 202", "how to ",
+    # News / research outlets and syndicated titles scraped as “company names”
+    "business insider",
+    "seeking alpha",
+    "marketwatch",
+    "barrons.com",
+    "the motley fool",
+    "grand view research",
+    "verified market research",
+    # Sector / market report fragments (not company names)
+    " robot sector",
+    " automation sector",
+    " market forecast",
+    " industry report",
+    " research report",
+    " weekly roundup",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -123,6 +138,15 @@ _JUNK_PATTERNS = [
     # Possessive headlines: "Hotels' challenge", "Workers' concerns"
     r"^[a-z].*'s?\s+(challenge|problem|concern|issue|struggle|need|demand|"
     r"opportunity|trend|future|rise|growth|decline|shift|impact|role)\b",
+
+    # ── Market research / sector labels (scraped as company names) ─────────────
+    r"(?i)\bsector\s*$",
+    r"(?i)\bforecast\s*$",
+    r"(?i)\breport\s*$",
+    r"(?i)\boutlook\s*$",
+    r"(?i)(market|industry|transformation)\s+(forecast|outlook)\s*$",
+    r"(?i)\s+robot\s+sector\s*$",
+    r"(?i)^(the\s+)?(associated\s+press|reuters|bloomberg\s+news|cnbc|fox\s+business|marketwatch)\s*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -135,6 +159,19 @@ _JUNK_EXACT = frozenset({
     "managers", "respondents", "report", "study", "survey", "data", "news",
     "update", "alert", "source", "analysis", "insights", "statistics",
     "the", "a", "an", "and", "or", "inc", "llc", "corp", "ltd", "co",
+    # Geography / generic words mistaken for company names (single-field scrapes)
+    "capital",
+    "las vegas",
+    # News / syndicated (whole “name” is the outlet or a sector label)
+    "business insider",
+    "reuters",
+    "associated press",
+    "cnbc",
+    "fox business",
+    "marketwatch",
+    "the wall street journal",
+    "wall street journal",
+    "hospitality robot sector",
 })
 
 

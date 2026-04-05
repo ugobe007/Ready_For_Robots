@@ -102,7 +102,7 @@
 
   /* inline label */
   .label {
-    @apply text-[10px] uppercase tracking-widest text-neutral-500;
+    @apply text-[10px] uppercase tracking-widest text-neutral-400;
   }
 
   /* trending ticker */

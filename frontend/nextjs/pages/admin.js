@@ -47,7 +47,7 @@ function StatCard({ label, value, sub, variant }) {
     >
       <div
         className={`text-[10px] uppercase tracking-widest mb-1 ${
-          emerald ? 'text-emerald-600' : 'text-neutral-500'
+          emerald ? 'text-emerald-500' : 'text-neutral-400'
         }`}
       >
         {label}
@@ -58,7 +58,7 @@ function StatCard({ label, value, sub, variant }) {
         {value ?? '—'}
       </div>
       {sub && (
-        <div className={`text-[11px] mt-1 ${emerald ? 'text-emerald-500/95' : 'text-neutral-600'}`}>
+        <div className={`text-[11px] mt-1 ${emerald ? 'text-emerald-400/90' : 'text-neutral-400'}`}>
           {sub}
         </div>
       )}
@@ -692,7 +692,7 @@ function Dashboard() {
       <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
         <div>
           <h2 className="text-lg font-semibold text-neutral-100">Admin Dashboard</h2>
-          <p className="text-xs text-neutral-600 mt-1">System metrics and business intelligence</p>
+          <p className="text-xs text-neutral-400 mt-1">System metrics and business intelligence</p>
         </div>
         <button
           onClick={handleRefresh}

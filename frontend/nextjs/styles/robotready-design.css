@@ -15,8 +15,9 @@
   --rr-red: #ef4444;
   --rr-yellow: #eab308;
   --rr-text: #f1f5f9;
-  --rr-muted: #64748b;
-  --rr-muted2: #94a3b8;
+  /* Secondary text: was slate-500/400 — too dim on dark bg; bump for WCAG-ish contrast */
+  --rr-muted: #94a3b8;
+  --rr-muted2: #cbd5e1;
   --rr-radius: 10px;
   --rr-radius-lg: 12px;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -149,6 +150,57 @@
 .rr-topnav-links button:hover {
   background: var(--rr-surface2);
   color: var(--rr-text);
+}
+
+/* Compact nav — smaller type after base rules (dropdowns replace long link row) */
+.rr-topnav-links--compact a,
+.rr-topnav-links--compact button {
+  font-size: 11px;
+  padding: 4px 7px;
+  letter-spacing: 0.02em;
+}
+
+.rr-nav-link-priority {
+  font-weight: 600;
+  color: var(--rr-muted2);
+}
+
+.rr-nav-dd-trigger {
+  white-space: nowrap;
+}
+
+.rr-nav-dd-panel {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 4px;
+  min-width: 11rem;
+  padding: 4px 0;
+  border-radius: 8px;
+  border: 1px solid var(--rr-border);
+  background: var(--rr-surface);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  z-index: 200;
+}
+
+.rr-nav-dd-item {
+  display: block;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--rr-muted2);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.rr-nav-dd-item:hover {
+  background: var(--rr-surface2);
+  color: var(--rr-text);
+}
+
+.rr-nav-refresh {
+  font-size: 11px !important;
+  font-weight: 600;
+  color: var(--rr-cyan) !important;
 }
 
 .rr-topnav-right {

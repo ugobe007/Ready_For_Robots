@@ -29,7 +29,6 @@ from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
-from app.api.crm import router as crm_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.social_posts import router as social_posts_router
 from app.database import get_db
@@ -166,7 +165,6 @@ app.include_router(share_router, prefix="/api", tags=["share"])
 app.include_router(playbook_router, prefix="/api", tags=["playbook"])
 app.include_router(robot_companies_router, tags=["robot-companies"])
 app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newsletter"])
-app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
 
 
 @app.on_event("startup")
@@ -247,22 +245,19 @@ if os.path.exists(STATIC_DIR):
         # 0. 404 for probe-like paths (middleware also catches, but belt-and-suspenders)
         if _PROBE_PATTERNS.search(full_path):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
-        # Normalize: "crm/", "crm", "a/b" → relpath without leading slashes (Next export uses folders)
-        rel = (full_path or "").strip().strip("/").replace("\\", "/")
         # 1. Exact file (e.g. favicon.ico)
-        candidate = os.path.join(STATIC_DIR, rel) if rel else STATIC_DIR
-        if rel and os.path.isfile(candidate):
+        candidate = os.path.join(STATIC_DIR, full_path)
+        if os.path.isfile(candidate):
             return FileResponse(candidate)
         # 2. /admin/ → static/admin/index.html  (trailingSlash export)
-        if rel:
-            idx = os.path.join(STATIC_DIR, *rel.split("/"), "index.html")
-            if os.path.isfile(idx):
-                return FileResponse(idx)
-            # 3. /admin → static/admin.html
-            html = os.path.join(STATIC_DIR, rel + ".html")
-            if os.path.isfile(html):
-                return FileResponse(html)
-        # 4. SPA fallback (includes / when rel is empty; missing exported route also lands here)
+        idx = os.path.join(STATIC_DIR, full_path, "index.html")
+        if os.path.isfile(idx):
+            return FileResponse(idx)
+        # 3. /admin → static/admin.html
+        html = os.path.join(STATIC_DIR, full_path + ".html")
+        if os.path.isfile(html):
+            return FileResponse(html)
+        # 4. Root (SPA fallback)
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 else:
     @app.get("/")

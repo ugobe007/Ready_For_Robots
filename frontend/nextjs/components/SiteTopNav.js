@@ -1,14 +1,35 @@
 /**
- * Shared site header — same primary nav as dashboard / pipeline.
- * Use on admin and other tools so users can reach Home, Search, Profile, etc.
+ * Shared site header — compact primary nav + dropdowns (Discover, Tools).
  */
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import LoginDropdown from './LoginDropdown';
+import SiteNavPrimaryLinks from './SiteNavPrimaryLinks';
+
+function MobileNavSection({ title, children }) {
+  return (
+    <div className="border-b border-neutral-800 last:border-0">
+      <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+        {title}
+      </div>
+      <div className="pb-1">{children}</div>
+    </div>
+  );
+}
 
 export default function SiteTopNav({ session }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  const mobileLink = (href, label, colorClass = 'text-neutral-300') => (
+    <Link href={href} onClick={() => setShowMenu(false)}>
+      <div
+        className={`px-4 py-2.5 text-[13px] ${colorClass} hover:bg-neutral-900 cursor-pointer`}
+      >
+        {label}
+      </div>
+    </Link>
+  );
 
   return (
     <header className="rr-topnav w-full">
@@ -34,74 +55,41 @@ export default function SiteTopNav({ session }) {
             ☰
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
-              <Link href="/" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🏠 Home</div>
-              </Link>
-              <Link href="/dashboard" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">📊 Dashboard</div>
-              </Link>
-              <Link href="/crm/" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🗂️ CRM</div>
-              </Link>
-              <Link href="/search" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🔍 Intelligence Search</div>
-              </Link>
-              <Link href="/market-insights" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">📈 Market</div>
-              </Link>
-              <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">💰 ROI Calculator</div>
-              </Link>
-              <Link href="/pilot-calculator" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🧪 Pilot Calculator</div>
-              </Link>
-              <Link href="/robot-ready" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">🤖 Robot Ready</div>
-              </Link>
-              <Link href="/newsletter" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">📰 Newsletter</div>
-              </Link>
-              <Link href="/profile" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">♡ Profile</div>
-              </Link>
-              <Link href="/admin" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">⚙️ Admin Panel</div>
-              </Link>
-              <Link href="/brief" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 cursor-pointer border-b border-neutral-800">📋 Strategy Brief</div>
-              </Link>
-              <Link href="/about" onClick={() => setShowMenu(false)}>
-                <div className="px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">⚡ Signal Intelligence</div>
-              </Link>
+            <div className="absolute right-0 top-full mt-2 w-64 max-h-[min(80vh,520px)] overflow-y-auto border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
+              <MobileNavSection title="Main">{mobileLink('/', '🏠 Home', 'text-emerald-400')}</MobileNavSection>
+              <MobileNavSection title="Pipeline">
+                {mobileLink('/dashboard', '📊 Pipeline', 'text-cyan-400')}
+                {mobileLink('/crm/', '🗂️ CRM', 'text-emerald-400')}
+              </MobileNavSection>
+              <MobileNavSection title="Discover">
+                {mobileLink('/search', '🔍 Search', 'text-cyan-400')}
+                {mobileLink('/market-insights', '📈 Market', 'text-cyan-400')}
+                {mobileLink('/about', '⚡ Signals', 'text-emerald-400')}
+                {mobileLink('/newsletter', '📰 Newsletter', 'text-neutral-300')}
+                {mobileLink('/social', '🎨 Studio', 'text-neutral-300')}
+              </MobileNavSection>
+              <MobileNavSection title="Tools">
+                {mobileLink('/roi-calculator', '💰 ROI', 'text-yellow-400')}
+                {mobileLink('/pilot-calculator', '🧪 Pilot', 'text-cyan-400')}
+                {mobileLink('/robot-ready', '🤖 Robot Ready', 'text-emerald-400')}
+                {mobileLink('/brief', '📋 Brief', 'text-cyan-400')}
+                {mobileLink('/admin', '⚙️ Admin', 'text-emerald-400')}
+                {mobileLink('/profile', '♡ Profile', 'text-neutral-300')}
+              </MobileNavSection>
             </div>
           )}
         </div>
 
-        <nav className="rr-topnav-links" aria-label="Site">
-          <Link href="/">Home</Link>
-          <Link href="/dashboard">Pipeline</Link>
-          <Link href="/crm/">CRM</Link>
-          <Link href="/search">Search</Link>
-          <Link href="/market-insights">Market</Link>
-          <Link href="/about">Signals</Link>
-          <Link href="/newsletter">Newsletter</Link>
-          <Link href="/social">Studio</Link>
-          <Link href="/roi-calculator">ROI</Link>
-          <Link href="/pilot-calculator">Pilot</Link>
-          <Link href="/robot-ready">Robot Ready</Link>
-          <Link href="/brief">Brief</Link>
-          <Link href="/admin">Admin</Link>
-          <Link href="/profile">Profile</Link>
-        </nav>
+        <SiteNavPrimaryLinks />
+
         <div className="rr-topnav-right hidden md:flex items-center">
           {session ? (
-            <span className="text-sm text-[var(--rr-muted2)] max-w-[10rem] truncate">{session.user.email.split('@')[0]}</span>
+            <span className="text-xs text-[var(--rr-muted2)] max-w-[10rem] truncate">{session.user.email.split('@')[0]}</span>
           ) : (
             <div title="Browse freely — sign in only to save companies and reports">
               <LoginDropdown
                 label="sign in to save"
-                className="[&_button]:rounded-md [&_button]:border [&_button]:border-[#1f2d42] [&_button]:px-3 [&_button]:py-1.5 [&_button]:text-sm [&_button]:text-[#94a3b8] [&_button]:hover:border-[#10b981] [&_button]:hover:text-[#10b981]"
+                className="[&_button]:rounded-md [&_button]:border [&_button]:border-[#1f2d42] [&_button]:px-3 [&_button]:py-1.5 [&_button]:text-xs [&_button]:text-[#cbd5e1] [&_button]:hover:border-[#10b981] [&_button]:hover:text-[#10b981]"
               />
             </div>
           )}

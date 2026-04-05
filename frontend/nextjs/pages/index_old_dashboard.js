@@ -2,7 +2,7 @@
  * Ready for Robots -- Lead Intelligence Dashboard
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
@@ -225,18 +225,14 @@ function strategicFit(lead) {
 function StrategicSnapshot({ leads, onSelect }) {
   const [rotationIndex, setRotationIndex] = useState(0);
   const [prevVisible, setPrevVisible] = useState([]);
-  const sorted = useMemo(
-    () =>
-      [...leads]
-        .filter(l => l.score?.overall_score != null)
-        .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0)),
-    [leads]
-  );
-
+  const sorted = [...leads]
+    .filter(l => l.score?.overall_score != null)
+    .sort((a, b) => (b.score?.overall_score ?? 0) - (a.score?.overall_score ?? 0));
+  
   // Rotate through leads every 5 seconds, showing 5 at a time
   useEffect(() => {
     if (sorted.length <= 5) return; // No need to rotate if we have 5 or fewer
-
+    
     const interval = setInterval(() => {
       setRotationIndex(prev => {
         const maxIndex = sorted.length - 5;
@@ -248,17 +244,14 @@ function StrategicSnapshot({ leads, onSelect }) {
   }, [sorted.length]);
 
   // Get 5 leads starting from rotationIndex
-  const visible = useMemo(
-    () => sorted.slice(rotationIndex, rotationIndex + 5),
-    [sorted, rotationIndex]
-  );
+  const visible = sorted.slice(rotationIndex, rotationIndex + 5);
 
   // Track previous visible leads for animation
   useEffect(() => {
     if (visible.length > 0) {
       setPrevVisible(visible.map(l => l.id));
     }
-  }, [visible]);
+  }, [rotationIndex]);
 
   if (!sorted.length) return null;
 
