@@ -105,7 +105,7 @@
 }
 
 .rr-brand-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--rr-text);
   line-height: 1.25;
@@ -685,9 +685,9 @@
 }
 
 .rr-nav-links a {
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--rr-muted2);
   transition: background 0.15s, color 0.15s;
 }
@@ -721,9 +721,9 @@
 }
 
 .rr-btn-signup {
-  padding: 7px 18px;
+  padding: 6px 16px;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   border: 1.5px solid var(--rr-green);
   background: transparent;
@@ -738,14 +738,14 @@
 
 /* Hero — headline + right ticker panel on one row (lg+) */
 .rr-hero {
-  padding: 72px 20px 40px;
+  padding: 56px 20px 28px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 @media (min-width: 768px) {
   .rr-hero {
-    padding: 88px 40px 52px;
+    padding: 64px 40px 36px;
   }
 }
 
@@ -757,19 +757,19 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 @media (min-width: 900px) {
   /* Lead + CTAs live in column 1 with the headline so they aren’t pushed below a tall ticker */
   .rr-hero-headline-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem);
-    align-items: start;
-    column-gap: clamp(20px, 3vw, 36px);
-    row-gap: 20px;
-    margin-bottom: 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 42rem);
+    align-items: center;
+    column-gap: clamp(14px, 2.2vw, 26px);
+    row-gap: 16px;
+    margin-bottom: 22px;
   }
 }
 
@@ -778,7 +778,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  align-self: start;
+  align-self: stretch;
+}
+
+@media (min-width: 900px) {
+  .rr-hero-headline-block {
+    align-self: center;
+  }
 }
 
 .rr-hero-ticker-panel {
@@ -790,36 +796,98 @@
   position: relative;
 }
 
+/* Live stats card: depth, soft lift, richer surface (less “flat”) */
+.rr-hero-ticker-panel--live {
+  background: linear-gradient(
+    165deg,
+    rgba(34, 42, 62, 0.98) 0%,
+    rgba(20, 26, 38, 0.99) 48%,
+    rgba(14, 18, 28, 1) 100%
+  );
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.45),
+    0 18px 38px -10px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+
+.rr-hero-ticker-panel--live::before {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.16) 0%,
+    rgba(52, 211, 153, 0.06) 38%,
+    transparent 58%
+  );
+}
+
+/* Wider hero panel when CRM shows rotating company names */
+.rr-hero-ticker-panel--crm-names {
+  padding: 16px 18px 15px !important;
+}
+
+@media (min-width: 900px) {
+  .rr-hero-ticker-panel--crm-names {
+    padding: 18px 20px 17px !important;
+  }
+}
+
 @media (min-width: 900px) {
   .rr-hero-ticker-panel {
     width: 100%;
     max-width: none;
     padding: 18px 18px 16px;
-    align-self: start;
+    align-self: center;
   }
 }
 
+/* Matches hero “Search Leads” outline — one visual system */
 .rr-hero-explore-btn {
   display: block;
   width: 100%;
   text-align: center;
-  margin-top: 14px;
-  padding: 11px 16px;
-  border-radius: 8px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border-radius: 9px;
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid var(--rr-green);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  text-decoration: none;
+  border: 1.5px solid rgba(16, 185, 129, 0.55);
   color: var(--rr-green);
-  background: rgba(16, 185, 129, 0.1);
+  background: transparent;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .rr-hero-explore-btn:hover {
-  background: rgba(16, 185, 129, 0.2);
-  color: var(--rr-text);
-  border-color: rgba(16, 185, 129, 0.65);
+  background: rgba(16, 185, 129, 0.08);
+  color: #a7f3d0;
+  border-color: var(--rr-green);
+}
+
+/* Tighter sample preview card */
+.rr-hero-ticker-panel--tight {
+  padding: 12px 12px 10px !important;
+}
+
+.rr-hero-ticker-panel--tight .rr-hero-sample-legend {
+  margin-bottom: 4px;
+}
+
+.rr-hero-ticker-panel--tight .rr-hero-stat-strip--compact {
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.rr-hero-ticker-panel--tight .rr-hero-crm-strip--sample {
+  margin-top: 6px;
+  padding-top: 6px;
+  gap: 4px;
+}
+
+.rr-hero-ticker-panel--tight .rr-emerging-note--inline {
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 
 .rr-hero-ticker-panel::before {
@@ -841,7 +909,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -853,6 +921,45 @@
   color: var(--rr-muted);
 }
 
+/* Hero strip: compact nav links (replaces static eyebrow copy) */
+.rr-hero-top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.rr-hero-top-nav a {
+  color: var(--rr-muted2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rr-hero-top-nav a:hover {
+  background: var(--rr-surface2);
+  color: var(--rr-green);
+}
+
+.rr-hero-top-nav .rr-hero-top-nav-sep {
+  color: var(--rr-border);
+  user-select: none;
+  padding: 0 2px;
+}
+
+.rr-hero-top-nav .rr-hero-top-nav-muted {
+  color: var(--rr-muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding-left: 4px;
+}
+
 .rr-hero h1 {
   font-size: clamp(2.35rem, 5vw, 3.65rem);
   font-weight: 900;
@@ -862,18 +969,73 @@
   margin-bottom: 0;
 }
 
+/* Primary marketing headline — slightly larger than default .rr-hero h1 */
+.rr-hero h1.rr-hero-title-main {
+  font-size: clamp(2.75rem, 6vw, 4.15rem);
+  line-height: 1.06;
+}
+
+/* Companies → Ready For Robots */
+.rr-hero-title-bridge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.12em 0.4em;
+  max-width: 100%;
+}
+
+.rr-hero-title-part {
+  white-space: nowrap;
+}
+
+.rr-hero-title-arrow {
+  color: rgba(52, 211, 153, 0.92);
+  font-weight: 500;
+  font-size: 0.72em;
+  line-height: 1;
+  vertical-align: 0.08em;
+  text-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+}
+
+.rr-hero-title-em {
+  color: rgba(52, 211, 153, 0.98);
+  font-weight: 900;
+}
+
+.rr-hero-subhead {
+  font-size: clamp(1.08rem, 2.4vw, 1.45rem);
+  font-weight: 600;
+  color: var(--rr-green);
+  margin-top: 8px;
+  margin-bottom: 0;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  max-width: 40rem;
+}
+
 .rr-hero h1 em {
   font-style: normal;
   color: var(--rr-green);
 }
 
 .rr-hero-lead {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--rr-muted2);
-  line-height: 1.7;
-  margin-top: 18px;
-  margin-bottom: 22px;
-  max-width: 38rem;
+  line-height: 1.62;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  max-width: 36rem;
+}
+
+.rr-hero-lead-accent {
+  margin: 0 0 12px;
+  max-width: 36rem;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--rr-green);
+  border-left: 2px solid rgba(16, 185, 129, 0.55);
+  padding-left: 10px;
 }
 
 .rr-hero-cta {
@@ -883,8 +1045,21 @@
   align-items: center;
 }
 
+.rr-hero-cta-hint {
+  margin: 6px 0 0;
+  max-width: 36rem;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--rr-muted);
+}
+
+.rr-hero-cta-hint strong {
+  color: var(--rr-muted2);
+  font-weight: 600;
+}
+
 .rr-btn-hero-primary {
-  padding: 13px 28px;
+  padding: 11px 28px;
   border-radius: 9px;
   font-size: 15px;
   font-weight: 700;
@@ -895,12 +1070,26 @@
   transition: opacity 0.15s;
 }
 
-.rr-btn-hero-primary:hover {
+/* Wider hero CTAs without extra height */
+.rr-btn-hero-btn-wide {
+  min-width: 10.5rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+a.rr-btn-hero-primary {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+}
+
+.rr-btn-hero-primary:hover,
+a.rr-btn-hero-primary:hover {
   opacity: 0.88;
 }
 
 .rr-btn-hero-secondary {
-  padding: 13px 28px;
+  padding: 11px 28px;
   border-radius: 9px;
   font-size: 15px;
   font-weight: 600;
@@ -908,12 +1097,25 @@
   background: transparent;
   color: var(--rr-muted2);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .rr-btn-hero-secondary:hover {
   border-color: var(--rr-green);
   color: var(--rr-green);
+}
+
+/* Intelligence Search — emerald stroke, no fill */
+.rr-btn-hero-secondary-emerald {
+  border-color: rgba(16, 185, 129, 0.55);
+  color: var(--rr-green);
+  background: transparent;
+}
+
+.rr-btn-hero-secondary-emerald:hover {
+  border-color: var(--rr-green);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.08);
 }
 
 .rr-testimonial-bar {
@@ -1006,8 +1208,22 @@
   min-width: 0;
   padding: 10px 6px;
   border-radius: 8px;
-  background: rgba(26, 34, 53, 0.65);
-  border: 1px solid var(--rr-border);
+  background: linear-gradient(
+    165deg,
+    rgba(42, 52, 74, 0.88) 0%,
+    rgba(22, 28, 42, 0.95) 100%
+  );
+  border: 1px solid rgba(100, 116, 139, 0.28);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.rr-hero-ticker-panel--live .rr-hero-stat-inline {
+  border-color: rgba(100, 116, 139, 0.35);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    0 3px 10px rgba(0, 0, 0, 0.32);
 }
 
 .rr-hero-stat-inline .n {
@@ -1026,6 +1242,36 @@
   text-align: center;
   line-height: 1.25;
   max-width: 100%;
+}
+
+.rr-hero-sample-legend {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--rr-muted);
+  text-align: center;
+}
+
+.rr-hero-stat-strip--compact {
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.rr-hero-stat-inline--sm {
+  padding: 6px 4px;
+  gap: 2px;
+}
+
+.rr-hero-stat-inline--sm .n {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rr-hero-stat-inline--sm .l {
+  font-size: 8px;
+  letter-spacing: 0.06em;
 }
 
 /* CRM framing row — under signal stats, same live numbers, workspace-oriented labels */
@@ -1063,8 +1309,21 @@
   min-width: 0;
   padding: 8px 6px;
   border-radius: 8px;
-  background: rgba(6, 78, 59, 0.22);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: linear-gradient(
+    165deg,
+    rgba(12, 92, 68, 0.38) 0%,
+    rgba(6, 52, 42, 0.55) 100%
+  );
+  border: 1px solid rgba(16, 185, 129, 0.42);
+  box-shadow:
+    inset 0 1px 0 0 rgba(167, 243, 208, 0.09),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.rr-hero-ticker-panel--live .rr-hero-crm-cell {
+  box-shadow:
+    inset 0 1px 0 0 rgba(167, 243, 208, 0.1),
+    0 3px 12px rgba(0, 0, 0, 0.3);
 }
 
 .rr-hero-crm-num {
@@ -1083,6 +1342,244 @@
   text-transform: lowercase;
   text-align: center;
   line-height: 1.2;
+}
+
+/* Smaller illustrative CRM row (homepage sample, not live DB totals) */
+.rr-hero-crm-strip--sample {
+  margin-top: 8px;
+  padding-top: 10px;
+  gap: 6px;
+}
+
+.rr-hero-crm-strip--sample .rr-hero-crm-strip-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.rr-hero-crm-strip--sample .rr-hero-crm-strip-stats {
+  gap: 6px;
+}
+
+.rr-hero-crm-cell--sm {
+  padding: 5px 4px;
+  gap: 2px;
+  border-radius: 6px;
+}
+
+.rr-hero-crm-cell--sm .rr-hero-crm-num {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rr-hero-crm-cell--sm .rr-hero-crm-lbl {
+  font-size: 8px;
+  line-height: 1.15;
+}
+
+/* CRM hero: two tiles — active | (hot + warm) with rotating names */
+.rr-hero-crm-strip--names {
+  margin-top: 10px;
+  padding-top: 12px;
+  gap: 8px;
+}
+
+.rr-hero-crm-strip-stats--two {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (min-width: 440px) {
+  .rr-hero-crm-strip-stats--two {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  }
+}
+
+.rr-hero-crm-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 12px 11px;
+  border-radius: 10px;
+  background: linear-gradient(
+    165deg,
+    rgba(12, 92, 68, 0.4) 0%,
+    rgba(6, 52, 42, 0.58) 100%
+  );
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow:
+    inset 0 1px 0 0 rgba(167, 243, 208, 0.1),
+    0 3px 14px rgba(0, 0, 0, 0.32);
+  min-height: 4.5rem;
+}
+
+.rr-hero-crm-tile--inline {
+  min-height: 0;
+  padding: 10px 11px 9px;
+  justify-content: flex-start;
+}
+
+.rr-hero-crm-tile--split {
+  gap: 0;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  justify-content: flex-start;
+}
+
+.rr-hero-crm-tile-metrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.rr-hero-crm-tile .rr-hero-crm-lbl {
+  text-align: left;
+}
+
+.rr-hero-crm-tile .rr-hero-crm-num {
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+/* Supabase-style: count · label · company · opportunity (fits inside tile) */
+.rr-hero-crm-inline {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.92);
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.rr-hero-crm-inline--stacked {
+  -webkit-line-clamp: 3;
+}
+
+.rr-hero-crm-inline-ct {
+  font-weight: 800;
+  font-size: 13px;
+  color: #a7f3d0;
+}
+
+.rr-hero-crm-inline-ct--hot {
+  color: rgba(251, 146, 60, 0.96);
+}
+
+.rr-hero-crm-inline-ct--warm {
+  color: rgba(52, 211, 153, 0.96);
+}
+
+.rr-hero-crm-inline-dot {
+  color: rgba(148, 163, 184, 0.55);
+  padding: 0 0.15em;
+  font-weight: 500;
+  user-select: none;
+}
+
+.rr-hero-crm-inline-role {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+  text-transform: lowercase;
+  color: var(--rr-muted);
+}
+
+.rr-hero-crm-inline-role--hot {
+  color: rgba(251, 146, 60, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.rr-hero-crm-inline-role--warm {
+  color: rgba(52, 211, 153, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.rr-hero-crm-inline-co {
+  font-weight: 600;
+  color: rgba(241, 245, 249, 0.96);
+}
+
+.rr-hero-crm-inline-opp {
+  font-weight: 400;
+  color: rgba(163, 180, 200, 0.95);
+}
+
+.rr-hero-crm-inline-placeholder {
+  color: var(--rr-muted);
+  font-style: normal;
+}
+
+.rr-hero-crm-hw-divider {
+  height: 1px;
+  background: rgba(16, 185, 129, 0.22);
+  margin: 6px 0;
+  flex-shrink: 0;
+}
+
+.rr-hero-crm-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rr-hero-crm-pair-metrics {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.rr-hero-crm-pair-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(251, 146, 60, 0.95);
+}
+
+.rr-hero-crm-pair-tag--warm {
+  color: rgba(52, 211, 153, 0.92);
+}
+
+.rr-hero-crm-pair-divider {
+  height: 1px;
+  background: rgba(16, 185, 129, 0.25);
+  margin: 2px 0 4px;
+  flex-shrink: 0;
+}
+
+.rr-hero-crm-rotate-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.38;
+  color: rgba(226, 232, 240, 0.9);
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.65em;
+  word-break: break-word;
+}
+
+.rr-hero-crm-rotate-name--compact {
+  font-size: 11px;
+  min-height: 2.45em;
 }
 
 .rr-emerging-note {

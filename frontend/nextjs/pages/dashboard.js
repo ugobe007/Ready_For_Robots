@@ -1954,23 +1954,109 @@ export default function Dashboard() {
     } catch {}
   }, []);
 
-  function quickSave(lead) {
+  // Merge cloud-saved companies when signed in (persistence via /api/user/saved)
+  useEffect(() => {
+    if (!session?.access_token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/user/saved`, liveFetchInit({
+          headers: { ...authHeader(session.access_token) },
+        }));
+        if (!res.ok) return;
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        setSavedIds((prev) => {
+          const next = new Set(prev);
+          rows.forEach((r) => next.add(r.company_id));
+          return next;
+        });
+        try {
+          const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[]}');
+          if (!store.companies) store.companies = [];
+          const byId = new Map(store.companies.map((c) => [c.id, c]));
+          for (const r of rows) {
+            if (!byId.has(r.company_id)) {
+              byId.set(r.company_id, {
+                id: r.company_id,
+                name: r.company_name,
+                industry: r.industry,
+                score: r.score ?? 0,
+                tier: r.tier,
+                saved_at: r.saved_at,
+                website: r.website,
+              });
+            }
+          }
+          store.companies = [...byId.values()];
+          localStorage.setItem('rfr_saved', JSON.stringify(store));
+        } catch {
+          /* ignore */
+        }
+      } catch (e) {
+        console.error('load saved companies', e);
+      }
+    })();
+  }, [session?.access_token]);
+
+  async function quickSave(lead) {
+    if (lead.id == null) return;
+    const alreadySaved = savedIds.has(lead.id);
     try {
-      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],' + '"lists":[]}');
+      const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[],"lists":[]}');
       if (!store.companies) store.companies = [];
-      const alreadySaved = !!store.companies.find(c => c.id === lead.id);
       if (alreadySaved) {
-        store.companies = store.companies.filter(c => c.id !== lead.id);
+        store.companies = store.companies.filter((c) => c.id !== lead.id);
       } else {
         store.companies.push({
-          id: lead.id, name: lead.company_name, industry: lead.industry,
-          score: lead.score?.overall_score ?? 0, tier: lead.priority_tier,
-          saved_at: new Date().toISOString(), website: lead.website,
+          id: lead.id,
+          name: lead.company_name,
+          industry: lead.industry,
+          score: lead.score?.overall_score ?? 0,
+          tier: lead.priority_tier,
+          saved_at: new Date().toISOString(),
+          website: lead.website,
         });
       }
       localStorage.setItem('rfr_saved', JSON.stringify(store));
-      setSavedIds(new Set(store.companies.map(c => c.id)));
-    } catch {}
+      setSavedIds(new Set(store.companies.map((c) => c.id)));
+    } catch {
+      /* ignore */
+    }
+
+    if (session?.access_token) {
+      try {
+        if (alreadySaved) {
+          const res = await fetch(`${API}/api/user/saved/${lead.id}`, liveFetchInit({
+            method: 'DELETE',
+            headers: { ...authHeader(session.access_token) },
+          }));
+          if (!res.ok && res.status !== 404) {
+            const t = await res.text().catch(() => '');
+            console.error('unsave company', res.status, t);
+          }
+        } else {
+          const res = await fetch(`${API}/api/user/saved`, liveFetchInit({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...authHeader(session.access_token) },
+            body: JSON.stringify({
+              company_id: lead.id,
+              company_name: lead.company_name,
+              industry: lead.industry ?? null,
+              tier: lead.priority_tier ?? null,
+              score: lead.score?.overall_score ?? null,
+              website: lead.website ?? null,
+              notes: null,
+            }),
+          }));
+          if (!res.ok) {
+            const t = await res.text().catch(() => '');
+            console.error('save company', res.status, t);
+          }
+        }
+      } catch (e) {
+        console.error('quickSave api', e);
+      }
+    }
   }
 
   // filter state
@@ -2430,6 +2516,76 @@ export default function Dashboard() {
         {/* RIGHT COLUMN - Main Content */}
         <main className="rr-main rr-main--tight flex-1 min-w-0 !p-4 md:!p-6">
 
+          <section
+            className="mb-6 rounded-xl border border-emerald-800/45 bg-gradient-to-br from-emerald-950/35 via-neutral-950/90 to-neutral-950 p-5 sm:p-6 shadow-lg shadow-black/25"
+            aria-labelledby="crm-pipeline-guide-title"
+          >
+            <div className="flex flex-col xl:flex-row xl:items-start gap-6 xl:gap-10">
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xl" aria-hidden>🗂️</span>
+                  <h2 id="crm-pipeline-guide-title" className="text-lg font-bold text-white tracking-tight">
+                    CRM &amp; sales pipeline
+                  </h2>
+                </div>
+                <p className="text-sm text-neutral-400 leading-relaxed">
+                  This page is your live workspace: use filters to narrow accounts, save deals into your list, then open a row for the AI assistant and engagement workflow.
+                </p>
+                <ol className="list-decimal list-inside space-y-2.5 text-sm text-neutral-300 leading-relaxed">
+                  <li>
+                    <span className="font-semibold text-emerald-400/95">Advanced search</span> — Use the{' '}
+                    <strong className="text-neutral-200">left column</strong> (tap <strong className="text-neutral-200">Filters</strong> on mobile) to search by company name,{' '}
+                    <strong className="text-neutral-200">tier</strong>, <strong className="text-neutral-200">industry</strong>, and{' '}
+                    <strong className="text-neutral-200">signal type</strong>. Combine <strong className="text-neutral-200">min score</strong> and{' '}
+                    <strong className="text-neutral-200">sort</strong> to fine-tune the list. For broader queries, use{' '}
+                    <Link href="/search" className="text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline">
+                      Intelligence Search
+                    </Link>
+                    .
+                  </li>
+                  <li>
+                    <span className="font-semibold text-emerald-400/95">Save deals</span> — Click{' '}
+                    <strong className="text-neutral-200">☆ save</strong> on a row to bookmark it.{' '}
+                    {session ? (
+                      <span className="text-neutral-400">Signed in: saves sync to your account (same list as Profile).</span>
+                    ) : (
+                      <span className="text-neutral-400">
+                        Guests: saves stay in this browser.{' '}
+                        <Link href="/login" className="text-amber-400/95 hover:text-amber-300">
+                          Sign in
+                        </Link>{' '}
+                        for cloud sync.
+                      </span>
+                    )}
+                  </li>
+                  <li>
+                    <span className="font-semibold text-emerald-400/95">Workflow + AI</span> — Open any lead for strategy, outreach angles, and talking points. Use saved accounts as your working pipeline before pushing to CRM accounts.
+                  </li>
+                </ol>
+              </div>
+              <aside className="shrink-0 w-full xl:w-72 space-y-3 rounded-lg border border-neutral-800/90 bg-black/35 p-4 sm:p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Account &amp; CRM</p>
+                <Link
+                  href="/crm/"
+                  className="block text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                >
+                  Set up CRM workspace →
+                </Link>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  Create teams and accounts so saved leads map to buyer records you can work in the CRM app.
+                </p>
+                <Link href="/profile" className="block text-sm text-cyan-400/90 hover:text-cyan-300">
+                  Profile &amp; saved companies →
+                </Link>
+                {!session && (
+                  <Link href="/login" className="block text-sm text-amber-400/90 hover:text-amber-300">
+                    Sign in to persist saves →
+                  </Link>
+                )}
+              </aside>
+            </div>
+          </section>
+
           {/* Headline + compact inline metrics (replaces large stat grid + recent-activity links) */}
           <header className="rr-dashboard-intro">
             <div className="rr-dashboard-intro-head">
@@ -2519,7 +2675,7 @@ export default function Dashboard() {
                   if (e.key === 'Enter') {
                     const url = e.target.value.trim();
                     if (url) {
-                      window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                      window.location.href = `/pipeline-results?url=${encodeURIComponent(url)}`;
                     }
                   }
                 }}
@@ -2530,7 +2686,7 @@ export default function Dashboard() {
                   const el = typeof document !== 'undefined' ? document.getElementById('dashboard-pipeline-url') : null;
                   const url = (el?.value || '').trim();
                   if (url) {
-                    window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                    window.location.href = `/pipeline-results?url=${encodeURIComponent(url)}`;
                   }
                 }}
                 className="rr-btn-primary rr-btn-primary-compact shrink-0 !px-3.5 !py-2 text-xs sm:text-sm"

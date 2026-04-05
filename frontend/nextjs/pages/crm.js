@@ -25,6 +25,22 @@ function fmtDate(iso) {
   }
 }
 
+/** Readable message from failed API response (handles generic 500 HTML/text). */
+function parseApiError(status, text) {
+  let detail = text;
+  try {
+    const j = JSON.parse(text);
+    if (j.detail != null) detail = j.detail;
+  } catch {
+    /* keep raw */
+  }
+  if (typeof detail !== 'string') detail = JSON.stringify(detail);
+  if (status >= 500 && /internal server error/i.test(detail)) {
+    return 'Server error — run CRM migration c7d8e9f0a1b2 on your database (see docs/crm_migrations.md), redeploy if needed, then reload.';
+  }
+  return detail;
+}
+
 export default function CrmPage() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
@@ -81,13 +97,7 @@ export default function CrmPage() {
       const r = await authFetch('/api/crm/teams');
       const text = await r.text();
       if (!r.ok) {
-        let detail = text;
-        try {
-          detail = JSON.parse(text).detail || text;
-        } catch {
-          /* raw */
-        }
-        throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        throw new Error(parseApiError(r.status, text));
       }
       const data = JSON.parse(text);
       const list = Array.isArray(data) ? data : [];
@@ -115,13 +125,7 @@ export default function CrmPage() {
         const r = await authFetch(`/api/crm/accounts?${q}`);
         const text = await r.text();
         if (!r.ok) {
-          let detail = text;
-          try {
-            detail = JSON.parse(text).detail || text;
-          } catch {
-            /* raw */
-          }
-          throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+          throw new Error(parseApiError(r.status, text));
         }
         const data = JSON.parse(text);
         setAccounts(Array.isArray(data) ? data : []);
@@ -190,13 +194,7 @@ export default function CrmPage() {
       });
       const text = await r.text();
       if (!r.ok) {
-        let detail = text;
-        try {
-          detail = JSON.parse(text).detail || text;
-        } catch {
-          /* raw */
-        }
-        throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        throw new Error(parseApiError(r.status, text));
       }
       const created = JSON.parse(text);
       setNewTeamName('');
@@ -231,13 +229,7 @@ export default function CrmPage() {
       });
       const text = await r.text();
       if (!r.ok) {
-        let detail = text;
-        try {
-          detail = JSON.parse(text).detail || text;
-        } catch {
-          /* raw */
-        }
-        throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        throw new Error(parseApiError(r.status, text));
       }
       setAcctName('');
       setAcctWebsite('');
@@ -274,29 +266,23 @@ export default function CrmPage() {
         />
       </Head>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 md:py-10 text-neutral-200">
+      <div className="crm-workspace max-w-6xl mx-auto px-4 py-8 md:py-10">
         <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold text-emerald-300 tracking-tight">
               CRM workspace
             </h1>
-            <p className="text-sm text-neutral-300 mt-1 max-w-xl leading-relaxed">
+            <p className="crm-subtitle text-sm mt-1 max-w-xl leading-relaxed">
               Workspaces group your buyer accounts. Link a database company by ID to pre-fill name and industry, or enter a prospect manually.
             </p>
           </div>
-          <Link
-            href="/dashboard"
-            className="text-sm text-cyan-300 hover:text-cyan-200 border border-neutral-600 rounded-md px-4 py-2 w-fit bg-neutral-900/60"
-          >
+          <Link href="/dashboard" className="crm-back-link w-fit shrink-0">
             ← Back to pipeline
           </Link>
         </div>
 
         {err && (
-          <div
-            className="mb-6 border border-red-500/60 bg-red-950/70 text-red-100 text-sm px-4 py-3 rounded-md"
-            role="alert"
-          >
+          <div className="crm-alert mb-6" role="alert">
             {err}
           </div>
         )}
@@ -304,11 +290,11 @@ export default function CrmPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Teams */}
           <section className="space-y-4">
-            <h2 className="text-xs uppercase tracking-widest text-neutral-400">Workspaces</h2>
+            <h2 className="crm-section-label">Workspaces</h2>
             {loadingTeams ? (
-              <p className="text-sm text-neutral-400">Loading workspaces…</p>
+              <p className="text-sm text-slate-300">Loading workspaces…</p>
             ) : (
-              <div className="border border-neutral-600 rounded-lg overflow-hidden bg-neutral-950/40">
+              <div className="crm-panel overflow-hidden">
                 <ul className="divide-y divide-neutral-700">
                   {teams.map((t) => (
                     <li key={t.id}>
@@ -332,29 +318,26 @@ export default function CrmPage() {
               </div>
             )}
 
-            <form
-              onSubmit={handleCreateTeam}
-              className="border border-neutral-600 rounded-lg p-4 space-y-3 bg-neutral-950/30"
-            >
-              <div className="text-xs uppercase tracking-widest text-neutral-400">New workspace</div>
+            <form onSubmit={handleCreateTeam} className="crm-panel p-4 space-y-3">
+              <div className="crm-section-label">New workspace</div>
               <input
                 type="text"
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 placeholder="Workspace name"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-600/50"
+                className="crm-input"
               />
               <input
                 type="text"
                 value={newTeamSlug}
                 onChange={(e) => setNewTeamSlug(e.target.value)}
                 placeholder="Optional slug (unique)"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-600/50"
+                className="crm-input"
               />
               <button
                 type="submit"
                 disabled={creatingTeam || !newTeamName.trim()}
-                className="text-sm font-medium bg-emerald-700 text-white border border-emerald-600 px-4 py-2 rounded-md hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="crm-btn-emerald"
               >
                 {creatingTeam ? 'Creating…' : 'Create workspace'}
               </button>
@@ -363,25 +346,24 @@ export default function CrmPage() {
 
           {/* Accounts */}
           <section className="space-y-4">
-            <h2 className="text-xs uppercase tracking-widest text-neutral-400">
+            <h2 className="crm-section-label">
               Accounts{' '}
               {teamId && (
-                <span className="text-neutral-500 font-mono text-[10px] ml-2">{teamId.slice(0, 8)}…</span>
+                <span className="text-slate-500 font-mono text-[10px] ml-2 normal-case tracking-normal">
+                  {teamId.slice(0, 8)}…
+                </span>
               )}
             </h2>
 
-            <form
-              onSubmit={handleCreateAccount}
-              className="border border-neutral-600 rounded-lg p-4 space-y-3 bg-neutral-950/30"
-            >
-              <div className="text-xs uppercase tracking-widest text-neutral-400">Add account</div>
+            <form onSubmit={handleCreateAccount} className="crm-panel p-4 space-y-3">
+              <div className="crm-section-label">Add account</div>
               <input
                 type="text"
                 inputMode="numeric"
                 value={acctCompanyId}
                 onChange={(e) => setAcctCompanyId(e.target.value)}
                 placeholder="Link company ID (optional — from pipeline DB)"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+                className="crm-input"
               />
               {companyPreview && (
                 <div className="text-xs text-emerald-200 border border-emerald-700/60 rounded-md px-3 py-2 bg-emerald-950/40">
@@ -394,36 +376,32 @@ export default function CrmPage() {
                 value={acctName}
                 onChange={(e) => setAcctName(e.target.value)}
                 placeholder="Account name (required if no company ID)"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+                className="crm-input"
               />
               <input
                 type="text"
                 value={acctWebsite}
                 onChange={(e) => setAcctWebsite(e.target.value)}
                 placeholder="Website"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+                className="crm-input"
               />
               <input
                 type="text"
                 value={acctIndustry}
                 onChange={(e) => setAcctIndustry(e.target.value)}
                 placeholder="Industry"
-                className="w-full bg-neutral-900 border border-neutral-600 rounded-md px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-cyan-600/50"
+                className="crm-input"
               />
-              <button
-                type="submit"
-                disabled={creatingAcct || !teamId}
-                className="text-sm font-medium bg-cyan-700 text-white border border-cyan-600 px-4 py-2 rounded-md hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={creatingAcct || !teamId} className="crm-btn-cyan">
                 {creatingAcct ? 'Saving…' : 'Add to workspace'}
               </button>
             </form>
 
-            <div className="border border-neutral-600 rounded-lg overflow-hidden min-h-[120px] bg-neutral-950/40">
+            <div className="crm-panel overflow-hidden min-h-[120px]">
               {loadingAccounts ? (
-                <p className="p-4 text-sm text-neutral-400">Loading accounts…</p>
+                <p className="p-4 text-sm text-slate-300">Loading accounts…</p>
               ) : accounts.length === 0 ? (
-                <p className="p-4 text-sm text-neutral-400">No accounts in this workspace yet.</p>
+                <p className="p-4 text-sm text-slate-300">No accounts in this workspace yet.</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>

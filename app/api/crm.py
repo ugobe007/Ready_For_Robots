@@ -15,15 +15,35 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError, OperationalError, ProgrammingError, StatementError
+from sqlalchemy.exc import (
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+    SQLAlchemyError,
+    StatementError,
+)
 
-from app.database import get_db
+from app.database import DATABASE_URL, get_db
 
 logger = logging.getLogger(__name__)
 
+# User-facing hints — the API often hit the wrong DB (Fly SQLite vs Supabase) even after SQL in the editor.
 CRM_MIGRATION_HINT = (
-    "CRM database tables are missing. Run migration c7d8e9f0a1b2 (see docs/crm_migrations.md), then retry."
+    "Table `teams` is missing in the database THIS server uses. "
+    "If you already ran SQL in Supabase, set Fly's DATABASE_URL to that same database: "
+    "fly secrets set DATABASE_URL=\"postgresql://...\" (Transaction pooler port 6543). "
+    "See DEPLOY_AND_ENV.md and GET /api/crm/db-status."
+)
+CRM_CONNECTION_HINT = (
+    "Cannot connect to Postgres (connection refused, timeout, or SSL). "
+    "Use Supabase Transaction pooler URI (port 6543, user postgres.PROJECT_REF) in fly secrets DATABASE_URL. "
+    "See app/database.py comments and DEPLOY_AND_ENV.md."
+)
+CRM_GENERIC_DB_HINT = (
+    "Database error in CRM. Check Fly logs. "
+    "Confirm DATABASE_URL on Fly matches the Supabase project where you ran the migration."
 )
 from app.api.auth_deps import _require_user
 from app.api.user import _ensure_profile
@@ -120,6 +140,41 @@ def _serialize_team_row(team: Team, role: str) -> dict[str, Any]:
     }
 
 
+def _raise_crm_db_error(exc: Exception) -> None:
+    """Map SQLAlchemy errors to actionable HTTP messages (not always 'run migration')."""
+    logger.warning(
+        "CRM DB error (%s): %s",
+        type(exc).__name__,
+        exc,
+        exc_info=True,
+    )
+    if isinstance(exc, OperationalError):
+        raise HTTPException(status_code=503, detail=CRM_CONNECTION_HINT) from exc
+    if isinstance(exc, ProgrammingError):
+        orig = str(getattr(exc, "orig", None) or exc).lower()
+        if "does not exist" in orig or "no such table" in orig:
+            raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from exc
+        raise HTTPException(
+            status_code=503,
+            detail=f"SQL error: {str(getattr(exc, 'orig', exc))[:220]}",
+        ) from exc
+    if isinstance(exc, StatementError):
+        orig = getattr(exc, "orig", None)
+        msg = str(orig or exc)[:280]
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database error: {msg}",
+        ) from exc
+    if isinstance(exc, SQLAlchemyError):
+        orig = getattr(exc, "orig", None)
+        parts = [type(exc).__name__, str(exc).strip()]
+        if orig is not None:
+            parts.append(str(orig).strip())
+        detail = " — ".join(p for p in parts if p)[:500]
+        raise HTTPException(status_code=503, detail=f"Database error: {detail}") from exc
+    raise exc
+
+
 def _serialize_account(a: CrmAccount) -> dict[str, Any]:
     return {
         "id": str(a.id),
@@ -136,6 +191,60 @@ def _serialize_account(a: CrmAccount) -> dict[str, Any]:
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 
+@router.get("/db-status")
+def crm_db_status(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+    """
+    Quick check: does this API process use Postgres vs SQLite, and does public.teams exist?
+    Use when CRM says tables are missing — usually DATABASE_URL on Fly ≠ DB where you ran SQL.
+    """
+    url = (DATABASE_URL or "").lower()
+    if "sqlite" in url:
+        kind = "sqlite"
+    elif "postgresql" in url:
+        kind = "postgresql"
+    else:
+        kind = "unknown"
+
+    teams = False
+    err: Optional[str] = None
+    try:
+        if kind == "postgresql":
+            teams = bool(db.execute(text("SELECT to_regclass('public.teams') IS NOT NULL")).scalar())
+        elif kind == "sqlite":
+            teams = (
+                db.execute(
+                    text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='teams' LIMIT 1")
+                ).first()
+                is not None
+            )
+    except Exception as e:
+        err = str(e)[:400]
+        logger.warning("crm db-status: %s", e)
+
+    hints: list[str] = []
+    if kind == "sqlite":
+        hints.append(
+            "Server is on SQLite — production CRM needs Postgres. "
+            "Set DATABASE_URL via: fly secrets set DATABASE_URL=\"postgresql://...\" "
+            "(copy Transaction pooler string from Supabase → Database)."
+        )
+    elif kind == "postgresql" and not teams and not err:
+        hints.append(
+            "Postgres is connected but public.teams is missing. "
+            "Run migrations/sql/c7d8e9f0a1b2_add_crm_teams_core.sql on this same database (or fix DATABASE_URL)."
+        )
+    elif kind == "postgresql" and teams:
+        hints.append("public.teams exists — if CRM still fails, check logs for another error.")
+    if err:
+        hints.append(f"Check failed: {err}")
+
+    return {
+        "database_driver": kind,
+        "public_teams_table_exists": teams,
+        "hints": hints,
+    }
+
+
 @router.get("/teams", response_model=list[TeamOut])
 def list_teams(
     user: dict = Depends(_require_user),
@@ -146,9 +255,10 @@ def list_teams(
         _ensure_default_team(db, uid, user.get("email") or "")
         rows = _team_rows_for_user(db, uid)
         return [_serialize_team_row(t, role) for t, role in rows]
-    except (OperationalError, ProgrammingError, StatementError) as e:
-        logger.warning("CRM list_teams: %s", e)
-        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
 
 
 @router.post("/teams", response_model=TeamOut)
@@ -164,16 +274,17 @@ def create_team(
         db.add(team)
         db.flush()
         db.add(TeamMember(team_id=team.id, user_id=uid, role="owner"))
-        try:
-            db.commit()
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(status_code=409, detail="Slug already in use or conflict")
+        db.commit()
         db.refresh(team)
         return _serialize_team_row(team, "owner")
-    except (OperationalError, ProgrammingError) as e:
-        logger.warning("CRM create_team: %s", e)
-        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
+    except HTTPException:
+        raise
+    except IntegrityError as e:
+        db.rollback()
+        logger.warning("CRM create_team integrity: %s", e)
+        raise HTTPException(status_code=409, detail="Slug already in use or conflict") from e
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
 
 
 @router.get("/accounts", response_model=list[CrmAccountOut])
@@ -194,9 +305,10 @@ def list_accounts(
             .all()
         )
         return [_serialize_account(a) for a in accounts]
-    except (OperationalError, ProgrammingError, StatementError) as e:
-        logger.warning("CRM list_accounts: %s", e)
-        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
 
 
 @router.post("/accounts", response_model=CrmAccountOut)
@@ -237,18 +349,17 @@ def create_account(
             owner_user_id=uid,
         )
         db.add(row)
-        try:
-            db.commit()
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(
-                status_code=409,
-                detail="An account for this company already exists in this team",
-            )
+        db.commit()
         db.refresh(row)
         return _serialize_account(row)
     except HTTPException:
         raise
-    except (OperationalError, ProgrammingError) as e:
-        logger.warning("CRM create_account: %s", e)
-        raise HTTPException(status_code=503, detail=CRM_MIGRATION_HINT) from e
+    except IntegrityError as e:
+        db.rollback()
+        logger.warning("CRM create_account integrity: %s", e)
+        raise HTTPException(
+            status_code=409,
+            detail="An account for this company already exists in this team",
+        ) from e
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)

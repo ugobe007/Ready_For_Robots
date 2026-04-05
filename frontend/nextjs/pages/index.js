@@ -10,12 +10,64 @@ import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
 
-/** Hero + stat tiles — consistent integers, en-US grouping, em dash when loading */
-function formatHeroStat(value) {
-  if (value === null || value === undefined || value === '') return '—';
+/** Hero stat cells: live summary counts, or em dash while the first homepage fetch is in flight. */
+function formatHeroCount(value, statsLoaded) {
+  if (!statsLoaded) return '—';
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
-  return Math.round(n).toLocaleString('en-US');
+  return n.toLocaleString();
+}
+
+function stripHtml(s) {
+  return String(s || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Short opportunity line for hero CRM (blurb → summary → signal → industry). */
+function opportunityLine(lead) {
+  if (!lead || typeof lead !== 'object') return '';
+  const blurb = stripHtml(lead.share_blurb);
+  if (blurb.length > 24 && !/^https?:\/\//i.test(blurb)) {
+    return blurb.length > 130 ? `${blurb.slice(0, 127)}…` : blurb;
+  }
+  const summary = stripHtml(lead.share_summary);
+  if (summary.length > 24) {
+    const dot = summary.indexOf('. ');
+    const first = (dot > 0 ? summary.slice(0, dot + 1) : summary).trim();
+    const t = first.length > 140 ? `${first.slice(0, 137)}…` : first;
+    if (t.length > 20) return t;
+  }
+  const sigs = lead.signals || [];
+  const top = sigs[0];
+  const raw = stripHtml(top?.raw_text);
+  if (raw.length > 12) {
+    return raw.length > 120 ? `${raw.slice(0, 117)}…` : raw;
+  }
+  const ind = (lead.industry || '').trim();
+  if (ind && ind.toLowerCase() !== 'new') {
+    return `Automation fit in ${ind} — explore signals on the dashboard.`;
+  }
+  return '';
+}
+
+function extractLeadPreviews(data) {
+  if (!Array.isArray(data)) return [];
+  return data
+    .map((lead) => {
+      const name = lead?.company_name && String(lead.company_name).trim();
+      if (!name) return null;
+      return { name, opp: opportunityLine(lead) };
+    })
+    .filter(Boolean);
+}
+
+/** Rotating { name, opp } rows (stable modulo). */
+function previewAt(rows, idx) {
+  if (!rows || rows.length === 0) return null;
+  const i = Number(idx) || 0;
+  return rows[i % rows.length];
 }
 
 export default function Signals() {
@@ -50,6 +102,12 @@ export default function Signals() {
   const [expandedDealId, setExpandedDealId] = useState(null);
   // Which hot lead card has share menu open (for social share dropdown)
   const [shareMenuLeadId, setShareMenuLeadId] = useState(null);
+  const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
+  const [pipelineModalInput, setPipelineModalInput] = useState('');
+
+  /** Rotating company + opportunity lines per tier; from /api/leads + spotlight fallback */
+  const [crmPreviewLists, setCrmPreviewLists] = useState({ active: [], hot: [], warm: [] });
+  const [crmNameSpin, setCrmNameSpin] = useState({ active: 0, hot: 0, warm: 0 });
 
   // Rotating automation quotes from real news/signals
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
@@ -75,6 +133,18 @@ export default function Signals() {
     { text: "\"New minimum wage increase makes automation payback under 18 months\"", company: "Distribution Network", signal: "Economic Trigger" },
     { text: "\"Surgical robot ROI proven - expanding program to 3 more hospitals\"", company: "Health Network", signal: "Deployment Success" }
   ];
+
+  useEffect(() => {
+    if (!pipelineModalOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setPipelineModalOpen(false);
+        setPipelineModalInput('');
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pipelineModalOpen]);
 
   // Close share menu when clicking outside
   useEffect(() => {
@@ -115,6 +185,63 @@ export default function Signals() {
 
     const interval = setInterval(updateSignalFlow, 3000);
     return () => clearInterval(interval);
+  }, []);
+
+  // CRM strip: longer name lists per tier (for rotation)
+  useEffect(() => {
+    const apiBase = getApiBase();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [rAll, rHot, rWarm] = await Promise.all([
+          fetch(`${apiBase}/api/leads?limit=40&sort=score`, liveFetchInit()),
+          fetch(`${apiBase}/api/leads?tier=HOT&limit=35&sort=score`, liveFetchInit()),
+          fetch(`${apiBase}/api/leads?tier=WARM&limit=35&sort=score`, liveFetchInit()),
+        ]);
+        const [dAll, dHot, dWarm] = await Promise.all([rAll.json(), rHot.json(), rWarm.json()]);
+        if (cancelled) return;
+        setCrmPreviewLists({
+          active: extractLeadPreviews(dAll),
+          hot: extractLeadPreviews(dHot),
+          warm: extractLeadPreviews(dWarm),
+        });
+      } catch (e) {
+        if (!cancelled) console.error('CRM preview lists:', e);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Spotlight leads fill names until tier lists load
+  useEffect(() => {
+    if (!hotLeads?.length) return;
+    setCrmPreviewLists((prev) => {
+      const fromSpotlight = {
+        active: extractLeadPreviews(hotLeads),
+        hot: extractLeadPreviews(hotLeads.filter((l) => l.priority_tier === 'HOT')),
+        warm: extractLeadPreviews(hotLeads.filter((l) => l.priority_tier === 'WARM')),
+      };
+      return {
+        active: prev.active.length ? prev.active : fromSpotlight.active,
+        hot: prev.hot.length ? prev.hot : fromSpotlight.hot,
+        warm: prev.warm.length ? prev.warm : fromSpotlight.warm,
+      };
+    });
+  }, [hotLeads]);
+
+  // Rotate displayed company names on independent offsets so rows don’t move in lockstep
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCrmNameSpin((s) => ({
+        active: s.active + 1,
+        hot: s.hot + 2,
+        warm: s.warm + 3,
+      }));
+    }, 3600);
+    return () => clearInterval(id);
   }, []);
 
   // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile)
@@ -174,9 +301,6 @@ export default function Signals() {
 
   // Use summary for counts (no full leads fetch)
   const hotCount = statsData.hotDeals ?? 0;
-  const warmCount = statsData.warmPipeline ?? 0;
-  const emergingCount = statsData.cold ?? 0;
-  const totalSignals = statsData.liveSignals ?? 0;
   const hottestSignal = hotLeads
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
@@ -310,14 +434,18 @@ export default function Signals() {
     ? signalCategories 
     : signalCategories.filter(cat => cat.id === activeCategory);
 
+  const crmPrevActive = previewAt(crmPreviewLists.active, crmNameSpin.active);
+  const crmPrevHot = previewAt(crmPreviewLists.hot, crmNameSpin.hot);
+  const crmPrevWarm = previewAt(crmPreviewLists.warm, crmNameSpin.warm);
+
   return (
     <>
       <Head>
-        <title>Automation Sales Leads with Actionable Signals | Ready For Robots</title>
+        <title>Companies → Ready For Robots | Signal Intelligence &amp; Automation Leads</title>
         <meta name="description" content="Automation sales leads with actionable signals. Buying intent from 150+ sources — labor shortages, CapEx, new facilities. Each lead comes with signals you can act on." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={BASE_URL} />
-        <meta property="og:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
+        <meta property="og:title" content="Companies → Ready For Robots | Signal Intelligence &amp; Automation Leads" />
         <meta property="og:description" content="Automation sales leads with actionable signals. We track buying intent across 150+ sources. Each lead comes with signals you can act on." />
         <meta property="og:image" content={`${BASE_URL}/og-logo.png`} />
         <meta property="og:image:width" content="1200" />
@@ -326,7 +454,7 @@ export default function Signals() {
         <meta name="twitter:card" content="summary_large_image" />
         {/* Pythia glyph used for all @pythh X posts — drop delphi-pythia-icon-glyph-dark.jpg into public/images/ */}
         <meta name="twitter:image" content={`${BASE_URL}/images/delphi-pythia-icon-glyph-dark.jpg`} />
-        <meta name="twitter:title" content="Ready For Robots | Automation Sales Leads with Actionable Signals" />
+        <meta name="twitter:title" content="Companies → Ready For Robots | Signal Intelligence &amp; Automation Leads" />
         <meta name="twitter:description" content="Automation sales leads with actionable signals. Each lead comes with signals you can act on." />
       </Head>
 
@@ -345,6 +473,9 @@ export default function Signals() {
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/dashboard" title="Lead pipeline and sales workspace">
               Pipeline
+            </Link>
+            <Link href="/crm/" title="CRM workspaces and buyer accounts">
+              CRM
             </Link>
             <Link href="/market-insights">Market Insights</Link>
             <Link href="/about">Signals</Link>
@@ -378,6 +509,9 @@ export default function Signals() {
                     </Link>
                     <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
                       🧭 Pipeline
+                    </Link>
+                    <Link href="/crm/" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
+                      🗂️ CRM
                     </Link>
                     <Link href="/market-insights" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
                       📈 Market Insights
@@ -414,33 +548,64 @@ export default function Signals() {
           <div className="rr-hero-inner">
             <div className="rr-hero-headline-row">
               <div className="rr-hero-headline-block">
-                <div className="rr-hero-eyebrow">
-                  ⚡ Curated Lead Lists <span>·</span> 14 Signal Types <span>·</span> 140+ Sources
-                </div>
-                <h1>
-                  Robot Automation Projects<br />
-                  <em>With Signal Intelligence</em>
+                <nav className="rr-hero-top-nav" aria-label="Quick links">
+                  <Link href="/dashboard">Dashboard</Link>
+                  <span className="rr-hero-top-nav-sep">·</span>
+                  <Link href="/dashboard">Pipeline</Link>
+                  <span className="rr-hero-top-nav-sep">·</span>
+                  <Link href="/crm/">CRM</Link>
+                  <span className="rr-hero-top-nav-sep">·</span>
+                  <Link href="/search">Search</Link>
+                  <span className="rr-hero-top-nav-sep">·</span>
+                  <a href="#leads">Browse leads</a>
+                  <span className="rr-hero-top-nav-sep">·</span>
+                  <Link href="/about">Signals</Link>
+                  <span className="rr-hero-top-nav-muted hidden sm:inline">
+                    · 14 types · 140+ sources
+                  </span>
+                </nav>
+                <h1 className="rr-hero-title-main rr-hero-title-bridge">
+                  <span className="rr-hero-title-part">Companies</span>
+                  <span className="rr-hero-title-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <span className="rr-hero-title-part">
+                    Ready <span className="rr-hero-title-em">For Robots</span>
+                  </span>
                 </h1>
+                <p className="rr-hero-subhead">
+                  Robot Automation Projects with Signal Intelligence.
+                </p>
                 <p className="rr-hero-lead">
                   We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.
                 </p>
-                <p className="text-sm mt-3 max-w-xl leading-relaxed font-medium text-emerald-400 border-l-2 border-emerald-500/70 pl-3">
-                  Let&apos;s build your customer engagement pipeline and workflow with our CRM system.
+                <p className="rr-hero-lead-accent">
+                  Explore the pipeline and CRM to turn signals into qualified conversations.
                 </p>
                 <div className="rr-hero-cta">
                   <button
                     type="button"
-                    className="rr-btn-hero-primary"
-                    onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="rr-btn-hero-primary rr-btn-hero-btn-wide"
+                    onClick={() => {
+                      setPipelineModalInput('');
+                      setPipelineModalOpen(true);
+                    }}
                   >
-                    Build CRM pipeline →
+                    Preview pipeline
                   </button>
-                  <Link href="/dashboard" className="rr-btn-hero-secondary inline-block text-center">
-                    Browse All Leads
+                  <Link href="/search" className="rr-btn-hero-secondary rr-btn-hero-secondary-emerald rr-btn-hero-btn-wide inline-block text-center">
+                    Search Leads
                   </Link>
                 </div>
+                <p className="rr-hero-cta-hint">
+                  <strong>Preview pipeline</strong>: your company → matches.{' '}
+                  <strong>Search Leads</strong>: full database.
+                </p>
               </div>
-              <aside className="rr-hero-ticker-panel" aria-label="Signal feed and pipeline stats">
+              <aside
+                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--crm-names"
+                aria-label="Signal feed and live pipeline totals"
+              >
                 <div className="rr-testimonial-bar rr-testimonial-bar--compact">
                   <span className="rr-testimonial-ico shrink-0" aria-hidden>💬</span>
                   <div className="flex-1 min-w-0">
@@ -457,50 +622,160 @@ export default function Signals() {
                     {currentQuoteIndex + 1}/{automationQuotes.length}
                   </span>
                 </div>
-                <div className="rr-hero-stat-strip">
-                  <div className="rr-hero-stat-inline">
-                    <span className="n text-[var(--rr-text)] tabular-nums">{statsLoaded ? formatHeroStat(statsData.activeLeads) : '—'}</span>
-                    <span className="l">{statsLoaded ? 'Active' : '…'}</span>
+                <p className="rr-hero-sample-legend">
+                  {statsLoaded
+                    ? 'Live pipeline totals · same tiering as the dashboard'
+                    : 'Loading live totals…'}
+                </p>
+                <div className="rr-hero-stat-strip rr-hero-stat-strip--compact">
+                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
+                    <span className="n text-[var(--rr-text)] tabular-nums">
+                      {formatHeroCount(statsData.activeLeads, statsLoaded)}
+                    </span>
+                    <span className="l">Active</span>
                   </div>
-                  <div className="rr-hero-stat-inline">
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-orange)' }}>{statsLoaded ? formatHeroStat(statsData.hotDeals) : '—'}</span>
+                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-orange)' }}>
+                      {formatHeroCount(statsData.hotDeals, statsLoaded)}
+                    </span>
                     <span className="l">Hot</span>
                   </div>
-                  <div className="rr-hero-stat-inline" title="Signals on pipeline leads (excludes junk)">
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-cyan)' }}>{statsLoaded ? formatHeroStat(statsData.liveSignals) : '—'}</span>
+                  <div
+                    className="rr-hero-stat-inline rr-hero-stat-inline--sm"
+                    title="Buying-intent signals across all leads"
+                  >
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-cyan)' }}>
+                      {formatHeroCount(statsData.liveSignals, statsLoaded)}
+                    </span>
                     <span className="l">Signals</span>
                   </div>
-                  <div className="rr-hero-stat-inline">
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-green)' }}>{statsLoaded ? formatHeroStat(statsData.warmPipeline) : '—'}</span>
+                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
+                    <span className="n tabular-nums" style={{ color: 'var(--rr-green)' }}>
+                      {formatHeroCount(statsData.warmPipeline, statsLoaded)}
+                    </span>
                     <span className="l">Warm</span>
                   </div>
                 </div>
                 <div
-                  className="rr-hero-crm-strip"
-                  title="Pipeline tiers you can track and work in the CRM workspace (same live counts as the platform)"
+                  className="rr-hero-crm-strip rr-hero-crm-strip--names"
+                  title="Live counts · inline company + opportunity — open the dashboard for full lists"
                 >
                   <div className="rr-hero-crm-strip-label">CRM pipeline</div>
-                  <div className="rr-hero-crm-strip-stats">
-                    <div className="rr-hero-crm-cell">
-                      <span className="rr-hero-crm-num tabular-nums">{statsLoaded ? formatHeroStat(statsData.activeLeads) : '—'}</span>
-                      <span className="rr-hero-crm-lbl">active projects</span>
+                  <div className="rr-hero-crm-strip-stats rr-hero-crm-strip-stats--two">
+                    <div className="rr-hero-crm-tile rr-hero-crm-tile--inline">
+                      <p
+                        className="rr-hero-crm-inline"
+                        title={
+                          crmPrevActive
+                            ? [crmPrevActive.name, crmPrevActive.opp].filter(Boolean).join(' — ')
+                            : undefined
+                        }
+                        aria-live="polite"
+                      >
+                        <span className="rr-hero-crm-inline-ct tabular-nums">
+                          {formatHeroCount(statsData.activeLeads, statsLoaded)}
+                        </span>
+                        <span className="rr-hero-crm-inline-dot">·</span>
+                        <span className="rr-hero-crm-inline-role">active projects</span>
+                        {crmPrevActive ? (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-co">{crmPrevActive.name}</span>
+                            {crmPrevActive.opp ? (
+                              <>
+                                <span className="rr-hero-crm-inline-dot">·</span>
+                                <span className="rr-hero-crm-inline-opp">{crmPrevActive.opp}</span>
+                              </>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-placeholder">
+                              {statsLoaded ? '…' : '—'}
+                            </span>
+                          </>
+                        )}
+                      </p>
                     </div>
-                    <div className="rr-hero-crm-cell">
-                      <span className="rr-hero-crm-num tabular-nums" style={{ color: 'var(--rr-orange)' }}>{statsLoaded ? formatHeroStat(statsData.hotDeals) : '—'}</span>
-                      <span className="rr-hero-crm-lbl">hot</span>
-                    </div>
-                    <div className="rr-hero-crm-cell">
-                      <span className="rr-hero-crm-num tabular-nums" style={{ color: 'var(--rr-green)' }}>{statsLoaded ? formatHeroStat(statsData.warmPipeline) : '—'}</span>
-                      <span className="rr-hero-crm-lbl">warm</span>
+                    <div className="rr-hero-crm-tile rr-hero-crm-tile--inline rr-hero-crm-tile--split">
+                      <p
+                        className="rr-hero-crm-inline rr-hero-crm-inline--stacked"
+                        title={
+                          crmPrevHot
+                            ? [crmPrevHot.name, crmPrevHot.opp].filter(Boolean).join(' — ')
+                            : undefined
+                        }
+                        aria-live="polite"
+                      >
+                        <span className="rr-hero-crm-inline-ct rr-hero-crm-inline-ct--hot tabular-nums">
+                          {formatHeroCount(statsData.hotDeals, statsLoaded)}
+                        </span>
+                        <span className="rr-hero-crm-inline-dot">·</span>
+                        <span className="rr-hero-crm-inline-role rr-hero-crm-inline-role--hot">hot</span>
+                        {crmPrevHot ? (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-co">{crmPrevHot.name}</span>
+                            {crmPrevHot.opp ? (
+                              <>
+                                <span className="rr-hero-crm-inline-dot">·</span>
+                                <span className="rr-hero-crm-inline-opp">{crmPrevHot.opp}</span>
+                              </>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-placeholder">
+                              {statsLoaded ? '…' : '—'}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                      <div className="rr-hero-crm-hw-divider" aria-hidden />
+                      <p
+                        className="rr-hero-crm-inline rr-hero-crm-inline--stacked"
+                        title={
+                          crmPrevWarm
+                            ? [crmPrevWarm.name, crmPrevWarm.opp].filter(Boolean).join(' — ')
+                            : undefined
+                        }
+                        aria-live="polite"
+                      >
+                        <span className="rr-hero-crm-inline-ct rr-hero-crm-inline-ct--warm tabular-nums">
+                          {formatHeroCount(statsData.warmPipeline, statsLoaded)}
+                        </span>
+                        <span className="rr-hero-crm-inline-dot">·</span>
+                        <span className="rr-hero-crm-inline-role rr-hero-crm-inline-role--warm">warm</span>
+                        {crmPrevWarm ? (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-co">{crmPrevWarm.name}</span>
+                            {crmPrevWarm.opp ? (
+                              <>
+                                <span className="rr-hero-crm-inline-dot">·</span>
+                                <span className="rr-hero-crm-inline-opp">{crmPrevWarm.opp}</span>
+                              </>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <span className="rr-hero-crm-inline-dot">·</span>
+                            <span className="rr-hero-crm-inline-placeholder">
+                              {statsLoaded ? '…' : '—'}
+                            </span>
+                          </>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>
-                {emergingCount > 0 && (
-                  <p className="rr-emerging-note rr-emerging-note--inline">
-                    Emerging · <span className="tabular-nums">{emergingCount.toLocaleString('en-US')}</span> in pipeline
-                  </p>
-                )}
-                <Link href="/dashboard" className="rr-hero-explore-btn">
+                <p className="rr-emerging-note rr-emerging-note--inline">
+                  Emerging ·{' '}
+                  <span className="tabular-nums">{formatHeroCount(statsData.cold, statsLoaded)}</span> in pipeline
+                </p>
+                <Link href="/dashboard" className="rr-hero-explore-btn" title="Open the live pipeline dashboard">
                   Explore
                 </Link>
               </aside>
@@ -569,21 +844,21 @@ export default function Signals() {
               </p>
             </div>
 
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const url = e.target.robotUrl.value;
-                  router.push(`/pipeline-results?url=${encodeURIComponent(url)}`);
+                  const v = e.target.robotUrl?.value?.trim() ?? '';
+                  setPipelineModalInput(v);
+                  setPipelineModalOpen(true);
                 }}
                 className="space-y-2"
               >
-                  <input
-                    type="text"
-                    name="robotUrl"
-                    placeholder="Enter your robot company website (e.g., amplibotics.ai)"
-                    className="rr-pipeline-input !mb-2 !py-3"
-                    required
-                  />
+                <input
+                  type="text"
+                  name="robotUrl"
+                  placeholder="Enter your robot company website (e.g., amplibotics.ai)"
+                  className="rr-pipeline-input !mb-2 !py-3"
+                />
                 <button type="submit" className="rr-btn-build rr-btn-build-compact">
                   Build CRM pipeline →
                 </button>
@@ -1096,6 +1371,78 @@ export default function Signals() {
           </div>
           <p>© 2026 Signal intelligence for robotics sales.</p>
         </footer>
+
+        {pipelineModalOpen && (
+          <div
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pipeline-modal-title"
+          >
+            <div
+              className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+              onClick={() => {
+                setPipelineModalOpen(false);
+                setPipelineModalInput('');
+              }}
+              aria-hidden
+            />
+            <div
+              className="relative w-full max-w-md rounded-xl border border-emerald-700/35 bg-neutral-950 p-6 shadow-2xl ring-1 ring-emerald-500/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 id="pipeline-modal-title" className="text-lg font-bold text-emerald-400 mb-1">
+                Preview your pipeline
+              </h2>
+              <p className="text-sm text-neutral-400 mb-4">
+                Enter your company name or website URL. We&apos;ll open a prospect preview with top matches and an engagement plan.
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const raw = pipelineModalInput.trim();
+                  if (!raw) return;
+                  setPipelineModalOpen(false);
+                  setPipelineModalInput('');
+                  router.push(`/pipeline-results?url=${encodeURIComponent(raw)}`);
+                }}
+              >
+                <label htmlFor="pipeline-modal-input" className="sr-only">
+                  Company name or URL
+                </label>
+                <input
+                  id="pipeline-modal-input"
+                  name="companyOrUrl"
+                  type="text"
+                  autoComplete="organization"
+                  placeholder="e.g. Acme Robotics or acme.com"
+                  className="w-full rounded-lg border border-neutral-700 bg-neutral-900/80 px-3 py-2.5 text-sm text-neutral-200 placeholder:text-neutral-500 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600/40 mb-4"
+                  value={pipelineModalInput}
+                  onChange={(e) => setPipelineModalInput(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm text-neutral-400 hover:text-white rounded-lg"
+                    onClick={() => {
+                      setPipelineModalOpen(false);
+                      setPipelineModalInput('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-lg bg-emerald-500 text-black text-sm font-semibold hover:bg-emerald-400 transition-colors"
+                  >
+                    Continue to pipeline
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
       <style jsx>{`

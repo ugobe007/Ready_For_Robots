@@ -263,4 +263,112 @@
     border: 1px solid rgba(31, 45, 66, 0.95);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 1px rgba(34, 211, 238, 0.12);
   }
+
+  /*
+   * CRM workspace — explicit contrast (Tailwind + rr-theme safe).
+   * Uses plain CSS so production always matches regardless of chunk/CSS order.
+   */
+  .crm-workspace {
+    color: #e2e8f0;
+  }
+
+  .crm-workspace .crm-subtitle {
+    color: #cbd5e1 !important;
+  }
+
+  .crm-workspace .crm-section-label {
+    color: #cbd5e1 !important;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .crm-workspace input.crm-input {
+    width: 100%;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #64748b !important;
+    -webkit-text-fill-color: #f8fafc;
+  }
+
+  .crm-workspace input.crm-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  .crm-workspace input.crm-input:focus {
+    outline: 2px solid rgba(16, 185, 129, 0.45);
+    outline-offset: 0;
+  }
+
+  .crm-workspace .crm-panel {
+    border: 1px solid #64748b !important;
+    border-radius: 0.5rem;
+    background: rgba(15, 23, 42, 0.55) !important;
+  }
+
+  .crm-workspace .crm-btn-emerald {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    background: #059669 !important;
+    color: #ffffff !important;
+    border: 1px solid #10b981 !important;
+  }
+
+  .crm-workspace .crm-btn-emerald:hover:not(:disabled) {
+    background: #047857 !important;
+  }
+
+  .crm-workspace .crm-btn-cyan {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    background: #0891b2 !important;
+    color: #ffffff !important;
+    border: 1px solid #22d3ee !important;
+  }
+
+  .crm-workspace .crm-btn-cyan:hover:not(:disabled) {
+    background: #0e7490 !important;
+  }
+
+  .crm-workspace .crm-btn-emerald:disabled,
+  .crm-workspace .crm-btn-cyan:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .crm-workspace .crm-alert {
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    background: rgba(127, 29, 29, 0.65) !important;
+    border: 1px solid rgba(248, 113, 113, 0.75) !important;
+    color: #fecaca !important;
+  }
+
+  .crm-workspace a.crm-back-link {
+    display: inline-block;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    color: #a5f3fc !important;
+    border: 1px solid #64748b !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+  }
+
+  .crm-workspace a.crm-back-link:hover {
+    color: #ecfeff !important;
+    border-color: #94a3b8 !important;
+  }
 }

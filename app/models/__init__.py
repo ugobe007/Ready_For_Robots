@@ -1,3 +1,5 @@
+# user_profiles must load before CRM FKs that reference it (team_members.user_id).
+from app.models.user_profile import UserProfile
 from app.models.company import Company
 from app.models.contact import Contact
 from app.models.signal import Signal
