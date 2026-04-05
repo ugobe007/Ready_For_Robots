@@ -794,6 +794,8 @@
   border-radius: var(--rr-radius-lg);
   padding: 16px 16px 14px;
   position: relative;
+  /* Limit reflow from rotating text / stat updates affecting the rest of the page */
+  contain: layout;
 }
 
 /* Live stats card: depth, soft lift, richer surface (less “flat”) */
@@ -1155,6 +1157,7 @@ a.rr-btn-hero-primary:hover {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: calc(1.5em * 3);
 }
 
 .rr-testimonial-source {
@@ -1251,6 +1254,11 @@ a.rr-btn-hero-primary:hover {
   letter-spacing: 0.04em;
   color: var(--rr-muted);
   text-align: center;
+  min-height: 2.75em;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .rr-hero-stat-strip--compact {
@@ -1267,6 +1275,10 @@ a.rr-btn-hero-primary:hover {
 .rr-hero-stat-inline--sm .n {
   font-size: 13px;
   font-weight: 800;
+  min-width: 7ch;
+  display: inline-block;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .rr-hero-stat-inline--sm .l {
@@ -1457,10 +1469,13 @@ a.rr-btn-hero-primary:hover {
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  /* Reserve height so rotating rows don’t change panel height */
+  min-height: calc(1.45em * 4);
 }
 
 .rr-hero-crm-inline--stacked {
   -webkit-line-clamp: 3;
+  min-height: calc(1.45em * 3);
 }
 
 .rr-hero-crm-inline-ct {

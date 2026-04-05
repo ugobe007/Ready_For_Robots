@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -74,6 +74,8 @@ export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  /** Avoid stale closure: homepage poll must not re-trigger full-page spotlight loading. */
+  const homepageFetchCompletedRef = useRef(false);
   
   // Stats from GET /api/leads/homepage — summary uses same tiering as dashboard (junk excluded)
   const [statsData, setStatsData] = useState({
@@ -251,7 +253,8 @@ export default function Signals() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000); // 10s for mobile/slow networks
     const fetchHomepage = async () => {
-      setLoading(true);
+      const isFirstFetch = !homepageFetchCompletedRef.current;
+      if (isFirstFetch) setLoading(true);
       try {
         const res = await fetch(
           `${apiBase}/api/leads/homepage?cb=${Date.now()}`,
@@ -285,6 +288,7 @@ export default function Signals() {
         clearTimeout(timeout);
         if (!cancelled) {
           setStatsLoaded(true);
+          homepageFetchCompletedRef.current = true;
           setLoading(false);
         }
       }
