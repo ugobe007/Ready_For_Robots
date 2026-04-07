@@ -9,10 +9,14 @@ Lead cleanup pipeline (run from repo root).
 
 Does not register FastAPI/Celery ORM hooks — updates profiles explicitly.
 
+Industry step is **conservative** by default: only fills empty / Unknown / Other / New.
+Use `--force-industry` to overwrite every row (NOISY signal text often mislabels companies).
+
 Usage:
   python3 scripts/cleanup_leads.py                    # dry-run (summary only)
   python3 scripts/cleanup_leads.py --apply            # execute all steps
-  python3 scripts/cleanup_leads.py --apply --skip-purge
+  python3 scripts/cleanup_leads.py --apply --skip-industry   # purge + names + profiles only
+  python3 scripts/cleanup_leads.py --apply --force-industry # dangerous full industry rewrite
   python3 scripts/cleanup_leads.py --apply --limit-names 200
 
 Env: DATABASE_URL via .env / frontend/nextjs/.env.local (same as other scripts).
@@ -23,6 +27,7 @@ import argparse
 import os
 import sys
 from dataclasses import dataclass
+from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -134,10 +139,17 @@ def phase_infer_names(db, apply: bool, stats: Stats, limit: int | None) -> None:
     )
 
 
-def phase_reinfer_industry(db, apply: bool, stats: Stats) -> None:
+def _industry_slot_empty(stored: Optional[str]) -> bool:
+    s = (stored or "").strip().lower()
+    return not s or s in ("unknown", "other", "new")
+
+
+def phase_reinfer_industry(db, apply: bool, stats: Stats, *, force_all: bool) -> None:
     companies = _load_companies_with_signals(db)
     n = 0
     for c in companies:
+        if not force_all and not _industry_slot_empty(c.industry):
+            continue
         parts = [c.name or ""]
         for s in c.signals or []:
             if s.signal_text:
@@ -149,17 +161,21 @@ def phase_reinfer_industry(db, apply: bool, stats: Stats) -> None:
         if (c.industry or "").strip() == inf:
             continue
         n += 1
-        if n <= 50 or apply:
+        if n <= 50:
             tag = "" if apply else "[dry-run] "
             print(f"  {tag}industry id={c.id} {(c.name or '')[:40]!r} → {inf}")
-        elif n == 51 and not apply:
-            print("  … (suppress further dry-run industry lines; count is total below)")
+        elif n == 51:
+            mode = "all rows" if force_all else "empty/unknown slots only"
+            print(f"  … (suppress further lines; mode={mode})")
         if apply:
             c.industry = inf
     stats.industry_updated = n
     if apply and n:
         db.commit()
-    print(f"  Industry rows {'updated' if apply else 'to update'}: {n}")
+    print(
+        f"  Industry rows {'updated' if apply else 'to update'}: {n} "
+        f"(force_all={'yes' if force_all else 'no — only empty/unknown/other/new'})"
+    )
 
 
 def phase_rebuild_profiles(db, apply: bool, stats: Stats) -> None:
@@ -188,6 +204,11 @@ def main() -> None:
     ap.add_argument("--skip-names", action="store_true")
     ap.add_argument("--skip-industry", action="store_true")
     ap.add_argument("--skip-profiles", action="store_true")
+    ap.add_argument(
+        "--force-industry",
+        action="store_true",
+        help="Overwrite industry for every company (default: only fill empty/Unknown/Other/New)",
+    )
     ap.add_argument("--limit-names", type=int, default=None, help="Max headline renames to process (safety)")
     args = ap.parse_args()
     apply = args.apply
@@ -208,7 +229,7 @@ def main() -> None:
 
         if not args.skip_industry:
             print("\n── Re-infer industry ──")
-            phase_reinfer_industry(db, apply, stats)
+            phase_reinfer_industry(db, apply, stats, force_all=args.force_industry)
 
         if not args.skip_profiles:
             print("\n── Rebuild automation_profile ──")
