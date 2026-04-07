@@ -147,6 +147,10 @@ _JUNK_PATTERNS = [
     r"(?i)(market|industry|transformation)\s+(forecast|outlook)\s*$",
     r"(?i)\s+robot\s+sector\s*$",
     r"(?i)^(the\s+)?(associated\s+press|reuters|bloomberg\s+news|cnbc|fox\s+business|marketwatch)\s*$",
+
+    # Supply chain / logistics section headers (exact-ish; allows trailing corporate buzzwords)
+    r"(?i)^(the\s+)?(global\s+)?supply[\s-]chain(\s+(management|network|solutions|strategy|operations|visibility|optimization|digitalization|digitalisation))?\s*$",
+    r"(?i)^(the\s+)?(global\s+)?value\s+chain(\s+(management|optimization|optimisation))?\s*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -159,6 +163,23 @@ _JUNK_EXACT = frozenset({
     "managers", "respondents", "report", "study", "survey", "data", "news",
     "update", "alert", "source", "analysis", "insights", "statistics",
     "the", "a", "an", "and", "or", "inc", "llc", "corp", "ltd", "co",
+    # Domain / section titles scraped as “company” (not proper nouns)
+    "supply chain", "supply-chain", "the supply chain",
+    "value chain", "the value chain",
+    "logistics", "the logistics", "global logistics",
+    "procurement", "strategic sourcing", "global sourcing", "sourcing",
+    "distribution", "distribution network",
+    "operations", "operations management",
+    "fulfillment", "order fulfillment",
+    "warehouse", "warehousing",
+    "inventory management",
+    "transportation", "freight", "shipping",
+    "digital transformation", "business transformation",
+    "customer experience", "customer service",
+    "human resources", "human capital",
+    "e-commerce", "ecommerce", "omnichannel",
+    "industrial automation",
+    "machine learning",
     # Geography / generic words mistaken for company names (single-field scrapes)
     "capital",
     "las vegas",
