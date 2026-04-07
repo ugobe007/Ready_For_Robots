@@ -294,16 +294,20 @@ def profile_from_company_api_dict(lead: Dict[str, Any]) -> AutomationProfile:
     )
 
 
-def build_automation_profile_dict_from_company(company: Any) -> Dict[str, Any]:
+def build_automation_profile_dict_from_company(
+    company: Any,
+    industry_override: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Compute rules_v1 profile from an ORM Company (needs `.name`, `.industry`, `.signals` loaded).
-    Used for persistence and backfills.
+    Used for persistence and backfills. `industry_override` fixes display when DB industry is wrong.
     """
     sigs = getattr(company, "signals", None) or []
+    ind = industry_override if industry_override is not None else getattr(company, "industry", None)
     return profile_from_company_api_dict(
         {
             "company_name": getattr(company, "name", None),
-            "industry": getattr(company, "industry", None),
+            "industry": ind,
             "signals": [
                 {"signal_type": s.signal_type, "raw_text": s.signal_text or ""}
                 for s in sigs
@@ -312,10 +316,18 @@ def build_automation_profile_dict_from_company(company: Any) -> Dict[str, Any]:
     ).to_dict()
 
 
-def get_automation_profile_for_response(company: Any) -> Dict[str, Any]:
+def get_automation_profile_for_response(
+    company: Any,
+    industry_override: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     API responses: return DB column when set; otherwise compute (e.g. before first persist).
+    If `industry_override` differs from stored company.industry, recompute (ignore stale JSON).
     """
+    raw_ind = (getattr(company, "industry", None) or "").strip()
+    ov = (industry_override or "").strip()
+    if ov and ov.lower() not in ("unknown", "other", "new") and ov != raw_ind:
+        return build_automation_profile_dict_from_company(company, industry_override=ov)
     stored = getattr(company, "automation_profile", None)
     if isinstance(stored, dict) and stored.get("source") == "rules_v1":
         return stored

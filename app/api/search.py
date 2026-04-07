@@ -19,6 +19,7 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.automation_profile import get_automation_profile_for_response
+from app.services.industry_inference import effective_industry_for_lead
 
 router = APIRouter()
 
@@ -319,11 +320,13 @@ def _run_keyword_search(
             key=lambda x: x["strength"],
             reverse=True,
         )
-        ind = (c.industry or "").strip()
+        ind = effective_industry_for_lead(c.name, c.industry, c.signals)
         if not ind or ind.lower() in ("unknown", "other"):
             ind = "New"
         _, _, pri = classify_lead(c, c.scores, c.signals)
-        automation_profile = get_automation_profile_for_response(c)
+        raw_stored = (c.industry or "").strip()
+        ov = ind if ind != raw_stored else None
+        automation_profile = get_automation_profile_for_response(c, industry_override=ov)
         results.append(
             {
                 "id": c.id,

@@ -1,8 +1,47 @@
 """
 Shared industry inference from text (signal text, company name, article context).
 Used by reclassify-unknown and can be used by scrapers.
+
+Tie-breaking: when keyword scores tie, prefer industries earlier in INDUSTRY_TIE_PRIORITY
+(stronger verticals / less noisy than e.g. Hospitality from STR headlines).
 """
-from typing import Dict
+from __future__ import annotations
+
+from typing import Dict, List, Optional, Sequence, Tuple
+
+# Normalized company name -> canonical industry (OEMs / frequent mislabels from signal text alone).
+KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
+    "faraday future": "Automotive & Manufacturing",
+    "tesla": "Automotive & Manufacturing",
+    "tesla inc": "Automotive & Manufacturing",
+    "rivian": "Automotive & Manufacturing",
+    "lucid motors": "Automotive & Manufacturing",
+    "lucid group": "Automotive & Manufacturing",
+    "nio inc": "Automotive & Manufacturing",
+    "xpeng": "Automotive & Manufacturing",
+    "fisker": "Automotive & Manufacturing",
+    "general motors": "Automotive & Manufacturing",
+    "ford motor": "Automotive & Manufacturing",
+}
+
+# When two industries have the same raw keyword score, pick the higher-priority one first.
+INDUSTRY_TIE_PRIORITY: Tuple[str, ...] = (
+    "Automotive & Manufacturing",
+    "Medical Technology",
+    "Healthcare",
+    "Logistics",
+    "Food Processing & Manufacturing",
+    "Manufacturing",
+    "Food & Beverage",
+    "Retail",
+    "Datacenters",
+    "Airports & Aviation",
+    "Hospitality",
+    "Food Service",
+    "Real Estate & Facilities",
+    "Media & Publishing",
+)
+
 
 INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Logistics": [
@@ -10,9 +49,11 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "3pl", "third party logistics", "fulfillment center", "fulfillment centre",
         "cold storage", "freight", "shipping", "delivery"
     ],
+    # Do not use generic "property management" — STR/Airbnb robot deployments often mention it
+    # and mislabel automotive OEMs (e.g. Faraday Future delivering robots to vacation rentals).
     "Hospitality": [
         "hotel", "resort", "hospitality", "lodging", "motel", "inn",
-        "housekeeping", "guest services", "property management"
+        "housekeeping", "guest services",
     ],
     "Food Service": [
         "restaurant", "food service", "kitchen", "dining", "qsr",
@@ -76,10 +117,15 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "dealership", "auto dealer", "car dealer", "automotive retail"
     ],
     "Automotive & Manufacturing": [
-        "automotive", "manufacturing", "factory", "assembly", "motor group",
+        "automotive", "automaker", "auto manufacturer", "car company", "vehicle manufacturer",
+        "electric vehicle", " ev ", "e.v.", "oem",
+        "manufacturing", "factory", "assembly", "motor group",
         "semiconductor", "cobot", "industrial automation", "hyundai motor",
         "bmw group", "teradyne", "rockwell", "omron", "stmicroelectronics",
-        "humanoid robots", "deploy humanoid", "factory from", "assembly line"
+        "humanoid robots", "deploy humanoid", "factory from", "assembly line",
+        "faraday future", "faraday",
+        "robot and vehicle", "robot & vehicle", "vehicle deliveries", "eai robotics",
+        "nvidia drive", "autonomous driving", "adas",
     ],
     "Media & Publishing": [
         "manufacturing dive", "motley fool", "new york times", "reuters",
@@ -103,11 +149,52 @@ def infer_industry_from_text(text: str) -> str:
     if not (text and text.strip()):
         return "Unknown"
     text_lower = text.lower()
-    scores = {}
+
+    # Longest key first so "faraday future" wins over "faraday" if both exist.
+    for key in sorted(KNOWN_COMPANY_INDUSTRY.keys(), key=len, reverse=True):
+        if key in text_lower:
+            return KNOWN_COMPANY_INDUSTRY[key]
+
+    scores: Dict[str, int] = {}
     for industry, keywords in INDUSTRY_KEYWORDS.items():
         score = sum(1 for kw in keywords if kw in text_lower)
         if score > 0:
             scores[industry] = score
-    if scores:
-        return max(scores.items(), key=lambda x: x[1])[0]
-    return "Unknown"
+    if not scores:
+        return "Unknown"
+
+    best = max(scores.values())
+    tied = [ind for ind, sc in scores.items() if sc == best]
+
+    def _tie_key(ind: str) -> Tuple[int, int]:
+        try:
+            pri = INDUSTRY_TIE_PRIORITY.index(ind)
+        except ValueError:
+            pri = len(INDUSTRY_TIE_PRIORITY)
+        return (-best, pri)
+
+    tied.sort(key=_tie_key)
+    return tied[0]
+
+
+def effective_industry_for_lead(
+    company_name: Optional[str],
+    stored_industry: Optional[str],
+    signals: Sequence[object],
+) -> str:
+    """
+    Industry for UI and share copy: infer from name + signal text; fall back to stored.
+    Prefer inference when it resolves (fixes bad Hospitality labels from STR-only keywords).
+    """
+    parts: List[str] = [company_name or ""]
+    for s in signals or []:
+        parts.append(getattr(s, "signal_text", None) or "")
+    parts.append(stored_industry or "")
+    blob = " ".join(parts)
+    inferred = infer_industry_from_text(blob)
+    if inferred != "Unknown":
+        return inferred
+    raw = (stored_industry or "").strip()
+    if raw and raw.lower() not in ("unknown", "other"):
+        return raw
+    return "New"

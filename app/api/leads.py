@@ -32,7 +32,7 @@ from app.services.lead_filter import (
     SIGNAL_TYPES_WARM,
 )
 from app.services.signal_ranker import compute_weighted_score
-from app.services.industry_inference import infer_industry_from_text
+from app.services.industry_inference import effective_industry_for_lead, infer_industry_from_text
 from app.services.scoring_public import get_scoring_system_public
 from app.services.automation_profile import get_automation_profile_for_response
 
@@ -322,14 +322,20 @@ def _company_size_word(emp: Optional[int]) -> str:
     return ""
 
 
-def _build_share_blurb(c: Company, pri, sigs: list) -> tuple:
+def _build_share_blurb(
+    c: Company,
+    pri,
+    sigs: list,
+    *,
+    industry_for_copy: Optional[str] = None,
+) -> tuple:
     """
     Returns (share_blurb ~220c for Twitter/copy, share_summary 4-5 sentence intelligence paragraph).
     Format: '[Company] is targeting automation for their [use_case] due to [pain_point]
     which aligns with our signals [types]. The timing of the project is [X] months.'
     """
     import re as _re
-    raw_ind = (c.industry or "").strip()
+    raw_ind = (industry_for_copy if industry_for_copy is not None else (c.industry or "")).strip()
     ind = raw_ind if raw_ind and raw_ind.lower() not in ("unknown", "other") else "New"
     name = c.name or "Company"
     tier = pri.tier
@@ -408,13 +414,17 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     signal_count_total = len(sigs)
     sigs_for_response = _dedup_top_signals(sigs, LEAD_RESPONSE_MAX_SIGNALS)
     # Public-facing: never expose "Unknown" — use "New" (unclassified)
-    industry_display = (c.industry or "").strip()
+    industry_display = effective_industry_for_lead(c.name, c.industry, c.signals)
     if not industry_display or industry_display.lower() in ("unknown", "other"):
         industry_display = "New"
 
-    share_blurb, share_summary = _build_share_blurb(c, pri, sigs)
+    share_blurb, share_summary = _build_share_blurb(
+        c, pri, sigs, industry_for_copy=industry_display
+    )
 
-    automation_profile = get_automation_profile_for_response(c)
+    raw_stored = (c.industry or "").strip()
+    ov = industry_display if industry_display != raw_stored else None
+    automation_profile = get_automation_profile_for_response(c, industry_override=ov)
 
     return {
         "id":             c.id,
