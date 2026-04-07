@@ -2,7 +2,8 @@
 Automation profile engine — infer high-level robot / automation requirements per lead.
 
 V1 is rule-based: industry + signal types + light keyword scan on signal text.
-Future: optional LLM pass, persistence on Company, CRM export.
+Persisted on `companies.automation_profile` (JSON); refreshed via ORM hooks when signals change.
+Future: optional LLM pass, CRM export.
 
 Bench tests: tests/test_automation_profile.py
 """
@@ -291,3 +292,31 @@ def profile_from_company_api_dict(lead: Dict[str, Any]) -> AutomationProfile:
         signals=lead.get("signals") or [],
         company_name=lead.get("company_name"),
     )
+
+
+def build_automation_profile_dict_from_company(company: Any) -> Dict[str, Any]:
+    """
+    Compute rules_v1 profile from an ORM Company (needs `.name`, `.industry`, `.signals` loaded).
+    Used for persistence and backfills.
+    """
+    sigs = getattr(company, "signals", None) or []
+    return profile_from_company_api_dict(
+        {
+            "company_name": getattr(company, "name", None),
+            "industry": getattr(company, "industry", None),
+            "signals": [
+                {"signal_type": s.signal_type, "raw_text": s.signal_text or ""}
+                for s in sigs
+            ],
+        }
+    ).to_dict()
+
+
+def get_automation_profile_for_response(company: Any) -> Dict[str, Any]:
+    """
+    API responses: return DB column when set; otherwise compute (e.g. before first persist).
+    """
+    stored = getattr(company, "automation_profile", None)
+    if isinstance(stored, dict) and stored.get("source") == "rules_v1":
+        return stored
+    return build_automation_profile_dict_from_company(company)

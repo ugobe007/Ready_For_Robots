@@ -2,6 +2,12 @@ from celery import Celery
 from celery.schedules import crontab
 import os
 
+# Load models + register automation_profile ORM hooks (same as app.main).
+import app.models  # noqa: F401
+from app.db_events import register_db_events
+
+register_db_events()
+
 REDIS = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 celery_app = Celery(

@@ -10,9 +10,10 @@ _src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-# Repo-root .env, then Next.js .env.local (override) — DATABASE_URL is often only in .env.local during dev
+# Repo-root .env, then Next.js .env.local — do not override DATABASE_URL already set in the shell (CI / one-off alembic).
 load_dotenv(Path(_src) / ".env")
-load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local", override=True)
+if not (os.getenv("DATABASE_URL") or "").strip():
+    load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local", override=True)
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool

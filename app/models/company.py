@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, func, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -16,6 +16,8 @@ class Company(Base):
     location_state = Column(String, nullable=True)
     location_country = Column(String, nullable=True)
     source = Column(String, nullable=True)
+    # Persisted robot/automation spec (rules_v1); refreshed when signals change (see app/db_events.py).
+    automation_profile = Column(JSON, nullable=True)
     is_internal = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

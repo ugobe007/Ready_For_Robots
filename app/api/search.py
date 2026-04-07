@@ -18,7 +18,7 @@ from app.database import get_db
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
-from app.services.automation_profile import profile_from_company_api_dict
+from app.services.automation_profile import get_automation_profile_for_response
 
 router = APIRouter()
 
@@ -323,16 +323,7 @@ def _run_keyword_search(
         if not ind or ind.lower() in ("unknown", "other"):
             ind = "New"
         _, _, pri = classify_lead(c, c.scores, c.signals)
-        automation_profile = profile_from_company_api_dict(
-            {
-                "company_name": c.name,
-                "industry": c.industry,
-                "signals": [
-                    {"signal_type": s.signal_type, "raw_text": s.signal_text or ""}
-                    for s in (c.signals or [])
-                ],
-            }
-        ).to_dict()
+        automation_profile = get_automation_profile_for_response(c)
         results.append(
             {
                 "id": c.id,

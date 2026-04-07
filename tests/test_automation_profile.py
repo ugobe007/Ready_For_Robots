@@ -1,7 +1,10 @@
 """Bench tests — automation profile engine (rules v1)."""
+from types import SimpleNamespace
+
 from app.services.automation_profile import (
     infer_automation_profile,
     profile_from_company_api_dict,
+    get_automation_profile_for_response,
 )
 
 
@@ -74,3 +77,34 @@ def test_profile_from_api_dict_shape():
     assert "robot_categories" in d
     assert "application_areas" in d
     assert d["source"] == "rules_v1"
+
+
+def test_get_automation_profile_for_response_uses_persisted_column():
+    stored = {
+        "source": "rules_v1",
+        "deployment_contexts": ["factory_floor"],
+        "robot_categories": ["cobot"],
+        "application_areas": ["welding"],
+        "human_robot_collaboration": "x",
+        "sizing_notes": "y",
+        "confidence": "high",
+    }
+    c = SimpleNamespace(
+        automation_profile=stored,
+        name="Other",
+        industry="Other",
+        signals=[],
+    )
+    assert get_automation_profile_for_response(c) is stored
+
+
+def test_get_automation_profile_for_response_computes_when_missing():
+    c = SimpleNamespace(
+        automation_profile=None,
+        name="Acme 3PL",
+        industry="Logistics",
+        signals=[],
+    )
+    d = get_automation_profile_for_response(c)
+    assert d["source"] == "rules_v1"
+    assert "logistics_warehouse" in d["deployment_contexts"] or "distribution_center" in d["deployment_contexts"]

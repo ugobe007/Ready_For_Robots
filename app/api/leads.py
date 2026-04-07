@@ -34,7 +34,7 @@ from app.services.lead_filter import (
 from app.services.signal_ranker import compute_weighted_score
 from app.services.industry_inference import infer_industry_from_text
 from app.services.scoring_public import get_scoring_system_public
-from app.services.automation_profile import profile_from_company_api_dict
+from app.services.automation_profile import get_automation_profile_for_response
 
 router = APIRouter()
 
@@ -414,16 +414,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
 
     share_blurb, share_summary = _build_share_blurb(c, pri, sigs)
 
-    automation_profile = profile_from_company_api_dict(
-        {
-            "company_name": c.name,
-            "industry": c.industry,
-            "signals": [
-                {"signal_type": sig.signal_type, "raw_text": sig.signal_text or ""}
-                for sig in (c.signals or [])
-            ],
-        }
-    ).to_dict()
+    automation_profile = get_automation_profile_for_response(c)
 
     return {
         "id":             c.id,

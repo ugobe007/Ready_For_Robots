@@ -34,6 +34,9 @@ from app.api.social_posts import router as social_posts_router
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
+from app.db_events import register_db_events
+
+register_db_events()
 
 # DB is not touched at startup — first connection happens when an API that uses get_db() is called (browser/request).
 # Schema is managed by Alembic migrations (run in release or background).
