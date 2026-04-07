@@ -509,29 +509,37 @@ def scheduler_heartbeat_task(self):
 
 @celery_app.task(bind=True)
 def scraper_health_check_task(self):
-    """Monitor scraper health and alert on failures"""
+    """Monitor scraper health and alert on failures (same JSON as app.scrapers.scraper_watchdog)."""
     import json
     from pathlib import Path
-    
-    health_file = Path("/tmp/scraper_health.json")
-    
+
+    from app.scrapers.scraper_watchdog import HEALTH_LOG_PATH
+
+    health_file = Path(HEALTH_LOG_PATH)
+
     if health_file.exists():
         try:
-            with open(health_file) as f:
+            with open(health_file, encoding="utf-8") as f:
                 health_data = json.load(f)
-            
-            # Check for failures
-            failures = [k for k, v in health_data.items() if v.get('status') == 'failed']
-            
-            if failures:
-                logger.warning(f"Scraper health check: {len(failures)} scrapers failing: {failures}")
+            runs = health_data.get("run_history") or []
+            failed = [r for r in runs if isinstance(r, dict) and r.get("status") == "failed"]
+            if failed:
+                names = [r.get("scraper_name", "?") for r in failed[-5:]]
+                logger.warning(
+                    "Scraper health check: %d failed run(s) in history (recent: %s)",
+                    len(failed),
+                    names,
+                )
             else:
-                logger.info("Scraper health check: All scrapers operational")
-                
+                logger.info(
+                    "Scraper health check: ok (%d URL(s) tracked, %d run(s) in history)",
+                    len(health_data.get("url_health") or {}),
+                    len(runs),
+                )
         except Exception as e:
             logger.error(f"Health check failed: {e}")
     else:
-        logger.info("No health data available yet")
+        logger.info("No health data file yet at %s", health_file)
 
 
 @celery_app.task(bind=True)

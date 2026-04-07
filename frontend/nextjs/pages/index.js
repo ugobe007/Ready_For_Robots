@@ -7,6 +7,7 @@ import LoginDropdown from '../components/LoginDropdown';
 import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { AutomationSpecBlock } from '../lib/automationProfile';
+import { stripHtml } from '../lib/plainText';
 // signalsDisplay helpers used in dashboard; index.js relies on API-side dedup/cap
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://readyforrobots.com';
@@ -17,13 +18,6 @@ function formatHeroCount(value, statsLoaded) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
   return n.toLocaleString();
-}
-
-function stripHtml(s) {
-  return String(s || '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 /** Short opportunity line for hero CRM (blurb → summary → signal → industry). */

@@ -281,6 +281,7 @@ async def get_scraper_status(db: Session = Depends(get_db)) -> Dict[str, Any]:
     from app.scrapers.scraper_watchdog import get_watchdog
     
     watchdog = get_watchdog()
+    watchdog.reload_from_disk()
     health = watchdog.status()
     
     # Calculate daily rate

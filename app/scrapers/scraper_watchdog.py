@@ -38,9 +38,13 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────
-HEALTH_LOG_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "scraper_health.json"
+# Repo root / `/code/scraper_health.json` in Docker — shared by uvicorn + Celery worker (same volume).
+HEALTH_LOG_PATH = os.environ.get(
+    "SCRAPER_HEALTH_JSON_PATH",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "scraper_health.json",
+    ),
 )
 
 MAX_RESTARTS       = 3          # max auto-restarts per run
@@ -419,27 +423,50 @@ class ScraperWatchdog:
                 },
                 "run_history": [asdict(r) for r in self._run_history[-100:]],
             }
-            with open(self._health_log_path, "w") as f:
+            with open(self._health_log_path, "w", encoding="utf-8") as f:
                 json.dump(state, f, indent=2)
         except Exception as e:
             logger.warning("Could not save watchdog state: %s", e)
 
+    def reload_from_disk(self) -> None:
+        """
+        Re-read scraper_health.json from disk.
+
+        Celery workers run in a different process than uvicorn; they persist state here while the
+        API process keeps its own singleton. Call this in HTTP handlers before status() so
+        /api/scraper-health reflects real worker runs.
+        """
+        self._load_state()
+
     def _load_state(self):
-        if not os.path.exists(self._health_log_path):
-            return
+        """Replace in-memory state from JSON (or clear if file missing)."""
         try:
-            with open(self._health_log_path) as f:
+            if not os.path.exists(self._health_log_path):
+                with self._lock:
+                    self._url_health.clear()
+                    self._run_history.clear()
+                return
+            with open(self._health_log_path, encoding="utf-8") as f:
                 state = json.load(f)
-            for url, data in state.get("url_health", {}).items():
-                uh = UrlHealth(**{k: v for k, v in data.items()})
-                self._url_health[url] = uh
-            for r in state.get("run_history", []):
-                try:
-                    self._run_history.append(ScraperRunRecord(**r))
-                except Exception:
-                    pass
-            logger.info("[WATCHDOG] Loaded state: %d URLs, %d runs",
-                        len(self._url_health), len(self._run_history))
+            with self._lock:
+                self._url_health.clear()
+                self._run_history.clear()
+                for url, data in state.get("url_health", {}).items():
+                    try:
+                        uh = UrlHealth(**{k: v for k, v in data.items()})
+                        self._url_health[url] = uh
+                    except Exception:
+                        continue
+                for r in state.get("run_history", []):
+                    try:
+                        self._run_history.append(ScraperRunRecord(**r))
+                    except Exception:
+                        pass
+            logger.info(
+                "[WATCHDOG] Loaded state: %d URLs, %d runs",
+                len(self._url_health),
+                len(self._run_history),
+            )
         except Exception as e:
             logger.warning("Could not load watchdog state: %s", e)
 

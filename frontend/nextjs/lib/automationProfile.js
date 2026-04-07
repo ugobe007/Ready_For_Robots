@@ -1,3 +1,5 @@
+import { stripHtml, PlainTextWithSourceLinks } from './plainText';
+
 /** Turn taxonomy id into readable label */
 function fmtId(id) {
   return String(id || '')
@@ -15,12 +17,12 @@ export function AutomationSpecBlock({ profile, compact = false, theme = 'home' }
   const apps = Array.isArray(profile.application_areas) ? profile.application_areas : [];
   const robots = Array.isArray(profile.robot_categories) ? profile.robot_categories : [];
   const deploy = Array.isArray(profile.deployment_contexts) ? profile.deployment_contexts : [];
-  const collab = String(profile.human_robot_collaboration || '').trim();
-  const sizing = String(profile.sizing_notes || '').trim();
+  const collabStripped = stripHtml(String(profile.human_robot_collaboration || '')).trim();
+  const sizingStripped = stripHtml(String(profile.sizing_notes || '')).trim();
   const conf = String(profile.confidence || '').trim();
 
   const hasLists = apps.length || robots.length || deploy.length;
-  if (!hasLists && !collab && !sizing) return null;
+  if (!hasLists && !collabStripped && !sizingStripped) return null;
 
   const chip =
     theme === 'dashboard'
@@ -44,11 +46,11 @@ export function AutomationSpecBlock({ profile, compact = false, theme = 'home' }
 
   if (compact) {
     const bits = [...robots.slice(0, 3).map(fmtId), ...apps.slice(0, 2).map(fmtId)].filter(Boolean);
-    if (bits.length === 0 && sizing) {
+    if (bits.length === 0 && sizingStripped) {
       return (
         <p className={`text-xs ${theme === 'dashboard' ? 'text-zinc-300' : 'text-neutral-300'} line-clamp-2`}>
-          {sizing.slice(0, 160)}
-          {sizing.length > 160 ? '…' : ''}
+          {sizingStripped.slice(0, 160)}
+          {sizingStripped.length > 160 ? '…' : ''}
         </p>
       );
     }
@@ -113,16 +115,30 @@ export function AutomationSpecBlock({ profile, compact = false, theme = 'home' }
         </div>
       )}
 
-      {collab && (
+      {collabStripped && (
         <p className={`text-sm leading-relaxed ${theme === 'dashboard' ? 'text-zinc-200' : 'text-neutral-200'}`}>
           <span className={`${subCls} block mb-1`}>Human–robot</span>
-          {collab}
+          <PlainTextWithSourceLinks
+            text={String(profile.human_robot_collaboration || '')}
+            linkClassName={
+              theme === 'dashboard'
+                ? 'text-cyan-400 hover:text-cyan-200 underline underline-offset-2'
+                : 'text-violet-300 hover:text-violet-100 underline underline-offset-2'
+            }
+          />
         </p>
       )}
 
-      {sizing && (
+      {sizingStripped && (
         <p className={`text-sm leading-relaxed ${theme === 'dashboard' ? 'text-zinc-300' : 'text-neutral-300'}`}>
-          {sizing}
+          <PlainTextWithSourceLinks
+            text={String(profile.sizing_notes || '')}
+            linkClassName={
+              theme === 'dashboard'
+                ? 'text-cyan-400 hover:text-cyan-200 underline underline-offset-2'
+                : 'text-violet-300 hover:text-violet-100 underline underline-offset-2'
+            }
+          />
         </p>
       )}
     </div>

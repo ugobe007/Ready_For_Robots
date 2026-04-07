@@ -21,6 +21,7 @@ router = APIRouter()
 def scraper_health():
     """Full watchdog health report — run history, circuit breakers, active runs."""
     watchdog = get_watchdog()
+    watchdog.reload_from_disk()
     data = watchdog.status()
     # Summarise for quick dashboard widget
     total_urls    = len(data["url_health"])
@@ -41,6 +42,7 @@ def scraper_health():
 def open_circuits():
     """List URLs currently blocked by open circuit breakers."""
     watchdog = get_watchdog()
+    watchdog.reload_from_disk()
     status = watchdog.status()
     return {
         "open_circuits": status["circuit_open_urls"],
@@ -57,6 +59,7 @@ def reset_circuit(url: str):
     """
     decoded_url = unquote(url)
     watchdog = get_watchdog()
+    watchdog.reload_from_disk()
     found = watchdog.reset_circuit(decoded_url)
     if found:
         return {"status": "reset", "url": decoded_url}
@@ -68,5 +71,6 @@ def reset_circuit(url: str):
 def reset_all_circuits():
     """Reset ALL open circuit breakers. Use after fixing a broken scraper."""
     watchdog = get_watchdog()
+    watchdog.reload_from_disk()
     watchdog.reset_all_circuits()
     return {"status": "all circuits reset"}

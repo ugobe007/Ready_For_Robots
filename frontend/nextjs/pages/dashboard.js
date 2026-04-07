@@ -12,6 +12,7 @@ import LoginDropdown from '../components/LoginDropdown';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
 import { AutomationSpecBlock } from '../lib/automationProfile';
+import { PlainTextWithSourceLinks } from '../lib/plainText';
 import SiteNavPrimaryLinks from '../components/SiteNavPrimaryLinks';
 
 // Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
@@ -1784,7 +1785,7 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
                 <div className="space-y-2">
                   {results.results.map(r => (
                     <div key={r.id}
-                      className="border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group">
+                      className="border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group overflow-hidden min-w-0">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
@@ -1811,11 +1812,14 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
                         </div>
                       </div>
                       {r.matched_signals?.length > 0 && (
-                        <div className="space-y-1.5 mt-1">
+                        <div className="space-y-1.5 mt-1 min-w-0">
                           {r.matched_signals.map((s, i) => (
-                            <div key={i} className="flex items-start gap-2">
+                            <div key={i} className="flex items-start gap-2 min-w-0">
                               <SignalBadge type={s.signal_type} />
-                              <span className="text-xs text-neutral-300 flex-1 leading-relaxed">{s.signal_text}</span>
+                              <PlainTextWithSourceLinks
+                                text={s.signal_text}
+                                className="text-xs text-neutral-300 flex-1 min-w-0 leading-relaxed"
+                              />
                               <span className={`shrink-0 text-xs font-mono tabular-nums ${
                                 s.strength >= 0.7 ? 'text-emerald-400'
                                 : s.strength >= 0.4 ? 'text-cyan-500'

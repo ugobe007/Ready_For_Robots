@@ -5,6 +5,7 @@ import Head from 'next/head';
 import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { AutomationSpecBlock } from '../lib/automationProfile';
+import { PlainTextWithSourceLinks } from '../lib/plainText';
 
 const API = getApiBase();
 
@@ -322,7 +323,7 @@ export default function SearchPage() {
                 };
                 return (
                 <div key={r.id}
-                  className="border border-neutral-800 rounded-lg px-5 py-4 hover:border-neutral-600 transition-colors">
+                  className="border border-neutral-800 rounded-lg px-5 py-4 hover:border-neutral-600 transition-colors overflow-hidden min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link href={`/dashboard?analyze=${r.id}`}>
@@ -364,11 +365,14 @@ export default function SearchPage() {
                   )}
                   
                   {r.matched_signals?.length > 0 && (
-                    <div className="space-y-2 mt-3">
+                    <div className="space-y-2 mt-3 min-w-0">
                       {r.matched_signals.map((s, i) => (
-                        <div key={i} className="flex items-start gap-2">
+                        <div key={i} className="flex items-start gap-2 min-w-0">
                           <SignalBadge type={s.signal_type} />
-                          <span className="text-xs text-neutral-300 flex-1 leading-relaxed">{s.signal_text}</span>
+                          <PlainTextWithSourceLinks
+                            text={s.signal_text}
+                            className="text-xs text-neutral-300 flex-1 min-w-0 leading-relaxed"
+                          />
                           <span className={`shrink-0 text-xs font-mono tabular-nums ${
                             pct(s) >= 70 ? 'text-emerald-400'
                             : pct(s) >= 40 ? 'text-cyan-500'
