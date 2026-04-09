@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import NullPool
 
 # Load repo-root .env, then Next.js .env.local (override) — same order as migrations/env.py
 _root = Path(__file__).resolve().parents[1]
@@ -120,8 +121,9 @@ def _postgres_engine_kwargs(url: str) -> dict:
             "Supabase → Database → Connection string → Transaction mode to avoid 500s under load.",
             file=sys.stderr,
         )
-        # Keep total connections small per process (multiple machines/workers add up).
-        return {**base, "pool_size": 2, "max_overflow": 2}
+        # Session pooler caps *all* clients project-wide; a QueuePool holds idle conns and exhausts it.
+        # NullPool opens a connection per request and closes when the session ends (no idle hoarding).
+        return {"poolclass": NullPool, "pool_pre_ping": True}
     return {**base, "pool_size": 5, "max_overflow": 10}
 
 
