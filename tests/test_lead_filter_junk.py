@@ -38,3 +38,22 @@ def test_sector_phrases_are_junk(name):
 )
 def test_real_company_names_not_junk(name):
     assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Read More — Hotel Tech Weekly",
+        "Acme Corp (Press Release)",
+        "contact@acme.com",  # email scrape
+        "Source: Hospitality Net",
+        "NASDAQ: RBT",
+        "Hotel Brand Stock Rises 12% on Earnings",
+        "Yahoo Finance",
+        "PR Newswire",
+        "Research and Markets Report Title",
+    ],
+)
+def test_extended_junk_patterns(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason

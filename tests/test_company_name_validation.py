@@ -14,6 +14,8 @@ from app.services.lead_filter import is_junk
         ("HOTEL DRIVE", "address"),
         ("TWIN CITIES THAI RESTAURANT", "shout-case venue"),
         ("SOME HEADLINE REPORT", "wire tail"),
+        ("Source: Reuters Staff", "attribution prefix"),
+        ("press@newswire.example.com", "email pattern"),
     ],
 )
 def test_reject_examples(name, snippet):

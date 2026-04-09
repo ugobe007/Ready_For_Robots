@@ -155,6 +155,14 @@ def reject_as_non_company_name(name: Optional[str]) -> Tuple[bool, str]:
         if len(words) >= 3 and _GENERIC_VENUE_TAIL.search(raw):
             return True, "shout-case generic venue line (likely category/listicle, not a legal entity)"
 
+    # Email / social handle leaked into name field
+    if "@" in raw and re.search(r"@\s*\S+\.\S+", raw):
+        return True, "email or handle pattern, not a company name"
+
+    # Attribution prefix (article metadata, not a buyer)
+    if re.match(r"(?i)^\s*(source|photo|image|credit|filed under)\s*:\s*\S", raw):
+        return True, "article attribution prefix, not a company name"
+
     return False, ""
 
 

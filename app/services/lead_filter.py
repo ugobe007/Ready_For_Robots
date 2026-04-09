@@ -49,6 +49,16 @@ _JUNK_SUBSTRINGS = [
     "sec 10-k", "sec 10-q", "10-k filing", "10-q filing", "annual report sec",
     # Specific known-bad junk from user feedback
     "how ai ", "pro-level", "yegor traiman", "travel market", "tourism market", "ops 202", "how to ",
+    # Page chrome / syndication / research boilerplate (not legal entities)
+    "read more", "click here", "subscribe to", "sign up for our", "cookie policy",
+    "terms of use", "privacy policy", "getty images", "shutterstock", "photo credit",
+    "image credit", "podcast episode", "webinar replay", "related articles", "see also",
+    "continued on page", "full article", "pdf download",
+    "pr newswire", "globe newswire", "business wire", "ein presswire", "accesswire",
+    "press release", "earnings call", "conference call", "investor presentation",
+    "research and markets", "researchandmarkets", "marketsandmarkets",
+    "mordor intelligence", "fortune business insights", "coherent market insights",
+    "experts say", "analysts say", "according to analysts",
     # News / research outlets and syndicated titles scraped as “company names”
     "business insider",
     "seeking alpha",
@@ -164,6 +174,15 @@ _JUNK_PATTERNS = [
     # Supply chain / logistics section headers (exact-ish; allows trailing corporate buzzwords)
     r"(?i)^(the\s+)?(global\s+)?supply[\s-]chain(\s+(management|network|solutions|strategy|operations|visibility|optimization|digitalization|digitalisation))?\s*$",
     r"(?i)^(the\s+)?(global\s+)?value\s+chain(\s+(management|optimization|optimisation))?\s*$",
+
+    # Email / attribution / ticker lines leaked into the name field
+    r"@",
+    r"(?i)^\s*(source|photo|image|credit|filed under)\s*:",
+    r"(?i)\b(nasdaq|nyse|otc)\s*:\s*[A-Za-z]{1,6}\b",
+
+    # Stock / analyst headline templates
+    r"(?i)\b(stock\s+)?(rises|falls|gains|drops|soars|plunges)\s+\d+\s*%",
+    r"(?i)\bbeats\s+(q[1-4]|first|second|third|fourth)\s+quarter\b",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
