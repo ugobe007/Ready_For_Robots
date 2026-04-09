@@ -96,16 +96,38 @@ if os.getenv("FLY_APP_NAME") and DATABASE_URL and "postgresql" in DATABASE_URL:
             file=sys.stderr,
         )
 
+
+def _postgres_engine_kwargs(url: str) -> dict:
+    """
+    Supabase *session* pooler (pooler.*.supabase.com:5432) caps concurrent clients per project
+    (FATAL: MaxClientsInSessionMode). Multiple Fly machines × a large SQLAlchemy pool exhausts it.
+    Prefer Transaction pooler (:6543, user postgres.PROJECT_REF) for app servers.
+    """
+    base = {
+        "pool_timeout": 30,
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
+    if not url or "postgresql" not in url or "sqlite" in url:
+        return {**base, "pool_size": 5, "max_overflow": 10}
+    pr = urlparse(url)
+    host = (pr.hostname or "").lower()
+    port = pr.port or 5432
+    if "pooler.supabase.com" in host and port == 5432:
+        print(
+            "WARNING: DATABASE_URL uses Supabase Session pooler (:5432). Slots are very limited; "
+            "switch to Transaction pooler (port 6543, user postgres.PROJECT_REF) in "
+            "Supabase → Database → Connection string → Transaction mode to avoid 500s under load.",
+            file=sys.stderr,
+        )
+        # Keep total connections small per process (multiple machines/workers add up).
+        return {**base, "pool_size": 2, "max_overflow": 2}
+    return {**base, "pool_size": 5, "max_overflow": 10}
+
+
 try:
     if DATABASE_URL and "postgresql" in DATABASE_URL:
-        engine = create_engine(
-            DATABASE_URL,
-            pool_size=5,
-            max_overflow=10,
-            pool_timeout=30,
-            pool_pre_ping=True,
-            pool_recycle=300,
-        )
+        engine = create_engine(DATABASE_URL, **_postgres_engine_kwargs(DATABASE_URL))
     else:
         # Respect DATABASE_URL for SQLite (e.g. sqlite:///./ready_for_robots.db or absolute path)
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
