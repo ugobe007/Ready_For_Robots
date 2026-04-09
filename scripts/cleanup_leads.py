@@ -217,6 +217,9 @@ def main() -> None:
         print("DRY RUN — no writes. Pass --apply to execute.\n")
 
     db = SessionLocal()
+    # With NullPool (Supabase session pooler), each commit closes the connection; default
+    # expire_on_commit=True then forces lazy loads that reopen DB — fragile for long batches.
+    db.expire_on_commit = False
     stats = Stats()
     try:
         if not args.skip_purge:
