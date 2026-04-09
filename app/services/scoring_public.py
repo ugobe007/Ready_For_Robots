@@ -59,17 +59,24 @@ def get_scoring_system_public() -> Dict[str, Any]:
     )
 
     return {
-        "version": "1.1",
+        "version": "1.4",
         "code_paths": {
             "priority_tier": "app/services/lead_filter.py",
             "per_signal_weight": "app/services/signal_ranker.py",
             "ml_base_score": "app/services/scoring_engine.py → inference_engine.analyze_signals",
+            "intent_time_decay_and_quality": "app/services/signal_quality.py",
+            "lead_value_score": "app/services/lead_value.py (CRM payload; intent + firmographics + spec + freshness)",
         },
         "summary": (
             "Spotlight **tier** (Hot / Warm / Emerging) uses a **priority composite**: "
             "ML `overall_intent_score` (0–100) plus capped rule boosts (industry fit, hot/warm signal mix, "
             "signal count, company size). The **SCORE** on each card is the ML overall intent score from the DB, "
-            "not the composite. **Weighted signal** scores (per row) use type weights, age decay, and text boosts."
+            "not the composite. **Intent inference** applies per-signal time decay (exponential half-life), then "
+            "announcement-noise and use-case-depth adjustments per ML domain (expansion takes more press penalty "
+            "than labor_pain). **`lead_value_score`** blends intent, firmographics, automation_profile spec "
+            "richness, signal freshness, and procurement/timeline cues (RFP, go-live, quarter/FY) from signal text. "
+            "**Weighted signal** rows (for ranking) use type weights, bracket "
+            "age decay, and text boosts in `signal_ranker` — separate from inference decay."
         ),
         "priority_composite": {
             "formula": "composite = min(PRIORITY_COMPOSITE_CAP, ml_base + sum(boosts))",

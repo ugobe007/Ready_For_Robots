@@ -18,6 +18,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List, Optional, Any
 
+from app.services.company_name_validation import reject_as_non_company_name
+from app.services.news_publications import is_known_publication_name
+
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
 # Substrings that always mean the record is scraper garbage (checked on lowercased name)
@@ -61,6 +64,13 @@ _JUNK_SUBSTRINGS = [
     " industry report",
     " research report",
     " weekly roundup",
+    # Report / outlook titles mistaken for company names (RSS headlines)
+    "global outlook",
+    "market outlook",
+    "sector outlook",
+    "economic outlook",
+    "weekly outlook",
+    "cautiously optimistic",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -139,6 +149,9 @@ _JUNK_PATTERNS = [
     r"^[a-z].*'s?\s+(challenge|problem|concern|issue|struggle|need|demand|"
     r"opportunity|trend|future|rise|growth|decline|shift|impact|role)\b",
 
+    # "Global Outlook", "Retail Outlook" — research report titles, not operating companies
+    r"(?i)^(global|regional|weekly|monthly|annual|retail|national|economic|industry)\s+outlook\.?$",
+
     # ── Market research / sector labels (scraped as company names) ─────────────
     r"(?i)\bsector\s*$",
     r"(?i)\bforecast\s*$",
@@ -206,6 +219,13 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
 
     stripped = name.strip()
     low = stripped.lower()
+
+    if is_known_publication_name(stripped):
+        return True, "news or trade publication (not a buyer company)"
+
+    bad_nc, reason_nc = reject_as_non_company_name(stripped)
+    if bad_nc:
+        return True, reason_nc
 
     # Exact match against known-bad generic words
     if low in _JUNK_EXACT:

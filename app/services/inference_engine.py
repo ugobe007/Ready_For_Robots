@@ -10,9 +10,8 @@ Pipeline:
     → InferenceEngine.infer()    # apply rules, compute domain scores
     → IntentResult               # structured output with explanations
 """
-import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from app.services.semantic_parser import SemanticParser, ParseResult
 from app.services.ontology import (
     INFERENCE_RULES, InferenceRule, get_industry_prior
@@ -52,6 +51,9 @@ class IntentResult:
     # Top activated concepts for UI explainability
     activated_concepts: List[Dict] = field(default_factory=list)
 
+    # Time decay + noise/use-case multipliers (optional, for explainability)
+    signal_quality: Optional[Dict[str, Any]] = None
+
     def to_score_dict(self) -> Dict[str, float]:
         """Returns dict compatible with Score ORM model (0–100 scale)."""
         return {
@@ -64,7 +66,7 @@ class IntentResult:
 
     def to_api_dict(self) -> Dict:
         """Full API response with explanations."""
-        return {
+        out = {
             **self.to_score_dict(),
             "fired_rules": [
                 {
@@ -78,6 +80,9 @@ class IntentResult:
             ],
             "activated_concepts": self.activated_concepts,
         }
+        if self.signal_quality:
+            out["signal_quality"] = self.signal_quality
+        return out
 
 
 # ──────────────────────────────────────────────
@@ -121,13 +126,53 @@ class InferenceEngine:
     def infer_from_signals(self,
                             signal_texts: List[str],
                             company_name: str = "",
-                            industry: Optional[str] = None) -> IntentResult:
+                            industry: Optional[str] = None,
+                            signal_weights: Optional[List[float]] = None) -> IntentResult:
         """
-        Convenience method for scoring a company from its collected signals.
-        Merges all signal texts then runs inference.
+        Score from signal lines with optional per-line weights (e.g. time decay).
+        Company name + industry are parsed at full weight; each signal row is weighted.
         """
-        all_text = f"{company_name} {industry or ''} " + " ".join(signal_texts)
-        return self.infer(all_text, industry=industry)
+        from app.services.signal_quality import apply_quality_to_domain_finals
+
+        prefix = f"{company_name} {industry or ''}".strip()
+        weights = signal_weights
+        if weights is not None and len(weights) != len(signal_texts):
+            weights = None
+
+        items: List[Tuple[str, float]] = []
+        if prefix:
+            items.append((prefix, 1.0))
+        for i, st in enumerate(signal_texts):
+            w = 1.0 if weights is None else float(weights[i])
+            items.append((st, w))
+
+        if not items:
+            return self.infer("", industry=industry)
+
+        parse = self._parser.parse_multi_weighted(items)
+        result = self._run_inference(parse, industry)
+
+        a2, l2, e2, i2, qdetail = apply_quality_to_domain_finals(
+            result.final_automation,
+            result.final_labor_pain,
+            result.final_expansion,
+            result.final_industry_fit,
+            signal_texts,
+            parse,
+        )
+        result.final_automation = a2
+        result.final_labor_pain = l2
+        result.final_expansion = e2
+        result.final_industry_fit = i2
+        result.overall_intent = round(
+            a2 * self.WEIGHTS["automation"]
+            + l2 * self.WEIGHTS["labor_pain"]
+            + e2 * self.WEIGHTS["expansion"]
+            + i2 * self.WEIGHTS["industry_fit"],
+            4,
+        )
+        result.signal_quality = qdetail
+        return result
 
     # ── Private logic ───────────────────────────────────────────
     def _run_inference(self, parse: ParseResult, industry: Optional[str]) -> IntentResult:
@@ -217,5 +262,21 @@ def analyze(text: str, industry: str = None) -> IntentResult:
 
 def analyze_signals(signal_texts: List[str],
                     company_name: str = "",
-                    industry: str = None) -> IntentResult:
-    return _engine.infer_from_signals(signal_texts, company_name, industry)
+                    industry: str = None,
+                    signal_times: Optional[List[Any]] = None) -> IntentResult:
+    """
+    Run inference on signal text lines. Optional `signal_times` (aligned with signal_texts)
+    enables per-row time decay when elements have created_at datetimes.
+    """
+    weights = None
+    if signal_times is not None and len(signal_times) == len(signal_texts):
+        from app.services.signal_quality import time_weight_for_signal
+        weights = []
+        for t in signal_times:
+            if t is None:
+                weights.append(1.0)
+            else:
+                weights.append(time_weight_for_signal(t))
+    return _engine.infer_from_signals(
+        signal_texts, company_name, industry, signal_weights=weights
+    )

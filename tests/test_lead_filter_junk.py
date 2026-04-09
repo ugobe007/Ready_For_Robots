@@ -7,6 +7,9 @@ from app.services.lead_filter import is_junk
 @pytest.mark.parametrize(
     "name",
     [
+        "Global Outlook.",
+        "Global Outlook",
+        "Retail Outlook",
         "Supply Chain",
         "supply chain",
         "Supply-Chain",

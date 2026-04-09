@@ -8,6 +8,7 @@ automation opportunities with ontological meaning.
 from typing import List, Optional
 from app.services.ontology import CONCEPTS
 from app.services.semantic_parser import SemanticParser
+from app.services.signal_rules_engine import infer_source_channel, rules_engine_signal_types
 
 # Concept name → signal_type for DB storage (aligns with SIGNAL_PATTERNS)
 CONCEPT_TO_SIGNAL: dict = {
@@ -74,14 +75,32 @@ def classify_signals_from_ontology(text: str, min_confidence: float = 0.2) -> Li
     return signals
 
 
-def classify_signals_with_fallback(text: str) -> List[str]:
+def classify_signals_with_fallback(
+    text: str,
+    *,
+    source_channel: Optional[str] = None,
+    article_url: str = "",
+    rss_source_name: str = "",
+) -> List[str]:
     """
-    Ontology-first classification with keyword fallback.
-    Used by intelligence news scraper for correlation.
+    Ontology + Pythh-style rules engine + keyword fallback.
+    Rules add modality/negation/costly-action structure; ontology stays primary for robotics concepts.
+
+    ``source_channel`` overrides inference; otherwise use ``article_url`` and ``rss_source_name``
+    (RSS ``<source>``) — see ``infer_source_channel`` in ``signal_rules_engine``.
     """
     ontology_signals = classify_signals_from_ontology(text, min_confidence=0.2)
-    if ontology_signals:
-        return ontology_signals
+    channel = source_channel or infer_source_channel(article_url, rss_source_name)
+    rules_signals = rules_engine_signal_types(text, source_channel=channel)
+
+    merged: List[str] = []
+    seen = set()
+    for s in ontology_signals + rules_signals:
+        if s not in seen:
+            seen.add(s)
+            merged.append(s)
+    if merged:
+        return merged
 
     # Fallback: high-value keyword triggers
     lower = text.lower()

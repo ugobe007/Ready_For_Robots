@@ -10,6 +10,15 @@ import { useAuth } from './_app';
 import { authHeader } from '../lib/supabase';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import RrSiteLayout from '../components/RrSiteLayout';
+import { SignalScoreBadge, LeadValueBadge, PipelineScoreLegend } from '../lib/signalScoreBadge';
+
+function tierTextClass(tier) {
+  if (!tier) return 'text-neutral-500';
+  const u = String(tier).toUpperCase();
+  if (u === 'HOT') return 'text-red-400 font-semibold';
+  if (u === 'WARM') return 'text-amber-400 font-medium';
+  return 'text-cyan-400';
+}
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -397,6 +406,8 @@ export default function CrmPage() {
               </button>
             </form>
 
+            <PipelineScoreLegend showTier className="mb-3" />
+
             <div className="crm-panel overflow-hidden min-h-[120px]">
               {loadingAccounts ? (
                 <p className="p-4 text-sm text-slate-300">Loading accounts…</p>
@@ -407,6 +418,9 @@ export default function CrmPage() {
                   <thead>
                     <tr className="border-b border-neutral-700 text-left text-[10px] uppercase tracking-widest text-neutral-400">
                       <th className="px-3 py-2 font-medium">Name</th>
+                      <th className="px-3 py-2 font-medium text-right">Signal</th>
+                      <th className="px-3 py-2 font-medium text-right">Value</th>
+                      <th className="px-3 py-2 font-medium">Tier</th>
                       <th className="px-3 py-2 font-medium">Company</th>
                       <th className="px-3 py-2 font-medium">Industry</th>
                       <th className="px-3 py-2 font-medium">Added</th>
@@ -416,6 +430,29 @@ export default function CrmPage() {
                     {accounts.map((a) => (
                       <tr key={a.id} className="border-b border-neutral-800/60 hover:bg-neutral-900/50">
                         <td className="px-3 py-2 text-neutral-100">{a.name}</td>
+                        <td className="px-3 py-2 text-right">
+                          {a.signal_score != null ? (
+                            <SignalScoreBadge value={a.signal_score} />
+                          ) : (
+                            <span className="text-neutral-600 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          {a.lead_value_score != null ? (
+                            <LeadValueBadge value={a.lead_value_score} />
+                          ) : (
+                            <span className="text-neutral-600 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-xs">
+                          {a.pipeline_priority_tier ? (
+                            <span className={tierTextClass(a.pipeline_priority_tier)}>
+                              {String(a.pipeline_priority_tier).toUpperCase()}
+                            </span>
+                          ) : (
+                            <span className="text-neutral-600">—</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2 text-neutral-400 tabular-nums">
                           {a.company_id != null ? (
                             <span className="text-cyan-400 tabular-nums">#{a.company_id}</span>

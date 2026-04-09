@@ -191,9 +191,9 @@ export default function Signals() {
     const load = async () => {
       try {
         const [rAll, rHot, rWarm] = await Promise.all([
-          fetch(`${apiBase}/api/leads?limit=40&sort=score`, liveFetchInit()),
-          fetch(`${apiBase}/api/leads?tier=HOT&limit=35&sort=score`, liveFetchInit()),
-          fetch(`${apiBase}/api/leads?tier=WARM&limit=35&sort=score`, liveFetchInit()),
+          fetch(`${apiBase}/api/leads?limit=40&sort=score&exclude_junk=true`, liveFetchInit()),
+          fetch(`${apiBase}/api/leads?tier=HOT&limit=35&sort=score&exclude_junk=true`, liveFetchInit()),
+          fetch(`${apiBase}/api/leads?tier=WARM&limit=35&sort=score&exclude_junk=true`, liveFetchInit()),
         ]);
         const [dAll, dHot, dWarm] = await Promise.all([rAll.json(), rHot.json(), rWarm.json()]);
         if (cancelled) return;

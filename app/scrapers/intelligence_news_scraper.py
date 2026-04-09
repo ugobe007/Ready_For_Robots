@@ -41,6 +41,12 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
+from app.services.news_publications import (
+    is_known_publication_name,
+    publication_matches_rss_source,
+    strip_trailing_news_attribution,
+)
+from app.services.lead_filter import is_junk
 from app.services.signal_classifier import classify_signals_with_fallback
 
 logger = logging.getLogger(__name__)
@@ -674,6 +680,10 @@ class IntelligenceNewsScraper:
     """
     Discovers new companies from news and enriches existing companies with signals.
     Acts as free alternative to expensive paid services.
+
+    Article handling uses **phased fault isolation** (same idea as ``ScraperOrchestrator`` /
+    pythh-style pipelines): one phase throwing does not abort the whole run—errors are
+    counted under ``stats["phase_failures"]`` and processing continues.
     """
     
     GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
@@ -687,6 +697,9 @@ class IntelligenceNewsScraper:
             "companies_enriched": 0,
             "signals_created": 0,
             "queries_run": 0,
+            # Per-phase failure counts (pythh-style: one phase blows, others still run)
+            "phase_failures": {},
+            "last_phase_errors": [],  # capped trail for debugging
         }
     
     # ══════════════════════════════════════════════════════════════════════════
@@ -724,7 +737,12 @@ class IntelligenceNewsScraper:
             
             articles = self._fetch_google_news(query)
             for article in articles[:max_articles_per_query]:
-                self._process_article(article, query)
+                try:
+                    self._process_article(article, query)
+                except Exception as e:
+                    ref = (article.get("url") or article.get("title") or "?")[:160]
+                    self._record_phase_failure("article_fatal", e, ref)
+                    logger.exception("Article pipeline fatal (skipped article): %s", ref)
             
             time.sleep(self.DELAY)
         
@@ -787,11 +805,13 @@ class IntelligenceNewsScraper:
                 
                 source_el = item.find("source")
                 source = source_el.text.strip() if source_el is not None else ""
-                
+
+                title_clean = strip_trailing_news_attribution(title, source)
+
                 articles.append({
                     "title": title,
                     "description": desc,
-                    "text": f"{title}. {desc}",
+                    "text": f"{title_clean}. {desc}",
                     "url": link,
                     "published": pub,
                     "source": source,
@@ -802,39 +822,145 @@ class IntelligenceNewsScraper:
             logger.warning(f"News fetch failed for '{query}': {e}")
         
         return articles
+
+    def _record_phase_failure(self, phase: str, exc: BaseException, context: str = "") -> None:
+        """Increment phase counters and keep a short error trail (does not re-raise)."""
+        pf = self.stats.setdefault("phase_failures", {})
+        pf[phase] = pf.get(phase, 0) + 1
+        trail = self.stats.setdefault("last_phase_errors", [])
+        trail.append(
+            {
+                "phase": phase,
+                "error": str(exc)[:400],
+                "context": (context or "")[:240],
+            }
+        )
+        if len(trail) > 40:
+            del trail[:-40]
     
     # ══════════════════════════════════════════════════════════════════════════
     # ARTICLE PROCESSING
     # ══════════════════════════════════════════════════════════════════════════
     
     def _process_article(self, article: Dict, query: str):
-        """Extract company, classify signals, save to DB."""
-        self.stats["articles_processed"] += 1
-        
-        # Extract company name(s) from article
-        companies = self._extract_companies(article["text"])
+        """
+        Turn one RSS article into zero or more Company rows + Signal rows.
+
+        Pipeline (order matters — adjust here and in helpers together when debugging):
+
+        1. **Ingest** — `_fetch_google_news` already built `article["text"]` from title +
+           description. Title went through `strip_trailing_news_attribution` so trailing
+           `` - Outlet`` / `` | Outlet`` tails (or RSS ``<source>``) are not treated as the
+           headline subject.
+
+        2. **Extract company string(s)** — `_extract_companies` uses regex/heuristics + a
+           title-case fallback. This is **not** ontological: it guesses spans that *look*
+           like proper names before verbs. False positives (outlets, headline junk) are
+           expected without the filters below.
+
+        3. **Filter candidates** — Inside `_extract_companies` / `_accept_company`: publication
+           denylist + RSS source match (`news_publications`), `lead_filter.is_junk`, shape
+           rules in `_is_valid_company_name`, ambiguous-word disambiguation.
+
+        4. **Persist company** — `_get_or_create_company` last-chance rejects known
+           publications, then INSERT or match by name.
+
+        5. **Signal types (ontology + rules + keywords)** — `_detect_signal_types` passes
+           article ``url`` and RSS ``source`` into `classify_signals_with_fallback` so the
+           rules engine gets a **source_channel** (SEC, press wire, news, …) for confidence.
+           Ontology still drives robotics concepts; rules add modality/negation/costly-action.
+
+        **Maintenance:** This path is high-churn. When discovery looks wrong (outlets as
+        leads, missed real companies), trace the failing string through steps 1→3 before
+        changing regexes; extend `app/services/news_publications.py` for new outlets.
+
+        **Phases (fault isolation):** ingest → extract → classify_signals → per-company
+        persist → per-signal write. A failure in one phase logs + increments
+        ``stats["phase_failures"]`` and continues or skips downstream work for that slice
+        only; see ``discover_leads`` for an outer ``article_fatal`` catch.
+        """
+        article_ref = (article.get("url") or article.get("title") or "?")[:160]
+
+        # ── Phase 1: ingest ───────────────────────────────────────────────────
+        try:
+            self.stats["articles_processed"] += 1
+            rss_source = (article.get("source") or "").strip()
+            body_text = (article.get("text") or "").strip()
+        except Exception as e:
+            self._record_phase_failure("ingest", e, article_ref)
+            logger.warning("Phase ingest failed (%s): %s", article_ref, e)
+            return
+
+        if not body_text:
+            return
+
+        # ── Phase 2: extract company candidates ────────────────────────────────
+        companies: List[Tuple[str, float]] = []
+        try:
+            companies = self._extract_companies(body_text, rss_source=rss_source)
+        except Exception as e:
+            self._record_phase_failure("extract", e, article_ref)
+            logger.warning("Phase extract failed (%s): %s", article_ref, e)
+            companies = []
+
         if not companies:
             return
-        
-        # Process each detected company
-        for company_name, confidence in companies:
-            # Get or create company
-            company = self._get_or_create_company(company_name, article["text"])
+
+        # ── Phase 3: classify signal types (once per article) ─────────────────
+        signal_types: List[str] = ["news"]
+        try:
+            signal_types = self._detect_signal_types(body_text, article)
+            if not signal_types:
+                signal_types = ["news"]
+        except Exception as e:
+            self._record_phase_failure("classify_signals", e, article_ref)
+            logger.warning("Phase classify_signals failed (%s), using ['news']: %s", article_ref, e)
+            signal_types = ["news"]
+
+        # ── Phase 4–5: persist company + write signals (per candidate / type) ─
+        for company_name, _confidence in companies:
+            company = None
+            try:
+                company = self._get_or_create_company(company_name, body_text)
+            except Exception as e:
+                self._record_phase_failure(
+                    "persist_company",
+                    e,
+                    f"{article_ref} | name={company_name!r}",
+                )
+                logger.warning(
+                    "Phase persist_company failed (%s, %r): %s",
+                    article_ref,
+                    company_name,
+                    e,
+                )
+                continue
+
             if not company:
                 continue
-            
-            # Detect signal type(s)
-            signal_types = self._detect_signal_types(article["text"])
-            
-            # Create signal for each type detected
+
             for signal_type in signal_types:
-                self._create_signal(
-                    company=company,
-                    signal_type=signal_type,
-                    text=article["text"][:600],
-                    url=article["url"],
-                    query=query
-                )
+                try:
+                    self._create_signal(
+                        company=company,
+                        signal_type=signal_type,
+                        text=body_text[:600],
+                        url=article.get("url") or "",
+                        query=query,
+                    )
+                except Exception as e:
+                    self._record_phase_failure(
+                        "write_signal",
+                        e,
+                        f"{article_ref} | {company_name!r} | {signal_type}",
+                    )
+                    logger.warning(
+                        "Phase write_signal failed (%s, %r, %s): %s",
+                        article_ref,
+                        company_name,
+                        signal_type,
+                        e,
+                    )
     
     def _enrich_company(self, company: Company):
         """Search news for specific company and add new signals."""
@@ -848,25 +974,44 @@ class IntelligenceNewsScraper:
         for query in queries:
             articles = self._fetch_google_news(query)
             for article in articles[:5]:  # Top 5 per query
-                if company.name.lower() in article["text"].lower():
-                    signal_types = self._detect_signal_types(article["text"])
+                ref = (article.get("url") or article.get("title") or "?")[:120]
+                try:
+                    if company.name.lower() not in article["text"].lower():
+                        continue
+                    try:
+                        signal_types = self._detect_signal_types(article["text"], article)
+                    except Exception as e:
+                        self._record_phase_failure("enrich_classify_signals", e, ref)
+                        signal_types = ["news"]
+                    if not signal_types:
+                        signal_types = ["news"]
                     for signal_type in signal_types:
-                        self._create_signal(
-                            company=company,
-                            signal_type=signal_type,
-                            text=article["text"][:600],
-                            url=article["url"],
-                            query=query
-                        )
+                        try:
+                            self._create_signal(
+                                company=company,
+                                signal_type=signal_type,
+                                text=article["text"][:600],
+                                url=article["url"],
+                                query=query,
+                            )
+                        except Exception as e:
+                            self._record_phase_failure("enrich_write_signal", e, ref)
+                            logger.warning("Enrich write_signal failed (%s): %s", ref, e)
+                except Exception as e:
+                    self._record_phase_failure("enrich_article", e, ref)
+                    logger.warning("Enrich article loop failed (%s): %s", ref, e)
     
     # ══════════════════════════════════════════════════════════════════════════
     # ENTITY EXTRACTION
     # ══════════════════════════════════════════════════════════════════════════
     
-    def _extract_companies(self, text: str) -> List[Tuple[str, float]]:
+    def _extract_companies(self, text: str, rss_source: str = "") -> List[Tuple[str, float]]:
         """
         Extract company names from text using multiple patterns.
         Returns: [(company_name, confidence), ...]
+
+        Fragile heuristic layer — see `_process_article` docstring for full pipeline;
+        tune patterns, `_accept_company`, and `news_publications` together.
         """
         companies = []
         seen = set()
@@ -874,6 +1019,12 @@ class IntelligenceNewsScraper:
 
         def _accept_company(name: str) -> bool:
             if not self._is_valid_company_name(name) or name in seen:
+                return False
+            if is_known_publication_name(name):
+                return False
+            if publication_matches_rss_source(name, rss_source):
+                return False
+            if is_junk(name)[0]:
                 return False
             # For ambiguous single-word names (Target, Apple, etc.), require disambiguating context
             words = name.strip().split()
@@ -1089,10 +1240,20 @@ class IntelligenceNewsScraper:
     # SIGNAL DETECTION
     # ══════════════════════════════════════════════════════════════════════════
     
-    def _detect_signal_types(self, text: str) -> List[str]:
-        """Detect signal types using ontology (meaning/intent) + keyword patterns."""
-        # Ontology: extracts semantic intent from robotics concepts
-        signals = list(dict.fromkeys(classify_signals_with_fallback(text)))
+    def _detect_signal_types(self, text: str, article: Optional[Dict] = None) -> List[str]:
+        """Detect signal types using ontology (meaning/intent) + rules engine + keyword patterns."""
+        art = article or {}
+        url = (art.get("url") or "").strip()
+        rss_src = (art.get("source") or "").strip()
+        signals = list(
+            dict.fromkeys(
+                classify_signals_with_fallback(
+                    text,
+                    article_url=url,
+                    rss_source_name=rss_src,
+                )
+            )
+        )
         # Merge with SIGNAL_PATTERNS for full coverage
         text_lower = text.lower()
         for signal_type, keywords in SIGNAL_PATTERNS.items():
@@ -1125,7 +1286,10 @@ class IntelligenceNewsScraper:
         """Get existing company or create new one."""
         # Normalize name
         name = name.strip()
-        
+        if is_known_publication_name(name):
+            logger.debug("Skip publication masquerading as company: %s", name)
+            return None
+
         # Check if exists (case-insensitive)
         existing = (
             self.db.query(Company)
@@ -1235,6 +1399,9 @@ class IntelligenceNewsScraper:
         logger.info(f"  🆕 Companies Discovered: {self.stats['companies_discovered']}")
         logger.info(f"  📈 Companies Enriched:   {self.stats['companies_enriched']}")
         logger.info(f"  📡 Signals Created:      {self.stats['signals_created']}")
+        pf = self.stats.get("phase_failures") or {}
+        if pf:
+            logger.info(f"  ⚠ Phase failures (non-fatal): {pf}")
         logger.info("="*60)
         
         if self.stats['companies_discovered'] > 0:

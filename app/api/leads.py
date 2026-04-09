@@ -31,10 +31,11 @@ from app.services.lead_filter import (
     SIGNAL_TYPES_HOT,
     SIGNAL_TYPES_WARM,
 )
-from app.services.signal_ranker import compute_weighted_score
+from app.services.signal_ranker import compute_weighted_score, compute_lead_aggregate_signal_score
 from app.services.industry_inference import effective_industry_for_lead, infer_industry_from_text
 from app.services.scoring_public import get_scoring_system_public
 from app.services.automation_profile import get_automation_profile_for_response
+from app.services.lead_value import compute_lead_value
 
 router = APIRouter()
 
@@ -426,6 +427,15 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     ov = industry_display if industry_display != raw_stored else None
     automation_profile = get_automation_profile_for_response(c, industry_override=ov)
 
+    overall_100 = float(s.overall_intent_score) if s else 0.0
+    lv = compute_lead_value(
+        overall_100,
+        c.employee_estimate,
+        automation_profile,
+        sigs,
+    )
+    signal_score = compute_lead_aggregate_signal_score(sigs)
+
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -441,14 +451,20 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "priority_reasons": pri.reasons,
         "is_junk":          junk,
         "junk_reason":      junk_reason,
-        # scores — DB already stores 0-100
+        # scores — DB stores 0–100; lead_value_score ranks deal quality (intent + scale + spec + freshness)
         "score": {
             "overall_score":    round((s.overall_intent_score  if s else 0), 1),
             "automation_score": round((s.automation_score      if s else 0), 1),
             "labor_pain_score": round((s.labor_pain_score      if s else 0), 1),
             "expansion_score":  round((s.expansion_score       if s else 0), 1),
             "market_fit_score": round((s.robotics_fit_score    if s else 0), 1),
+            "lead_value_score": lv["lead_value_score"],
+            "lead_value_components": lv["components"],
+            "lead_value_weights": lv["weights"],
+            "procurement_hints": lv.get("procurement_hints") or [],
+            "signal_score": signal_score,
         },
+        "procurement_hints": lv.get("procurement_hints") or [],
         "signal_count": signal_count_total,
         "created_at":   c.created_at.isoformat() if c.created_at else None,
         "updated_at":   c.updated_at.isoformat() if c.updated_at else None,

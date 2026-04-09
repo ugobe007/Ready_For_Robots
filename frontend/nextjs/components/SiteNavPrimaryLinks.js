@@ -18,6 +18,7 @@ const TOOLS = [
   { href: '/pilot-calculator', label: 'Pilot' },
   { href: '/robot-ready', label: 'Robot Ready' },
   { href: '/brief', label: 'Brief' },
+  { href: '/pipeline-health', label: 'Pipeline health' },
   { href: '/admin', label: 'Admin' },
   { href: '/profile', label: 'Profile' },
 ];

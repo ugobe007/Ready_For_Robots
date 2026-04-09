@@ -118,3 +118,15 @@ def compute_weighted_score(signal) -> float:
 
     weighted = base * type_w * age_w * robot_boost * problem_boost * roi_boost
     return round(min(weighted * 100, 100.0), 1)
+
+
+def compute_lead_aggregate_signal_score(signals) -> float:
+    """
+    Single 0–100 number per sales account: mean of the top 5 per-signal weighted scores
+    (type weight × age decay × text boosts). Empty → 0.
+    """
+    if not signals:
+        return 0.0
+    scores = sorted((compute_weighted_score(s) for s in signals), reverse=True)
+    top = scores[:5]
+    return round(sum(top) / len(top), 1)

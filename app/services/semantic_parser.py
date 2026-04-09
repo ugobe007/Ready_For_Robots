@@ -152,6 +152,35 @@ class SemanticParser:
                     merged.activations[name] = act
         return merged
 
+    def parse_multi_weighted(self, items: List[Tuple[str, float]]) -> ParseResult:
+        """
+        Parse fragments with per-fragment weights in (0, 1] (e.g. time decay).
+        Merges activations by max of (confidence * weight).
+        """
+        preview = " | ".join((t or "")[:50] for t, _ in items[:3])
+        merged = ParseResult(text=preview)
+        for text, w in items:
+            if not (text or "").strip():
+                continue
+            weight = float(w)
+            if weight <= 0.0:
+                continue
+            weight = min(1.0, weight)
+            r = self.parse(text)
+            for name, act in r.activations.items():
+                scaled_conf = min(1.0, act.confidence * weight)
+                scaled = ConceptActivation(
+                    concept_name=act.concept_name,
+                    domain=act.domain,
+                    confidence=round(scaled_conf, 4),
+                    matched_by=list(act.matched_by),
+                    propagated=act.propagated,
+                )
+                prev = merged.activations.get(name)
+                if prev is None or scaled.confidence > prev.confidence:
+                    merged.activations[name] = scaled
+        return merged
+
     # ── Private helpers ─────────────────────────
     def _match_patterns(self, concept_name: str, norm_text: str) -> Tuple[float, List[str]]:
         matched = []

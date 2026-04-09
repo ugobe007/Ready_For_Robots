@@ -4,7 +4,7 @@ Scoring Engine
 Computes robotics intent scores for a company using the ontological
 InferenceEngine.  Falls back to legacy keyword scoring if no signals exist.
 """
-from typing import Dict, List
+from typing import Dict, List, Optional
 from app.models.signal import Signal
 from app.services.inference_engine import analyze_signals
 
@@ -20,11 +20,18 @@ def compute_scores(company, signals: List[Signal]) -> Dict:
 
     if signals:
         signal_texts = []
+        signal_times: List[Optional[object]] = []
         for s in signals:
             if not hasattr(s, 'signal_type') or not hasattr(s, 'signal_text'):
                 continue  # skip malformed/corrupt entries
             signal_texts.append(f"{s.signal_type or ''} {s.signal_text or ''}")
-        result = analyze_signals(signal_texts, company_name=name, industry=industry)
+            signal_times.append(getattr(s, "created_at", None))
+        result = analyze_signals(
+            signal_texts,
+            company_name=name,
+            industry=industry,
+            signal_times=signal_times if len(signal_times) == len(signal_texts) else None,
+        )
         scores = result.to_score_dict()
     else:
         # No signals yet — use industry prior only

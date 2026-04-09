@@ -36,7 +36,7 @@ export default function PipelineResults() {
     try {
       // Get top 6 HOT leads as matches
       const res = await fetch(
-        `${getApiBase()}/api/leads?limit=6&tier=HOT&sort=score`,
+        `${getApiBase()}/api/leads?limit=6&tier=HOT&sort=score&exclude_junk=true`,
         liveFetchInit()
       );
       const data = await res.json();

@@ -16,7 +16,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import (
     IntegrityError,
     OperationalError,
@@ -120,6 +120,11 @@ class CrmAccountOut(BaseModel):
     industry: Optional[str] = None
     owner_user_id: Optional[str] = None
     created_at: Optional[str] = None
+    # Enriched when company_id links to pipeline companies
+    signal_score: Optional[float] = None
+    overall_intent_score: Optional[float] = None
+    lead_value_score: Optional[float] = None
+    pipeline_priority_tier: Optional[str] = None
 
 
 class CreateAccountIn(BaseModel):
@@ -186,6 +191,44 @@ def _serialize_account(a: CrmAccount) -> dict[str, Any]:
         "owner_user_id": str(a.owner_user_id) if a.owner_user_id else None,
         "created_at": a.created_at.isoformat() if a.created_at else None,
     }
+
+
+def _pipeline_snapshot_for_company_row(c: Company) -> dict[str, Any]:
+    """Compute signal / intent / value / tier for a loaded Company (signals + scores)."""
+    from app.services.automation_profile import get_automation_profile_for_response
+    from app.services.lead_filter import classify_lead, pick_primary_score
+    from app.services.lead_value import compute_lead_value
+    from app.services.signal_ranker import compute_lead_aggregate_signal_score
+
+    sigs = c.signals or []
+    ss = compute_lead_aggregate_signal_score(sigs)
+    sc = pick_primary_score(c.scores)
+    intent = float(sc.overall_intent_score) if sc else 0.0
+    _, _, pri = classify_lead(c, c.scores, sigs)
+    ap = get_automation_profile_for_response(c)
+    lv = compute_lead_value(intent, c.employee_estimate, ap, sigs)
+    return {
+        "signal_score": ss,
+        "overall_intent_score": round(intent, 1),
+        "lead_value_score": lv["lead_value_score"],
+        "pipeline_priority_tier": pri.tier,
+    }
+
+
+def _serialize_account_enriched(a: CrmAccount, pipeline: Optional[dict[str, Any]]) -> dict[str, Any]:
+    base = _serialize_account(a)
+    if not pipeline:
+        base.update(
+            {
+                "signal_score": None,
+                "overall_intent_score": None,
+                "lead_value_score": None,
+                "pipeline_priority_tier": None,
+            }
+        )
+    else:
+        base.update(pipeline)
+    return base
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -304,7 +347,26 @@ def list_accounts(
             .order_by(CrmAccount.created_at.desc())
             .all()
         )
-        return [_serialize_account(a) for a in accounts]
+        ids = list({a.company_id for a in accounts if a.company_id})
+        by_id: dict[int, Company] = {}
+        if ids:
+            rows = (
+                db.query(Company)
+                .options(joinedload(Company.signals), joinedload(Company.scores))
+                .filter(Company.id.in_(ids))
+                .all()
+            )
+            by_id = {c.id: c for c in rows}
+        out: list[dict[str, Any]] = []
+        for a in accounts:
+            pl = None
+            if a.company_id and a.company_id in by_id:
+                try:
+                    pl = _pipeline_snapshot_for_company_row(by_id[a.company_id])
+                except Exception:
+                    logger.warning("CRM pipeline snapshot failed for company_id=%s", a.company_id, exc_info=True)
+            out.append(_serialize_account_enriched(a, pl))
+        return out
     except HTTPException:
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
@@ -351,7 +413,24 @@ def create_account(
         db.add(row)
         db.commit()
         db.refresh(row)
-        return _serialize_account(row)
+        pl = None
+        if row.company_id:
+            co = (
+                db.query(Company)
+                .options(joinedload(Company.signals), joinedload(Company.scores))
+                .filter(Company.id == row.company_id)
+                .first()
+            )
+            if co:
+                try:
+                    pl = _pipeline_snapshot_for_company_row(co)
+                except Exception:
+                    logger.warning(
+                        "CRM pipeline snapshot failed for new account company_id=%s",
+                        row.company_id,
+                        exc_info=True,
+                    )
+        return _serialize_account_enriched(row, pl)
     except HTTPException:
         raise
     except IntegrityError as e:

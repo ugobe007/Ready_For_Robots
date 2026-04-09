@@ -2,7 +2,7 @@
  * Ready for Robots -- Lead Intelligence Dashboard
  * Supabase-style: no fills, stroke + text only, emerald/cyan accents.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -14,6 +14,7 @@ import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay
 import { AutomationSpecBlock } from '../lib/automationProfile';
 import { PlainTextWithSourceLinks } from '../lib/plainText';
 import SiteNavPrimaryLinks from '../components/SiteNavPrimaryLinks';
+import { SignalScoreBadge, SignalScoreLabel, PipelineScoreLegend } from '../lib/signalScoreBadge';
 
 // Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
 const API = getApiBase();
@@ -187,6 +188,50 @@ function ScoreNum({ value }) {
   );
 }
 
+/** Deal value score (intent + firmographics + spec + timing + procurement) — distinct from ML intent */
+function ValueNum({ value }) {
+  const v = Math.round(value ?? 0);
+  let badgeClass = 'border-violet-900 text-violet-400';
+  if (v >= 75) badgeClass = 'border-violet-500 text-violet-200';
+  else if (v >= 50) badgeClass = 'border-violet-600 text-violet-300';
+  else if (v >= 30) badgeClass = 'border-violet-800 text-violet-400';
+  return (
+    <span
+      className={`inline-flex items-center border rounded-md px-2 leading-none tabular-nums font-mono font-bold text-xs ${badgeClass}`}
+      style={{ paddingTop: '0.25rem', paddingBottom: '0.25rem' }}
+      title="Lead value: blended deal quality (not tier alone)"
+    >
+      {v}
+    </span>
+  );
+}
+
+const PROCUREMENT_HINT_LABELS = {
+  rfp_procurement: 'RFP',
+  go_live_milestone: 'Go-live',
+  quarter_fy_window: 'FY/Q',
+  near_term_horizon: 'Near-term',
+  capex_committed: 'CapEx',
+};
+
+function ProcurementHints({ hints, className = '' }) {
+  const list = Array.isArray(hints) ? hints : [];
+  if (!list.length) return null;
+  return (
+    <div className={`flex flex-wrap gap-1 ${className}`}>
+      {list.map((h) => (
+        <span
+          key={h}
+          title={h}
+          className="text-[9px] px-1.5 py-0.5 rounded border border-amber-800/70 text-amber-400/95 font-medium"
+        >
+          {PROCUREMENT_HINT_LABELS[h] || String(h).replace(/_/g, ' ')}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities', 'Manufacturing'];
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage', 'quality_bottleneck', 'safety_incident', 'production_capacity', 'warehouse_throughput', 'packaging_automation', 'repetitive_process', 'material_handling'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
@@ -292,13 +337,15 @@ function StrategicSnapshot({ leads, onSelect }) {
       <div className="rr-strategic-snapshot-table-wrap">
         <div
           className="rr-strategic-snapshot-thead hidden md:grid"
-          style={{gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 4.5rem 6.5rem'}}>
+          style={{gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 3.25rem 4rem 4rem 6.5rem'}}>
           <span />
           <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-3 py-2.5">company</span>
           <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">signal</span>
           <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">readiness</span>
           <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5">deal size</span>
-          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5 text-right">score</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-teal-500/90 px-2 py-2.5 text-right" title="Weighted signal evidence">sig</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-violet-400/90 px-2 py-2.5 text-right" title="Deal value">value</span>
+          <span className="text-[10px] uppercase font-bold tracking-wide text-[var(--rr-muted)] px-2 py-2.5 text-right" title="ML intent">intent</span>
           <span />
         </div>
 
@@ -313,7 +360,7 @@ function StrategicSnapshot({ leads, onSelect }) {
             <div key={lead.id}
               className="grid grid-cols-[1.5rem_1fr_auto] md:grid-cols-none border-b border-[var(--rr-border)] last:border-0 hover:bg-white/[0.02] transition-colors group items-center"
               style={{
-                gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 4.5rem 6.5rem'
+                gridTemplateColumns:'1.5rem 1fr 7.5rem 7rem 6rem 3.25rem 4rem 4rem 6.5rem'
               }}>
 
               {/* rank */}
@@ -355,7 +402,18 @@ function StrategicSnapshot({ leads, onSelect }) {
                 <span className="text-[11px] text-neutral-400">{deal.tier}</span>
               </div>
 
-              {/* score */}
+              {/* aggregate signal score */}
+              <div className="hidden md:flex items-center justify-end px-2 py-2">
+                <SignalScoreBadge value={lead.score?.signal_score ?? 0} />
+              </div>
+
+              {/* lead value */}
+              <div className="hidden md:flex flex-col items-end justify-center px-2 py-2 gap-0.5">
+                <ValueNum value={lead.score?.lead_value_score ?? 0} />
+                <ProcurementHints hints={lead.procurement_hints} />
+              </div>
+
+              {/* ML intent */}
               <div className="flex items-center justify-end px-2 py-2">
                 <ScoreNum value={lead.score?.overall_score ?? 0} />
               </div>
@@ -801,8 +859,21 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h2 className="text-lg font-semibold text-neutral-100 truncate">{lead.company_name}</h2>
               <TierBadge tier={lead.priority_tier} />
+              {sc.signal_score != null && (
+                <span className="inline-flex items-center gap-1">
+                  <SignalScoreLabel />
+                  <SignalScoreBadge value={sc.signal_score} />
+                </span>
+              )}
               {sc.overall_score != null && <ScoreNum value={sc.overall_score} />}
+              {sc.lead_value_score != null && <ValueNum value={sc.lead_value_score} />}
             </div>
+            {lead.procurement_hints?.length > 0 && (
+              <div className="mt-1.5">
+                <span className="text-[10px] uppercase tracking-wide text-amber-600/90 mr-2">procurement</span>
+                <ProcurementHints hints={lead.procurement_hints} className="inline-flex" />
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
               {lead.industry && <span className="text-neutral-300">{lead.industry}</span>}
               {city && <span>{city}{state ? `, ${state}` : ''}</span>}
@@ -865,12 +936,22 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
               <div>
                 <p className="label mb-3">intent scores</p>
                 <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-                  <ScoreBar value={sc.overall_score     ?? 0} label="overall" />
+                  <ScoreBar value={sc.lead_value_score ?? 0} label="lead value" />
+                  <ScoreBar value={sc.overall_score     ?? 0} label="ML intent" />
                   <ScoreBar value={sc.automation_score  ?? 0} label="automation" />
                   <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
                   <ScoreBar value={sc.expansion_score   ?? 0} label="expansion" />
                   <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
                 </div>
+                {sc.lead_value_components && (
+                  <p className="text-[10px] text-neutral-500 mt-3 leading-relaxed">
+                    Value blend: intent {Math.round((sc.lead_value_components.intent_strength || 0) * 100)} ·
+                    firmographic {Math.round((sc.lead_value_components.firmographic_strength || 0) * 100)} ·
+                    spec {Math.round((sc.lead_value_components.spec_richness || 0) * 100)} ·
+                    freshness {Math.round((sc.lead_value_components.timing_freshness || 0) * 100)} ·
+                    procurement {Math.round((sc.lead_value_components.procurement_timeline || 0) * 100)}
+                  </p>
+                )}
               </div>
 
               {loading && (
@@ -2111,7 +2192,8 @@ export default function Dashboard() {
     const p = new URLSearchParams();
     p.set('exclude_junk', excludeJunk);
     p.set('min_score', minScore);
-    p.set('sort', sort);
+    // Backend only knows score | name | signals — lead_value is sorted client-side after fetch
+    p.set('sort', sort === 'lead_value' ? 'score' : sort);
     if (tier !== 'ALL')     p.set('tier', tier);
     if (industry !== 'All') p.set('industry', industry);
     if (sigType)            p.set('signal_type', sigType);
@@ -2121,7 +2203,10 @@ export default function Dashboard() {
   // Fetch live signals for ticker
   const fetchLiveSignals = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/leads?limit=20&sort=signals_detected_at`, liveFetchInit());
+      const res = await fetch(
+        `${API}/api/leads?limit=20&sort=signals_detected_at&exclude_junk=${excludeJunk}`,
+        liveFetchInit(),
+      );
       if (res.ok) {
         const allLeads = await res.json();
         // Extract unique signals from recent leads
@@ -2143,7 +2228,7 @@ export default function Dashboard() {
     } catch (e) {
       console.error('Failed to fetch live signals:', e);
     }
-  }, []);
+  }, [excludeJunk]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -2210,9 +2295,16 @@ export default function Dashboard() {
   const filtered = leads.filter(l =>
     !search || (l.company_name || '').toLowerCase().includes(search.toLowerCase())
   );
-  
+
+  const sortedForUi = useMemo(() => {
+    if (sort !== 'lead_value') return filtered;
+    return [...filtered].sort(
+      (a, b) => (b.score?.lead_value_score ?? 0) - (a.score?.lead_value_score ?? 0),
+    );
+  }, [filtered, sort]);
+
   // Free tier: limit to 5 leads for non-logged-in users
-  const displayedLeads = !session ? filtered.slice(0, 5) : filtered;
+  const displayedLeads = !session ? sortedForUi.slice(0, 5) : sortedForUi;
 
   async function handleResetAll() {
     setResetting(true);
@@ -2516,7 +2608,8 @@ export default function Dashboard() {
               <select value={sort} onChange={e => setSort(e.target.value)}
                 className="w-full bg-zinc-950 border border-zinc-600 rounded-lg px-3 py-2.5 text-base
                            text-zinc-100 focus:outline-none focus:border-emerald-600">
-                <option value="score">Score (High → Low)</option>
+                <option value="score">ML intent (High → Low)</option>
+                <option value="lead_value">Lead value (High → Low)</option>
                 <option value="signals">Signal Count</option>
                 <option value="name">Company Name</option>
               </select>
@@ -2708,6 +2801,7 @@ export default function Dashboard() {
               <p className="rr-pipeline-card-lead">
                 Paste your site URL — see matched prospects with signals in seconds.
               </p>
+              <PipelineScoreLegend className="mb-3" />
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pipeline-input-row">
               <input
@@ -2839,10 +2933,20 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* score -- text only, no pill bg */}
-                  <div className="shrink-0 text-right">
-                    <ScoreNum value={sc.overall_score ?? 0} />
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 block mt-1">score</span>
+                  {/* scores: signal + value + ML intent */}
+                  <div className="shrink-0 text-right space-y-1">
+                    <div className="flex flex-col items-end gap-0.5">
+                      <SignalScoreBadge value={sc.signal_score ?? 0} />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-teal-600/90">signal</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5 pt-1 border-t border-zinc-800/80">
+                      <ValueNum value={sc.lead_value_score ?? 0} />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-violet-500/90">value</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5 pt-1 border-t border-zinc-800/80">
+                      <ScoreNum value={sc.overall_score ?? 0} />
+                      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">intent</span>
+                    </div>
                   </div>
 
                   {/* Click indicator */}
@@ -2857,13 +2961,21 @@ export default function Dashboard() {
                 </div>
 
                 {/* score bars */}
-                <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-5 pl-10">
+                <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-3 pl-10">
+                  <ScoreBar value={sc.signal_score ?? 0} label="signal evidence" />
+                  <ScoreBar value={sc.lead_value_score ?? 0} label="lead value" />
+                  <ScoreBar value={sc.overall_score     ?? 0} label="ML intent" />
                   <ScoreBar value={sc.automation_score ?? 0} label="automation" />
                   <ScoreBar value={sc.labor_pain_score  ?? 0} label="labor pain" />
                   <ScoreBar value={sc.expansion_score   ?? 0} label="expansion"  />
                   <ScoreBar value={sc.market_fit_score  ?? 0} label="market fit" />
-                  <ScoreBar value={sc.overall_score     ?? 0} label="overall"    />
                 </div>
+                {lead.procurement_hints?.length > 0 && (
+                  <div className="mt-2 pl-10 flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] uppercase text-amber-600/80">procurement</span>
+                    <ProcurementHints hints={lead.procurement_hints} />
+                  </div>
+                )}
 
                 {/* priority reasons -- inline text */}
                 {lead.priority_reasons?.length > 0 && (
@@ -3046,8 +3158,13 @@ export default function Dashboard() {
       {/* scraper health */}
       {health && (
         <div className="mt-12 border-t border-zinc-700/80 pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold uppercase tracking-wider text-zinc-300">Scraper health</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold uppercase tracking-wider text-zinc-300">Scraper health</span>
+              <Link href="/pipeline-health" className="text-xs text-cyan-500 hover:text-cyan-400 whitespace-nowrap">
+                Full run history →
+              </Link>
+            </div>
             <button onClick={handleResetAll} disabled={resetting || openCircuits === 0}
               className="btn-danger">
               {resetting ? 'resetting...' : 'reset circuits'}
@@ -3072,7 +3189,7 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-700/80">
-                  {['', 'url', 'failures', 'restarts', 'last seen'].map(h => (
+                  {['', 'url', 'attempts', 'failures', 'circuit'].map(h => (
                     <th key={h} className="pb-2 pr-6 text-left text-xs font-bold uppercase tracking-wide text-zinc-400">{h}</th>
                   ))}
                 </tr>
@@ -3084,12 +3201,10 @@ export default function Dashboard() {
                     <td className="py-1.5 pr-6 max-w-[14rem] truncate text-zinc-300" title={url}>
                       {url.replace(/^https?:\/\//, '').substring(0, 45)}
                     </td>
-                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.consecutive_failures}</td>
-                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.restart_count}</td>
-                    <td className="py-1.5 text-zinc-400">
-                      {info.last_success
-                        ? new Date(info.last_success * 1000).toLocaleTimeString()
-                        : 'never'}
+                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.attempts ?? '—'}</td>
+                    <td className="py-1.5 pr-6 tabular-nums text-zinc-400">{info.failures ?? info.consecutive_failures ?? '—'}</td>
+                    <td className="py-1.5 text-zinc-500 text-[10px] max-w-[8rem] truncate" title={info.last_error || ''}>
+                      {info.circuit_open ? 'open' : 'ok'}
                     </td>
                   </tr>
                 ))}

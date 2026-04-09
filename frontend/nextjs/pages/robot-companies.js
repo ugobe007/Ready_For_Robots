@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
@@ -71,9 +71,16 @@ export default function RobotCompanies() {
     loadCompanies();
   }, [loadStats, loadCompanies]);
 
-  const filteredCompanies = companies.filter(comp => 
-    search ? comp.company_name.toLowerCase().includes(search.toLowerCase()) : true
-  );
+  const filteredCompanies = useMemo(() => {
+    const list = companies.filter((comp) =>
+      search ? comp.company_name.toLowerCase().includes(search.toLowerCase()) : true
+    );
+    return [...list].sort((a, b) => {
+      const va = Number(a.vendor_list_score ?? a.lead_score ?? 0);
+      const vb = Number(b.vendor_list_score ?? b.lead_score ?? 0);
+      return vb - va;
+    });
+  }, [companies, search]);
 
   function openWorkflowModal(company) {
     setWorkflowModal(company);
@@ -259,7 +266,12 @@ export default function RobotCompanies() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #262626' }}>
-                  <th style={thStyle}>Score</th>
+                  <th style={thStyle} title="Composite outreach score (U.S. presence, urgency, tier, stored score)">
+                    Vendor list
+                  </th>
+                  <th style={thStyle} title="Legacy stored lead_score field">
+                    Stored
+                  </th>
                   <th style={thStyle}>Company</th>
                   <th style={thStyle}>Type</th>
                   <th style={thStyle}>U.S. Presence</th>
@@ -279,16 +291,29 @@ export default function RobotCompanies() {
                   >
                     <td style={tdStyle}>
                       <span style={{
-                        color: comp.lead_score >= 85 ? '#10B981' : comp.lead_score >= 70 ? '#F59E0B' : '#737373',
+                        color: (comp.vendor_list_score ?? comp.lead_score) >= 85 ? '#14B8A6' : (comp.vendor_list_score ?? comp.lead_score) >= 70 ? '#F59E0B' : '#737373',
                         fontWeight: '600',
                         fontSize: '14px'
+                      }}>
+                        {comp.vendor_list_score != null
+                          ? Math.round(Number(comp.vendor_list_score))
+                          : '—'}
+                      </span>
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        color: '#525252',
+                        fontWeight: '500',
+                        fontSize: '12px'
                       }}>
                         {comp.lead_score}
                       </span>
                     </td>
                     <td style={{...tdStyle, color: '#fff', fontWeight: '500'}}>
                       {comp.company_name}
-                      {comp.lead_score >= 90 && <span style={{ marginLeft: '6px', fontSize: '12px' }}>⭐</span>}
+                      {(comp.vendor_list_score ?? comp.lead_score) >= 90 && (
+                        <span style={{ marginLeft: '6px', fontSize: '12px' }}>⭐</span>
+                      )}
                     </td>
                     <td style={tdStyle}>
                       <span style={{

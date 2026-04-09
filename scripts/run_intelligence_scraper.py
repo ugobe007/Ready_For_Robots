@@ -96,6 +96,9 @@ def main():
             print(f"  Companies Enriched:     {stats['companies_enriched']}")
             print(f"  Signals Created:        {stats['signals_created']}")
             print(f"  Articles Processed:     {stats['articles_processed']}")
+            pf = stats.get("phase_failures") or {}
+            if pf:
+                print(f"  Phase failures (by phase): {pf}")
             print("="*60)
             
             if stats['companies_discovered'] > 0:

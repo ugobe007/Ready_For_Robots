@@ -4,15 +4,24 @@ Lead generation system for robotics vendors
 Focus: Chinese companies entering U.S. market
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime
 
 from app.database import get_db
 from app.models.robot_company import RobotCompany
 from app.services.email_templates import get_email_template
+from app.services.vendor_scoring import compute_vendor_list_score
 
 router = APIRouter(prefix="/api/robot-companies", tags=["robot-companies"])
+
+
+def _enrich_robot_company(c: RobotCompany) -> dict[str, Any]:
+    """JSON-serializable dict with computed vendor_list_score for UI sorting."""
+    d = jsonable_encoder(c)
+    d.update(compute_vendor_list_score(c))
+    return d
 
 
 @router.get("/")
@@ -68,17 +77,16 @@ def get_robot_companies(
     if search:
         query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
     
-    # Order by lead score descending
+    # Order by lead score descending (count before pagination)
     query = query.order_by(RobotCompany.lead_score.desc())
-    
-    companies = query.offset(skip).limit(limit).all()
     total = query.count()
-    
+    companies = query.offset(skip).limit(limit).all()
+
     return {
-        "companies": companies,
+        "companies": [_enrich_robot_company(c) for c in companies],
         "total": total,
         "skip": skip,
-        "limit": limit
+        "limit": limit,
     }
 
 
@@ -94,8 +102,8 @@ def get_hot_leads(
     ).order_by(RobotCompany.lead_score.desc()).all()
     
     return {
-        "hot_leads": companies,
-        "count": len(companies)
+        "hot_leads": [_enrich_robot_company(c) for c in companies],
+        "count": len(companies),
     }
 
 
@@ -116,9 +124,9 @@ def get_chinese_companies(
     companies = query.order_by(RobotCompany.lead_score.desc()).all()
     
     return {
-        "companies": companies,
+        "companies": [_enrich_robot_company(c) for c in companies],
         "total": len(companies),
-        "filter": us_presence or "all"
+        "filter": us_presence or "all",
     }
 
 
@@ -144,20 +152,20 @@ def get_market_entry_waves(db: Session = Depends(get_db)):
     
     return {
         "wave_1": {
-            "companies": wave_1,
+            "companies": [_enrich_robot_company(c) for c in wave_1],
             "count": len(wave_1),
-            "description": "Already Entered U.S. (2020-2024)"
+            "description": "Already Entered U.S. (2020-2024)",
         },
         "wave_2": {
-            "companies": wave_2,
+            "companies": [_enrich_robot_company(c) for c in wave_2],
             "count": len(wave_2),
-            "description": "Rapid Expansion (2024-2026)"
+            "description": "Rapid Expansion (2024-2026)",
         },
         "wave_3": {
-            "companies": wave_3,
+            "companies": [_enrich_robot_company(c) for c in wave_3],
             "count": len(wave_3),
-            "description": "Next-Generation AI Robots (2025-2027)"
-        }
+            "description": "Next-Generation AI Robots (2025-2027)",
+        },
     }
 
 
@@ -169,9 +177,9 @@ def get_needs_distribution(db: Session = Depends(get_db)):
     ).order_by(RobotCompany.lead_score.desc()).all()
     
     return {
-        "companies": companies,
+        "companies": [_enrich_robot_company(c) for c in companies],
         "count": len(companies),
-        "message": "Companies actively seeking U.S. distribution partners"
+        "message": "Companies actively seeking U.S. distribution partners",
     }
 
 
@@ -187,8 +195,8 @@ def get_by_robot_type(db: Session = Depends(get_db)):
         ).order_by(RobotCompany.lead_score.desc()).all()
         
         result[robot_type] = {
-            "companies": companies,
-            "count": len(companies)
+            "companies": [_enrich_robot_company(c) for c in companies],
+            "count": len(companies),
         }
     
     return result
@@ -232,8 +240,8 @@ def get_robot_company(company_id: int, db: Session = Depends(get_db)):
     
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    
-    return company
+
+    return _enrich_robot_company(company)
 
 
 @router.put("/{company_id}/outreach")
@@ -263,8 +271,8 @@ def update_outreach_status(
     
     db.commit()
     db.refresh(company)
-    
-    return company
+
+    return _enrich_robot_company(company)
 
 
 @router.get("/search/by-trade-show")
@@ -279,8 +287,8 @@ def search_by_trade_show(
     
     return {
         "trade_show": trade_show,
-        "companies": companies,
-        "count": len(companies)
+        "companies": [_enrich_robot_company(c) for c in companies],
+        "count": len(companies),
     }
 
 
@@ -291,7 +299,7 @@ def create_robot_company(company_data: dict, db: Session = Depends(get_db)):
     db.add(company)
     db.commit()
     db.refresh(company)
-    return company
+    return _enrich_robot_company(company)
 
 
 @router.put("/{company_id}")
@@ -311,8 +319,8 @@ def update_robot_company(
     
     db.commit()
     db.refresh(company)
-    
-    return company
+
+    return _enrich_robot_company(company)
 
 
 @router.put("/{company_id}/workflow")
