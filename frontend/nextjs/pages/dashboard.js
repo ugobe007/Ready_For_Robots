@@ -280,6 +280,22 @@ const READINESS = {
   COLD: { label: 'Monitoring',    color: 'text-neutral-500', dot: 'bg-neutral-600' },
 };
 
+/** Prefer API `gtm` (robot readiness stage + why now); fall back to tier labels. */
+function gtmReadinessDisplay(lead) {
+  const g = lead.gtm;
+  if (!g || !g.readiness_label) {
+    const r = READINESS[lead.priority_tier] || READINESS.COLD;
+    return { label: r.label, color: r.color, sub: null };
+  }
+  const stage = g.readiness_stage;
+  const color =
+    stage === 'deploying' ? 'text-rose-400' :
+    stage === 'evaluating' ? 'text-amber-400' :
+    'text-zinc-500';
+  const sub = Array.isArray(g.why_now) && g.why_now[0] ? g.why_now[0] : null;
+  return { label: g.readiness_label, color, sub };
+}
+
 function dealLabel(emp) {
   if (!emp) return { tier: '—', est: null };
   if (emp >= 100000) return { tier: 'Enterprise',  est: Math.round(emp / 400) };
@@ -351,7 +367,7 @@ function StrategicSnapshot({ leads, onSelect }) {
 
         {sorted.map((lead, i) => {
           const sig   = topSignal(lead);
-          const ready = READINESS[lead.priority_tier] || READINESS.COLD;
+          const ready = gtmReadinessDisplay(lead);
           const deal  = dealLabel(lead.employee_estimate);
           const sigM  = sig ? (SIGNAL_META[sig.signal_type] || { label: sig.signal_type, border: 'border-neutral-700', text: 'text-neutral-400' }) : null;
           const excerpt = sig ? (sig.raw_text || '').substring(0, 55) : '';
@@ -392,9 +408,14 @@ function StrategicSnapshot({ leads, onSelect }) {
                   : <span className="text-[10px] text-neutral-800">—</span>}
               </div>
 
-              {/* readiness */}
-              <div className="hidden md:flex items-center gap-1.5 px-2 py-2">
+              {/* readiness (GTM stage + first “why now”) */}
+              <div className="hidden md:flex flex-col justify-center gap-0.5 px-2 py-2 min-w-0">
                 <span className={`text-[11px] font-medium ${ready.color}`}>{ready.label}</span>
+                {ready.sub && (
+                  <span className="text-[10px] text-neutral-500 leading-snug line-clamp-2" title={ready.sub}>
+                    {ready.sub}
+                  </span>
+                )}
               </div>
 
               {/* deal */}
@@ -743,6 +764,10 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
   const [reportSaved,  setReportSaved]  = useState(false);
   const [savingReport, setSavingReport] = useState(false);
   const [automationProfileExtra, setAutomationProfileExtra] = useState(null);
+  const [gtmExtra, setGtmExtra] = useState(null);
+  const [repFbSending, setRepFbSending] = useState(false);
+  const [repFbDone, setRepFbDone] = useState(false);
+  const [repFbErr, setRepFbErr] = useState(null);
 
   // load profile + check saved state
   useEffect(() => {
@@ -758,17 +783,49 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
       .catch(() => setLoading(false));
   }, [lead.id]);
 
-  // When modal opened from search, list payload may omit automation_profile — hydrate from API
+  // When modal opened from search, list payload may omit automation_profile / gtm — hydrate from API
   useEffect(() => {
     setAutomationProfileExtra(null);
-    if (lead?.automation_profile || !lead?.id) return;
+    setGtmExtra(null);
+    if (!lead?.id) return;
+    if (lead?.automation_profile && lead?.gtm) return;
     fetch(`${API}/api/leads/by-id/${lead.id}`, liveFetchInit())
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.automation_profile) setAutomationProfileExtra(d.automation_profile);
+        if (d?.gtm) setGtmExtra(d.gtm);
       })
       .catch(() => {});
-  }, [lead.id, lead.automation_profile]);
+  }, [lead.id, lead.automation_profile, lead.gtm]);
+
+  useEffect(() => {
+    setRepFbDone(false);
+    setRepFbErr(null);
+  }, [lead.id]);
+
+  async function submitRepFeedback(vote, reasonCode = null) {
+    if (repFbSending || lead?.id == null) return;
+    setRepFbSending(true);
+    setRepFbErr(null);
+    try {
+      const hdr = { 'Content-Type': 'application/json' };
+      if (session?.access_token) hdr.Authorization = `Bearer ${session.access_token}`;
+      const r = await fetch(`${API}/api/leads/${lead.id}/feedback`, liveFetchInit({
+        method: 'POST',
+        headers: hdr,
+        body: JSON.stringify({
+          vote,
+          ...(reasonCode ? { reason_code: reasonCode } : {}),
+        }),
+      }));
+      if (!r.ok) throw new Error((await r.text()) || r.statusText);
+      setRepFbDone(true);
+    } catch (e) {
+      setRepFbErr(e.message || 'Failed to send');
+    } finally {
+      setRepFbSending(false);
+    }
+  }
 
   // close on Escape
   useEffect(() => {
@@ -840,6 +897,7 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
   const site   = comp.website || lead.website;
 
   const automationProfile = lead.automation_profile || automationProfileExtra;
+  const gtm = lead.gtm || gtmExtra;
   const engagementSignals = lead.signals || [];
 
   return (
@@ -874,6 +932,54 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                 <ProcurementHints hints={lead.procurement_hints} className="inline-flex" />
               </div>
             )}
+            {gtm && (
+              <div className="mt-2 rounded border border-emerald-900/40 bg-emerald-950/25 px-3 py-2 max-w-xl">
+                <div className="text-[10px] uppercase tracking-wide text-emerald-600/90 mb-0.5">GTM · robot readiness</div>
+                <div className="text-sm text-emerald-100/95 font-medium">{gtm.readiness_label}</div>
+                {Array.isArray(gtm.why_now) && gtm.why_now.length > 0 && (
+                  <ul className="mt-1.5 space-y-0.5 text-xs text-neutral-400 list-disc list-inside">
+                    {gtm.why_now.slice(0, 4).map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                )}
+                {gtm.suggested_motion && (
+                  <p className="mt-2 text-[11px] text-neutral-500 leading-snug">{gtm.suggested_motion}</p>
+                )}
+              </div>
+            )}
+            <div className="mt-2 rounded border border-zinc-800/80 bg-zinc-950/40 px-3 py-2 max-w-xl">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Rep feedback</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={repFbSending || repFbDone}
+                  onClick={() => submitRepFeedback('up')}
+                  className="text-xs px-2 py-1 rounded border border-zinc-700 text-zinc-300 hover:border-emerald-700 hover:text-emerald-400 disabled:opacity-40"
+                >
+                  👍 Good lead
+                </button>
+                <button
+                  type="button"
+                  disabled={repFbSending || repFbDone}
+                  onClick={() => submitRepFeedback('down')}
+                  className="text-xs px-2 py-1 rounded border border-zinc-700 text-zinc-300 hover:border-amber-800 hover:text-amber-400 disabled:opacity-40"
+                >
+                  👎 Off
+                </button>
+                <span className="text-[10px] text-zinc-600">Wrong company?</span>
+                <button
+                  type="button"
+                  disabled={repFbSending || repFbDone}
+                  onClick={() => submitRepFeedback('down', 'wrong_company')}
+                  className="text-[10px] px-1.5 py-0.5 rounded border border-zinc-800 text-zinc-500 hover:text-zinc-300 disabled:opacity-40"
+                >
+                  flag
+                </button>
+              </div>
+              {repFbDone && <p className="text-[11px] text-emerald-500/90 mt-1.5">Thanks — recorded.</p>}
+              {repFbErr && <p className="text-[11px] text-red-400/90 mt-1.5">{repFbErr}</p>}
+            </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
               {lead.industry && <span className="text-neutral-300">{lead.industry}</span>}
               {city && <span>{city}{state ? `, ${state}` : ''}</span>}

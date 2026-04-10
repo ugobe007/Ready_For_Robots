@@ -5,6 +5,7 @@ Additional endpoints for company management and system controls.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, or_
 from typing import Optional
@@ -78,6 +79,49 @@ def delete_company(company_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"status": "deleted", "company_id": company_id}
+
+
+class MergeDupesBody(BaseModel):
+    dry_run: bool = True
+    domain: Optional[str] = None
+
+
+@router.post("/merge-duplicate-companies-by-domain")
+def merge_duplicate_companies_by_domain_admin(body: MergeDupesBody, db: Session = Depends(get_db)):
+    """
+    Physically merge duplicate `companies` rows sharing `website_domain` (see `company_merge` service).
+    Default `dry_run: true` returns the plan without deleting rows.
+    """
+    from app.services.company_merge import merge_duplicate_companies_by_domain
+
+    return merge_duplicate_companies_by_domain(
+        db, dry_run=body.dry_run, domain_filter=body.domain
+    )
+
+
+@router.get("/rep-feedback-summary")
+def rep_feedback_summary(db: Session = Depends(get_db)):
+    """Aggregate rep thumbs / reason codes for tuning the pipeline."""
+    from app.models.lead_rep_feedback import LeadRepFeedback
+
+    vote_rows = (
+        db.query(LeadRepFeedback.vote, func.count(LeadRepFeedback.id))
+        .group_by(LeadRepFeedback.vote)
+        .all()
+    )
+    by_vote = {r[0]: r[1] for r in vote_rows}
+    reason_rows = (
+        db.query(LeadRepFeedback.reason_code, func.count(LeadRepFeedback.id))
+        .filter(LeadRepFeedback.reason_code.isnot(None))
+        .group_by(LeadRepFeedback.reason_code)
+        .all()
+    )
+    by_reason = {r[0]: r[1] for r in reason_rows}
+    return {
+        "by_vote": by_vote,
+        "by_reason": by_reason,
+        "total": sum(by_vote.values()),
+    }
 
 
 # ── System Controls ───────────────────────────────────────────────────────────

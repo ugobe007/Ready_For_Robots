@@ -7,6 +7,7 @@ Tie-breaking: when keyword scores tie, prefer industries earlier in INDUSTRY_TIE
 """
 from __future__ import annotations
 
+import re
 from typing import Dict, List, Optional, Sequence, Tuple
 
 # Normalized company name -> canonical industry (OEMs / frequent mislabels from signal text alone).
@@ -142,6 +143,53 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "automated car wash", "car wash chain", "quick wash"
     ],
 }
+
+
+def should_skip_industry_reinfer_for_company_name(name: Optional[str]) -> bool:
+    """
+    True when `name` looks like a person, event, geography fragment, or headline — not
+    an operating company. Cleanup scripts should not persist `infer_industry_from_text`
+    for these rows (keyword scoring mislabels e.g. Jeff Bezos → Media, South Korea. → Manufacturing).
+    """
+    if not name or not str(name).strip():
+        return True
+    raw = str(name).strip()
+    low = raw.lower()
+
+    # Country / region standing alone
+    if re.match(r"(?i)^(south|north)\s+korea\.?$", raw):
+        return True
+
+    # Tech / celebrity figures mis-scraped as company names
+    for pat in (
+        r"(?i)^jeff\s+bezos\b",
+        r"(?i)^elon\s+musk\b",
+        r"(?i)^mark\s+zuckerberg\b",
+        r"(?i)^tim\s+cook\b",
+        r"(?i)^satya\s+nadella\b",
+        r"(?i)^sundar\s+pichai\b",
+    ):
+        if re.match(pat, raw):
+            return True
+
+    # Conference / trade-show / week-style headlines
+    if re.search(r"(?i)\b(national|international)\s+\w+\s+week\b", raw):
+        return True
+    if re.search(
+        r"(?i)\b(ces|gtc|mach|modex|logimat|nrf|uscap|shoptalk)\b.*\b20\d\d",
+        raw,
+    ):
+        return True
+    if re.match(r"(?i)^nvidia\s+gtc\.?$", raw):
+        return True
+    if re.match(r"(?i)^mach\s+20\d\d", raw):
+        return True
+
+    # Product / meme headlines
+    if re.match(r"(?i)^tesla'?s\s+optimus\b", raw):
+        return True
+
+    return False
 
 
 def infer_industry_from_text(text: str) -> str:

@@ -78,6 +78,22 @@ def _verify_jwt(token: str) -> dict:
     raise HTTPException(status_code=401, detail="Invalid token")
 
 
+def optional_user(authorization: Optional[str] = Header(None)) -> Optional[dict]:
+    """
+    Return {uid, email} when a valid Bearer token is present; otherwise None.
+    Use for endpoints that accept both anonymous and authenticated callers.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        token = authorization.split(" ", 1)[1]
+        payload = _verify_jwt(token)
+        email = _extract_email(payload) or ""
+        return {"uid": payload["sub"], "email": email}
+    except HTTPException:
+        return None
+
+
 def _require_user(authorization: Optional[str] = Header(None)) -> dict:
     """Verify Supabase Bearer token and return {uid, email}."""
     if not authorization or not authorization.startswith("Bearer "):

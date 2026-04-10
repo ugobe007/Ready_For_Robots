@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, func, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from app.database import Base
 
 class Company(Base):
@@ -9,6 +9,8 @@ class Company(Base):
     tenant_id = Column(String, index=True, nullable=True)
     name = Column(String, nullable=False, index=True)
     website = Column(String, nullable=True)
+    # Normalized hostname (no scheme/www) for indexed domain-level entity resolution.
+    website_domain = Column(String, nullable=True, index=True)
     industry = Column(String, nullable=True, index=True)
     sub_industry = Column(String, nullable=True)
     employee_estimate = Column(Integer, nullable=True)
@@ -26,3 +28,10 @@ class Company(Base):
     signals = relationship("Signal", back_populates="company", cascade="all, delete-orphan")
     # One-to-many: multiple score rows can exist after re-runs / sync; use pick_primary_score() when reading
     scores = relationship("Score", back_populates="company", cascade="all, delete-orphan")
+
+    @validates("website")
+    def _sync_website_domain(self, key, value):
+        from app.services.company_domain import normalize_website_domain
+
+        self.website_domain = normalize_website_domain(value) if value else None
+        return value

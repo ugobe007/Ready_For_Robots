@@ -991,6 +991,19 @@ export default function Signals() {
                         <div className="text-sm text-neutral-400">
                           {lead.industry} • {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
                         </div>
+                        {lead.gtm && (
+                          <div className="mt-2 rounded-md border border-emerald-800/50 bg-emerald-950/20 px-3 py-2">
+                            <div className="text-[10px] uppercase tracking-wide text-emerald-600/90 mb-0.5">When they&apos;re ready · why now</div>
+                            <div className="text-sm font-medium text-emerald-200/95">{lead.gtm.readiness_label}</div>
+                            {Array.isArray(lead.gtm.why_now) && lead.gtm.why_now.length > 0 && (
+                              <ul className="mt-1.5 space-y-0.5 text-xs text-neutral-400 list-disc list-inside">
+                                {lead.gtm.why_now.slice(0, 3).map((line, wi) => (
+                                  <li key={wi}>{line}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        )}
                         {lead.share_summary && (
                           <p className="text-sm text-neutral-300 leading-snug pt-1 border-l-2 border-orange-600/50 pl-3">
                             {lead.share_summary}

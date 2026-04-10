@@ -49,7 +49,10 @@ from app.services.company_name_inference import (
     best_name_from_signals,
     should_attempt_name_fix,
 )
-from app.services.industry_inference import infer_industry_from_text
+from app.services.industry_inference import (
+    infer_industry_from_text,
+    should_skip_industry_reinfer_for_company_name,
+)
 from app.services.lead_filter import is_junk
 
 
@@ -149,6 +152,8 @@ def phase_reinfer_industry(db, apply: bool, stats: Stats, *, force_all: bool) ->
     n = 0
     for c in companies:
         if not force_all and not _industry_slot_empty(c.industry):
+            continue
+        if should_skip_industry_reinfer_for_company_name(c.name):
             continue
         parts = [c.name or ""]
         for s in c.signals or []:

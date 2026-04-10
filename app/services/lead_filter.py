@@ -20,6 +20,7 @@ from typing import List, Optional, Any
 
 from app.services.company_name_validation import reject_as_non_company_name
 from app.services.news_publications import is_known_publication_name
+from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
 # ─── Junk detection ───────────────────────────────────────────────────────────
 
@@ -175,6 +176,21 @@ _JUNK_PATTERNS = [
     r"(?i)^(the\s+)?(global\s+)?supply[\s-]chain(\s+(management|network|solutions|strategy|operations|visibility|optimization|digitalization|digitalisation))?\s*$",
     r"(?i)^(the\s+)?(global\s+)?value\s+chain(\s+(management|optimization|optimisation))?\s*$",
 
+    # Generic warehouse / WMS topic titles scraped as “company” (see SEO listicles: “… Top 10”)
+    r"(?i)^(warehouse|inventory|order)\s+management\s+top\s*$",
+    r"(?i)^warehouse\s+automation\s*$",
+    r"(?i)^(smart\s+)?warehouse\s+(robotics|systems?|solutions?|technology)\s*$",
+
+    # Article titles: "Why Automation Is the Ally…", "How Hotels Can…" (third word is not the verb — see extra pattern below)
+    r"(?i)^(why|how|what)\s+\w+\s+(is|are|was|were|will|would|should|can|could)\b",
+    # Listicle openers: "Five Success Factors for…", "3 Tips for…"
+    r"(?i)^(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+"
+    r"(success\s+)?(factors|tips|ways|reasons|steps|things|secrets|rules|mistakes)\b",
+    # Regional + generic facility (headline / section, not "Acme Warehousing LLC")
+    r"(?i)^(east|west|north|south)\s+coast\s+warehouse\b",
+    # News headline: sector + "Implements" + robots/workers (not a legal entity name)
+    r"(?i)\b(restaurant|hotel|warehouse|hospital|casino|factory|plant|retail)\s+implements\s+",
+
     # Email / attribution / ticker lines leaked into the name field
     r"@",
     r"(?i)^\s*(source|photo|image|credit|filed under)\s*:",
@@ -225,6 +241,9 @@ _JUNK_EXACT = frozenset({
     "the wall street journal",
     "wall street journal",
     "hospitality robot sector",
+    # Article / category lines mistaken for legal names (user-reported)
+    "warehouse automation",
+    "warehouse management top",
 })
 
 
@@ -245,6 +264,9 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
     bad_nc, reason_nc = reject_as_non_company_name(stripped)
     if bad_nc:
         return True, reason_nc
+
+    if is_known_robotics_vendor_name(stripped):
+        return True, "robotics vendor / OEM (not a buyer opportunity)"
 
     # Exact match against known-bad generic words
     if low in _JUNK_EXACT:

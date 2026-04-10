@@ -185,6 +185,7 @@ Set `"dry_run": false` to delete (same logic as `is_junk`).
 | `scripts/watch_leads.py` | TUI watch |
 | `scripts/audit_pipeline.py` | Pipeline audit |
 | `scripts/sync_from_production.py` | Sync (read script before use) |
+| `scripts/merge_duplicate_companies_by_domain.py` | Merge duplicate `companies` rows that share `website_domain` (dry-run default; `--execute` to apply). Requires `website_domain` column (Alembic). |
 
 ---
 

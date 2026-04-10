@@ -2,6 +2,7 @@
 Leads API
 =========
 GET /api/leads
+  POST /api/leads/{company_id}/feedback — rep feedback (optional Bearer)
   Query params:
     min_score     float  default 0   — minimum overall_intent_score
     max_score     float  default 100 — (for cold-lead views)
@@ -15,14 +16,17 @@ GET /api/leads
 from datetime import datetime, timezone, date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from pydantic import BaseModel, Field
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 from app.database import get_db
+from app.api.auth_deps import optional_user
 from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
+from app.models.lead_rep_feedback import LeadRepFeedback
 from app.services.lead_filter import (
     classify_lead,
     is_junk,
@@ -36,28 +40,42 @@ from app.services.industry_inference import effective_industry_for_lead, infer_i
 from app.services.scoring_public import get_scoring_system_public
 from app.services.automation_profile import get_automation_profile_for_response
 from app.services.lead_value import compute_lead_value
+from app.services.gtm_readiness import compute_gtm_readiness
+from app.services.company_domain import (
+    dedupe_companies_ordered,
+    dedupe_staged_lead_tuples,
+    normalize_website_domain,
+    pick_canonical_company,
+)
 
 router = APIRouter()
 
 
-def _dedupe_companies_by_normalized_name(companies: List[Company]) -> List[Company]:
+def _entity_resolution_payload(db: Session, c: Company) -> Optional[dict]:
     """
-    Keep the first row per normalized display name (order preserved — typically score/recency).
-    Stops duplicate CRM rows when the same buyer was ingested twice under different company IDs.
+    When multiple company rows share the same registrable domain, expose IDs and
+    the canonical row (highest intent + signal evidence) for clients that merge in UI.
     """
-    seen: set[str] = set()
-    out: List[Company] = []
-    for c in companies:
-        raw = (c.name or "").strip()
-        if not raw:
-            out.append(c)
-            continue
-        key = " ".join(raw.lower().split())
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append(c)
-    return out
+    dom = getattr(c, "website_domain", None) or normalize_website_domain(c.website)
+    if not dom:
+        return None
+    peers = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.website_domain == dom)
+        .all()
+    )
+    if len(peers) <= 1:
+        return None
+    canonical = pick_canonical_company(peers)
+    if not canonical:
+        return None
+    return {
+        "website_domain": dom,
+        "company_ids_sharing_domain": sorted(p.id for p in peers),
+        "canonical_company_id": canonical.id,
+        "requested_is_canonical": c.id == canonical.id,
+    }
 
 
 # Embedded `signals` in JSON are capped + deduplicated by signal_type.
@@ -457,6 +475,8 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
     )
     signal_score = compute_lead_aggregate_signal_score(sigs)
 
+    gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
+
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -503,6 +523,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "share_blurb": share_blurb,
         "share_summary": share_summary,
         "automation_profile": automation_profile,
+        "gtm": gtm,
     }
 
 
@@ -577,7 +598,9 @@ def get_leads(
     else:
         results.sort(key=lambda x: x["priority_score"], reverse=True)
 
-    results = results[:limit]
+    # Extra headroom so domain/name dedupe can still return up to `limit` distinct entities.
+    pre_limit = min(max(limit * 5, 240), 1500)
+    results = results[:pre_limit]
 
     if not results:
         return []
@@ -591,18 +614,19 @@ def get_leads(
     )
     company_map = {c.id: c for c in companies}
 
-    final = []
+    staged = []
     for r in results:
         c = company_map.get(r["id"])
         if not c:
             continue
-        # Re-classify only the final visible rows so the response stays exact.
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
         if junk and exclude_junk:
             continue
-        final.append(_fmt_company(c, junk, junk_reason, pri))
+        staged.append((c, junk, junk_reason, pri))
 
-    return final   # plain list — dashboard iterates it directly
+    staged = dedupe_staged_lead_tuples(staged)[:limit]
+
+    return [_fmt_company(c, junk, junk_reason, pri) for c, junk, junk_reason, pri in staged]
 
 
 @router.get("/by-id/{company_id}")
@@ -617,7 +641,47 @@ def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
     if not c:
         raise HTTPException(status_code=404, detail="Lead not found")
     junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-    return _fmt_company(c, junk, junk_reason, pri)
+    payload = _fmt_company(c, junk, junk_reason, pri)
+    er = _entity_resolution_payload(db, c)
+    if er:
+        payload["entity_resolution"] = er
+    return payload
+
+
+class RepFeedbackIn(BaseModel):
+    vote: Literal["up", "down"]
+    reason_code: Optional[Literal["wrong_company", "not_ready", "spam", "other"]] = None
+    note: Optional[str] = Field(None, max_length=2000)
+
+
+@router.post("/{company_id}/feedback")
+def post_lead_rep_feedback(
+    company_id: int,
+    body: RepFeedbackIn,
+    db: Session = Depends(get_db),
+    user: Optional[dict] = Depends(optional_user),
+):
+    """
+    Rep feedback loop: thumbs up/down plus optional reason (wrong company, not ready, spam).
+    Anonymous submissions allowed; Bearer token attaches user_id when present.
+    """
+    c = db.query(Company).filter(Company.id == company_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Company not found")
+    uid = None
+    if user and user.get("uid"):
+        uid = str(user["uid"])
+    row = LeadRepFeedback(
+        company_id=company_id,
+        vote=body.vote,
+        reason_code=body.reason_code,
+        note=body.note,
+        user_id=uid,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {"ok": True, "id": row.id}
 
 
 @router.get("/homepage")
@@ -691,8 +755,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
 
     hot_pool.sort(key=lambda x: (-x[0], -x[1]))
     warm_pool.sort(key=lambda x: (-x[0], -x[1]))
-    hot_ordered = _dedupe_companies_by_normalized_name([t[2] for t in hot_pool])
-    warm_ordered = _dedupe_companies_by_normalized_name([t[2] for t in warm_pool])
+    hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
+    warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
 
     spotlight_limit = 5
     hot_slots = 3
