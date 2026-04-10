@@ -562,7 +562,7 @@ export default function Signals() {
             <div className="rr-hero-headline-row">
               <div className="rr-hero-headline-block">
                 <p className="rr-hero-signal-source-tag">
-                  14 signal types · 140+ sources
+                  14 signal types · 150+ sources
                 </p>
                 <h1 className="rr-hero-title-main rr-hero-title-bridge">
                   <span className="rr-hero-title-part">Companies</span>

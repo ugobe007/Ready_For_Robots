@@ -122,7 +122,7 @@ export default function SignalIntelligencePage() {
     <>
       <Head>
         <title>Signal Intelligence | Ready For Robots</title>
-        <meta name="description" content="How we detect buying intent across 140+ sources — 14 signal types, HOT/WARM/Emerging tiers, and real-time lead intelligence." />
+        <meta name="description" content="How we detect buying intent across 150+ sources — 14 signal types, HOT/WARM/Emerging tiers, and real-time lead intelligence." />
       </Head>
       <RrSiteLayout active="about">
       <main className="max-w-7xl mx-auto px-6 py-10 md:py-14 space-y-16 text-[var(--rr-text)]">
@@ -130,14 +130,14 @@ export default function SignalIntelligencePage() {
         {/* Hero Section */}
         <section className="text-center space-y-6 py-8">
           <div className="inline-block px-4 py-1.5 rounded-full border border-cyan-700 bg-cyan-950/30 text-cyan-400 text-sm font-medium mb-4">
-            ⚡ Powered by 14 Signal Types · 140+ Data Sources
+            ⚡ Powered by 14 Signal Types · 150+ Data Sources
           </div>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent leading-tight">
             Robot Ready Sales Leads<br />with Signal Intelligence
           </h1>
           <p className="text-xl text-neutral-400 max-w-3xl mx-auto leading-relaxed">
             We detect buying intent <span className="text-emerald-400 font-semibold">before companies even know they're ready to buy</span>. 
-            Our AI monitors 140+ sources 24/7, analyzing signals that reveal automation opportunities 6-12 months early.
+            Our AI monitors 150+ sources 24/7, analyzing signals that reveal automation opportunities 6-12 months early.
           </p>
           <div className="flex items-center justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function SignalIntelligencePage() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-neutral-800 text-center text-[10px] text-neutral-500">
-            Signal velocity metrics update every 3s based on detection patterns across 140+ sources
+            Signal velocity metrics update every 3s based on detection patterns across 150+ sources
           </div>
         </section>
 
@@ -215,7 +215,7 @@ export default function SignalIntelligencePage() {
               ⚡ The Signal Engine
             </h2>
             <p className="text-neutral-400 text-lg max-w-3xl mx-auto">
-              We detect <span className="text-emerald-400 font-semibold">14 distinct signal types</span> across 140+ data sources. 
+              We detect <span className="text-emerald-400 font-semibold">14 distinct signal types</span> across 150+ data sources. 
               Each signal reveals buying intent at different stages of the decision journey.
             </p>
           </div>
@@ -258,7 +258,7 @@ export default function SignalIntelligencePage() {
               <div className="text-4xl mb-2">🎯</div>
               <h4 className="font-semibold text-emerald-400">1. Detection</h4>
               <p className="text-sm text-neutral-400 leading-relaxed">
-                AI crawls 140+ sources 24/7, detecting signals in real-time
+                AI crawls 150+ sources 24/7, detecting signals in real-time
               </p>
             </div>
             <div className="text-center space-y-3">
@@ -442,7 +442,7 @@ export default function SignalIntelligencePage() {
               <div className="text-xs text-neutral-500">Total Leads</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-cyan-400 tabular-nums">140+</div>
+              <div className="text-2xl font-bold text-cyan-400 tabular-nums">150+</div>
               <div className="text-xs text-neutral-500">Data Sources</div>
             </div>
             <div>
@@ -525,7 +525,7 @@ export default function SignalIntelligencePage() {
 
           <div className="mt-8 pt-6 border-t border-neutral-800 text-center">
             <p className="text-sm text-neutral-500">
-              <span className="text-emerald-400 font-semibold">140+ sources</span> monitored 24/7 · 
+              <span className="text-emerald-400 font-semibold">150+ sources</span> monitored 24/7 · 
               Government contracts average <span className="text-cyan-400 font-semibold">$2M-$10M+</span> deployments · 
               New signals detected every <span className="text-purple-400 font-semibold">~2 minutes</span>
             </p>
@@ -563,7 +563,7 @@ export default function SignalIntelligencePage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-emerald-400">✓</span>
-              <span>140+ Data Sources</span>
+              <span>150+ Data Sources</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-emerald-400">✓</span>
