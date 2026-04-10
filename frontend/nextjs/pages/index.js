@@ -260,7 +260,7 @@ export default function Signals() {
     const apiBase = getApiBase();
     let cancelled = false;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10s for mobile/slow networks
+      const timeout = setTimeout(() => controller.abort(), 20000); // 20s — allows for Fly cold-start
     const fetchHomepage = async () => {
       const isFirstFetch = !homepageFetchCompletedRef.current;
       if (isFirstFetch) setLoading(true);

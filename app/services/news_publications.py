@@ -216,6 +216,8 @@ def normalize_publication_name(s: str) -> str:
     t = _WS_RE.sub(" ", t)
     # Strip paired quotes Google sometimes leaves in titles
     t = t.strip("\"'“”‘’")
+    # Strip trailing punctuation RSS scrapers leave on names ("Modern Materials Handling.")
+    t = t.rstrip(".,;:!?")
     return t
 
 

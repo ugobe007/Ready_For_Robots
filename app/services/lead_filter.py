@@ -199,6 +199,21 @@ _JUNK_PATTERNS = [
     # Stock / analyst headline templates
     r"(?i)\b(stock\s+)?(rises|falls|gains|drops|soars|plunges)\s+\d+\s*%",
     r"(?i)\bbeats\s+(q[1-4]|first|second|third|fourth)\s+quarter\b",
+
+    # Names ending with a bare period that are NOT known corporate abbreviations.
+    # Matches "Acme Logistics." but NOT "Acme Inc." / "Acme Ltd." / "Acme Co." / "Acme Corp."
+    r"(?i)^(?!.*\b(inc|ltd|co|corp|llc|plc|llp|lp|gmbh|bv|nv|ag|sa|srl)\b\s*\.?\s*$)"
+    r".+[a-z]\.$",
+
+    # "… for Restaurants", "… for Hotels" — sector-targeting article fragments
+    r"(?i)\bfor\s+(restaurants|hotels|warehouses|hospitals|retailers|operators|facilities)\s*$",
+
+    # Named after a state/city + generic venue type — usually a headline "Florida Restaurant …"
+    r"(?i)^(florida|california|texas|new\s+york|ohio|georgia|arizona|illinois|"
+    r"michigan|washington|colorado|nevada|virginia|pennsylvania|north\s+carolina|"
+    r"south\s+carolina|new\s+jersey|massachusetts|minnesota|tennessee)\s+"
+    r"(restaurant|hotel|warehouse|hospital|casino|factory|retail\s+store|"
+    r"grocery\s+store|distribution\s+center)\b",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -259,6 +274,10 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
     low = stripped.lower()
 
     if is_known_publication_name(stripped):
+        return True, "news or trade publication (not a buyer company)"
+    # Catch publications stored with trailing punctuation ("Modern Materials Handling.")
+    stripped_punct = stripped.rstrip(".,;:!?")
+    if stripped_punct != stripped and is_known_publication_name(stripped_punct):
         return True, "news or trade publication (not a buyer company)"
 
     bad_nc, reason_nc = reject_as_non_company_name(stripped)

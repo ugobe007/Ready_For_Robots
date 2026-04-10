@@ -41,9 +41,11 @@ logs/
 
 # Node
 node_modules/
+node_modules.old*/
 .next/
 frontend/nextjs/.next/
 frontend/nextjs/node_modules/
+frontend/nextjs/node_modules.old*/
 
 # OS
 .DS_Store

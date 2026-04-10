@@ -13,6 +13,7 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
+import time
 from datetime import datetime, timezone, date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -684,6 +685,24 @@ def post_lead_rep_feedback(
     return {"ok": True, "id": row.id}
 
 
+# ── Homepage TTL cache ────────────────────────────────────────────────────────
+# The two aggregate queries on 4 000+ rows take 15–30 s on cold DB connections.
+# Cache the built response for 90 s so repeat visits (and Fly wake-ups) are fast.
+_HOMEPAGE_CACHE_TTL = 90  # seconds
+_homepage_cache: dict = {}
+
+
+def _get_homepage_cache():
+    entry = _homepage_cache.get("v1")
+    if entry and (time.monotonic() - entry["ts"]) < _HOMEPAGE_CACHE_TTL:
+        return entry["data"]
+    return None
+
+
+def _set_homepage_cache(data: dict) -> None:
+    _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
+
+
 @router.get("/homepage")
 def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
@@ -693,13 +712,22 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     Selection: sort by newest signal time, then score; take 3 HOT + 2 WARM with a
     daily + hourly rotating window so the same top-score rows do not monopolize the list.
     Includes tierLegend for UI copy (COLD band documented as "Emerging").
+
+    Performance: runs ONE aggregate query (not two), then sorts candidate rows in
+    Python. Result is cached server-side for 90 s to avoid hammering the DB on
+    every page load while the Fly machine is warm.
     """
-    # Dynamic DB counts — do not cache (was max-age=90; browsers kept stale totals after deploys)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
 
-    # 1. Summary — must use _lead_rows_query so hot_hits/warm_hits match list + classify_lead tier logic
+    cached = _get_homepage_cache()
+    if cached is not None:
+        return cached
+
+    # Single aggregate query — reused for both summary and spotlight candidates.
     rows = _lead_rows_query(db).all()
+
+    # Summary
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
     )
@@ -710,15 +738,15 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         "by_industry": by_industry,
     }
 
-    # 2. Spotlight: same ordering as high-intent pipeline, tier from classify_lead
-    candidate_rows = (
-        _lead_rows_query(db)
-        .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
-        .limit(280)
-        .all()
-    )
+    # Spotlight candidates: top-280 by score, sorted in Python (avoids second DB round-trip)
+    candidate_rows = sorted(
+        rows,
+        key=lambda r: float(r.overall_score or 0),
+        reverse=True,
+    )[:280]
+
     ordered_ids = []
-    seen = set()
+    seen: set = set()
     for row in candidate_rows:
         if _row_is_junk(row.name)[0]:
             continue
@@ -730,7 +758,9 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         ordered_ids.append(row.id)
 
     if not ordered_ids:
-        return {"summary": summary, "hotLeads": []}
+        result = {"summary": summary, "hotLeads": []}
+        _set_homepage_cache(result)
+        return result
 
     companies = (
         db.query(Company)
@@ -769,7 +799,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     w_seed = day_o * 9283 + 411 + hour * 23
 
     chosen: List[Company] = []
-    used_ids = set()
+    used_ids: set = set()
 
     for c in _take_rotated(hot_ordered, hot_slots, h_seed):
         if c.id not in used_ids:
@@ -803,7 +833,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
         hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
 
-    return {
+    result = {
         "summary": summary,
         "hotLeads": hot_leads,
         "tierLegend": HOMEPAGE_TIER_LEGEND,
@@ -815,6 +845,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         },
         "scoringSystem": get_scoring_system_public(),
     }
+    _set_homepage_cache(result)
+    return result
 
 
 @router.get("/scoring-system")

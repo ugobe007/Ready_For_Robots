@@ -14,14 +14,16 @@ def test_faraday_future_headline():
 
 
 def test_best_name_from_signals():
+    # "Acme Robotics" is now correctly classified as a vendor (not a buyer);
+    # use a genuine buyer company name instead.
     assert (
         best_name_from_signals(
             [
                 "noise",
-                "Acme Robotics announces Series B for warehouse arms",
+                "Apex Logistics announces expansion of warehouse operations",
             ]
         )
-        == "Acme Robotics"
+        == "Apex Logistics"
     )
 
 
