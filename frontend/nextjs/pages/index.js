@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -56,6 +56,19 @@ function extractLeadPreviews(data) {
       return { name, opp: opportunityLine(lead) };
     })
     .filter(Boolean);
+}
+
+/** One card per buyer name — duplicate DB rows (same company ingested twice) collapse for UI. */
+function dedupeHomepageLeads(leads) {
+  if (!Array.isArray(leads)) return [];
+  const seen = new Set();
+  return leads.filter((l) => {
+    const k = (l.company_name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!k) return true;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 
 /** Rotating { name, opp } rows (stable modulo). */
@@ -216,10 +229,11 @@ export default function Signals() {
   useEffect(() => {
     if (!hotLeads?.length) return;
     setCrmPreviewLists((prev) => {
+      const spot = dedupeHomepageLeads(hotLeads);
       const fromSpotlight = {
-        active: extractLeadPreviews(hotLeads),
-        hot: extractLeadPreviews(hotLeads.filter((l) => l.priority_tier === 'HOT')),
-        warm: extractLeadPreviews(hotLeads.filter((l) => l.priority_tier === 'WARM')),
+        active: extractLeadPreviews(spot),
+        hot: extractLeadPreviews(spot.filter((l) => l.priority_tier === 'HOT')),
+        warm: extractLeadPreviews(spot.filter((l) => l.priority_tier === 'WARM')),
       };
       return {
         active: prev.active.length ? prev.active : fromSpotlight.active,
@@ -304,8 +318,8 @@ export default function Signals() {
     .flatMap(lead => (lead.signals || []).map(s => ({ ...s, company: lead.company_name })))
     .sort((a, b) => (b.signal_strength || 0) - (a.signal_strength || 0))[0];
 
-  // Daily Hot Deals: already fetched as top 5 HOT (topHotDeals = hotLeads)
-  const topHotDeals = hotLeads;
+  // Daily spotlight: API may still return same name twice if DB has duplicate companies; collapse here too.
+  const topHotDeals = useMemo(() => dedupeHomepageLeads(hotLeads), [hotLeads]);
 
   const getColorClasses = (color) => {
     const colors = {
@@ -820,7 +834,7 @@ export default function Signals() {
                     Spotlight
                   </span>
                   <div className="rr-home-spotlight-chips">
-                    {hotLeads.slice(0, 6).map((lead) => (
+                    {dedupeHomepageLeads(hotLeads).slice(0, 6).map((lead) => (
                       <Link
                         key={lead.id}
                         href="#leads"
@@ -868,10 +882,6 @@ export default function Signals() {
                 <span className="rr-pipeline-check">Free trial</span>
               </div>
           </div>
-
-          <Link href="/dashboard" className="rr-browse-all-btn">
-            Browse All {statsData.activeLeads} Leads by Industry →
-          </Link>
         </div>
 
         <div className="rr-section !pt-2 !pb-6">
@@ -1192,12 +1202,6 @@ export default function Signals() {
                                 );
                               })()}
                             </div>
-                            <Link
-                              href={`/dashboard?analyze=${lead.id}`}
-                              className="inline-flex items-center gap-1 text-sm text-orange-400 hover:text-orange-300 font-semibold whitespace-nowrap"
-                            >
-                              Full AI analysis →
-                            </Link>
                           </div>
                         </div>
                       </div>

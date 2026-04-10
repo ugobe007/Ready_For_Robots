@@ -39,6 +39,27 @@ from app.services.lead_value import compute_lead_value
 
 router = APIRouter()
 
+
+def _dedupe_companies_by_normalized_name(companies: List[Company]) -> List[Company]:
+    """
+    Keep the first row per normalized display name (order preserved — typically score/recency).
+    Stops duplicate CRM rows when the same buyer was ingested twice under different company IDs.
+    """
+    seen: set[str] = set()
+    out: List[Company] = []
+    for c in companies:
+        raw = (c.name or "").strip()
+        if not raw:
+            out.append(c)
+            continue
+        key = " ".join(raw.lower().split())
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(c)
+    return out
+
+
 # Embedded `signals` in JSON are capped + deduplicated by signal_type.
 # Top-scoring representative per unique type; then top N overall.
 # `signal_count` still holds the true DB total.
@@ -670,8 +691,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
 
     hot_pool.sort(key=lambda x: (-x[0], -x[1]))
     warm_pool.sort(key=lambda x: (-x[0], -x[1]))
-    hot_ordered = [t[2] for t in hot_pool]
-    warm_ordered = [t[2] for t in warm_pool]
+    hot_ordered = _dedupe_companies_by_normalized_name([t[2] for t in hot_pool])
+    warm_ordered = _dedupe_companies_by_normalized_name([t[2] for t in warm_pool])
 
     spotlight_limit = 5
     hot_slots = 3
