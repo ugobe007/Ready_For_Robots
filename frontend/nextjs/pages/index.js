@@ -561,22 +561,9 @@ export default function Signals() {
           <div className="rr-hero-inner">
             <div className="rr-hero-headline-row">
               <div className="rr-hero-headline-block">
-                <nav className="rr-hero-top-nav" aria-label="Quick links">
-                  <Link href="/dashboard">Dashboard</Link>
-                  <span className="rr-hero-top-nav-sep">·</span>
-                  <Link href="/dashboard">Pipeline</Link>
-                  <span className="rr-hero-top-nav-sep">·</span>
-                  <Link href="/crm/">CRM</Link>
-                  <span className="rr-hero-top-nav-sep">·</span>
-                  <Link href="/search">Search</Link>
-                  <span className="rr-hero-top-nav-sep">·</span>
-                  <a href="#leads">Browse leads</a>
-                  <span className="rr-hero-top-nav-sep">·</span>
-                  <Link href="/about">Signals</Link>
-                  <span className="rr-hero-top-nav-muted hidden sm:inline">
-                    · 14 types · 140+ sources
-                  </span>
-                </nav>
+                <p className="rr-hero-signal-source-tag">
+                  14 signal types · 140+ sources
+                </p>
                 <h1 className="rr-hero-title-main rr-hero-title-bridge">
                   <span className="rr-hero-title-part">Companies</span>
                   <span className="rr-hero-title-arrow" aria-hidden="true">

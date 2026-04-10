@@ -975,43 +975,14 @@
   color: var(--rr-muted);
 }
 
-/* Hero strip: compact nav links (replaces static eyebrow copy) */
-.rr-hero-top-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 4px;
+/* Hero eyebrow: signal source count tag */
+.rr-hero-signal-source-tag {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  margin-bottom: 16px;
-  max-width: 100%;
-}
-
-.rr-hero-top-nav a {
-  color: var(--rr-muted2);
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background 0.15s, color 0.15s;
-}
-
-.rr-hero-top-nav a:hover {
-  background: var(--rr-surface2);
-  color: var(--rr-green);
-}
-
-.rr-hero-top-nav .rr-hero-top-nav-sep {
-  color: var(--rr-border);
-  user-select: none;
-  padding: 0 2px;
-}
-
-.rr-hero-top-nav .rr-hero-top-nav-muted {
   color: var(--rr-muted);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding-left: 4px;
+  margin-bottom: 16px;
 }
 
 .rr-hero h1 {
