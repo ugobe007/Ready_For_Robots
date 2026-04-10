@@ -806,71 +806,6 @@ export default function Signals() {
               })()}
         </div>
 
-        {/* CTA — CRM / pipeline builder (layout aligned with dashboard pipeline card) */}
-        <div id="cta" className="rr-section !pt-2">
-          <div className="rr-pipeline-section rr-pipeline-home-cta border-emerald-900/30 bg-gradient-to-br from-emerald-950/25 to-[var(--rr-surface)]">
-            <div className="rr-pipeline-eyebrow">● Free CRM builder</div>
-            <div className="rr-pipeline-card-title-row">
-              <h2 className="rr-pipeline-card-title text-2xl sm:text-[1.75rem] md:text-3xl font-extrabold tracking-tight text-[var(--rr-text)] !mb-0">
-                Start Building your Customer CRM
-              </h2>
-              {!loading && hotLeads.length > 0 && (
-                <div className="rr-home-spotlight-inline" aria-label="Spotlight companies">
-                  <span className="rr-ticker-inline-label">
-                    <span className="inline-block h-1 w-1 rounded-full bg-emerald-500" aria-hidden />
-                    Spotlight
-                  </span>
-                  <div className="rr-home-spotlight-chips">
-                    {dedupeHomepageLeads(hotLeads).slice(0, 6).map((lead) => (
-                      <Link
-                        key={lead.id}
-                        href="#leads"
-                        className="rr-home-spotlight-chip"
-                      >
-                        {lead.company_name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="rr-pipeline-card-lead mt-2 mb-4 space-y-2.5">
-              <p>
-                Automation projects are difficult to discover and plan for without great data. We deliver great data that is live, not stale.
-              </p>
-              <p>
-                Then we help you shape your timing and strategy for each one so opportunities turn into PoCs (Proof of Concept) and projects.
-              </p>
-            </div>
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const v = e.target.robotUrl?.value?.trim() ?? '';
-                  setPipelineModalInput(v);
-                  setPipelineModalOpen(true);
-                }}
-                className="space-y-2"
-              >
-                <input
-                  type="text"
-                  name="robotUrl"
-                  placeholder="Enter your robot company website (e.g., amplibotics.ai)"
-                  className="rr-pipeline-input !mb-2 !py-3"
-                />
-                <button type="submit" className="rr-btn-build rr-btn-build-compact">
-                  Build CRM pipeline →
-                </button>
-              </form>
-
-              <div className="rr-pipeline-checks">
-                <span className="rr-pipeline-check">No signup required</span>
-                <span className="rr-pipeline-check">Instant results</span>
-                <span className="rr-pipeline-check">Free trial</span>
-              </div>
-          </div>
-        </div>
-
         <div className="rr-section !pt-2 !pb-6">
           <Link href="#signals" className="rr-why-signals group block rounded-[var(--rr-radius-lg)]">
             <div className="flex items-center justify-between gap-3">
@@ -1211,6 +1146,71 @@ export default function Signals() {
               })}
             </div>
           )}
+        </div>
+
+        {/* CTA — CRM / pipeline builder — after spotlight so users see proof before the ask */}
+        <div id="cta" className="rr-section !pt-2">
+          <div className="rr-pipeline-section rr-pipeline-home-cta border-emerald-900/30 bg-gradient-to-br from-emerald-950/25 to-[var(--rr-surface)]">
+            <div className="rr-pipeline-eyebrow">● Free CRM builder</div>
+            <div className="rr-pipeline-card-title-row">
+              <h2 className="rr-pipeline-card-title text-2xl sm:text-[1.75rem] md:text-3xl font-extrabold tracking-tight text-[var(--rr-text)] !mb-0">
+                Start Building your Customer CRM
+              </h2>
+              {!loading && hotLeads.length > 0 && (
+                <div className="rr-home-spotlight-inline" aria-label="Spotlight companies">
+                  <span className="rr-ticker-inline-label">
+                    <span className="inline-block h-1 w-1 rounded-full bg-emerald-500" aria-hidden />
+                    Spotlight
+                  </span>
+                  <div className="rr-home-spotlight-chips">
+                    {dedupeHomepageLeads(hotLeads).slice(0, 6).map((lead) => (
+                      <Link
+                        key={lead.id}
+                        href="#leads"
+                        className="rr-home-spotlight-chip"
+                      >
+                        {lead.company_name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="rr-pipeline-card-lead mt-2 mb-4 space-y-2.5">
+              <p>
+                Automation projects are difficult to discover and plan for without great data. We deliver great data that is live, not stale.
+              </p>
+              <p>
+                Then we help you shape your timing and strategy for each one so opportunities turn into PoCs (Proof of Concept) and projects.
+              </p>
+            </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const v = e.target.robotUrl?.value?.trim() ?? '';
+                  setPipelineModalInput(v);
+                  setPipelineModalOpen(true);
+                }}
+                className="space-y-2"
+              >
+                <input
+                  type="text"
+                  name="robotUrl"
+                  placeholder="Enter your robot company website (e.g., amplibotics.ai)"
+                  className="rr-pipeline-input !mb-2 !py-3"
+                />
+                <button type="submit" className="rr-btn-build rr-btn-build-compact">
+                  Build CRM pipeline →
+                </button>
+              </form>
+
+              <div className="rr-pipeline-checks">
+                <span className="rr-pipeline-check">No signup required</span>
+                <span className="rr-pipeline-check">Instant results</span>
+                <span className="rr-pipeline-check">Free trial</span>
+              </div>
+          </div>
         </div>
 
         {/* Browse All Leads by Industry */}
