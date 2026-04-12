@@ -103,6 +103,7 @@ const TABS = [
   'System',
   'CRM',
   'Robot Companies',
+  'Data Quality',
 ];
 
 const SCRAPERS  = ['all', 'job_board', 'hotel_dir', 'rss_feed', 'news'];
@@ -1476,6 +1477,7 @@ export default function AdminPage() {
         {tab === 'System'      && <SystemControls />}
         {tab === 'CRM'         && <CrmAdminPanel />}
         {tab === 'Robot Companies' && <RobotCompaniesLink />}
+        {tab === 'Data Quality'   && <DataQuality />}
       </main>
     </div>
     </AdminAuthContext.Provider>
@@ -1586,6 +1588,233 @@ function RobotCompaniesLink() {
           Open Robot Companies →
         </Link>
       </div>
+    </div>
+  );
+}
+
+// ── Data Quality Tab ──────────────────────────────────────────────────────────
+const ADMIN_KEY = typeof process !== 'undefined' ? (process.env.NEXT_PUBLIC_ADMIN_KEY || '') : '';
+
+function DataQuality() {
+  const [queue, setQueue] = useState(null);
+  const [queueErr, setQueueErr] = useState('');
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [deleteResult, setDeleteResult] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [purgeResult, setPurgeResult] = useState(null);
+  const [purging, setPurging] = useState(false);
+  const [adminKey, setAdminKey] = useState('');
+
+  const fetchQueue = async () => {
+    if (!adminKey) { setQueueErr('Enter your Admin Key first'); return; }
+    setQueueLoading(true);
+    setQueueErr('');
+    setQueue(null);
+    setSelected(new Set());
+    setDeleteResult(null);
+    try {
+      const r = await fetch(`${API}/api/admin/review-queue?limit=100`, {
+        headers: { 'X-Admin-Key': adminKey },
+      });
+      if (!r.ok) { setQueueErr(`HTTP ${r.status}`); return; }
+      setQueue(await r.json());
+    } catch (e) {
+      setQueueErr(e?.message || 'Request failed');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => setSelected(new Set((queue?.leads || []).map(l => l.id)));
+  const clearAll  = () => setSelected(new Set());
+
+  const deleteSelected = async (dryRun) => {
+    if (!selected.size) return;
+    setDeleting(true);
+    setDeleteResult(null);
+    try {
+      const r = await fetch(`${API}/api/admin/delete-by-ids`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        body: JSON.stringify({ company_ids: [...selected], dry_run: dryRun }),
+      });
+      const d = await r.json();
+      setDeleteResult({ ...d, dryRun });
+      if (!dryRun) { setSelected(new Set()); fetchQueue(); }
+    } catch (e) {
+      setDeleteResult({ error: e?.message || 'Request failed' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const runPurge = async (dryRun) => {
+    setPurging(true);
+    setPurgeResult(null);
+    try {
+      const r = await fetch(`${API}/api/admin/purge-junk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+        body: JSON.stringify({ dry_run: dryRun }),
+      });
+      setPurgeResult(await r.json());
+    } catch (e) {
+      setPurgeResult({ error: e?.message || 'Request failed' });
+    } finally {
+      setPurging(false);
+    }
+  };
+
+  return (
+    <div className="space-y-10 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-semibold text-emerald-400">Data Quality</h2>
+        <p className="text-sm text-neutral-500 mt-1">
+          Review low-confidence leads, delete known junk by ID, and run the automated junk purge.
+        </p>
+      </div>
+
+      {/* Admin key input */}
+      <div className="space-y-2">
+        <label className="text-xs text-neutral-400 uppercase tracking-wider">Admin Key</label>
+        <input
+          type="password"
+          value={adminKey}
+          onChange={e => setAdminKey(e.target.value)}
+          placeholder="Paste your X-Admin-Key…"
+          className="w-full max-w-sm bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-emerald-600"
+        />
+      </div>
+
+      {/* ── Review Queue ─────────────────────────────────────────── */}
+      <section className="border border-neutral-800 rounded-lg p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h3 className="font-medium text-neutral-100">Review Queue</h3>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Leads that passed the junk filter but have only weak signals (automation_interest / news) and score&nbsp;&lt;&nbsp;60.
+              These may be article fragments or misclassified records.
+            </p>
+          </div>
+          <button
+            onClick={fetchQueue}
+            disabled={queueLoading}
+            className="px-4 py-1.5 text-sm border border-emerald-700 text-emerald-400 rounded hover:bg-emerald-900/30 disabled:opacity-50 transition-colors"
+          >
+            {queueLoading ? 'Loading…' : 'Load Queue'}
+          </button>
+        </div>
+
+        {queueErr && <p className="text-red-400 text-sm">{queueErr}</p>}
+
+        {queue && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-xs text-neutral-500">
+              <span>{queue.count} leads in queue</span>
+              <button onClick={selectAll}  className="text-emerald-500 hover:underline">Select all</button>
+              <button onClick={clearAll}   className="text-neutral-500 hover:underline">Clear</button>
+              <span className="ml-auto">{selected.size} selected</span>
+            </div>
+
+            <div className="border border-neutral-800 rounded divide-y divide-neutral-800 max-h-96 overflow-y-auto">
+              {queue.leads.map(lead => (
+                <div
+                  key={lead.id}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer hover:bg-neutral-900/60 transition-colors ${selected.has(lead.id) ? 'bg-red-950/20' : ''}`}
+                  onClick={() => toggleSelect(lead.id)}
+                >
+                  <input
+                    type="checkbox"
+                    readOnly
+                    checked={selected.has(lead.id)}
+                    className="accent-red-500 cursor-pointer"
+                  />
+                  <span className="flex-1 text-neutral-200 font-mono text-xs">{lead.name}</span>
+                  <span className="text-neutral-600 text-xs w-28 shrink-0">{lead.industry || '—'}</span>
+                  <span className="text-neutral-500 text-xs w-16 text-right">{lead.score}</span>
+                  <span className="text-neutral-600 text-xs w-32 text-right shrink-0">{lead.signals.join(', ')}</span>
+                </div>
+              ))}
+              {queue.leads.length === 0 && (
+                <div className="px-4 py-6 text-center text-neutral-600 text-sm">No leads in review queue — great data quality!</div>
+              )}
+            </div>
+
+            {selected.size > 0 && (
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={() => deleteSelected(true)}
+                  disabled={deleting}
+                  className="px-4 py-1.5 text-sm border border-yellow-700 text-yellow-400 rounded hover:bg-yellow-900/20 disabled:opacity-50 transition-colors"
+                >
+                  Preview Delete ({selected.size})
+                </button>
+                <button
+                  onClick={() => deleteSelected(false)}
+                  disabled={deleting}
+                  className="px-4 py-1.5 text-sm border border-red-700 text-red-400 rounded hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+                >
+                  {deleting ? 'Deleting…' : `Delete ${selected.size} leads`}
+                </button>
+              </div>
+            )}
+
+            {deleteResult && (
+              <div className={`text-xs rounded p-3 font-mono ${deleteResult.error ? 'bg-red-950/30 text-red-400' : 'bg-neutral-900 text-neutral-300'}`}>
+                {deleteResult.error
+                  ? deleteResult.error
+                  : deleteResult.dryRun
+                    ? `DRY RUN — would delete ${deleteResult.found} records: ${(deleteResult.records || []).map(r => r.name).join(', ')}`
+                    : `✓ Deleted ${deleteResult.deleted} records`
+                }
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── Automated Purge ──────────────────────────────────────── */}
+      <section className="border border-neutral-800 rounded-lg p-6 space-y-4">
+        <div>
+          <h3 className="font-medium text-neutral-100">Automated Junk Purge</h3>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Runs the <code className="text-emerald-400">is_junk()</code> filter across all companies and deletes matches.
+            Always preview first.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => runPurge(true)}
+            disabled={purging || !adminKey}
+            className="px-4 py-1.5 text-sm border border-yellow-700 text-yellow-400 rounded hover:bg-yellow-900/20 disabled:opacity-50 transition-colors"
+          >
+            {purging ? 'Running…' : 'Preview Purge'}
+          </button>
+          <button
+            onClick={() => runPurge(false)}
+            disabled={purging || !adminKey}
+            className="px-4 py-1.5 text-sm border border-red-700 text-red-400 rounded hover:bg-red-900/20 disabled:opacity-50 transition-colors"
+          >
+            {purging ? 'Running…' : 'Run Purge (delete)'}
+          </button>
+        </div>
+        {purgeResult && (
+          <div className="text-xs rounded p-3 font-mono bg-neutral-900 text-neutral-300 max-h-48 overflow-y-auto whitespace-pre-wrap">
+            {purgeResult.error
+              ? purgeResult.error
+              : JSON.stringify(purgeResult, null, 2)}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

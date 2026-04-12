@@ -10,9 +10,9 @@ POST /api/admin/purge-junk
             {"dry_run": false, "limit": 500}  — cap deletions per call
 """
 import os
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -25,6 +25,11 @@ router = APIRouter()
 class PurgeJunkPayload(BaseModel):
     dry_run: bool = True          # safe default: preview only
     limit: Optional[int] = None   # safety cap on how many to delete at once
+
+
+class DeleteByIdsPayload(BaseModel):
+    company_ids: List[int]
+    dry_run: bool = True
 
 
 def _check_admin_key(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")) -> None:
@@ -86,3 +91,98 @@ def purge_junk(
         "remaining": len(companies) - deleted,
         "sample_deleted": [r["name"] for r in junk_found[:30]],
     }
+
+
+@router.post("/delete-by-ids")
+def delete_by_ids(
+    payload: DeleteByIdsPayload,
+    db: Session = Depends(get_db),
+    _: None = Depends(_check_admin_key),
+):
+    """
+    Delete specific company records by ID list.
+    dry_run=true  → preview only (shows what would be deleted).
+    dry_run=false → permanently delete companies + their signals and scores.
+    """
+    companies = db.query(Company).filter(Company.id.in_(payload.company_ids)).all()
+    found = [{"id": c.id, "name": c.name, "industry": c.industry} for c in companies]
+
+    if payload.dry_run:
+        return {"dry_run": True, "found": len(found), "records": found}
+
+    from sqlalchemy import text
+    deleted = 0
+    for cid in payload.company_ids:
+        db.execute(text("DELETE FROM scores  WHERE company_id = :cid"), {"cid": cid})
+        db.execute(text("DELETE FROM signals WHERE company_id = :cid"), {"cid": cid})
+        result = db.execute(text("DELETE FROM companies WHERE id = :cid"), {"cid": cid})
+        deleted += result.rowcount
+    db.commit()
+
+    return {"dry_run": False, "deleted": deleted, "records": found}
+
+
+@router.get("/review-queue")
+def review_queue(
+    db: Session = Depends(get_db),
+    _: None = Depends(_check_admin_key),
+    limit: int = Query(100, le=500),
+):
+    """
+    Returns leads that are low-confidence and worth human review before appearing on site.
+    Criteria: only weak signals (automation_interest / news) AND score < 60.
+    These passed is_junk() but may still be article fragments or misclassified records.
+    """
+    from app.models.signal import Signal
+    from app.models.score import Score
+    from app.services.lead_filter import is_junk
+    from sqlalchemy import func
+
+    # Companies with at least one signal
+    sig_counts = (
+        db.query(Signal.company_id, func.count(Signal.id).label("n"))
+        .group_by(Signal.company_id)
+        .subquery()
+    )
+    # Weak signal types that alone don't confirm a buyer
+    WEAK_SIGNALS = {"automation_interest", "news"}
+
+    candidates = (
+        db.query(Company)
+        .join(sig_counts, Company.id == sig_counts.c.company_id)
+        .limit(limit * 5)   # over-fetch; we'll filter below
+        .all()
+    )
+
+    results = []
+    for c in candidates:
+        # Skip if already caught by is_junk (purge handles those)
+        bad, _ = is_junk(c.name)
+        if bad:
+            continue
+        sigs = db.query(Signal).filter(Signal.company_id == c.id).all()
+        sig_types = {s.signal_type for s in sigs}
+        # Only flag if ALL signals are weak
+        if not sig_types.issubset(WEAK_SIGNALS):
+            continue
+        score_row = (
+            db.query(Score)
+            .filter(Score.company_id == c.id)
+            .order_by(Score.last_calculated_at.desc())
+            .first()
+        )
+        overall = getattr(score_row, "overall_intent_score", 0.0) if score_row else 0.0
+        if overall >= 60:
+            continue
+        results.append({
+            "id": c.id,
+            "name": c.name,
+            "industry": c.industry,
+            "score": round(overall, 1),
+            "signals": sorted(sig_types),
+        })
+        if len(results) >= limit:
+            break
+
+    results.sort(key=lambda r: r["score"])
+    return {"count": len(results), "leads": results}

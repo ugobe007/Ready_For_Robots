@@ -122,7 +122,9 @@ function LeadShareBar({ lead, compact = false }) {
   };
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
-  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+  const liTitle = encodeURIComponent(`${lead.company_name} — ${lead.priority_tier || 'Lead'} | Ready For Robots`);
+  const liSummary = encodeURIComponent(fullSummary.slice(0, 700));
+  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${liTitle}&summary=${liSummary}&source=readyforrobots.com`;
 
   if (compact) {
     return (
@@ -232,7 +234,7 @@ function ProcurementHints({ hints, className = '' }) {
   );
 }
 
-const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities', 'Manufacturing'];
+const INDUSTRIES  = ['All', 'Hospitality', 'Logistics', 'Healthcare', 'Food Service', 'Food Processing & Manufacturing', 'CPG & Consumer Goods', 'Contract Manufacturing', 'Airports & Transportation', 'Casinos & Gaming', 'Cruise Lines', 'Theme Parks & Entertainment', 'Real Estate & Facilities', 'Manufacturing'];
 const SIGNAL_TYPES = ['', 'funding_round', 'strategic_hire', 'capex', 'ma_activity', 'expansion', 'job_posting', 'labor_shortage', 'quality_bottleneck', 'safety_incident', 'production_capacity', 'warehouse_throughput', 'packaging_automation', 'repetitive_process', 'material_handling'];
 const TIERS = ['ALL', 'HOT', 'WARM', 'COLD'];
 
@@ -262,16 +264,21 @@ function uniqueSignalTypes(signals = []) {
 
 // -- Strategic Snapshot (replaces HOT/WARM/COLD boxes) ----------------------
 const INDUSTRY_ROBOT_FIT = {
-  'Hospitality':               'Service & Delivery',
-  'Logistics':                 'Warehouse AMR Fleet',
-  'Healthcare':                'Clinical Logistics',
-  'Food Service':              'BOH Automation',
-  'Airports & Transportation': 'Ground Ops Robots',
-  'Retail':                    'Picking & Restocking',
-  'Casinos & Gaming':          'Floor & F&B Delivery',
-  'Cruise Lines':              'Onboard Delivery',
-  'Theme Parks & Entertainment': 'F&B & Custodial',
-  'Real Estate & Facilities':  'Cleaning & Concierge',
+  'Hospitality':                    'Service & Delivery',
+  'Logistics':                      'Warehouse AMR Fleet',
+  'Healthcare':                     'Clinical Logistics',
+  'Food Service':                   'BOH Automation',
+  'Food Processing & Manufacturing':'EOL Line Automation',
+  'CPG & Consumer Goods':           'Palletizing & Case Pack',
+  'Contract Manufacturing':         'Flexible EOL Robotics',
+  'Airports & Transportation':      'Ground Ops Robots',
+  'Retail':                         'Picking & Restocking',
+  'Casinos & Gaming':               'Floor & F&B Delivery',
+  'Cruise Lines':                   'Onboard Delivery',
+  'Theme Parks & Entertainment':    'F&B & Custodial',
+  'Real Estate & Facilities':       'Cleaning & Concierge',
+  'Automotive & Manufacturing':     'Assembly & Machine Tending',
+  'Manufacturing':                  'Assembly & Material Handling',
 };
 
 const READINESS = {
@@ -1590,7 +1597,10 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                             {lead.industry === 'Hospitality' && '43% of hotel chains deployed service robots in 2025'}
                             {lead.industry === 'Food Service' && '38% of QSR chains automated BOH operations in 2025'}
                             {lead.industry === 'Healthcare' && '52% of hospitals deployed clinical logistics robots in 2025'}
-                            {!['Logistics', 'Hospitality', 'Food Service', 'Healthcare'].includes(lead.industry) && 'Automation adoption accelerating across industry'}
+                            {lead.industry === 'Food Processing & Manufacturing' && '71% of food plants cite EOL palletizing as #1 automation priority in 2025'}
+                            {lead.industry === 'CPG & Consumer Goods' && '64% of CPG manufacturers deployed robotic case packing or palletizing in 2025'}
+                            {lead.industry === 'Contract Manufacturing' && 'Co-packers adopting flexible EOL robots 2× faster than captive plants — high changeover ROI'}
+                            {!['Logistics', 'Hospitality', 'Food Service', 'Healthcare', 'Food Processing & Manufacturing', 'CPG & Consumer Goods', 'Contract Manufacturing'].includes(lead.industry) && 'Automation adoption accelerating across industry'}
                           </p>
                         </div>
                       )}
@@ -1655,7 +1665,28 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                               <p className="text-neutral-300">• Director Kitchen Operations (technical buyer)</p>
                             </>
                           )}
-                          {!['Logistics', 'Hospitality', 'Food Service'].includes(lead.industry) && (
+                          {lead.industry === 'Food Processing & Manufacturing' && (
+                            <>
+                              <p className="text-neutral-300">• VP / Director Manufacturing (budget owner)</p>
+                              <p className="text-neutral-300">• Plant Manager / Engineering Director (technical buyer)</p>
+                              <p className="text-neutral-300">• Director EOL / Packaging Engineering (project lead)</p>
+                            </>
+                          )}
+                          {lead.industry === 'CPG & Consumer Goods' && (
+                            <>
+                              <p className="text-neutral-300">• VP / Director Engineering & Automation (budget owner)</p>
+                              <p className="text-neutral-300">• Plant Manager / Operations Director (technical buyer)</p>
+                              <p className="text-neutral-300">• Packaging Engineering Manager (project lead)</p>
+                            </>
+                          )}
+                          {lead.industry === 'Contract Manufacturing' && (
+                            <>
+                              <p className="text-neutral-300">• COO / VP Operations (budget owner)</p>
+                              <p className="text-neutral-300">• Director Engineering (technical buyer)</p>
+                              <p className="text-neutral-300">• Continuous Improvement Manager (internal champion)</p>
+                            </>
+                          )}
+                          {!['Logistics', 'Hospitality', 'Food Service', 'Food Processing & Manufacturing', 'CPG & Consumer Goods', 'Contract Manufacturing'].includes(lead.industry) && (
                             <>
                               <p className="text-neutral-300">• COO / VP Operations (budget owner)</p>
                               <p className="text-neutral-300">• Operations Director (technical buyer)</p>
@@ -1756,7 +1787,10 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
                           {lead.industry === 'Logistics' && '✅ LOW - Mature automation category with proven ROI'}
                           {lead.industry === 'Hospitality' && '⚠️ MEDIUM - Emerging category, emphasize case studies'}
                           {lead.industry === 'Food Service' && '⚡ MEDIUM - Growing adoption, highlight health/labor benefits'}
-                          {!['Logistics', 'Hospitality', 'Food Service'].includes(lead.industry) && '⚠️ ASSESS - Evaluate automation maturity in industry vertical'}
+                          {lead.industry === 'Food Processing & Manufacturing' && '✅ LOW - Palletizing & EOL robotics are fully proven; ROI payback typically 12–24 months'}
+                          {lead.industry === 'CPG & Consumer Goods' && '✅ LOW - Case packing and palletizing well-established; focus on changeover speed and uptime SLAs'}
+                          {lead.industry === 'Contract Manufacturing' && '⚡ MEDIUM - High ROI but changeover complexity is a key objection; lead with flexibility story'}
+                          {!['Logistics', 'Hospitality', 'Food Service', 'Food Processing & Manufacturing', 'CPG & Consumer Goods', 'Contract Manufacturing'].includes(lead.industry) && '⚠️ ASSESS - Evaluate automation maturity in industry vertical'}
                         </p>
                       </div>
                     </div>
@@ -2296,6 +2330,7 @@ export default function Dashboard() {
 
   const buildQuery = useCallback(() => {
     const p = new URLSearchParams();
+    p.set('limit', '150');
     p.set('exclude_junk', excludeJunk);
     p.set('min_score', minScore);
     // Backend only knows score | name | signals — lead_value is sorted client-side after fetch
@@ -2307,34 +2342,23 @@ export default function Dashboard() {
   }, [tier, industry, minScore, sigType, excludeJunk, sort]);
 
   // Fetch live signals for ticker
-  const fetchLiveSignals = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `${API}/api/leads?limit=20&sort=signals_detected_at&exclude_junk=${excludeJunk}`,
-        liveFetchInit(),
-      );
-      if (res.ok) {
-        const allLeads = await res.json();
-        // Extract unique signals from recent leads
-        const signals = [];
-        allLeads.forEach(lead => {
-          if (lead.signals && lead.signals.length > 0) {
-            lead.signals.slice(0, 2).forEach(sig => {
-              signals.push({
-                company: lead.company_name,
-                type: sig.signal_type || 'news',
-                industry: lead.industry,
-                lead: lead
-              });
-            });
-          }
+  const fetchLiveSignals = useCallback((leadsData) => {
+    // Extract signals from leads already fetched — no extra API call needed
+    const signals = [];
+    (leadsData || []).forEach(lead => {
+      if (lead.signals && lead.signals.length > 0) {
+        lead.signals.slice(0, 2).forEach(sig => {
+          signals.push({
+            company: lead.company_name,
+            type: sig.signal_type || 'news',
+            industry: lead.industry,
+            lead: lead,
+          });
         });
-        setLiveSignals(signals.slice(0, 15)); // Keep top 15 for ticker
       }
-    } catch (e) {
-      console.error('Failed to fetch live signals:', e);
-    }
-  }, [excludeJunk]);
+    });
+    setLiveSignals(signals.slice(0, 15));
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -2360,13 +2384,13 @@ export default function Dashboard() {
         );
         setLeads([]);
       } else {
-        setLeads(await leadsRes.json());
+        const leadsData = await leadsRes.json();
+        setLeads(leadsData);
         setError(null);
+        fetchLiveSignals(leadsData);
       }
       if (summaryRes.ok) setSummary(await summaryRes.json());
       if (healthRes.ok) setHealth(await healthRes.json());
-
-      await fetchLiveSignals();
     } catch (e) {
       setError(
         'Cannot reach API. For localhost:3000, run FastAPI on :8000 (next dev proxies /api → :8000). ' +

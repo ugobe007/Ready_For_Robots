@@ -245,6 +245,55 @@ DISCOVERY_QUERIES = [
     "produce processing automation 2026",
     "food safety automation inspection 2026",
     "automated food sorting system 2026",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 📦 END-OF-LINE / CPG / CONTRACT MANUFACTURING (New - Apr 2026)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # End-of-Line Packaging Automation
+    "palletizer robot deployment food plant 2026",
+    "robotic palletizing case packing investment 2026",
+    "end-of-line packaging automation CPG 2026",
+    "automated case packer shrink wrapper deployment 2026",
+    "robotic palletizer installation beverage plant 2026",
+    "EOL automation food manufacturing investment 2026",
+    "stretch wrapper palletizer robot food plant 2026",
+    "robotic depalletizer warehouse food distribution 2026",
+
+    # Intralogistics / Pack-In / Pack-Out
+    "intralogistics AMR food manufacturing plant 2026",
+    "pack-out automation food beverage plant 2026",
+    "autonomous forklift food plant intralogistics 2026",
+    "material handling robot food manufacturing 2026",
+    "AGV food plant internal transport deployment 2026",
+
+    # CPG & Consumer Goods Buyers
+    "CPG company robotic automation investment 2026",
+    "consumer goods plant automation expansion 2026",
+    "FMCG manufacturing automation robot deployment 2026",
+    "Kraft Heinz General Mills Nestle plant automation 2026",
+    "Tyson Cargill JBS food plant labor shortage 2026",
+    "beverage bottling plant automation investment 2026",
+    "packaging line efficiency robot deployment 2026",
+
+    # Contract Manufacturing / Co-Packing
+    "contract manufacturer automation robot deployment 2026",
+    "co-packer flexible automation robot 2026",
+    "contract packaging robotic automation investment 2026",
+    "CMO facility expansion automation 2026",
+    "toll manufacturer automation upgrade 2026",
+
+    # Safety & Labor Pain in Manufacturing
+    "food plant ergonomic injury OSHA automation solution 2026",
+    "manufacturing repetitive strain worker injury automation 2026",
+    "food manufacturing labor shortage worker hiring 2026",
+    "packaging line operator shortage food plant 2026",
+    "production capacity constraint food manufacturing 2026",
+
+    # Buyer Persona Hires — Manufacturing
+    "VP Director manufacturing automation food beverage hired 2026",
+    "plant manager engineering director CPG appointed 2026",
+    "Director packaging automation engineering hire 2026",
     
     # ═══════════════════════════════════════════════════════════════════════
     # 💾 DATACENTER AUTOMATION

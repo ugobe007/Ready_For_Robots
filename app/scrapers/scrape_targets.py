@@ -264,6 +264,86 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         notes="Companies integrating WMS/ERP are infrastructure-ready for robots",
     ),
 
+    # === END-OF-LINE / MANUFACTURING / CPG: labor pain + buyer personas ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=palletizer+operator+packaging+line+operator&l=United+States&sort=date",
+        label="Indeed - Palletizer / Packaging Line Operators (volume hiring)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["labor_pain", "labor_shortage", "packaging_automation"],
+        notes="Companies hiring palletizer/packaging operators at scale = EOL automation opportunity",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=machine+operator+production+line+food+manufacturing&l=United+States&sort=date",
+        label="Indeed - Machine / Production Line Operators Food Manufacturing",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["labor_pain", "repetitive_process"],
+        notes="High-volume manual machine operators = repetitive process automation signal",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=pack+out+pack+in+operator+food+beverage+manufacturing&l=United+States&sort=date",
+        label="Indeed - Pack-Out / Pack-In Operators (food & beverage manufacturing)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["labor_pain", "packaging_automation"],
+        notes="Pack-in/pack-out roles = direct EOL automation use case",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=material+handler+intralogistics+manufacturing+plant&l=United+States&sort=date",
+        label="Indeed - Material Handlers / Intralogistics Manufacturing Plant",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "Contract Manufacturing"],
+        signal_types=["labor_pain", "material_handling"],
+        notes="Internal factory transport = AMR/AGV opportunity",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=Director+VP+manufacturing+operations+plant+manager+food+beverage&l=United+States&sort=date",
+        label="Indeed - Director/VP Manufacturing Operations Food & Beverage (buyer persona)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["strategic_hire"],
+        notes="New plant ops leader = automation budget review cycle",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=Director+VP+engineering+automation+packaging+manufacturing&l=United+States&sort=date",
+        label="Indeed - Director/VP Engineering & Automation Packaging (buyer persona)",
+        scraper="job_board", cadence="daily",
+        industries=["CPG & Consumer Goods", "Food Processing & Manufacturing", "Contract Manufacturing"],
+        signal_types=["strategic_hire", "packaging_automation"],
+        notes="Engineering/automation director hire = direct robot buyer",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=continuous+improvement+manager+lean+manufacturing+food+plant&l=United+States&sort=date",
+        label="Indeed - Continuous Improvement Manager Food / CPG Plant",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["repetitive_process", "production_capacity"],
+        notes="CI hire in manufacturing = active automation evaluation underway",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=maintenance+technician+packaging+equipment+filler+labeler&l=United+States&sort=date",
+        label="Indeed - Packaging Equipment Maintenance (filler / labeler / palletizer)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["labor_pain", "packaging_automation"],
+        notes="Packaging equipment maintenance hiring = aging line / expansion signal",
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=palletizer+packaging+line+operator+production&l=United+States",
+        label="SimplyHired - Palletizer / Packaging Line Operators",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["labor_pain", "packaging_automation"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=VP+Director+manufacturing+plant+operations+food+beverage&l=United+States",
+        label="SimplyHired - VP/Director Manufacturing Operations (buyer persona)",
+        scraper="job_board", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["strategic_hire"],
+    ),
+
     # === SIMPLYHIRED: broader scraping reach beyond Indeed ===
     ScrapeTarget(
         url="https://www.simplyhired.com/search?q=housekeeper+room+attendant+hotel&l=United+States",
@@ -513,6 +593,35 @@ LOGISTICS_DIRECTORY_TARGETS: List[ScrapeTarget] = [
         scraper="logistics_dir", cadence="weekly",
         industries=["Logistics", "Food Service"], signal_types=["capex", "expansion"],
         notes="Grocery DCs: high SKU count + demanding throughput = strong robot fit",
+    ),
+    # === END-OF-LINE: Manufacturing & CPG Directories ===
+    ScrapeTarget(
+        url="https://www.yellowpages.com/search?search_terms=food+manufacturing+food+processing+plant&geo_location_terms=United+States",
+        label="Yellow Pages - Food Manufacturing & Processing Plants",
+        scraper="logistics_dir", cadence="weekly",
+        industries=["Food Processing & Manufacturing"], signal_types=["packaging_automation", "production_capacity"],
+        notes="Food plants: EOL lines, palletizers, case packers, fillers — high robot fit",
+    ),
+    ScrapeTarget(
+        url="https://www.yellowpages.com/search?search_terms=contract+manufacturer+contract+packaging&geo_location_terms=United+States",
+        label="Yellow Pages - Contract Manufacturers & Contract Packagers",
+        scraper="logistics_dir", cadence="weekly",
+        industries=["Contract Manufacturing"], signal_types=["packaging_automation", "material_handling"],
+        notes="Co-packers & CMOs: high SKU mix + rapid changeover = automation buying trigger",
+    ),
+    ScrapeTarget(
+        url="https://www.yellowpages.com/search?search_terms=beverage+manufacturer+bottling+plant&geo_location_terms=United+States",
+        label="Yellow Pages - Beverage Manufacturers & Bottling Plants",
+        scraper="logistics_dir", cadence="weekly",
+        industries=["CPG & Consumer Goods", "Food Processing & Manufacturing"], signal_types=["packaging_automation", "capex"],
+        notes="Bottling & canning lines: filling, labeling, case packing, palletizing — EOL sweet spot",
+    ),
+    ScrapeTarget(
+        url="https://www.yellowpages.com/search?search_terms=packaging+company+packaging+plant&geo_location_terms=United+States",
+        label="Yellow Pages - Packaging Companies",
+        scraper="logistics_dir", cadence="weekly",
+        industries=["CPG & Consumer Goods"], signal_types=["packaging_automation", "capex", "expansion"],
+        notes="Packaging plants themselves: flexible packaging, corrugated, containers — robot buyers",
     ),
 ]
 
@@ -910,6 +1019,88 @@ RSS_FEED_TARGETS: List[ScrapeTarget] = [
         signal_types=["funding_round", "capex", "automation_intent"],
         notes="Official press releases from companies deploying or evaluating robots",
     ),
+    # ── END-OF-LINE / PACKAGING / FOOD MANUFACTURING (NEW) ───────────────────
+    ScrapeTarget(
+        url="https://www.packworld.com/rss.xml",
+        label="Packaging World (PMMI Media — end-of-line packaging)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["packaging_automation", "capex", "expansion", "automation_intent"],
+        notes="Premier packaging trade pub — case packers, palletizers, fillers, labelers, EOL lines",
+    ),
+    ScrapeTarget(
+        url="https://www.profoodworld.com/rss.xml",
+        label="ProFood World (food & beverage manufacturing automation)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["packaging_automation", "production_capacity", "capex", "automation_intent"],
+        notes="Food plant automation: EOL lines, processing robots, palletizing",
+    ),
+    ScrapeTarget(
+        url="https://www.foodmanufacturing.com/rss/news",
+        label="Food Manufacturing Magazine",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["expansion", "capex", "automation_intent", "production_capacity"],
+        notes="Food plant expansions, new lines, tech investments",
+    ),
+    ScrapeTarget(
+        url="https://www.packagingdigest.com/rss.xml",
+        label="Packaging Digest (packaging line technology)",
+        scraper="rss_feed", cadence="daily",
+        industries=["CPG & Consumer Goods", "Food Processing & Manufacturing"],
+        signal_types=["packaging_automation", "capex", "equipment_integration"],
+        notes="Packaging machinery buyers — shrink wrap, case packing, labeling, conveyor",
+    ),
+    ScrapeTarget(
+        url="https://www.foodbusinessnews.net/rss/news",
+        label="Food Business News (CPG & food industry)",
+        scraper="rss_feed", cadence="daily",
+        industries=["CPG & Consumer Goods", "Food Processing & Manufacturing"],
+        signal_types=["funding_round", "expansion", "ma_activity", "capex"],
+        notes="CPG company investment, M&A, new facility news",
+    ),
+    ScrapeTarget(
+        url="https://www.bevindustry.com/rss/all",
+        label="Beverage Industry Magazine",
+        scraper="rss_feed", cadence="daily",
+        industries=["CPG & Consumer Goods", "Food Processing & Manufacturing"],
+        signal_types=["capex", "expansion", "packaging_automation", "production_capacity"],
+        notes="Beverage plant expansions, new packaging lines, filling/labeling automation",
+    ),
+    ScrapeTarget(
+        url="https://www.contractpharma.com/rss/news",
+        label="Contract Pharma (contract manufacturing)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Contract Manufacturing"],
+        signal_types=["expansion", "capex", "packaging_automation", "automation_intent"],
+        notes="CMOs/CDMOs: facility expansion = new packaging, filling, palletizing automation",
+    ),
+    ScrapeTarget(
+        url="https://www.plantengineering.com/rss/",
+        label="Plant Engineering (factory & facilities)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods", "Contract Manufacturing"],
+        signal_types=["capex", "automation_intent", "repetitive_process", "production_capacity"],
+        notes="Plant-level automation investment, maintenance, production efficiency",
+    ),
+    ScrapeTarget(
+        url="https://www.controleng.com/rss/all",
+        label="Control Engineering (industrial automation)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "CPG & Consumer Goods"],
+        signal_types=["automation_intent", "capex", "equipment_integration"],
+        notes="Industrial control & automation: PLC, SCADA, robotics integration",
+    ),
+    ScrapeTarget(
+        url="https://www.processindustryforum.com/feed",
+        label="Process Industry Forum",
+        scraper="rss_feed", cadence="daily",
+        industries=["Food Processing & Manufacturing", "Contract Manufacturing"],
+        signal_types=["automation_intent", "production_capacity", "capex"],
+        notes="Process manufacturing: filling, mixing, packaging, intralogistics",
+    ),
+
     # ── Industry news sources from user URL list (March 2026) ─────────────────
     ScrapeTarget(
         url="https://www.manufacturingdive.com/feeds/news/",
@@ -1060,6 +1251,34 @@ NEWS_QUERIES = [
     {"query": "hospital EHR clinical system integration upgrade operational technology",                "industries": ["Healthcare"],                  "signal_types": ["equipment_integration", "capex"]},
     {"query": "restaurant POS technology upgrade system integration chain multi-unit",                  "industries": ["Food Service"],                "signal_types": ["equipment_integration"]},
     {"query": "fulfillment center automation technology integration existing equipment",                "industries": ["Logistics"],                   "signal_types": ["equipment_integration", "automation_intent"]},
+
+    # === END-OF-LINE / CPG / FOOD MANUFACTURING SIGNALS ===
+    # Labor pain at food & CPG plants
+    {"query": "food manufacturing plant labor shortage worker hiring 2025 2026",                    "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["labor_shortage", "labor_pain"]},
+    {"query": "beverage plant staffing operator shortage production line workers",                  "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["labor_shortage", "labor_pain"]},
+    {"query": "contract manufacturer labor shortage packaging operator hiring",                    "industries": ["Contract Manufacturing"],                                      "signal_types": ["labor_shortage", "packaging_automation"]},
+    # EOL / Packaging automation buyer intent
+    {"query": "food plant end-of-line packaging automation robotic palletizer investment 2025",    "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["packaging_automation", "capex"]},
+    {"query": "CPG company robotic case packer palletizer installation 2025 2026",                 "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["packaging_automation", "automation_intent"]},
+    {"query": "beverage bottling plant packaging line automation robotic upgrade",                  "industries": ["CPG & Consumer Goods", "Food Processing & Manufacturing"],  "signal_types": ["packaging_automation", "capex"]},
+    {"query": "contract packager co-packer automation robot palletizer case packing",              "industries": ["Contract Manufacturing"],                                      "signal_types": ["packaging_automation", "automation_intent"]},
+    {"query": "food manufacturing intralogistics AGV AMR internal transport robot",                "industries": ["Food Processing & Manufacturing"],                            "signal_types": ["material_handling", "automation_intent"]},
+    # Pack-in / pack-out / pack line pain
+    {"query": "pack out pack in manual line operator throughput bottleneck food plant",             "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["repetitive_process", "production_capacity"]},
+    {"query": "packaging line efficiency improvement throughput investment food beverage",          "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["production_capacity", "packaging_automation"]},
+    # Expansions & capex
+    {"query": "food manufacturing plant expansion new facility investment groundbreaking 2025",    "industries": ["Food Processing & Manufacturing"],                            "signal_types": ["expansion", "capex"]},
+    {"query": "CPG company new production line capacity expansion 2025 2026",                     "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["production_capacity", "expansion", "capex"]},
+    {"query": "food beverage plant modernization upgrade capital investment automation",            "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["capex", "automation_intent"]},
+    # Buyer persona hires
+    {"query": "VP Director engineering automation food beverage plant appointed 2025",             "industries": ["Food Processing & Manufacturing", "CPG & Consumer Goods"],  "signal_types": ["strategic_hire"]},
+    {"query": "plant manager director manufacturing operations food company appointed",            "industries": ["Food Processing & Manufacturing"],                            "signal_types": ["strategic_hire"]},
+    {"query": "VP operations CPG consumer goods company appointed hired 2025",                    "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["strategic_hire"]},
+    # Named CPG / food manufacturer targets
+    {"query": "Kraft Heinz Mondelez Nestle plant automation investment operations",               "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["capex", "automation_intent"]},
+    {"query": "Tyson Foods JBS Cargill Smithfield plant labor automation investment",             "industries": ["Food Processing & Manufacturing"],                            "signal_types": ["labor_shortage", "capex"]},
+    {"query": "General Mills Campbell Conagra plant expansion new facility 2025",                 "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["expansion", "capex"]},
+    {"query": "Anheuser-Busch Molson Coors Constellation Brands brewery plant automation",       "industries": ["CPG & Consumer Goods"],                                       "signal_types": ["packaging_automation", "capex"]},
 
     # === MANUFACTURING OPERATIONAL SIGNALS (NEW) ===
     # Quality Bottlenecks

@@ -50,6 +50,10 @@ _JUNK_SUBSTRINGS = [
     "sec 10-k", "sec 10-q", "10-k filing", "10-q filing", "annual report sec",
     # Specific known-bad junk from user feedback
     "how ai ", "pro-level", "yegor traiman", "travel market", "tourism market", "ops 202", "how to ",
+    # Article headline fragments reported by users
+    "revenue drain", "hidden revenue", "industry could",
+    "gets high-tech", "gets high tech",
+    "hn brief", "dropship",
     # Page chrome / syndication / research boilerplate (not legal entities)
     "read more", "click here", "subscribe to", "sign up for our", "cookie policy",
     "terms of use", "privacy policy", "getty images", "shutterstock", "photo credit",
@@ -82,6 +86,21 @@ _JUNK_SUBSTRINGS = [
     "economic outlook",
     "weekly outlook",
     "cautiously optimistic",
+    # EOL / packaging scrape artifacts — food politics, equipment types, market labels
+    "caught covid", "meat plant workers", "covid outbreak",
+    "declares meat", "meat supply critical",
+    "senate democrats", "executive order",
+    "market overview", "market report",
+    "canned soup", "processed food", "fortified foods", "foods market",
+    "vending machine", "filling machine", "sealing machine", "labeling machine",
+    "wrapping machine", "packing machine", "capping machine",
+    "workload automation tools", "automation tools",
+    "top article", "creates new problems", "peels away",
+    "should your packaging", "improving packaging line",
+    "standout packaging", "package boiler", "drum filling",
+    "showcases flexible", "weighing conveying",
+    "global beer", "major food",
+    "news us", "cornhusker clink", "spartanburg distribution",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -208,12 +227,72 @@ _JUNK_PATTERNS = [
     # "… for Restaurants", "… for Hotels" — sector-targeting article fragments
     r"(?i)\bfor\s+(restaurants|hotels|warehouses|hospitals|retailers|operators|facilities)\s*$",
 
+    # "Why X" article openers (single extra word, or industry/verb second word)
+    r"(?i)^why\s+\w+\s*$",
+    r"(?i)^why\s+(warehouse|hotel|restaurant|hospital|logistics|food|retail|manufacturing|healthcare|serve|use|choose|adopt|deploy|implement|invest|automate|switch|embrace|consider|event)\b",
+
+    # "Where X Is/Are Headed" headline pattern
+    r"(?i)^where\s+\w+\s+(is|are)\s+(headed|going)",
+
+    # Action-verb openers — not company names
+    r"(?i)^(pushing|boosting|leveraging|driving|solving|fixing|mastering|navigating|revolutionizing|transforming)\s+\w+",
+
+    # Names ending in bare " industry" (sector label, not legal entity)
+    r"(?i)\s+industry\s*$",
+
+    # Trade show / conference names scraped as companies
+    r"(?i)^(ces|logimat|promat|modex|imts|pack\s*expo|automatica|groceryshop|shoptalk)\b",
+
+    # Year + dash separator in name → conference/event/article title, not a company
+    r"\b(202[4-9]|20[3-9]\d)\s*[-–—]",
+
     # Named after a state/city + generic venue type — usually a headline "Florida Restaurant …"
     r"(?i)^(florida|california|texas|new\s+york|ohio|georgia|arizona|illinois|"
     r"michigan|washington|colorado|nevada|virginia|pennsylvania|north\s+carolina|"
     r"south\s+carolina|new\s+jersey|massachusetts|minnesota|tennessee)\s+"
     r"(restaurant|hotel|warehouse|hospital|casino|factory|retail\s+store|"
     r"grocery\s+store|distribution\s+center)\b",
+
+    # Machine / equipment type labels (not companies) — common in packaging/EOL scrapes
+    r"(?i)^(drum|bottle|can|case|tray|bag|pouch|box|carton|pallet)\s+(filling|packing|sealing|"
+    r"labeling|wrapping|forming|erecting|loading|handling)\s+(machine|system|equipment|line)\s*$",
+    r"(?i)\b(filling\s+machine|labeling\s+machine|wrapping\s+machine|sealing\s+machine|"
+    r"packing\s+machine|capping\s+machine|casing\s+machine|palletizing\s+machine|"
+    r"vending\s+machine|boiler\s+system|conveyor\s+system)\s*$",
+    r"(?i)^(package|drum|boiler|filler|labeler|capper|sealer|wrapper|conveyor|sorter)\s+"
+    r"(boiler|filler|machine|system|equipment|tools?|unit|assembly)\s*$",
+
+    # Food product / ingredient categories (not operating companies)
+    r"(?i)^(canned|frozen|dried|fresh|processed|packaged|organic|fortified)\s+"
+    r"(soup|food|meals?|goods|produce|meat|protein|beverage|drinks?|snacks?|cereals?)\s*$",
+    r"(?i)^(global|major|big|top|leading|premium|value)\s+"
+    r"(food|beer|beverage|snack|brand|chain|market)\s*$",
+
+    # Political / news headline openers (scraped from political news)
+    r"(?i)^(trump|biden|president|senate|congress|democrat|republican|federal|white\s+house)\s+",
+    r"(?i)\b(declares|passed|signed|voted|lawmakers|legislation|executive\s+order)\b",
+    r"(?i)^exclusive\s+(senate|congress|report|investigation|sources?|data)\b",
+
+    # COVID / crisis / disaster headline fragments
+    r"(?i)\b(caught\s+covid|covid\s+outbreak|meat\s+plant\s+workers|covid-19\s+cases)\b",
+    r"(?i)^at\s+least\s+\d+[KMB]?\s+\w+",
+
+    # Market/research report patterns
+    r"(?i)\s+(market\s+overview|market\s+report|market\s+analysis|market\s+forecast|"
+    r"market\s+outlook|market\s+size|market\s+share|market\s+trends?)\s*$",
+    r"(?i)^(foods?|snacks?|beverages?|retail|packaging)\s+market\s+overview\s*$",
+
+    # Verb phrases that are clearly headlines, not company names (EOL scrape common)
+    r"(?i)^[A-Z][a-z]+\s+(peels|peel|unveils|slashes|halts|pulls|rolls|taps|nets|inks|eyes)\s+",
+    r"(?i)^(creates?\s+new|solves?\s+the|fixes?\s+the|should\s+your|improving\s+)",
+
+    # "Standout X Machinery / Solutions / Products" — article titles, not companies
+    r"(?i)^(standout|top|leading|best)\s+\w+\s+(machinery|solutions?|products?|technologies?|"
+    r"systems?|approaches?)\s*$",
+
+    # Distribution center / plant named with a city only — headline fragments
+    r"(?i)^(spartanburg|cornhusker|blue\s+ridge|rust\s+belt|heartland)\s+(distribution|"
+    r"plant|facility|center|clink|hub)\s*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -246,6 +325,8 @@ _JUNK_EXACT = frozenset({
     # Geography / generic words mistaken for company names (single-field scrapes)
     "capital",
     "las vegas",
+    # Single generic words that slip through (user-reported)
+    "growth", "growth rate", "data center", "boosting",
     # News / syndicated (whole “name” is the outlet or a sector label)
     "business insider",
     "reuters",
@@ -315,6 +396,12 @@ HIGH_FIT_INDUSTRIES = {
     "healthcare", "hospital", "senior living", "assisted living",
     "food service", "food & beverage", "restaurant", "catering",
     "warehouse", "fulfillment",
+    # End-of-line / manufacturing / CPG verticals
+    "food processing", "food manufacturing", "food processing & manufacturing",
+    "cpg", "consumer goods", "cpg & consumer goods",
+    "contract manufacturing", "contract manufacturer",
+    "beverage", "bottling", "packaging",
+    "manufacturing", "automotive & manufacturing",
 }
 
 # Signal types — exported for SQL rollups (leads API) so summary/homepage match classify_lead.

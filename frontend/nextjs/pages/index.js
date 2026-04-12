@@ -197,48 +197,17 @@ export default function Signals() {
     return () => clearInterval(interval);
   }, []);
 
-  // CRM strip: longer name lists per tier (for rotation)
-  useEffect(() => {
-    const apiBase = getApiBase();
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const [rAll, rHot, rWarm] = await Promise.all([
-          fetch(`${apiBase}/api/leads?limit=40&sort=score&exclude_junk=true`, liveFetchInit()),
-          fetch(`${apiBase}/api/leads?tier=HOT&limit=35&sort=score&exclude_junk=true`, liveFetchInit()),
-          fetch(`${apiBase}/api/leads?tier=WARM&limit=35&sort=score&exclude_junk=true`, liveFetchInit()),
-        ]);
-        const [dAll, dHot, dWarm] = await Promise.all([rAll.json(), rHot.json(), rWarm.json()]);
-        if (cancelled) return;
-        setCrmPreviewLists({
-          active: extractLeadPreviews(dAll),
-          hot: extractLeadPreviews(dHot),
-          warm: extractLeadPreviews(dWarm),
-        });
-      } catch (e) {
-        if (!cancelled) console.error('CRM preview lists:', e);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Spotlight leads fill names until tier lists load
+  // CRM strip: populate from spotlight leads (already loaded by /api/leads/homepage)
+  // No separate heavy API calls — the homepage batched endpoint provides all we need.
   useEffect(() => {
     if (!hotLeads?.length) return;
     setCrmPreviewLists((prev) => {
+      if (prev.active.length) return prev; // already populated, don't overwrite
       const spot = dedupeHomepageLeads(hotLeads);
-      const fromSpotlight = {
+      return {
         active: extractLeadPreviews(spot),
         hot: extractLeadPreviews(spot.filter((l) => l.priority_tier === 'HOT')),
         warm: extractLeadPreviews(spot.filter((l) => l.priority_tier === 'WARM')),
-      };
-      return {
-        active: prev.active.length ? prev.active : fromSpotlight.active,
-        hot: prev.hot.length ? prev.hot : fromSpotlight.hot,
-        warm: prev.warm.length ? prev.warm : fromSpotlight.warm,
       };
     });
   }, [hotLeads]);
@@ -771,39 +740,15 @@ export default function Signals() {
                   <span className="tabular-nums">{formatHeroCount(statsData.cold, statsLoaded)}</span> in pipeline
                 </p>
                 <Link
-                  href="/market-insights/"
+                  href="/dashboard"
                   className="rr-hero-explore-btn"
-                  title="Market insights — industry context and timing"
+                  title="Dashboard — all leads and strategic snapshot"
                 >
                   Explore
                 </Link>
               </aside>
             </div>
           </div>
-        </div>
-
-        <div className="rr-section !pt-0">
-              {Object.keys(leadsByIndustry).length > 0 && (() => {
-                const merged = {};
-                Object.entries(leadsByIndustry).forEach(([industry, count]) => {
-                  const key = (industry || '').trim().toLowerCase() === 'unknown' ? 'New' : (industry || 'New');
-                  merged[key] = (merged[key] || 0) + (count || 0);
-                });
-                return (
-                <div className="rr-industry-cloud">
-                  <div className="rr-industry-cloud-label">Leads by Industry</div>
-                  <div className="rr-industry-tags">
-                    {Object.entries(merged)
-                      .sort((a, b) => (b[1] || 0) - (a[1] || 0))
-                      .map(([industry, count]) => (
-                        <span key={industry} className="rr-ind-tag">
-                          {industry} <span className="cnt">{count}</span>
-                        </span>
-                      ))}
-                  </div>
-                </div>
-                );
-              })()}
         </div>
 
         <div className="rr-section !pt-2 !pb-6">
@@ -819,6 +764,56 @@ export default function Signals() {
               <span className="text-[var(--rr-green)] group-hover:translate-x-1 transition-transform shrink-0">→</span>
             </div>
           </Link>
+        </div>
+
+        {/* Markets We Track — industry vertical nav */}
+        <div className="max-w-7xl mx-auto px-6 pt-8 pb-2">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="text-xs text-neutral-400 font-semibold uppercase tracking-widest border border-neutral-800 px-2 py-0.5 rounded">
+              Coverage
+            </div>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-1">Markets we track</h2>
+          <p className="text-sm text-neutral-400 mb-5">Filter leads by vertical on the dashboard — every market below has live signals.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {[
+              { label: 'Logistics & Warehousing',            icon: '📦', fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
+              { label: 'Hospitality & Hotels',               icon: '🏨', fit: 'Service & Delivery Robots',    q: 'Hospitality' },
+              { label: 'Healthcare & Senior Living',         icon: '🏥', fit: 'Clinical Logistics Robots',    q: 'Healthcare' },
+              { label: 'Food Service & Restaurants',         icon: '🍽️', fit: 'BOH Kitchen Automation',      q: 'Food Service' },
+              { label: 'Food Processing & Manufacturing',    icon: '🏭', fit: 'EOL Line Automation',          q: 'Food Processing & Manufacturing', badge: 'NEW' },
+              { label: 'CPG & Consumer Goods',               icon: '📦', fit: 'Palletizing & Case Packing',  q: 'CPG & Consumer Goods', badge: 'NEW' },
+              { label: 'Contract Manufacturing',             icon: '⚙️', fit: 'Flexible EOL Robotics',       q: 'Contract Manufacturing', badge: 'NEW' },
+              { label: 'Retail & Grocery',                   icon: '🛒', fit: 'Picking & Restocking',         q: 'Retail' },
+              { label: 'Airports & Transportation',          icon: '✈️', fit: 'Ground Ops Robots',            q: 'Airports & Transportation' },
+              { label: 'Casinos & Gaming',                   icon: '🎰', fit: 'Floor & F&B Delivery',         q: 'Casinos & Gaming' },
+              { label: 'Real Estate & Facilities',           icon: '🏢', fit: 'Cleaning & Concierge',         q: 'Real Estate & Facilities' },
+              { label: 'Cruise Lines',                       icon: '🚢', fit: 'Onboard Delivery',             q: 'Cruise Lines' },
+            ].map((m) => (
+              <Link
+                key={m.q}
+                href={`/dashboard?industry=${encodeURIComponent(m.q)}`}
+                className="group flex flex-col gap-1 border border-neutral-800 hover:border-emerald-700 rounded-lg p-3 bg-neutral-950 hover:bg-neutral-900 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-lg">{m.icon}</span>
+                  {m.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-800 uppercase tracking-widest">{m.badge}</span>
+                  )}
+                </div>
+                <p className="text-xs font-semibold text-white leading-tight group-hover:text-emerald-300 transition-colors">{m.label}</p>
+                <p className="text-[10px] text-neutral-500 leading-tight">{m.fit}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
+                    <span className="text-[10px] text-emerald-500 font-mono">{leadsByIndustry[m.q]} leads</span>
+                  ) : (
+                    <span className="text-[10px] text-neutral-600 font-mono">loading…</span>
+                  )}
+                  <span className="text-neutral-600 text-[10px] ml-auto group-hover:text-emerald-500 transition-colors">→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* ENHANCED: Strategic Snapshot - Top Hot Deals with More POP */}
@@ -975,7 +970,9 @@ export default function Signals() {
                               const tweetText = `${xHeadline}\n\n${tweetBody}`;
                               const shareText = summaryBody; // LinkedIn/copy gets full summary
                               const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
-                              const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+                              const liTitle = encodeURIComponent(`${lead.company_name} — ${lead.priority_tier || 'Lead'} | Ready For Robots`);
+                              const liSummary = encodeURIComponent(shareText.slice(0, 700));
+                              const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${liTitle}&summary=${liSummary}&source=readyforrobots.com`;
                               const copyShare = () => {
                                 navigator.clipboard?.writeText(`${shareText}\n\n${shareUrl}`);
                                 setShareMenuLeadId(null);
@@ -1116,13 +1113,16 @@ export default function Signals() {
                                 const firstSentence = fullSummary.split('. ')[0] + '.';
                                 const tweetBody = firstSentence.length <= maxBody ? firstSentence : firstSentence.slice(0, maxBody - 1) + '…';
                                 const tweetText = `${xHeadline}\n\n${tweetBody}`;
+                                const liTitle2 = encodeURIComponent(`${lead.company_name} — ${lead.priority_tier || 'Lead'} | Ready For Robots`);
+                                const liSummary2 = encodeURIComponent(fullSummary.slice(0, 700));
+                                const linkedInUrl2 = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${liTitle2}&summary=${liSummary2}&source=readyforrobots.com`;
                                 return (
                                   <>
                                     <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-black text-neutral-400 hover:text-white text-xs">
                                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                                       Share on X
                                     </a>
-                                    <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-[#0a66c2] text-neutral-400 hover:text-white text-xs">
+                                    <a href={linkedInUrl2} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded bg-neutral-800 hover:bg-[#0a66c2] text-neutral-400 hover:text-white text-xs">
                                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                                       LinkedIn
                                     </a>
@@ -1210,24 +1210,6 @@ export default function Signals() {
                 <span className="rr-pipeline-check">Instant results</span>
                 <span className="rr-pipeline-check">Free trial</span>
               </div>
-          </div>
-        </div>
-
-        {/* Browse All Leads by Industry */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="border border-neutral-800 rounded-lg p-8 text-center space-y-4">
-            <h3 className="text-2xl font-semibold text-white">Browse All {statsData.activeLeads} Leads by Industry</h3>
-            <p className="text-neutral-400 max-w-2xl mx-auto">
-              View complete database organized by Logistics, Hospitality, Healthcare, Food Service, and more
-            </p>
-            <div className="pt-2">
-              <Link 
-                href="/dashboard" 
-                className="inline-block px-8 py-3 border border-emerald-500 text-emerald-400 rounded-lg hover:bg-emerald-950/30 transition-colors font-medium"
-              >
-                View Full Dashboard →
-              </Link>
-            </div>
           </div>
         </div>
 

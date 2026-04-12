@@ -573,7 +573,7 @@ export default function ROICalculator() {
                 Share on Twitter
               </a>
               <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent('My Robot ROI Calculation | Ready For Robots')}&summary=${encodeURIComponent(`Check out my robot ROI calculation: ${results?.paybackMonths?.toFixed(1)} month payback, $${results?.annualSavings?.toLocaleString()}/year savings! Calculate yours at readyforrobots.com`)}&source=readyforrobots.com`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 text-center bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm font-medium transition-colors">

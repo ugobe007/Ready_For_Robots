@@ -686,9 +686,10 @@ def post_lead_rep_feedback(
 
 
 # ── Homepage TTL cache ────────────────────────────────────────────────────────
-# The two aggregate queries on 4 000+ rows take 15–30 s on cold DB connections.
-# Cache the built response for 90 s so repeat visits (and Fly wake-ups) are fast.
-_HOMEPAGE_CACHE_TTL = 90  # seconds
+# The aggregate query on 4 000+ rows is expensive. Cache for 10 minutes so Fly
+# cold-starts and repeat visits always get a fast response. A background thread
+# warms the cache at startup so the FIRST user request is never slow.
+_HOMEPAGE_CACHE_TTL = 600  # 10 minutes
 _homepage_cache: dict = {}
 
 
@@ -701,6 +702,109 @@ def _get_homepage_cache():
 
 def _set_homepage_cache(data: dict) -> None:
     _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
+
+
+def warm_homepage_cache() -> None:
+    """
+    Pre-populate the homepage cache in a background thread at startup so the
+    first real user request is served instantly instead of waiting 60+ seconds
+    for the cold DB query.
+    """
+    import threading
+
+    def _warm():
+        try:
+            from app.database import SessionLocal
+            db = SessionLocal()
+            try:
+                # Reuse the same logic as the /homepage endpoint (minus the HTTP Response obj)
+                rows = _lead_rows_query(db).all()
+                total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(rows, exclude_junk=True)
+                summary = {
+                    "total": total, "hot": hot, "warm": warm, "cold": cold,
+                    "junk_filtered": junk_count,
+                    "total_signals": total_signals,
+                    "by_industry": by_industry,
+                }
+                candidate_rows = sorted(rows, key=lambda r: float(r.overall_score or 0), reverse=True)[:280]
+                ordered_ids = []
+                seen: set = set()
+                for row in candidate_rows:
+                    if _row_is_junk(row.name)[0]:
+                        continue
+                    if row.id in seen:
+                        continue
+                    if int(row.signal_count or 0) < 1:
+                        continue
+                    seen.add(row.id)
+                    ordered_ids.append(row.id)
+                if not ordered_ids:
+                    _set_homepage_cache({"summary": summary, "hotLeads": []})
+                    return
+                companies = (
+                    db.query(Company)
+                    .options(joinedload(Company.scores), joinedload(Company.signals))
+                    .filter(Company.id.in_(ordered_ids[:220]))
+                    .all()
+                )
+                id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
+                companies.sort(key=lambda c: id_rank.get(c.id, 9999))
+                hot_pool: List[tuple] = []
+                warm_pool: List[tuple] = []
+                for c in companies:
+                    junk, _, pri = classify_lead(c, c.scores, c.signals)
+                    if junk or not c.signals:
+                        continue
+                    ts = _latest_signal_ts(c)
+                    if pri.tier == "HOT":
+                        hot_pool.append((ts, pri.score, c))
+                    elif pri.tier == "WARM":
+                        warm_pool.append((ts, pri.score, c))
+                hot_pool.sort(key=lambda x: (-x[0], -x[1]))
+                warm_pool.sort(key=lambda x: (-x[0], -x[1]))
+                hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
+                warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
+                now = datetime.now(timezone.utc)
+                day_o = now.date().toordinal()
+                hour = now.hour
+                h_seed = day_o * 7919 + 203 + hour * 17
+                w_seed = day_o * 9283 + 411 + hour * 23
+                chosen: List[Company] = []
+                used_ids: set = set()
+                for c in _take_rotated(hot_ordered, 3, h_seed):
+                    if c.id not in used_ids:
+                        chosen.append(c); used_ids.add(c.id)
+                warm_avail = [c for c in warm_ordered if c.id not in used_ids]
+                for c in _take_rotated(warm_avail, 2, w_seed):
+                    if c.id not in used_ids:
+                        chosen.append(c); used_ids.add(c.id)
+                chosen = chosen[:5]
+                hot_leads = []
+                for c in chosen:
+                    j, jr, pri = classify_lead(c, c.scores, c.signals)
+                    hot_leads.append(_fmt_company(c, j, jr, pri))
+                result = {
+                    "summary": summary,
+                    "hotLeads": hot_leads,
+                    "tierLegend": HOMEPAGE_TIER_LEGEND,
+                    "spotlightMix": {
+                        "hot_slots": 3, "warm_slots": 2,
+                        "rotation_day": str(now.date()),
+                        "rotation_hour_utc": hour,
+                    },
+                    "scoringSystem": get_scoring_system_public(),
+                }
+                _set_homepage_cache(result)
+                # Also warm the summary cache (same data, reused for dashboard)
+                _set_summary_cache(True, summary)
+                logger.info("Homepage cache warmed at startup: %d total, %d hot", total, hot)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("Homepage cache warm-up failed (non-fatal): %s", exc)
+
+    t = threading.Thread(target=_warm, daemon=True, name="homepage-cache-warmer")
+    t.start()
 
 
 @router.get("/homepage")
@@ -858,6 +962,22 @@ def leads_scoring_system():
     return get_scoring_system_public()
 
 
+_SUMMARY_CACHE_TTL = 600  # 10 minutes — same as homepage
+_summary_cache: dict = {}
+
+
+def _get_summary_cache(exclude_junk: bool):
+    key = f"v1_{exclude_junk}"
+    entry = _summary_cache.get(key)
+    if entry and (time.monotonic() - entry["ts"]) < _SUMMARY_CACHE_TTL:
+        return entry["data"]
+    return None
+
+
+def _set_summary_cache(exclude_junk: bool, data: dict) -> None:
+    _summary_cache[f"v1_{exclude_junk}"] = {"ts": time.monotonic(), "data": data}
+
+
 @router.get("/summary")
 def leads_summary(
     response: Response,
@@ -867,18 +987,25 @@ def leads_summary(
     """Pipeline counts for the dashboard stat cards and front-page ticker. Includes leads per industry."""
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
+
+    cached = _get_summary_cache(exclude_junk)
+    if cached is not None:
+        return cached
+
     # Same row shape as GET /api/leads — hot_hits/warm_hits rollups required for _row_priority tiers
     rows = _lead_rows_query(db).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=exclude_junk
     )
 
-    return {
+    result = {
         "total": total, "hot": hot, "warm": warm, "cold": cold,
         "junk_filtered": junk_count,
         "total_signals": total_signals,
         "by_industry": by_industry,
     }
+    _set_summary_cache(exclude_junk, result)
+    return result
 
 
 @router.post("/reclassify-unknown")

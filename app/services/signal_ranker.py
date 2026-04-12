@@ -57,14 +57,23 @@ ROBOT_RE = re.compile(
     r"cobot|collaborative robot|conveyor|sortation|pick.to.light|"
     r"goods.to.person|AS[/]?RS|smart factory|industry 4\.0|"
     r"warehouse automat|fulfillment automat|machine vision|computer vision|"
-    r"palletiz|depalletiz|pick.and.place|end.of.line|wearable exoskeleton)\b",
+    r"palletiz|depalletiz|pick.and.place|end.of.line|wearable exoskeleton|"
+    r"case packer|case.pack|shrink wrapper|labeler|filler|capper|sealer|"
+    r"intralogistics|intra.logistics|pack.out|pack.in|pack.off|"
+    r"packaging line|packaging automation|stretch wrapper|wrapping machine|"
+    r"co.pack|contract pack|cartoner|case erector|tray packer|"
+    r"cobotic|mobile robot|autonomous forklift|autonomous pallet)\b",
     re.IGNORECASE,
 )
 
 PROBLEM_RE = re.compile(
     r"\b(labor shortage|can.?t find|understaffed|turnover|vacancy|attrition|"
     r"overtime|absenteeism|temp worker|staffing crisis|scheduling gap|"
-    r"wage inflation|workforce gap|high.*injury|worker.*injur)\b",
+    r"wage inflation|workforce gap|high.*injury|worker.*injur|"
+    r"throughput bottleneck|capacity constraint|running at capacity|maxed out|"
+    r"repetitive strain|ergonomic risk|OSHA|lost.time|"
+    r"scrap rate|defect rate|rework|quality issue|reject rate|"
+    r"pack.out backlog|line speed|uptime issue|changeover time)\b",
     re.IGNORECASE,
 )
 

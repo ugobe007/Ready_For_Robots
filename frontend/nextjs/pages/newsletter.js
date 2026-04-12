@@ -31,7 +31,7 @@ function ShareButtons({ url, title, headline, description, compact = false, id }
   const copyId = id || 'share-copy';
 
   const links = {
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle.slice(0, 200))}&summary=${encodeURIComponent(linkedInText.slice(0, 700))}&source=readyforrobots.com`,
     twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(tweetText)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
   };

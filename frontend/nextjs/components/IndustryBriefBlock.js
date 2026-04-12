@@ -63,7 +63,8 @@ export default function IndustryBriefBlock({ brief, className = '' }) {
   const tweetText = `${briefHeadline}\n\n${tweetBody}`;
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
-  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+  const liSummary = execTake.slice(0, 700);
+  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(briefHeadline)}&summary=${encodeURIComponent(liSummary)}&source=readyforrobots.com`;
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
 
   const copyBrief = () => {

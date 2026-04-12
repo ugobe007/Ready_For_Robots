@@ -7,8 +7,8 @@ class Signal(Base):
     __tablename__ = 'signals'
 
     id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
-    signal_type = Column(String, nullable=False)
+    company_id = Column(Integer, ForeignKey('companies.id'), nullable=False, index=True)
+    signal_type = Column(String, nullable=False, index=True)
     signal_text = Column(String, nullable=False)
     signal_strength = Column(Float, nullable=False)
     source_url = Column(String, nullable=True)

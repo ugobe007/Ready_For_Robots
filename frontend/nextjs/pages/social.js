@@ -64,11 +64,11 @@ function TwitterShareButton({ text, url }) {
   );
 }
 
-function LinkedInShareButton({ url }) {
-  const encoded = encodeURIComponent(url);
+function LinkedInShareButton({ url, title, summary }) {
+  const liUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}${title ? `&title=${encodeURIComponent(title.slice(0, 200))}` : ''}${summary ? `&summary=${encodeURIComponent(summary.slice(0, 700))}` : ''}&source=readyforrobots.com`;
   return (
     <a
-      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`}
+      href={liUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="text-xs px-3 py-1.5 rounded border border-blue-800 text-blue-400 hover:border-blue-600 hover:text-blue-300 transition-colors font-mono"
@@ -196,7 +196,7 @@ function PostCard({ post, index, onMarkPosted, isPosted }) {
               </span>
               <div className="flex gap-2 flex-wrap">
                 <CopyButton text={linkedinText} label="Copy post" successLabel="✓ Copied" />
-                <LinkedInShareButton url={shareUrl} />
+                <LinkedInShareButton url={shareUrl} title={post.title || post.company_name} summary={linkedinText} />
               </div>
             </div>
           </div>

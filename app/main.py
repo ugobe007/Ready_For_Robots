@@ -173,6 +173,12 @@ app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newslette
 @app.on_event("startup")
 def startup():
     _start_scheduled_scraper()
+    # Pre-warm the homepage cache so the first user request is never slow
+    try:
+        from app.api.leads import warm_homepage_cache
+        warm_homepage_cache()
+    except Exception as exc:
+        logger.warning("Homepage cache warm-up could not be scheduled: %s", exc)
 
 
 @app.get("/health")
