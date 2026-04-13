@@ -121,6 +121,25 @@ _JUNK_SUBSTRINGS = [
     # Airport codes standing alone (3-letter IATA codes)
     # "MassRobotics startups", "AI startups" — list article fragments (not companies)
     "startups",
+    # "Central Fill Pharmacy Automation" / "Intelligent Pharmacy Leveraging AI" — product descriptors
+    "fill pharmacy", "pharmacy automation", "leveraging ai",
+    # "Delta's Power Cooling" / possessive fragment patterns
+    # (handled by regex below — kept here as belt+suspenders)
+    # "Report UK Hospitality" — starts with "Report"
+    # handled by regex below
+    # "Expanding Healthcare Access" — should be caught by Rising/Exploring pattern
+    # but adding as substring for safety
+    "healthcare access",
+    # "JAMES BEARD FOUNDATION RELEASES" — foundation + all-caps verb
+    # "Can AI" — question fragment
+    "can ai",
+    # "We want" / "Percent Solution" / "BE-A" — too generic or too short
+    # handled by regex patterns below
+    # "Xpanner Officially" — company + adverb (truncated headline)
+    " officially",
+    # "New Eastern Hub" / "Battery Lifters" etc. handled above
+    # Log-confirmed specific junk names
+    "report uk hospitality",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -174,6 +193,82 @@ _JUNK_PATTERNS = [
 
     # "Big Tax", "Big Labor", "Big Tech", "Big Pharma" — political/editorial shorthand
     r"(?i)^big\s+(tax|labor|tech|pharma|food|ag|oil|data|bank|biz|gov|media|auto)\s*$",
+
+    # "X Policy", "X Act", "X Law", "X Bill" — legislation, not companies
+    r"(?i)^[\w\s]{3,40}\s+(policy|act|law|bill|legislation|regulation|rule|reform)\s*$",
+
+    # "US-based X", "UK-based X" — geographic descriptor prefix, not a company name
+    r"(?i)^(us|uk|china|japan|europe|germany|france|india|canada|australia)-based\s+",
+
+    # "X distribution center" (no proper name), "X warehouse", "X hub" as full name
+    r"(?i)^(new|north|south|east|west|central|regional|national|global)\s+"
+    r"(distribution\s+center|fulfillment\s+center|warehouse|hub|facility|campus|complex)\s*$",
+
+    # "$X billion expansion", "$X million warehouse" — financial fragment, not company
+    r"(?i)^\$?\d[\d,.]*\s*(million|billion|m\b|b\b)\s+\w",
+    r"(?i)^(billion|million|trillion)\s+\w",
+
+    # (ISIN identifier check moved to is_junk() to stay case-sensitive)
+
+    # "Reach US", "Reach USD", "Reach EUR" — currency/market fragments
+    r"(?i)^reach\s+(us|usd|eur|gbp|cad|aud|jpy)\s*$",
+
+    # "Report X" / "Report on X" — news summary title, not a company
+    r"(?i)^report\s+(uk|us|on|from|for|about|into|of)\s+\w",
+    r"(?i)^(annual|quarterly|monthly|weekly|special|full)\s+report\b",
+
+    # "Lineage Continues North American Warehouse" — company name + action verb + location
+    # Catches "[Company] continues/expands/opens/launches [Geographic] [Noun]"
+    r"(?i)^(\w+\s+){1,2}(continues?|expands?|opens?|builds?|launches?|adds?|grows?)\s+"
+    r"(north|south|east|west|central|global|national|regional|american|european)\b",
+
+    # All-caps foundation / org + action verb: "JAMES BEARD FOUNDATION RELEASES"
+    r"^[A-Z\s]{5,}\s+(RELEASES|DELIVERS|ANNOUNCES|LAUNCHES|NAMES|HIRES|OPENS|FILES)\s*$",
+
+    # "Percent Solution" / "Billion X" / "Million X" — numerical fragment
+    r"(?i)^percent\s+\w",
+    r"(?i)^(a\s+)?few\s+(hundred|thousand|million|billion)\b",
+
+    # "BE-A" / short hyphenated non-names (1-2 chars per segment)
+    r"^[A-Z]{1,2}-[A-Z]{1,2}$",
+
+    # Possessive + generic noun: "Delta's Power Cooling", "Walmart's New Hub"
+    r"(?i)^\w+'s\s+(power|new|old|key|core|main|prime|central|global|major|first|second)\s+\w",
+
+    # "X Officially" — company + adverb (incomplete headline)
+    r"(?i)\s+(officially|reportedly|allegedly|finally|recently|actually|currently)\s*$",
+
+    # "We X", "Can X" — first person / question fragment
+    r"(?i)^(we|can|should|could|would|may|might|do|did|does|is|are|was|were)\s+\w",
+
+    # "U.S" / "U.K" alone — country abbreviation, not a company
+    r"^U\.(S|K|A)\.?$",
+
+    # Generic equipment categories — allow optional middle adjective e.g. "Industrial Robotic Motors"
+    r"(?i)^(battery|pallet|material|conveyor|fork|lift|stacker|sorter|nut|grain|seed|"
+    r"scanner|sensor|picker|placer|gripper|actuator|industrial|robotic|motor|drive)\s+"
+    r"(\w+\s+)?"
+    r"(lifters?|trucks?|handling|equipment|systems?|vehicles?|loaders?|robots?|motors?|drives?|"
+    r"processing\s+machines?|processing\s+equipment)\s*$",
+
+    # "Nut Processing Machine", "Industrial Robotic Motors" — equipment type stubs
+    r"(?i)^(nut|grain|seed|fruit|vegetable|meat|fish|poultry)\s+processing\s+(machines?|systems?|lines?|equipment)\s*$",
+    r"(?i)^(industrial|robotic|servo|stepper|linear)\s+(\w+\s+)?(motors?|drives?|actuators?|arms?|grippers?)\s*$",
+
+    # "New Eastern Hub", "New Central Facility" — "New" + geographic modifier + generic noun
+    r"(?i)^new\s+(eastern|western|northern|southern|central|global|regional|national|"
+    r"american|european|asian|pacific|atlantic)\s+(hub|facility|center|campus|office|warehouse|dc)\s*$",
+
+    # Standalone policy/political topics
+    r"(?i)^(immigration|trade|tariff|wage|minimum wage|carbon|climate)\s+"
+    r"(policy|act|law|bill|reform|regulation|tax|credit)\s*$",
+
+    # "Health Systems", "Hospital Systems" — generic category (not a named company)
+    r"(?i)^(health|hospital|medical|care|pharmacy|clinical)\s+(systems?|networks?|services?|centers?|group)\s*$",
+
+    # "Global Real Estate", "Global Logistics" — pure generic+category (no proper noun)
+    r"(?i)^(global|national|regional|local|american|european|asian)\s+"
+    r"(real estate|logistics|supply chain|automation|manufacturing|technology|innovation)\s*$",
 
     # "CPHI Frankfurt 2025", "ProPak Asia 2026" — conference acronym + city + year
     r"(?i)^[A-Za-z]{2,10}\s+(frankfurt|amsterdam|chicago|houston|las vegas|"
@@ -241,8 +336,10 @@ _JUNK_PATTERNS = [
     # 5-9 word news headlines: subject + action verb (allow symbols like & in subject)
     r"^(?:\S+\s+){1,7}(?:unveil|reinforc|knock|launch|announc|reveal|acquir|hire|"
     r"expand|clos|shut|file|say|grow|rise|fall|win|lose|"
-    r"drop|spike|surge|plunge|soar|slip|shed|boost|spur|gain|add|nam|serv|"
-    r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint)\w*\b",
+    r"drop|spike|surge|plunge|soar|slip|shed|boost|spur|gain|add|nam|serv|deliver|"
+    r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
+    r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
+    r"integrat|transform|accelerat|moderniz|optim|automat|digitiz)\w*\b",
 
     # "The" + generic category word (no proper noun)
     r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"
@@ -420,6 +517,12 @@ _JUNK_EXACT = frozenset({
     "e-commerce", "ecommerce", "omnichannel",
     "industrial automation",
     "machine learning",
+    # Single generic adjectives commonly scraped as company names
+    "flexible", "scalable", "automated", "autonomous", "intelligent",
+    "advanced", "integrated", "connected", "digital",
+    # Generic two-word stubs
+    "material handling", "battery lifters", "pallet trucks",
+    "can ai", "we want",
     # Geography / generic words mistaken for company names (single-field scrapes)
     "capital",
     "las vegas",
@@ -480,10 +583,15 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
         if rx.search(stripped):
             return True, f"junk pattern: {rx.pattern[:60]}"
 
-    # Case-sensitive: standalone ALL-CAPS airport / exchange ticker codes (EWR, JFK, SMRSC 2026)
-    # Must stay case-sensitive so mixed-case names like "Amazon", "Apple" are not affected.
-    if re.match(r"^[A-Z0-9]{2,6}(\s+20\d\d)?\s*$", stripped):
-        return True, "standalone uppercase code (airport/ticker)"
+    # Case-sensitive: standalone ALL-CAPS airport codes (EWR, JFK, LAX) — 2-3 letters only.
+    # 4+ letter all-caps can be real companies (URBN, LVMH, BASF), so we exclude them.
+    if re.match(r"^[A-Z]{2,3}(\d)?$", stripped):
+        return True, "standalone uppercase airport/ticker code"
+
+    # Case-sensitive: ISIN bond/stock identifier (two uppercase letters + 10 uppercase/digits)
+    # e.g., "Rockwell Automation Stock ISIN US77463M1053"
+    if re.search(r"\b[A-Z]{2}[A-Z0-9]{10}\b", stripped):
+        return True, "ISIN bond/stock identifier embedded in name"
 
     return False, ""
 

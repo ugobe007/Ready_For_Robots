@@ -435,6 +435,95 @@ CONCEPTS: Dict[str, Concept] = {
         ],
         synonyms=["vendor selection", "provider chosen"],
     ),
+
+    # ═══ End-of-Line (EOL) Automation Concepts (Apr 2026) ═══════════════════
+
+    "eol_palletizing": Concept(
+        name="eol_palletizing", domain="automation", base_weight=0.92,
+        patterns=[
+            r"palletiz", "depalletiz", "palletizer", "pallet robot",
+            r"robotic pallet", "automatic.*palletiz", "layer palletiz",
+            "case palletiz", "bag palletiz",
+        ],
+        synonyms=["palletizer", "depalletizer", "robotic palletizing", "pallet stacking robot"],
+    ),
+    "eol_case_packing": Concept(
+        name="eol_case_packing", domain="automation", base_weight=0.88,
+        patterns=[
+            "case pack", "case packer", "robotic case pack",
+            "case erect", "tray pack", "tray former",
+            "case.*forming", "wrap-around case", "carton erect",
+            "top-load case", "side-load case",
+        ],
+        synonyms=["case packer", "case erector", "tray packer", "carton packer"],
+    ),
+    "eol_wrapping_labeling": Concept(
+        name="eol_wrapping_labeling", domain="automation", base_weight=0.84,
+        patterns=[
+            "stretch wrap", "shrink wrap", "stretch hood",
+            "automatic.*wrap", "robotic.*wrap",
+            "label.*applicat", "print.*apply", "labeling.*automat",
+            "checkweigh", "x-ray inspect", "metal detect",
+        ],
+        synonyms=["stretch wrapper", "shrink wrapper", "label applicator", "checkweigher"],
+    ),
+    "eol_line_automation": Concept(
+        name="eol_line_automation", domain="automation", base_weight=0.90,
+        patterns=[
+            "end.of.line", "end-of-line", r"\bEOL\b",
+            "packaging line automat", "pack-out", "pack-in",
+            "intralogistics", "intra-logistics",
+            "conveyor.*automat", "automated.*conveyor",
+            "line.*integrat", "full.*line.*automat",
+        ],
+        synonyms=["end-of-line automation", "EOL robotics", "packaging line robotics",
+                  "pack-out automation", "intralogistics"],
+    ),
+    "cpg_food_vertical": Concept(
+        name="cpg_food_vertical", domain="industry_fit", base_weight=0.88,
+        patterns=[
+            "consumer packaged goods", r"\bcpg\b", "food.*manufactur",
+            "food.*processing", "food.*production", "food.*plant",
+            "beverage.*manufactur", "bottling.*plant", "canning.*plant",
+            "snack.*manufactur", "dairy.*plant", "meat.*processing",
+            "packaged food", "packaged beverage", "brand manufacturer",
+        ],
+        synonyms=["CPG", "food processing", "food manufacturing", "beverage plant"],
+    ),
+    "contract_manufacturing_vertical": Concept(
+        name="contract_manufacturing_vertical", domain="industry_fit", base_weight=0.85,
+        patterns=[
+            "contract.*manufactur", r"\bcmo\b", r"\bcdmo\b",
+            "co-packer", "co packer", "contract packer", "contract packager",
+            "toll.*manufactur", "toll.*processing",
+            "high.*mix.*low.*volume", "rapid.*changeover",
+            "flexible.*manufactur", "make.*to.*order",
+        ],
+        synonyms=["CMO", "CDMO", "co-packer", "contract manufacturer", "toll manufacturer"],
+    ),
+    "throughput_pressure": Concept(
+        name="throughput_pressure", domain="labor_pain", base_weight=0.80,
+        patterns=[
+            "throughput.*bottleneck", "capacity.*constraint",
+            "running.*at.*capacity", "maxed.*out",
+            "line.*speed", "uptime.*issue", "changeover.*time",
+            "pack-out.*backlog", "production.*bottleneck",
+            "output.*target", "rate.*target",
+            "scrap.*rate", "defect.*rate", "rework", "reject.*rate",
+            "quality.*issue", "inspection.*fail",
+        ],
+        synonyms=["throughput bottleneck", "capacity constraint", "production pressure"],
+    ),
+    "ergonomic_risk": Concept(
+        name="ergonomic_risk", domain="labor_pain", base_weight=0.75,
+        patterns=[
+            r"\bOSHA\b", "ergonomic.*risk", "repetitive.*strain",
+            "musculoskeletal", r"\bRSI\b", "workplace.*injury",
+            "workers.*comp", "ergonomic.*hazard",
+            "lifting.*injury", "manual.*handling.*risk",
+        ],
+        synonyms=["OSHA compliance", "ergonomic hazard", "repetitive strain injury"],
+    ),
 }
 
 
@@ -477,6 +566,16 @@ RELATIONSHIPS: List[Relationship] = [
     Relationship("roi_documented",           "automation_intent",        "implies",         0.80),
     Relationship("disinfection_robot",       "healthcare_vertical",      "associated_with", 0.85),
     Relationship("floor_scrubber_automation","service_robot",            "associated_with", 0.80),
+
+    # EOL relationships (Apr 2026)
+    Relationship("eol_palletizing",           "eol_line_automation",     "implies",         0.90),
+    Relationship("eol_case_packing",          "eol_line_automation",     "implies",         0.85),
+    Relationship("eol_wrapping_labeling",     "eol_line_automation",     "associated_with", 0.75),
+    Relationship("eol_line_automation",       "cpg_food_vertical",       "associated_with", 0.80),
+    Relationship("throughput_pressure",       "reduce_labor_costs",      "implies",         0.70),
+    Relationship("ergonomic_risk",            "reduce_labor_costs",      "implies",         0.65),
+    Relationship("contract_manufacturing_vertical", "eol_line_automation", "associated_with", 0.80),
+    Relationship("cpg_food_vertical",         "labor_shortage",          "associated_with", 0.60),
 ]
 
 
@@ -669,6 +768,64 @@ INFERENCE_RULES: List[InferenceRule] = [
         boost=0.35,
         description="Warehouse with robot deployment → AMR market validation"
     ),
+
+    # ═══ EOL / CPG / Food Manufacturing Inference Rules (Apr 2026) ═══
+    InferenceRule(
+        name="eol_labor_pain_buyer",
+        conditions=["eol_line_automation", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.40,
+        description="EOL automation context + labor shortage → strong packaging robot buyer"
+    ),
+    InferenceRule(
+        name="food_plant_throughput_pressure",
+        conditions=["cpg_food_vertical", "throughput_pressure"],
+        conclusion_domain="automation",
+        boost=0.38,
+        description="Food/CPG plant with throughput constraint → EOL robot prioritization"
+    ),
+    InferenceRule(
+        name="food_plant_labor_shortage",
+        conditions=["cpg_food_vertical", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="Food/CPG plant with staffing pain → palletizer/case packer buyer"
+    ),
+    InferenceRule(
+        name="contract_mfg_changeover_pain",
+        conditions=["contract_manufacturing_vertical", "throughput_pressure"],
+        conclusion_domain="automation",
+        boost=0.38,
+        description="Co-packer/CMO with changeover pressure → flexible EOL robot buyer"
+    ),
+    InferenceRule(
+        name="eol_capex_buyer",
+        conditions=["eol_line_automation", "capex_announcement"],
+        conclusion_domain="automation",
+        boost=0.42,
+        description="Active capex + EOL automation interest → near-term palletizer/case packer buyer"
+    ),
+    InferenceRule(
+        name="ergonomic_eol_driver",
+        conditions=["ergonomic_risk", "cpg_food_vertical"],
+        conclusion_domain="automation",
+        boost=0.32,
+        description="OSHA/ergonomic risk at food/CPG plant → palletizing automation driven by safety"
+    ),
+    InferenceRule(
+        name="palletizer_roi_signal",
+        conditions=["eol_palletizing", "roi_documented"],
+        conclusion_domain="automation",
+        boost=0.45,
+        description="Palletizer ROI documented → case study / expansion buyer"
+    ),
+    InferenceRule(
+        name="eol_expansion_hire",
+        conditions=["eol_line_automation", "strategic_automation_hire"],
+        conclusion_domain="automation",
+        boost=0.40,
+        description="EOL automation context + automation exec hire → capital project in motion"
+    ),
 ]
 
 
@@ -676,21 +833,28 @@ INFERENCE_RULES: List[InferenceRule] = [
 # 7. Industry priors (base robotics-fit score)
 # ──────────────────────────────────────────────
 INDUSTRY_PRIORS: Dict[str, float] = {
-    "logistics":     0.90,
-    "hospitality":   0.85,
-    "hotel":         0.85,
-    "healthcare":    0.80,
-    "medical tech":  0.82,
-    "food service":  0.75,
-    "restaurant":    0.72,
-    "food process":  0.76,
-    "airport":       0.78,
-    "casino":        0.70,
-    "manufacturing": 0.68,
-    "retail":        0.62,
-    "datacenter":    0.70,
-    "apparel":       0.65,
-    "unknown":       0.40,
+    "logistics":              0.90,
+    "hospitality":            0.85,
+    "hotel":                  0.85,
+    "healthcare":             0.80,
+    "medical tech":           0.82,
+    "food service":           0.75,
+    "restaurant":             0.72,
+    "food process":           0.88,   # EOL buyer — high fit
+    "food manufactur":        0.88,
+    "cpg":                    0.87,
+    "consumer goods":         0.87,
+    "contract manufactur":    0.85,
+    "beverage":               0.84,
+    "bottling":               0.84,
+    "packaging":              0.80,
+    "airport":                0.78,
+    "casino":                 0.70,
+    "manufacturing":          0.72,
+    "retail":                 0.62,
+    "datacenter":             0.70,
+    "apparel":                0.65,
+    "unknown":                0.40,
 }
 
 

@@ -1182,107 +1182,188 @@ class IntelligenceNewsScraper:
         """Filter out noise from extracted company names (headline fragments, etc.)."""
         name_lower = name.lower().strip()
         words = name_lower.split()
-        
-        # Too short or too long (min 3 allows NCR, IBM, P&G, HPE, etc.)
-        if len(name) < 3 or len(name) > 60:
+
+        # Too short or too long (min 3 allows NCR, IBM, P&G; max 55 catches long headlines)
+        if len(name) < 3 or len(name) > 55:
             return False
-        
+
         # Must contain at least one uppercase letter (proper noun)
         if not any(c.isupper() for c in name):
             return False
-        
+
         # Starts with noise word
         if any(name_lower.startswith(word.strip()) for word in NOISE_WORDS):
             return False
-        
+
+        # Starts with adverb / modifier that indicates this is a sentence, not a name
+        _LEADING_ADVERBS = re.compile(
+            r"^(significantly|rapidly|recently|officially|increasingly|reportedly|"
+            r"nearly|currently|already|now|just|still|yet|also|only|even|further|"
+            r"us-based|uk-based|china-based|japan-based|europe-based|"
+            r"approximately|roughly|almost|over|more than|less than)\b",
+            re.IGNORECASE,
+        )
+        if _LEADING_ADVERBS.match(name_lower):
+            return False
+
+        # Possessive form followed by a generic noun → headline fragment, not company
+        # "Delta's Power Cooling", "Walmart's Automation Drive"
+        if re.search(r"'s?\s+\w+", name) and not re.search(
+            r"(?i)'s?\s+(group|corp|inc|ltd|co\.?|holdings?|ventures?|partners?|labs?|"
+            r"technologies|solutions|services|systems)$", name_lower
+        ):
+            return False
+
         # Contains specific noise phrases (news orgs, headline fragments)
-        noise_phrases = {"& world", "& report", "u.s. news", "world report",
-                        "criticize", "discusses", " in funding", "in funding",
-                        "receives approval",
-                        "in stages", "leaves door", "chicken restaurant chain",
-                        "fast food industry", "logistics park", "national park",
-                        "market research", "market outlook", "market size",
-                        "labor shortage", "predicts a profit", "can you", "now it",
-                        "replacement route", "route 95", "route 9517",
-                        "launches ai and robotic", "launches ai and robot",
-                        "wildfires", "neuropsychology"}
+        noise_phrases = {
+            "& world", "& report", "u.s. news", "world report",
+            "criticize", "discusses", " in funding", "in funding",
+            "receives approval", "in stages", "leaves door",
+            "chicken restaurant chain", "fast food industry",
+            "logistics park", "national park",
+            "market research", "market outlook", "market size",
+            "labor shortage", "predicts a profit", "can you", "now it",
+            "replacement route", "route 95", "route 9517",
+            "launches ai and robotic", "launches ai and robot",
+            "wildfires", "neuropsychology",
+            # Added from log analysis
+            "isin ", " isin", "stock isin",       # stock/bond identifier codes
+            "earnings new", "earnings ",           # financial headline fragments
+            "distribution and",                    # truncated headline
+            "leveraging ai",                       # article title phrase
+            "automation lag",                      # headline fragment
+            "pharmacy automation",                 # product category descriptor
+            "fill pharmacy",                       # category fragment
+            "healthcare access",                   # policy topic, not company
+        }
         if any(phrase in name_lower for phrase in noise_phrases):
             return False
-        
+
         # Headline debris: "… in funding - The Robot", "… - U.S. News"
         if re.search(r"\bin funding\b.*\bthe robot\b$", name_lower):
             return False
         if "state leaders" in name_lower and "criticize" in name_lower:
             return False
-        
+
+        # News source attribution: "... - Mankato Free Press", "... - FOX 13"
+        if re.search(r'\s-\s+\w+[\w\s]*?(press|times|news|post|herald|tribune|"
+                     r"journal|gazette|review|report|daily|weekly|media|wire)\s*$',
+                     name_lower):
+            return False
+
+        # ISIN / ticker code embedded: "Rockwell Automation Stock ISIN US77463M1053"
+        if re.search(r'\b[A-Z]{2}[A-Z0-9]{10}\b', name):
+            return False
+
         # Is just a noise word
         if name_lower in NOISE_WORDS:
             return False
-        
-        # Truncated / sentence fragments: ends with " to", " -", " in", " for"
-        if re.search(r'\s(to|-\s|in|for)$', name_lower):
+
+        # Truncated / sentence fragments: ends with " to", " -", " in", " for", " and"
+        if re.search(r'\s(to|-\s*$|in|for|and|the|a|an|of|by)$', name_lower):
             return False
-        
+
         # News org pattern: "X & World", "X Report", "X - U.S."
         if re.search(r'& (world|report)$|\s-\s*(u\.?s\.?|the)\b', name_lower):
             return False
-        
-        # Contains verbs/prepositions/sentence fragments (whole-word match)
-        sentence_words = {"to", "for", "in", "on", "at", "with", "from", "but",
-                         "receives", "approval", "stages", "funding", "staffing",
-                         "cuts", "leaves", "pleas", "trends", "know", "about",
-                         "criticize", "discusses", "what", "how", "through",
-                         "will", "nixes", "cancels", "kicks", "amid", "alumni",
-                         "reportedly", "predicts", "some", "it"}
+
+        # Contains sentence verbs / prepositions (whole-word match)
+        # Expanded from logs: delivers, releases, continues, anticipates, leveraging, lag
+        sentence_words = {
+            "to", "for", "in", "on", "at", "with", "from", "but",
+            "receives", "approval", "stages", "funding", "staffing",
+            "cuts", "leaves", "pleas", "trends", "know", "about",
+            "criticize", "discusses", "what", "how", "through",
+            "will", "nixes", "cancels", "kicks", "amid", "alumni",
+            "reportedly", "predicts", "some", "it",
+            # New from log analysis:
+            "delivers", "delivery", "releases", "continues", "anticipates",
+            "anticipate", "increase", "increases", "reveal", "reveals",
+            "access", "policy", "act", "could", "brace", "braces",
+            "lag", "lags", "industry",
+        }
         if any(re.search(r'\b' + re.escape(w) + r'\b', " " + name_lower + " ") for w in sentence_words):
             return False
-        
-        # Headline structure: "Company verb" captured wrong → "X will", "X nixes", "X cancels"
-        if re.search(r'\s(will|nixes|cancels|kicks\s|kicks off|predicts)\s*$', name_lower):
+
+        # Headline structure: trailing action verb
+        if re.search(
+            r'\s(will|nixes|cancels|kicks\s|kicks off|predicts|releases?|delivers?|'
+            r'continues?|brace|braces?|surge|surges?|lag|lags?|boosts?|gains?|adds?|'
+            r'names?|serves?|cuts?|slashes?|opens?|closes?|shuts?|files?|wins?|'
+            r'loses?|drops?|spikes?|surges?|plunges?|soars?|slips?|sheds?|'
+            r'unveils?|launches?|announces?|reveals?|acquires?|hires?|expands?|'
+            r'celebrates?|highlights?|appoints?|introduces?)\s*$',
+            name_lower
+        ):
             return False
-        
+
+        # All-caps + action verb at end: "JAMES BEARD FOUNDATION RELEASES"
+        if re.search(r'\b(RELEASES|DELIVERS|ANNOUNCES|LAUNCHES|UNVEILS|OPENS|CLOSES|'
+                     r'REPORTS|NAMES|HIRES|ACQUIRES|SIGNS|WINS|LOSES)\s*$', name):
+            return False
+
         # "New [number]" or "New [product descriptor]" (New 82, New surgical robot)
         if name_lower.startswith("new "):
             if len(words) >= 2 and (words[1].isdigit() or words[1] in {
-                    "surgical", "robot", "82", "mir", "software"}):
+                    "surgical", "robot", "82", "mir", "software", "eastern", "western",
+                    "northern", "southern", "hub", "facility", "center"}):
                 return False
-        
-        # Ends with " CEO", " robot" (product), " Market" (report title)
-        if re.search(r'\s(ceo|robot|market|market research|market outlook)\s*$', name_lower):
+
+        # Ends with " CEO", " robot", " Market" (report title), " Act", " Policy"
+        if re.search(r'\s(ceo|robot|market|market research|market outlook|act|policy|'
+                     r"hub|center|facility|complex|campus|park|'s)\s*$", name_lower):
             return False
-        
+
         # Generic plural roles/categories as whole name
-        if name_lower in {"retailers", "nurses", "women", "robots", "experts"}:
+        if name_lower in {"retailers", "nurses", "women", "robots", "experts",
+                          "workers", "operators", "managers", "systems"}:
             return False
-        
-        # Starts with "Some " (Some cloud experts)
-        if name_lower.startswith("some "):
+
+        # Single generic/abstract word (not a company)
+        _GENERIC_SINGLES = {
+            "flexible", "scalable", "automated", "autonomous", "intelligent",
+            "digital", "smart", "advanced", "integrated", "connected",
+            "global", "local", "national", "regional", "international",
+        }
+        if len(words) == 1 and name_lower in _GENERIC_SINGLES:
             return False
-        
+
+        # Starts with "Some " (Some cloud experts), "Can " (Can AI)
+        if name_lower.startswith("some ") or name_lower.startswith("can "):
+            return False
+
         # Contains comma (sentence fragment: "Clover predicts a profit,")
         if "," in name:
             return False
-        
+
         # "X and CTA" / "City and CTA" style headline fragments
         if " and " in name_lower and any(w in name_lower for w in ("cta", " and robot", " and robotic")):
             return False
-        
+
         # Contains only common words
         if all(word in NOISE_WORDS for word in words):
             return False
-        
-        # Too many words (likely sentence); 8 allows "X Y Z Corporation" / longer legal names
-        if len(words) > 8:
+
+        # Tightened from 8 → 7 words; genuine company names rarely exceed 7 words
+        # (e.g., "Marriott International Hotels & Resorts" = 5 words)
+        if len(words) > 7:
             return False
-        
+
         # Starts with lowercase (likely mid-sentence)
         if name[0].islower():
             return False
-        
-        # Location pattern: "N.J. X", "State X"
+
+        # Location patterns: "Thunder Bay Ont.", "N.J. X", "State X", city + state abbrev
         if re.match(r'^[a-z]{2}\.\s', name_lower) or name_lower.startswith("state "):
             return False
-        
+        # Canadian city + province: "Thunder Bay Ont."
+        if re.search(r'\b(ont|que|b\.?c|alta?|sask|man|n\.?s|n\.?b|p\.?e\.?i|n\.?l)\b\.?\s*$',
+                     name_lower):
+            return False
+        # U.S. / country abbreviations alone or as last token
+        if re.search(r'\b(u\.s|u\.k|u\.s\.a)\s*\.?\s*$', name_lower):
+            return False
+
         return True
     
     # ══════════════════════════════════════════════════════════════════════════
