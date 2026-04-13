@@ -1339,6 +1339,12 @@ class IntelligenceNewsScraper:
             logger.debug("Skip publication masquerading as company: %s", name)
             return None
 
+        # Skip names that were previously deleted as junk
+        from app.services.scraper_blocklist import is_blocklisted
+        if is_blocklisted(name):
+            logger.debug("Skip blocklisted name: %s", name)
+            return None
+
         # Check if exists (case-insensitive)
         existing = (
             self.db.query(Company)

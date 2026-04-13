@@ -101,6 +101,26 @@ _JUNK_SUBSTRINGS = [
     "showcases flexible", "weighing conveying",
     "global beer", "major food",
     "news us", "cornhusker clink", "spartanburg distribution",
+    # Celebrity / entertainment headlines
+    "celebrates rock", "gene simmons", "celebrates", "rock and roll",
+    # Generic equipment / product categories (not companies)
+    "testing equipment", "waterjet", "intensifier pump", "world cement",
+    "world waterjet", "mezzanines", "reverse logistic",
+    # Job listing / career headline fragments
+    "highest paying", "paying tech jobs", "paying artificial intelligence",
+    "paying jobs", "top paying",
+    # Conference / event / show fragments
+    "conference agenda", "full agenda", "smrsc", "empack",
+    "packaging innovations", "packaging news",
+    # Generic single words / non-company stubs
+    "investment",
+    # Headline verb fragments
+    "war just picked", "retail war",
+    # Generic financial / corporate jargon scraped as names
+    "million series", "nano one highlights",
+    # Airport codes standing alone (3-letter IATA codes)
+    # "MassRobotics startups", "AI startups" — list article fragments (not companies)
+    "startups",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -136,6 +156,37 @@ _JUNK_PATTERNS = [
     r"report|the\s+report|study|the\s+study|survey|the\s+survey|"
     r"statistics|insights|analysis|the\s+analysis|update|the\s+update|"
     r"news|breaking|alert|exclusive|source|weekly|monthly|daily|annual|quarterly)\s*$",
+
+    # "Rising X" / "Exploring X" / "Declining X" — trend/article titles
+    r"(?i)^(rising|exploring|declining|growing|falling|surging|shrinking|emerging)\s+\w+(\s+\w+)*$",
+
+    # "X Is Up/Down/Back/Next" — stock/market headline fragments
+    r"(?i)\s+(is|are|was|were)\s+(up|down|back|next|out|in|gone|here|there|live|set|due|key|new)\s*$",
+
+    # "Video X" / "Photo X" / "Audio X" — media file descriptors
+    r"(?i)^(video|photo|audio|image|gallery|podcast|webinar|whitepaper|infographic)\s+\w",
+
+    # Labor/union headlines: "X Teamsters Authorize Strike", "Workers Strike At X"
+    r"(?i)\b(teamsters|authorize\s+strike|workers?\s+strike|union\s+vote|labor\s+action)\b",
+
+    # "X Day Y" — event/holiday fragments (Moving Day March, Opening Day Spring…)
+    r"(?i)^(\w+)\s+day\s+(\w+)\s*$",
+
+    # "Big Tax", "Big Labor", "Big Tech", "Big Pharma" — political/editorial shorthand
+    r"(?i)^big\s+(tax|labor|tech|pharma|food|ag|oil|data|bank|biz|gov|media|auto)\s*$",
+
+    # Generic two/three word "category" stubs — no proper noun:
+    # "Food Safety", "Goat Equipment", "Eagle Product Inspection Highlights Pack"
+    r"(?i)^(food|product|worker|plant|labor|supply|chain|market|industry|public|"
+    r"consumer|workplace|global|national|regional)\s+"
+    r"(safety|inspection|compliance|standards?|quality|testing?|equipment|regulation|"
+    r"guidelines?|requirements?|alert|warning|recall)\s*$",
+
+    # "X Inspection Highlights Y" / "X Inspections Rolled Out" — food safety headline
+    r"(?i)\b(inspections?\s+(rolled|launched|expanded|highlighted|highlights))\b",
+
+    # "Eagle Product Inspection Highlights Pack" type — product + inspection + action word
+    r"(?i)\b(inspection|inspections)\s+(highlights?|packs?|report|results?|findings?)\b",
 
     # Standalone Co-op / Cooperative without a proper name qualifier
     r"^(the\s+)?co-?ops?\s*$",
@@ -200,8 +251,12 @@ _JUNK_PATTERNS = [
     r"(?i)^warehouse\s+automation\s*$",
     r"(?i)^(smart\s+)?warehouse\s+(robotics|systems?|solutions?|technology)\s*$",
 
-    # Article titles: "Why Automation Is the Ally…", "How Hotels Can…" (third word is not the verb — see extra pattern below)
-    r"(?i)^(why|how|what)\s+\w+\s+(is|are|was|were|will|would|should|can|could)\b",
+    # Article titles: "Why Automation Is…", "How Hotels Can…", "Why AI Companies May…"
+    # Catches question-word headlines even when the modal verb appears later
+    r"(?i)^(why|how|what)\s+\S+(\s+\S+)?\s+(is|are|was|were|will|would|should|can|could|may|might|must)\b",
+    # Short "Why UC workers" / "Why AI Companies" — question word + 1-2-letter abbreviation
+    # Only triggers on 1-2 char uppercase abbreviations to avoid "Why Not Coffee Co" false positives
+    r"(?i)^(why|how|what)\s+[A-Z]{1,2}\s+\w",
     # Listicle openers: "Five Success Factors for…", "3 Tips for…"
     r"(?i)^(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+"
     r"(success\s+)?(factors|tips|ways|reasons|steps|things|secrets|rules|mistakes)\b",
@@ -293,6 +348,26 @@ _JUNK_PATTERNS = [
     # Distribution center / plant named with a city only — headline fragments
     r"(?i)^(spartanburg|cornhusker|blue\s+ridge|rust\s+belt|heartland)\s+(distribution|"
     r"plant|facility|center|clink|hub)\s*$",
+
+    # (Airport / exchange code check moved to is_junk() to keep case-sensitive)
+
+    # "X Celebrates Y" / "X Highlights Y" — headline verb fragments not company names
+    r"(?i)\b(celebrates|highlighted?s?|announces?|introduces?|names?|appoints?|"
+    r"sets|picks|picks up|taps|inks|nets|eyes|unveils?)\s+\w",
+
+    # "Highest Paying …" / "Best Paying …" job article titles
+    r"(?i)^(highest|best|top)\s+paying\b",
+
+    # Generic single-word stubs that are not proper nouns (exact match via short word)
+    r"^(Investment|Mezzanines|Logistics|Packaging|Manufacturing|Automation|"
+    r"Technology|Innovation|Solutions|Services|Operations|Distribution)\s*$",
+
+    # "World X" where X is a product/material (not "World Bank", "World Health Org")
+    r"(?i)^world\s+(cement|waterjet|steel|plastic|packaging|paper|rubber|foam|glass)\b",
+
+    # Conference / agenda / schedule fragments
+    r"(?i)^(full|complete|complete\s+list\s+of|official)\s+(conference|agenda|schedule|program|lineup)\b",
+    r"(?i)\d{4}\s*(agenda|schedule|lineup|program)\s*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -381,6 +456,11 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
     for rx in _JUNK_RE:
         if rx.search(stripped):
             return True, f"junk pattern: {rx.pattern[:60]}"
+
+    # Case-sensitive: standalone ALL-CAPS airport / exchange ticker codes (EWR, JFK, SMRSC 2026)
+    # Must stay case-sensitive so mixed-case names like "Amazon", "Apple" are not affected.
+    if re.match(r"^[A-Z0-9]{2,6}(\s+20\d\d)?\s*$", stripped):
+        return True, "standalone uppercase code (airport/ticker)"
 
     return False, ""
 

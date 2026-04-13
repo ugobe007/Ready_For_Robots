@@ -75,7 +75,9 @@ def purge_junk(
 
     # Delete — must remove child rows first to satisfy FK constraints
     from sqlalchemy import text
+    from app.services.scraper_blocklist import add_bulk_to_blocklist
     ids_to_delete = [r["id"] for r in junk_found]
+    names_to_block = [r["name"] for r in junk_found]
     deleted = 0
     for cid in ids_to_delete:
         db.execute(text("DELETE FROM scores  WHERE company_id = :cid"), {"cid": cid})
@@ -83,6 +85,8 @@ def purge_junk(
         db.execute(text("DELETE FROM companies WHERE id = :cid"), {"cid": cid})
         deleted += 1
     db.commit()
+    # Blocklist all deleted names so scraper never re-ingests them
+    add_bulk_to_blocklist(names_to_block, reason="purge_junk")
 
     return {
         "dry_run": False,
@@ -111,6 +115,7 @@ def delete_by_ids(
         return {"dry_run": True, "found": len(found), "records": found}
 
     from sqlalchemy import text
+    from app.services.scraper_blocklist import add_bulk_to_blocklist
     deleted = 0
     for cid in payload.company_ids:
         db.execute(text("DELETE FROM scores  WHERE company_id = :cid"), {"cid": cid})
@@ -118,6 +123,8 @@ def delete_by_ids(
         result = db.execute(text("DELETE FROM companies WHERE id = :cid"), {"cid": cid})
         deleted += result.rowcount
     db.commit()
+    # Blocklist deleted names to prevent re-ingestion
+    add_bulk_to_blocklist([r["name"] for r in found], reason="delete_by_ids")
 
     return {"dry_run": False, "deleted": deleted, "records": found}
 
