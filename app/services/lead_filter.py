@@ -175,6 +175,29 @@ _JUNK_PATTERNS = [
     # "Big Tax", "Big Labor", "Big Tech", "Big Pharma" — political/editorial shorthand
     r"(?i)^big\s+(tax|labor|tech|pharma|food|ag|oil|data|bank|biz|gov|media|auto)\s*$",
 
+    # "CPHI Frankfurt 2025", "ProPak Asia 2026" — conference acronym + city + year
+    r"(?i)^[A-Za-z]{2,10}\s+(frankfurt|amsterdam|chicago|houston|las vegas|"
+    r"london|paris|munich|dubai|singapore|toronto|barcelona|jakarta|atlanta|"
+    r"asia|europe|americas?|latin|global)\s+20\d\d\s*$",
+
+    # "Ongoing Automation", "Advanced Manufacturing" — adjective + generic industry noun (no proper noun)
+    r"(?i)^(ongoing|advanced|smart|digital|modern|integrated|automated|autonomous|"
+    r"next-gen|next gen|connected|emerging|evolving|traditional|conventional)\s+"
+    r"(automation|manufacturing|logistics|production|processing|packaging|operations?|"
+    r"technology|innovation|transformation|distribution)\s*$",
+
+    # Generic category without a proper name: "Dairy Producer", "Food Manufacturer", "Packaging Plant"
+    r"(?i)^(dairy|meat|poultry|seafood|snack|beverage|cereal|candy|confection|bakery|"
+    r"frozen food|canned food|packaged food|processed food)\s+"
+    r"(producer|manufacturer|processor|plant|facility|operation|company|supplier|brand)\s*$",
+
+    # "Voting is" / "X is" — incomplete headline fragment (verb 'is' or 'are' as last word)
+    r"(?i)\s+(is|are|was|were)\s*$",
+
+    # "Eight Integrated Shows", "Seven Key Trends" — spelled number + words (article title)
+    r"(?i)^(eight|nine|eleven|twelve|thirteen|fourteen|fifteen|sixteen|"
+    r"seventeen|eighteen|nineteen|twenty)\s+\w",
+
     # Generic two/three word "category" stubs — no proper noun:
     # "Food Safety", "Goat Equipment", "Eagle Product Inspection Highlights Pack"
     r"(?i)^(food|product|worker|plant|labor|supply|chain|market|industry|public|"
@@ -216,10 +239,10 @@ _JUNK_PATTERNS = [
     r"aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}\b",
 
     # 5-9 word news headlines: subject + action verb (allow symbols like & in subject)
-    # NOTE: omit "partner/post/open/sign/report/show/earn/cut/raise/gain" — too common in real names
-    r"^(?:\S+\s+){1,5}(?:unveil|reinforc|knock|launch|announc|reveal|acquir|hire|"
+    r"^(?:\S+\s+){1,7}(?:unveil|reinforc|knock|launch|announc|reveal|acquir|hire|"
     r"expand|clos|shut|file|say|grow|rise|fall|win|lose|"
-    r"drop|spike|surge|plunge|soar|slip|shed)\w*\b",
+    r"drop|spike|surge|plunge|soar|slip|shed|boost|spur|gain|add|nam|serv|"
+    r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint)\w*\b",
 
     # "The" + generic category word (no proper noun)
     r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"
