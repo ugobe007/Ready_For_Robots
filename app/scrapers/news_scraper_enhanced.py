@@ -399,10 +399,14 @@ class EnhancedNewsScraper:
             return None
         
         # Get or create company
+        if not self._name_is_valid(company_name):
+            logger.debug("news_scraper_enhanced: rejected %r — failed validator", company_name)
+            return
+
         company = self.db.query(Company).filter(
             Company.name == company_name
         ).first()
-        
+
         if not company:
             company = Company(
                 name=company_name,

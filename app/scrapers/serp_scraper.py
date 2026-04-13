@@ -194,6 +194,9 @@ class SerpScraper:
     def _get_or_create_company(self, name: str, industry: str) -> Optional[Company]:
         if not name:
             return None
+        if not self._name_is_valid(name):
+            logger.debug("_get_or_create_company: rejected %r — failed validator", name)
+            return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
             return existing

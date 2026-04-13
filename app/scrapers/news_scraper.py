@@ -548,6 +548,9 @@ class NewsScraper:
         """Look up or create a company record by name."""
         if not name:
             return None
+        if not self._name_is_valid(name):
+            logger.debug("_get_or_create_company: rejected %r — failed validator", name)
+            return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
             if existing.industry == "Unknown" and industry != "Unknown":

@@ -74,8 +74,29 @@ class BaseScraper(ABC):
                     logger.exception("Error scraping %s: %s", url, e)
             browser.close()
 
+    @staticmethod
+    def _name_is_valid(name: str) -> bool:
+        """
+        Gate: returns True only if `name` looks like a real company that could
+        be a robotics/automation buyer.  Rejects article titles, generic phrases,
+        country names, known individuals, and trade publications.
+        Called before any DB write so junk never reaches the database.
+        """
+        if not name or not name.strip():
+            return False
+        try:
+            from app.services.company_validator import is_valid_lead
+            valid, _ = is_valid_lead(name)
+            return valid
+        except Exception:
+            return True  # fail-open: never block ingestion if validator crashes
+
     def save_company(self, data: dict) -> Company:
-        existing = self.db.query(Company).filter(Company.name == data.get("name")).first()
+        name = data.get("name", "")
+        if not self._name_is_valid(name):
+            logger.debug("save_company: rejected %r — failed validator", name)
+            return None  # type: ignore[return-value]
+        existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
             return existing
         company = Company(**data)

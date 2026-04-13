@@ -365,11 +365,13 @@ class EnhancedSerpScraper:
         """Get existing company or create new one"""
         if not name:
             return None
-        
+        if not self._name_is_valid(name):
+            logger.debug("_get_or_create_company: rejected %r — failed validator", name)
+            return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
             return existing
-        
+
         company = Company(name=name, industry=industry, source="serp_scraper_enhanced")
         self.db.add(company)
         self.db.commit()
