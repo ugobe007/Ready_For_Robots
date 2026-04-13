@@ -48,6 +48,82 @@ const SEARCH_CATEGORIES = [
   { key: 'robot_automation', label: 'Robot Automation' }
 ];
 
+// Per-vertical context shown when landing from the Markets grid
+const INDUSTRY_META = {
+  'Hospitality': {
+    icon: '🏨',
+    fit: 'Service & Delivery Robots',
+    description: 'Hotels and resorts actively hiring housekeeping and guest-services staff signal labor pain — the primary driver for service robot and room-delivery deployments.',
+    color: 'amber',
+  },
+  'Logistics': {
+    icon: '📦',
+    fit: 'Warehouse AMR Fleet',
+    description: 'Distribution centers and 3PLs scaling fulfillment volumes face picker shortages and throughput constraints — the clearest buying signal for AMR and AS/RS deployments.',
+    color: 'cyan',
+  },
+  'Healthcare': {
+    icon: '🏥',
+    fit: 'Clinical Logistics Robots',
+    description: 'Hospitals and senior living communities struggling to staff EVS, dietary, and transport roles are prime buyers for disinfection, delivery, and patient-logistics robots.',
+    color: 'emerald',
+  },
+  'Food Service': {
+    icon: '🍽️',
+    fit: 'BOH Kitchen Automation',
+    description: 'Restaurant chains and QSRs fighting turnover and rising kitchen labor costs are rapidly evaluating BOH automation — from food-prep cobots to front-of-house delivery bots.',
+    color: 'orange',
+  },
+  'Food Processing & Manufacturing': {
+    icon: '🏭',
+    fit: 'EOL Line Automation',
+    description: 'Food plants running palletizers, case packers, and packaging lines with manual labor are direct buyers for end-of-line robotics — proven ROI in 12–24 months.',
+    color: 'emerald',
+  },
+  'CPG & Consumer Goods': {
+    icon: '📦',
+    fit: 'Palletizing & Case Packing',
+    description: 'Consumer goods manufacturers scaling production lines need robotic palletizers, case packers, and stretch wrappers to hit throughput targets without adding headcount.',
+    color: 'cyan',
+  },
+  'Contract Manufacturing': {
+    icon: '⚙️',
+    fit: 'Flexible EOL Robotics',
+    description: 'Co-packers and CMOs running high-mix, rapid-changeover lines are buying flexible EOL robots to handle SKU variety without dedicated hard automation.',
+    color: 'purple',
+  },
+  'Airports & Transportation': {
+    icon: '✈️',
+    fit: 'Ground Ops Robots',
+    description: 'Airports modernizing ground operations, baggage handling, and terminal cleaning are investing in autonomous cleaning and logistics robots.',
+    color: 'sky',
+  },
+  'Casinos & Gaming': {
+    icon: '🎰',
+    fit: 'Floor & F&B Delivery',
+    description: 'Casino resorts managing large F&B and hospitality operations face the same labor constraints as hotels — delivery and floor-service robots reduce service staff dependency.',
+    color: 'amber',
+  },
+  'Cruise Lines': {
+    icon: '🚢',
+    fit: 'Onboard Delivery',
+    description: 'Cruise operators are piloting autonomous in-cabin delivery and F&B service robots to manage crew costs on extended voyages.',
+    color: 'sky',
+  },
+  'Real Estate & Facilities': {
+    icon: '🏢',
+    fit: 'Cleaning & Concierge',
+    description: 'Commercial real estate and facilities management companies are deploying autonomous floor scrubbers, security robots, and concierge bots across office campuses.',
+    color: 'neutral',
+  },
+  'Retail': {
+    icon: '🛒',
+    fit: 'Picking & Restocking',
+    description: 'Grocery and retail chains automating inventory scanning, shelf restocking, and micro-fulfillment centers are active robot buyers.',
+    color: 'emerald',
+  },
+};
+
 // Signal badge component
 function SignalBadge({ type }) {
   const SIGNAL_META = {
@@ -79,6 +155,7 @@ export default function SearchPage() {
   const searchRef = useRef(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(null);
+  const [industry, setIndustry] = useState(null);  // set when landing from Markets grid
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -105,9 +182,37 @@ export default function SearchPage() {
     setLoading(false);
   }, []);
 
+  const loadIndustryLeads = useCallback(async (ind) => {
+    setLoading(true);
+    setResults(null);
+    try {
+      const params = new URLSearchParams({
+        industry: ind,
+        limit: '60',
+        sort: 'score',
+        exclude_junk: 'true',
+      });
+      const r = await fetch(`${API}/api/leads?${params}`, liveFetchInit());
+      if (!r.ok) return;
+      const leads = await r.json();
+      const rows = (Array.isArray(leads) ? leads : []).map(leadToSearchRow);
+      setResults({
+        results: rows,
+        total: rows.length,
+        query: null,
+        category: null,
+        category_label: ind,
+        prepopulated: false,
+        industryMode: true,
+      });
+    } catch {}
+    setLoading(false);
+  }, []);
+
   async function runSearch(q, cat) {
     setLoading(true);
     setResults(null);
+    setIndustry(null);
     try {
       const params = new URLSearchParams();
       if (q && q.trim()) params.set('q', q.trim());
@@ -127,26 +232,33 @@ export default function SearchPage() {
     setLoading(false);
   }
 
-  // Read URL params on load and run search (avoids blank pages from links)
+  // Read URL params on load — supports ?q=, ?category=, and ?industry=
   useEffect(() => {
     if (!router.isReady) return;
     const q = router.query.q;
     const cat = router.query.category;
-    if (q != null || cat != null) {
+    const ind = router.query.industry;
+    if (ind != null) {
+      const indVal = typeof ind === 'string' ? ind : (ind?.[0] ?? '');
+      setIndustry(indVal);
+      setQuery('');
+      setCategory(null);
+      loadIndustryLeads(indVal);
+    } else if (q != null || cat != null) {
       const qVal = typeof q === 'string' ? q : (q?.[0] ?? '');
       const catVal = typeof cat === 'string' ? cat : (cat?.[0] ?? null);
       setQuery(qVal);
       setCategory(catVal);
       runSearch(qVal, catVal);
     }
-  }, [router.isReady, router.query.q, router.query.category]);
+  }, [router.isReady, router.query.q, router.query.category, router.query.industry]);
 
-  // No ?q= / ?category= — show HOT leads with automation specs (never empty table)
+  // No params — show HOT leads with automation specs
   useEffect(() => {
     if (!router.isReady) return;
-    if (router.query.q !== undefined || router.query.category !== undefined) return;
+    if (router.query.q !== undefined || router.query.category !== undefined || router.query.industry !== undefined) return;
     loadHotLeads();
-  }, [router.isReady, router.query.q, router.query.category, loadHotLeads]);
+  }, [router.isReady, router.query.q, router.query.category, router.query.industry, loadHotLeads]);
 
   // '/' keyboard shortcut to focus search
   useEffect(() => {
@@ -163,12 +275,14 @@ export default function SearchPage() {
   function selectCategory(key) {
     const next = category === key ? null : key;
     setCategory(next);
+    setIndustry(null);
     if (next || query.trim()) runSearch(query, next || null);
     else loadHotLeads();
   }
 
   function handleSubmit(e) {
     e.preventDefault();
+    setIndustry(null);
     if (query.trim() || category) runSearch(query, category);
     else loadHotLeads();
   }
@@ -176,25 +290,72 @@ export default function SearchPage() {
   function clearAll() {
     setQuery('');
     setCategory(null);
+    setIndustry(null);
     router.replace('/search', undefined, { shallow: true });
     loadHotLeads();
   }
 
+  const indMeta = industry ? (INDUSTRY_META[industry] || null) : null;
+
   return (
     <>
       <Head>
-        <title>Intelligence Search | Ready For Robots</title>
-        <meta name="description" content="Search companies by funding, expansion, labor signals, M&amp;A, and automation intent." />
+        <title>{industry ? `${industry} Leads | Ready For Robots` : 'Intelligence Search | Ready For Robots'}</title>
+        <meta name="description" content={industry ? `Automation sales leads for ${industry} — signal intelligence, scores, and outreach playbooks.` : 'Search companies by funding, expansion, labor signals, M&A, and automation intent.'} />
       </Head>
       <RrSiteLayout active="search">
       <div className="px-4 py-8 md:px-8 md:py-10 max-w-7xl mx-auto text-[var(--rr-text)]">
-      {/* Header */}
+
+      {/* Industry landing banner — shown when arriving from Markets grid */}
+      {industry && (
+        <div className="mb-7">
+          <Link href="/#leads" className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-4">
+            ← All markets
+          </Link>
+          <div className={`border rounded-xl p-5 mb-2 ${
+            indMeta?.color === 'amber'   ? 'border-amber-800/50 bg-amber-950/20' :
+            indMeta?.color === 'emerald' ? 'border-emerald-800/50 bg-emerald-950/20' :
+            indMeta?.color === 'cyan'    ? 'border-cyan-800/50 bg-cyan-950/20' :
+            indMeta?.color === 'purple'  ? 'border-purple-800/50 bg-purple-950/20' :
+            indMeta?.color === 'orange'  ? 'border-orange-800/50 bg-orange-950/20' :
+            indMeta?.color === 'sky'     ? 'border-sky-800/50 bg-sky-950/20' :
+            'border-neutral-800 bg-neutral-900/30'
+          }`}>
+            <div className="flex flex-wrap items-start gap-4">
+              {indMeta?.icon && <span className="text-3xl shrink-0">{indMeta.icon}</span>}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold text-white">{industry}</h1>
+                  {indMeta?.fit && (
+                    <span className="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded border border-neutral-700 text-neutral-400">
+                      {indMeta.fit}
+                    </span>
+                  )}
+                </div>
+                {indMeta?.description && (
+                  <p className="text-sm text-neutral-400 leading-relaxed">{indMeta.description}</p>
+                )}
+              </div>
+              <Link
+                href={`/dashboard?industry=${encodeURIComponent(industry)}`}
+                className="shrink-0 text-xs px-3 py-2 rounded border border-neutral-700 text-neutral-400 hover:border-cyan-700 hover:text-cyan-300 transition-colors"
+              >
+                Full dashboard →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header — hidden in industry mode (banner takes its place) */}
+      {!industry && (
       <header className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-xl text-cyan-400">Intelligence Search</h2>
         </div>
         <p className="text-sm text-neutral-400">Find buyers by investment activity, M&A, labor trends & verticals</p>
       </header>
+      )}
 
       {/* Search Interface */}
       <div className="border border-neutral-800 rounded-lg p-6 mb-6 space-y-5">
@@ -252,16 +413,20 @@ export default function SearchPage() {
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <span className="text-lg font-medium text-neutral-200">
-              {results.total} result{results.total !== 1 ? 's' : ''}
+              {results.total} lead{results.total !== 1 ? 's' : ''}
             </span>
-            {results.category_label && (
-              <span className="px-3 py-1 rounded text-xs border border-cyan-800 text-cyan-400">
-                {results.category_label}
+            {results.industryMode ? (
+              <span className="text-xs text-neutral-500">
+                ranked by signal score — search below to filter within this vertical
               </span>
-            )}
-            {results.prepopulated && (
+            ) : results.prepopulated ? (
               <span className="text-xs text-neutral-500">
                 Showing live HOT pipeline — search or filter to narrow
+              </span>
+            ) : null}
+            {results.category_label && !results.industryMode && (
+              <span className="px-3 py-1 rounded text-xs border border-cyan-800 text-cyan-400">
+                {results.category_label}
               </span>
             )}
             {results.query && (
@@ -295,9 +460,13 @@ export default function SearchPage() {
 
           {results.total === 0 ? (
             <div className="text-center py-16 border border-neutral-800 rounded-lg space-y-4">
-              <p className="text-neutral-400 mb-2">No results found</p>
+              <p className="text-neutral-400 mb-2">
+                {industry ? `No leads yet for ${industry}` : 'No results found'}
+              </p>
               <p className="text-sm text-neutral-500">
-                Try a different category, or search for a company name like &quot;Marriott&quot; or keyword like &quot;AMR&quot;
+                {industry
+                  ? 'The scraper is actively building this vertical — check back soon, or browse all hot leads.'
+                  : 'Try a different category, or search for a company name like "Marriott" or keyword like "AMR"'}
               </p>
               <Link
                 href={MARKET_INSIGHTS_HREF}

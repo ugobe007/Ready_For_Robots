@@ -792,7 +792,7 @@ export default function Signals() {
             ].map((m) => (
               <Link
                 key={m.q}
-                href={`/dashboard?industry=${encodeURIComponent(m.q)}`}
+                href={`/search?industry=${encodeURIComponent(m.q)}`}
                 className="group flex flex-col gap-1 border border-neutral-800 hover:border-emerald-700 rounded-lg p-3 bg-neutral-950 hover:bg-neutral-900 transition-colors"
               >
                 <div className="flex items-center justify-between">
