@@ -341,7 +341,9 @@ _JUNK_PATTERNS = [
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
     r"integrat|transform|accelerat|moderniz|optim|automat|digitiz|"
     r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale|"
-    r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul)\w*\b",
+    r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul|"
+    r"turn|shift|pivot|reshape|redefin|reinvent|overhaul|navigat|tackle|"
+    r"address|combat|fight|face|brac|struggl|grappl)\w*\b",
 
     # Phrasal verb at end: "Revs Up", "Heats Up", "Ramps Up", "Kicks In" etc.
     r"(?i)\s+(revs?|heats?|ramps?|gears?|picks?|winds?|steps?|scales?|powers?|dials?)\s+(up|in|off|out|down)\s*$",

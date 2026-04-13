@@ -105,6 +105,21 @@ _GENERIC_WORDS: frozenset[str] = frozenset({
     # Agriculture / food subcategories that read as generic topics
     "poultry", "livestock", "grain", "crop", "crops", "produce",
     "seafood", "aquaculture", "horticulture",
+    # Plural / variant forms missed earlier
+    "distributions", "facilities", "centres", "hubs",
+    # Workforce / labor terms (concepts, not company identifiers)
+    "labor", "labour", "workforce", "workers", "worker", "employees",
+    "staffing", "hiring", "recruitment", "talent", "headcount",
+    "challenge", "challenges", "issue", "issues", "problem", "problems",
+    "risk", "risks", "concern", "concerns", "pressure", "pressures",
+    "impact", "impacts", "trend", "trends", "shift", "shifts",
+    # News event / geopolitical topics — never company names
+    "war", "wars", "crisis", "crises", "conflict", "conflicts",
+    "disaster", "disasters", "emergency", "emergencies",
+    "outbreak", "pandemic", "recession", "inflation",
+    "shortage", "shortages", "disruption", "disruptions",
+    "scandal", "breach", "attack", "attacks", "threat", "threats",
+    "uncertainty", "volatility", "downturn", "slowdown",
 })
 
 # Well-known individual people — never a company name
