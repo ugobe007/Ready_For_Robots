@@ -93,6 +93,46 @@ _GENERIC_WORDS: frozenset[str] = frozenset({
     # Generic plural suffixes used as categories (user-reported)
     "chains", "brands", "groups", "networks", "systems", "operators",
     "providers", "vendors", "suppliers", "dealers", "distributors",
+    # Abstract concept / innovation words (user-reported)
+    "innovation", "innovations", "technological", "expertise", "expert", "experts",
+    "intelligence", "intelligent", "insights", "insight",
+    "knowledge", "learning", "thinking", "strategy", "strategic",
+    "excellence", "quality", "performance", "efficiency",
+    "transformation", "initiative", "initiatives",
+    # Web / media / content stubs
+    "site", "sites", "portal", "portals", "hub", "hubs", "page", "pages",
+    "blog", "blogs", "media", "content", "channel", "channels",
+    # Agriculture / food subcategories that read as generic topics
+    "poultry", "livestock", "grain", "crop", "crops", "produce",
+    "seafood", "aquaculture", "horticulture",
+})
+
+# Well-known individual people — never a company name
+_KNOWN_INDIVIDUALS: frozenset[str] = frozenset({
+    # Tech / business figures
+    "elon musk", "jeff bezos", "bill gates", "mark zuckerberg", "tim cook",
+    "sundar pichai", "satya nadella", "jensen huang", "sam altman", "larry page",
+    "sergey brin", "jack dorsey", "reed hastings", "marc benioff", "andy jassy",
+    "warren buffett", "charlie munger", "ray dalio", "jamie dimon",
+    # Political / public figures likely to appear in news-scraped headlines
+    "donald trump", "joe biden", "kamala harris", "barack obama", "joe biden",
+    "ron desantis", "gavin newsom", "xi jinping", "vladimir putin",
+    "angela merkel", "emmanuel macron", "rishi sunak", "justin trudeau",
+    # Celebrities / sports that appear in business news
+    "taylor swift", "lebron james", "oprah winfrey",
+})
+
+# Common first names — used as a supporting heuristic for person detection
+_COMMON_FIRST_NAMES: frozenset[str] = frozenset({
+    "james", "john", "robert", "michael", "william", "david", "richard",
+    "joseph", "thomas", "charles", "christopher", "daniel", "matthew",
+    "anthony", "donald", "mark", "paul", "steven", "andrew", "kenneth",
+    "george", "joshua", "kevin", "brian", "edward", "ronald", "timothy",
+    "jason", "jeffrey", "ryan", "jacob", "gary", "nicholas", "eric",
+    "mary", "patricia", "jennifer", "linda", "barbara", "elizabeth",
+    "susan", "jessica", "sarah", "karen", "lisa", "nancy", "betty",
+    "margaret", "sandra", "ashley", "emily", "donna", "michelle", "carol",
+    "elon", "jeff", "sundar", "satya", "jensen", "oprah",
 })
 
 # Country and region names — never a company name on their own
@@ -216,6 +256,12 @@ def is_valid_lead(name: str) -> Tuple[bool, str]:
     # Stage 2b: country / region names are never companies
     if name.strip().lower() in _COUNTRIES_AND_REGIONS:
         return False, f"country or region name, not a company ({name!r})"
+
+    # Stage 2c: known individual people are never companies
+    # Using a curated list only — generic first-name heuristics cause false positives
+    # on founder-named companies like "John Deere", "Tim Hortons", "Walt Disney".
+    if name.strip().lower() in _KNOWN_INDIVIDUALS:
+        return False, f"known individual person, not a company ({name!r})"
 
     # Stage 3: must contain a distinctive proper noun
     if not _has_distinctive_word(name):
