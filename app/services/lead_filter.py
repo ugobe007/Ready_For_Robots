@@ -131,8 +131,8 @@ _JUNK_SUBSTRINGS = [
     # but adding as substring for safety
     "healthcare access",
     # "JAMES BEARD FOUNDATION RELEASES" — foundation + all-caps verb
-    # "Can AI" — question fragment
-    "can ai",
+    # NOTE: "can ai" removed from substrings — it's a substring of "American Airlines"
+    # It lives in _JUNK_EXACT (exact match only)
     # "We want" / "Percent Solution" / "BE-A" — too generic or too short
     # handled by regex patterns below
     # "Xpanner Officially" — company + adverb (truncated headline)

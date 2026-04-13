@@ -1159,24 +1159,31 @@ class IntelligenceNewsScraper:
         return companies[:15]  # Top 15 per article to surface more new leads
 
     def _extract_leading_company_phrase(self, text: str) -> Optional[str]:
-        """Fallback: extract first title-case phrase (2–5 words) from start of headline."""
+        """
+        Fallback extraction: apply verb-anchor / possessive logic to find the
+        ACTOR in a headline before falling back to the old title-case grab.
+
+        OLD approach: blindly grab the first 2–5 title-case words.
+        PROBLEM: "Distribution Centers Turn" → "Distribution Centers" (a descriptor,
+                 not an actor), "War Crisis" → "War Crisis" (a topic, not a company).
+
+        NEW approach (user-defined model):
+          • Verb is the anchor — everything before it is the SUBJECT.
+          • Possessive marker ('s) identifies the ACTOR (owner) vs the OBJECT.
+          • If the subject before the verb is a generic phrase → no actor → return None.
+          • Only return a name if it passes the full company_validator gate.
+        """
+        from app.services.headline_parser import extract_actor
         text = text.strip()
-        if not text or len(text) < 15:
+        if not text or len(text) < 10:
             return None
-        # Tokenize on spaces; take words that look like a name (start with upper, alphanumeric/&.')
-        words = []
-        for w in re.findall(r"[A-Za-z0-9&\.\'\-]+", text):
-            if len(words) >= 5:
-                break
-            if w and w[0].isupper() and w.lower() not in NOISE_WORDS and len(w) > 1:
-                words.append(w)
-            elif words:
-                # Stop at first non-name word after we have at least 2
-                if len(words) >= 2:
-                    break
-                words = []
-        if 2 <= len(words) <= 5:
-            return " ".join(words)
+        # Verb-anchor + possessive extraction — returns None for generic descriptors
+        actor = extract_actor(text)
+        if actor:
+            return actor
+        # No actor identified: do NOT fall back to the old title-case grab.
+        # Returning None here prevents "Distribution Centers", "War Crisis" etc.
+        # from entering the DB just because they appeared at the start of a headline.
         return None
     
     def _is_valid_company_name(self, name: str) -> bool:

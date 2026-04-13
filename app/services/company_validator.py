@@ -93,6 +93,15 @@ _GENERIC_WORDS: frozenset[str] = frozenset({
     # Generic plural suffixes used as categories (user-reported)
     "chains", "brands", "groups", "networks", "systems", "operators",
     "providers", "vendors", "suppliers", "dealers", "distributors",
+    # Generic collective nouns — never a company name by themselves
+    "companies", "firms", "businesses", "enterprises", "organizations",
+    "corporations", "institutions", "agencies", "associations",
+    "players", "stakeholders", "participants",
+    # Nationality adjectives — describe origin, not identity
+    "german", "french", "british", "chinese", "japanese", "korean",
+    "italian", "spanish", "dutch", "swedish", "swiss", "australian",
+    "canadian", "mexican", "brazilian", "indian", "russian",
+    "american", "european", "asian", "african", "latin",
     # Abstract concept / innovation words (user-reported)
     "innovation", "innovations", "technological", "expertise", "expert", "experts",
     "intelligence", "intelligent", "insights", "insight",
@@ -173,7 +182,8 @@ _ALWAYS_DISTINCTIVE: frozenset[str] = frozenset({
     # Kept here because they appear as PART of multi-word names where another
     # word carries the distinctiveness (General Mills, National Grid)
     "general", "national",
-    "american",    # American Airlines, American Express
+    # "american" removed — now classified as nationality adjective in _GENERIC_WORDS
+    # Real companies like "American Airlines" pass because "Airlines" is distinctive
     "first",       # First Solar, First Data
     "new",         # New Balance, New York Times Company
     # Known 3-letter company tickers that look like airport codes

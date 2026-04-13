@@ -512,7 +512,14 @@ class NewsScraper:
         for key in sorted(db_lookup.keys(), key=len, reverse=True):
             if key in lower:
                 return db_lookup[key]
-        # 3. Regex fallback: "Company Name announces/invests/opens ..."
+        # 3. Verb-anchor / possessive extraction — understands actor vs descriptor
+        from app.services.headline_parser import extract_actor
+        actor = extract_actor(text)
+        if actor:
+            industry = self._infer_industry_from_text(text)
+            return actor, industry
+
+        # 4. Regex fallback: "Company Name announces/invests/opens ..."
         match = _COMPANY_ANNOUNCE_RE.search(text)
         if match:
             extracted = match.group(1).strip()
