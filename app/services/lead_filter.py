@@ -339,7 +339,32 @@ _JUNK_PATTERNS = [
     r"drop|spike|surge|plunge|soar|slip|shed|boost|spur|gain|add|nam|serv|deliver|"
     r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
-    r"integrat|transform|accelerat|moderniz|optim|automat|digitiz)\w*\b",
+    r"integrat|transform|accelerat|moderniz|optim|automat|digitiz|"
+    r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale)\w*\b",
+
+    # Phrasal verb at end: "Revs Up", "Heats Up", "Ramps Up", "Kicks In" etc.
+    r"(?i)\s+(revs?|heats?|ramps?|gears?|picks?|winds?|steps?|scales?|powers?|dials?)\s+(up|in|off|out|down)\s*$",
+
+    # "Here Are / There Are" list headlines: "Here Are Five Global Restaurants"
+    r"(?i)^(here\s+(are|is|'s)|there\s+(are|is|'s))\s+",
+
+    # "The Future of X" / "State of X" / "Rise of X" — article title pattern
+    r"(?i)^(the\s+)?(future|state|rise|fall|history|evolution|dawn|end|era|age)\s+of\s+\w",
+
+    # Generic "[Topic] Technology" / "[Topic] Solutions" / "[Topic] Management" (no proper noun)
+    r"(?i)^(supply\s+chain|value\s+chain|cold\s+chain|food\s+supply|demand\s+chain)\s+"
+    r"(technology|management|solutions?|software|analytics|visibility|optimization|platform)\s*$",
+
+    # "X Technology" / "X Solutions" where X is a generic industry phrase (2-3 words)
+    r"(?i)^(warehouse|logistics|fulfillment|distribution|manufacturing|packaging|"
+    r"retail|hospitality|healthcare|food\s+safety|food\s+service|restaurant|"
+    r"automation|robotics)\s+(technology|technologies|solutions?|management|"
+    r"services?|systems?|analytics|platform|software|trends?)\s*$",
+
+    # "Warehouse Technology Trends" / "Logistics Solutions Insights" — 3-word topic stubs
+    r"(?i)^(warehouse|logistics|supply\s+chain|manufacturing|automation|packaging|"
+    r"distribution|fulfillment|hospitality|retail|food\s+service)\s+\w+\s+"
+    r"(trends?|insights?|outlook|roundup|update|report|analysis|review)\s*$",
 
     # "The" + generic category word (no proper noun)
     r"^the\s+(hotel|hotels|restaurant|restaurants|chain|chains|brand|brands|"

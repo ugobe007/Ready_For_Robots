@@ -1281,6 +1281,8 @@ class IntelligenceNewsScraper:
             "anticipate", "increase", "increases", "reveal", "reveals",
             "access", "policy", "act", "could", "brace", "braces",
             "lag", "lags", "industry",
+            # Headline list/question openers:
+            "here", "there", "five", "six", "seven", "eight", "nine", "ten",
         }
         if any(re.search(r'\b' + re.escape(w) + r'\b', " " + name_lower + " ") for w in sentence_words):
             return False
@@ -1293,6 +1295,32 @@ class IntelligenceNewsScraper:
             r'loses?|drops?|spikes?|surges?|plunges?|soars?|slips?|sheds?|'
             r'unveils?|launches?|announces?|reveals?|acquires?|hires?|expands?|'
             r'celebrates?|highlights?|appoints?|introduces?)\s*$',
+            name_lower
+        ):
+            return False
+
+        # Trailing phrasal verb: "Revs Up", "Heats Up", "Ramps Up", "Gears Up"
+        if re.search(
+            r'\s(revs?|heats?|ramps?|gears?|picks?|winds?|steps?|scales?|powers?)\s+(up|in|off|out|down)\s*$',
+            name_lower
+        ):
+            return False
+
+        # "Here Are / There Are" list headlines
+        if re.match(r'^(here\s+(are|is)|there\s+(are|is))\s+', name_lower):
+            return False
+
+        # "The Future of X" / "State of X" / "Rise of X"
+        if re.match(r'^(the\s+)?(future|state|rise|fall|history|evolution|dawn|end|era|age)\s+of\s+', name_lower):
+            return False
+
+        # Generic "[Topic] Technology/Solutions/Management" (no proper noun)
+        if re.match(
+            r'^(supply chain|value chain|cold chain|warehouse|logistics|fulfillment|'
+            r'distribution|manufacturing|packaging|retail|hospitality|healthcare|'
+            r'food safety|food service|restaurant|automation|robotics)\s+'
+            r'(technology|technologies|solutions?|management|services?|systems?|'
+            r'analytics|platform|software|trends?)\s*$',
             name_lower
         ):
             return False
