@@ -1067,13 +1067,14 @@ class IntelligenceNewsScraper:
         text_lower = text.lower()
 
         def _accept_company(name: str) -> bool:
-            if not self._is_valid_company_name(name) or name in seen:
+            if name in seen:
                 return False
-            if is_known_publication_name(name):
+            # Gate 1+2+3+4: junk filter → logic engine → vendor/pub check (in that order)
+            from app.services.company_validator import is_valid_lead
+            valid, _ = is_valid_lead(name)
+            if not valid:
                 return False
             if publication_matches_rss_source(name, rss_source):
-                return False
-            if is_junk(name)[0]:
                 return False
             # For ambiguous single-word names (Target, Apple, etc.), require disambiguating context
             words = name.strip().split()
