@@ -90,6 +90,24 @@ _GENERIC_WORDS: frozenset[str] = frozenset({
     "report", "survey", "study", "analysis", "outlook", "forecast",
     "trends", "trend", "insights", "insight", "review", "news",
     "weekly", "monthly", "annual", "quarterly",
+    # Generic plural suffixes used as categories (user-reported)
+    "chains", "brands", "groups", "networks", "systems", "operators",
+    "providers", "vendors", "suppliers", "dealers", "distributors",
+})
+
+# Country and region names — never a company name on their own
+_COUNTRIES_AND_REGIONS: frozenset[str] = frozenset({
+    "germany", "france", "japan", "china", "india", "brazil", "canada",
+    "australia", "mexico", "italy", "spain", "south korea", "north korea",
+    "russia", "ukraine", "turkey", "indonesia", "argentina", "netherlands",
+    "switzerland", "sweden", "norway", "denmark", "finland", "poland",
+    "singapore", "taiwan", "vietnam", "thailand", "malaysia", "philippines",
+    "saudi arabia", "uae", "united arab emirates", "egypt", "nigeria",
+    "south africa", "kenya", "israel", "pakistan", "bangladesh",
+    "europe", "asia", "africa", "latin america", "middle east",
+    "north america", "south america", "southeast asia",
+    "western europe", "eastern europe", "asia pacific",
+    "the eu", "the uk", "the us",
 })
 
 # Words that look generic but are used as real brand/company identifiers.
@@ -194,6 +212,10 @@ def is_valid_lead(name: str) -> Tuple[bool, str]:
     # Stage 2: legal suffix fast-pass
     if _has_legal_suffix(name):
         return True, ""
+
+    # Stage 2b: country / region names are never companies
+    if name.strip().lower() in _COUNTRIES_AND_REGIONS:
+        return False, f"country or region name, not a company ({name!r})"
 
     # Stage 3: must contain a distinctive proper noun
     if not _has_distinctive_word(name):

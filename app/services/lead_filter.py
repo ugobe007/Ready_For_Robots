@@ -340,7 +340,8 @@ _JUNK_PATTERNS = [
     r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
     r"integrat|transform|accelerat|moderniz|optim|automat|digitiz|"
-    r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale)\w*\b",
+    r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale|"
+    r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul)\w*\b",
 
     # Phrasal verb at end: "Revs Up", "Heats Up", "Ramps Up", "Kicks In" etc.
     r"(?i)\s+(revs?|heats?|ramps?|gears?|picks?|winds?|steps?|scales?|powers?|dials?)\s+(up|in|off|out|down)\s*$",
@@ -553,6 +554,22 @@ _JUNK_EXACT = frozenset({
     "las vegas",
     # Single generic words that slip through (user-reported)
     "growth", "growth rate", "data center", "boosting",
+    # Generic plural category nouns (not company names)
+    "hotel chains", "restaurant chains", "grocery chains", "retail chains",
+    "hotel brands", "restaurant brands", "food brands", "consumer brands",
+    "hospital networks", "health networks", "hospital systems",
+    "hotel groups", "restaurant groups", "food groups",
+    # Countries / regions as standalone "companies" (user-reported)
+    "germany", "france", "japan", "china", "india", "brazil", "canada",
+    "australia", "mexico", "italy", "spain", "south korea", "north korea",
+    "russia", "ukraine", "turkey", "indonesia", "argentina", "netherlands",
+    "switzerland", "sweden", "norway", "denmark", "finland", "poland",
+    "singapore", "taiwan", "vietnam", "thailand", "malaysia", "philippines",
+    "saudi arabia", "uae", "united arab emirates", "egypt", "nigeria",
+    "south africa", "kenya", "israel", "pakistan", "bangladesh",
+    "europe", "asia", "africa", "latin america", "middle east",
+    "north america", "south america", "southeast asia", "western europe",
+    "eastern europe", "asia pacific",
     # News / syndicated (whole “name” is the outlet or a sector label)
     "business insider",
     "reuters",
