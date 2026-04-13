@@ -436,6 +436,40 @@ CONCEPTS: Dict[str, Concept] = {
         synonyms=["vendor selection", "provider chosen"],
     ),
 
+    # ── Gap-fill: high-value buyer signals (Apr 2026) ─────────────────────
+    "rfq_rfp": Concept(
+        name="rfq_rfp", domain="expansion", base_weight=0.95,
+        patterns=[
+            r"\bRFQ\b", r"\bRFP\b", "request for quote", "request for proposal",
+            "request for information", r"\bRFI\b", "vendor evaluation",
+            "issuing.*bid", "bid.*process", "procurement.*process",
+            "sourcing.*robot", "evaluating.*vendor", "evaluating.*solution",
+        ],
+        synonyms=["RFQ", "RFP", "RFI", "request for quote", "request for proposal"],
+    ),
+    "regulatory_compliance": Concept(
+        name="regulatory_compliance", domain="quality", base_weight=0.72,
+        patterns=[
+            r"\bOSHA\b", "ergonomic.*regulat", "safety.*compliance",
+            r"\bFDA\b", "food.*safety.*regulat", "gmp.*compliance",
+            r"\bGMP\b", "fsma", "haccp", r"\bHACCP\b",
+            "repetitive.*motion.*violat", "injury.*rate", "workers.*comp",
+            "safety.*incident", "recordable.*incident",
+        ],
+        synonyms=["OSHA compliance", "FDA compliance", "food safety", "GMP", "HACCP"],
+    ),
+    "supply_chain_disruption": Concept(
+        name="supply_chain_disruption", domain="labor_pain", base_weight=0.68,
+        patterns=[
+            "supply chain.*disrupt", "supply.*shortage", "component.*shortage",
+            "nearshoring", "reshoring", "onshoring", "friendshoring",
+            "supply.*resilience", "domestic.*manufactur",
+            "supply chain.*risk", "single.*source.*risk",
+            "inventory.*buffer", "safety.*stock", "just-in-case",
+        ],
+        synonyms=["supply chain disruption", "reshoring", "nearshoring", "onshoring"],
+    ),
+
     # ═══ End-of-Line (EOL) Automation Concepts (Apr 2026) ═══════════════════
 
     "eol_palletizing": Concept(
@@ -576,6 +610,46 @@ RELATIONSHIPS: List[Relationship] = [
     Relationship("ergonomic_risk",            "reduce_labor_costs",      "implies",         0.65),
     Relationship("contract_manufacturing_vertical", "eol_line_automation", "associated_with", 0.80),
     Relationship("cpg_food_vertical",         "labor_shortage",          "associated_with", 0.60),
+
+    # ── Gap-fix: orphaned concept wiring (Apr 2026) ──────────────────────
+    # warehouse_automation → downstream outcomes
+    Relationship("warehouse_automation",      "reduce_labor_costs",      "implies",         0.75),
+    Relationship("warehouse_automation",      "logistics_vertical",      "associated_with", 0.80),
+    # cobots
+    Relationship("cobots",                    "reduce_labor_costs",      "implies",         0.70),
+    Relationship("cobots",                    "amr_agv",                 "associated_with", 0.65),
+    Relationship("cobots",                    "automation_intent",       "implies",         0.80),
+    # computer_vision / ai_operations
+    Relationship("computer_vision",           "ai_operations",           "implies",         0.75),
+    Relationship("computer_vision",           "automation_intent",       "associated_with", 0.60),
+    Relationship("ai_operations",             "modernization",           "implies",         0.70),
+    Relationship("ai_operations",             "warehouse_automation",    "associated_with", 0.55),
+    # vertical identifiers → their primary robot type
+    Relationship("hospitality_vertical",      "service_robot",           "implies",         0.85),
+    Relationship("logistics_vertical",        "amr_agv",                 "implies",         0.85),
+    Relationship("logistics_vertical",        "warehouse_automation",    "implies",         0.80),
+    Relationship("healthcare_vertical",       "disinfection_robot",      "associated_with", 0.80),
+    Relationship("food_beverage_vertical",    "eol_line_automation",     "implies",         0.85),
+    Relationship("food_beverage_vertical",    "cpg_food_vertical",       "associated_with", 0.90),
+    Relationship("airport_vertical",          "service_robot",           "implies",         0.75),
+    Relationship("casino_vertical",           "service_robot",           "associated_with", 0.70),
+    # expansion signals → vertical context
+    Relationship("hotel_expansion",           "hospitality_vertical",    "implies",         0.80),
+    Relationship("hotel_expansion",           "new_construction",        "associated_with", 0.75),
+    Relationship("new_construction",          "warehouse_expansion",     "associated_with", 0.60),
+    Relationship("new_construction",          "automation_intent",       "associated_with", 0.50),
+    Relationship("acquisition",               "ma_activity",             "implies",         0.85),
+    Relationship("acquisition",               "operational_scale",       "implies",         0.70),
+    # vendor_selection — critical buying signal
+    Relationship("vendor_selection",          "automation_intent",       "implies",         0.90),
+    Relationship("vendor_selection",          "reduce_labor_costs",      "associated_with", 0.65),
+    # regulatory / supply chain new concepts
+    Relationship("regulatory_compliance",     "automation_intent",       "implies",         0.70),
+    Relationship("regulatory_compliance",     "ergonomic_risk",          "associated_with", 0.60),
+    Relationship("supply_chain_disruption",   "warehouse_automation",    "implies",         0.65),
+    Relationship("supply_chain_disruption",   "automation_intent",       "associated_with", 0.60),
+    Relationship("rfq_rfp",                   "vendor_selection",        "implies",         0.95),
+    Relationship("rfq_rfp",                   "automation_intent",       "implies",         0.90),
 ]
 
 
@@ -825,6 +899,78 @@ INFERENCE_RULES: List[InferenceRule] = [
         conclusion_domain="automation",
         boost=0.40,
         description="EOL automation context + automation exec hire → capital project in motion"
+    ),
+
+    # ── Gap-fill: new inference rules for wired orphans (Apr 2026) ────────
+    InferenceRule(
+        name="vendor_selection_labor_pain",
+        conditions=["vendor_selection", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.42,
+        description="Active vendor evaluation + labor shortage → imminent purchase decision"
+    ),
+    InferenceRule(
+        name="rfq_active_buyer",
+        conditions=["rfq_rfp", "automation_intent"],
+        conclusion_domain="automation",
+        boost=0.48,
+        description="Live RFQ/RFP + automation intent → highest-priority outreach target"
+    ),
+    InferenceRule(
+        name="rfq_labor_pain",
+        conditions=["rfq_rfp", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.45,
+        description="Live RFQ + labor shortage → near-term robot buyer with urgency"
+    ),
+    InferenceRule(
+        name="cobot_labor_pain",
+        conditions=["cobots", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.38,
+        description="Cobot language + labor pain → collaborative robot deployment candidate"
+    ),
+    InferenceRule(
+        name="regulatory_automation_driver",
+        conditions=["regulatory_compliance", "ergonomic_risk"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="OSHA/regulatory pressure + ergonomic risk → compliance-driven automation"
+    ),
+    InferenceRule(
+        name="supply_chain_reshoring",
+        conditions=["supply_chain_disruption", "warehouse_automation"],
+        conclusion_domain="automation",
+        boost=0.33,
+        description="Reshoring/nearshoring + warehouse automation → greenfield robot deployment"
+    ),
+    InferenceRule(
+        name="acquisition_integration_pain",
+        conditions=["acquisition", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.30,
+        description="M&A integration + labor shortage → automation to unify operations"
+    ),
+    InferenceRule(
+        name="new_construction_automation",
+        conditions=["new_construction", "automation_intent"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="Greenfield build + automation intent → robot-ready facility design"
+    ),
+    InferenceRule(
+        name="food_beverage_eol_signal",
+        conditions=["food_beverage_vertical", "throughput_pressure"],
+        conclusion_domain="automation",
+        boost=0.40,
+        description="Food/beverage vertical with throughput pain → EOL robot buyer"
+    ),
+    InferenceRule(
+        name="computer_vision_ai_ops",
+        conditions=["computer_vision", "ai_operations"],
+        conclusion_domain="automation",
+        boost=0.28,
+        description="CV + AI operations → technology-forward operator ready for robot integration"
     ),
 ]
 

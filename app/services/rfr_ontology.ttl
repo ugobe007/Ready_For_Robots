@@ -1,0 +1,831 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rfr:  <https://readyforrobots.com/ontology#> .
+
+<https://readyforrobots.com/ontology>
+    a owl:Ontology ;
+    rdfs:label "Ready for Robots — Buyer Intent Ontology" ;
+    rdfs:comment "Auto-exported from app/services/ontology.py" .
+
+rfr:Concept       a owl:Class ; rdfs:label "Concept" .
+rfr:InferenceRule a owl:Class ; rdfs:label "InferenceRule" .
+rfr:Industry      a owl:Class ; rdfs:label "Industry" .
+
+rfr:implies       a owl:ObjectProperty .
+rfr:relatedTo     a owl:ObjectProperty .
+rfr:hasCondition  a owl:ObjectProperty .
+rfr:concludes     a owl:ObjectProperty .
+rfr:domain        a owl:DatatypeProperty ; rdfs:range xsd:string .
+rfr:baseWeight    a owl:DatatypeProperty ; rdfs:range xsd:float .
+rfr:boost         a owl:DatatypeProperty ; rdfs:range xsd:float .
+rfr:prior         a owl:DatatypeProperty ; rdfs:range xsd:float .
+
+rfr:warehouse_automation
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "warehouse_automation" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:amr_agv
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "amr_agv" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.9"^^xsd:float .
+
+rfr:robotics_engineer
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "robotics_engineer" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.8"^^xsd:float .
+
+rfr:pick_place
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "pick_place" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.75"^^xsd:float .
+
+rfr:wms_integration
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "wms_integration" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.7"^^xsd:float .
+
+rfr:computer_vision
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "computer_vision" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.72"^^xsd:float .
+
+rfr:ai_operations
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "ai_operations" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.68"^^xsd:float .
+
+rfr:service_robot
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "service_robot" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.88"^^xsd:float .
+
+rfr:cobots
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "cobots" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.75"^^xsd:float .
+
+rfr:labor_shortage
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "labor_shortage" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:high_turnover
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "high_turnover" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:reduce_labor_costs
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "reduce_labor_costs" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.82"^^xsd:float .
+
+rfr:operational_efficiency
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "operational_efficiency" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.65"^^xsd:float .
+
+rfr:modernization
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "modernization" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.6"^^xsd:float .
+
+rfr:warehouse_expansion
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "warehouse_expansion" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.8"^^xsd:float .
+
+rfr:hotel_expansion
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "hotel_expansion" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:funding_announcement
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "funding_announcement" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.72"^^xsd:float .
+
+rfr:new_construction
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "new_construction" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.7"^^xsd:float .
+
+rfr:acquisition
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "acquisition" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.65"^^xsd:float .
+
+rfr:hospitality_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "hospitality_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.9"^^xsd:float .
+
+rfr:logistics_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "logistics_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.92"^^xsd:float .
+
+rfr:healthcare_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "healthcare_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:food_beverage_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "food_beverage_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.75"^^xsd:float .
+
+rfr:airport_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "airport_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.8"^^xsd:float .
+
+rfr:casino_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "casino_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:strategic_automation_hire
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "strategic_automation_hire" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.88"^^xsd:float .
+
+rfr:operations_technology_hire
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "operations_technology_hire" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.8"^^xsd:float .
+
+rfr:capex_announcement
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "capex_announcement" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.82"^^xsd:float .
+
+rfr:growth_plan
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "growth_plan" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.75"^^xsd:float .
+
+rfr:ma_activity
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "ma_activity" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:series_funding
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "series_funding" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:operational_scale
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "operational_scale" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.7"^^xsd:float .
+
+rfr:automation_intent
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "automation_intent" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:service_consistency
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "service_consistency" ;
+    rfr:domain "quality" ;
+    rfr:baseWeight "0.72"^^xsd:float .
+
+rfr:equipment_integration
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "equipment_integration" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.68"^^xsd:float .
+
+rfr:franchise_operations
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "franchise_operations" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.73"^^xsd:float .
+
+rfr:robot_installation
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "robot_installation" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.95"^^xsd:float .
+
+rfr:pilot_success
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "pilot_success" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.88"^^xsd:float .
+
+rfr:roi_documented
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "roi_documented" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:disinfection_robot
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "disinfection_robot" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.9"^^xsd:float .
+
+rfr:floor_scrubber_automation
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "floor_scrubber_automation" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.82"^^xsd:float .
+
+rfr:vendor_selection
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "vendor_selection" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.78"^^xsd:float .
+
+rfr:rfq_rfp
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "rfq_rfp" ;
+    rfr:domain "expansion" ;
+    rfr:baseWeight "0.95"^^xsd:float .
+
+rfr:regulatory_compliance
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "regulatory_compliance" ;
+    rfr:domain "quality" ;
+    rfr:baseWeight "0.72"^^xsd:float .
+
+rfr:supply_chain_disruption
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "supply_chain_disruption" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.68"^^xsd:float .
+
+rfr:eol_palletizing
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "eol_palletizing" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.92"^^xsd:float .
+
+rfr:eol_case_packing
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "eol_case_packing" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.88"^^xsd:float .
+
+rfr:eol_wrapping_labeling
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "eol_wrapping_labeling" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.84"^^xsd:float .
+
+rfr:eol_line_automation
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "eol_line_automation" ;
+    rfr:domain "automation" ;
+    rfr:baseWeight "0.9"^^xsd:float .
+
+rfr:cpg_food_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "cpg_food_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.88"^^xsd:float .
+
+rfr:contract_manufacturing_vertical
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "contract_manufacturing_vertical" ;
+    rfr:domain "industry_fit" ;
+    rfr:baseWeight "0.85"^^xsd:float .
+
+rfr:throughput_pressure
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "throughput_pressure" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.8"^^xsd:float .
+
+rfr:ergonomic_risk
+    a rfr:Concept, owl:NamedIndividual ;
+    rdfs:label "ergonomic_risk" ;
+    rfr:domain "labor_pain" ;
+    rfr:baseWeight "0.75"^^xsd:float .
+
+[ a owl:Axiom ; owl:annotatedSource rfr:amr_agv ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.9"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:pick_place ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:wms_integration ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:labor_shortage ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:high_turnover ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:labor_shortage ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:service_robot ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:hospitality_vertical ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:warehouse_expansion ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:funding_announcement ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_expansion ; rfr:baseWeight "0.5"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:modernization ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:ai_operations ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:robotics_engineer ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:amr_agv ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:series_funding ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:capex_announcement ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:series_funding ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:growth_plan ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:ma_activity ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:operational_scale ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:strategic_automation_hire ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:strategic_automation_hire ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:amr_agv ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:operations_technology_hire ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:modernization ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:capex_announcement ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_expansion ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:growth_plan ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_expansion ; rfr:baseWeight "0.55"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:operational_scale ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:labor_shortage ; rfr:baseWeight "0.5"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:automation_intent ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:automation_intent ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:service_consistency ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:franchise_operations ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:service_consistency ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:franchise_operations ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:labor_shortage ; rfr:baseWeight "0.55"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:equipment_integration ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:equipment_integration ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:robot_installation ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.95"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:robot_installation ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:pilot_success ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.9"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:roi_documented ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:disinfection_robot ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:healthcare_vertical ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:floor_scrubber_automation ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:eol_palletizing ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:eol_line_automation ; rfr:baseWeight "0.9"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:eol_case_packing ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:eol_line_automation ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:eol_wrapping_labeling ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:eol_line_automation ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:eol_line_automation ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:cpg_food_vertical ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:throughput_pressure ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:ergonomic_risk ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:contract_manufacturing_vertical ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:eol_line_automation ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:cpg_food_vertical ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:labor_shortage ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:warehouse_automation ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:warehouse_automation ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:logistics_vertical ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:cobots ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:cobots ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:amr_agv ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:cobots ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:computer_vision ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:ai_operations ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:computer_vision ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:ai_operations ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:modernization ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:ai_operations ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.55"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:hospitality_vertical ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:logistics_vertical ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:amr_agv ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:logistics_vertical ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:healthcare_vertical ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:disinfection_robot ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:food_beverage_vertical ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:eol_line_automation ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:food_beverage_vertical ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:cpg_food_vertical ; rfr:baseWeight "0.9"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:airport_vertical ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:casino_vertical ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:service_robot ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:hotel_expansion ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:hospitality_vertical ; rfr:baseWeight "0.8"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:hotel_expansion ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:new_construction ; rfr:baseWeight "0.75"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:new_construction ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:warehouse_expansion ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:new_construction ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.5"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:acquisition ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:ma_activity ; rfr:baseWeight "0.85"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:acquisition ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:operational_scale ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:vendor_selection ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.9"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:vendor_selection ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:reduce_labor_costs ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:regulatory_compliance ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.7"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:regulatory_compliance ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:ergonomic_risk ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:supply_chain_disruption ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:warehouse_automation ; rfr:baseWeight "0.65"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:supply_chain_disruption ; owl:annotatedProperty rfr:associated_with ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.6"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:rfq_rfp ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:vendor_selection ; rfr:baseWeight "0.95"^^xsd:float ] .
+[ a owl:Axiom ; owl:annotatedSource rfr:rfq_rfp ; owl:annotatedProperty rfr:implies ; owl:annotatedTarget rfr:automation_intent ; rfr:baseWeight "0.9"^^xsd:float ] .
+
+rfr:rule_warehouse_ready
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "warehouse_ready" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.25"^^xsd:float ;
+    rfr:hasCondition rfr:warehouse_automation , rfr:labor_shortage .
+
+rfr:rule_hotel_robotics_ready
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "hotel_robotics_ready" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.3"^^xsd:float ;
+    rfr:hasCondition rfr:hospitality_vertical , rfr:labor_shortage .
+
+rfr:rule_logistics_expansion_signal
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "logistics_expansion_signal" ;
+    rfr:concludes rfr:expansion ;
+    rfr:boost "0.3"^^xsd:float ;
+    rfr:hasCondition rfr:logistics_vertical , rfr:warehouse_expansion .
+
+rfr:rule_funded_expansion
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "funded_expansion" ;
+    rfr:concludes rfr:expansion ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:funding_announcement , rfr:warehouse_expansion .
+
+rfr:rule_tech_forward_operator
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "tech_forward_operator" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.2"^^xsd:float ;
+    rfr:hasCondition rfr:ai_operations , rfr:modernization .
+
+rfr:rule_healthcare_automation
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "healthcare_automation" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.28"^^xsd:float ;
+    rfr:hasCondition rfr:healthcare_vertical , rfr:labor_shortage .
+
+rfr:rule_full_stack_signal
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "full_stack_signal" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:amr_agv , rfr:wms_integration , rfr:labor_shortage .
+
+rfr:rule_service_industry_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "service_industry_pain" ;
+    rfr:concludes rfr:labor_pain ;
+    rfr:boost "0.22"^^xsd:float ;
+    rfr:hasCondition rfr:reduce_labor_costs , rfr:operational_efficiency .
+
+rfr:rule_funded_automation_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "funded_automation_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:series_funding , rfr:strategic_automation_hire .
+
+rfr:rule_funded_expansion_capex
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "funded_expansion_capex" ;
+    rfr:concludes rfr:expansion ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:series_funding , rfr:capex_announcement .
+
+rfr:rule_ma_integration_need
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "ma_integration_need" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.3"^^xsd:float ;
+    rfr:hasCondition rfr:ma_activity , rfr:operational_scale .
+
+rfr:rule_strategic_hire_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "strategic_hire_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:strategic_automation_hire , rfr:labor_shortage .
+
+rfr:rule_growth_scale_pressure
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "growth_scale_pressure" ;
+    rfr:concludes rfr:labor_pain ;
+    rfr:boost "0.28"^^xsd:float ;
+    rfr:hasCondition rfr:growth_plan , rfr:labor_shortage .
+
+rfr:rule_capex_logistics_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "capex_logistics_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.32"^^xsd:float ;
+    rfr:hasCondition rfr:capex_announcement , rfr:logistics_vertical .
+
+rfr:rule_capex_hospitality_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "capex_hospitality_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.28"^^xsd:float ;
+    rfr:hasCondition rfr:capex_announcement , rfr:hospitality_vertical .
+
+rfr:rule_funded_expansion_hire_triple
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "funded_expansion_hire_triple" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.45"^^xsd:float ;
+    rfr:hasCondition rfr:series_funding , rfr:growth_plan , rfr:strategic_automation_hire .
+
+rfr:rule_automation_intent_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "automation_intent_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:automation_intent , rfr:labor_shortage .
+
+rfr:rule_service_consistency_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "service_consistency_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.3"^^xsd:float ;
+    rfr:hasCondition rfr:service_consistency , rfr:labor_shortage .
+
+rfr:rule_franchise_scale_consistency
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "franchise_scale_consistency" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.28"^^xsd:float ;
+    rfr:hasCondition rfr:franchise_operations , rfr:service_consistency .
+
+rfr:rule_equipment_integration_ready
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "equipment_integration_ready" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.25"^^xsd:float ;
+    rfr:hasCondition rfr:equipment_integration , rfr:operational_efficiency .
+
+rfr:rule_franchise_labor_scale
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "franchise_labor_scale" ;
+    rfr:concludes rfr:labor_pain ;
+    rfr:boost "0.32"^^xsd:float ;
+    rfr:hasCondition rfr:franchise_operations , rfr:labor_shortage .
+
+rfr:rule_robot_install_expansion_signal
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "robot_install_expansion_signal" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:robot_installation , rfr:expansion .
+
+rfr:rule_pilot_success_scale
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "pilot_success_scale" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:pilot_success , rfr:labor_shortage .
+
+rfr:rule_roi_proven_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "roi_proven_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:roi_documented , rfr:labor_shortage .
+
+rfr:rule_robot_install_industry
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "robot_install_industry" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.32"^^xsd:float ;
+    rfr:hasCondition rfr:robot_installation , rfr:hospitality_vertical .
+
+rfr:rule_robot_install_logistics
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "robot_install_logistics" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:robot_installation , rfr:logistics_vertical .
+
+rfr:rule_eol_labor_pain_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "eol_labor_pain_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:eol_line_automation , rfr:labor_shortage .
+
+rfr:rule_food_plant_throughput_pressure
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "food_plant_throughput_pressure" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:cpg_food_vertical , rfr:throughput_pressure .
+
+rfr:rule_food_plant_labor_shortage
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "food_plant_labor_shortage" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:cpg_food_vertical , rfr:labor_shortage .
+
+rfr:rule_contract_mfg_changeover_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "contract_mfg_changeover_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:contract_manufacturing_vertical , rfr:throughput_pressure .
+
+rfr:rule_eol_capex_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "eol_capex_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.42"^^xsd:float ;
+    rfr:hasCondition rfr:eol_line_automation , rfr:capex_announcement .
+
+rfr:rule_ergonomic_eol_driver
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "ergonomic_eol_driver" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.32"^^xsd:float ;
+    rfr:hasCondition rfr:ergonomic_risk , rfr:cpg_food_vertical .
+
+rfr:rule_palletizer_roi_signal
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "palletizer_roi_signal" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.45"^^xsd:float ;
+    rfr:hasCondition rfr:eol_palletizing , rfr:roi_documented .
+
+rfr:rule_eol_expansion_hire
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "eol_expansion_hire" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:eol_line_automation , rfr:strategic_automation_hire .
+
+rfr:rule_vendor_selection_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "vendor_selection_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.42"^^xsd:float ;
+    rfr:hasCondition rfr:vendor_selection , rfr:labor_shortage .
+
+rfr:rule_rfq_active_buyer
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "rfq_active_buyer" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.48"^^xsd:float ;
+    rfr:hasCondition rfr:rfq_rfp , rfr:automation_intent .
+
+rfr:rule_rfq_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "rfq_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.45"^^xsd:float ;
+    rfr:hasCondition rfr:rfq_rfp , rfr:labor_shortage .
+
+rfr:rule_cobot_labor_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "cobot_labor_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.38"^^xsd:float ;
+    rfr:hasCondition rfr:cobots , rfr:labor_shortage .
+
+rfr:rule_regulatory_automation_driver
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "regulatory_automation_driver" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:regulatory_compliance , rfr:ergonomic_risk .
+
+rfr:rule_supply_chain_reshoring
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "supply_chain_reshoring" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.33"^^xsd:float ;
+    rfr:hasCondition rfr:supply_chain_disruption , rfr:warehouse_automation .
+
+rfr:rule_acquisition_integration_pain
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "acquisition_integration_pain" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.3"^^xsd:float ;
+    rfr:hasCondition rfr:acquisition , rfr:labor_shortage .
+
+rfr:rule_new_construction_automation
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "new_construction_automation" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.35"^^xsd:float ;
+    rfr:hasCondition rfr:new_construction , rfr:automation_intent .
+
+rfr:rule_food_beverage_eol_signal
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "food_beverage_eol_signal" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.4"^^xsd:float ;
+    rfr:hasCondition rfr:food_beverage_vertical , rfr:throughput_pressure .
+
+rfr:rule_computer_vision_ai_ops
+    a rfr:InferenceRule, owl:NamedIndividual ;
+    rdfs:label "computer_vision_ai_ops" ;
+    rfr:concludes rfr:automation ;
+    rfr:boost "0.28"^^xsd:float ;
+    rfr:hasCondition rfr:computer_vision , rfr:ai_operations .
+
+rfr:industry_logistics
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "logistics" ;
+    rfr:prior "0.9"^^xsd:float .
+
+rfr:industry_hospitality
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "hospitality" ;
+    rfr:prior "0.85"^^xsd:float .
+
+rfr:industry_hotel
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "hotel" ;
+    rfr:prior "0.85"^^xsd:float .
+
+rfr:industry_healthcare
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "healthcare" ;
+    rfr:prior "0.8"^^xsd:float .
+
+rfr:industry_medical_tech
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "medical tech" ;
+    rfr:prior "0.82"^^xsd:float .
+
+rfr:industry_food_service
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "food service" ;
+    rfr:prior "0.75"^^xsd:float .
+
+rfr:industry_restaurant
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "restaurant" ;
+    rfr:prior "0.72"^^xsd:float .
+
+rfr:industry_food_process
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "food process" ;
+    rfr:prior "0.88"^^xsd:float .
+
+rfr:industry_food_manufactur
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "food manufactur" ;
+    rfr:prior "0.88"^^xsd:float .
+
+rfr:industry_cpg
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "cpg" ;
+    rfr:prior "0.87"^^xsd:float .
+
+rfr:industry_consumer_goods
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "consumer goods" ;
+    rfr:prior "0.87"^^xsd:float .
+
+rfr:industry_contract_manufactur
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "contract manufactur" ;
+    rfr:prior "0.85"^^xsd:float .
+
+rfr:industry_beverage
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "beverage" ;
+    rfr:prior "0.84"^^xsd:float .
+
+rfr:industry_bottling
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "bottling" ;
+    rfr:prior "0.84"^^xsd:float .
+
+rfr:industry_packaging
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "packaging" ;
+    rfr:prior "0.8"^^xsd:float .
+
+rfr:industry_airport
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "airport" ;
+    rfr:prior "0.78"^^xsd:float .
+
+rfr:industry_casino
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "casino" ;
+    rfr:prior "0.7"^^xsd:float .
+
+rfr:industry_manufacturing
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "manufacturing" ;
+    rfr:prior "0.72"^^xsd:float .
+
+rfr:industry_retail
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "retail" ;
+    rfr:prior "0.62"^^xsd:float .
+
+rfr:industry_datacenter
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "datacenter" ;
+    rfr:prior "0.7"^^xsd:float .
+
+rfr:industry_apparel
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "apparel" ;
+    rfr:prior "0.65"^^xsd:float .
+
+rfr:industry_unknown
+    a rfr:Industry, owl:NamedIndividual ;
+    rdfs:label "unknown" ;
+    rfr:prior "0.4"^^xsd:float .
