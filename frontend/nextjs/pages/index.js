@@ -768,14 +768,17 @@ export default function Signals() {
 
         {/* Markets We Track — industry vertical nav */}
         <div className="max-w-7xl mx-auto px-6 pt-10 pb-2">
-          <div className="border-b border-neutral-800/50 pb-5 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[11px] font-semibold tracking-[0.1em] uppercase text-neutral-500 bg-neutral-800/50 border border-neutral-700/40 px-2.5 py-1 rounded-full">Coverage</span>
-            </div>
-            <h2 className="text-xl font-bold text-white tracking-tight mb-1">Markets we track</h2>
-            <p className="text-sm text-neutral-500">Filter leads by vertical on the dashboard — every market below has live signals.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-4 rounded-full bg-emerald-500" />
+            <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-neutral-400">Coverage</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">Markets we track</h2>
+              <p className="text-sm text-neutral-500 mt-1">Every vertical below has live signals — click to filter.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {[
               { label: 'Logistics & Warehousing',            icon: '📦', fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
               { label: 'Hospitality & Hotels',               icon: '🏨', fit: 'Service & Delivery Robots',    q: 'Hospitality' },
@@ -793,27 +796,32 @@ export default function Signals() {
               <Link
                 key={m.q}
                 href={`/search?industry=${encodeURIComponent(m.q)}`}
-                className="group flex flex-col gap-2.5 border border-neutral-800 hover:border-emerald-600/40 rounded-xl p-4 bg-[#0d1117] hover:bg-neutral-900/70 transition-all duration-150"
+                className="group relative flex flex-col justify-between border border-neutral-800 hover:border-emerald-500/50 rounded-xl p-4 bg-neutral-900 hover:bg-[#141d2b] transition-all duration-150 overflow-hidden"
               >
-                <div className="flex items-start justify-between">
-                  <div className="w-8 h-8 rounded-lg bg-neutral-800/70 flex items-center justify-center text-base leading-none shrink-0">
+                {/* hover glow */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent" />
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-lg leading-none shrink-0">
                     {m.icon}
                   </div>
                   {m.badge && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">{m.badge}</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">{m.badge}</span>
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-semibold text-neutral-100 leading-snug group-hover:text-white transition-colors">{m.label}</p>
                   <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">{m.fit}</p>
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60 mt-auto">
+                <div className="flex items-end justify-between mt-4 pt-3 border-t border-neutral-800">
                   {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
-                    <span className="text-xs text-emerald-400 font-mono font-semibold">{leadsByIndustry[m.q]}<span className="text-neutral-600 font-normal text-[10px] ml-1">leads</span></span>
+                    <div>
+                      <div className="text-xl font-bold tabular-nums text-emerald-400 leading-none">{leadsByIndustry[m.q]}</div>
+                      <div className="text-[10px] text-neutral-600 mt-0.5 font-medium uppercase tracking-wide">leads</div>
+                    </div>
                   ) : (
-                    <span className="text-[10px] text-neutral-700 font-mono">—</span>
+                    <span className="text-sm text-neutral-700 font-mono">—</span>
                   )}
-                  <span className="text-neutral-600 text-sm group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all">→</span>
+                  <span className="text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all text-base">→</span>
                 </div>
               </Link>
             ))}
@@ -822,50 +830,43 @@ export default function Signals() {
 
         {/* Daily Spotlight Deals */}
         <div id="leads" className="max-w-7xl mx-auto px-6 pt-10 pb-10 md:pb-12 space-y-8">
-          <div className="border-b border-neutral-800/50 pb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase text-neutral-500 bg-neutral-800/50 border border-neutral-700/40 px-2.5 py-1 rounded-full">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1 h-4 rounded-full bg-orange-500" />
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] uppercase text-neutral-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Daily Spotlight
               </span>
             </div>
-            <h2 className="text-xl font-bold text-white tracking-tight mb-1.5">
+            <h2 className="text-3xl font-bold text-white tracking-tight mb-2">
               Daily spotlight deals
             </h2>
-            <p className="text-sm text-neutral-500 max-w-xl">
+            <p className="text-sm text-neutral-500 max-w-xl mb-5">
               Five accounts rotate each day: three Hot and two Warm, ranked by newest signal activity first.
             </p>
             {tierLegend && (
-              <div className="mt-5 flex flex-col sm:flex-row rounded-xl border border-neutral-800 overflow-hidden">
-                {['HOT', 'WARM', 'COLD'].map((key, ki) => {
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                {['HOT', 'WARM', 'COLD'].map((key) => {
                   const block = tierLegend[key];
                   if (!block) return null;
-                  const lineColor =
-                    key === 'HOT'  ? 'bg-orange-500' :
-                    key === 'WARM' ? 'bg-amber-400'  :
-                    'bg-cyan-500';
-                  const labelColor =
-                    key === 'HOT'  ? 'text-orange-400' :
-                    key === 'WARM' ? 'text-amber-400'  :
-                    'text-cyan-400';
+                  const styles =
+                    key === 'HOT'  ? { border: 'border-orange-500/30', bg: 'bg-orange-500/8',  dot: 'bg-orange-500',  label: 'text-orange-400' } :
+                    key === 'WARM' ? { border: 'border-amber-500/30',  bg: 'bg-amber-500/8',   dot: 'bg-amber-400',   label: 'text-amber-400'  } :
+                                    { border: 'border-cyan-500/30',    bg: 'bg-cyan-500/8',    dot: 'bg-cyan-500',    label: 'text-cyan-400'   };
                   return (
-                    <div key={key} className={`flex-1 flex gap-3 px-4 py-3.5 bg-neutral-950/60 ${ki < 2 ? 'border-b sm:border-b-0 sm:border-r border-neutral-800' : ''}`}>
-                      <div className={`w-0.5 shrink-0 self-stretch rounded-full ${lineColor}`} />
-                      <div>
-                        <div className={`text-xs font-bold uppercase tracking-wider ${labelColor}`}>
-                          {block.label}
-                          <span className="text-neutral-500 font-normal normal-case"> — {block.tagline}</span>
-                        </div>
-                        <p className="text-xs text-neutral-500 leading-snug mt-0.5">{block.description}</p>
+                    <div key={key} className={`rounded-xl border ${styles.border} ${styles.bg} px-4 py-3`}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${styles.dot}`} />
+                        <span className={`text-xs font-bold uppercase tracking-wider ${styles.label}`}>{block.label}</span>
+                        <span className="text-neutral-600 text-xs font-normal normal-case">— {block.tagline}</span>
                       </div>
+                      <p className="text-xs text-neutral-500 leading-snug">{block.description}</p>
                     </div>
                   );
                 })}
               </div>
             )}
-            <div className="mt-4">
-              <HotDealsScoringExplainer data={scoringSystem} />
-            </div>
+            <HotDealsScoringExplainer data={scoringSystem} />
           </div>
 
           {loading ? (
