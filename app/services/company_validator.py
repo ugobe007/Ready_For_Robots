@@ -5,20 +5,25 @@ Answers: "Is this string the name of a real company that could be a
 robot/automation buyer?"
 
 Pipeline (in order — fastest gates first):
+  0. text_classifier entity_hint  → fast-reject if caller already classified
+                                    the name as a non-company entity type
   1. is_junk(name)                → reject known noise/headlines
   2. has_legal_suffix(name)       → accept immediately (Inc, LLC, Corp…)
   3. has_distinctive_proper_noun  → reject if ALL words are generic
                                     category terms (e.g. "Restaurant Robotics")
-  4. is_structure_valid(name)     → reject structural headline patterns
+  4. is_structure_valid(name)     → reject structural headline artifacts
                                     that escape the junk filter
 
 Called from intelligence_news_scraper._accept_company() BEFORE the company
 is written to the database, replacing the ad-hoc _is_valid_company_name check.
+
+When the caller has already run text_classifier.classify(), pass the result
+via the `entity_hint` parameter to skip redundant re-classification.
 """
 from __future__ import annotations
 
 import re
-from typing import Tuple
+from typing import Optional, Tuple
 
 from app.services.lead_filter import is_junk
 from app.services.robot_vendor_names import is_known_robotics_vendor_name
@@ -242,23 +247,67 @@ def _is_structure_valid(name: str) -> bool:
 # Public API
 # ─────────────────────────────────────────────────────────────────────────────
 
-def is_valid_lead(name: str) -> Tuple[bool, str]:
+def is_valid_lead(
+    name: str,
+    entity_hint: "Optional[object]" = None,
+) -> Tuple[bool, str]:
     """
     Main gate.  Returns (True, "") if name should be ingested as a lead,
     or (False, reason) if it should be rejected.
 
     Pipeline:
+      0. entity_hint   — if caller already ran text_classifier.classify(),
+                         pass the TextClassification here to fast-reject
+                         without re-running the classifier
       1. Junk filter   — catches known bad patterns (fast regex)
       2. Legal suffix  — fast-pass for Inc/LLC/Corp names
       3. Generic words — reject if no distinctive proper noun
       4. Structure     — reject structural headline artifacts
       5. Vendor check  — reject known robotics vendors (not buyers)
       6. Publication   — reject known news orgs
+
+    Parameters
+    ----------
+    name        : candidate company name string
+    entity_hint : optional TextClassification from text_classifier.classify()
+                  — if provided, hard-reject types are applied immediately
+                  without re-running the classifier
     """
     if not name or not name.strip():
         return False, "empty name"
 
     name = name.strip()
+
+    # Stage 0: entity type hint from text_classifier (avoids re-classification)
+    if entity_hint is not None:
+        try:
+            from app.services.text_classifier import EntityType
+            hint_type = getattr(entity_hint, "entity_type", None)
+            hint_conf = getattr(entity_hint, "confidence", 0.0)
+            hint_evidence = getattr(entity_hint, "evidence", [])
+            _HARD_REJECT = {
+                EntityType.PERSON_NAME,
+                EntityType.CITY_OR_TOWN,
+                EntityType.COUNTRY,
+                EntityType.SAYING,
+                EntityType.EQUIPMENT_CAT,
+                EntityType.MARKET_FRAGMENT,
+            }
+            if hint_type in _HARD_REJECT and hint_conf >= 0.65:
+                reason = (
+                    f"text_classifier: {hint_type.value} "
+                    f"(conf={hint_conf:.2f}) — "
+                    + "; ".join(hint_evidence[:2])
+                )
+                return False, reason
+            if hint_type == EntityType.ARTICLE_HEADLINE and hint_conf >= 0.75:
+                return False, (
+                    f"text_classifier: article headline "
+                    f"(conf={hint_conf:.2f}) — "
+                    + "; ".join(hint_evidence[:2])
+                )
+        except Exception:
+            pass  # never let hint processing break the validator
 
     # Stage 1a: fast-pass for universally-known companies (before junk filter
     # which can reject short all-caps names as airport codes)

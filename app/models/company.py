@@ -20,6 +20,9 @@ class Company(Base):
     source = Column(String, nullable=True)
     # Persisted robot/automation spec (rules_v1); refreshed when signals change (see app/db_events.py).
     automation_profile = Column(JSON, nullable=True)
+    # CRM descriptors: budget, timing, automation_requirements, decision_makers, quality_flags.
+    # Populated by crm_extractor after enrichment + rectification passes.
+    crm_metadata = Column(JSON, nullable=True)
     is_internal = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

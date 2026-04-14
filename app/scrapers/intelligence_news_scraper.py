@@ -1452,6 +1452,34 @@ class IntelligenceNewsScraper:
         """Get existing company or create new one."""
         # Normalize name
         name = name.strip()
+
+        # ── Gate 0: Semantic entity type classifier (runs FIRST, before any DB I/O) ──
+        # Ask "what is this?" before spending resources on blocklist lookups or writes.
+        # Hard-reject if the classifier is confident the candidate is not a company name.
+        from app.services.text_classifier import classify, EntityType
+        tc = classify(name)
+        _HARD_REJECT_TYPES = {
+            EntityType.PERSON_NAME,
+            EntityType.CITY_OR_TOWN,
+            EntityType.COUNTRY,
+            EntityType.SAYING,
+            EntityType.EQUIPMENT_CAT,
+            EntityType.MARKET_FRAGMENT,
+        }
+        if tc.entity_type in _HARD_REJECT_TYPES and tc.confidence >= 0.65:
+            logger.debug(
+                "text_classifier rejected %r as %s (conf=%.2f): %s",
+                name, tc.entity_type.value, tc.confidence,
+                "; ".join(tc.evidence[:2]),
+            )
+            return None
+        if tc.entity_type == EntityType.ARTICLE_HEADLINE and tc.confidence >= 0.75:
+            logger.debug(
+                "text_classifier rejected %r as article headline (conf=%.2f)",
+                name, tc.confidence,
+            )
+            return None
+
         if is_known_publication_name(name):
             logger.debug("Skip publication masquerading as company: %s", name)
             return None

@@ -120,6 +120,14 @@ CELERYBEAT_SCHEDULE = {
         'kwargs': {'limit': 80},
     },
     
+    # ── RECTIFY + CRM ENRICH ── Nightly quality sweep (rectification + CRM extraction)
+    # Also triggered automatically after run_enrich_companies_task.
+    'rectify-crm-nightly': {
+        'task': 'worker.tasks.rectify_and_enrich_crm_task',
+        'schedule': crontab(hour=2, minute=30),   # 2:30am UTC daily
+        'kwargs': {'limit': 150, 'hours_since_scraped': 48},
+    },
+
     # ── CLEANUP ── Remove old/junk leads weekly
     'cleanup-junk-leads': {
         'task': 'worker.tasks.cleanup_junk_leads_task',

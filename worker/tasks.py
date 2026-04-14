@@ -160,6 +160,7 @@ def run_enrich_companies_task(self, limit=50):
     """
     Enrich existing companies by searching news for their names.
     Finds recent signals we may have missed. Run daily.
+    After enrichment, queues rectification + CRM extraction for each company.
     """
     from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
     db = get_db()
@@ -171,9 +172,111 @@ def run_enrich_companies_task(self, limit=50):
             stats['companies_enriched'],
             stats['signals_created']
         )
+        # Queue rectification + CRM extraction after enrichment finishes
+        rectify_and_enrich_crm_task.delay(limit=limit)
         return stats
     except Exception as exc:
         logger.error("Enrich companies failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def rectify_and_enrich_crm_task(self, limit=100, hours_since_scraped=48):
+    """
+    Post-enrichment quality sweep.
+
+    Pipeline per company (in order):
+      1. Rectifier — re-ask "what is this?" with full signal context.
+           Quarantines (is_internal=False) anything that fails the sniff test.
+      2. CRM Extractor — extracts budget, timing, automation requirements,
+           and decision makers from signals; writes crm_metadata + contacts.
+
+    Runs automatically after run_enrich_companies_task and is also scheduled
+    independently as a nightly sweep.
+    """
+    from datetime import datetime, timezone, timedelta
+    from sqlalchemy import func
+    from app.models.company import Company
+    from app.models.signal import Signal
+    from app.services.rectifier import validate as rectify_validate, quarantine
+    from app.services.crm_extractor import extract as crm_extract, build_crm_metadata_dict
+
+    db = get_db()
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_since_scraped)
+
+        # Fetch recently active, internal companies (up to limit)
+        companies = (
+            db.query(Company)
+            .filter(Company.is_internal.is_(True))
+            .outerjoin(Signal, Signal.company_id == Company.id)
+            .group_by(Company.id)
+            .having(func.count(Signal.id) > 0)
+            .order_by(Company.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        rectified = 0
+        quarantined = 0
+        crm_enriched = 0
+
+        for company in companies:
+            try:
+                signals = (
+                    db.query(Signal)
+                    .filter(Signal.company_id == company.id)
+                    .order_by(Signal.created_at.desc())
+                    .limit(20)
+                    .all()
+                )
+
+                # ── Step 1: Rectification ────────────────────────────────────
+                result = rectify_validate(company, signals)
+                rectified += 1
+
+                if not result.passed:
+                    quarantine(company, db, reason=result.reason)
+                    quarantined += 1
+                    logger.info(
+                        "Rectifier quarantined %r (id=%d): %s",
+                        company.name, company.id, result.reason,
+                    )
+                    continue  # skip CRM extraction for quarantined leads
+
+                # ── Step 2: CRM extraction ───────────────────────────────────
+                descriptors = crm_extract(company, signals, db)
+                metadata = build_crm_metadata_dict(descriptors)
+
+                # Merge with existing crm_metadata (don't wipe prior extractions)
+                existing = company.crm_metadata or {}
+                existing.update(metadata)
+                company.crm_metadata = existing
+                db.commit()
+                crm_enriched += 1
+
+            except Exception as e:
+                logger.warning(
+                    "Rectify/CRM failed for company %d (%r): %s",
+                    company.id, company.name, e,
+                )
+                db.rollback()
+                continue
+
+        logger.info(
+            "Rectify+CRM sweep done — checked=%d quarantined=%d crm_enriched=%d",
+            rectified, quarantined, crm_enriched,
+        )
+        return {
+            "checked": rectified,
+            "quarantined": quarantined,
+            "crm_enriched": crm_enriched,
+        }
+
+    except Exception as exc:
+        logger.error("rectify_and_enrich_crm_task failed: %s", exc)
         raise self.retry(exc=exc)
     finally:
         db.close()
