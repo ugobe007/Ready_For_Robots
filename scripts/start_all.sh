@@ -4,10 +4,16 @@
 
 set -e
 
-# Run migrations in background so app starts immediately. No blocking on DB at deploy.
+# Schema must match ORM before serving API (Company loads include all columns).
+# Background migrations caused race: /api/leads and /homepage 500 until column exists.
 if [ -n "$DATABASE_URL" ]; then
-  echo "Running database migrations in background..."
-  (timeout 120 alembic upgrade head 2>&1 && echo "Migrations completed.") || echo "Migrations failed or skipped; run 'alembic upgrade head' if needed." &
+  echo "Running database migrations (alembic upgrade head)..."
+  if alembic upgrade head; then
+    echo "Migrations completed."
+  else
+    echo "ERROR: alembic upgrade head failed — API may return 500 until fixed."
+    exit 1
+  fi
 fi
 
 # Start Celery (non-blocking)

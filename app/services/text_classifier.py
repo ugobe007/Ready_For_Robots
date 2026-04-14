@@ -83,7 +83,7 @@ _AUX_VERBS = re.compile(
 # Strong action verbs in 3rd-person singular (common in news headlines)
 # Ending: -s, -es, -ed — but NOT legitimate company name suffixes like "-ies"
 _HEADLINE_VERBS = re.compile(
-    r"\b(expands?|launches?|hires?|opens?|closes?|acquires?|deploys?|announces?|"
+    r"\b(expands?|continues?|launches?|hires?|opens?|closes?|acquires?|deploys?|announces?|"
     r"reveals?|unveils?|signs?|wins?|loses?|raises?|cuts?|gains?|drops?|rises?|falls?|"
     r"grows?|shrinks?|invests?|plans?|aims?|targets?|secures?|lands?|names?|appoints?|"
     r"promotes?|retires?|resigns?|files?|sues?|settles?|recalls?|halts?|pauses?|"
@@ -191,7 +191,7 @@ _COMMON_FIRST_NAMES: frozenset = frozenset({
 })
 
 _LEGAL_SUFFIX_RE = re.compile(
-    r"\b(inc\.?|llc\.?|ltd\.?|corp\.?|co\.?|plc\.?|llp\.?|lp\.?|gmbh|bv|nv|ag|"
+    r"\b(inc\.?|llc\.?|ltd\.?|corp\.?|corporations?|co\.?|plc\.?|llp\.?|lp\.?|gmbh|bv|nv|ag|"
     r"s\.a\.?|s\.r\.l\.?|pty\.?|pte\.?|holdings?|group|enterprises?|"
     r"international|industries|ventures?|partners?|associates?)\s*$",
     re.IGNORECASE,

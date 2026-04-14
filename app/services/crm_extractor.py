@@ -161,10 +161,21 @@ _TIMING_PATTERNS = [
     (re.compile(r"\b(Q[1-4]\s*20\d\d)\b", re.IGNORECASE), 0.90),
     # H1 2025, H2 2026
     (re.compile(r"\b(H[12]\s*20\d\d)\b", re.IGNORECASE), 0.85),
-    # by end of 2025, by 2026
-    (re.compile(r"\bby\s+(?:end\s+of\s+)?(?:the\s+)?(20\d\d)\b", re.IGNORECASE), 0.80),
-    # in 2025, in fiscal 2026
-    (re.compile(r"\bin\s+(?:fiscal\s+)?(20\d\d)\b", re.IGNORECASE), 0.70),
+    # by end of 2025, by 2026, by end of fiscal year 2025
+    (re.compile(
+        r"\bby\s+(?:end\s+of\s+)?(?:the\s+)?(?:fiscal\s+year\s+)?(20\d\d)\b",
+        re.IGNORECASE,
+    ), 0.80),
+    # in 2025, in fiscal 2026, in early/mid/late 2027
+    (re.compile(
+        r"\bin\s+(?:fiscal\s+year\s+|fiscal\s+|early\s+|mid[-\s]|late\s+)?(20\d\d)\b",
+        re.IGNORECASE,
+    ), 0.70),
+    # "end of fiscal year 2025" (without leading "by")
+    (re.compile(
+        r"\bend\s+of\s+(?:the\s+)?(?:fiscal\s+year\s+|fiscal\s+)?(20\d\d)\b",
+        re.IGNORECASE,
+    ), 0.75),
     # within 6 months, within 12 months
     (re.compile(r"\bwithin\s+(\d+)\s+(months?|weeks?|years?)\b", re.IGNORECASE), 0.75),
     # this quarter / this year / this fiscal year
@@ -228,8 +239,8 @@ _AUTOMATION_REQ_PATTERNS: List[tuple[re.Pattern, str]] = [
     (re.compile(r"\b(material\s+handl(?:ing|er))\b", re.IGNORECASE), "material handling"),
     (re.compile(r"\b(order\s+fulfillment|order\s+pick(?:ing)?)\b", re.IGNORECASE), "order fulfillment"),
     (re.compile(r"\b(warehouse\s+(?:automation|robot(?:ics)?))\b", re.IGNORECASE), "warehouse automation"),
-    (re.compile(r"\b(AMR|autonomous\s+mobile\s+robot)\b", re.IGNORECASE), "AMR / mobile robots"),
-    (re.compile(r"\b(AGV|automated\s+guided\s+vehicle)\b", re.IGNORECASE), "AGV"),
+    (re.compile(r"\b(AMRs?|autonomous\s+mobile\s+robots?)\b", re.IGNORECASE), "AMR / mobile robots"),
+    (re.compile(r"\b(AGVs?|automated\s+guided\s+vehicles?)\b", re.IGNORECASE), "AGV"),
     (re.compile(r"\b(BOH|back[-\s]of[-\s]house)\s+(?:kitchen\s+)?(?:robot|automat)\b", re.IGNORECASE), "BOH kitchen automation"),
     (re.compile(r"\b(food\s+(?:prep|preparation|processing))\s+(?:robot|automat)\b", re.IGNORECASE), "food prep automation"),
     (re.compile(r"\b(cold\s+stor(?:age|e)|frozen\s+(?:stor|ware))\b", re.IGNORECASE), "cold storage"),
@@ -237,7 +248,7 @@ _AUTOMATION_REQ_PATTERNS: List[tuple[re.Pattern, str]] = [
     (re.compile(r"\b(room\s+(?:service\s+)?delivery|in[-\s]room\s+deliver)\b", re.IGNORECASE), "room delivery robots"),
     (re.compile(r"\b(floor\s+clean(?:ing)?|autonom\w+\s+clean)\b", re.IGNORECASE), "autonomous cleaning"),
     (re.compile(r"\b(surgical|clinical\s+logistic|medication\s+deliver)\b", re.IGNORECASE), "clinical / surgical robotics"),
-    (re.compile(r"\b(cobot|collaborative\s+robot)\b", re.IGNORECASE), "collaborative robots (cobots)"),
+    (re.compile(r"\b(cobots?|collaborative\s+robots?)\b", re.IGNORECASE), "collaborative robots (cobots)"),
     (re.compile(r"\b(end[-\s]of[-\s]line|EOL)\b", re.IGNORECASE), "end-of-line automation"),
     (re.compile(r"\b(quality\s+(?:control|inspection|check))\s+(?:robot|automat|vision)\b", re.IGNORECASE), "quality inspection"),
     (re.compile(r"\b(vision\s+system|machine\s+vision|computer\s+vision)\b", re.IGNORECASE), "machine vision"),
