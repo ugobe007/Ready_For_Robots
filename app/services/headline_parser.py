@@ -111,10 +111,21 @@ def _clean_subject(phrase: str) -> str:
 
 def extract_actor(headline: str) -> Optional[str]:
     """
-    Main API.  Returns the company name of the actor in `headline`, or None.
+    Main API.  Returns the FIRST validated company actor found in `headline`, or None.
 
-    None means: "no specific company actor could be identified from this headline."
-    Callers should either skip ingestion or fall through to other extraction patterns.
+    For headlines with multiple actors (compound sentences), use extract_actors().
+
+    Processing pipeline — in priority order:
+      1. Possessive:  "Walmart's Distribution Centers Turn" → "Walmart"
+      2. Clause structure (sentence_parser):
+           Complex:   "Because costs rose, Hilton Hotels deploys robots"
+                       → skip subordinate, extract from independent → "Hilton Hotels"
+           Compound:  "Amazon expands, but Walmart scales back"
+                       → returns first actor: "Amazon"
+           Simple:    "Hilton Hotels Is Targeting Automation"
+                       → SVO extraction → subject = "Hilton Hotels"
+      3. Raw verb-phrase fallback (single clause, no structure detected)
+      4. Validate whole text as bare company name
     """
     from app.services.company_validator import is_valid_lead
 
@@ -123,51 +134,57 @@ def extract_actor(headline: str) -> Optional[str]:
         return None
 
     # ── Rule 1: Possessive ──────────────────────────────────────────────────
-    # "Walmart's Distribution Centers Turn" → owner = "Walmart"
-    # Must run BEFORE verb detection — the possessive 's is not a verb.
     poss_m = _POSSESSIVE.match(text)
     if poss_m:
         owner = poss_m.group(1).strip().rstrip("'")
         valid, _ = is_valid_lead(owner)
         if valid:
             return owner
-        # Owner itself is generic ("Industry's X") → fall through to verb logic
 
-    # ── Rule 2: Verb phrase anchor ─────────────────────────────────────────
-    # find_verb_phrase understands all tenses, persons, numbers, moods.
-    #
-    # Example verb phrases and what they return:
-    #   "Is Targeting"        → (start_of_Is, end_of_Targeting, "target")
-    #   "Had Been Expanding"  → (start_of_Had, end_of_Expanding, "expand")
-    #   "Announces"           → (start, end, "announce")
-    #   "Went"                → (start, end, "go")       ← irregular past
-    #   "Built"               → (start, end, "build")    ← irregular past
+    # ── Rule 2: Full clause-structure parse ─────────────────────────────────
+    # Handles complex ("Because X, Company does Y"), compound ("A does X, but B does Y"),
+    # and compound-complex sentences. Strips subordinate clauses, splits on FANBOYS,
+    # and extracts SVO from each independent clause.
+    from app.services.sentence_parser import parse_headline as _parse
+    parsed = _parse(text)
+    if parsed.actors:
+        return parsed.actors[0]      # first validated actor
+
+    # ── Rule 3: Verb phrase fallback for single-clause with no actor found ──
+    # (e.g. generic subject before verb — already handled by sentence_parser,
+    # but catch edge cases where clause splitting may have changed the text)
     vp = find_verb_phrase(text)
     if vp is not None:
         vp_start, _vp_end, _lemma = vp
-        subject_phrase = text[:vp_start]
-        subject_phrase = _clean_subject(subject_phrase)
-
+        subject_phrase = _clean_subject(text[:vp_start])
         if not subject_phrase:
-            # Verb phrase at very start ("Announces record results…") → no subject
             return None
-
         valid, _ = is_valid_lead(subject_phrase)
         if valid:
             return subject_phrase
+        return None   # generic subject → no actor; do NOT fall back to full title
 
-        # Subject is generic (e.g. "Distribution Centers", "German Companies") →
-        # this headline describes a category event, not a company action.
-        # Return None explicitly — do NOT fall back to grabbing the title.
-        return None
-
-    # ── Rule 3: No verb phrase found ───────────────────────────────────────
-    # Might be a bare company name, an appositive, or a title fragment.
-    # Validate the whole text — return it only if it's a real company.
+    # ── Rule 4: No verb phrase — validate whole text as a bare company name ─
     valid, _ = is_valid_lead(text)
-    if valid:
-        return text
-    return None
+    return text if valid else None
+
+
+def extract_actors(headline: str) -> list:
+    """
+    Returns ALL validated company actors from a headline.
+    Useful for compound sentences: "Amazon expands, but Walmart struggles"
+    → ["Amazon", "Walmart"]
+    """
+    from app.services.sentence_parser import extract_actors as _ea
+    # Also check possessive as first-pass
+    poss_m = _POSSESSIVE.match(headline.strip())
+    if poss_m:
+        from app.services.company_validator import is_valid_lead
+        owner = poss_m.group(1).strip().rstrip("'")
+        valid, _ = is_valid_lead(owner)
+        if valid:
+            return [owner]
+    return _ea(headline)
 
 
 def possessive_owner(text: str) -> Optional[str]:
