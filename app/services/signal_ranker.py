@@ -122,21 +122,41 @@ def compute_weighted_score(signal) -> float:
 
     text = getattr(signal, "signal_text", "") or ""
 
-    # ── Context guard: do NOT boost for editorial / infinitive-only automation ──
-    # "This is the most awesome way to automate frying potatoes" contains the
-    # word "automate" but it is NOT a buyer signal — it's marketing hyperbole.
-    # Check whether automation keywords appear in a genuine company-action context
-    # before applying the robot boost.
+    # ── Context guard: qualify the robot boost by sentence intent ─────────────
+    # Three classes of false-positive automation context:
+    #
+    #   1. Editorial / how-to  ("Here's how to automate your warehouse")
+    #      → automation keyword present, but no company action described
+    #      → penalty: 0.85 (worse than neutral)
+    #
+    #   2. Comparative / benchmark  ("McDonald's vs. Wendy's automation goals")
+    #      → companies are comparison targets, not confirmed buyers
+    #      → penalty: 0.88
+    #
+    #   3. Conditional / hypothetical  ("if Lowe's improves automation by 50%...")
+    #      → speculative action, not a committed deployment
+    #      → penalty: 0.90  (less severe than editorial — company intent is real,
+    #        but action is unconfirmed)
+    #
+    #   Real buyer signal  ("Tyson Foods Deploys Robots Across 500 Plants")
+    #      → full ROBOT_RE boost: 1.15
     robot_boost = 1.0
     if ROBOT_RE.search(text):
         try:
-            from app.services.sentence_parser import has_editorial_context, has_infinitive_only_automation
+            from app.services.sentence_parser import (
+                has_editorial_context,
+                has_infinitive_only_automation,
+                has_comparative_context,
+                has_conditional_context,
+            )
             if has_editorial_context(text) or has_infinitive_only_automation(text):
-                # Editorial / how-to content: automation keyword present but context
-                # is descriptive, not a company buying/deploying → no boost, slight penalty
-                robot_boost = 0.85
+                robot_boost = 0.85  # strongest penalty: pure editorial/how-to
+            elif has_comparative_context(text):
+                robot_boost = 0.88  # benchmark comparison, not a buyer
+            elif has_conditional_context(text):
+                robot_boost = 0.90  # speculative/hypothetical action
             else:
-                robot_boost = SIGNAL_TEXT_BOOST_ROBOT
+                robot_boost = SIGNAL_TEXT_BOOST_ROBOT  # 1.15 — confirmed buyer action
         except Exception:
             robot_boost = SIGNAL_TEXT_BOOST_ROBOT  # fail-open
 

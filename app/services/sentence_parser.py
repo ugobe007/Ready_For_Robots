@@ -493,6 +493,109 @@ def extract_actors(text: str) -> List[str]:
 # Used by the signal ranker to avoid boosting scores for editorial/hyperbole.
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPARATIVE SENTENCE MARKERS
+# Companies mentioned AFTER these phrases are benchmarks, not buyers.
+#
+#   "McDonald's Big Mac will be the most efficient compared to Wendy's"
+#    → "Wendy's" is a comparison target, not an actor
+#
+#   "if Lowe's improves automation … they will surpass Home Depot's goals"
+#    → "Home Depot's goals" is a comparison target
+# ─────────────────────────────────────────────────────────────────────────────
+_COMPARATIVE_PHRASE_RE = re.compile(
+    r"\b(?:"
+    r"compared\s+to|"
+    r"versus|vs\.?|"
+    r"unlike|"
+    r"relative\s+to|"
+    r"surpass(?:ing|es|ed)?|"
+    r"outperform(?:ing|s|ed)?|"
+    r"ahead\s+of|"
+    r"behind\s+(?:its|their|the)?|"
+    r"better\s+than|"
+    r"worse\s+than|"
+    r"more\s+(?:efficient|competitive|productive)\s+than|"
+    r"over\s+(?:its\s+)?(?:rivals?|competitors?|peers?)"
+    r")\b",
+    re.IGNORECASE,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONDITIONAL / HYPOTHETICAL LANGUAGE
+# The company is real but the action is speculative, not an actual deployment.
+#
+#   "if Lowe's improves their logistics automation … they will surpass …"
+#    → conditional hypothesis, not a confirmed buyer signal
+#
+#   "Walmart could reduce labor costs by 30% through automation"
+#    → modal verb = possibility, not committed action
+#
+#   "Home Depot's automation goals of 30%" — goal ≠ action
+# ─────────────────────────────────────────────────────────────────────────────
+_CONDITIONAL_OPENER_RE = re.compile(
+    r"^if\s+\w",  # sentence starts with "if [word]"
+    re.IGNORECASE,
+)
+
+_HYPOTHETICAL_LANGUAGE_RE = re.compile(
+    r"(?:"
+    # Sentence-opening "if <pronoun/generic> would/could…"
+    r"\bif\s+(?:they|it|we|the\s+company|companies|retailers?)\s+(?:would|could|should)\b|"
+    # Quantitative goals / targets — ends in %, so no trailing \b
+    r"\bgoals?\s+of\s+\d+\s*%|"                  # "goals of 30%"
+    r"\btargets?\s+(?:of\s+)?\d+\s*%|"           # "target of 50%"
+    # Aims with numbers
+    r"\baim(?:s|ing|ed)?\s+(?:to\s+)?(?:achieve|hit|reach)\s+\d|"
+    # Modal verbs followed by competitive or cost-reduction verbs
+    r"\b(?:would|could|might)\s+(?:surpass|outperform|exceed|beat|overtake|"
+    r"reduce|save|cut|eliminate|lower|decrease|achieve|hit|reach)\b|"
+    # Pure hypothetical markers
+    r"\bhypothetical(?:ly)?\b|"
+    r"\bin\s+theory\b"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def has_comparative_context(text: str) -> bool:
+    """
+    Return True if the text contains comparison language that suggests companies
+    are being used as benchmarks rather than as genuine automation buyers.
+
+    Examples that return True:
+      "McDonald's Big Mac will be most efficient compared to Wendy's and Burger King"
+      "Lowe's wants to surpass Home Depot's automation rate"
+      "Amazon's throughput vs. Walmart's logistics efficiency"
+
+    Examples that return False (genuine buyer signals, no comparison):
+      "Tyson Foods Deploys Robots Across 500 Plants"
+      "Lowe's Is Expanding Its Automation Program"
+    """
+    return bool(_COMPARATIVE_PHRASE_RE.search(text))
+
+
+def has_conditional_context(text: str) -> bool:
+    """
+    Return True if the text is a conditional / hypothetical sentence where the
+    company action is speculative rather than confirmed.
+
+    Examples that return True:
+      "if Lowe's improves logistics automation … they will surpass Home Depot"
+      "Walmart could reduce labor costs by 30% through automation"
+      "The goals of 50% cost reduction through robotics"
+
+    Examples that return False (confirmed actions):
+      "Lowe's Is Expanding Its Automation Program"
+      "Tyson Foods Plans to Automate Its Packaging Line"  ← planning is an action
+    """
+    if _CONDITIONAL_OPENER_RE.match(text):
+        return True
+    if _HYPOTHETICAL_LANGUAGE_RE.search(text):
+        return True
+    return False
+
+
 def has_editorial_context(text: str) -> bool:
     """
     Return True if the text reads as editorial/how-to/listicle content rather

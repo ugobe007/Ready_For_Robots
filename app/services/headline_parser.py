@@ -134,12 +134,30 @@ def extract_actor(headline: str) -> Optional[str]:
         return None
 
     # ── Rule 1: Possessive ──────────────────────────────────────────────────
+    # Handles two structurally different cases:
+    #   a) True possessive  — "Walmart's Distribution Centers Turn Automated"
+    #        → 's is a possessive inflection; owner = "Walmart" (no apostrophe)
+    #   b) Company name ending in 's — "Lowe's Is Expanding", "McDonald's Deploys Robots"
+    #        → 's is part of the legal name; the remainder starts with a VERB
+    #        → Rule 1 skips to Rule 2 (sentence parser) which reads the full subject
+    #          correctly as "Lowe's" or "McDonald's"
     poss_m = _POSSESSIVE.match(text)
     if poss_m:
         owner = poss_m.group(1).strip().rstrip("'")
-        valid, _ = is_valid_lead(owner)
-        if valid:
-            return owner
+        remainder = text[poss_m.end():].strip()
+        # Detect "Lowe's IS expanding" pattern: remainder starts immediately with a verb.
+        # In this case the 's is part of the company name, not a possessive marker.
+        # Skip to Rule 2 so the sentence parser returns the correct "Lowe's" subject.
+        vp_in_remainder = find_verb_phrase(remainder)
+        remainder_starts_with_verb = (
+            vp_in_remainder is not None and vp_in_remainder[0] == 0
+        )
+        if not remainder_starts_with_verb:
+            # True possessive: return the owner without 's
+            valid, _ = is_valid_lead(owner)
+            if valid:
+                return owner
+        # else: fall through to Rule 2 (sentence parser handles "Lowe's" as subject)
 
     # ── Rule 2: Full clause-structure parse ─────────────────────────────────
     # Handles complex ("Because X, Company does Y"), compound ("A does X, but B does Y"),
