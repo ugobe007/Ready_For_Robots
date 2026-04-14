@@ -767,15 +767,15 @@ export default function Signals() {
         </div>
 
         {/* Markets We Track — industry vertical nav */}
-        <div className="max-w-7xl mx-auto px-6 pt-8 pb-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="text-xs text-neutral-400 font-semibold uppercase tracking-widest border border-neutral-800 px-2 py-0.5 rounded">
-              Coverage
+        <div className="max-w-7xl mx-auto px-6 pt-10 pb-2">
+          <div className="border-b border-neutral-800/50 pb-5 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[11px] font-semibold tracking-[0.1em] uppercase text-neutral-500 bg-neutral-800/50 border border-neutral-700/40 px-2.5 py-1 rounded-full">Coverage</span>
             </div>
+            <h2 className="text-xl font-bold text-white tracking-tight mb-1">Markets we track</h2>
+            <p className="text-sm text-neutral-500">Filter leads by vertical on the dashboard — every market below has live signals.</p>
           </div>
-          <h2 className="text-xl font-bold text-white mb-1">Markets we track</h2>
-          <p className="text-sm text-neutral-400 mb-5">Filter leads by vertical on the dashboard — every market below has live signals.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {[
               { label: 'Logistics & Warehousing',            icon: '📦', fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
               { label: 'Hospitality & Hotels',               icon: '🏨', fit: 'Service & Delivery Robots',    q: 'Hospitality' },
@@ -793,65 +793,77 @@ export default function Signals() {
               <Link
                 key={m.q}
                 href={`/search?industry=${encodeURIComponent(m.q)}`}
-                className="group flex flex-col gap-1 border border-neutral-800 hover:border-emerald-700 rounded-lg p-3 bg-neutral-950 hover:bg-neutral-900 transition-colors"
+                className="group flex flex-col gap-2.5 border border-neutral-800 hover:border-emerald-600/40 rounded-xl p-4 bg-[#0d1117] hover:bg-neutral-900/70 transition-all duration-150"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-lg">{m.icon}</span>
+                <div className="flex items-start justify-between">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-800/70 flex items-center justify-center text-base leading-none shrink-0">
+                    {m.icon}
+                  </div>
                   {m.badge && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-400 border border-emerald-800 uppercase tracking-widest">{m.badge}</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">{m.badge}</span>
                   )}
                 </div>
-                <p className="text-xs font-semibold text-white leading-tight group-hover:text-emerald-300 transition-colors">{m.label}</p>
-                <p className="text-[10px] text-neutral-500 leading-tight">{m.fit}</p>
-                <div className="flex items-center gap-1 mt-1">
+                <div>
+                  <p className="text-sm font-semibold text-neutral-100 leading-snug group-hover:text-white transition-colors">{m.label}</p>
+                  <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">{m.fit}</p>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60 mt-auto">
                   {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
-                    <span className="text-[10px] text-emerald-500 font-mono">{leadsByIndustry[m.q]} leads</span>
+                    <span className="text-xs text-emerald-400 font-mono font-semibold">{leadsByIndustry[m.q]}<span className="text-neutral-600 font-normal text-[10px] ml-1">leads</span></span>
                   ) : (
-                    <span className="text-[10px] text-neutral-600 font-mono">loading…</span>
+                    <span className="text-[10px] text-neutral-700 font-mono">—</span>
                   )}
-                  <span className="text-neutral-600 text-[10px] ml-auto group-hover:text-emerald-500 transition-colors">→</span>
+                  <span className="text-neutral-600 text-sm group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all">→</span>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ENHANCED: Strategic Snapshot - Top Hot Deals with More POP */}
-        <div id="leads" className="max-w-7xl mx-auto px-6 pt-6 pb-10 md:pb-12 space-y-8">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-neutral-400 font-semibold uppercase tracking-widest border border-neutral-800 px-2 py-0.5 rounded">
+        {/* Daily Spotlight Deals */}
+        <div id="leads" className="max-w-7xl mx-auto px-6 pt-10 pb-10 md:pb-12 space-y-8">
+          <div className="border-b border-neutral-800/50 pb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase text-neutral-500 bg-neutral-800/50 border border-neutral-700/40 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Daily Spotlight
-              </div>
+              </span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
+            <h2 className="text-xl font-bold text-white tracking-tight mb-1.5">
               Daily spotlight deals
             </h2>
-            <p className="text-lg text-neutral-400">
+            <p className="text-sm text-neutral-500 max-w-xl">
               Five accounts rotate each day: three Hot and two Warm, ranked by newest signal activity first.
             </p>
             {tierLegend && (
-              <div className="mt-5 grid md:grid-cols-3 gap-3 text-left">
-                {['HOT', 'WARM', 'COLD'].map((key) => {
+              <div className="mt-5 flex flex-col sm:flex-row rounded-xl border border-neutral-800 overflow-hidden">
+                {['HOT', 'WARM', 'COLD'].map((key, ki) => {
                   const block = tierLegend[key];
                   if (!block) return null;
-                  const accent =
-                    key === 'HOT' ? 'border-orange-700/50 bg-orange-950/20' :
-                    key === 'WARM' ? 'border-amber-700/50 bg-amber-950/15' :
-                    'border-cyan-800/50 bg-cyan-950/15';
+                  const lineColor =
+                    key === 'HOT'  ? 'bg-orange-500' :
+                    key === 'WARM' ? 'bg-amber-400'  :
+                    'bg-cyan-500';
+                  const labelColor =
+                    key === 'HOT'  ? 'text-orange-400' :
+                    key === 'WARM' ? 'text-amber-400'  :
+                    'text-cyan-400';
                   return (
-                    <div key={key} className={`rounded-lg border px-4 py-3 ${accent}`}>
-                      <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-0.5">
-                        {block.label}
-                        <span className="text-neutral-500 font-normal normal-case"> — {block.tagline}</span>
+                    <div key={key} className={`flex-1 flex gap-3 px-4 py-3.5 bg-neutral-950/60 ${ki < 2 ? 'border-b sm:border-b-0 sm:border-r border-neutral-800' : ''}`}>
+                      <div className={`w-0.5 shrink-0 self-stretch rounded-full ${lineColor}`} />
+                      <div>
+                        <div className={`text-xs font-bold uppercase tracking-wider ${labelColor}`}>
+                          {block.label}
+                          <span className="text-neutral-500 font-normal normal-case"> — {block.tagline}</span>
+                        </div>
+                        <p className="text-xs text-neutral-500 leading-snug mt-0.5">{block.description}</p>
                       </div>
-                      <p className="text-xs text-neutral-400 leading-snug">{block.description}</p>
                     </div>
                   );
                 })}
               </div>
             )}
-            <div className="mt-6">
+            <div className="mt-4">
               <HotDealsScoringExplainer data={scoringSystem} />
             </div>
           </div>
@@ -884,17 +896,17 @@ export default function Signals() {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-lg font-semibold text-white group-hover:text-orange-300 transition-colors">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <h4 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
                             {lead.company_name}
                           </h4>
                           <span
-                            className={`px-2 py-0.5 text-xs font-semibold rounded text-white ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full border ${
                               lead.priority_tier === 'WARM'
-                                ? 'bg-amber-600'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
                                 : lead.priority_tier === 'COLD'
-                                  ? 'bg-cyan-700'
-                                  : 'bg-orange-600'
+                                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25'
+                                  : 'bg-orange-500/10 text-orange-400 border-orange-500/25'
                             }`}
                           >
                             {lead.priority_tier === 'WARM'
@@ -903,10 +915,10 @@ export default function Signals() {
                                 ? '✦ Emerging'
                                 : '🔥 Hot'}
                           </span>
-                          <span className="text-neutral-500 text-sm">{isExpanded ? '▲' : '▼'}</span>
+                          <span className="text-neutral-600 text-xs ml-auto sm:ml-0">{isExpanded ? '▲' : '▼'}</span>
                         </div>
-                        <div className="text-sm text-neutral-400">
-                          {lead.industry} • {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
+                        <div className="text-xs text-neutral-500 font-medium">
+                          {lead.industry} · {lead.location_city && lead.location_state ? `${lead.location_city}, ${lead.location_state}` : 'Location N/A'}
                         </div>
                         {lead.gtm && (
                           <div className="mt-2 rounded-md border border-emerald-800/50 bg-emerald-950/20 px-3 py-2">
@@ -922,14 +934,14 @@ export default function Signals() {
                           </div>
                         )}
                         {lead.share_summary && (
-                          <p className="text-sm text-neutral-300 leading-snug pt-1 border-l-2 border-orange-600/50 pl-3">
+                          <p className="text-xs text-neutral-400 leading-relaxed pt-1 border-l-2 border-orange-500/40 pl-3">
                             {lead.share_summary}
                           </p>
                         )}
                         {cardSignals.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             {cardSignals.map((signal, sidx) => (
-                              <span key={sidx} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded font-medium">
+                              <span key={sidx} className="text-[11px] text-emerald-400 bg-emerald-500/8 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">
                                 {signal.signal_label || signal.signal_type}
                               </span>
                             ))}
@@ -939,12 +951,12 @@ export default function Signals() {
                           <AutomationSpecBlock profile={lead.automation_profile} compact theme="home" />
                         )}
                       </div>
-                      <div className="text-right space-y-2 flex flex-col items-end">
-                        <div className="relative">
-                          <div className="text-3xl font-bold text-orange-400">
+                      <div className="text-right space-y-2 flex flex-col items-end shrink-0">
+                        <div className="flex flex-col items-center bg-neutral-900/60 border border-neutral-800 rounded-lg px-3 py-2 min-w-[52px]">
+                          <div className="text-xl font-bold tabular-nums text-orange-400 leading-none">
                             {score.toFixed(0)}
                           </div>
-                          <div className="text-xs text-neutral-500 font-medium">SCORE</div>
+                          <div className="text-[9px] text-neutral-600 font-semibold uppercase tracking-wider mt-0.5">score</div>
                         </div>
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <div className="relative" data-share-menu>

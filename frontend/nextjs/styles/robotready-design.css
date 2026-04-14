@@ -1913,20 +1913,22 @@ a.rr-btn-hero-primary:hover {
 /* Deal cards (homepage spotlight) */
 .rr-deal-card {
   border: 1px solid var(--rr-border);
-  border-radius: var(--rr-radius);
-  padding: 18px 20px;
-  background: var(--rr-bg);
-  transition: border-color 0.15s, background 0.15s;
+  border-radius: 12px;
+  padding: 20px 22px;
+  background: #0d1117;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .rr-deal-card:hover {
-  border-color: rgba(16, 185, 129, 0.35);
-  background: var(--rr-surface);
+  border-color: rgba(16, 185, 129, 0.3);
+  background: #111827;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08);
 }
 
 .rr-deal-card-expanded {
-  border-color: rgba(16, 185, 129, 0.5);
-  background: var(--rr-surface);
+  border-color: rgba(16, 185, 129, 0.45);
+  background: #111827;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
 /* Dashboard — Strategic Snapshot (matches docs/design/dashboard_design.html section + table chrome) */
