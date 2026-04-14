@@ -159,6 +159,10 @@ def extract_actor(headline: str) -> Optional[str]:
         subject_phrase = _clean_subject(text[:vp_start])
         if not subject_phrase:
             return None
+        # Pronoun subjects are never company actors ("They are disrupting…")
+        from app.services.sentence_parser import _PRONOUN_SUBJECTS
+        if subject_phrase.strip().lower() in _PRONOUN_SUBJECTS:
+            return None
         valid, _ = is_valid_lead(subject_phrase)
         if valid:
             return subject_phrase

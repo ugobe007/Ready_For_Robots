@@ -499,6 +499,22 @@ _JUNK_PATTERNS = [
 
     # (Airport / exchange code check moved to is_junk() to keep case-sensitive)
 
+    # ── Hyperbole / editorial / how-to patterns ────────────────────────────
+    # These look like automation signals but are editorial content, not company actions.
+    # "This is the most awesome way to automate frying potatoes."
+    # "Here's how to deploy robots in your warehouse."
+    # "5 ways to automate your packaging line."
+    r"(?i)^(this|it|that|these|those)\s+(is|are|was|were|has\s+been|have\s+been)\s+",
+    r"(?i)^here('s|\s+is|\s+are)\s+(how|why|what|the|a)\b",
+    r"(?i)^\d+\s+(ways?|tips?|steps?|reasons?|things?|methods?|strategies?)\s+(to|for)\b",
+    r"(?i)^the\s+(best|ultimate|complete|definitive|top|only|right|smart|easiest|fastest)\s+"
+    r"(way|ways|guide|method|approach|solution|strategy|path)\s+(to|for)\b",
+    r"(?i)^how\s+to\s+(automate|deploy|use|leverage|integrate|implement|adopt)\b",
+    r"(?i)^why\s+(you\s+)?(should|need|must|want|have\s+to)\s+(automate|deploy|use|invest)\b",
+    r"(?i)^(a|the)\s+(beginner'?s?|complete|quick|simple|easy)\s+guide\s+(to|for)\b",
+    r"(?i)^what\s+(is|are)\s+(automation|robotics|ai|the\s+future|the\s+difference)\b",
+    # "The Future of X" / "State of X" already caught, but belt-and-suspenders:
+    r"(?i)^(is|are|can|will|does|do|should)\s+(robots?|automation|ai|technology)\b",
     # "X Celebrates Y" / "X Highlights Y" — headline verb fragments not company names
     r"(?i)\b(celebrates|highlighted?s?|announces?|introduces?|names?|appoints?|"
     r"sets|picks|picks up|taps|inks|nets|eyes|unveils?)\s+\w",

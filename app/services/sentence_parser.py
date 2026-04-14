@@ -129,6 +129,68 @@ _BARE_FANBOYS_SPLIT = re.compile(
 _SEMICOLON_SPLIT = re.compile(r"\s*;\s*")
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PRONOUN / DEMONSTRATIVE SUBJECTS
+# When the subject of the main clause is a pronoun, there is no company actor.
+#
+#   "This is the most awesome way to automate frying potatoes."
+#    └─ subject = "This"  → pronoun → no actor extractable
+#
+#   "It is becoming the standard in packaging automation."
+#    └─ subject = "It"    → pronoun → no actor
+#
+#   "Here's how to automate your warehouse."
+#    └─ subject = "Here"  → placeholder → no actor
+# ─────────────────────────────────────────────────────────────────────────────
+_PRONOUN_SUBJECTS: frozenset = frozenset({
+    # Personal pronouns
+    "i", "we", "you", "he", "she", "it", "they",
+    # Demonstrative pronouns
+    "this", "that", "these", "those",
+    # Existential / placeholder
+    "here", "there", "everything", "something", "nothing", "anything",
+    # Indefinite
+    "one", "someone", "anyone", "everyone", "nobody", "somebody",
+    # Interrogative openers
+    "what", "why", "how", "when", "where", "who", "which",
+})
+
+# ─────────────────────────────────────────────────────────────────────────────
+# INFINITIVE AUTOMATION TRAP
+# "automate" (and similar) appearing ONLY in an infinitive phrase ("to automate X")
+# is NOT a genuine buyer signal — it's a descriptor of a method/way/solution.
+#
+#   "This is the most awesome way to automate frying potatoes."
+#    └─ "automate" is part of "to automate" → infinitive → NOT a buyer verb
+#
+#   "Hilton Hotels Is Deploying Automation Technology"
+#    └─ "automate/automation" is the OBJECT — the company is the actor ✓
+#
+# We flag text that contains automation words ONLY in infinitive position so the
+# signal ranker can discount the score appropriately.
+# ─────────────────────────────────────────────────────────────────────────────
+_INFINITIVE_AUTOMATION_RE = re.compile(
+    r"\bto\s+(?:automate|deploy|implement|adopt|use|leverage|integrate|"
+    r"digitize|optimize|modernize|streamline|transform)\b",
+    re.IGNORECASE,
+)
+
+# Editorial / how-to / listicle openers — headline is content, not a buyer signal
+_EDITORIAL_OPENER_RE = re.compile(
+    r"^(?:"
+    r"here(?:'s|\s+is|\s+are)?\s+(?:how|why|what)|"       # "Here's how to..."
+    r"how\s+to\s+|"                                         # "How to automate..."
+    r"why\s+(?:you\s+)?(?:should|need|must|want)|"         # "Why you should automate"
+    r"\d+\s+(?:ways?|tips?|steps?|reasons?|things?)\s+to|" # "5 ways to automate"
+    r"the\s+(?:best|ultimate|complete|definitive|top)\s+(?:guide|way|ways?|method|approach)|"
+    r"what\s+(?:is|are|you\s+need)|"                       # "What is automation?"
+    r"(?:a|the)\s+(?:beginner'?s?|complete|quick)\s+guide|"
+    r"(?:is|are|can|will|should|does|do)\s+"               # "Is automation right for...?"
+    r"(?:automation|robots?|ai|technology|the\s+future)"
+    r")",
+    re.IGNORECASE,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # RELATIVE PRONOUNS — introduce relative (dependent) clauses
 # "the distribution center, which Walmart owns, is automated"
 # ─────────────────────────────────────────────────────────────────────────────
@@ -333,6 +395,11 @@ def extract_svo(clause: str) -> Optional[SVO]:
     raw_subject = text[:vp_start]
     raw_subject = _clean_subject(raw_subject)
 
+    # ── Pronoun subject guard ────────────────────────────────────────────────
+    # "This is the most awesome way to automate..." → subject = "This" → no actor
+    if raw_subject.strip().lower() in _PRONOUN_SUBJECTS:
+        return None
+
     raw_object = text[vp_end:].strip().lstrip(",;:-— ")
     # Stop at coordinating conjunction — "Expanded and Walmart Restructured"
     # The object is only the first noun phrase, not the rest of the sentence
@@ -419,3 +486,66 @@ def extract_actors(text: str) -> List[str]:
     """
     result = parse_headline(text)
     return result.actors
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FALSE-SIGNAL CONTEXT DETECTORS
+# Used by the signal ranker to avoid boosting scores for editorial/hyperbole.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def has_editorial_context(text: str) -> bool:
+    """
+    Return True if the text reads as editorial/how-to/listicle content rather
+    than a genuine company action.  These texts may contain automation keywords
+    but they describe methods, not buyer intent.
+
+    Examples that return True:
+      "This is the most awesome way to automate frying potatoes."
+      "Here's how to automate your warehouse in 5 steps."
+      "5 ways to use robots in food manufacturing."
+      "The ultimate guide to packaging automation."
+      "Why you should automate your distribution center."
+
+    Examples that return False (real buyer signals):
+      "Hilton Hotels Is Deploying Automation Technology."
+      "Tyson Foods Seeks Automation Partners."
+    """
+    # Editorial opener patterns
+    if _EDITORIAL_OPENER_RE.search(text):
+        return True
+    # Pronoun/demonstrative subject in the first clause
+    first_words = text.strip().split()
+    if first_words and first_words[0].lower().rstrip(",") in _PRONOUN_SUBJECTS:
+        return True
+    return False
+
+
+def has_infinitive_only_automation(text: str) -> bool:
+    """
+    Return True if automation/robot keywords appear ONLY as part of infinitive
+    phrases ("to automate X") rather than as the main predicate verb or object.
+
+    "This is the most awesome way to automate frying potatoes."
+      → "automate" is in "to automate" → True
+
+    "Hilton Hotels Is Deploying Automation Technology"
+      → "automation" is a noun in the direct object, not an infinitive → False
+
+    "Tyson Foods Plans to Automate Its Packaging Line"
+      → "to Automate" IS the infinitive, but "Tyson Foods" is the actor
+        AND "plans" is the predicate → False (the company PLANS to automate)
+    """
+    # If there's a valid company actor and the automation is what they plan to do,
+    # it IS a genuine buyer signal even if "to automate" appears.
+    has_actor = bool(parse_headline(text).actors)
+    has_infinitive_auto = bool(_INFINITIVE_AUTOMATION_RE.search(text))
+
+    if not has_infinitive_auto:
+        return False
+    # If the text is editorial AND has infinitive automation → false signal
+    if has_editorial_context(text):
+        return True
+    # If no company actor but has infinitive automation → likely descriptive
+    if not has_actor and has_infinitive_auto:
+        return True
+    return False

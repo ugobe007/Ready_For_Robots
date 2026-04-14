@@ -121,7 +121,25 @@ def compute_weighted_score(signal) -> float:
     age_w = _age_factor(created_at)
 
     text = getattr(signal, "signal_text", "") or ""
-    robot_boost = SIGNAL_TEXT_BOOST_ROBOT if ROBOT_RE.search(text) else 1.0
+
+    # ── Context guard: do NOT boost for editorial / infinitive-only automation ──
+    # "This is the most awesome way to automate frying potatoes" contains the
+    # word "automate" but it is NOT a buyer signal — it's marketing hyperbole.
+    # Check whether automation keywords appear in a genuine company-action context
+    # before applying the robot boost.
+    robot_boost = 1.0
+    if ROBOT_RE.search(text):
+        try:
+            from app.services.sentence_parser import has_editorial_context, has_infinitive_only_automation
+            if has_editorial_context(text) or has_infinitive_only_automation(text):
+                # Editorial / how-to content: automation keyword present but context
+                # is descriptive, not a company buying/deploying → no boost, slight penalty
+                robot_boost = 0.85
+            else:
+                robot_boost = SIGNAL_TEXT_BOOST_ROBOT
+        except Exception:
+            robot_boost = SIGNAL_TEXT_BOOST_ROBOT  # fail-open
+
     problem_boost = SIGNAL_TEXT_BOOST_PROBLEM if PROBLEM_RE.search(text) else 1.0
     roi_boost = SIGNAL_TEXT_BOOST_ROI if ROI_RE.search(text) else 1.0
 
