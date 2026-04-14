@@ -2,111 +2,111 @@
 headline_parser.py
 ==================
 Extracts the ACTOR (the company that owns or performs an action) from a
-news headline by applying three linguistic rules:
+news headline by applying three linguistic rules backed by a proper verb
+conjugation engine (verb_conjugation.py):
 
   RULE 1 — Possessive → actor
       "Walmart's Distribution Centers Turn Automated"
-       └─ owner = "Walmart"  →  actor = "Walmart"
+       └─ possessive owner = "Walmart"  →  actor = "Walmart"
 
-       "Hilton Hotels' restaurants are deploying robots"
-        └─ owner = "Hilton Hotels"  →  actor = "Hilton Hotels"
+      "Hilton Hotels' restaurants are deploying robots"
+       └─ possessive owner = "Hilton Hotels"  →  actor = "Hilton Hotels"
 
-  RULE 2 — Verb anchor → subject / descriptor split
-      Find the first strong news verb.  Everything before it is the SUBJECT.
+  RULE 2 — Verb phrase as anchor → subject / descriptor split
+      Use find_verb_phrase() to locate the FIRST verb phrase regardless of:
+        • Tense:    simple past/present/future
+        • Person:   1st / 2nd / 3rd singular or plural
+        • Number:   singular ("launches") or plural ("launch")
+        • Mood:     indicative, progressive, perfect, perfect-progressive
+        • Irregular: "went", "built", "had been expanding", "is targeting"
+
+      Subject = text[:verb_phrase_start]
+
       Validate the subject:
-        • Subject is a real company → return it as the actor.
-        • Subject is a generic phrase ("Distribution Centers") → no actor, return None.
+        • Valid company name → return as actor
+        • Generic phrase ("Distribution Centers", "German Companies") → None
 
-      "Hilton Hotels Targets Automation of Their Distribution Centers"
-       └─ verb = "Targets"  subject = "Hilton Hotels"  → VALID → "Hilton Hotels"
+  RULE 3 — No verb phrase found
+      Validate whole text as a company name.  If it passes, return it.
+      Otherwise return None.
 
-      "Distribution Centers in the Middle East Are Facing a Crisis"
-       └─ verb = "Are Facing"  subject = "Distribution Centers" → GENERIC → None
+  WHY CONJUGATION MATTERS HERE
+      The old approach used regex stem-matching (deploy\w{0,6}) which:
+        - Missed irregular past tenses: "went", "built", "had been expanding"
+        - Incorrectly included auxiliary verbs in the subject span
+          ("Marriott International Is [deploying]" → subject = "Marriott International Is")
+        - Could not distinguish "is" (auxiliary in "is targeting") from "is"
+          appearing as part of a company name
 
-      "War Crisis Hits Warehousing Sector"
-       └─ verb = "Hits"  subject = "War Crisis" → GENERIC → None
-
-  RULE 3 — Pronoun ownership ("their", "its") signals a prior mention
-      The actor is implied by context (pronoun), not extractable from the
-      headline alone → return None and let other scraper patterns handle it.
+      The conjugation engine:
+        - Maps any form to its infinitive: "went"→"go", "built"→"build",
+          "securing"→"secure", "had been expanding"→"expand"
+        - Understands auxiliary chains: "has been building" = aux+aux+main
+        - Returns the START of the full verb phrase (including leading auxiliary)
+          so the subject slice is clean
 
 Public API
 ----------
   extract_actor(headline: str) -> Optional[str]
-      Returns the company name of the actor, or None if none can be identified.
+      Returns the company name of the actor, or None if none identified.
+
+  possessive_owner(text: str) -> Optional[str]
+      Extract the possessive owner from a text fragment, or None.
 """
 from __future__ import annotations
 
 import re
 from typing import Optional
 
-# ─────────────────────────────────────────────────────────────────────────────
-# News-headline verb list — the "anchor" used to split subject from predicate.
-# Ordered from most to least specific.  Each alternation should match the STEM
-# so that plurals / tenses (turns, turned, turning) are caught by \w* after.
-# ─────────────────────────────────────────────────────────────────────────────
-_VERB_STEMS = (
-    # Announcement / corporate action
-    "announc", "launch", "unveil", "reveal", "introduc", "present",
-    "releas", "publish", "publish",
-    # Acquisition / partnership
-    "acquir", "merg", "partner", "team.*up", "joint.*ventur",
-    "sign.*deal", "ink.*deal",
-    # Investment / finance
-    "rais", "secur", "clos.*fund", "land.*fund", "obtain.*fund",
-    "invest", "fund", "back", "financ",
-    # Hiring / leadership
-    "appoint", "hire", "nam.*ceo", "promot", "onboard",
-    # Expansion / construction
-    "expand", "open", "build", "deploy", "install", "roll.*out",
-    "break.*ground", "construct", "enabl",
-    # Contraction / trouble
-    "clos", "shut", "layoff", "lay.*off", "downsize", "restructur",
-    "exit", "bankrupt", "fil.*chapter",
-    # Reporting / stating
-    "said", "report", "confirm", "stat", "acknowledg",
-    # Change / direction verbs (user-identified: "Distribution Centers TURN")
-    "turn", "shift", "pivot", "redefin", "reinvent", "overhaul",
-    "transform", "reengineer", "moderniz", "upgrad",
-    # Challenge / response verbs
-    "navig", "tackl", "address", "combat", "fight", "brac",
-    "struggl", "grappl", "face", "confront", "resist",
-    # Market / financial movement
-    "surge", "soar", "plunge", "spike", "slip", "drop", "rise",
-    "fall", "gain", "lose", "climb", "slid",
-    # Growth / momentum
-    "grow", "scal", "accelerat", "boost", "spur", "lead",
-    "outperform", "beat", "miss",
-    # General corporate news
-    "celebrat", "mark", "win", "award", "receiv",
-    "plan", "aim", "target", "prioritiz",
-    "hit", "reach", "achiev", "complet", "finish",
-    # Strategic / operational verbs (user-identified)
-    "deploy", "adopt", "integrat", "automat", "digitiz", "optimiz",
-    "streamlin", "consolidat", "restructur", "reorganiz",
-)
-
-# Build compiled regex: match any verb stem at a word boundary.
-# Suffixes: s, ed, es, ing, er, ers handled by \w{0,6}
-_VERB_STEMS_PAT = "|".join(_VERB_STEMS)
-_HEADLINE_VERB = re.compile(
-    r"\b(?:" + _VERB_STEMS_PAT + r")\w{0,6}\b",
-    re.IGNORECASE,
-)
+from app.services.verb_conjugation import find_verb_phrase, AUXILIARIES
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Possessive patterns
+# "Walmart's X"        → owner = "Walmart"
+# "Hilton Hotels' X"   → owner = "Hilton Hotels"
 # ─────────────────────────────────────────────────────────────────────────────
-# "Walmart's ..."  or  "Hilton Hotels' ..."
 _POSSESSIVE = re.compile(
     r"^([A-Z][A-Za-z0-9\s&\.\-]{1,60}?)'\s*s?\s+",
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Pronoun ownership signals — headline contains "their" or "its" early on,
-# meaning the actor was referenced earlier in the article, not in the headline.
-# ─────────────────────────────────────────────────────────────────────────────
-_PRONOUN_LEAD = re.compile(r"\b(their|its|his|her)\b", re.IGNORECASE)
+# Small words that legitimately follow an owner in a possessive construction
+# but should be stripped from the end of the subject phrase if they bleed in
+_TRAILING_FUNCTION_WORDS = re.compile(
+    r"\s+\b(is|are|was|were|has|have|had|will|would|can|could|should|"
+    r"in|at|of|and|or|the|a|an|by|for|on|with|to|into|as|"
+    r"now|also|still|already|just|recently|today|yesterday|"
+    r"its|their|his|her|our|your)\b\s*$",
+    re.IGNORECASE,
+)
+
+
+# Trailing prepositional phrase: "Distribution Centers in the Middle East [Are Facing…]"
+# The core noun phrase is before the preposition — strip location/direction prep phrases.
+_TRAILING_PREP_PHRASE = re.compile(
+    r"\s+\b(in|at|of|across|throughout|within|near|from|between|among|"
+    r"around|through|over|under|beyond|behind|above|below|along|"
+    r"inside|outside|into|onto|upon)\b\s+.+$",
+    re.IGNORECASE,
+)
+
+
+def _clean_subject(phrase: str) -> str:
+    """
+    Strip trailing function words / auxiliaries that bled into the subject
+    because the verb phrase finder started at the main verb (not the aux).
+    Also strips trailing prepositional phrases ("in the Middle East") so
+    that "Distribution Centers in the Middle East" reduces to "Distribution Centers"
+    before the is_valid_lead check.
+
+    Applied iteratively until no more trailing words are removed.
+    """
+    prev = None
+    text = phrase.strip().rstrip(",;:-—")
+    while text != prev:
+        prev = text
+        text = _TRAILING_FUNCTION_WORDS.sub("", text).strip()
+        text = _TRAILING_PREP_PHRASE.sub("", text).strip()
+    return text
 
 
 def extract_actor(headline: str) -> Optional[str]:
@@ -124,6 +124,7 @@ def extract_actor(headline: str) -> Optional[str]:
 
     # ── Rule 1: Possessive ──────────────────────────────────────────────────
     # "Walmart's Distribution Centers Turn" → owner = "Walmart"
+    # Must run BEFORE verb detection — the possessive 's is not a verb.
     poss_m = _POSSESSIVE.match(text)
     if poss_m:
         owner = poss_m.group(1).strip().rstrip("'")
@@ -132,46 +133,37 @@ def extract_actor(headline: str) -> Optional[str]:
             return owner
         # Owner itself is generic ("Industry's X") → fall through to verb logic
 
-    # ── Rule 2: Verb anchor ─────────────────────────────────────────────────
-    verb_m = _HEADLINE_VERB.search(text)
-    if verb_m:
-        subject_phrase = text[:verb_m.start()].strip().rstrip(",;:-—")
+    # ── Rule 2: Verb phrase anchor ─────────────────────────────────────────
+    # find_verb_phrase understands all tenses, persons, numbers, moods.
+    #
+    # Example verb phrases and what they return:
+    #   "Is Targeting"        → (start_of_Is, end_of_Targeting, "target")
+    #   "Had Been Expanding"  → (start_of_Had, end_of_Expanding, "expand")
+    #   "Announces"           → (start, end, "announce")
+    #   "Went"                → (start, end, "go")       ← irregular past
+    #   "Built"               → (start, end, "build")    ← irregular past
+    vp = find_verb_phrase(text)
+    if vp is not None:
+        vp_start, _vp_end, _lemma = vp
+        subject_phrase = text[:vp_start]
+        subject_phrase = _clean_subject(subject_phrase)
 
         if not subject_phrase:
-            # Verb is at the very beginning ("Turns out …") → no extractable subject
+            # Verb phrase at very start ("Announces record results…") → no subject
             return None
-
-        # Clean trailing auxiliary verbs and prepositions that bleed into subject.
-        # "Marriott International Is [Deploying]" → strip trailing "Is" → "Marriott International"
-        subject_phrase = re.sub(
-            r"\s+\b(is|are|was|were|has|have|had|will|would|can|could|should|"
-            r"in|at|of|and|or|the|a|an|by|for|on|with|to|into|as|now|also|still)\b\s*$",
-            "",
-            subject_phrase,
-            flags=re.IGNORECASE,
-        ).strip()
-        # Apply iteratively — "Marriott International Is Now" needs two passes
-        subject_phrase = re.sub(
-            r"\s+\b(is|are|was|were|has|have|had|will|would|can|could|should|"
-            r"in|at|of|and|or|the|a|an|by|for|on|with|to|into|as|now|also|still)\b\s*$",
-            "",
-            subject_phrase,
-            flags=re.IGNORECASE,
-        ).strip()
 
         valid, _ = is_valid_lead(subject_phrase)
         if valid:
             return subject_phrase
 
-        # Subject is generic (e.g. "Distribution Centers", "War Crisis") →
+        # Subject is generic (e.g. "Distribution Centers", "German Companies") →
         # this headline describes a category event, not a company action.
-        # Return None: do NOT fall back to grabbing the full title.
+        # Return None explicitly — do NOT fall back to grabbing the title.
         return None
 
-    # ── Rule 3: No verb found ───────────────────────────────────────────────
-    # Could be a fragment, a company name alone, or an appositive.
-    # Validate the whole headline as-is: if it's a valid company name, return it;
-    # otherwise return None and let structural patterns upstream handle it.
+    # ── Rule 3: No verb phrase found ───────────────────────────────────────
+    # Might be a bare company name, an appositive, or a title fragment.
+    # Validate the whole text — return it only if it's a real company.
     valid, _ = is_valid_lead(text)
     if valid:
         return text
@@ -182,7 +174,7 @@ def possessive_owner(text: str) -> Optional[str]:
     """
     Extract just the possessive owner from a text fragment.
     "Hilton Hotels' automation strategy" → "Hilton Hotels"
-    Returns None if no possessive found.
+    Returns None if no possessive found or owner fails validation.
     """
     from app.services.company_validator import is_valid_lead
     m = _POSSESSIVE.match(text.strip())
