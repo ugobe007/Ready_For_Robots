@@ -780,51 +780,60 @@ export default function Signals() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Logistics & Warehousing',            icon: '📦', fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
-              { label: 'Hospitality & Hotels',               icon: '🏨', fit: 'Service & Delivery Robots',    q: 'Hospitality' },
-              { label: 'Healthcare & Senior Living',         icon: '🏥', fit: 'Clinical Logistics Robots',    q: 'Healthcare' },
-              { label: 'Food Service & Restaurants',         icon: '🍽️', fit: 'BOH Kitchen Automation',      q: 'Food Service' },
-              { label: 'Food Processing & Manufacturing',    icon: '🏭', fit: 'EOL Line Automation',          q: 'Food Processing & Manufacturing', badge: 'NEW' },
-              { label: 'CPG & Consumer Goods',               icon: '📦', fit: 'Palletizing & Case Packing',  q: 'CPG & Consumer Goods', badge: 'NEW' },
-              { label: 'Contract Manufacturing',             icon: '⚙️', fit: 'Flexible EOL Robotics',       q: 'Contract Manufacturing', badge: 'NEW' },
-              { label: 'Retail & Grocery',                   icon: '🛒', fit: 'Picking & Restocking',         q: 'Retail' },
-              { label: 'Airports & Transportation',          icon: '✈️', fit: 'Ground Ops Robots',            q: 'Airports & Transportation' },
-              { label: 'Casinos & Gaming',                   icon: '🎰', fit: 'Floor & F&B Delivery',         q: 'Casinos & Gaming' },
-              { label: 'Real Estate & Facilities',           icon: '🏢', fit: 'Cleaning & Concierge',         q: 'Real Estate & Facilities' },
-              { label: 'Cruise Lines',                       icon: '🚢', fit: 'Onboard Delivery',             q: 'Cruise Lines' },
-            ].map((m) => (
-              <Link
-                key={m.q}
-                href={`/search?industry=${encodeURIComponent(m.q)}`}
-                className="group relative flex flex-col justify-between border border-neutral-800 hover:border-emerald-500/50 rounded-xl p-4 bg-neutral-900 hover:bg-[#141d2b] transition-all duration-150 overflow-hidden"
-              >
-                {/* hover glow */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent" />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-lg leading-none shrink-0">
-                    {m.icon}
+              { label: 'Logistics & Warehousing',            fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
+              { label: 'Hospitality & Hotels',               fit: 'Service & Delivery Robots',    q: 'Hospitality' },
+              { label: 'Healthcare & Senior Living',         fit: 'Clinical Logistics Robots',    q: 'Healthcare' },
+              { label: 'Food Service & Restaurants',         fit: 'BOH Kitchen Automation',       q: 'Food Service' },
+              { label: 'Food Processing & Manufacturing',    fit: 'EOL Line Automation',          q: 'Food Processing & Manufacturing', badge: 'NEW' },
+              { label: 'CPG & Consumer Goods',               fit: 'Palletizing & Case Packing',   q: 'CPG & Consumer Goods', badge: 'NEW' },
+              { label: 'Contract Manufacturing',             fit: 'Flexible EOL Robotics',        q: 'Contract Manufacturing', badge: 'NEW' },
+              { label: 'Retail & Grocery',                   fit: 'Picking & Restocking',         q: 'Retail' },
+              { label: 'Airports & Transportation',          fit: 'Ground Ops Robots',            q: 'Airports & Transportation' },
+              { label: 'Casinos & Gaming',                   fit: 'Floor & F&B Delivery',         q: 'Casinos & Gaming' },
+              { label: 'Real Estate & Facilities',           fit: 'Cleaning & Concierge',         q: 'Real Estate & Facilities' },
+              { label: 'Cruise Lines',                       fit: 'Onboard Delivery',             q: 'Cruise Lines' },
+            ].map((m) => {
+              const qFirst = m.q.split(' ')[0].toLowerCase();
+              const matchingLead = hotLeads.find(lead =>
+                (lead.industry || '').toLowerCase().includes(qFirst)
+              );
+              const topSig = matchingLead?.signals?.[0];
+              const sigLabel = topSig?.signal_label || topSig?.signal_type?.replace(/_/g, ' ');
+              return (
+                <Link
+                  key={m.q}
+                  href={`/search?industry=${encodeURIComponent(m.q)}`}
+                  className="group relative flex flex-col justify-between border border-neutral-800 hover:border-emerald-500/50 rounded-xl p-4 bg-neutral-900 hover:bg-[#141d2b] transition-all duration-150 overflow-hidden"
+                >
+                  {/* hover glow */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent" />
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="text-sm font-bold text-emerald-400 group-hover:text-emerald-300 leading-snug transition-colors">{m.label}</p>
+                    {m.badge && (
+                      <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">{m.badge}</span>
+                    )}
                   </div>
-                  {m.badge && (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">{m.badge}</span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-neutral-100 leading-snug group-hover:text-white transition-colors">{m.label}</p>
-                  <p className="text-[11px] text-neutral-500 leading-tight mt-0.5">{m.fit}</p>
-                </div>
-                <div className="flex items-end justify-between mt-4 pt-3 border-t border-neutral-800">
-                  {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
-                    <div>
-                      <div className="text-xl font-bold tabular-nums text-emerald-400 leading-none">{leadsByIndustry[m.q]}</div>
-                      <div className="text-[10px] text-neutral-600 mt-0.5 font-medium uppercase tracking-wide">leads</div>
+                  <p className="text-[11px] text-neutral-500 leading-tight">{m.fit}</p>
+                  {sigLabel && (
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 self-start text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full font-medium truncate max-w-full">
+                      <span className="w-1 h-1 rounded-full bg-orange-400 shrink-0" />
+                      {sigLabel}
                     </div>
-                  ) : (
-                    <span className="text-sm text-neutral-700 font-mono">—</span>
                   )}
-                  <span className="text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all text-base">→</span>
-                </div>
-              </Link>
-            ))}
+                  <div className="flex items-end justify-between mt-4 pt-3 border-t border-neutral-800">
+                    {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
+                      <div>
+                        <div className="text-xl font-bold tabular-nums text-emerald-400 leading-none">{leadsByIndustry[m.q]}</div>
+                        <div className="text-[10px] text-neutral-600 mt-0.5 font-medium uppercase tracking-wide">leads</div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-neutral-700 font-mono">—</span>
+                    )}
+                    <span className="text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all text-base">→</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
