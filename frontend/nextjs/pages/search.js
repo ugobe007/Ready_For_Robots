@@ -12,7 +12,7 @@ const API = getApiBase();
 /** Canonical market insights path (same as https://readyforrobots.com/market-insights/) */
 const MARKET_INSIGHTS_HREF = '/market-insights/';
 
-/** Map GET /api/leads row → search result row + automation_profile */
+/** Map GET /api/leads row → search result row + full CRM data */
 function leadToSearchRow(lead) {
   const sigs = lead.signals || [];
   const matched_signals = sigs.slice(0, 6).map((s) => ({
@@ -31,10 +31,23 @@ function leadToSearchRow(lead) {
     industry: lead.industry,
     location_city: lead.location_city,
     location_state: lead.location_state,
+    website: lead.website,
+    employee_estimate: lead.employee_estimate,
+    // Scores
     overall_score: lead.score?.overall_score ?? 0,
+    signal_score: lead.score?.signal_score ?? null,
+    automation_score: lead.score?.automation_score ?? null,
+    labor_pain_score: lead.score?.labor_pain_score ?? null,
+    // Tiering
+    priority_tier: lead.priority_tier,
+    priority_reasons: Array.isArray(lead.priority_reasons) ? lead.priority_reasons : [],
+    // GTM / CRM
+    gtm: lead.gtm || null,
+    share_summary: lead.share_summary || null,
+    procurement_hints: lead.procurement_hints || null,
+    // Signal data
     matched_signals,
     automation_profile: lead.automation_profile,
-    priority_tier: lead.priority_tier,
   };
 }
 
@@ -148,6 +161,245 @@ function ScoreNum({ value }) {
   const v = value ?? 0;
   const color = v >= 80 ? 'text-red-400' : v >= 60 ? 'text-yellow-400' : v >= 40 ? 'text-cyan-500' : 'text-neutral-600';
   return <span className={`text-sm font-bold tabular-nums ${color}`}>{Math.round(v)}</span>;
+}
+
+function ScorePip({ label, value }) {
+  if (value == null) return null;
+  const v = Math.round(value);
+  const color = v >= 80 ? 'text-red-400' : v >= 60 ? 'text-yellow-400' : v >= 40 ? 'text-cyan-400' : 'text-neutral-500';
+  return (
+    <div className="flex flex-col items-center min-w-[44px]">
+      <span className={`text-sm font-bold tabular-nums ${color}`}>{v}</span>
+      <span className="text-[9px] text-neutral-600 uppercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+const GTM_MOTION_ICON = {
+  'Direct outreach': '📞',
+  'Demo request': '🖥️',
+  'Event follow-up': '🎪',
+  'Partner channel': '🤝',
+  'Content play': '📄',
+};
+
+/** Full clickable sales lead panel with CRM highlights */
+function LeadPanel({ lead: r, rank, router }) {
+  const [copied, setCopied] = useState(false);
+
+  const tier = r.priority_tier;
+  const tierBorder =
+    tier === 'HOT'  ? 'border-orange-700/70 hover:border-orange-500'
+    : tier === 'WARM' ? 'border-amber-700/50 hover:border-amber-500'
+    : 'border-neutral-700 hover:border-cyan-600';
+  const tierBadgeCls =
+    tier === 'HOT'  ? 'border-orange-700 text-orange-400 bg-orange-950/40'
+    : tier === 'WARM' ? 'border-amber-700 text-amber-400 bg-amber-950/30'
+    : 'border-cyan-800 text-cyan-400 bg-cyan-950/20';
+
+  const pct = (s) => {
+    const v = Number(s.strength);
+    const x = v > 1 ? v / 100 : v;
+    return Math.round(Math.min(100, Math.max(0, x * 100)));
+  };
+
+  const analysisUrl = `/dashboard?analyze=${r.id}`;
+
+  function handleCardClick(e) {
+    // Don't navigate if clicking a button, link, or input inside the card
+    if (e.target.closest('a, button, [data-nopropagate]')) return;
+    router.push(analysisUrl);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      router.push(analysisUrl);
+    }
+  }
+
+  function handleCopy(e) {
+    e.stopPropagation();
+    const url = `${window.location.origin}${analysisUrl}`;
+    const text = r.share_summary
+      ? `${r.company_name} — ${r.share_summary}\n\n${url}`
+      : url;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const gtm = r.gtm || {};
+  const motionIcon = Object.entries(GTM_MOTION_ICON).find(([k]) =>
+    (gtm.suggested_motion || '').toLowerCase().includes(k.toLowerCase())
+  )?.[1] || '→';
+
+  const location = [r.location_city, r.location_state].filter(Boolean).join(', ');
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
+      className={`group relative border rounded-xl px-5 py-5 cursor-pointer transition-all duration-150 overflow-hidden min-w-0
+        ${tierBorder} bg-neutral-900/40 hover:bg-neutral-900/70 focus:outline-none focus:ring-1 focus:ring-cyan-700`}
+    >
+      {/* ── Rank accent ── */}
+      <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl opacity-30"
+        style={{ background: tier === 'HOT' ? '#f97316' : tier === 'WARM' ? '#f59e0b' : '#06b6d4' }} />
+
+      {/* ── Header row ── */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3 pl-1">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="text-[10px] font-mono text-neutral-600">#{rank}</span>
+            <h3 className="text-lg font-bold text-neutral-100 group-hover:text-cyan-300 transition-colors leading-tight">
+              {r.company_name}
+            </h3>
+            {tier && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${tierBadgeCls}`}>
+                {tier}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+            {r.industry && <span>{r.industry}</span>}
+            {location && <span>📍 {location}</span>}
+            {r.employee_estimate && <span>👥 {r.employee_estimate} emp.</span>}
+            {r.website && (
+              <a href={r.website} target="_blank" rel="noopener noreferrer"
+                data-nopropagate="1"
+                onClick={e => e.stopPropagation()}
+                className="text-cyan-600 hover:text-cyan-400 transition-colors">
+                {r.website.replace(/^https?:\/\/(www\.)?/, '')}
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Score cluster */}
+        <div className="flex items-start gap-4 shrink-0">
+          <div className="flex gap-3 border border-neutral-800 rounded-lg px-3 py-2 bg-neutral-900/60">
+            <div className="flex flex-col items-center">
+              <ScoreNum value={r.overall_score} />
+              <span className="text-[9px] text-neutral-600 uppercase tracking-wide">overall</span>
+            </div>
+            <ScorePip label="signal" value={r.signal_score} />
+            <ScorePip label="automate" value={r.automation_score} />
+            <ScorePip label="labor" value={r.labor_pain_score} />
+          </div>
+          <Link
+            href={analysisUrl}
+            data-nopropagate="1"
+            onClick={e => e.stopPropagation()}
+            className="shrink-0 mt-1 text-xs px-3 py-2 rounded-md border border-cyan-800 text-cyan-400
+                       hover:border-cyan-600 hover:text-cyan-300 hover:bg-cyan-950/30 transition-all whitespace-nowrap"
+          >
+            Full analysis →
+          </Link>
+        </div>
+      </div>
+
+      {/* ── CRM Highlights ── */}
+      {(gtm.readiness_label || gtm.why_now || r.priority_reasons?.length > 0 || gtm.suggested_motion) && (
+        <div className="mt-3 mb-3 rounded-lg border border-neutral-800 bg-neutral-950/50 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-600 mb-2">CRM Highlights</p>
+          <div className="flex flex-wrap gap-4">
+            {/* GTM Readiness */}
+            {gtm.readiness_label && (
+              <div className="flex flex-col gap-0.5 min-w-[120px]">
+                <span className="text-[9px] uppercase tracking-widest text-neutral-600">Readiness</span>
+                <span className={`text-xs font-semibold ${
+                  gtm.readiness_label?.toLowerCase().includes('hot') || gtm.readiness_label?.toLowerCase().includes('now')
+                    ? 'text-orange-400'
+                    : gtm.readiness_label?.toLowerCase().includes('warm')
+                      ? 'text-amber-400'
+                      : 'text-cyan-300'
+                }`}>
+                  {gtm.readiness_label}
+                </span>
+              </div>
+            )}
+
+            {/* Suggested motion */}
+            {gtm.suggested_motion && (
+              <div className="flex flex-col gap-0.5 min-w-[130px]">
+                <span className="text-[9px] uppercase tracking-widest text-neutral-600">Sales Motion</span>
+                <span className="text-xs text-neutral-300">
+                  {motionIcon} {gtm.suggested_motion}
+                </span>
+              </div>
+            )}
+
+            {/* Why now */}
+            {gtm.why_now && (
+              <div className="flex flex-col gap-0.5 flex-1 min-w-[160px]">
+                <span className="text-[9px] uppercase tracking-widest text-neutral-600">Why Now</span>
+                <span className="text-xs text-neutral-400 leading-relaxed">{gtm.why_now}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Priority reasons */}
+          {r.priority_reasons?.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {r.priority_reasons.slice(0, 4).map((reason, i) => (
+                <span key={i}
+                  className="text-[10px] px-2 py-0.5 rounded border border-neutral-700 bg-neutral-900 text-neutral-400">
+                  {reason}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Automation spec ── */}
+      {r.automation_profile && (
+        <div className="mt-2 border-t border-neutral-800/60 pt-3">
+          <AutomationSpecBlock profile={r.automation_profile} theme="dashboard" />
+        </div>
+      )}
+
+      {/* ── Signal evidence ── */}
+      {r.matched_signals?.length > 0 && (
+        <div className="space-y-2 mt-3 border-t border-neutral-800/60 pt-3 min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-600 mb-1">Signal Evidence</p>
+          {r.matched_signals.map((s, i) => (
+            <div key={i} className="flex items-start gap-2 min-w-0">
+              <SignalBadge type={s.signal_type} />
+              <PlainTextWithSourceLinks
+                text={s.signal_text}
+                className="text-xs text-neutral-400 flex-1 min-w-0 leading-relaxed"
+              />
+              <span className={`shrink-0 text-xs font-mono tabular-nums ${
+                pct(s) >= 70 ? 'text-emerald-400'
+                : pct(s) >= 40 ? 'text-cyan-500'
+                : 'text-neutral-500'
+              }`}>{pct(s)}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Footer: share strip ── */}
+      <div className="mt-4 pt-3 border-t border-neutral-800/40 flex items-center justify-between gap-3">
+        <span className="text-[10px] text-neutral-600">
+          Click anywhere to open full analysis
+        </span>
+        <button
+          data-nopropagate="1"
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded border border-neutral-700 text-neutral-500
+                     hover:border-cyan-700 hover:text-cyan-400 transition-all"
+        >
+          {copied ? '✓ Copied' : '🔗 Share deal'}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function SearchPage() {
@@ -476,84 +728,10 @@ export default function SearchPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {results.results.map((r) => {
-                const tier = r.priority_tier;
-                const tierCls =
-                  tier === 'HOT'
-                    ? 'border-orange-700 text-orange-400 bg-orange-950/30'
-                    : tier === 'WARM'
-                      ? 'border-amber-700 text-amber-400 bg-amber-950/20'
-                      : 'border-cyan-800 text-cyan-400 bg-cyan-950/20';
-                const pct = (s) => {
-                  const v = Number(s.strength);
-                  const x = v > 1 ? v / 100 : v;
-                  return Math.round(Math.min(100, Math.max(0, x * 100)));
-                };
-                return (
-                <div key={r.id}
-                  className="border border-neutral-800 rounded-lg px-5 py-4 hover:border-neutral-600 transition-colors overflow-hidden min-w-0">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link href={`/dashboard?analyze=${r.id}`}>
-                        <span className="text-lg font-semibold text-neutral-100 hover:text-cyan-400 cursor-pointer transition-colors">
-                          {r.company_name}
-                        </span>
-                      </Link>
-                      {tier && (
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${tierCls}`}>
-                          {tier}
-                        </span>
-                      )}
-                      {r.industry && (
-                        <span className="text-xs text-neutral-500">{r.industry}</span>
-                      )}
-                      {r.location_city && (
-                        <span className="text-xs text-neutral-600">
-                          {r.location_city}{r.location_state ? `, ${r.location_state}` : ''}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <ScoreNum value={r.overall_score} />
-                        <div className="text-[10px] text-neutral-600">score</div>
-                      </div>
-                      <Link href={`/dashboard?analyze=${r.id}`}>
-                        <span className="text-xs text-cyan-500 hover:text-cyan-300 transition-colors">
-                          View analysis →
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-
-                  {r.automation_profile && (
-                    <div className="mt-3 border-t border-neutral-800/80 pt-3">
-                      <AutomationSpecBlock profile={r.automation_profile} theme="dashboard" />
-                    </div>
-                  )}
-                  
-                  {r.matched_signals?.length > 0 && (
-                    <div className="space-y-2 mt-3 min-w-0">
-                      {r.matched_signals.map((s, i) => (
-                        <div key={i} className="flex items-start gap-2 min-w-0">
-                          <SignalBadge type={s.signal_type} />
-                          <PlainTextWithSourceLinks
-                            text={s.signal_text}
-                            className="text-xs text-neutral-300 flex-1 min-w-0 leading-relaxed"
-                          />
-                          <span className={`shrink-0 text-xs font-mono tabular-nums ${
-                            pct(s) >= 70 ? 'text-emerald-400'
-                            : pct(s) >= 40 ? 'text-cyan-500'
-                            : 'text-neutral-400'
-                          }`}>{pct(s)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                );
-              })}
+            <div className="space-y-4">
+              {results.results.map((r, idx) => (
+                <LeadPanel key={r.id} lead={r} rank={idx + 1} router={router} />
+              ))}
             </div>
           )}
         </div>
