@@ -272,7 +272,8 @@ export default function Signals() {
       }
     };
     fetchHomepage();
-    const interval = setInterval(fetchHomepage, 90000); // refresh every 90s
+    // Align with server homepage cache (~2 min) + minute-based spotlight rotation
+    const interval = setInterval(fetchHomepage, 120000);
     return () => {
       cancelled = true;
       controller.abort();

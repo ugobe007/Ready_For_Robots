@@ -52,6 +52,10 @@ _JUNK_SUBSTRINGS = [
     "how ai ", "pro-level", "yegor traiman", "travel market", "tourism market", "ops 202", "how to ",
     # Article headline fragments reported by users
     "revenue drain", "hidden revenue", "industry could",
+    "sport airline",
+    # Do NOT add "sports retailer" alone — e.g. "Swedish sports retailer Stadium" is a real legal name.
+    "ideas ahead",
+    "supply chain drive",
     "gets high-tech", "gets high tech",
     "hn brief", "dropship",
     # Page chrome / syndication / research boilerplate (not legal entities)
@@ -140,6 +144,15 @@ _JUNK_SUBSTRINGS = [
     # "New Eastern Hub" / "Battery Lifters" etc. handled above
     # Log-confirmed specific junk names
     "report uk hospitality",
+    # Intelligence scraper — headline / listicle fragments stored as company.name
+    "unlock the roi",
+    "chaos to consistency",
+    "supply chain automation leaders",
+    "hub in industry first",
+    # PR / news headline: "[Brand] Strengthens …" (not a legal entity name)
+    "strengthens position",
+    "strengthens presence",
+    "strengthens leadership",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -339,7 +352,7 @@ _JUNK_PATTERNS = [
     r"drop|spike|surge|plunge|soar|slip|shed|boost|spur|gain|add|nam|serv|deliver|"
     r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
-    r"integrat|transform|accelerat|moderniz|optim|automat|digitiz|"
+    r"integrat|transform|accelerat|moderniz|optim|digitiz|"
     r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale|"
     r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul|"
     r"turn|shift|pivot|reshape|redefin|reinvent|overhaul|navigat|tackle|"
@@ -398,6 +411,9 @@ _JUNK_PATTERNS = [
     r"(?i)^(warehouse|inventory|order)\s+management\s+top\s*$",
     r"(?i)^warehouse\s+automation\s*$",
     r"(?i)^(smart\s+)?warehouse\s+(robotics|systems?|solutions?|technology)\s*$",
+
+    # Colon + "The 20NN Guide" / handbook titles (listicles, not legal names)
+    r"(?i):\s*the\s+20\d\d\s+guide\s*$",
 
     # Article titles: "Why Automation Is…", "How Hotels Can…", "Why AI Companies May…"
     # Catches question-word headlines even when the modal verb appears later
@@ -532,6 +548,18 @@ _JUNK_PATTERNS = [
     # Conference / agenda / schedule fragments
     r"(?i)^(full|complete|complete\s+list\s+of|official)\s+(conference|agenda|schedule|program|lineup)\b",
     r"(?i)\d{4}\s*(agenda|schedule|lineup|program)\s*$",
+
+    # ── Editorial deck / headline fragments (user-reported, Apr 2026) ─────────
+    # "Inside Alaska Airlines…" — magazine-style deck (needs ≥3 words; avoids "Inside Out")
+    r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]",
+    # Rhetorical or survey-style titles scraped as names
+    r"\?\s*$",
+    # Truncated RSS / deck copy: "Swedish sports retailer…?"
+    r"\.{3,}",
+    # Nordic + sport + generic role — **entire** name is the headline stub (not "… retailer Stadium").
+    r"(?i)^(swedish|norwegian|danish|finnish|icelandic|estonian|latvian|lithuanian)\s+"
+    r"(sport|sports)\s+(airline|airlines|carrier|retailer|retailers|chain|chains|"
+    r"brand|brands|group)\s*[\s.?!…]*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -601,6 +629,10 @@ _JUNK_EXACT = frozenset({
     # Article / category lines mistaken for legal names (user-reported)
     "warehouse automation",
     "warehouse management top",
+    # Single-token vertical stubs scraped from news (not operating company names)
+    "airport",
+    "development",
+    "equipment",
 })
 
 

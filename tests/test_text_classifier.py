@@ -83,6 +83,38 @@ def test_question_opener_is_headline(text):
     assert tc.is_valid_company is False
 
 
+@pytest.mark.parametrize("text", [
+    "Swedish sport airline?",
+    "Is automation winning in warehouses?",
+    "What about cobots?",
+])
+def test_rhetorical_question_or_fragment_is_headline(text):
+    """Trailing ? or obvious question — not a company name."""
+    tc = classify(text)
+    assert tc.entity_type == EntityType.ARTICLE_HEADLINE, (
+        f"{text!r} → {tc.entity_type.value}\nevidence: {tc.evidence}"
+    )
+    assert tc.is_valid_company is False
+
+
+@pytest.mark.parametrize("text", [
+    "Inside Alaska Airlines....",
+    "Inside Delta Operations Now",
+])
+def test_inside_deck_kicker_is_headline(text):
+    tc = classify(text)
+    assert tc.entity_type == EntityType.ARTICLE_HEADLINE, (
+        f"{text!r} → {tc.entity_type.value}\nevidence: {tc.evidence}"
+    )
+    assert tc.is_valid_company is False
+
+
+def test_inside_out_two_words_not_forced_headline():
+    """Two-word title after 'Inside' — do not treat as editorial deck."""
+    tc = classify("Inside Out")
+    assert tc.entity_type != EntityType.ARTICLE_HEADLINE or tc.confidence < 0.75
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Comparisons → ARTICLE_HEADLINE
 # ─────────────────────────────────────────────────────────────────────────────

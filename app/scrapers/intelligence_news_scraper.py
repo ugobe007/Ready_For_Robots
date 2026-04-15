@@ -1195,6 +1195,14 @@ class IntelligenceNewsScraper:
         if len(name) < 3 or len(name) > 55:
             return False
 
+        # Editorial decks, rhetorical questions, truncated RSS ("Swedish sports retailer…?")
+        if "?" in name:
+            return False
+        if re.search(r"\.{3,}", name) or "..." in name:
+            return False
+        if re.match(r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]", name.strip()):
+            return False
+
         # Must contain at least one uppercase letter (proper noun)
         if not any(c.isupper() for c in name):
             return False
@@ -1254,9 +1262,11 @@ class IntelligenceNewsScraper:
             return False
 
         # News source attribution: "... - Mankato Free Press", "... - FOX 13"
-        if re.search(r'\s-\s+\w+[\w\s]*?(press|times|news|post|herald|tribune|"
-                     r"journal|gazette|review|report|daily|weekly|media|wire)\s*$',
-                     name_lower):
+        if re.search(
+            r"\s-\s+\w+[\w\s]*?(press|times|news|post|herald|tribune|journal|gazette|"
+            r"review|report|daily|weekly|media|wire)\s*$",
+            name_lower,
+        ):
             return False
 
         # ISIN / ticker code embedded: "Rockwell Automation Stock ISIN US77463M1053"
@@ -1506,7 +1516,17 @@ class IntelligenceNewsScraper:
                     existing.industry = industry
                     self.db.commit()
             return existing
-        
+
+        # Logic engine (junk filter + distinctive noun + structure + vendor/pub).
+        # Extraction already calls is_valid_lead; this closes the gap where a name
+        # could still reach insert without passing the full gate with classifier hint.
+        from app.services.company_validator import is_valid_lead
+
+        valid, vreason = is_valid_lead(name, entity_hint=tc)
+        if not valid:
+            logger.debug("logic engine rejected new company %r: %s", name, vreason)
+            return None
+
         # Create new company
         industry = self._infer_industry(context_text) if context_text else "Unknown"
         

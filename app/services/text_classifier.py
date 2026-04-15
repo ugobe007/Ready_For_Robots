@@ -377,6 +377,27 @@ def classify(text: str) -> TextClassification:
     evidence: List[str] = []
     confidence = 0.5  # default mid-confidence until a template fires
 
+    # ── Hard headline / deck artefacts (before legal-suffix fast-pass) ─────────
+    # Real operating names almost never end in "?" or use "Inside X" magazine decks.
+    if raw.endswith("?"):
+        evidence.append("ends with question mark (rhetorical headline / fragment)")
+        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.90, evidence, False)
+    if re.search(r"\.{3,}", raw):
+        evidence.append("ellipsis or truncated RSS/deck copy")
+        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.88, evidence, False)
+    if re.match(r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]", raw):
+        evidence.append("editorial section kicker: 'Inside X Y …'")
+        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.90, evidence, False)
+    # Same rule as lead_filter: only when the whole string is the stub (allows "… Stadium").
+    _nordic_sport_headline_only = re.compile(
+        r"(?i)(swedish|norwegian|danish|finnish|icelandic|estonian|latvian|lithuanian)\s+"
+        r"(sport|sports)\s+(airline|airlines|carrier|retailer|retailers|chain|chains|"
+        r"brand|brands|group)\s*[\s.?!…]*\Z",
+    )
+    if _nordic_sport_headline_only.fullmatch(raw):
+        evidence.append("nationality + generic sector headline only (not 'descriptor + brand')")
+        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.88, evidence, False)
+
     # ── Fast-pass: legal suffix → almost certainly a company ─────────────────
     if _has_legal_suffix(raw):
         evidence.append("has legal entity suffix (Inc/LLC/Corp/Ltd/…)")

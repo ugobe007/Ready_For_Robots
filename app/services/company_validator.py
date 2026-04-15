@@ -14,8 +14,9 @@ Pipeline (in order — fastest gates first):
   4. is_structure_valid(name)     → reject structural headline artifacts
                                     that escape the junk filter
 
-Called from intelligence_news_scraper._accept_company() BEFORE the company
-is written to the database, replacing the ad-hoc _is_valid_company_name check.
+Called from intelligence_news_scraper:
+  - ``_extract_companies`` / ``_accept_company`` (extraction pass; optional hint)
+  - ``_get_or_create_company`` before **insert** (always pass classifier hint)
 
 When the caller has already run text_classifier.classify(), pass the result
 via the `entity_hint` parameter to skip redundant re-classification.
@@ -233,6 +234,8 @@ _STRUCTURAL_REJECTS = [
     re.compile(r"\s+and\s+\w+\s*$", re.IGNORECASE),
     # All words are 3 letters or fewer (likely an acronym chain or noise)
     re.compile(r"^([A-Z]{1,3}\s+){2,}[A-Z]{1,3}\s*$"),
+    # PR / news headline: "[Brand] Strengthens Position|Presence|Leadership …"
+    re.compile(r"(?i)\bstrengthens\s+(position|presence|leadership)\b"),
 ]
 
 

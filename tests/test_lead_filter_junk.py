@@ -106,3 +106,97 @@ def test_robot_oems_are_junk_not_buyers(name):
     junk, reason = is_junk(name)
     assert junk is True, reason
     assert "vendor" in reason.lower() or "oem" in reason.lower() or "buyer" in reason.lower()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Swedish sport airline?",
+        "Swedish sports retailer...?",
+        "Inside Alaska Airlines....",
+        "Inside Delta Operations",
+        "Norwegian sports carrier",
+        "Why is this not a company???",
+    ],
+)
+def test_editorial_headline_fragments_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, f"expected junk for {name!r}, got: {reason!r}"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Swedish sports retailer Stadium",
+        "Swedish Sports Retailer Stadium AB",
+    ],
+)
+def test_descriptor_plus_real_brand_not_junk(name):
+    """Nationality + role + actual company name (e.g. Stadium) must not be junk."""
+    assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Ideas Ahead....?",
+        "DHL Warehouse Supply Chain Drive...?",
+    ],
+)
+def test_truncated_listicle_logistics_headlines_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, f"expected junk for {name!r}, got: {reason!r}"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Unlock the ROI",
+        "Airport",
+        "Development",
+        "Major DFW Hub in Industry First",
+        "Chaos to Consistency: The 2026 Guide",
+        "Three supply chain automation leaders",
+    ],
+)
+def test_intelligence_scraper_headline_stubs_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, f"expected junk for {name!r}, got: {reason!r}"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Denver International Airport Authority",
+        "Software Development Inc",
+        "Airport Retail Group LLC",
+    ],
+)
+def test_names_containing_airport_or_development_tokens_not_junk(name):
+    assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Equipment",
+        "EVERSANA Strengthens Position",
+        "Acme Corp Strengthens Presence in APAC",
+        "GlobalCo Strengthens Leadership Team",
+    ],
+)
+def test_equipment_stub_and_strengthens_headline_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Eversana",
+        "EVERSANA",
+        "Medical Equipment Leasing LLC",
+    ],
+)
+def test_real_brand_or_equipment_in_phrase_not_junk(name):
+    assert is_junk(name)[0] is False

@@ -13,6 +13,7 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
+import random
 import time
 from datetime import datetime, timezone, date
 
@@ -301,6 +302,33 @@ def _take_rotated(companies: List[Company], count: int, seed: int) -> List[Compa
         return []
     start = seed % n
     return [companies[(start + i) % n] for i in range(min(count, n))]
+
+
+def _shuffle_spotlight_order(leads: List[Company], h_seed: int, w_seed: int) -> List[Company]:
+    """Deterministic shuffle — same five picks can feel fresh when card order changes."""
+    if len(leads) <= 1:
+        return leads
+    out = leads[:]
+    rnd = random.Random((h_seed ^ w_seed) & 0xFFFFFFFF or 1)
+    rnd.shuffle(out)
+    return out
+
+
+def _spotlight_rotation_seeds(now: datetime) -> tuple[int, int, int]:
+    """
+    Deterministic seeds for HOT vs WARM circular picks on the homepage spotlight.
+
+    Previously only day + hour changed — same five companies for a full hour and
+    a 10-minute HTTP cache doubled staleness.  We now fold in the UTC **minute**
+    (with co-prime multipliers) so each cache rebuild surfaces a different window
+    through the ranked HOT/WARM rings while staying reproducible for debugging.
+    """
+    day_o = int(now.date().toordinal())
+    hour = now.hour
+    minute = now.minute
+    h_seed = day_o * 7919 + hour * 167 + minute * 9176 + 203
+    w_seed = day_o * 9283 + hour * 263 + minute * 5843 + 411
+    return h_seed, w_seed, minute
 
 
 def _signal_label(signal_type: str) -> str:
@@ -686,10 +714,10 @@ def post_lead_rep_feedback(
 
 
 # ── Homepage TTL cache ────────────────────────────────────────────────────────
-# The aggregate query on 4 000+ rows is expensive. Cache for 10 minutes so Fly
-# cold-starts and repeat visits always get a fast response. A background thread
-# warms the cache at startup so the FIRST user request is never slow.
-_HOMEPAGE_CACHE_TTL = 600  # 10 minutes
+# Aggregate query is expensive; keep a short TTL so spotlight rotation (minute-
+# level seeds) actually reaches browsers.  Trade-off: ~1 DB rebuild / 2 min
+# per warm machine vs stale identical cards for 10+ minutes.
+_HOMEPAGE_CACHE_TTL = 120  # 2 minutes — pairs with per-minute rotation seeds
 _homepage_cache: dict = {}
 
 
@@ -765,10 +793,8 @@ def warm_homepage_cache() -> None:
                 hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
                 warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
                 now = datetime.now(timezone.utc)
-                day_o = now.date().toordinal()
+                h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
                 hour = now.hour
-                h_seed = day_o * 7919 + 203 + hour * 17
-                w_seed = day_o * 9283 + 411 + hour * 23
                 chosen: List[Company] = []
                 used_ids: set = set()
                 for c in _take_rotated(hot_ordered, 3, h_seed):
@@ -778,7 +804,7 @@ def warm_homepage_cache() -> None:
                 for c in _take_rotated(warm_avail, 2, w_seed):
                     if c.id not in used_ids:
                         chosen.append(c); used_ids.add(c.id)
-                chosen = chosen[:5]
+                chosen = _shuffle_spotlight_order(chosen[:5], h_seed, w_seed)
                 hot_leads = []
                 for c in chosen:
                     j, jr, pri = classify_lead(c, c.scores, c.signals)
@@ -791,6 +817,7 @@ def warm_homepage_cache() -> None:
                         "hot_slots": 3, "warm_slots": 2,
                         "rotation_day": str(now.date()),
                         "rotation_hour_utc": hour,
+                        "rotation_minute_utc": minute,
                     },
                     "scoringSystem": get_scoring_system_public(),
                 }
@@ -818,8 +845,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     Includes tierLegend for UI copy (COLD band documented as "Emerging").
 
     Performance: runs ONE aggregate query (not two), then sorts candidate rows in
-    Python. Result is cached server-side for 90 s to avoid hammering the DB on
-    every page load while the Fly machine is warm.
+    Python. Result is cached server-side briefly (~2 min) while rotation seeds use
+    the UTC minute so successive rebuilds walk different slices of the HOT/WARM rings.
     """
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
@@ -896,11 +923,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     hot_slots = 3
     warm_slots = 2
     now = datetime.now(timezone.utc)
-    day_o = now.date().toordinal()
+    h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
     hour = now.hour
-    # Hour term shifts the window a few times per day so repeat visits are not frozen
-    h_seed = day_o * 7919 + 203 + hour * 17
-    w_seed = day_o * 9283 + 411 + hour * 23
 
     chosen: List[Company] = []
     used_ids: set = set()
@@ -930,7 +954,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
             if len(chosen) >= spotlight_limit:
                 break
 
-    chosen = chosen[:spotlight_limit]
+    chosen = _shuffle_spotlight_order(chosen[:spotlight_limit], h_seed, w_seed)
 
     hot_leads = []
     for c in chosen:
@@ -946,6 +970,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
             "warm_slots": warm_slots,
             "rotation_day": str(now.date()),
             "rotation_hour_utc": hour,
+            "rotation_minute_utc": minute,
         },
         "scoringSystem": get_scoring_system_public(),
     }

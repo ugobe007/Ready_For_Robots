@@ -19,6 +19,10 @@ Usage:
   python3 scripts/cleanup_leads.py --apply --force-industry # dangerous full industry rewrite
   python3 scripts/cleanup_leads.py --apply --limit-names 200
 
+After a noisy scraper run, prefer `--skip-industry` unless you intend to refill
+industry from signal text. For ML feedback, export decisions with
+`scripts/export_quality_decision_log.py` (see docs/lead_quality_pipeline.md).
+
 Env: DATABASE_URL via .env / frontend/nextjs/.env.local (same as other scripts).
 """
 from __future__ import annotations
