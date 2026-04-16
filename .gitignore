@@ -47,6 +47,9 @@ frontend/nextjs/.next/
 frontend/nextjs/node_modules/
 frontend/nextjs/node_modules.old*/
 
+# Next.js static export — macOS Finder "Duplicate" creates `name 2.ext` (never commit)
+frontend/nextjs/out/**/* 2.*
+
 # OS
 .DS_Store
 Thumbs.db
