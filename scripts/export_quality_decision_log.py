@@ -15,6 +15,14 @@ Typical workflow (see docs/lead_quality_pipeline.md):
   python3 scripts/export_quality_decision_log.py --limit 2000 --since-id 5700
 
 Progress / line counts go to stderr; JSONL goes only to -o or stdout.
+
+Viewing JSONL (one JSON object per line — ``python -m json.tool`` expects a single value):
+
+  python3 -c "import json, pathlib; p=pathlib.Path('data/quality_log.jsonl'); [print(json.dumps(json.loads(l), indent=2), chr(10)+'---'+chr(10)) for l in p.read_text().splitlines()[:5]]"
+
+  With jq:  head -5 data/quality_log.jsonl | jq .
+
+  In Cursor: open the ``.jsonl`` file in the editor (no ``open`` in Terminal required).
 """
 from __future__ import annotations
 
