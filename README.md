@@ -55,6 +55,10 @@ The project is organized into several key directories:
    celery -A worker.celery_worker worker --loglevel=info
    ```
 
+## Frontend (static export)
+
+The marketing app lives under **`frontend/nextjs/`**. To ship updates: run **`npm run build`** there, **commit the generated `out/` directory** in one coherent commit, then deploy `out/` to your host. Step-by-step notes: **[frontend/nextjs/DEPLOY.md](frontend/nextjs/DEPLOY.md)**.
+
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
 
