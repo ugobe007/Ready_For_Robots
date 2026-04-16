@@ -1,7 +1,9 @@
 """Junk company-name detection — generic sector phrases are not leads."""
+from types import SimpleNamespace
+
 import pytest
 
-from app.services.lead_filter import is_junk
+from app.services.lead_filter import classify_lead, is_junk
 
 
 @pytest.mark.parametrize(
@@ -200,3 +202,38 @@ def test_equipment_stub_and_strengthens_headline_are_junk(name):
 )
 def test_real_brand_or_equipment_in_phrase_not_junk(name):
     assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Share Insights",
+        "Using Flexible Robotics",
+        "EBRD Grants RON",
+    ],
+)
+def test_headline_fragments_user_reported_feb_2026(name):
+    assert is_junk(name)[0] is True
+
+
+def test_classify_lead_treats_logic_engine_reject_as_junk():
+    """API / spotlight use classify_lead — must hide non-company strings from HOT."""
+    c = SimpleNamespace(name="Share Insights", industry="Retail", employee_estimate=None)
+    junk, reason, pri = classify_lead(c, None, [])
+    assert junk is True
+    assert pri.tier == "COLD"
+    assert "junk" in reason.lower() or "logic engine" in reason.lower()
+
+
+def test_classify_lead_allows_real_company():
+    c = SimpleNamespace(name="Acme Logistics LLC", industry="Logistics", employee_estimate=500)
+    junk, reason, pri = classify_lead(c, None, [])
+    assert junk is False
+    assert reason == ""
+
+
+def test_short_ticker_brands_not_junk_lg_bp():
+    """Cleanup uses is_junk only; must match logic-engine allowlist (see known_brands)."""
+    assert is_junk("LG")[0] is False
+    assert is_junk("BP")[0] is False
+    assert is_junk("3M")[0] is False

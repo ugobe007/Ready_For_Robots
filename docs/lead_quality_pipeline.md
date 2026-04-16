@@ -43,6 +43,8 @@ python3 -m pytest tests/test_quality_decision_log.py -q
 
 Record layout is implemented in `app/services/quality_decision_log.py` (`build_decision_record`); the script is a thin DB cursor over that function.
 
+Why junk can still slip through sometimes — and how we layer defenses: **[lead_quality_blind_spots.md](lead_quality_blind_spots.md)**.
+
 ## Ingestion reference
 
 `app/scrapers/intelligence_news_scraper.py` runs the text classifier first, then **`is_valid_lead(name, entity_hint=…)` immediately before insert** in `_get_or_create_company` (so the logic engine cannot be bypassed at persistence). Extraction still uses `is_valid_lead` in `_accept_company` without a hint; the insert-time pass uses the hint and matches production behavior.

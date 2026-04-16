@@ -26,6 +26,7 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
+from app.services.known_brands import ALLOWLISTED_COMPANY_NAMES
 from app.services.lead_filter import is_junk
 from app.services.robot_vendor_names import is_known_robotics_vendor_name
 from app.services.news_publications import is_known_publication_name
@@ -236,6 +237,13 @@ _STRUCTURAL_REJECTS = [
     re.compile(r"^([A-Z]{1,3}\s+){2,}[A-Z]{1,3}\s*$"),
     # PR / news headline: "[Brand] Strengthens Position|Presence|Leadership …"
     re.compile(r"(?i)\bstrengthens\s+(position|presence|leadership)\b"),
+    # Deck / SEO fragments: "Share Insights", "Using … Robotics"
+    re.compile(r"(?i)^share\s+insights\s*$"),
+    re.compile(r"(?i)^using\s+\w+\s+robotics\s*$"),
+    # Development-finance grant headlines (currency tickers)
+    re.compile(
+        r"(?i)\bgrants\s+(usd|eur|gbp|ron|try|pln|czk|sek|nok|dkk|chf|huf|bgn|aed|sar)\b"
+    ),
 ]
 
 
@@ -253,6 +261,8 @@ def _is_structure_valid(name: str) -> bool:
 def is_valid_lead(
     name: str,
     entity_hint: "Optional[object]" = None,
+    *,
+    skip_junk_check: bool = False,
 ) -> Tuple[bool, str]:
     """
     Main gate.  Returns (True, "") if name should be ingested as a lead,
@@ -275,6 +285,8 @@ def is_valid_lead(
     entity_hint : optional TextClassification from text_classifier.classify()
                   — if provided, hard-reject types are applied immediately
                   without re-running the classifier
+    skip_junk_check : if True, skip stage 1 ``is_junk`` (caller already ran it;
+                  used by ``classify_lead`` to avoid duplicate work).
     """
     if not name or not name.strip():
         return False, "empty name"
@@ -312,19 +324,16 @@ def is_valid_lead(
         except Exception:
             pass  # never let hint processing break the validator
 
-    # Stage 1a: fast-pass for universally-known companies (before junk filter
+    # Stage 1a: fast-pass for universally-known short brands (before junk filter
     # which can reject short all-caps names as airport codes)
-    _KNOWN_COMPANIES: frozenset[str] = frozenset({
-        "ups", "dhl", "ibm", "3m", "sap", "bmw", "kfc", "cvs", "gm",
-        "ge", "hp", "lg", "bp", "ab inbev", "jbs", "mcd",
-    })
-    if name.strip().lower() in _KNOWN_COMPANIES:
+    if name.strip().lower() in ALLOWLISTED_COMPANY_NAMES:
         return True, ""
 
     # Stage 1: junk filter (existing regex-based)
-    junk, reason = is_junk(name)
-    if junk:
-        return False, f"junk filter: {reason}"
+    if not skip_junk_check:
+        junk, reason = is_junk(name)
+        if junk:
+            return False, f"junk filter: {reason}"
 
     # Stage 2: legal suffix fast-pass
     if _has_legal_suffix(name):

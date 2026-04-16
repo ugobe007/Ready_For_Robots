@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Any
 
 from app.services.company_name_validation import reject_as_non_company_name
+from app.services.known_brands import is_allowlisted_company_name
 from app.services.news_publications import is_known_publication_name
 from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
@@ -153,6 +154,9 @@ _JUNK_SUBSTRINGS = [
     "strengthens position",
     "strengthens presence",
     "strengthens leadership",
+    # Listicle / deck fragments mistaken for company names
+    "share insights",
+    "ebrd grants",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -456,6 +460,12 @@ _JUNK_PATTERNS = [
     # Action-verb openers — not company names
     r"(?i)^(pushing|boosting|leveraging|driving|solving|fixing|mastering|navigating|revolutionizing|transforming)\s+\w+",
 
+    # "Using Flexible Robotics" — instructional headline, not a legal entity
+    r"(?i)^using\s+\w+\s+robotics\s*$",
+
+    # Multilateral / grant headlines: "EBRD Grants RON", "IMF Grants USD" (not companies)
+    r"(?i)\bgrants\s+(usd|eur|gbp|ron|try|pln|czk|sek|nok|dkk|chf|huf|bgn|aed|sar)\b",
+
     # Names ending in bare " industry" (sector label, not legal entity)
     r"(?i)\s+industry\s*$",
 
@@ -646,6 +656,10 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
 
     stripped = name.strip()
     low = stripped.lower()
+
+    # Align with company_validator: short tickers (LG, BP, 3M) are not junk.
+    if is_allowlisted_company_name(stripped):
+        return False, ""
 
     if is_known_publication_name(stripped):
         return True, "news or trade publication (not a buyer company)"
@@ -964,12 +978,21 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
 
     If junk is True, priority tier will be 'COLD' with no reasons.
     """
-    junk, junk_reason = is_junk(getattr(company, "name", None))
+    name = getattr(company, "name", None)
+    junk, junk_reason = is_junk(name)
     if junk:
         return True, junk_reason, PriorityResult("COLD", 0.0, [junk_reason])
     # Target false positive: "Target" from "exceeds its target" in xAI/Anthropic headlines
-    if _is_target_false_positive(getattr(company, "name", ""), signals):
+    if _is_target_false_positive(name or "", signals):
         return True, "target false positive (common-word in funding headlines)", PriorityResult("COLD", 0.0, ["target false positive"])
+
+    # Logic engine (legal suffix, distinctive noun, structure, vendor, publication).
+    # Listing APIs use classify_lead; this aligns HOT/WARM spotlight with is_valid_lead.
+    from app.services.company_validator import is_valid_lead
+
+    ok_logic, logic_reason = is_valid_lead(name or "", skip_junk_check=True)
+    if not ok_logic:
+        return True, f"logic engine: {logic_reason}", PriorityResult("COLD", 0.0, [logic_reason])
 
     score = pick_primary_score(scores_or_one)
     overall = getattr(score, "overall_intent_score", 0.0) if score else 0.0
