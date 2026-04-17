@@ -157,6 +157,7 @@ _JUNK_SUBSTRINGS = [
     # Listicle / deck fragments mistaken for company names
     "share insights",
     "ebrd grants",
+    "technology banking coverage",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -466,6 +467,20 @@ _JUNK_PATTERNS = [
     # Multilateral / grant headlines: "EBRD Grants RON", "IMF Grants USD" (not companies)
     r"(?i)\bgrants\s+(usd|eur|gbp|ron|try|pln|czk|sek|nok|dkk|chf|huf|bgn|aed|sar)\b",
 
+    # Listicle stub: "These Robotics Companies" (not a legal name)
+    r"(?i)^these\s+\w+\s+companies\s*$",
+
+    # News headline: "[Brand] hopes robots can…" (sentence in name field)
+    r"(?i)^[A-Za-z][A-Za-z&]+\s+hopes\s+\w+",
+    r"(?i)\bhopes\s+robots?\b",
+    r"(?i)\bcan\s+replace\s+\d",
+
+    # Truncated stat headline fragments
+    r"(?i)\b\d+[KkMm]\s+future\s*$",
+
+    # University / dept fragment: "UF's RoboPI lab" (not an operating company name)
+    r"(?i)^[A-Z]{2,4}'s\s+\S+\s+lab\s*$",
+
     # Names ending in bare " industry" (sector label, not legal entity)
     r"(?i)\s+industry\s*$",
 
@@ -643,6 +658,8 @@ _JUNK_EXACT = frozenset({
     "airport",
     "development",
     "equipment",
+    # Generic tech headline noun pair (not a company name by itself)
+    "ai agents",
 })
 
 

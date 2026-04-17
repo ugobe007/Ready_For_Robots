@@ -237,3 +237,18 @@ def test_short_ticker_brands_not_junk_lg_bp():
     assert is_junk("LG")[0] is False
     assert is_junk("BP")[0] is False
     assert is_junk("3M")[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Technology Banking Coverage with Veteran Banker",
+        "AI agents",
+        "These Robotics Companies",
+        "Amazon hopes robots can replace 600K future",
+        "UF's RoboPI lab",
+    ],
+)
+def test_quality_log_headline_fragments_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason

@@ -244,6 +244,9 @@ _STRUCTURAL_REJECTS = [
     re.compile(
         r"(?i)\bgrants\s+(usd|eur|gbp|ron|try|pln|czk|sek|nok|dkk|chf|huf|bgn|aed|sar)\b"
     ),
+    re.compile(r"(?i)^these\s+\w+\s+companies\s*$"),
+    re.compile(r"(?i)^[A-Za-z][A-Za-z&]+\s+hopes\s+\w+"),
+    re.compile(r"(?i)^[A-Z]{2,4}'s\s+\S+\s+lab\s*$"),
 ]
 
 
