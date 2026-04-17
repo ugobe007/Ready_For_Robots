@@ -166,6 +166,9 @@ _JUNK_SUBSTRINGS = [
     "share insights",
     "ebrd grants",
     "technology banking coverage",
+    # Magazine / SEO headline stubs (not legal entities)
+    "power couple",
+    "future proofing",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -583,9 +586,15 @@ _JUNK_PATTERNS = [
     r"(?i)\d{4}\s*(agenda|schedule|lineup|program)\s*$",
 
     # ── Editorial deck / headline fragments (user-reported, Apr 2026) ─────────
+    # "Meet Betty Bot" — article / profile intro, not a legal entity name
+    r"(?i)^meet\s+",
+    # "New MIT Mecalux" — news-deck collaboration line (university + partner), not a company row
+    r"(?i)^new\s+(mit|harvard|stanford|berkeley|cmu|caltech|yale|princeton|columbia|cornell|"
+    r"gatech|georgia tech|ucla|usc|nyu|duke|northwestern|oxford|cambridge)\s+\S",
     # "Inside Alaska Airlines…" — magazine-style deck (needs ≥3 words; avoids "Inside Out")
     r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]",
     # Rhetorical or survey-style titles scraped as names
+    r"(?i)\?{2,}\s*$",  # two+ trailing ? (clickbait / deck uncertainty)
     r"\?\s*$",
     # Truncated RSS / deck copy: "Swedish sports retailer…?"
     r"\.{3,}",

@@ -136,6 +136,37 @@ def test_editorial_headline_fragments_are_junk(name):
 @pytest.mark.parametrize(
     "name",
     [
+        "Future Proofing. Power Couple ????",
+        "Future Proofing and Your Supply Chain",
+        "This Power Couple Is Betting on AMRs",
+        "Will It Work????",
+    ],
+)
+def test_magazine_style_headline_phrases_are_junk(name):
+    assert is_junk(name)[0] is True
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Meet Betty Bot",
+        "Meet the Team Behind the Robot",
+        "New MIT Mecalux",
+        "New Stanford Robotics Lab Spinout",
+    ],
+)
+def test_meet_and_new_university_deck_lines_are_junk(name):
+    assert is_junk(name)[0] is True
+
+
+def test_real_brand_without_meet_or_new_univ_prefix_not_junk():
+    assert is_junk("Mecalux")[0] is False
+    assert is_junk("Mecalux North America")[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
         "Swedish sports retailer Stadium",
         "Swedish Sports Retailer Stadium AB",
     ],

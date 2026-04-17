@@ -13,10 +13,18 @@ Pipeline (in order — fastest gates first):
                                     category terms (e.g. "Restaurant Robotics")
   4. is_structure_valid(name)     → reject structural headline artifacts
                                     that escape the junk filter
+  4b. optional Wikidata check     → for long headline-like strings only, if
+                                    ``COMPANY_NAME_WIKIDATA_VERIFY=1``: reject when
+                                    top Wikidata hits are clearly not organizations
+                                    (films, disambiguation, etc.); unknown/timeout → allow
+  4c. optional DNS/HTTPS probe    → if ``COMPANY_NAME_DNS_HTTPS_VERIFY=1``: infer
+                                    ``brand.com``; optional strict reject when
+                                    ``COMPANY_NAME_DNS_HTTPS_STRICT=1`` and no DNS footprint
 
 Called from intelligence_news_scraper:
-  - ``_extract_companies`` / ``_accept_company`` (extraction pass; optional hint)
-  - ``_get_or_create_company`` before **insert** (always pass classifier hint)
+  - ``_extract_companies`` / ``_accept_company`` — runs ``text_classifier.classify(name)``
+    then ``is_valid_lead(..., entity_hint=tc)`` (same pipeline as insert)
+  - ``_get_or_create_company`` before **insert** — re-runs the full gate with the same hint
 
 When the caller has already run text_classifier.classify(), pass the result
 via the `entity_hint` parameter to skip redundant re-classification.
@@ -26,10 +34,24 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
+from app.services.company_name_presence import (
+    dns_https_probe,
+    dns_https_strict_enabled,
+    dns_https_verify_enabled,
+    needs_wikidata_verification,
+    wikidata_entity_likelihood,
+    wikidata_verify_enabled,
+)
 from app.services.known_brands import ALLOWLISTED_COMPANY_NAMES
 from app.services.lead_filter import is_junk
 from app.services.robot_vendor_names import is_known_robotics_vendor_name
 from app.services.news_publications import is_known_publication_name
+
+# Extraction placeholders / template tokens — never a company
+_PLACEHOLDER_COMPANY_NAMES: frozenset[str] = frozenset({
+    "name",
+    "tbd",
+})
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GATE 2 — Legal suffix fast-pass
@@ -279,6 +301,8 @@ def is_valid_lead(
       2. Legal suffix  — fast-pass for Inc/LLC/Corp names
       3. Generic words — reject if no distinctive proper noun
       4. Structure     — reject structural headline artifacts
+      4b. Wikidata     — optional; long names only if ``COMPANY_NAME_WIKIDATA_VERIFY`` is on
+      4c. DNS/HTTPS    — optional; same long-name trigger; strict mode off by default
       5. Vendor check  — reject known robotics vendors (not buyers)
       6. Publication   — reject known news orgs
 
@@ -332,6 +356,10 @@ def is_valid_lead(
     if name.strip().lower() in ALLOWLISTED_COMPANY_NAMES:
         return True, ""
 
+    # Stage 0b: template / placeholder tokens scraped into name fields
+    if name.strip().lower() in _PLACEHOLDER_COMPANY_NAMES:
+        return False, "placeholder token, not a company name"
+
     # Stage 1: junk filter (existing regex-based)
     if not skip_junk_check:
         junk, reason = is_junk(name)
@@ -362,6 +390,26 @@ def is_valid_lead(
     # Stage 4: structural sanity
     if not _is_structure_valid(name):
         return False, "structural headline artifact"
+
+    # Stage 4b: optional Wikidata footprint (long headline-like names only)
+    if wikidata_verify_enabled():
+        if needs_wikidata_verification(name):
+            lk = wikidata_entity_likelihood(name)
+            if lk == "likely_not_org":
+                return (
+                    False,
+                    "external check: Wikidata top hits are not organization-like",
+                )
+
+    # Stage 4c: optional DNS / HTTPS probe (same long-name trigger as 4b)
+    if dns_https_verify_enabled():
+        if needs_wikidata_verification(name):
+            probe = dns_https_probe(name)
+            if probe == "unreachable" and dns_https_strict_enabled():
+                return (
+                    False,
+                    "external check: inferred brand domain has no DNS footprint",
+                )
 
     # Stage 5: robotics vendor (seller, not buyer)
     if is_known_robotics_vendor_name(name):

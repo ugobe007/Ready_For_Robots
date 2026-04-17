@@ -1004,9 +1004,13 @@ class IntelligenceNewsScraper:
         def _accept_company(name: str) -> bool:
             if name in seen:
                 return False
-            # Gate 1+2+3+4: junk filter → logic engine → vendor/pub check (in that order)
+            # Same pipeline as insert: classifier hint (stage 0) + junk + legal + distinctive +
+            # structure + optional external checks + vendor/pub.
+            from app.services.text_classifier import classify
             from app.services.company_validator import is_valid_lead
-            valid, _ = is_valid_lead(name)
+
+            tc = classify(name)
+            valid, _ = is_valid_lead(name, entity_hint=tc)
             if not valid:
                 return False
             if publication_matches_rss_source(name, rss_source):
@@ -1452,9 +1456,8 @@ class IntelligenceNewsScraper:
                     self.db.commit()
             return existing
 
-        # Logic engine (junk filter + distinctive noun + structure + vendor/pub).
-        # Extraction already calls is_valid_lead; this closes the gap where a name
-        # could still reach insert without passing the full gate with classifier hint.
+        # Logic engine — same as _accept_company: classifier hint + junk + distinctive +
+        # structure + optional Wikidata/DNS + vendor/pub. Re-check here before INSERT.
         from app.services.company_validator import is_valid_lead
 
         valid, vreason = is_valid_lead(name, entity_hint=tc)
