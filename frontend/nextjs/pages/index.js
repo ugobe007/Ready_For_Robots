@@ -82,6 +82,10 @@ export default function Signals() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
+  /** Set when the batched homepage request fails after retries (mobile networks, cold start). */
+  const [homepageError, setHomepageError] = useState(null);
+  /** Increment to re-run the homepage fetch (Retry button). */
+  const [homepageRetryTick, setHomepageRetryTick] = useState(0);
   /** Avoid stale closure: homepage poll must not re-trigger full-page spotlight loading. */
   const homepageFetchCompletedRef = useRef(false);
   
@@ -224,46 +228,109 @@ export default function Signals() {
     return () => clearInterval(id);
   }, []);
 
-  // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile)
+  // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile).
+  // Fresh AbortController per request — reusing an aborted signal breaks the 2‑min poll after any timeout.
   useEffect(() => {
     const apiBase = getApiBase();
     let cancelled = false;
-    const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000); // 20s — allows for Fly cold-start
-    const fetchHomepage = async () => {
+    const HOMEPAGE_TIMEOUT_MS = 20000;
+    const INITIAL_RETRIES = 3;
+
+    if (homepageRetryTick > 0) {
+      homepageFetchCompletedRef.current = false;
+    }
+
+    const applyHomepagePayload = (data) => {
+      const s = data.summary || {};
+      setStatsData({
+        activeLeads: s.total ?? 0,
+        hotDeals: s.hot ?? 0,
+        liveSignals: s.total_signals ?? 0,
+        warmPipeline: s.warm ?? 0,
+        cold: s.cold ?? 0,
+      });
+      setLeadsByIndustry(s.by_industry ?? {});
+      setTierLegend(data.tierLegend || null);
+      setScoringSystem(data.scoringSystem || null);
+      setHotLeads(Array.isArray(data.hotLeads) ? data.hotLeads : []);
+      setHomepageError(null);
+    };
+
+    const fetchHomepageOnce = async (signal) => {
+      const res = await fetch(
+        `${apiBase}/api/leads/homepage?cb=${Date.now()}`,
+        liveFetchInit({ signal }),
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    };
+
+    const fetchHomepage = async (isPoll) => {
       const isFirstFetch = !homepageFetchCompletedRef.current;
-      if (isFirstFetch) setLoading(true);
+      if (isFirstFetch) {
+        setLoading(true);
+        setHomepageError(null);
+      }
+
+      const runSingleAttempt = async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), HOMEPAGE_TIMEOUT_MS);
+        try {
+          const data = await fetchHomepageOnce(controller.signal);
+          clearTimeout(timeout);
+          return data;
+        } catch (e) {
+          clearTimeout(timeout);
+          throw e;
+        }
+      };
+
       try {
-        const res = await fetch(
-          `${apiBase}/api/leads/homepage?cb=${Date.now()}`,
-          liveFetchInit({
-            signal: controller.signal,
-          }),
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (cancelled) return;
-        const s = data.summary || {};
-        setStatsData({
-          activeLeads: s.total ?? 0,
-          hotDeals: s.hot ?? 0,
-          liveSignals: s.total_signals ?? 0,
-          warmPipeline: s.warm ?? 0,
-          cold: s.cold ?? 0
-        });
-        setLeadsByIndustry(s.by_industry ?? {});
-        // Preserve API order: recency-ranked + daily rotation (3 hot + 2 warm); do not re-sort by score
-        setTierLegend(data.tierLegend || null);
-        setScoringSystem(data.scoringSystem || null);
-        setHotLeads(Array.isArray(data.hotLeads) ? data.hotLeads : []);
+        let data;
+        if (isPoll) {
+          data = await runSingleAttempt();
+        } else {
+          let lastErr;
+          for (let attempt = 0; attempt < INITIAL_RETRIES; attempt++) {
+            if (cancelled) return;
+            try {
+              data = await runSingleAttempt();
+              lastErr = null;
+              break;
+            } catch (err) {
+              lastErr = err;
+              const retryable =
+                err?.name === 'AbortError' ||
+                (typeof err?.message === 'string' && /failed to fetch|network|load/i.test(err.message));
+              if (attempt < INITIAL_RETRIES - 1 && retryable) {
+                await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+                continue;
+              }
+              throw err;
+            }
+          }
+        }
+
+        if (cancelled || data === undefined) return;
+        applyHomepagePayload(data);
       } catch (err) {
-        if (err?.name !== 'AbortError' && !cancelled) {
-          console.error('Error fetching homepage data:', err);
+        if (cancelled) return;
+        if (err?.name === 'AbortError') {
+          if (!isPoll) {
+            console.error('Homepage fetch timed out:', err);
+            setHomepageError('Request timed out. Check your connection and try again.');
+            setHotLeads([]);
+            setScoringSystem(null);
+          }
+          return;
+        }
+        console.error('Error fetching homepage data:', err);
+        if (!isPoll) {
+          setHomepageError('Could not load spotlight deals. Tap Retry or try again in a moment.');
           setHotLeads([]);
           setScoringSystem(null);
         }
       } finally {
-        clearTimeout(timeout);
         if (!cancelled) {
           setStatsLoaded(true);
           homepageFetchCompletedRef.current = true;
@@ -271,16 +338,16 @@ export default function Signals() {
         }
       }
     };
-    fetchHomepage();
-    // Align with server homepage cache (~2 min) + minute-based spotlight rotation
-    const interval = setInterval(fetchHomepage, 120000);
+
+    fetchHomepage(false);
+    const interval = setInterval(() => {
+      fetchHomepage(true);
+    }, 120000);
     return () => {
       cancelled = true;
-      controller.abort();
-      clearTimeout(timeout);
       clearInterval(interval);
     };
-  }, []);
+  }, [homepageRetryTick]);
 
   // Use summary for counts (no full leads fetch)
   const hotCount = statsData.hotDeals ?? 0;
@@ -839,7 +906,7 @@ export default function Signals() {
         </div>
 
         {/* Daily Spotlight Deals */}
-        <div id="leads" className="max-w-7xl mx-auto px-6 pt-10 pb-10 md:pb-12 space-y-8">
+        <div id="leads" className="max-w-7xl mx-auto px-6 pt-10 pb-10 md:pb-12 space-y-8 scroll-mt-24">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-1 h-4 rounded-full bg-orange-500" />
@@ -883,6 +950,17 @@ export default function Signals() {
             <div className="text-center py-12">
               <div className="inline-block w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
               <p className="text-neutral-400 mt-4">Loading spotlight deals...</p>
+            </div>
+          ) : homepageError && topHotDeals.length === 0 ? (
+            <div className="text-center py-12 space-y-4">
+              <p className="text-neutral-400 max-w-md mx-auto">{homepageError}</p>
+              <button
+                type="button"
+                onClick={() => setHomepageRetryTick((t) => t + 1)}
+                className="inline-flex items-center justify-center rounded-lg border border-emerald-600/50 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-300 hover:bg-emerald-900/40 hover:border-emerald-500/60 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : topHotDeals.length === 0 ? (
             <div className="text-center py-12">

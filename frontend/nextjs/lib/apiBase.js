@@ -49,6 +49,7 @@ export function liveFetchInit(overrides = {}) {
   const { headers: hdr, ...rest } = overrides;
   return {
     cache: 'no-store',
+    mode: 'cors',
     ...rest,
     headers: { 'Cache-Control': 'no-cache', ...(hdr || {}) },
   };
