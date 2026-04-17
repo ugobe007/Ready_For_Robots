@@ -40,8 +40,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 _root = Path(__file__).resolve().parents[1]
-load_dotenv(_root / ".env")
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload

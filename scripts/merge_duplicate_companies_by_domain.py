@@ -22,8 +22,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 _root = Path(__file__).resolve().parents[1]
-load_dotenv(_root / ".env")
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
 
 from app.database import SessionLocal
 from app.services.company_merge import merge_duplicate_companies_by_domain

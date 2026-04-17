@@ -8,10 +8,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import NullPool
 
-# Load repo-root .env, then Next.js .env.local (override) — same order as migrations/env.py
+# Next.js `.env.local` first, then repo-root `.env` with override so `DATABASE_URL`
+# and other backend secrets in `.env` are not replaced by stale copies in `.env.local`.
+# (Same order as migrations/env.py and DB scripts.)
 _root = Path(__file__).resolve().parents[1]
-load_dotenv(_root / ".env")
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite:///./ready_for_robots.db")
 _raw_url = (_raw_url or "").strip().strip('"').strip("'")

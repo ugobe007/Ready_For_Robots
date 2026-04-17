@@ -21,8 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
 
 _root = Path(__file__).resolve().parents[1]
-load_dotenv(_root / ".env")
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
 
 from app.database import SessionLocal
 from app.models.company import Company

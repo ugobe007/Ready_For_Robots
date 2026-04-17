@@ -9,9 +9,11 @@ Usage:
   python3 scripts/purge_junk_leads.py --delete --limit 500  # delete in batches
 
 Run from the repo root with the venv active:
-  cd /path/to/Ready_For_Robots
+  cd /path/to/your/Ready_For_Robots
   source venv/bin/activate
   python3 scripts/purge_junk_leads.py
+
+Requires a valid ``DATABASE_URL`` in repo-root ``.env`` (see ``.env.example``).
 """
 import sys
 import os
@@ -25,8 +27,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 _root = Path(__file__).resolve().parents[1]
-load_dotenv(_root / ".env")
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
 
 from app.database import SessionLocal
 from app.models.company import Company

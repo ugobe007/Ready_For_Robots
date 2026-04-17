@@ -11,8 +11,8 @@ if _src not in sys.path:
     sys.path.insert(0, _src)
 
 # Same load order as app/database.py so Alembic uses the same DATABASE_URL as the app.
-load_dotenv(Path(_src) / ".env")
-load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local", override=True)
+load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local")
+load_dotenv(Path(_src) / ".env", override=True)
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
