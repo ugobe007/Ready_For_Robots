@@ -46,6 +46,7 @@ from app.services.news_publications import (
     publication_matches_rss_source,
     strip_trailing_news_attribution,
 )
+from app.services.industry_inference import INDUSTRY_KEYWORDS
 from app.services.lead_filter import is_junk
 from app.services.signal_classifier import classify_signals_with_fallback
 
@@ -636,73 +637,7 @@ SIGNAL_PATTERNS = {
     ],
 }
 
-# ── Industry Detection Keywords ───────────────────────────────────────────────
-INDUSTRY_KEYWORDS = {
-    "Logistics": [
-        "warehouse", "logistics", "fulfillment", "distribution", "supply chain",
-        "3pl", "cold storage", "freight", "shipping", "delivery"
-    ],
-    "Hospitality": [
-        "hotel", "resort", "hospitality", "lodging", "motel", "inn",
-        "housekeeping", "guest services", "property management"
-    ],
-    "Food Service": [
-        "restaurant", "food service", "kitchen", "dining", "qsr",
-        "fast food", "cafe", "chain restaurant", "franchise"
-    ],
-    "Healthcare": [
-        "hospital", "healthcare", "health system", "clinic", "patient",
-        "senior living", "nursing home", "assisted living", "medical center"
-    ],
-    "Medical Technology": [
-        "laboratory", "lab automation", "clinical lab", "diagnostics lab",
-        "pharmacy", "hospital pharmacy", "surgical robot", "surgical suite",
-        "patient care", "specimen processing", "pathology", "iv compounding",
-        "medication dispensing", "robotic surgery", "da vinci", "telepresence"
-    ],
-    "Food Processing & Manufacturing": [
-        "food processing", "food manufacturing", "meat processing",
-        "bakery", "produce processing", "food packaging", "food safety",
-        "food sorting", "food preparation", "cooking automation",
-        "robotic chef", "robotic kitchen"
-    ],
-    "Datacenters": [
-        "datacenter", "data center", "server", "hyperscale", "cloud infrastructure",
-        "colocation", "server farm", "datacenter operations", "datacenter maintenance"
-    ],
-    "Airports & Aviation": [
-        "airport", "terminal", "aviation", "baggage handling", "boarding gate",
-        "airport operations", "airport security", "airport shuttle"
-    ],
-    "Retail": [
-        "retail", "store", "shopping", "e-commerce", "grocery", "supermarket",
-        "shelf scanning", "inventory robot", "click-and-collect", "micro-fulfillment",
-        "retail fulfillment", "retail automation", "cashier", "checkout"
-    ],
-    "Apparel & Textiles": [
-        "garment", "apparel", "clothing", "fashion", "textile",
-        "sewing", "fabric cutting", "apparel factory", "apparel warehouse",
-        "clothing distribution", "fashion logistics", "garment sorting"
-    ],
-    "Casinos & Gaming": [
-        "casino", "gaming", "resort casino", "slot", "table games",
-        "integrated resort", "tribal gaming"
-    ],
-    "Cruise Lines": [
-        "cruise", "cruise line", "cruise ship", "vessel", "onboard"
-    ],
-    "Theme Parks & Entertainment": [
-        "theme park", "amusement park", "roller coaster", "attractions",
-        "entertainment venue", "water park"
-    ],
-    "Real Estate & Facilities": [
-        "facilities management", "property management", "commercial real estate",
-        "building services", "janitorial", "facility services"
-    ],
-    "Automotive Dealerships": [
-        "dealership", "auto dealer", "car dealer", "automotive retail"
-    ],
-}
+# Industry keyword scoring: single source of truth in app.services.industry_inference.
 
 # ── Noise Filter (exclude generic terms, headline fragments, news orgs) ───────
 NOISE_WORDS = {

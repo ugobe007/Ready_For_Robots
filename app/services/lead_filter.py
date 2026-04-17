@@ -150,6 +150,14 @@ _JUNK_SUBSTRINGS = [
     "chaos to consistency",
     "supply chain automation leaders",
     "hub in industry first",
+    "ranked by",
+    "demonstrates industry",
+    "workflow orchestration",
+    "strategic collaboration",
+    "market size,",
+    "robotics market size",
+    "what bubble",
+    "-- designed",
     # PR / news headline: "[Brand] Strengthens …" (not a legal entity name)
     "strengthens position",
     "strengthens presence",
@@ -658,6 +666,8 @@ _JUNK_EXACT = frozenset({
     "airport",
     "development",
     "equipment",
+    "football",
+    "smoothies",
     # Generic tech headline noun pair (not a company name by itself)
     "ai agents",
 })
@@ -715,6 +725,10 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
     # e.g., "Rockwell Automation Stock ISIN US77463M1053"
     if re.search(r"\b[A-Z]{2}[A-Z0-9]{10}\b", stripped):
         return True, "ISIN bond/stock identifier embedded in name"
+
+    # Article titles / listicles scraped as company.name — real buyer legal names here are short.
+    if len(stripped) >= 68:
+        return True, "name too long (likely article headline, not a company)"
 
     return False, ""
 

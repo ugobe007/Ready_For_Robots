@@ -98,11 +98,18 @@ if os.getenv("FLY_APP_NAME") and DATABASE_URL and "postgresql" in DATABASE_URL:
         )
 
 
+def _session_pooler_warning_suppressed() -> bool:
+    """Set SUPABASE_SESSION_POOLER=1 when you intentionally use session mode (:5432 pooler)."""
+    return os.getenv("SUPABASE_SESSION_POOLER", "").strip().lower() in ("1", "true", "yes")
+
+
 def _postgres_engine_kwargs(url: str) -> dict:
     """
-    Supabase *session* pooler (pooler.*.supabase.com:5432) caps concurrent clients per project
-    (FATAL: MaxClientsInSessionMode). Multiple Fly machines × a large SQLAlchemy pool exhausts it.
-    Prefer Transaction pooler (:6543, user postgres.PROJECT_REF) for app servers.
+    Supabase session pooler (pooler.*.supabase.com:5432) caps concurrent clients per project
+    (FATAL: MaxClientsInSessionMode). We use NullPool so connections are not hoarded idle.
+
+    Transaction mode (:6543) allows more concurrent clients; use it if you outgrow session slots.
+    Set SUPABASE_SESSION_POOLER=1 to silence the startup note when session mode is deliberate.
     """
     base = {
         "pool_timeout": 30,
@@ -115,12 +122,14 @@ def _postgres_engine_kwargs(url: str) -> dict:
     host = (pr.hostname or "").lower()
     port = pr.port or 5432
     if "pooler.supabase.com" in host and port == 5432:
-        print(
-            "WARNING: DATABASE_URL uses Supabase Session pooler (:5432). Slots are very limited; "
-            "switch to Transaction pooler (port 6543, user postgres.PROJECT_REF) in "
-            "Supabase → Database → Connection string → Transaction mode to avoid 500s under load.",
-            file=sys.stderr,
-        )
+        if not _session_pooler_warning_suppressed():
+            print(
+                "NOTE: DATABASE_URL uses Supabase Session pooler (:5432). Slots are limited project-wide; "
+                "if you see MaxClientsInSessionMode / 500s under load, switch to Transaction pooler "
+                "(port 6543, user postgres.PROJECT_REF) or set SUPABASE_SESSION_POOLER=1 to silence this. "
+                "See Supabase → Database → Connection string.",
+                file=sys.stderr,
+            )
         # Session pooler caps *all* clients project-wide; a QueuePool holds idle conns and exhausts it.
         # NullPool opens a connection per request and closes when the session ends (no idle hoarding).
         return {"poolclass": NullPool, "pool_pre_ping": True}

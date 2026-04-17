@@ -50,7 +50,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Logistics": [
         "warehouse", "logistics", "fulfillment", "distribution", "supply chain",
         "3pl", "third party logistics", "fulfillment center", "fulfillment centre",
-        "cold storage", "freight", "shipping", "delivery"
+        "cold storage", "freight", "shipping",
+        # Omit bare "delivery" — matches almost any supply-chain headline and pollutes other verticals.
     ],
     # Do not use generic "property management" — STR/Airbnb robot deployments often mention it
     # and mislabel automotive OEMs (e.g. Faraday Future delivering robots to vacation rentals).
@@ -108,18 +109,22 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "multi-sku", "rapid changeover", "high mix low volume",
     ],
     "Datacenters": [
-        "datacenter", "data center", "server", "hyperscale", "cloud infrastructure",
-        "colocation", "server farm", "datacenter operations", "datacenter maintenance"
+        "datacenter", "data center", "hyperscale", "cloud infrastructure",
+        "colocation", "server farm", "datacenter operations", "datacenter maintenance",
+        # Omit bare "server" — substring-matches "food server", unrelated IT mentions.
     ],
     "Airports & Aviation": [
         "airport", "terminal", "aviation", "baggage handling", "boarding gate",
         "airport operations", "airport security", "airport shuttle",
-        "airlines", "airline", "metro", "transit", "transportation", "lax station"
+        "airlines", "airline",
+        # Omit generic "metro", "transit", "transportation" — label city-mobility and unrelated articles.
     ],
     "Retail": [
-        "retail", "store", "shopping", "e-commerce", "grocery", "supermarket",
+        "retail", "shopping", "e-commerce", "grocery", "supermarket",
         "shelf scanning", "inventory robot", "click-and-collect", "micro-fulfillment",
-        "retail fulfillment", "retail automation", "cashier", "checkout"
+        "retail fulfillment", "retail automation", "cashier", "checkout",
+        "brick and mortar", "big box",
+        # Omit bare "store" — substring false positives ("restore", "bookstore" as noise, etc.).
     ],
     "Apparel & Textiles": [
         "garment", "apparel", "clothing", "fashion", "textile",
@@ -135,13 +140,23 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     ],
     "Theme Parks & Entertainment": [
         "theme park", "amusement park", "roller coaster", "attractions",
-        "entertainment venue", "water park", "six flags", "ski resort", "stevens pass"
+        "entertainment venue", "water park", "six flags", "ski resort", "stevens pass",
+        # Major operators & resorts (prefer phrases — bare "disney" hits non-park news)
+        "walt disney world", "disneyland", "disney parks", "disney resort",
+        "universal studios", "universal orlando", "universal hollywood", "universal beijing",
+        "seaworld", "sea world", "legoland", "cedar point", "busch gardens",
+        "knott's berry farm", "hersheypark", "cedar fair", "merlin entertainments",
+        "madame tussauds", "safari park", "zoo exhibit", "public aquarium",
+        # Venue & experience types
+        "family entertainment center", "indoor amusement", "dark ride", "haunted attraction",
+        "seasonal park", "fairground", "carnival ride", "observation wheel",
     ],
     "Real Estate & Facilities": [
         "facilities management", "property management", "commercial real estate",
         "building services", "janitorial", "facility services",
         "corporate office", "corporate offices", "office building", "headquarters",
-        "enterprise", "office campus", "office tower", "corporate campus"
+        "office campus", "office tower", "corporate campus",
+        # Omit bare "enterprise" — matches generic B2B / software copy unrelated to facilities.
     ],
     "Automotive Dealerships": [
         "dealership", "auto dealer", "car dealer", "automotive retail"

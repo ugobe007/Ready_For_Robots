@@ -9,10 +9,13 @@ Query params:
   category  str    preset category key (see CATEGORY_KEYWORDS below)
   limit     int    default 30  (max 100)
 """
+from __future__ import annotations
+
+import re
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
-from typing import Optional, List
+from typing import Dict, FrozenSet, List, Optional, Tuple
 
 from app.database import get_db
 from app.models.company import Company
@@ -237,6 +240,531 @@ CATEGORY_ALIASES: dict = {
     "robot_automation": "automation_investment",
 }
 
+# When the user clearly asks for a vertical (e.g. "hotel"), we still ILIKE-match signal text,
+# which can hit incidental mentions on high-scoring leads. Bucket sort pulls aligned industries
+# ahead of obvious mismatches before applying overall_score.
+#
+# Order matters: first regex match wins. Put specific phrases (food processing, medtech)
+# before broad ones (food service, hospitality).
+_QUERY_VERTICAL_PATTERNS: Tuple[Tuple[re.Pattern, str], ...] = (
+    (
+        re.compile(
+            r"\b(surgical\s+robot|lab\s+automation|medical\s+device|diagnostics\s+lab|"
+            r"robotic\s+surgery|pharmacy\s+automation|medical\s+technology)\b",
+            re.I,
+        ),
+        "Medical Technology",
+    ),
+    (
+        re.compile(
+            r"\b(hospital|hospitals|health\s*system|healthcare|health\s+care|clinic|clinics|"
+            r"patient\s+care|senior\s+living|nursing\s+home|assisted\s+living|medical\s+center)\b",
+            re.I,
+        ),
+        "Healthcare",
+    ),
+    (
+        re.compile(
+            r"\b(food\s+processing|meat\s+processing|food\s+plant|food\s+manufacturing|"
+            r"poultry\s+processing|food\s+factory|slaughter|bottling\s+plant|brewery|brewing)\b",
+            re.I,
+        ),
+        "Food Processing & Manufacturing",
+    ),
+    (
+        re.compile(
+            r"\b(restaurant|restaurants|qsr|fast\s+food|dining\s+chain|food\s+service|"
+            r"cafe|chain\s+restaurant|franchise\s+restaurant)\b",
+            re.I,
+        ),
+        "Food Service",
+    ),
+    (
+        re.compile(
+            r"\b(hotel|hotels|hospitality|resort|resorts|lodging|motel|motels|"
+            r"housekeeping\s+staff|guest\s+services)\b",
+            re.I,
+        ),
+        "Hospitality",
+    ),
+    (
+        re.compile(
+            r"\b(warehouse|warehouses|logistics|fulfillment\s+center|3pl|distribution\s+center|"
+            r"supply\s+chain|cold\s+storage|cross-dock)\b",
+            re.I,
+        ),
+        "Logistics",
+    ),
+    (
+        re.compile(
+            r"\b(retail|grocery|supermarket|e-commerce|ecommerce|micro-fulfillment|"
+            r"planogram|BOPIS|click-and-collect|omnichannel|in-store\s+robot)\b",
+            re.I,
+        ),
+        "Retail",
+    ),
+    (
+        re.compile(
+            r"\b(cpg|fmcg|consumer\s+packaged\s+goods|packaged\s+food\s+brand)\b",
+            re.I,
+        ),
+        "CPG & Consumer Goods",
+    ),
+    (
+        re.compile(
+            r"\b(automotive|automaker|vehicle\s+manufacturer|assembly\s+line|"
+            r"industrial\s+automation|semiconductor\s+fabrication|oem\s+production)\b",
+            re.I,
+        ),
+        "Automotive & Manufacturing",
+    ),
+    (
+        re.compile(
+            r"\b(airport|airports|airline|airlines|aviation|baggage\s+handling|"
+            r"boarding\s+gate|terminal\s+operations)\b",
+            re.I,
+        ),
+        "Airports & Aviation",
+    ),
+    (
+        re.compile(
+            r"\b(datacenter|data\s+center|hyperscale|colocation|\bcolo\b|server\s+farm|"
+            r"cloud\s+infrastructure)\b",
+            re.I,
+        ),
+        "Datacenters",
+    ),
+    (
+        re.compile(
+            r"\b(casino|casinos|resort\s+casino|tribal\s+gaming|table\s+games)\b",
+            re.I,
+        ),
+        "Casinos & Gaming",
+    ),
+    (
+        re.compile(
+            r"\b(cruise\s+ship|cruise\s+line|cruise\s+lines|onboard\s+operations)\b",
+            re.I,
+        ),
+        "Cruise Lines",
+    ),
+    (
+        re.compile(
+            r"\b(theme\s+park|amusement\s+park|water\s+park|roller\s+coaster)\b",
+            re.I,
+        ),
+        "Theme Parks & Entertainment",
+    ),
+    (
+        re.compile(
+            r"\b(facilities\s+management|janitorial|commercial\s+real\s+estate|"
+            r"building\s+services|facility\s+services)\b",
+            re.I,
+        ),
+        "Real Estate & Facilities",
+    ),
+    (
+        re.compile(
+            r"\b(contract\s+manufacturer|contract\s+manufacturing|toll\s+manufacturer|"
+            r"toll\s+packaging|\bcmo\b|\bcdmo\b|white\s+label\s+manufacturing)\b",
+            re.I,
+        ),
+        "Contract Manufacturing",
+    ),
+    (
+        re.compile(
+            r"\b(apparel|garment\s+factory|textile\s+mill|fashion\s+logistics|"
+            r"fabric\s+cutting)\b",
+            re.I,
+        ),
+        "Apparel & Textiles",
+    ),
+    (
+        re.compile(
+            r"\b(car\s+dealer|auto\s+dealer|automotive\s+retail|dealership)\b",
+            re.I,
+        ),
+        "Automotive Dealerships",
+    ),
+    (
+        re.compile(
+            r"\b(commercial\s+laundry|linen\s+service|industrial\s+laundry|"
+            r"uniform\s+cleaning)\b",
+            re.I,
+        ),
+        "Laundry & Linen Services",
+    ),
+    (
+        re.compile(
+            r"\b(car\s+wash|carwash|tunnel\s+wash|express\s+wash)\b",
+            re.I,
+        ),
+        "Car Wash",
+    ),
+)
+
+# Keys = intent string from _QUERY_VERTICAL_PATTERNS (must match INDUSTRY_KEYWORDS / inference labels).
+_MEDIA_DEMOTE: FrozenSet[str] = frozenset({"Media & Publishing"})
+
+SEARCH_VERTICAL_RULES: Dict[str, Dict[str, object]] = {
+    "Medical Technology": {
+        "strong": frozenset({"Medical Technology"}),
+        "adjacent": frozenset({"Healthcare"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Hospitality",
+                "Logistics",
+                "Food Service",
+                "Food Processing & Manufacturing",
+                "CPG & Consumer Goods",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("medical technology", "medtech", "diagnostic"),
+    },
+    "Healthcare": {
+        "strong": frozenset({"Healthcare", "Medical Technology"}),
+        "adjacent": frozenset({"Food Service"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Logistics",
+                "CPG & Consumer Goods",
+                "Automotive & Manufacturing",
+                "Hospitality",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": (
+            "hospital",
+            "healthcare",
+            "medical center",
+            "clinic",
+            "senior living",
+            "nursing home",
+            "health system",
+        ),
+    },
+    "Food Processing & Manufacturing": {
+        "strong": frozenset({"Food Processing & Manufacturing"}),
+        "adjacent": frozenset({"CPG & Consumer Goods", "Contract Manufacturing", "Food Service"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Hospitality",
+                "Healthcare",
+                "Logistics",
+                "Datacenters",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": ("food processing", "meat processing", "food plant"),
+    },
+    "Food Service": {
+        "strong": frozenset({"Food Service"}),
+        "adjacent": frozenset({"Hospitality", "Retail", "Food Processing & Manufacturing"}),
+        "demote": frozenset(
+            {
+                "Logistics",
+                "Medical Technology",
+                "Datacenters",
+                "Automotive & Manufacturing",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": ("restaurant", "food service", "qsr"),
+    },
+    "Hospitality": {
+        "strong": frozenset({"Hospitality"}),
+        "adjacent": frozenset(
+            {"Casinos & Gaming", "Cruise Lines", "Theme Parks & Entertainment", "Food Service"}
+        ),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Logistics",
+                "CPG & Consumer Goods",
+                "Apparel & Textiles",
+                "Automotive & Manufacturing",
+                "Medical Technology",
+                "Healthcare",
+                "Food Processing & Manufacturing",
+                "Datacenters",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": ("hospitality", "hotel", "resort", "lodging"),
+    },
+    "Logistics": {
+        "strong": frozenset({"Logistics"}),
+        "adjacent": frozenset({"Retail", "CPG & Consumer Goods", "Airports & Aviation", "Apparel & Textiles"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Healthcare",
+                "Food Service",
+                "Medical Technology",
+                "Casinos & Gaming",
+                "Media & Publishing",
+                "Real Estate & Facilities",
+            }
+        ),
+        "raw_strong_substrings": ("logistics", "warehouse", "fulfillment", "3pl"),
+    },
+    "Retail": {
+        "strong": frozenset({"Retail", "Automotive Dealerships"}),
+        "adjacent": frozenset({"CPG & Consumer Goods", "Logistics", "Food Service"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Healthcare",
+                "Medical Technology",
+                "Food Processing & Manufacturing",
+                "Datacenters",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("retail", "grocery", "supermarket", "e-commerce"),
+    },
+    "CPG & Consumer Goods": {
+        "strong": frozenset({"CPG & Consumer Goods"}),
+        "adjacent": frozenset({"Retail", "Food Processing & Manufacturing", "Logistics", "Contract Manufacturing"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Healthcare",
+                "Medical Technology",
+                "Airports & Aviation",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("cpg", "consumer packaged", "fmcg"),
+    },
+    "Automotive & Manufacturing": {
+        "strong": frozenset({"Automotive & Manufacturing"}),
+        "adjacent": frozenset({"Contract Manufacturing", "Logistics", "Medical Technology"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Retail",
+                "Food Service",
+                "Healthcare",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("automotive", "manufacturing", "assembly"),
+    },
+    "Airports & Aviation": {
+        "strong": frozenset({"Airports & Aviation"}),
+        "adjacent": frozenset({"Logistics", "Retail"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Healthcare",
+                "Food Processing & Manufacturing",
+                "Casinos & Gaming",
+                "Media & Publishing",
+                "Datacenters",
+            }
+        ),
+        "raw_strong_substrings": ("airport", "aviation", "airline"),
+    },
+    "Datacenters": {
+        "strong": frozenset({"Datacenters"}),
+        "adjacent": frozenset({"Automotive & Manufacturing"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Retail",
+                "Food Service",
+                "Healthcare",
+                "Logistics",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("datacenter", "data center", "hyperscale"),
+    },
+    "Casinos & Gaming": {
+        "strong": frozenset({"Casinos & Gaming"}),
+        "adjacent": frozenset({"Hospitality", "Retail"}),
+        "demote": frozenset(
+            {
+                "Healthcare",
+                "Medical Technology",
+                "Logistics",
+                "Datacenters",
+                "Food Processing & Manufacturing",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("casino", "gaming"),
+    },
+    "Cruise Lines": {
+        "strong": frozenset({"Cruise Lines"}),
+        "adjacent": frozenset({"Hospitality", "Logistics"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Healthcare",
+                "Datacenters",
+                "Automotive & Manufacturing",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("cruise",),
+    },
+    "Theme Parks & Entertainment": {
+        "strong": frozenset({"Theme Parks & Entertainment"}),
+        "adjacent": frozenset({"Hospitality", "Retail"}),
+        "demote": frozenset(
+            {
+                "Healthcare",
+                "Logistics",
+                "Datacenters",
+                "CPG & Consumer Goods",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("theme park", "amusement"),
+    },
+    "Real Estate & Facilities": {
+        "strong": frozenset({"Real Estate & Facilities"}),
+        "adjacent": frozenset({"Hospitality", "Logistics"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Healthcare",
+                "Medical Technology",
+                "Food Processing & Manufacturing",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("facilities management", "janitorial", "property management"),
+    },
+    "Contract Manufacturing": {
+        "strong": frozenset({"Contract Manufacturing"}),
+        "adjacent": frozenset({"CPG & Consumer Goods", "Food Processing & Manufacturing", "Medical Technology"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Retail",
+                "Casinos & Gaming",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": ("contract manufacturing", "contract manufacturer", "cmo", "cdmo"),
+    },
+    "Apparel & Textiles": {
+        "strong": frozenset({"Apparel & Textiles"}),
+        "adjacent": frozenset({"Retail", "Logistics"}),
+        "demote": frozenset(
+            {
+                "Healthcare",
+                "Datacenters",
+                "Food Service",
+                "Casinos & Gaming",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("apparel", "textile", "garment"),
+    },
+    "Automotive Dealerships": {
+        "strong": frozenset({"Automotive Dealerships", "Retail"}),
+        "adjacent": frozenset({"Automotive & Manufacturing"}),
+        "demote": frozenset(
+            {
+                "Hospitality",
+                "Healthcare",
+                "Food Processing & Manufacturing",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("dealership", "auto dealer"),
+    },
+    "Laundry & Linen Services": {
+        "strong": frozenset({"Laundry & Linen Services"}),
+        "adjacent": frozenset({"Healthcare", "Hospitality", "Real Estate & Facilities"}),
+        "demote": frozenset(
+            {
+                "Retail",
+                "Datacenters",
+                "Automotive & Manufacturing",
+                "Media & Publishing",
+                "Airports & Aviation",
+            }
+        ),
+        "raw_strong_substrings": ("laundry", "linen"),
+    },
+    "Car Wash": {
+        "strong": frozenset({"Car Wash"}),
+        "adjacent": frozenset({"Retail", "Automotive Dealerships"}),
+        "demote": frozenset(
+            {
+                "Healthcare",
+                "Hospitality",
+                "Datacenters",
+                "Food Service",
+                "Media & Publishing",
+            }
+        ),
+        "raw_strong_substrings": ("car wash", "carwash"),
+    },
+}
+
+
+def _detect_query_vertical(free_text: Optional[str], keywords: List[str]) -> Optional[str]:
+    """If search text clearly targets one vertical, return canonical industry name."""
+    blob = f" {free_text or ''} {' '.join(keywords)} "
+    for rx, vertical in _QUERY_VERTICAL_PATTERNS:
+        if rx.search(blob):
+            return vertical
+    return None
+
+
+def _vertical_alignment_bucket(
+    effective_industry: str,
+    stored_industry: Optional[str],
+    intent: Optional[str],
+) -> int:
+    """
+    Higher = rank earlier (with reverse sort). Used only when intent is set.
+    2 = strong match, 1 = adjacent vertical, 0 = unknown/neutral, -1 = likely off-topic.
+    """
+    if not intent:
+        return 0
+    eff = (effective_industry or "").strip()
+    raw = (stored_industry or "").strip().lower()
+    rules = SEARCH_VERTICAL_RULES.get(intent)
+    if not rules:
+        return 0
+
+    strong: FrozenSet[str] = rules["strong"]  # type: ignore[assignment]
+    adjacent: FrozenSet[str] = rules["adjacent"]  # type: ignore[assignment]
+    demote: FrozenSet[str] = rules["demote"]  # type: ignore[assignment]
+    raw_subs: Tuple[str, ...] = tuple(rules.get("raw_strong_substrings") or ())  # type: ignore[arg-type]
+
+    if eff in strong:
+        return 2
+    for sub in raw_subs:
+        if sub and sub in raw:
+            return 2
+    if eff in adjacent:
+        return 1
+    if eff in demote or eff in _MEDIA_DEMOTE:
+        return -1
+    return 0
+
 
 def _run_keyword_search(
     db: Session,
@@ -311,6 +839,7 @@ def _run_keyword_search(
         .all()
     )
 
+    v_intent = _detect_query_vertical(free_text, keywords)
     results = []
     for c in companies:
         ps = pick_primary_score(c.scores)
@@ -327,6 +856,7 @@ def _run_keyword_search(
         raw_stored = (c.industry or "").strip()
         ov = ind if ind != raw_stored else None
         automation_profile = get_automation_profile_for_response(c, industry_override=ov)
+        v_bucket = _vertical_alignment_bucket(ind, c.industry, v_intent)
         results.append(
             {
                 "id": c.id,
@@ -341,10 +871,18 @@ def _run_keyword_search(
                 "match_source": company_match_source.get(c.id, "signal"),
                 "priority_tier": pri.tier,
                 "automation_profile": automation_profile,
+                "_v_bucket": v_bucket,
             }
         )
 
-    results.sort(key=lambda x: x["overall_score"], reverse=True)
+    # Relevance: when the query implies a vertical, rank aligned industries before
+    # high-scoring incidental matches (e.g. "hotel" mentioned in retail news).
+    if v_intent:
+        results.sort(key=lambda x: (x["_v_bucket"], x["overall_score"]), reverse=True)
+    else:
+        results.sort(key=lambda x: x["overall_score"], reverse=True)
+    for r in results:
+        r.pop("_v_bucket", None)
     return results[:limit]
 
 

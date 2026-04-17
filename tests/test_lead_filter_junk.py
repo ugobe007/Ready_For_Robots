@@ -42,6 +42,13 @@ def test_real_company_names_not_junk(name):
     assert is_junk(name)[0] is False
 
 
+def test_scraped_article_title_too_long_is_junk():
+    long_headline = (
+        "Top robotics and automation companies ranked by financial performance in Q4"
+    )
+    assert is_junk(long_headline)[0] is True
+
+
 def test_buyer_name_containing_robotics_vendor_token_not_auto_junk():
     """Prefix-only vendor match: do not block arbitrary names ending with a vendor phrase."""
     assert is_junk("Acme Bear Robotics Partnership")[0] is False

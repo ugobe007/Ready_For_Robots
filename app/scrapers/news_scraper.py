@@ -37,6 +37,7 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
+from app.services.industry_inference import infer_industry_from_text
 from app.services.ontology import CONCEPTS
 
 logger = logging.getLogger(__name__)
@@ -516,7 +517,7 @@ class NewsScraper:
         from app.services.headline_parser import extract_actor
         actor = extract_actor(text)
         if actor:
-            industry = self._infer_industry_from_text(text)
+            industry = infer_industry_from_text(text)
             return actor, industry
 
         # 4. Regex fallback: "Company Name announces/invests/opens ..."
@@ -524,30 +525,9 @@ class NewsScraper:
         if match:
             extracted = match.group(1).strip()
             if len(extracted) > 2 and extracted.lower() not in ("the", "a", "an", "this"):
-                industry = self._infer_industry_from_text(text)
+                industry = infer_industry_from_text(text)
                 return extracted, industry
         return None, None
-
-    def _infer_industry_from_text(self, text: str) -> str:
-        """Infer industry from article keywords."""
-        lower = text.lower()
-        if any(w in lower for w in ["hotel", "resort", "hospitality", "housekeep", "lodging", "motel", "inn"]):
-            return "Hospitality"
-        if any(w in lower for w in ["restaurant", "food service", "kitchen", "dining", "qsr", "fast food", "cafe"]):
-            return "Food Service"
-        if any(w in lower for w in ["hospital", "health system", "healthcare", "clinic", "patient", "senior living", "nursing"]):
-            return "Healthcare"
-        if any(w in lower for w in ["warehouse", "logistics", "fulfillment", "distribution", "supply chain", "cold storage", "3pl"]):
-            return "Logistics"
-        if any(w in lower for w in ["casino", "gaming", "resort casino", "slot", "table game", "integrated resort"]):
-            return "Casinos & Gaming"
-        if any(w in lower for w in ["cruise", "cruise ship", "cruise line", "onboard", "vessel"]):
-            return "Cruise Lines"
-        if any(w in lower for w in ["theme park", "amusement park", "theme park", "roller coaster", "disney", "universal studios", "sea world"]):
-            return "Theme Parks & Entertainment"
-        if any(w in lower for w in ["facilities management", "property management", "commercial real estate", "building services", "janitorial"]):
-            return "Real Estate & Facilities"
-        return "Unknown"
 
     # ── DB persistence ────────────────────────────────────────────────────────
 

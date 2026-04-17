@@ -4,7 +4,8 @@ Purge junk company records from the database.
 
 Usage:
   python3 scripts/purge_junk_leads.py            # dry run — preview only
-  python3 scripts/purge_junk_leads.py --delete   # actually delete junk
+  python3 scripts/purge_junk_leads.py --delete   # actually delete junk (prompts for yes)
+  python3 scripts/purge_junk_leads.py --delete --yes  # non-interactive (CI / automation)
   python3 scripts/purge_junk_leads.py --delete --limit 500  # delete in batches
 
 Run from the repo root with the venv active:
@@ -38,6 +39,8 @@ def main():
                         help="Actually delete. Default is dry-run (preview only).")
     parser.add_argument("--limit", type=int, default=None,
                         help="Max records to delete in one run (safety cap).")
+    parser.add_argument("--yes", action="store_true",
+                        help="With --delete, skip confirmation prompt (use with care).")
     args = parser.parse_args()
 
     db = SessionLocal()
@@ -82,10 +85,11 @@ def main():
             to_delete = junk[:args.limit]
             print(f"\n⚠  limit set — deleting {len(to_delete)} of {len(junk)} junk records")
 
-        confirm = input(f"\nDelete {len(to_delete)} junk companies + their signals? [yes/no]: ")
-        if confirm.strip().lower() != "yes":
-            print("Aborted — no changes made.")
-            return
+        if not args.yes:
+            confirm = input(f"\nDelete {len(to_delete)} junk companies + their signals? [yes/no]: ")
+            if confirm.strip().lower() != "yes":
+                print("Aborted — no changes made.")
+                return
 
         deleted = 0
         for c, _ in to_delete:
