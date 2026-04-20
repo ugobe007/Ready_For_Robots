@@ -182,7 +182,7 @@ _COMMON_FIRST_NAMES: frozenset = frozenset({
     "mary", "patricia", "jennifer", "linda", "barbara", "elizabeth", "susan",
     "jessica", "sarah", "karen", "lisa", "nancy", "betty", "margaret",
     "sandra", "ashley", "emily", "donna", "michelle", "carol", "amanda",
-    "melissa", "deborah", "stephanie", "rebecca", "sharon", "laura", "cynthia",
+    "melissa", "melonie", "melony", "deborah", "stephanie", "rebecca", "sharon", "laura", "cynthia",
     "kathleen", "amy", "angela", "shirley", "anna", "brenda", "pamela",
     "emma", "nicole", "helen", "samantha", "katherine", "christine", "virginia",
     # Well-known first names of public figures in business news

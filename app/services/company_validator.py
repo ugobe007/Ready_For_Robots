@@ -177,6 +177,8 @@ _KNOWN_INDIVIDUALS: frozenset[str] = frozenset({
     "angela merkel", "emmanuel macron", "rishi sunak", "justin trudeau",
     # Celebrities / sports that appear in business news
     "taylor swift", "lebron james", "oprah winfrey",
+    # Scraped as company — executive / person headlines (reported via product)
+    "melonie wise",
 })
 
 # Common first names — used as a supporting heuristic for person detection

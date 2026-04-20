@@ -723,7 +723,7 @@ export default function Signals() {
                         const topSig    = (lead.signals || [])[0];
                         const sigLabel  = (topSig?.signal_label || (topSig?.signal_type || '').replace(/_/g, ' ')).toLowerCase();
                         const tierLabel = isHot ? 'HOT' : isWarm ? 'WARM' : 'EMRG';
-                        const tierColor = isHot ? '#f97316' : isWarm ? '#f59e0b' : '#22d3ee';
+                        const tierColor = isHot ? '#34d399' : isWarm ? '#2dd4bf' : '#94a3b8';
                         return (
                           <Link
                             key={`${feedOffset}-${i}`}
@@ -732,7 +732,7 @@ export default function Signals() {
                           >
                             <span
                               className="shrink-0 mt-1 w-0.5 self-stretch rounded-full"
-                              style={{ background: isHot ? '#f97316' : isWarm ? '#f59e0b' : '#374151' }}
+                              style={{ background: isHot ? '#34d399' : isWarm ? '#2dd4bf' : '#475569' }}
                             />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-baseline gap-2">
@@ -742,7 +742,7 @@ export default function Signals() {
                                 >
                                   {tierLabel}
                                 </span>
-                                <span className={`text-sm font-semibold truncate transition-colors ${isHot ? 'text-white group-hover:text-orange-50' : 'text-neutral-200 group-hover:text-white'}`}>
+                                <span className={`text-sm font-semibold truncate transition-colors ${isHot ? 'text-white group-hover:text-emerald-50' : 'text-neutral-200 group-hover:text-white'}`}>
                                   {lead.company_name}
                                 </span>
                               </div>

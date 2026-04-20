@@ -14,6 +14,7 @@ GET /api/leads
     sort          str    score|name|signals  default score
 """
 import logging
+import os
 import random
 import threading
 import time
@@ -198,6 +199,22 @@ def _lead_rows_query(db: Session):
             Score.overall_intent_score,
         )
     )
+
+
+# Cap how many company rows we score per request. Loading/scoring the entire table
+# materializes every GROUP BY row in Python and times out under load.
+_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "12000"))
+
+
+def _lead_rows_query_limited(db: Session, limit: int):
+    """
+    Same rollups as _lead_rows_query, but only the top `limit` rows by intent score.
+    Tier counts match the full pipeline for the scored head; very low-score cold leads
+    beyond this cap are omitted from summary totals (acceptable for UI cards).
+    """
+    lim = max(500, min(limit, 100_000))
+    sq = _lead_rows_query(db).subquery()
+    return db.query(sq).order_by(sq.c.overall_score.desc()).limit(lim)
 
 
 def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
@@ -734,9 +751,26 @@ def _set_homepage_cache(data: dict) -> None:
     _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
 
 
+def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
+    """Tier counts from a capped, score-ordered slice — not a full-table scan."""
+    rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
+    total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
+        rows, exclude_junk=exclude_junk
+    )
+    return {
+        "total": total,
+        "hot": hot,
+        "warm": warm,
+        "cold": cold,
+        "junk_filtered": junk_count,
+        "total_signals": total_signals,
+        "by_industry": by_industry,
+    }
+
+
 def _build_homepage_payload(db: Session) -> dict:
-    """Heavy work for GET /api/leads/homepage — one aggregate query + spotlight pool."""
-    rows = _lead_rows_query(db).all()
+    """Homepage: capped SQL slice + spotlight pool (classify only ~200 companies)."""
+    rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
     )
@@ -749,16 +783,10 @@ def _build_homepage_payload(db: Session) -> dict:
         "total_signals": total_signals,
         "by_industry": by_industry,
     }
-
-    candidate_rows = sorted(
-        rows,
-        key=lambda r: float(r.overall_score or 0),
-        reverse=True,
-    )[:280]
-
-    ordered_ids = []
+    # Rows are already ordered by score DESC; walk in order — no Python sort of 10k+ rows.
+    ordered_ids: List[int] = []
     seen: set = set()
-    for row in candidate_rows:
+    for row in rows:
         if _row_is_junk(row.name)[0]:
             continue
         if row.id in seen:
@@ -767,9 +795,25 @@ def _build_homepage_payload(db: Session) -> dict:
             continue
         seen.add(row.id)
         ordered_ids.append(row.id)
+        if len(ordered_ids) >= 280:
+            break
 
     if not ordered_ids:
-        return {"summary": summary, "hotLeads": []}
+        now = datetime.now(timezone.utc)
+        return {
+            "summary": summary,
+            "hotLeads": [],
+            "tierLegend": HOMEPAGE_TIER_LEGEND,
+            "spotlightMix": {
+                "hot_slots": 35,
+                "warm_slots": 15,
+                "feed_limit": 50,
+                "rotation_day": str(now.date()),
+                "rotation_hour_utc": now.hour,
+                "rotation_minute_utc": now.minute,
+            },
+            "scoringSystem": get_scoring_system_public(),
+        }
 
     companies = (
         db.query(Company)
@@ -780,10 +824,18 @@ def _build_homepage_payload(db: Session) -> dict:
     id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
     companies.sort(key=lambda c: id_rank.get(c.id, 9999))
 
+    cl_cache: dict = {}
+
+    def _classify(c: Company):
+        cid = c.id
+        if cid not in cl_cache:
+            cl_cache[cid] = classify_lead(c, c.scores, c.signals)
+        return cl_cache[cid]
+
     hot_pool: List[tuple[float, float, Company]] = []
     warm_pool: List[tuple[float, float, Company]] = []
     for c in companies:
-        junk, _, pri = classify_lead(c, c.scores, c.signals)
+        junk, _, pri = _classify(c)
         if junk or not c.signals:
             continue
         ts = _latest_signal_ts(c)
@@ -824,7 +876,7 @@ def _build_homepage_payload(db: Session) -> dict:
             used_ids.add(c.id)
 
     def _pool_sort_key(c: Company):
-        junk, _, pri = classify_lead(c, c.scores, c.signals)
+        junk, _, pri = _classify(c)
         tier_rank = 0 if pri.tier == "HOT" else 1
         return (tier_rank, -_latest_signal_ts(c))
 
@@ -832,7 +884,7 @@ def _build_homepage_payload(db: Session) -> dict:
 
     hot_leads = []
     for c in chosen:
-        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        junk, junk_reason, pri = _classify(c)
         hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
 
     return {
@@ -959,20 +1011,45 @@ def leads_scoring_system():
     return get_scoring_system_public()
 
 
-_SUMMARY_CACHE_TTL = 600  # 10 minutes — same as homepage
+_SUMMARY_CACHE_TTL = 600  # 10 minutes
 _summary_cache: dict = {}
-
-
-def _get_summary_cache(exclude_junk: bool):
-    key = f"v1_{exclude_junk}"
-    entry = _summary_cache.get(key)
-    if entry and (time.monotonic() - entry["ts"]) < _SUMMARY_CACHE_TTL:
-        return entry["data"]
-    return None
+_summary_bg_lock = threading.Lock()
+_summary_bg_in_progress: set = set()
 
 
 def _set_summary_cache(exclude_junk: bool, data: dict) -> None:
     _summary_cache[f"v1_{exclude_junk}"] = {"ts": time.monotonic(), "data": data}
+
+
+def _schedule_summary_background_refresh(exclude_junk: bool) -> None:
+    """Refresh stale summary without blocking the HTTP response."""
+    key = f"v1_{exclude_junk}"
+    with _summary_bg_lock:
+        if key in _summary_bg_in_progress:
+            return
+        _summary_bg_in_progress.add(key)
+
+    def _run():
+        try:
+            from app.database import SessionLocal
+
+            db = SessionLocal()
+            try:
+                data = _compute_pipeline_summary(db, exclude_junk)
+                _set_summary_cache(exclude_junk, data)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("Summary background refresh failed: %s", exc)
+        finally:
+            with _summary_bg_lock:
+                _summary_bg_in_progress.discard(key)
+
+    threading.Thread(
+        target=_run,
+        daemon=True,
+        name=f"summary-cache-refresh-{exclude_junk}",
+    ).start()
 
 
 @router.get("/summary")
@@ -981,26 +1058,20 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts for the dashboard stat cards and front-page ticker. Includes leads per industry."""
+    """Pipeline counts for dashboard cards — capped query, stale-while-revalidate when TTL expires."""
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
 
-    cached = _get_summary_cache(exclude_junk)
-    if cached is not None:
-        return cached
+    cache_key = f"v1_{exclude_junk}"
+    entry = _summary_cache.get(cache_key)
+    if entry is not None:
+        age = time.monotonic() - entry["ts"]
+        if age < _SUMMARY_CACHE_TTL:
+            return entry["data"]
+        _schedule_summary_background_refresh(exclude_junk)
+        return entry["data"]
 
-    # Same row shape as GET /api/leads — hot_hits/warm_hits rollups required for _row_priority tiers
-    rows = _lead_rows_query(db).all()
-    total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
-        rows, exclude_junk=exclude_junk
-    )
-
-    result = {
-        "total": total, "hot": hot, "warm": warm, "cold": cold,
-        "junk_filtered": junk_count,
-        "total_signals": total_signals,
-        "by_industry": by_industry,
-    }
+    result = _compute_pipeline_summary(db, exclude_junk)
     _set_summary_cache(exclude_junk, result)
     return result
 

@@ -18,16 +18,9 @@ import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import SiteTopNav from '../components/SiteTopNav';
 const API = getApiBase();
 
-/** FastAPI Swagger — marketing static host has no /docs; prefer env, then API base, then Fly. */
+/** FastAPI Swagger — marketing static host has no /docs; use same base as API fetches. */
 function apiDocsBaseUrl() {
-  const env =
-    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
-      ? String(process.env.NEXT_PUBLIC_API_URL).replace(/\/$/, '')
-      : '';
-  if (env) return env;
-  const b = getApiBase();
-  if (b && b.length > 0) return b;
-  return 'https://ready-2-robot.fly.dev';
+  return getApiBase();
 }
 
 const AdminAuthContext = createContext({ authHeaders: {}, adminFetch: (url, opts) => fetch(url, opts), onAccessDenied: () => {} });

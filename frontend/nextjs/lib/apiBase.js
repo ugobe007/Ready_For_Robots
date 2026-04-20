@@ -11,13 +11,50 @@ const MARKETING_HOSTS = new Set(['readyforrobots.com', 'www.readyforrobots.com']
 /** When env is not inlined; keep in sync with Fly app URL. */
 const DEFAULT_PRODUCTION_API = 'https://ready-2-robot.fly.dev';
 
+function _hostnameFromUrlCandidate(s) {
+  const t = String(s || '').trim();
+  if (!t) return '';
+  try {
+    const u = new URL(t.includes('://') ? t : `https://${t}`);
+    return u.hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * NEXT_PUBLIC_API_URL is sometimes set to the marketing site by mistake. That yields
+ * `fetch("https://readyforrobots.com/api/...")` → static HTML → JSON parse "Unexpected token '<'".
+ */
+function _sanitizeEnvApiUrl(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return '';
+  const base = trimmed.replace(/\/$/, '');
+  const host = _hostnameFromUrlCandidate(base);
+  if (host && MARKETING_HOSTS.has(host)) {
+    return '';
+  }
+  const siteRaw =
+    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SITE_URL
+      ? String(process.env.NEXT_PUBLIC_SITE_URL).trim()
+      : '';
+  if (siteRaw && base === siteRaw.replace(/\/$/, '')) {
+    return '';
+  }
+  const siteHost = _hostnameFromUrlCandidate(siteRaw);
+  if (host && siteHost && host === siteHost) {
+    return '';
+  }
+  return base;
+}
+
 export function getApiBase() {
   const envUrl =
     typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
-      ? String(process.env.NEXT_PUBLIC_API_URL).trim()
+      ? _sanitizeEnvApiUrl(process.env.NEXT_PUBLIC_API_URL)
       : '';
   if (envUrl) {
-    return envUrl.replace(/\/$/, '');
+    return envUrl;
   }
   const isDev =
     typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
