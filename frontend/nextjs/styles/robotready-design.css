@@ -890,6 +890,165 @@
   }
 }
 
+/* Supabase-inspired live card: dark UI shell, brand green, dot grid, mono labels */
+.rr-hero-ticker-panel--supabase.rr-hero-ticker-panel--live {
+  --sb-green: #3ecf8e;
+  --sb-green-dim: rgba(62, 207, 142, 0.14);
+  --sb-surface: #141414;
+  --sb-surface-2: #0a0a0a;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -30%, rgba(62, 207, 142, 0.09), transparent 55%),
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(165deg, #1a1a1a 0%, var(--sb-surface) 45%, var(--sb-surface-2) 100%);
+  background-size:
+    100% 100%,
+    15px 15px,
+    100% 100%;
+  border-color: rgba(62, 207, 142, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(62, 207, 142, 0.08),
+    0 4px 6px -1px rgba(0, 0, 0, 0.55),
+    0 24px 48px -14px rgba(0, 0, 0, 0.7),
+    0 0 40px -20px rgba(62, 207, 142, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+.rr-hero-ticker-panel--supabase.rr-hero-ticker-panel--live::before {
+  background: linear-gradient(
+    125deg,
+    rgba(62, 207, 142, 0.12) 0%,
+    rgba(62, 207, 142, 0.04) 40%,
+    transparent 65%
+  );
+  animation: rr-hero-ticker-sheen 8s ease-in-out infinite;
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-accent {
+  height: 2px;
+  background: linear-gradient(90deg, #3ecf8e 0%, #26a96a 55%, #1f6f4a 100%);
+  opacity: 1;
+}
+
+.rr-hero-ticker-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rr-hero-ticker-sb-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #3ecf8e, #1fa86a);
+  box-shadow: 0 0 12px rgba(62, 207, 142, 0.45);
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-header-title {
+  font-family: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-live-pill {
+  color: #0a0a0a;
+  background: linear-gradient(180deg, #3ecf8e 0%, #2db87a 100%);
+  border: 1px solid rgba(62, 207, 142, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2) inset,
+    0 2px 12px rgba(62, 207, 142, 0.35);
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-live-dot::before {
+  background: #0a0a0a;
+  opacity: 0.35;
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-live-dot::after {
+  background: #0a0a0a;
+  box-shadow: none;
+}
+
+.rr-hero-ticker-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rr-hero-ticker-metric {
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.rr-hero-ticker-metric--hot {
+  border-color: rgba(249, 115, 22, 0.25);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.rr-hero-ticker-metric--signals {
+  border-color: rgba(62, 207, 142, 0.2);
+  background: linear-gradient(180deg, rgba(62, 207, 142, 0.06) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.rr-hero-ticker-metric-label {
+  display: block;
+  font-family: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.rr-hero-ticker-metric-value {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+
+.rr-hero-ticker-metric--hot .rr-hero-ticker-metric-value {
+  color: #fdba74;
+}
+
+.rr-hero-ticker-metric--signals .rr-hero-ticker-metric-value {
+  color: #6ee7b7;
+}
+
+.rr-hero-ticker-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(62, 207, 142, 0.2), transparent);
+  margin-bottom: 2px;
+}
+
+.rr-hero-ticker-panel--supabase .rr-hero-ticker-row:hover {
+  background: rgba(62, 207, 142, 0.06);
+  border-color: rgba(62, 207, 142, 0.12);
+}
+
+.rr-hero-ticker-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rr-hero-ticker-footer-link {
+  color: #3ecf8e;
+  transition: color 0.15s ease, filter 0.15s ease;
+}
+
+.rr-hero-ticker-footer-link:hover {
+  color: #6ee7b7;
+  filter: brightness(1.05);
+}
+
 /* Wider hero panel when CRM shows rotating company names */
 .rr-hero-ticker-panel--crm-names {
   padding: 16px 18px 15px !important;

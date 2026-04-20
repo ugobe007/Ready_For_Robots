@@ -15,6 +15,7 @@ GET /api/leads
 """
 import logging
 import random
+import threading
 import time
 from datetime import datetime, timezone, date
 
@@ -717,170 +718,38 @@ def post_lead_rep_feedback(
 
 
 # ── Homepage TTL cache ────────────────────────────────────────────────────────
-# Aggregate query is expensive; keep a short TTL so spotlight rotation (minute-
-# level seeds) actually reaches browsers.  Trade-off: ~1 DB rebuild / 2 min
-# per warm machine vs stale identical cards for 10+ minutes.
+# Aggregate query is expensive. We keep a short logical TTL but **serve stale
+# payloads immediately** when it expires and refresh in a background thread, so
+# clients do not block on a slow rebuild. Cold miss (empty cache) still runs
+# synchronously. Each Fly machine has its own RAM cache; stale serving avoids
+# thundering herds when TTLs expire.
 _HOMEPAGE_CACHE_TTL = 120  # 2 minutes — pairs with per-minute rotation seeds
 _homepage_cache: dict = {}
-
-
-def _get_homepage_cache():
-    entry = _homepage_cache.get("v1")
-    if entry and (time.monotonic() - entry["ts"]) < _HOMEPAGE_CACHE_TTL:
-        return entry["data"]
-    return None
+_homepage_build_lock = threading.Lock()
+_homepage_bg_refresh_lock = threading.Lock()
+_homepage_bg_refresh_in_progress = False
 
 
 def _set_homepage_cache(data: dict) -> None:
     _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
 
 
-def warm_homepage_cache() -> None:
-    """
-    Pre-populate the homepage cache in a background thread at startup so the
-    first real user request is served instantly instead of waiting 60+ seconds
-    for the cold DB query.
-    """
-    import threading
-
-    def _warm():
-        try:
-            from app.database import SessionLocal
-            db = SessionLocal()
-            try:
-                # Reuse the same logic as the /homepage endpoint (minus the HTTP Response obj)
-                rows = _lead_rows_query(db).all()
-                total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(rows, exclude_junk=True)
-                summary = {
-                    "total": total, "hot": hot, "warm": warm, "cold": cold,
-                    "junk_filtered": junk_count,
-                    "total_signals": total_signals,
-                    "by_industry": by_industry,
-                }
-                candidate_rows = sorted(rows, key=lambda r: float(r.overall_score or 0), reverse=True)[:280]
-                ordered_ids = []
-                seen: set = set()
-                for row in candidate_rows:
-                    if _row_is_junk(row.name)[0]:
-                        continue
-                    if row.id in seen:
-                        continue
-                    if int(row.signal_count or 0) < 1:
-                        continue
-                    seen.add(row.id)
-                    ordered_ids.append(row.id)
-                if not ordered_ids:
-                    _set_homepage_cache({"summary": summary, "hotLeads": []})
-                    return
-                companies = (
-                    db.query(Company)
-                    .options(joinedload(Company.scores), joinedload(Company.signals))
-                    .filter(Company.id.in_(ordered_ids[:220]))
-                    .all()
-                )
-                id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
-                companies.sort(key=lambda c: id_rank.get(c.id, 9999))
-                hot_pool: List[tuple] = []
-                warm_pool: List[tuple] = []
-                for c in companies:
-                    junk, _, pri = classify_lead(c, c.scores, c.signals)
-                    if junk or not c.signals:
-                        continue
-                    ts = _latest_signal_ts(c)
-                    if pri.tier == "HOT":
-                        hot_pool.append((ts, pri.score, c))
-                    elif pri.tier == "WARM":
-                        warm_pool.append((ts, pri.score, c))
-                hot_pool.sort(key=lambda x: (-x[0], -x[1]))
-                warm_pool.sort(key=lambda x: (-x[0], -x[1]))
-                hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
-                warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
-                now = datetime.now(timezone.utc)
-                h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
-                hour = now.hour
-                feed_limit_w = 50
-                chosen: List[Company] = []
-                used_ids: set = set()
-                for c in _take_rotated(hot_ordered, 35, h_seed):
-                    if c.id not in used_ids:
-                        chosen.append(c); used_ids.add(c.id)
-                warm_avail = [c for c in warm_ordered if c.id not in used_ids]
-                for c in _take_rotated(warm_avail, 15, w_seed):
-                    if c.id not in used_ids:
-                        chosen.append(c); used_ids.add(c.id)
-                for c in hot_ordered + warm_ordered:
-                    if len(chosen) >= feed_limit_w: break
-                    if c.id not in used_ids:
-                        chosen.append(c); used_ids.add(c.id)
-                def _wk(c):
-                    _, _, p = classify_lead(c, c.scores, c.signals)
-                    return (0 if p.tier == "HOT" else 1, -_latest_signal_ts(c))
-                chosen = sorted(chosen[:feed_limit_w], key=_wk)
-                hot_leads = []
-                for c in chosen:
-                    j, jr, pri = classify_lead(c, c.scores, c.signals)
-                    hot_leads.append(_fmt_company(c, j, jr, pri))
-                result = {
-                    "summary": summary,
-                    "hotLeads": hot_leads,
-                    "tierLegend": HOMEPAGE_TIER_LEGEND,
-                    "spotlightMix": {
-                        "hot_slots": 35, "warm_slots": 15, "feed_limit": feed_limit_w,
-                        "rotation_day": str(now.date()),
-                        "rotation_hour_utc": hour,
-                        "rotation_minute_utc": minute,
-                    },
-                    "scoringSystem": get_scoring_system_public(),
-                }
-                _set_homepage_cache(result)
-                # Also warm the summary cache (same data, reused for dashboard)
-                _set_summary_cache(True, summary)
-                logger.info("Homepage cache warmed at startup: %d total, %d hot", total, hot)
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("Homepage cache warm-up failed (non-fatal): %s", exc)
-
-    t = threading.Thread(target=_warm, daemon=True, name="homepage-cache-warmer")
-    t.start()
-
-
-@router.get("/homepage")
-def leads_homepage(response: Response, db: Session = Depends(get_db)):
-    """
-    Batched endpoint for homepage: summary + spotlight leads in one response.
-
-    Spotlight uses classify_lead on full signals (aligned with list views).
-    Selection: sort by newest signal time, then score; take 3 HOT + 2 WARM with a
-    daily + hourly rotating window so the same top-score rows do not monopolize the list.
-    Includes tierLegend for UI copy (COLD band documented as "Emerging").
-
-    Performance: runs ONE aggregate query (not two), then sorts candidate rows in
-    Python. Result is cached server-side briefly (~2 min) while rotation seeds use
-    the UTC minute so successive rebuilds walk different slices of the HOT/WARM rings.
-    """
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-
-    cached = _get_homepage_cache()
-    if cached is not None:
-        return cached
-
-    # Single aggregate query — reused for both summary and spotlight candidates.
+def _build_homepage_payload(db: Session) -> dict:
+    """Heavy work for GET /api/leads/homepage — one aggregate query + spotlight pool."""
     rows = _lead_rows_query(db).all()
-
-    # Summary
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
     )
     summary = {
-        "total": total, "hot": hot, "warm": warm, "cold": cold,
+        "total": total,
+        "hot": hot,
+        "warm": warm,
+        "cold": cold,
         "junk_filtered": junk_count,
         "total_signals": total_signals,
         "by_industry": by_industry,
     }
 
-    # Spotlight candidates: top-280 by score, sorted in Python (avoids second DB round-trip)
     candidate_rows = sorted(
         rows,
         key=lambda r: float(r.overall_score or 0),
@@ -900,9 +769,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         ordered_ids.append(row.id)
 
     if not ordered_ids:
-        result = {"summary": summary, "hotLeads": []}
-        _set_homepage_cache(result)
-        return result
+        return {"summary": summary, "hotLeads": []}
 
     companies = (
         db.query(Company)
@@ -930,30 +797,25 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
     warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
 
-    # Feed pool: up to 50 leads (35 HOT + 15 WARM) for the rotating hero panel.
-    # The client handles client-side rotation; server just provides the pool.
-    feed_limit   = 50
-    hot_slots    = 35
-    warm_slots   = 15
-    now          = datetime.now(timezone.utc)
+    feed_limit = 50
+    hot_slots = 35
+    warm_slots = 15
+    now = datetime.now(timezone.utc)
     h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
-    hour         = now.hour
+    hour = now.hour
 
     chosen: List[Company] = []
     used_ids: set = set()
 
-    # Fill HOT slots (rotated so different leads surface each hour)
     for c in _take_rotated(hot_ordered, hot_slots, h_seed):
         if c.id not in used_ids:
             chosen.append(c)
             used_ids.add(c.id)
-    # Fill WARM slots
     warm_avail = [c for c in warm_ordered if c.id not in used_ids]
     for c in _take_rotated(warm_avail, warm_slots, w_seed):
         if c.id not in used_ids:
             chosen.append(c)
             used_ids.add(c.id)
-    # Top-up with any remaining HOT/WARM if slots not filled
     for c in hot_ordered + warm_ordered:
         if len(chosen) >= feed_limit:
             break
@@ -961,7 +823,6 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
             chosen.append(c)
             used_ids.add(c.id)
 
-    # Sort final pool: HOT first (by recency), then WARM
     def _pool_sort_key(c: Company):
         junk, _, pri = classify_lead(c, c.scores, c.signals)
         tier_rank = 0 if pri.tier == "HOT" else 1
@@ -974,7 +835,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
         hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
 
-    result = {
+    return {
         "summary": summary,
         "hotLeads": hot_leads,
         "tierLegend": HOMEPAGE_TIER_LEGEND,
@@ -988,8 +849,105 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         },
         "scoringSystem": get_scoring_system_public(),
     }
-    _set_homepage_cache(result)
-    return result
+
+
+def _schedule_homepage_background_refresh() -> None:
+    """Single-flight async rebuild; callers already returned stale JSON."""
+    global _homepage_bg_refresh_in_progress
+    with _homepage_bg_refresh_lock:
+        if _homepage_bg_refresh_in_progress:
+            return
+        _homepage_bg_refresh_in_progress = True
+
+    def _run():
+        global _homepage_bg_refresh_in_progress
+        try:
+            from app.database import SessionLocal
+
+            db = SessionLocal()
+            try:
+                with _homepage_build_lock:
+                    payload = _build_homepage_payload(db)
+                    _set_homepage_cache(payload)
+                    _set_summary_cache(True, payload["summary"])
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("Homepage background refresh failed: %s", exc)
+        finally:
+            with _homepage_bg_refresh_lock:
+                _homepage_bg_refresh_in_progress = False
+
+    threading.Thread(target=_run, daemon=True, name="homepage-cache-refresh").start()
+
+
+def warm_homepage_cache() -> None:
+    """
+    Pre-populate the homepage cache in a background thread at startup so the
+    first real user request is not blocked on the cold aggregate query.
+    """
+
+    def _warm():
+        try:
+            from app.database import SessionLocal
+
+            db = SessionLocal()
+            try:
+                with _homepage_build_lock:
+                    if _homepage_cache.get("v1"):
+                        return
+                    payload = _build_homepage_payload(db)
+                    _set_homepage_cache(payload)
+                    _set_summary_cache(True, payload["summary"])
+                    logger.info(
+                        "Homepage cache warmed at startup: %d total, %d hot",
+                        payload["summary"].get("total", 0),
+                        payload["summary"].get("hot", 0),
+                    )
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("Homepage cache warm-up failed (non-fatal): %s", exc)
+
+    threading.Thread(target=_warm, daemon=True, name="homepage-cache-warmer").start()
+
+
+@router.get("/homepage")
+def leads_homepage(response: Response, db: Session = Depends(get_db)):
+    """
+    Batched endpoint for homepage: summary + spotlight leads in one response.
+
+    Spotlight uses classify_lead on full signals (aligned with list views).
+    Selection: sort by newest signal time, then score; take 3 HOT + 2 WARM with a
+    daily + hourly rotating window so the same top-score rows do not monopolize the list.
+    Includes tierLegend for UI copy (COLD band documented as "Emerging").
+
+    Performance: one aggregate query + Python sort; in-memory cache with stale-while-
+    revalidate so expired TTL does not block clients on a slow rebuild.
+    """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+
+    entry = _homepage_cache.get("v1")
+    if entry is not None:
+        age = time.monotonic() - entry["ts"]
+        if age < _HOMEPAGE_CACHE_TTL:
+            return entry["data"]
+        _schedule_homepage_background_refresh()
+        return entry["data"]
+
+    with _homepage_build_lock:
+        entry = _homepage_cache.get("v1")
+        if entry is not None:
+            age = time.monotonic() - entry["ts"]
+            if age < _HOMEPAGE_CACHE_TTL:
+                return entry["data"]
+            _schedule_homepage_background_refresh()
+            return entry["data"]
+        payload = _build_homepage_payload(db)
+        _set_homepage_cache(payload)
+        _set_summary_cache(True, payload["summary"])
+        return payload
 
 
 @router.get("/scoring-system")

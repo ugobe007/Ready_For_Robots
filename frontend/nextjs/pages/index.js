@@ -665,36 +665,38 @@ export default function Signals() {
                   <strong>Search Leads</strong>: full database.
                 </p>
               </div>
-              {/* ── Hero right panel: rotating signal feed (Supabase-style) */}
+              {/* ── Hero right panel: Supabase-inspired live pipeline card */}
               <aside
-                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--crm-names flex flex-col"
+                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--supabase rr-hero-ticker-panel--crm-names flex flex-col"
                 aria-label="Live signal feed"
               >
                 <span className="rr-hero-ticker-accent" aria-hidden="true" />
                 <div className="rr-hero-ticker-header">
-                  <span className="rr-hero-ticker-header-title">Hot signal stream</span>
+                  <div className="rr-hero-ticker-header-left">
+                    <span className="rr-hero-ticker-sb-mark" aria-hidden="true" />
+                    <span className="rr-hero-ticker-header-title">Live pipeline</span>
+                  </div>
                   <span className="rr-hero-ticker-live-pill">
                     <span className="rr-hero-ticker-live-dot" aria-hidden="true" />
                     Live
                   </span>
                 </div>
-                {/* Single inline stat line */}
-                <p className="text-[11px] text-neutral-500 tabular-nums leading-none mb-3 shrink-0">
-                  <span className="text-neutral-200 font-semibold">{formatHeroCount(statsData.activeLeads, statsLoaded)}</span>
-                  <span className="mx-1.5 text-neutral-700">·</span>
-                  <span className="text-neutral-400">active</span>
-                  <span className="mx-2.5 text-neutral-700">·</span>
-                  <span className="font-semibold" style={{ color: 'var(--rr-orange)' }}>{formatHeroCount(statsData.hotDeals, statsLoaded)}</span>
-                  <span className="mx-1.5 text-neutral-700">·</span>
-                  <span className="text-neutral-400">hot</span>
-                  <span className="mx-2.5 text-neutral-700">·</span>
-                  <span className="font-semibold" style={{ color: 'var(--rr-cyan)' }}>{formatHeroCount(statsData.liveSignals, statsLoaded)}</span>
-                  <span className="mx-1.5 text-neutral-700">·</span>
-                  <span className="text-neutral-400">signals</span>
-                </p>
+                <div className="rr-hero-ticker-metrics shrink-0 mb-3">
+                  <div className="rr-hero-ticker-metric">
+                    <span className="rr-hero-ticker-metric-label">Active</span>
+                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.activeLeads, statsLoaded)}</span>
+                  </div>
+                  <div className="rr-hero-ticker-metric rr-hero-ticker-metric--hot">
+                    <span className="rr-hero-ticker-metric-label">Hot</span>
+                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.hotDeals, statsLoaded)}</span>
+                  </div>
+                  <div className="rr-hero-ticker-metric rr-hero-ticker-metric--signals">
+                    <span className="rr-hero-ticker-metric-label">Signals</span>
+                    <span className="rr-hero-ticker-metric-value">{formatHeroCount(statsData.liveSignals, statsLoaded)}</span>
+                  </div>
+                </div>
 
-                {/* Divider */}
-                <div className="border-t border-neutral-800 shrink-0" />
+                <div className="rr-hero-ticker-divider shrink-0" />
 
                 {/* Rotating signal feed */}
                 <div
@@ -706,8 +708,8 @@ export default function Signals() {
                 >
                   {loading ? (
                     <div className="py-8 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                      <span className="text-xs text-neutral-600">Loading signals…</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#3ecf8e] animate-pulse" />
+                      <span className="text-xs text-neutral-500 font-mono">Loading rows…</span>
                     </div>
                   ) : topHotDeals.length === 0 ? (
                     <p className="text-xs text-neutral-600 py-6">No signals yet — check back soon</p>
@@ -726,7 +728,7 @@ export default function Signals() {
                           <Link
                             key={`${feedOffset}-${i}`}
                             href="/dashboard"
-                            className="group flex items-start gap-3 py-3 px-1 -mx-1 rounded-lg border-b border-neutral-800/70 hover:border-orange-500/25 hover:bg-orange-500/[0.06] transition-colors last:border-b-0"
+                            className="rr-hero-ticker-row group flex items-start gap-3 py-3 px-1 -mx-1 rounded-md border-b border-white/[0.06] transition-colors last:border-b-0"
                           >
                             <span
                               className="shrink-0 mt-1 w-0.5 self-stretch rounded-full"
@@ -750,7 +752,7 @@ export default function Signals() {
                                 {lead.industry && <span>{lead.industry}</span>}
                               </p>
                             </div>
-                            <span className="shrink-0 text-neutral-700 group-hover:text-neutral-500 text-xs mt-1 transition-colors">→</span>
+                            <span className="rr-hero-ticker-row-arrow shrink-0 text-neutral-600 group-hover:text-[#3ecf8e] text-xs mt-1 transition-colors">→</span>
                           </Link>
                         );
                       })}
@@ -759,17 +761,17 @@ export default function Signals() {
                 </div>
 
                 {/* Footer: live pulse + CTA + warm count */}
-                <div className="mt-3 pt-3 border-t border-neutral-800/60 shrink-0 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0" />
+                <div className="rr-hero-ticker-footer mt-3 pt-3 shrink-0 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#3ecf8e] animate-pulse shrink-0" />
                     <Link
                       href="/dashboard"
-                      className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                      className="rr-hero-ticker-footer-link text-[11px] font-semibold font-mono truncate"
                     >
-                      View all {formatHeroCount(statsData.hotDeals, statsLoaded)} HOT leads →
+                      View all {formatHeroCount(statsData.hotDeals, statsLoaded)} HOT →
                     </Link>
                   </div>
-                  <span className="text-[10px] text-neutral-700 tabular-nums">
+                  <span className="text-[10px] text-neutral-500 tabular-nums font-mono shrink-0">
                     {formatHeroCount(statsData.warmPipeline, statsLoaded)} warm
                   </span>
                 </div>
