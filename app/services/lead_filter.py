@@ -59,6 +59,14 @@ _JUNK_SUBSTRINGS = [
     "supply chain drive",
     "gets high-tech", "gets high tech",
     "hn brief", "dropship",
+    # News source names scraped as companies
+    "business journals", "next web", "cap times", "the cap times",
+    # Medical / research topic phrases (not company names)
+    "hospital-acquired infections", "healthcare-associated infections",
+    "infections prevention", "disease prevention technology",
+    # Generic tech/supply chain descriptors
+    "pallet labelling", "pallet labeling",
+    "size share",  # market research fragment
     # Page chrome / syndication / research boilerplate (not legal entities)
     "read more", "click here", "subscribe to", "sign up for our", "cookie policy",
     "terms of use", "privacy policy", "getty images", "shutterstock", "photo credit",
@@ -169,6 +177,29 @@ _JUNK_SUBSTRINGS = [
     # Magazine / SEO headline stubs (not legal entities)
     "power couple",
     "future proofing",
+    # Stock/ETF/financial listicle fragments
+    " etfs", " reits", " stocks to", " stock to",
+    "swot analysis",
+    # Product review listicles
+    "we've tested", "we tested",
+    "air fryers", "coffee makers", "dishwashers", "waffle makers",
+    "pool vacuums", "cpap machines", "password managers", "grab bars",
+    "toaster ovens", "meat thermometer", "sprinkler timers", "clothing irons",
+    # Consumer guide catch-all (belt+suspenders for "Best" regex above)
+    "best robot lawn mow", "best robot mop", "best robot vacuum",
+    # Labor/union events
+    "strike starts", "authorize strike",
+    # Generic geographic + topic fragments
+    "tourism poised", "minimum wage",
+    # Breakthrough/technology descriptor fragments (not proper names)
+    "breakthrough self driving", "bulk material handling system",
+    "blowroom lines", "breaker panels", "bus duct inspection",
+    "chilled water storage",
+    # Financial/market fragments
+    "bull of", "capital budget", "chat control",
+    "cell therapy testing", "cloud computing",
+    # Incomplete possessive country
+    "china's", "india's",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -194,9 +225,13 @@ _JUNK_PATTERNS = [
     # Starts with a number + unit/fraction combo
     r"^\d+\s*(percent|%|in\s+\d+|of\s+\d+|tips|ways|reasons|steps|things|facts)\b",
 
-    # Starts with ordinal / superlative
-    r"^(top|best|worst|biggest|largest|smallest|leading|growing|rising|"
-    r"fastest|slowest|new|latest|recent|upcoming)\s+\d*\s*(hotel|restaurant|"
+    # "Best X" — product reviews, stock/ETF listicles, consumer guides (never a company name)
+    # Catches: "Best Spatulas", "Best AI Stocks", "Best Robot Vacuums We've Tested", etc.
+    r"(?i)^best\s+.{2,}",
+
+    # "Top X" / "Worst X" superlative listicles
+    r"^(top|worst|biggest|largest|smallest|leading|growing|rising|"
+    r"fastest|slowest|latest|recent|upcoming)\s+\d*\s*(hotel|restaurant|"
     r"chain|brand|company|operator|brand|employer|employer)\b",
 
     # Generic single-word industry terms (not proper nouns)
@@ -338,6 +373,109 @@ _JUNK_PATTERNS = [
     # Standalone Co-op / Cooperative without a proper name qualifier
     r"^(the\s+)?co-?ops?\s*$",
 
+    # "X SWOT Analysis" — company + analyst-framework descriptor (not a company name)
+    r"(?i)\bSWOT\s+Analysis\b",
+
+    # "X-based company/firm/startup" — geographic descriptor, not a proper company name
+    r"(?i)\b\w+-based\s+(company|firm|startup|business|group|operation|manufacturer|provider)\s*$",
+
+    # "X Sweetens Up Spring", "X Rolls Out", "X Levels Up" — company + marketing verb phrase
+    # (Brand name mistakenly re-extracted from headline containing action verbs)
+    r"(?i)\s+(sweetens|rolls\s+out|levels\s+up|gears\s+up|kicks\s+off|teams\s+up|"
+    r"doubles\s+down|steps\s+up|beefs\s+up|ramps\s+up|inks\s+deal)\b",
+
+    # "BIM-Driven X", "AI-Powered X", "Tech-Enabled X" — technology adjective + topic (not a company)
+    r"(?i)^(bim|ai|iot|ar|vr|ml|erp|crm|rpa|saas|paas|api|edi)-"
+    r"(driven|powered|enabled|based|led|first|native|ready|focused)\s+\w",
+
+    # "[City/State] Local", "[City] Pushing", "[City/State] Minimum Wage" — geographic + generic topic
+    r"(?i)^(california|chicago|texas|new\s+york|florida|ohio|georgia|michigan|"
+    r"virginia|washington|colorado|illinois|arizona)\s+"
+    r"(local|minimum\s+wage|pushing|tourism|natural|farming|jobs|firms?|companies)\b",
+
+    # "Birmingham", "Chicago" alone — city names with no company qualifier
+    r"(?i)^(birmingham|chicago|atlanta|dallas|houston|phoenix|seattle|denver|"
+    r"boston|miami|detroit|portland|minneapolis|cleveland|pittsburgh|"
+    r"memphis|nashville|baltimore|sacramento|kansas\s+city)\s*$",
+
+    # "Black Friday", "Cyber Monday" — retail events, not companies
+    r"(?i)^(black\s+friday|cyber\s+monday|prime\s+day|singles\s+day)\b",
+
+    # "Cheap Summer Why Rising Costs", "Buying Online" — consumer advice fragments
+    r"(?i)^(cheap|buying|selling|shopping|saving|spending|getting|making|finding|avoiding)\s+\w",
+
+    # "China's", "India's" — possessive country name fragments (lowercase-first only).
+    # Case-sensitive: uppercase-first possessives like "Wendy's" / "McDonald's" are
+    # real company names and must NOT be caught here.
+    r"^[a-z][a-z]+\'s\s*$",
+
+    # "Beyond Tesla" — "Beyond X" stock/market analysis fragments
+    r"(?i)^beyond\s+(tesla|apple|amazon|google|meta|nvidia|microsoft|walmart|amazon)\b",
+
+    # "X rival", "X competitor" — comparative editorial fragment, not a company name
+    r"(?i)\s+(rival|rivals|competitor|competitors|contender|contenders)\s*$",
+
+    # "Beloved X chain", "Fast-growing X chain" — adjective + category + "chain"
+    r"(?i)^(beloved|popular|iconic|famous|struggling|growing|fast-growing|booming|thriving)\s+\w+(\s+\w+)?\s+chain\b",
+
+    # "Leaked X" — rumor/leak article title
+    r"(?i)^leaked\s+\w",
+
+    # "Every Budget and X" — consumer advice fragment
+    r"(?i)^every\s+budget\b",
+
+    # "X looks", "X needs most" — incomplete headline fragments
+    r"(?i)\s+(looks|looks\s+to|needs\s+most|still\s+leads?|keeps?\s+going)\s*$",
+
+    # "NC prisons", "State prisons" — government/facility category without a proper name
+    r"(?i)^(nc|ny|ca|tx|fl|il|pa|oh|ga|mi|nj|wa|az|ma|tn|in|md|mn|co|wi|mo|al|sc|la|ky)\s+(prisons?|jails?|courts?|schools?|dept|department)\b",
+
+    # "Healey-Driscoll Administration", "Biden Administration" — government, not a company
+    r"(?i)\badministration\s*$",
+
+    # "Elderly Americans", "Five senior" — demographic fragments
+    r"(?i)^(elderly|aging|senior|young|older|younger)\s+(american|european|worker|adult|consumer|citizen|people|patient)\b",
+    r"(?i)^(five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty)\s+(senior|major|key|leading|top|big|small|mid)\b",
+
+    # "Gen Z", "Gen X", "Baby Boomer" — demographic group terms
+    r"(?i)^gen\s+[xyz]\b",
+    r"(?i)^baby\s+boomer\b",
+
+    # "Electric Cars", "Flying Cars", "Self-Driving Cars" — vehicle category, not company
+    r"(?i)^(electric|autonomous|self-driving|flying|driverless|hydrogen|hybrid)\s+(cars?|trucks?|vehicles?|buses?)\s*$",
+
+    # "Hyundai labor union", "X labor union", "X workers union" — labor org fragment
+    r"(?i)\b(labor\s+union|workers?\s+union|trade\s+union|union\s+workers?)\s*$",
+
+    # "Bigger 2026 Capex", "Q3 2026 Revenue" — financial metric fragment
+    r"(?i)^(bigger|higher|lower|rising|falling|record)\s+20\d\d\s+\w",
+    r"(?i)^(q[1-4]|h[12])\s+20\d\d\s+\w",
+
+    # "Islanders need most", "Islanders rally" — sports team + verb phrase (not a company)
+    r"(?i)\b(islanders?|patriots?|eagles?|cowboys?|steelers?|lakers?|celtics?|warriors?|yankees?)\s+\w+\s*$",
+
+    # "REVIEW You Won", "PREVIEW X" — content type marker at start
+    r"(?i)^(review|preview|recap|roundup|analysis|commentary|opinion|column)\s+\w",
+
+    # "Top Robotics Stocks Worth Investing" — stock investment titles with "Worth" or "Investing"
+    r"(?i)\b(worth\s+investing|worth\s+buying|to\s+buy\s+now|to\s+watch\s+in\s+20\d\d)\s*$",
+
+    # "DOT secretary", "Labor secretary", "Treasury secretary" — government role titles
+    r"(?i)^(dot|fda|faa|cdc|epa|dol|hhs|doj|sec|fed|usda|osha)\s+(secretary|commissioner|director|chair|chief|head|official)\b",
+    r"(?i)^(labor|treasury|commerce|energy|transportation|agriculture|interior|defense)\s+secretary\b",
+
+    # "No-Brainer Robotics Stocks", "X-Brainer X" — financial editorial fragments
+    r"(?i)^no-brainer\s+\w",
+
+    # "X Advancing", "X Emerging", "X Expanding" — company/topic + action word (truncated headline)
+    # Only if no proper noun qualifier before the action word
+    r"(?i)^([A-Z]\w+)\s+(advancing|emerging|expanding|evolving|accelerating|transforming|disrupting|navigating)\s*$",
+
+    # "Cold Storage" alone, "Computer Vision" alone — generic tech/logistics category
+    # (real companies have a proper name like "Lineage Cold Storage")
+    r"(?i)^cold\s+storage\s*$",
+    r"(?i)^computer\s+vision\s*$",
+
     # Names that are clearly job titles scraped as company names
     r"^(vp|vice\s+president|ceo|coo|cfo|cto|chief|president|director|manager|"
     r"head|svp|evp)\s+(of\s+)?\w+",
@@ -369,6 +507,7 @@ _JUNK_PATTERNS = [
     r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
     r"integrat|transform|accelerat|moderniz|optim|digitiz|"
+    r"strengthen|sell|sold|partner|pivot|rebrand|restructur|consolidat|divest|"
     r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale|"
     r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul|"
     r"turn|shift|pivot|reshape|redefin|reinvent|overhaul|navigat|tackle|"
@@ -585,6 +724,65 @@ _JUNK_PATTERNS = [
     r"(?i)^(full|complete|complete\s+list\s+of|official)\s+(conference|agenda|schedule|program|lineup)\b",
     r"(?i)\d{4}\s*(agenda|schedule|lineup|program)\s*$",
 
+    # ── Junk patterns added from user feedback (Apr 2026) ────────────────────
+    # "Koch Strengthens Retail Fulfillment Strategy" / "Sweetgreen Sells Robotics Arm"
+    # Catches company name + strong headline verb — expands the existing verb stem list.
+    # NOTE: "plan" omitted — matches "Plant" (noun). "partner(?!ship)" prevents "Partnership Health Plan" FP.
+    r"(?i)^(?:\S+\s+){0,3}(strengthen|sell|sold|sells|acquir|partner(?!ship)|pivot|merge|rebrand|restructur)\w*\s+\w",
+
+    # "Wins EU Contract", "Won the Bid", "Secures Major Deal" — verb-first fragment
+    r"(?i)^(wins?|won|secures?|secured|clinch(es)?|clinched|bags?|bagged|awarded?|landed?)\s+\w",
+
+    # "Tesla Plans" / "Amazon Eyes" — [known brand] + standalone verb (headline stub, ≤3 words)
+    r"(?i)^(tesla|apple|amazon|google|meta|nvidia|microsoft|walmart|target|kroger|"
+    r"starbucks|mcdonald|costco|home\s*depot|lowe'?s|walgreens|cvs|fedex|ups)\s+"
+    r"(plans?|eyes?|aims?|mulls?|weighs?|considers?|explores?|eyes?)\b",
+
+    # "[US city] plant / facility" — location description, not a company
+    r"(?i)^(tampa|orlando|jacksonville|phoenix|tucson|denver|boulder|oakland|"
+    r"raleigh|durham|richmond|norfolk|buffalo|rochester|louisville|"
+    r"birmingham|mobile|charleston|columbia|tulsa|albuquerque|omaha|"
+    r"spokane|tacoma|stockton|toledo|anchorage|bakersfield|modesto)\s+"
+    r"(plant|facility|hub|depot|campus|warehouse|distribution)\s*$",
+
+    # "[Country adjective] facility / plant / operation" — location not company
+    r"(?i)^(german|french|japanese|chinese|british|italian|spanish|dutch|"
+    r"korean|swedish|canadian|australian|mexican|brazilian|indian|thai|"
+    r"polish|czech|romanian|hungarian|greek|portuguese|turkish|"
+    r"russian|ukrainian|vietnamese|singaporean|taiwanese|belgian|swiss|"
+    r"austrian|danish|norwegian|finnish|irish)\s+"
+    r"(facility|plant|campus|hub|office|warehouse|factory|center|operation|subsidiary)\s*$",
+
+    # "[Name] County restaurant / hospital / warehouse" — county + venue type
+    r"(?i)^[A-Za-z]+\s+county\s+(restaurant|hotel|hospital|warehouse|casino|"
+    r"grocery\s+store|retail\s+store|distribution\s+center|facility|plant)\b",
+
+    # "[Industry] robotics firm [Company]" — company description wrapping another name
+    # "Warehouse robotics firm GreyOrange", "Food delivery robot company Starship"
+    r"(?i)^(warehouse|logistics|food|delivery|service|hospital|retail|"
+    r"manufacturing|industrial)\s+(robotics?|automation)\s+(firm|company|"
+    r"startup|vendor|maker|provider|specialist|leader)\s+[A-Z]",
+
+    # "CSA Exclusive H&M" / "Nike Exclusive [Partner]" — retail collab header scraped as name
+    r"(?i)\bexclusive\s+[A-Z&][A-Z&]*\s*$",
+
+    # "[Adjective] + expansion / acquisition / merger" — M&A headline fragment
+    r"(?i)^(major|new|record|significant|massive|large-scale|historic|planned|"
+    r"pending|proposed|confirmed|announced|completed)\s+"
+    r"(expansion|acquisition|merger|deal|investment|partnership|contract|order)\s*$",
+
+    # "Global Pallet Labelling System" / "Automated Case Labeling Equipment"
+    r"(?i)^(global|new|advanced|automated|smart|integrated|next-gen)\s+"
+    r"(pallet|case|box|carton|drum|bottle|can)\s+"
+    r"(labelling|labeling|packing|sealing|wrapping|forming)\s+"
+    r"(system|systems?|machine|equipment|line|solution)\s*$",
+
+    # "[Topic] Research" / "[Topic] Technology Research" — academic/research label
+    r"(?i)^([\w\s-]+)\s+(prevention|treatment|management)\s+technology\s+research\s*$",
+
+    # "[Material] Manufacturing Plant DPR/Setup" — project brief, not a company
+    r"(?i)^[\w\s]+(manufacturing|fabrication|processing)\s+plant\s+(dpr|setup|project|brief|report|study)\s*$",
+
     # ── Editorial deck / headline fragments (user-reported, Apr 2026) ─────────
     # "Meet Betty Bot" — article / profile intro, not a legal entity name
     r"(?i)^meet\s+",
@@ -679,6 +877,18 @@ _JUNK_EXACT = frozenset({
     "smoothies",
     # Generic tech headline noun pair (not a company name by itself)
     "ai agents",
+    # Generic single nouns that are never company names
+    "expansion", "acquisition", "merger", "investment", "contract", "deal",
+    "announcement", "restructuring", "partnership", "collaboration",
+    "major expansion", "new expansion", "record expansion",
+    "cold storage network", "cold storage networks",
+    "medication safety", "patient safety", "worker safety", "food safety",
+    "warehouse robotics use", "warehouse robotics adoption",
+    "semiconductor sourcing", "component sourcing", "chip sourcing",
+    "size share",
+    # Location + facility stubs (not operating companies)
+    "tampa plant", "tampa facility", "german facility", "german plant",
+    "french facility", "japanese facility", "chinese facility",
 })
 
 

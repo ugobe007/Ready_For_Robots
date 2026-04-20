@@ -13,9 +13,12 @@ GET /api/leads
     limit         int    default 200
     sort          str    score|name|signals  default score
 """
+import logging
 import random
 import time
 from datetime import datetime, timezone, date
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
@@ -795,16 +798,24 @@ def warm_homepage_cache() -> None:
                 now = datetime.now(timezone.utc)
                 h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
                 hour = now.hour
+                feed_limit_w = 50
                 chosen: List[Company] = []
                 used_ids: set = set()
-                for c in _take_rotated(hot_ordered, 3, h_seed):
+                for c in _take_rotated(hot_ordered, 35, h_seed):
                     if c.id not in used_ids:
                         chosen.append(c); used_ids.add(c.id)
                 warm_avail = [c for c in warm_ordered if c.id not in used_ids]
-                for c in _take_rotated(warm_avail, 2, w_seed):
+                for c in _take_rotated(warm_avail, 15, w_seed):
                     if c.id not in used_ids:
                         chosen.append(c); used_ids.add(c.id)
-                chosen = _shuffle_spotlight_order(chosen[:5], h_seed, w_seed)
+                for c in hot_ordered + warm_ordered:
+                    if len(chosen) >= feed_limit_w: break
+                    if c.id not in used_ids:
+                        chosen.append(c); used_ids.add(c.id)
+                def _wk(c):
+                    _, _, p = classify_lead(c, c.scores, c.signals)
+                    return (0 if p.tier == "HOT" else 1, -_latest_signal_ts(c))
+                chosen = sorted(chosen[:feed_limit_w], key=_wk)
                 hot_leads = []
                 for c in chosen:
                     j, jr, pri = classify_lead(c, c.scores, c.signals)
@@ -814,7 +825,7 @@ def warm_homepage_cache() -> None:
                     "hotLeads": hot_leads,
                     "tierLegend": HOMEPAGE_TIER_LEGEND,
                     "spotlightMix": {
-                        "hot_slots": 3, "warm_slots": 2,
+                        "hot_slots": 35, "warm_slots": 15, "feed_limit": feed_limit_w,
                         "rotation_day": str(now.date()),
                         "rotation_hour_utc": hour,
                         "rotation_minute_utc": minute,
@@ -919,42 +930,44 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     hot_ordered = dedupe_companies_ordered([t[2] for t in hot_pool])
     warm_ordered = dedupe_companies_ordered([t[2] for t in warm_pool])
 
-    spotlight_limit = 5
-    hot_slots = 3
-    warm_slots = 2
-    now = datetime.now(timezone.utc)
+    # Feed pool: up to 50 leads (35 HOT + 15 WARM) for the rotating hero panel.
+    # The client handles client-side rotation; server just provides the pool.
+    feed_limit   = 50
+    hot_slots    = 35
+    warm_slots   = 15
+    now          = datetime.now(timezone.utc)
     h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
-    hour = now.hour
+    hour         = now.hour
 
     chosen: List[Company] = []
     used_ids: set = set()
 
+    # Fill HOT slots (rotated so different leads surface each hour)
     for c in _take_rotated(hot_ordered, hot_slots, h_seed):
         if c.id not in used_ids:
             chosen.append(c)
             used_ids.add(c.id)
+    # Fill WARM slots
     warm_avail = [c for c in warm_ordered if c.id not in used_ids]
     for c in _take_rotated(warm_avail, warm_slots, w_seed):
         if c.id not in used_ids:
             chosen.append(c)
             used_ids.add(c.id)
+    # Top-up with any remaining HOT/WARM if slots not filled
+    for c in hot_ordered + warm_ordered:
+        if len(chosen) >= feed_limit:
+            break
+        if c.id not in used_ids:
+            chosen.append(c)
+            used_ids.add(c.id)
 
-    if len(chosen) < spotlight_limit:
-        for c in hot_ordered:
-            if c.id not in used_ids:
-                chosen.append(c)
-                used_ids.add(c.id)
-            if len(chosen) >= spotlight_limit:
-                break
-    if len(chosen) < spotlight_limit:
-        for c in warm_ordered:
-            if c.id not in used_ids:
-                chosen.append(c)
-                used_ids.add(c.id)
-            if len(chosen) >= spotlight_limit:
-                break
+    # Sort final pool: HOT first (by recency), then WARM
+    def _pool_sort_key(c: Company):
+        junk, _, pri = classify_lead(c, c.scores, c.signals)
+        tier_rank = 0 if pri.tier == "HOT" else 1
+        return (tier_rank, -_latest_signal_ts(c))
 
-    chosen = _shuffle_spotlight_order(chosen[:spotlight_limit], h_seed, w_seed)
+    chosen = sorted(chosen[:feed_limit], key=_pool_sort_key)
 
     hot_leads = []
     for c in chosen:
@@ -968,6 +981,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         "spotlightMix": {
             "hot_slots": hot_slots,
             "warm_slots": warm_slots,
+            "feed_limit": feed_limit,
             "rotation_day": str(now.date()),
             "rotation_hour_utc": hour,
             "rotation_minute_utc": minute,

@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 # Normalized company name -> canonical industry (OEMs / frequent mislabels from signal text alone).
 KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
+    # Automotive / EV
     "faraday future": "Automotive & Manufacturing",
     "tesla": "Automotive & Manufacturing",
     "tesla inc": "Automotive & Manufacturing",
@@ -23,6 +24,30 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "fisker": "Automotive & Manufacturing",
     "general motors": "Automotive & Manufacturing",
     "ford motor": "Automotive & Manufacturing",
+    "stellantis": "Automotive & Manufacturing",
+    "sumitomo": "Automotive & Manufacturing",
+    "duravant": "Automotive & Manufacturing",
+    # Robotics / technology
+    "brain corp": "Datacenters",
+    "brain corp.": "Datacenters",
+    "dexterity": "Automotive & Manufacturing",
+    "opentrons global robotics": "Medical Technology",
+    "hesai technology": "Automotive & Manufacturing",
+    "seagull software": "Datacenters",
+    "blinkops": "Datacenters",
+    "velaris": "Datacenters",
+    # Healthcare / senior living
+    "cedarhurst": "Healthcare",
+    "lifespire": "Healthcare",
+    "novant health": "Healthcare",
+    "marshall medical": "Healthcare",
+    # Logistics / food distribution
+    "performance food group": "Logistics",
+    "core-mark": "Logistics",
+    "dp world antwerp": "Logistics",
+    "forward air acquisition": "Logistics",
+    # Entertainment / gaming
+    "mgm springfield": "Casinos & Gaming",
 }
 
 # When two industries have the same raw keyword score, pick the higher-priority one first.
@@ -65,7 +90,11 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     ],
     "Healthcare": [
         "hospital", "healthcare", "health system", "clinic", "patient",
-        "senior living", "nursing home", "assisted living", "medical center"
+        "senior living", "nursing home", "assisted living", "medical center",
+        "skilled nursing", "memory care", "long-term care", "ltc",
+        "elder care", "home health", "home care", "palliative care",
+        "cedarhurst", "lifespire", "brookdale", "sunrise senior",
+        "brightspring", "encompass health",
     ],
     "Medical Technology": [
         "laboratory", "lab automation", "clinical lab", "diagnostics lab",

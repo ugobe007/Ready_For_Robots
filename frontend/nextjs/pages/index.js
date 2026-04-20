@@ -112,6 +112,14 @@ export default function Signals() {
   const [hotLeads, setHotLeads] = useState([]);
   const [tierLegend, setTierLegend] = useState(null);
   const [scoringSystem, setScoringSystem] = useState(null);
+
+  // ── Hero feed rotation ────────────────────────────────────────────────────
+  const FEED_VISIBLE  = 5;   // rows shown at once
+  const FEED_INTERVAL = 3200; // ms between rotations
+  const [feedOffset, setFeedOffset]       = useState(0);
+  const [feedExiting, setFeedExiting]     = useState(false); // top row fading out
+  const [feedEntering, setFeedEntering]   = useState(false); // bottom row fading in
+
   // Expanded deal for inline details
   const [expandedDealId, setExpandedDealId] = useState(null);
   // Which hot lead card has share menu open (for social share dropdown)
@@ -348,6 +356,24 @@ export default function Signals() {
       clearInterval(interval);
     };
   }, [homepageRetryTick]);
+
+  // ── Feed rotation effect ─────────────────────────────────────────────────
+  useEffect(() => {
+    const pool = dedupeHomepageLeads(hotLeads);
+    if (pool.length <= FEED_VISIBLE) return;
+    const timer = setInterval(() => {
+      // Fade out → advance offset → fade in
+      setFeedExiting(true);
+      setTimeout(() => {
+        setFeedOffset(prev => (prev + 1) % pool.length);
+        setFeedExiting(false);
+        setFeedEntering(true);
+        setTimeout(() => setFeedEntering(false), 400);
+      }, 300);
+    }, FEED_INTERVAL);
+    return () => clearInterval(timer);
+    // FEED_VISIBLE / FEED_INTERVAL are module-level constants
+  }, [hotLeads]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use summary for counts (no full leads fetch)
   const hotCount = statsData.hotDeals ?? 0;
@@ -639,287 +665,134 @@ export default function Signals() {
                   <strong>Search Leads</strong>: full database.
                 </p>
               </div>
+              {/* ── Hero right panel: rotating signal feed (Supabase-style) */}
               <aside
-                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--crm-names"
-                aria-label="Signal feed and live pipeline totals"
+                className="rr-hero-ticker-panel rr-hero-ticker-panel--live rr-hero-ticker-panel--crm-names flex flex-col"
+                aria-label="Live signal feed"
               >
-                <div className="rr-testimonial-bar rr-testimonial-bar--compact">
-                  <span className="rr-testimonial-ico shrink-0" aria-hidden>💬</span>
-                  <div className="flex-1 min-w-0">
-                    <div key={currentQuoteIndex} className="rr-testimonial-text">
-                      {automationQuotes[currentQuoteIndex].text}
-                    </div>
-                  </div>
-                  <span className="rr-testimonial-counter tabular-nums">
-                    {currentQuoteIndex + 1}/{automationQuotes.length}
+                <span className="rr-hero-ticker-accent" aria-hidden="true" />
+                <div className="rr-hero-ticker-header">
+                  <span className="rr-hero-ticker-header-title">Hot signal stream</span>
+                  <span className="rr-hero-ticker-live-pill">
+                    <span className="rr-hero-ticker-live-dot" aria-hidden="true" />
+                    Live
                   </span>
                 </div>
-                <p className="rr-hero-sample-legend">
-                  {statsLoaded
-                    ? 'Live pipeline totals · same tiering as the dashboard'
-                    : 'Loading live totals…'}
+                {/* Single inline stat line */}
+                <p className="text-[11px] text-neutral-500 tabular-nums leading-none mb-3 shrink-0">
+                  <span className="text-neutral-200 font-semibold">{formatHeroCount(statsData.activeLeads, statsLoaded)}</span>
+                  <span className="mx-1.5 text-neutral-700">·</span>
+                  <span className="text-neutral-400">active</span>
+                  <span className="mx-2.5 text-neutral-700">·</span>
+                  <span className="font-semibold" style={{ color: 'var(--rr-orange)' }}>{formatHeroCount(statsData.hotDeals, statsLoaded)}</span>
+                  <span className="mx-1.5 text-neutral-700">·</span>
+                  <span className="text-neutral-400">hot</span>
+                  <span className="mx-2.5 text-neutral-700">·</span>
+                  <span className="font-semibold" style={{ color: 'var(--rr-cyan)' }}>{formatHeroCount(statsData.liveSignals, statsLoaded)}</span>
+                  <span className="mx-1.5 text-neutral-700">·</span>
+                  <span className="text-neutral-400">signals</span>
                 </p>
-                <div className="rr-hero-stat-strip rr-hero-stat-strip--compact">
-                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
-                    <span className="n text-[var(--rr-text)] tabular-nums">
-                      {formatHeroCount(statsData.activeLeads, statsLoaded)}
-                    </span>
-                    <span className="l">Active</span>
-                  </div>
-                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-orange)' }}>
-                      {formatHeroCount(statsData.hotDeals, statsLoaded)}
-                    </span>
-                    <span className="l">Hot</span>
-                  </div>
-                  <div
-                    className="rr-hero-stat-inline rr-hero-stat-inline--sm"
-                    title="Buying-intent signals across all leads"
-                  >
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-cyan)' }}>
-                      {formatHeroCount(statsData.liveSignals, statsLoaded)}
-                    </span>
-                    <span className="l">Signals</span>
-                  </div>
-                  <div className="rr-hero-stat-inline rr-hero-stat-inline--sm">
-                    <span className="n tabular-nums" style={{ color: 'var(--rr-green)' }}>
-                      {formatHeroCount(statsData.warmPipeline, statsLoaded)}
-                    </span>
-                    <span className="l">Warm</span>
-                  </div>
-                </div>
+
+                {/* Divider */}
+                <div className="border-t border-neutral-800 shrink-0" />
+
+                {/* Rotating signal feed */}
                 <div
-                  className="rr-hero-crm-strip rr-hero-crm-strip--names"
-                  title="Live counts · inline company + opportunity — open the dashboard for full lists"
+                  className="flex-1 overflow-hidden"
+                  style={{
+                    transition: 'opacity 300ms ease',
+                    opacity: feedExiting ? 0 : 1,
+                  }}
                 >
-                  <div className="rr-hero-crm-strip-label">CRM pipeline</div>
-                  <div className="rr-hero-crm-strip-stats rr-hero-crm-strip-stats--two">
-                    <div className="rr-hero-crm-tile rr-hero-crm-tile--inline">
-                      <p
-                        className="rr-hero-crm-inline"
-                        title={
-                          crmPrevActive
-                            ? [crmPrevActive.name, crmPrevActive.opp].filter(Boolean).join(' — ')
-                            : undefined
-                        }
-                        aria-live="polite"
-                      >
-                        <span className="rr-hero-crm-inline-ct tabular-nums">
-                          {formatHeroCount(statsData.activeLeads, statsLoaded)}
-                        </span>
-                        <span className="rr-hero-crm-inline-dot">·</span>
-                        <span className="rr-hero-crm-inline-role">active projects</span>
-                        {crmPrevActive ? (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-co">{crmPrevActive.name}</span>
-                            {crmPrevActive.opp ? (
-                              <>
-                                <span className="rr-hero-crm-inline-dot">·</span>
-                                <span className="rr-hero-crm-inline-opp">{crmPrevActive.opp}</span>
-                              </>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-placeholder">
-                              {statsLoaded ? '…' : '—'}
-                            </span>
-                          </>
-                        )}
-                      </p>
+                  {loading ? (
+                    <div className="py-8 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      <span className="text-xs text-neutral-600">Loading signals…</span>
                     </div>
-                    <div className="rr-hero-crm-tile rr-hero-crm-tile--inline rr-hero-crm-tile--split">
-                      <p
-                        className="rr-hero-crm-inline rr-hero-crm-inline--stacked"
-                        title={
-                          crmPrevHot
-                            ? [crmPrevHot.name, crmPrevHot.opp].filter(Boolean).join(' — ')
-                            : undefined
-                        }
-                        aria-live="polite"
-                      >
-                        <span className="rr-hero-crm-inline-ct rr-hero-crm-inline-ct--hot tabular-nums">
-                          {formatHeroCount(statsData.hotDeals, statsLoaded)}
-                        </span>
-                        <span className="rr-hero-crm-inline-dot">·</span>
-                        <span className="rr-hero-crm-inline-role rr-hero-crm-inline-role--hot">hot</span>
-                        {crmPrevHot ? (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-co">{crmPrevHot.name}</span>
-                            {crmPrevHot.opp ? (
-                              <>
-                                <span className="rr-hero-crm-inline-dot">·</span>
-                                <span className="rr-hero-crm-inline-opp">{crmPrevHot.opp}</span>
-                              </>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-placeholder">
-                              {statsLoaded ? '…' : '—'}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                      <div className="rr-hero-crm-hw-divider" aria-hidden />
-                      <p
-                        className="rr-hero-crm-inline rr-hero-crm-inline--stacked"
-                        title={
-                          crmPrevWarm
-                            ? [crmPrevWarm.name, crmPrevWarm.opp].filter(Boolean).join(' — ')
-                            : undefined
-                        }
-                        aria-live="polite"
-                      >
-                        <span className="rr-hero-crm-inline-ct rr-hero-crm-inline-ct--warm tabular-nums">
-                          {formatHeroCount(statsData.warmPipeline, statsLoaded)}
-                        </span>
-                        <span className="rr-hero-crm-inline-dot">·</span>
-                        <span className="rr-hero-crm-inline-role rr-hero-crm-inline-role--warm">warm</span>
-                        {crmPrevWarm ? (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-co">{crmPrevWarm.name}</span>
-                            {crmPrevWarm.opp ? (
-                              <>
-                                <span className="rr-hero-crm-inline-dot">·</span>
-                                <span className="rr-hero-crm-inline-opp">{crmPrevWarm.opp}</span>
-                              </>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <span className="rr-hero-crm-inline-dot">·</span>
-                            <span className="rr-hero-crm-inline-placeholder">
-                              {statsLoaded ? '…' : '—'}
-                            </span>
-                          </>
-                        )}
-                      </p>
+                  ) : topHotDeals.length === 0 ? (
+                    <p className="text-xs text-neutral-600 py-6">No signals yet — check back soon</p>
+                  ) : (
+                    <div>
+                      {Array.from({ length: Math.min(FEED_VISIBLE, topHotDeals.length) }, (_, i) => {
+                        const lead      = topHotDeals[(feedOffset + i) % topHotDeals.length];
+                        const tier      = lead.priority_tier || 'COLD';
+                        const isHot     = tier === 'HOT';
+                        const isWarm    = tier === 'WARM';
+                        const topSig    = (lead.signals || [])[0];
+                        const sigLabel  = (topSig?.signal_label || (topSig?.signal_type || '').replace(/_/g, ' ')).toLowerCase();
+                        const tierLabel = isHot ? 'HOT' : isWarm ? 'WARM' : 'EMRG';
+                        const tierColor = isHot ? '#f97316' : isWarm ? '#f59e0b' : '#22d3ee';
+                        return (
+                          <Link
+                            key={`${feedOffset}-${i}`}
+                            href="/dashboard"
+                            className="group flex items-start gap-3 py-3 px-1 -mx-1 rounded-lg border-b border-neutral-800/70 hover:border-orange-500/25 hover:bg-orange-500/[0.06] transition-colors last:border-b-0"
+                          >
+                            <span
+                              className="shrink-0 mt-1 w-0.5 self-stretch rounded-full"
+                              style={{ background: isHot ? '#f97316' : isWarm ? '#f59e0b' : '#374151' }}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-baseline gap-2">
+                                <span
+                                  className="shrink-0 text-[9px] font-bold tracking-[0.14em] uppercase"
+                                  style={{ color: tierColor, minWidth: '2.6rem' }}
+                                >
+                                  {tierLabel}
+                                </span>
+                                <span className={`text-sm font-semibold truncate transition-colors ${isHot ? 'text-white group-hover:text-orange-50' : 'text-neutral-200 group-hover:text-white'}`}>
+                                  {lead.company_name}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-neutral-500 truncate mt-0.5 leading-snug pl-[2.6rem]">
+                                {sigLabel && <span className="text-neutral-400">{sigLabel}</span>}
+                                {sigLabel && lead.industry && <span className="mx-1 text-neutral-700">·</span>}
+                                {lead.industry && <span>{lead.industry}</span>}
+                              </p>
+                            </div>
+                            <span className="shrink-0 text-neutral-700 group-hover:text-neutral-500 text-xs mt-1 transition-colors">→</span>
+                          </Link>
+                        );
+                      })}
                     </div>
-                  </div>
+                  )}
                 </div>
-                <p className="rr-emerging-note rr-emerging-note--inline">
-                  Emerging ·{' '}
-                  <span className="tabular-nums">{formatHeroCount(statsData.cold, statsLoaded)}</span> in pipeline
-                </p>
-                <Link
-                  href="/dashboard"
-                  className="rr-hero-explore-btn"
-                  title="Dashboard — all leads and strategic snapshot"
-                >
-                  Explore
-                </Link>
+
+                {/* Footer: live pulse + CTA + warm count */}
+                <div className="mt-3 pt-3 border-t border-neutral-800/60 shrink-0 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0" />
+                    <Link
+                      href="/dashboard"
+                      className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      View all {formatHeroCount(statsData.hotDeals, statsLoaded)} HOT leads →
+                    </Link>
+                  </div>
+                  <span className="text-[10px] text-neutral-700 tabular-nums">
+                    {formatHeroCount(statsData.warmPipeline, statsLoaded)} warm
+                  </span>
+                </div>
               </aside>
             </div>
           </div>
         </div>
 
-        <div className="rr-section !pt-2 !pb-6">
-          <Link href="#signals" className="rr-why-signals group block rounded-[var(--rr-radius-lg)]">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-lg shrink-0">💡</span>
-                <div>
-                  <div className="font-semibold text-[var(--rr-green)]">Why Signals Matter</div>
-                  <div className="text-sm text-[var(--rr-muted2)] hidden sm:block">Learn how we identify buying intent</div>
-                </div>
-              </div>
-              <span className="text-[var(--rr-green)] group-hover:translate-x-1 transition-transform shrink-0">→</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Markets We Track — industry vertical nav */}
-        <div className="max-w-7xl mx-auto px-6 pt-10 pb-2">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-1 h-4 rounded-full bg-emerald-500" />
-            <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-neutral-400">Coverage</span>
-          </div>
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Markets we track</h2>
-              <p className="text-sm text-neutral-500 mt-1">Every vertical below has live signals — click to filter.</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[
-              { label: 'Logistics & Warehousing',            fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
-              { label: 'Hospitality & Hotels',               fit: 'Service & Delivery Robots',    q: 'Hospitality' },
-              { label: 'Healthcare & Senior Living',         fit: 'Clinical Logistics Robots',    q: 'Healthcare' },
-              { label: 'Food Service & Restaurants',         fit: 'BOH Kitchen Automation',       q: 'Food Service' },
-              { label: 'Food Processing & Manufacturing',    fit: 'EOL Line Automation',          q: 'Food Processing & Manufacturing', badge: 'NEW' },
-              { label: 'CPG & Consumer Goods',               fit: 'Palletizing & Case Packing',   q: 'CPG & Consumer Goods', badge: 'NEW' },
-              { label: 'Contract Manufacturing',             fit: 'Flexible EOL Robotics',        q: 'Contract Manufacturing', badge: 'NEW' },
-              { label: 'Retail & Grocery',                   fit: 'Picking & Restocking',         q: 'Retail' },
-              { label: 'Airports & Transportation',          fit: 'Ground Ops Robots',            q: 'Airports & Transportation' },
-              { label: 'Casinos & Gaming',                   fit: 'Floor & F&B Delivery',         q: 'Casinos & Gaming' },
-              { label: 'Real Estate & Facilities',           fit: 'Cleaning & Concierge',         q: 'Real Estate & Facilities' },
-              { label: 'Cruise Lines',                       fit: 'Onboard Delivery',             q: 'Cruise Lines' },
-            ].map((m) => {
-              const qFirst = m.q.split(' ')[0].toLowerCase();
-              const matchingLead = hotLeads.find(lead =>
-                (lead.industry || '').toLowerCase().includes(qFirst)
-              );
-              const topSig = matchingLead?.signals?.[0];
-              const sigLabel = topSig?.signal_label || topSig?.signal_type?.replace(/_/g, ' ');
-              return (
-                <Link
-                  key={m.q}
-                  href={`/search?industry=${encodeURIComponent(m.q)}`}
-                  className="group relative flex flex-col justify-between border border-neutral-800 hover:border-emerald-500/50 rounded-xl p-4 bg-neutral-900 hover:bg-[#141d2b] transition-all duration-150 overflow-hidden"
-                >
-                  {/* hover glow */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent" />
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-sm font-bold text-emerald-400 group-hover:text-emerald-300 leading-snug transition-colors">{m.label}</p>
-                    {m.badge && (
-                      <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">{m.badge}</span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-neutral-500 leading-tight">{m.fit}</p>
-                  {sigLabel && (
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 self-start text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full font-medium truncate max-w-full">
-                      <span className="w-1 h-1 rounded-full bg-orange-400 shrink-0" />
-                      {sigLabel}
-                    </div>
-                  )}
-                  <div className="flex items-end justify-between mt-4 pt-3 border-t border-neutral-800">
-                    {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
-                      <div>
-                        <div className="text-xl font-bold tabular-nums text-emerald-400 leading-none">{leadsByIndustry[m.q]}</div>
-                        <div className="text-[10px] text-neutral-600 mt-0.5 font-medium uppercase tracking-wide">leads</div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-neutral-700 font-mono">—</span>
-                    )}
-                    <span className="text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all text-base">→</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Daily Spotlight Deals */}
-        <div id="leads" className="max-w-7xl mx-auto px-6 pt-10 pb-10 md:pb-12 space-y-8 scroll-mt-24">
+        {/* Daily Spotlight Deals — now above the fold */}
+        <div id="leads" className="max-w-7xl mx-auto px-6 pt-6 pb-10 md:pb-12 space-y-8 scroll-mt-24">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-1 h-4 rounded-full bg-orange-500" />
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.12em] uppercase text-neutral-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Daily Spotlight
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                HOT leads · Act this week
               </span>
             </div>
             <h2 className="text-3xl font-bold text-white tracking-tight mb-2">
-              Daily spotlight deals
+              Today&apos;s automation pipeline
             </h2>
             <p className="text-sm text-neutral-500 max-w-xl mb-5">
-              Five accounts rotate each day: three Hot and two Warm, ranked by newest signal activity first.
+              Ranked by newest signal activity. Three HOT, two Warm — each with buying signals you can act on.
             </p>
             {tierLegend && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
@@ -1247,6 +1120,92 @@ export default function Signals() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Markets We Track — industry vertical nav */}
+        <div className="max-w-7xl mx-auto px-6 pt-10 pb-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1 h-4 rounded-full bg-emerald-500" />
+            <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-neutral-400">Coverage</span>
+          </div>
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">Markets we track</h2>
+              <p className="text-sm text-neutral-500 mt-1">Every vertical below has live signals — click to filter.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              { label: 'Logistics & Warehousing',            fit: 'Warehouse AMR Fleet',          q: 'Logistics' },
+              { label: 'Hospitality & Hotels',               fit: 'Service & Delivery Robots',    q: 'Hospitality' },
+              { label: 'Healthcare & Senior Living',         fit: 'Clinical Logistics Robots',    q: 'Healthcare' },
+              { label: 'Food Service & Restaurants',         fit: 'BOH Kitchen Automation',       q: 'Food Service' },
+              { label: 'Food Processing & Manufacturing',    fit: 'EOL Line Automation',          q: 'Food Processing & Manufacturing', badge: 'NEW' },
+              { label: 'CPG & Consumer Goods',               fit: 'Palletizing & Case Packing',   q: 'CPG & Consumer Goods', badge: 'NEW' },
+              { label: 'Contract Manufacturing',             fit: 'Flexible EOL Robotics',        q: 'Contract Manufacturing', badge: 'NEW' },
+              { label: 'Retail & Grocery',                   fit: 'Picking & Restocking',         q: 'Retail' },
+              { label: 'Airports & Transportation',          fit: 'Ground Ops Robots',            q: 'Airports & Transportation' },
+              { label: 'Casinos & Gaming',                   fit: 'Floor & F&B Delivery',         q: 'Casinos & Gaming' },
+              { label: 'Real Estate & Facilities',           fit: 'Cleaning & Concierge',         q: 'Real Estate & Facilities' },
+              { label: 'Cruise Lines',                       fit: 'Onboard Delivery',             q: 'Cruise Lines' },
+            ].map((m) => {
+              const qFirst = m.q.split(' ')[0].toLowerCase();
+              const matchingLead = hotLeads.find(lead =>
+                (lead.industry || '').toLowerCase().includes(qFirst)
+              );
+              const topSig = matchingLead?.signals?.[0];
+              const sigLabel = topSig?.signal_label || topSig?.signal_type?.replace(/_/g, ' ');
+              return (
+                <Link
+                  key={m.q}
+                  href={`/search?industry=${encodeURIComponent(m.q)}`}
+                  className="group relative flex flex-col justify-between border border-neutral-800 hover:border-emerald-500/50 rounded-xl p-4 bg-neutral-900 hover:bg-[#141d2b] transition-all duration-150 overflow-hidden"
+                >
+                  {/* hover glow */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-gradient-to-br from-emerald-500/5 to-transparent" />
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="text-sm font-bold text-emerald-400 group-hover:text-emerald-300 leading-snug transition-colors">{m.label}</p>
+                    {m.badge && (
+                      <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">{m.badge}</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-neutral-500 leading-tight">{m.fit}</p>
+                  {sigLabel && (
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 self-start text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full font-medium truncate max-w-full">
+                      <span className="w-1 h-1 rounded-full bg-orange-400 shrink-0" />
+                      {sigLabel}
+                    </div>
+                  )}
+                  <div className="flex items-end justify-between mt-4 pt-3 border-t border-neutral-800">
+                    {m.q && typeof leadsByIndustry[m.q] === 'number' && leadsByIndustry[m.q] > 0 ? (
+                      <div>
+                        <div className="text-xl font-bold tabular-nums text-emerald-400 leading-none">{leadsByIndustry[m.q]}</div>
+                        <div className="text-[10px] text-neutral-600 mt-0.5 font-medium uppercase tracking-wide">leads</div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-neutral-700 font-mono">—</span>
+                    )}
+                    <span className="text-neutral-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all text-base">→</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rr-section !pt-2 !pb-6">
+          <Link href="#signals" className="rr-why-signals group block rounded-[var(--rr-radius-lg)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-lg shrink-0">💡</span>
+                <div>
+                  <div className="font-semibold text-[var(--rr-green)]">Why Signals Matter</div>
+                  <div className="text-sm text-[var(--rr-muted2)] hidden sm:block">Learn how we identify buying intent</div>
+                </div>
+              </div>
+              <span className="text-[var(--rr-green)] group-hover:translate-x-1 transition-transform shrink-0">→</span>
+            </div>
+          </Link>
         </div>
 
         {/* CTA — CRM / pipeline builder — after spotlight so users see proof before the ask */}

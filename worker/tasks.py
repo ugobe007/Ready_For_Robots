@@ -461,10 +461,21 @@ def run_rfp_marketplace_scraper_task(self):
                 ).first()
                 
                 if not company:
+                    from app.services.company_validator import is_valid_lead
+
+                    cname = signal_data.get("company_name") or ""
+                    ok, reason = is_valid_lead(cname)
+                    if not ok:
+                        logger.debug(
+                            "RFP marketplace: skip invalid company name %r — %s",
+                            cname,
+                            reason,
+                        )
+                        continue
                     company = Company(
-                        name=signal_data['company_name'],
-                        industry=signal_data.get('industry'),
-                        source=signal_data['source']
+                        name=cname,
+                        industry=signal_data.get("industry"),
+                        source=signal_data["source"],
                     )
                     db.add(company)
                     db.flush()

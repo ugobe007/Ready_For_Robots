@@ -21,9 +21,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 from pathlib import Path
 
+from app.env_loader import database_url_is_template_or_sqlite
+
+_shell_database_url = (os.environ.get("DATABASE_URL") or "").strip()
 _root = Path(__file__).resolve().parents[1]
 load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
 load_dotenv(_root / ".env", override=True)
+_loaded_after_dotenv = (os.environ.get("DATABASE_URL") or "").strip()
+if _shell_database_url and database_url_is_template_or_sqlite(_loaded_after_dotenv):
+    os.environ["DATABASE_URL"] = _shell_database_url
 
 from app.database import SessionLocal
 from app.services.company_merge import merge_duplicate_companies_by_domain

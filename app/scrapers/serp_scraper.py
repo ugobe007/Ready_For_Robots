@@ -27,6 +27,7 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
 from app.scrapers.news_scraper import KNOWN_COMPANIES, _COMPANY_ANNOUNCE_RE
+from app.scrapers.base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,8 @@ class SerpScraper:
     Targeted SERP-style news scraper for expansion + automation-intent signals.
     Runs a curated list of high-signal queries against Google News RSS.
     """
+
+    _name_is_valid = staticmethod(BaseScraper._name_is_valid)
 
     def __init__(self, db: Session = None):
         self.db = db or SessionLocal()

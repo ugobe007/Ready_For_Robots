@@ -4,24 +4,28 @@
 
 set -e
 
-# Schema must match ORM before serving API (Company loads include all columns).
-# Background migrations caused race: /api/leads and /homepage 500 until column exists.
+# Run migrations with a 60-second timeout so a slow/unavailable DB never blocks startup.
+# If alembic fails or times out, uvicorn still starts — static pages and health checks work.
 if [ -n "$DATABASE_URL" ]; then
   echo "Running database migrations (alembic upgrade head)..."
-  if alembic upgrade head; then
+  if timeout 60 alembic upgrade head; then
     echo "Migrations completed."
   else
-    echo "ERROR: alembic upgrade head failed — API may return 500 until fixed."
-    exit 1
+    echo "WARNING: alembic upgrade head failed or timed out — continuing startup."
+    echo "         APIs that require schema changes may return 500 until next deploy."
   fi
 fi
 
-# Start Celery (non-blocking)
-echo "Starting Celery beat..."
-celery -A worker.celery_worker beat --loglevel=info &
-echo "Starting Celery worker..."
-celery -A worker.celery_worker worker --loglevel=info --concurrency=2 &
+# Start Celery only if Redis is available (skip gracefully on Fly.io without Redis)
+if [ -n "$REDIS_URL" ] || [ -n "$CELERY_BROKER_URL" ]; then
+  echo "Starting Celery beat..."
+  celery -A worker.celery_worker beat --loglevel=info &
+  echo "Starting Celery worker..."
+  celery -A worker.celery_worker worker --loglevel=info --concurrency=2 &
+else
+  echo "No Redis/Celery broker configured — skipping Celery (scrapers run on schedule inside FastAPI)."
+fi
 
-# Start uvicorn immediately — health checks and static pages work without DB
+# Start uvicorn — always starts regardless of DB/Celery state
 echo "Starting FastAPI on 0.0.0.0:8080..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8080

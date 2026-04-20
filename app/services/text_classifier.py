@@ -474,44 +474,98 @@ def classify(text: str) -> TextClassification:
         return TextClassification(EntityType.PERSON_NAME, 0.78, evidence, False)
 
     # ── Soft scoring: accumulate positive company signals ─────────────────────
+    # Philosophy: prove that the string IS a company name, don't just assume it.
+    # Each signal adds or removes evidence. A name passes only when multiple
+    # independent positive signals agree.
 
     company_score = 0.0
     word_count = _word_count(raw)
 
-    # Title-case proper noun
+    # ── POSITIVE signals ──────────────────────────────────────────────────────
+
+    # Title-case proper noun (+0.25)
     if _is_title_case(raw):
         company_score += 0.25
         evidence.append("title-case proper noun")
 
-    # Starts with capital
+    # Starts with capital (+0.10)
     if raw[0].isupper():
         company_score += 0.10
         evidence.append("starts with capital letter")
 
-    # Compact (1–5 words) — real companies are rarely longer
-    if 1 <= word_count <= 5:
+    # Compact (1–4 words) — sweet spot for company names (+0.20)
+    # 5-word names still plausible but less certain (+0.10)
+    if 1 <= word_count <= 4:
         company_score += 0.20
         evidence.append(f"compact name ({word_count} word(s))")
+    elif word_count == 5:
+        company_score += 0.10
+        evidence.append(f"5-word name (borderline compact)")
     elif word_count <= 7:
-        company_score += 0.05
+        company_score += 0.02
     else:
-        company_score -= 0.20
+        company_score -= 0.25
         evidence.append(f"very long ({word_count} words) — likely a sentence")
 
-    # No punctuation typical of sentences
+    # No sentence punctuation (+0.10)
     if not re.search(r"[.!?,;:]", raw):
         company_score += 0.10
         evidence.append("no sentence-punctuation")
 
-    # No lowercase run that would indicate a mid-sentence fragment
+    # No all-lowercase word pair — not a mid-sentence fragment (+0.10)
     if not re.search(r"\b[a-z]{4,}\s+[a-z]{4,}", raw):
         company_score += 0.10
         evidence.append("no all-lowercase word pair (not mid-sentence)")
+
+    # Contains at least one word that is NOT a generic industry category word.
+    # Import the same _GENERIC_WORDS set used by company_validator so scoring
+    # is consistent. A name with zero distinctive words is almost certainly a
+    # topic label, not a legal entity (+0.20 / -0.30).
+    try:
+        from app.services.company_validator import _GENERIC_WORDS, _ALWAYS_DISTINCTIVE
+        words_lower = [w.lower() for w in re.findall(r"[a-zA-Z&]+", raw)]
+        distinctive = any(
+            w in _ALWAYS_DISTINCTIVE or w not in _GENERIC_WORDS
+            for w in words_lower
+        )
+        if distinctive:
+            company_score += 0.20
+            evidence.append("contains distinctive non-generic word")
+        else:
+            company_score -= 0.30
+            evidence.append("all words are generic category terms — no proper noun")
+    except Exception:
+        pass  # never break if cross-import fails
+
+    # Contains a number or symbol that real companies sometimes use (&, #, digits)
+    # but this is a weak positive — small bonus only
+    if re.search(r"[&\+\d]", raw):
+        company_score += 0.05
+        evidence.append("contains & / + / digit (brand formatting)")
+
+    # ── NEGATIVE signals ──────────────────────────────────────────────────────
 
     # Short all-caps (2–3 letters) = ticker/airport code
     if _SHORT_ALLCAPS.match(raw):
         company_score -= 0.50
         evidence.append("short all-caps: likely ticker or airport code")
+
+    # Generic noun phrase ending (e.g. "Network", "Expansion", "Sourcing" alone)
+    _BARE_GENERIC_ENDING = re.compile(
+        r"\b(network|expansion|sourcing|research|facility|plant|campus|"
+        r"use|adoption|trends?|insights?|overview|strategy|safety|"
+        r"management|solutions?|services?|technology)\s*$",
+        re.IGNORECASE,
+    )
+    if _BARE_GENERIC_ENDING.search(raw) and word_count <= 4:
+        company_score -= 0.20
+        evidence.append("ends with bare generic noun (concept label, not company)")
+
+    # All words are common English words found in a dictionary (not proper nouns)
+    # Simple heuristic: if every word is all-lowercase letters (after strip), likely text
+    if raw == raw.lower() and not re.search(r"\d|[&\+]", raw):
+        company_score -= 0.20
+        evidence.append("entirely lowercase — not a proper noun")
 
     # ── Decision ──────────────────────────────────────────────────────────────
 
@@ -520,9 +574,10 @@ def classify(text: str) -> TextClassification:
     if confidence >= 0.45:
         return TextClassification(EntityType.COMPANY_NAME, confidence, evidence, True)
 
-    if confidence >= 0.20:
-        # Borderline — we classify as UNKNOWN rather than asserting company
-        evidence.append(f"low confidence ({confidence:.2f}) — ambiguous")
+    if confidence >= 0.25:
+        # Borderline — classify as UNKNOWN rather than asserting company.
+        # The inference gate in company_validator will reject UNKNOWN < 0.40.
+        evidence.append(f"borderline ({confidence:.2f}) — insufficient proof of company identity")
         return TextClassification(EntityType.UNKNOWN, confidence, evidence, False)
 
     evidence.append(f"insufficient positive signals (score={confidence:.2f})")

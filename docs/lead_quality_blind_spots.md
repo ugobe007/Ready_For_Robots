@@ -1,5 +1,7 @@
 # Lead quality: blind spots and mitigations
 
+**Goals:** [lead_quality_north_star.md](lead_quality_north_star.md).
+
 Heuristic filters will always miss some edge cases: headlines are infinite, and scrapers invent new failure modes. This doc explains the **layers** we use and how to tighten the system without false confidence.
 
 ## Layers (defense in depth)
@@ -9,7 +11,7 @@ Heuristic filters will always miss some edge cases: headlines are infinite, and 
 3. **`classify_lead`** — Used by the leads API and spotlight: **`is_junk` + Target false-positive helper + full `is_valid_lead` (skip duplicate junk)** so HOT/WARM cannot bypass the logic engine.
 4. **Ingest** (`intelligence_news_scraper._get_or_create_company`) — Classifier + **`is_valid_lead` with entity hint** before insert.
 
-When cleanup (`scripts/cleanup_leads.py`) deletes rows, it uses **`is_junk` only** for the purge phase. That must stay aligned with (1) and the allowlist so we do not delete real brands again.
+When cleanup (`scripts/cleanup_leads.py`) deletes rows, the purge phase uses **`is_valid_lead`** (full logic engine, not `is_junk` alone) so it stays aligned with ingest and the API.
 
 ## Operational hygiene
 

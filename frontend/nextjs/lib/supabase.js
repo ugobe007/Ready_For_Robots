@@ -1,25 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Dashboard may label this "anon" (JWT) or "publishable" (sb_publishable_…); either works in the browser.
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-// Singleton client — safe to import anywhere
-// If credentials are missing, export null client (auth features disabled)
-export const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY) 
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession:    true,
-        autoRefreshToken:  true,
-        detectSessionInUrl: true,   // picks up magic-link hash on redirect
-      },
-    })
-  : null;
+export const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      })
+    : null;
 
-// Warn in development if Supabase is not configured
 if (!supabase && typeof window !== 'undefined') {
   console.warn(
-    '[Supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.\n' +
-    'Auth features will be disabled. App will run in guest mode.'
+    '[Supabase] Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY ' +
+      '(or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY). Auth disabled until then.'
   );
 }
 
@@ -32,9 +33,10 @@ export function authHeader(token) {
 }
 
 /**
- * Convenience: get the current session (null if not logged in).
+ * Convenience: get the current session (null if not logged in or not configured).
  */
 export async function getSession() {
+  if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data?.session ?? null;
 }

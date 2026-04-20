@@ -31,7 +31,7 @@ conjugation engine (verb_conjugation.py):
       Otherwise return None.
 
   WHY CONJUGATION MATTERS HERE
-      The old approach used regex stem-matching (deploy\w{0,6}) which:
+      The old approach used regex stem-matching (deploy\\w{0,6}) which:
         - Missed irregular past tenses: "went", "built", "had been expanding"
         - Incorrectly included auxiliary verbs in the subject span
           ("Marriott International Is [deploying]" → subject = "Marriott International Is")

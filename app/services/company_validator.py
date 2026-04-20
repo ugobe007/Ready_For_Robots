@@ -60,7 +60,11 @@ _PLACEHOLDER_COMPANY_NAMES: frozenset[str] = frozenset({
 _LEGAL_SUFFIX = re.compile(
     r"\b(inc\.?|llc\.?|ltd\.?|corp\.?|co\.?|plc\.?|llp\.?|lp\.?|gmbh|bv|nv|ag|"
     r"s\.a\.?|s\.r\.l\.?|pty\.?|pte\.?|holdings?|group|enterprises?|"
-    r"international|industries|ventures?|partners?|associates?)\s*$",
+    r"international|industries|ventures?|partners?|associates?|"
+    # Healthcare / insurance / finance entity suffixes
+    r"health\s+plan|health\s+system|health\s+network|medical\s+center|"
+    r"medical\s+group|hospital\s+system|insurance|bank|credit\s+union|"
+    r"financial\s+group|investment\s+group|capital\s+group)\s*$",
     re.IGNORECASE,
 )
 
@@ -369,6 +373,46 @@ def is_valid_lead(
     # Stage 2: legal suffix fast-pass
     if _has_legal_suffix(name):
         return True, ""
+
+    # Stage 2d: Inference gate — classify what the name IS, not just what it isn't.
+    # Rather than trusting the default-allow path, we require positive evidence that
+    # the string is a company name. Names that score below the confidence threshold
+    # are rejected as ambiguous rather than silently passed.
+    #
+    # This runs when no entity_hint was provided (entity_hint is already handled
+    # in Stage 0 above). Only trigger for names without a clear legal suffix (those
+    # already fast-passed above).
+    if entity_hint is None:
+        try:
+            from app.services.text_classifier import classify, EntityType
+            tc = classify(name)
+            # Hard reject on clear non-company classifications
+            _HARD_REJECT_TYPES = {
+                EntityType.PERSON_NAME,
+                EntityType.CITY_OR_TOWN,
+                EntityType.COUNTRY,
+                EntityType.SAYING,
+                EntityType.EQUIPMENT_CAT,
+                EntityType.MARKET_FRAGMENT,
+                EntityType.ARTICLE_HEADLINE,
+                EntityType.DESCRIPTION,
+            }
+            if tc.entity_type in _HARD_REJECT_TYPES and tc.confidence >= 0.70:
+                return False, (
+                    f"inference gate: classified as {tc.entity_type.value} "
+                    f"(conf={tc.confidence:.2f}) — "
+                    + "; ".join(tc.evidence[:2])
+                )
+            # Soft reject: UNKNOWN with low confidence means insufficient proof
+            # that this is a company. Reject rather than defaulting to accept.
+            if tc.entity_type == EntityType.UNKNOWN and tc.confidence < 0.40:
+                return False, (
+                    f"inference gate: insufficient positive evidence of company name "
+                    f"(conf={tc.confidence:.2f}) — "
+                    + "; ".join(tc.evidence[:2])
+                )
+        except Exception:
+            pass  # never let classifier failure break the pipeline
 
     # Stage 2b: country / region names are never companies
     if name.strip().lower() in _COUNTRIES_AND_REGIONS:

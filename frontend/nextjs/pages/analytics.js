@@ -97,140 +97,117 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <div className="text-neutral-400 text-sm mb-2">Total Calculations</div>
-            <div className="text-3xl font-bold text-white">{analytics?.total_calculations || 0}</div>
-            <div className="text-emerald-400 text-sm mt-2">
-              +{analytics?.calculation_growth || 0}% vs previous period
-            </div>
+        {/* Pipeline Stats — live from DB */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/50">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500 mb-1">Companies Tracked</div>
+            <div className="text-2xl font-mono font-bold text-white">{(analytics?.total_companies || 0).toLocaleString()}</div>
+            <div className="text-emerald-400 text-xs mt-1">+{analytics?.new_companies || 0} this period</div>
           </div>
-          
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <div className="text-neutral-400 text-sm mb-2">Robot Searches</div>
-            <div className="text-3xl font-bold text-white">{analytics?.robot_searches || 0}</div>
-            <div className="text-cyan-400 text-sm mt-2">
-              {analytics?.avg_matches_per_search || 0} avg matches
-            </div>
+          <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-900/50">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500 mb-1">Signals Collected</div>
+            <div className="text-2xl font-mono font-bold text-white">{(analytics?.total_signals || 0).toLocaleString()}</div>
+            <div className="text-cyan-400 text-xs mt-1">+{analytics?.new_signals || 0} this period</div>
           </div>
-          
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <div className="text-neutral-400 text-sm mb-2">Avg Payback Period</div>
-            <div className="text-3xl font-bold text-white">
-              {analytics?.avg_payback_months || 0}<span className="text-xl text-neutral-400 ml-1">mo</span>
-            </div>
-            <div className="text-yellow-400 text-sm mt-2">
-              ${(analytics?.avg_robot_cost || 0).toLocaleString()} avg cost
-            </div>
+          <div className="border border-red-900 rounded-lg p-4 bg-red-950/20">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500 mb-1">HOT Leads</div>
+            <div className="text-2xl font-mono font-bold text-red-400">{analytics?.hot_count || 0}</div>
+            <div className="text-neutral-500 text-xs mt-1">≥70 intent score</div>
           </div>
-          
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <div className="text-neutral-400 text-sm mb-2">Email Captures</div>
-            <div className="text-3xl font-bold text-white">{analytics?.email_captures || 0}</div>
-            <div className="text-purple-400 text-sm mt-2">
-              {analytics?.conversion_rate || 0}% conversion rate
-            </div>
+          <div className="border border-amber-900 rounded-lg p-4 bg-amber-950/20">
+            <div className="text-[11px] uppercase tracking-wide text-neutral-500 mb-1">WARM Pipeline</div>
+            <div className="text-2xl font-mono font-bold text-amber-400">{analytics?.warm_count || 0}</div>
+            <div className="text-neutral-500 text-xs mt-1">40–69 intent score</div>
           </div>
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          
-          {/* Top Robot Types */}
+
+          {/* Top Industries — from DB */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Top Robot Types</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Companies by Industry</h3>
             <div className="space-y-3">
-              {analytics?.top_robot_types?.map((robot, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-neutral-300">{robot.type}</span>
-                      <span className="text-neutral-400 text-sm">{robot.count} calcs</span>
+              {analytics?.top_industries?.length > 0
+                ? analytics.top_industries.map((industry, idx) => (
+                    <div key={idx}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-neutral-300 text-sm">{industry.name}</span>
+                        <span className="text-neutral-400 text-xs tabular-nums">{industry.count.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                        <div className="bg-cyan-500 h-1.5 rounded-full transition-all" style={{ width: `${industry.percentage}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-neutral-800 rounded-full h-2">
-                      <div 
-                        className="bg-emerald-500 h-2 rounded-full transition-all"
-                        style={{ width: `${robot.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )) || <p className="text-neutral-500 text-center py-4">No data available</p>}
+                  ))
+                : <p className="text-neutral-500 text-center py-4 text-sm">No industry data yet</p>}
             </div>
           </div>
 
-          {/* Top Industries */}
+          {/* Signal Type Breakdown — from DB */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Top Industries</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Signal Types Detected</h3>
             <div className="space-y-3">
-              {analytics?.top_industries?.map((industry, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-neutral-300">{industry.name}</span>
-                      <span className="text-neutral-400 text-sm">{industry.count} calcs</span>
+              {analytics?.signal_type_breakdown?.length > 0
+                ? analytics.signal_type_breakdown.map((sig, idx) => (
+                    <div key={idx}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-neutral-300 text-sm">{sig.type}</span>
+                        <span className="text-neutral-400 text-xs tabular-nums">{sig.count.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-neutral-800 rounded-full h-1.5">
+                        <div className="bg-emerald-500 h-1.5 rounded-full transition-all" style={{ width: `${sig.percentage}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-neutral-800 rounded-full h-2">
-                      <div 
-                        className="bg-cyan-500 h-2 rounded-full transition-all"
-                        style={{ width: `${industry.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )) || <p className="text-neutral-500 text-center py-4">No data available</p>}
+                  ))
+                : <p className="text-neutral-500 text-center py-4 text-sm">No signal data yet</p>}
             </div>
           </div>
 
         </div>
 
-        {/* Regional Distribution */}
+        {/* Score Distribution + Top HOT Leads */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          
-          {/* Geographic Distribution */}
+
+          {/* Score Distribution */}
           <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Geographic Distribution</h3>
-            <div className="space-y-3">
-              {analytics?.top_regions?.map((region, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-4">Lead Score Distribution</h3>
+            <div className="space-y-4">
+              {(analytics?.score_distribution || []).map((band, idx) => {
+                const total = (analytics?.total_scored || 1);
+                const pct = total > 0 ? Math.round((band.count / total) * 100) : 0;
+                const barColor = band.color === 'red' ? 'bg-red-500' : band.color === 'amber' ? 'bg-amber-500' : 'bg-cyan-500';
+                const textColor = band.color === 'red' ? 'text-red-400' : band.color === 'amber' ? 'text-amber-400' : 'text-cyan-400';
+                return (
+                  <div key={idx}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-neutral-300">{region.name}</span>
-                      <span className="text-neutral-400 text-sm">{region.searches} searches</span>
+                      <span className={`text-sm font-medium ${textColor}`}>{band.range}</span>
+                      <span className="text-neutral-400 text-xs tabular-nums">{band.count.toLocaleString()} ({pct}%)</span>
                     </div>
                     <div className="w-full bg-neutral-800 rounded-full h-2">
-                      <div 
-                        className="bg-purple-500 h-2 rounded-full transition-all"
-                        style={{ width: `${region.percentage}%` }}
-                      ></div>
+                      <div className={`${barColor} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
-                </div>
-              )) || <p className="text-neutral-500 text-center py-4">No data available</p>}
+                );
+              })}
             </div>
           </div>
 
-          {/* Cost Distribution */}
-          <div className="border border-neutral-800 rounded-lg p-6 bg-neutral-900/50">
-            <h3 className="text-lg font-semibold text-white mb-4">Robot Cost Distribution</h3>
+          {/* Top HOT Leads */}
+          <div className="border border-red-900 rounded-lg p-6 bg-red-950/10">
+            <h3 className="text-lg font-semibold text-red-400 mb-4">Top HOT Leads</h3>
             <div className="space-y-3">
-              {analytics?.cost_buckets?.map((bucket, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-neutral-300">{bucket.range}</span>
-                      <span className="text-neutral-400 text-sm">{bucket.count} robots</span>
+              {analytics?.top_hot_leads?.length > 0
+                ? analytics.top_hot_leads.map((lead, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1 border-b border-neutral-800 last:border-0">
+                      <div>
+                        <div className="text-neutral-200 text-sm font-medium">{lead.name}</div>
+                        <div className="text-neutral-500 text-xs">{lead.industry}</div>
+                      </div>
+                      <div className="text-red-400 font-mono text-sm font-bold">{lead.score}</div>
                     </div>
-                    <div className="w-full bg-neutral-800 rounded-full h-2">
-                      <div 
-                        className="bg-yellow-500 h-2 rounded-full transition-all"
-                        style={{ width: `${bucket.percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )) || <p className="text-neutral-500 text-center py-4">No data available</p>}
+                  ))
+                : <p className="text-neutral-500 text-center py-4 text-sm">No HOT leads yet</p>}
             </div>
           </div>
 

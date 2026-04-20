@@ -13,6 +13,20 @@ from __future__ import annotations
 ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
     "ups", "dhl", "ibm", "3m", "sap", "bmw", "kfc", "cvs", "gm",
     "ge", "hp", "lg", "bp", "ab inbev", "jbs", "mcd",
+    # "Best X" companies — real brands that trigger the Best-listicle junk pattern
+    "best buy", "best western", "best western hotels", "best western international",
+    "best western plus",
+    # Founder-named companies — person-name classifier fires on these (false positive)
+    # They are real companies; always allowlist.
+    "john deere", "tim hortons", "henry schein", "ben & jerry's",
+    "bob evans", "bob's red mill", "dave's hot chicken", "jack in the box",
+    "jack's family restaurants", "bob evans farms",
+    # Possessive brand names — single-word possessives that are real QSR chains
+    "wendy's", "mcdonald's", "denny's", "arby's", "hardee's", "carl's jr",
+    "popeyes", "chili's", "applebee's", "shari's", "friendly's", "steak 'n shake",
+    # Health plan / insurance companies that look like noun phrases
+    "partnership health plan", "health plan of san joaquin",
+    "health plan of the redwoods", "molina healthcare",
 })
 
 

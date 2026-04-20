@@ -224,14 +224,14 @@ class CompanyImportPayload(BaseModel):
 
 @router.post("/import/companies")
 def import_companies(payload: CompanyImportPayload, db: Session = Depends(get_db)):
-    """Bulk-import company records. Skips junk names and duplicates."""
-    from app.services.lead_filter import is_junk
+    """Bulk-import company records. Skips names that fail `is_valid_lead` (same gate as scrapers) and duplicates."""
+    from app.services.company_validator import is_valid_lead
 
     added, skipped = [], []
 
     for rec in payload.companies:
-        junk, reason = is_junk(rec.name)
-        if junk:
+        ok, reason = is_valid_lead(rec.name or "")
+        if not ok:
             skipped.append({"name": rec.name, "reason": reason})
             continue
 

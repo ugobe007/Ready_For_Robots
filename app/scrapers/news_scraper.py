@@ -39,6 +39,7 @@ from app.models.signal import Signal
 from app.services.inference_engine import analyze
 from app.services.industry_inference import infer_industry_from_text
 from app.services.ontology import CONCEPTS
+from app.scrapers.base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 
@@ -110,10 +111,16 @@ KNOWN_COMPANIES: dict = {
     "saddle creek": ("Saddle Creek Logistics", "Logistics"),
     "kenco": ("Kenco Logistics", "Logistics"),
     "ceva logistics": ("CEVA Logistics", "Logistics"),
-    "target": ("Target Corporation", "Logistics"),
-    "kroger": ("Kroger Company", "Logistics"),
-    "walmart": ("Walmart", "Logistics"),
-    "costco": ("Costco Wholesale", "Logistics"),
+    # NOTE: "target" alone is omitted — it's an extremely common English verb/noun
+    # ("targeting growth", "hit the target") and causes thousands of false-positive signal attributions.
+    # Only match full legal forms.
+    "target corporation": ("Target Corporation", "Retail"),
+    "target stores": ("Target Corporation", "Retail"),
+    "target.com": ("Target Corporation", "Retail"),
+    "kroger": ("Kroger Company", "Retail"),
+    "walmart": ("Walmart", "Retail"),
+    "walmart stores": ("Walmart", "Retail"),
+    "costco": ("Costco Wholesale", "Retail"),
     # Hospitality
     "marriott": ("Marriott International", "Hospitality"),
     "hilton": ("Hilton Worldwide Holdings", "Hospitality"),
@@ -171,21 +178,24 @@ KNOWN_COMPANIES: dict = {
     "kaiser": ("Kaiser Permanente", "Healthcare"),
     "mayo clinic": ("Mayo Clinic", "Healthcare"),
     "tenet healthcare": ("Tenet Healthcare", "Healthcare"),
-    "tenet": ("Tenet Healthcare", "Healthcare"),
+    # NOTE: "tenet" alone omitted — "a tenet of" / "the tenets" are extremely common phrases
     "lifepoint": ("LifePoint Health", "Healthcare"),
     "genesis healthcare": ("Genesis Healthcare", "Healthcare"),
+    # NOTE: "genesis" alone omitted — common word used in many non-healthcare contexts
     "banner health": ("Banner Health", "Healthcare"),
-    "providence": ("Providence Health & Services", "Healthcare"),
+    "providence health": ("Providence Health & Services", "Healthcare"),
+    # NOTE: "providence" alone omitted — also city name and common noun
     "sunrise senior living": ("Sunrise Senior Living", "Healthcare"),
-    "sunrise": ("Sunrise Senior Living", "Healthcare"),
+    # NOTE: "sunrise" alone omitted — common word (sunrise, sunrise to sunset, etc.)
     "atria senior living": ("Atria Senior Living", "Healthcare"),
-    "atria": ("Atria Senior Living", "Healthcare"),
+    # NOTE: "atria" alone omitted — also a medical/architectural term
     # Casinos & Gaming
     "caesars": ("Caesars Entertainment", "Casinos & Gaming"),
     "caesars entertainment": ("Caesars Entertainment", "Casinos & Gaming"),
     "las vegas sands": ("Las Vegas Sands Corp", "Casinos & Gaming"),
     "sands": ("Las Vegas Sands Corp", "Casinos & Gaming"),
     "wynn resorts": ("Wynn Resorts", "Casinos & Gaming"),
+    # NOTE: "wynn" alone kept — distinctive enough (no common English word)
     "wynn": ("Wynn Resorts", "Casinos & Gaming"),
     "hard rock": ("Hard Rock International", "Casinos & Gaming"),
     "penn entertainment": ("Penn Entertainment", "Casinos & Gaming"),
@@ -204,9 +214,10 @@ KNOWN_COMPANIES: dict = {
     "norwegian cruise": ("Norwegian Cruise Line Holdings", "Cruise Lines"),
     "ncl": ("Norwegian Cruise Line Holdings", "Cruise Lines"),
     "msc cruises": ("MSC Cruises", "Cruise Lines"),
-    "msc": ("MSC Cruises", "Cruise Lines"),
+    # NOTE: "msc" alone omitted — overloaded acronym (Mediterranean Shipping Company, MSC Software, etc.)
     "viking cruises": ("Viking Cruises", "Cruise Lines"),
-    "viking": ("Viking Cruises", "Cruise Lines"),
+    "viking ocean": ("Viking Cruises", "Cruise Lines"),
+    # NOTE: "viking" alone omitted — also tech companies, history references
     "virgin voyages": ("Virgin Voyages", "Cruise Lines"),
     # Theme Parks & Entertainment
     "disney parks": ("Walt Disney Parks & Resorts", "Theme Parks & Entertainment"),
@@ -288,6 +299,9 @@ class NewsScraper:
     Fetches Google News RSS articles and converts them into
     buying-intent signals stored in the database.
     """
+
+    # Must wrap: plain assignment drops @staticmethod, so self._name_is_valid(x) would pass `self`.
+    _name_is_valid = staticmethod(BaseScraper._name_is_valid)
 
     GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
     DELAY_BETWEEN_REQUESTS = 1.5   # seconds — be polite to Google
@@ -495,6 +509,10 @@ class NewsScraper:
             return lookup
         except Exception as e:
             logger.warning("DB company lookup failed: %s", e)
+            try:
+                self.db.rollback()
+            except Exception:
+                pass
             return {}
 
     def _extract_company_from_text(self, text: str) -> tuple[Optional[str], Optional[str]]:

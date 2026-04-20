@@ -5,8 +5,15 @@ Coordinates all scrapers, data processing, and lead generation
 Similar to pythh.ai's investor/startup discovery pipeline
 """
 import logging
+import sys
+from pathlib import Path
+
+# Allow `python3 app/scrapers/orchestrator.py` from repo root (same as `python3 -m app.scrapers.orchestrator`).
+_root = Path(__file__).resolve().parents[2]
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
 from typing import List, Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -17,7 +24,7 @@ from app.models.score import Score
 from app.services.scoring_engine import compute_scores
 from app.scrapers.news_scraper import NewsScraper
 from app.scrapers.job_board_scraper import JobBoardScraper
-from app.scrapers.serp_scraper import SERPScraper
+from app.scrapers.serp_scraper import SerpScraper, EXPANSION_QUERIES
 from app.scrapers.scrape_targets import get_urls, get_news_queries
 
 logger = logging.getLogger(__name__)
@@ -57,7 +64,7 @@ class ScraperOrchestrator:
         logger.info("SCRAPER ORCHESTRATOR - Full Pipeline Starting")
         logger.info("=" * 60)
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             # Step 1: News scraping (highest value signals)
@@ -83,7 +90,7 @@ class ScraperOrchestrator:
             self.stats['errors'].append(str(e))
         
         finally:
-            duration = (datetime.utcnow() - start_time).total_seconds()
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             self._log_stats(duration)
             
     def _run_news_pipeline(self):
@@ -143,16 +150,10 @@ class ScraperOrchestrator:
         logger.info("→ Step 3: SERP Pipeline")
         
         try:
-            scraper = SERPScraper(db=self.db)
-            
-            # Run expansion queries
-            scraper.run_expansion_queries()
-            
-            # Run manufacturing signal queries
-            scraper.run_manufacturing_queries()
-            
-            self.stats['sources_scraped'] += 20  # Approximate query count
-            logger.info("  ✓ SERP pipeline completed")
+            scraper = SerpScraper(db=self.db)
+            scraper.run()
+            self.stats['sources_scraped'] += len(EXPANSION_QUERIES)
+            logger.info("  ✓ SERP pipeline completed (%d queries)", len(EXPANSION_QUERIES))
             
         except Exception as e:
             logger.error(f"  ✗ SERP pipeline failed: {e}")
@@ -194,10 +195,10 @@ class ScraperOrchestrator:
         
         try:
             # Get companies without scores or stale scores (>24h old)
-            cutoff = datetime.utcnow() - timedelta(hours=24)
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
             
             companies = self.db.query(Company).outerjoin(Score).filter(
-                (Score.id == None) | (Score.created_at < cutoff)
+                (Score.id == None) | (Score.last_calculated_at < cutoff)
             ).limit(200).all()
             
             scored = 0
@@ -212,31 +213,28 @@ class ScraperOrchestrator:
                     
                     # Compute scores
                     score_data = compute_scores(company, signals)
-                    
-                    # Create or update Score record
+
                     score = self.db.query(Score).filter(
                         Score.company_id == company.id
                     ).first()
-                    
+
                     if not score:
                         score = Score(company_id=company.id)
                         self.db.add(score)
-                    
-                    score.overall_score = score_data.get('overall_score', 0)
-                    score.automation_score = score_data.get('automation_score', 0)
-                    score.labor_pain_score = score_data.get('labor_pain_score', 0)
-                    score.expansion_score = score_data.get('expansion_score', 0)
-                    score.market_fit_score = score_data.get('market_fit_score', 0)
-                    
-                    # Determine tier
+
+                    score.automation_score = float(score_data.get("automation_score", 0) or 0)
+                    score.labor_pain_score = float(score_data.get("labor_pain_score", 0) or 0)
+                    score.expansion_score = float(score_data.get("expansion_score", 0) or 0)
+                    score.robotics_fit_score = float(score_data.get("robotics_fit_score", 0) or 0)
+                    score.overall_intent_score = float(score_data.get("overall_intent_score", 0) or 0)
+
                     from app.services.lead_filter import classify_lead
-                    tier_data = classify_lead(company, signals, score_data)
-                    score.tier = tier_data.get('tier', 'COLD')
-                    
-                    scored += 1
-                    
-                    if score.tier == 'HOT':
+
+                    junk, _jr, pri = classify_lead(company, score, signals)
+                    if not junk and pri.tier == "HOT":
                         hot_count += 1
+
+                    scored += 1
                         
                 except Exception as e:
                     logger.warning(f"Failed to score company {company.id}: {e}")
@@ -264,17 +262,15 @@ class ScraperOrchestrator:
             # Count companies
             company_count = self.db.query(func.count(Company.id)).scalar()
             
-            # Count HOT leads
-            hot_count = self.db.query(func.count(Score.id)).filter(
-                Score.tier == 'HOT'
-            ).scalar()
-            
             self.stats['signals_detected'] = signal_count
-            
-            logger.info(f"  ✓ Quality Check:")
-            logger.info(f"    • Total Companies: {company_count}")
-            logger.info(f"    • Total Signals: {signal_count}")
-            logger.info(f"    • HOT Leads: {hot_count}")
+
+            logger.info("  ✓ Quality Check:")
+            logger.info("    • Total Companies: %s", company_count)
+            logger.info("    • Total Signals: %s", signal_count)
+            logger.info(
+                "    • HOT tier (this pipeline run classifier): %s",
+                self.stats.get("hot_leads_found", 0),
+            )
             
         except Exception as e:
             logger.error(f"  ✗ Quality check failed: {e}")

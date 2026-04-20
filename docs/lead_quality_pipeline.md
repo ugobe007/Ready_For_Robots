@@ -1,5 +1,7 @@
 # Lead quality pipeline and feedback loop
 
+**Product goals (why this order exists):** [lead_quality_north_star.md](lead_quality_north_star.md).
+
 This document matches the intended processing order for scraped and CRM-derived company names.
 
 ## Ordered stages

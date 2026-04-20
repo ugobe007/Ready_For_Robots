@@ -817,9 +817,9 @@
   /* Lead + CTAs live in column 1 with the headline so they aren’t pushed below a tall ticker */
   .rr-hero-headline-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(22rem, 42rem);
-    align-items: center;
-    column-gap: clamp(14px, 2.2vw, 26px);
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, min(34rem, 42vw));
+    align-items: start;
+    column-gap: clamp(18px, 2.5vw, 32px);
     row-gap: 16px;
     margin-bottom: 22px;
   }
@@ -835,7 +835,8 @@
 
 @media (min-width: 900px) {
   .rr-hero-headline-block {
-    align-self: center;
+    /* Top-align with ticker so the right panel doesn’t float mid-column */
+    align-self: start;
   }
 }
 
@@ -852,36 +853,53 @@
 
 /* Live stats card: depth, soft lift, richer surface (less “flat”) */
 .rr-hero-ticker-panel--live {
+  overflow: hidden;
   background: linear-gradient(
     165deg,
-    rgba(34, 42, 62, 0.98) 0%,
-    rgba(20, 26, 38, 0.99) 48%,
-    rgba(14, 18, 28, 1) 100%
+    rgba(38, 48, 72, 0.98) 0%,
+    rgba(22, 28, 42, 0.99) 42%,
+    rgba(12, 16, 26, 1) 100%
   );
-  border-color: rgba(148, 163, 184, 0.2);
+  border-color: rgba(249, 115, 22, 0.22);
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.45),
-    0 18px 38px -10px rgba(0, 0, 0, 0.62),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+    0 0 0 1px rgba(16, 185, 129, 0.12),
+    0 4px 6px -1px rgba(0, 0, 0, 0.5),
+    0 22px 44px -12px rgba(0, 0, 0, 0.65),
+    0 0 48px -18px rgba(249, 115, 22, 0.18),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
 }
 
 .rr-hero-ticker-panel--live::before {
   background: linear-gradient(
     135deg,
-    rgba(16, 185, 129, 0.16) 0%,
-    rgba(52, 211, 153, 0.06) 38%,
-    transparent 58%
+    rgba(16, 185, 129, 0.22) 0%,
+    rgba(249, 115, 22, 0.1) 35%,
+    rgba(52, 211, 153, 0.08) 52%,
+    transparent 65%
   );
+  animation: rr-hero-ticker-sheen 7s ease-in-out infinite;
+}
+
+@keyframes rr-hero-ticker-sheen {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
 }
 
 /* Wider hero panel when CRM shows rotating company names */
 .rr-hero-ticker-panel--crm-names {
   padding: 16px 18px 15px !important;
+  min-height: 280px;
 }
 
 @media (min-width: 900px) {
   .rr-hero-ticker-panel--crm-names {
     padding: 18px 20px 17px !important;
+    min-height: 340px;
   }
 }
 
@@ -890,7 +908,92 @@
     width: 100%;
     max-width: none;
     padding: 18px 18px 16px;
-    align-self: center;
+    align-self: start;
+  }
+}
+
+/* Accent rail — reads as “instrument” / live module, ties panel to hero grid */
+.rr-hero-ticker-panel--live .rr-hero-ticker-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(249, 115, 22, 0.95) 0%,
+    rgba(52, 211, 153, 0.75) 45%,
+    rgba(34, 211, 238, 0.65) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rr-hero-ticker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rr-hero-ticker-header-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rr-muted2);
+}
+
+.rr-hero-ticker-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.14);
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  box-shadow: 0 0 20px -4px rgba(249, 115, 22, 0.45);
+}
+
+.rr-hero-ticker-live-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+}
+
+.rr-hero-ticker-live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #fb923c;
+  animation: rr-hero-live-ping 1.85s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.rr-hero-ticker-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #f97316;
+  box-shadow: 0 0 8px #f97316;
+}
+
+@keyframes rr-hero-live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
   }
 }
 

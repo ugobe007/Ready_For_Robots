@@ -83,7 +83,7 @@ export default function LoginPage() {
   async function handleOAuthSignIn(provider) {
     if (!supabase) {
       setStatus('error');
-      setErrMsg('Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      setErrMsg('Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).');
       return;
     }
     setErrMsg('');

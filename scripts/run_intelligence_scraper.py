@@ -24,10 +24,21 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Load .env so DATABASE_URL is available (avoids needing export/source before run)
+# Load .env the same way as cleanup_leads / check_db_connection (worktrees + DOTENV_PATH).
 try:
     from dotenv import load_dotenv
-    load_dotenv(PROJECT_ROOT / ".env")
+
+    from app.env_loader import database_url_is_template_or_sqlite
+
+    _shell_database_url = (os.environ.get("DATABASE_URL") or "").strip()
+    load_dotenv(PROJECT_ROOT / "frontend" / "nextjs" / ".env.local")
+    load_dotenv(PROJECT_ROOT / ".env", override=True)
+    _dotenv_path = (os.getenv("DOTENV_PATH") or "").strip()
+    if _dotenv_path:
+        load_dotenv(Path(_dotenv_path).expanduser(), override=True)
+    _loaded = (os.environ.get("DATABASE_URL") or "").strip()
+    if _shell_database_url and database_url_is_template_or_sqlite(_loaded):
+        os.environ["DATABASE_URL"] = _shell_database_url
 except ImportError:
     pass
 

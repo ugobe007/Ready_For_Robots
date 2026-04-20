@@ -71,6 +71,12 @@ export default function App({ Component, pageProps }) {
     <AuthProvider>
       <VisitTracker>
       <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta name="theme-color" content="#0D0D0D" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

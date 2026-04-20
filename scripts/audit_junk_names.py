@@ -19,9 +19,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dotenv import load_dotenv
 
+from app.env_loader import database_url_is_template_or_sqlite
+
+_shell_database_url = (os.environ.get("DATABASE_URL") or "").strip()
 _root = Path(__file__).resolve().parents[1]
 load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
 load_dotenv(_root / ".env", override=True)
+_loaded_after_dotenv = (os.environ.get("DATABASE_URL") or "").strip()
+if _shell_database_url and database_url_is_template_or_sqlite(_loaded_after_dotenv):
+    os.environ["DATABASE_URL"] = _shell_database_url
 
 from app.database import SessionLocal
 from app.models.company import Company

@@ -10,9 +10,18 @@ _src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
+from app.env_loader import database_url_is_template_or_sqlite
+
 # Same load order as app/database.py so Alembic uses the same DATABASE_URL as the app.
+_env_database_url = (os.environ.get("DATABASE_URL") or "").strip()
 load_dotenv(Path(_src) / "frontend" / "nextjs" / ".env.local")
 load_dotenv(Path(_src) / ".env", override=True)
+_dotenv_path = (os.getenv("DOTENV_PATH") or "").strip()
+if _dotenv_path:
+    load_dotenv(Path(_dotenv_path).expanduser(), override=True)
+_loaded_from_dotenv = (os.environ.get("DATABASE_URL") or "").strip()
+if _env_database_url and database_url_is_template_or_sqlite(_loaded_from_dotenv):
+    os.environ["DATABASE_URL"] = _env_database_url
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
