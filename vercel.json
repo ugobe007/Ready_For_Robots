@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm ci --prefix frontend/nextjs",
-  "buildCommand": "npm run build --prefix frontend/nextjs",
+  "installCommand": "if [ -f frontend/nextjs/package-lock.json ]; then npm ci --prefix frontend/nextjs; else npm ci; fi",
+  "buildCommand": "if [ -f next.config.js ]; then npm run build; else npm run build --prefix frontend/nextjs; fi",
   "outputDirectory": "frontend/nextjs/out"
 }
