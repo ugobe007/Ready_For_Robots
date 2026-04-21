@@ -21,7 +21,20 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 _CACHE: dict[str, tuple[float, str]] = {}
-_TTL_SEC = float(os.getenv("COMPANY_URL_OPENAI_CACHE_SEC", "86400"))
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = (os.getenv(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning("Invalid %s=%r — using default %s", name, raw, default)
+        return default
+
+
+_TTL_SEC = _env_float("COMPANY_URL_OPENAI_CACHE_SEC", 86400.0)
 
 
 def openai_url_resolve_enabled() -> bool:
