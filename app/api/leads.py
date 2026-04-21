@@ -49,6 +49,7 @@ from app.services.automation_profile import get_automation_profile_for_response
 from app.services.lead_value import compute_lead_value
 from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.lead_primary_link import enrich_lead_link_fields
+from app.services.company_url_openai import resolve_homepage_urls_for_companies
 from app.services.company_domain import (
     dedupe_companies_ordered,
     dedupe_staged_lead_tuples,
@@ -499,7 +500,13 @@ def _build_share_blurb(
     return blurb[:220], summary[:700]
 
 
-def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
+def _fmt_company(
+    c: Company,
+    junk: bool,
+    junk_reason: str,
+    pri,
+    llm_homepage_url: Optional[str] = None,
+) -> dict:
     s = pick_primary_score(c.scores)
     sigs = c.signals or []
     signal_count_total = len(sigs)
@@ -533,6 +540,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         signals=sigs,
         overall_score=overall_100,
         signal_count=signal_count_total,
+        llm_resolved_url=llm_homepage_url,
     )
 
     return {
@@ -702,7 +710,11 @@ def get_leads(
     else:
         staged = staged[:limit]
 
-    return [_fmt_company(c, junk, junk_reason, pri) for c, junk, junk_reason, pri in staged]
+    llm_hints = resolve_homepage_urls_for_companies([t[0] for t in staged])
+    return [
+        _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+        for c, junk, junk_reason, pri in staged
+    ]
 
 
 @router.get("/by-id/{company_id}")
@@ -717,7 +729,8 @@ def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
     if not c:
         raise HTTPException(status_code=404, detail="Lead not found")
     junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-    payload = _fmt_company(c, junk, junk_reason, pri)
+    llm_hints = resolve_homepage_urls_for_companies([c])
+    payload = _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
     er = _entity_resolution_payload(db, c)
     if er:
         payload["entity_resolution"] = er
@@ -911,10 +924,13 @@ def _build_homepage_payload(db: Session) -> dict:
 
     chosen = sorted(chosen[:feed_limit], key=_pool_sort_key)
 
+    llm_hints = resolve_homepage_urls_for_companies(chosen)
     hot_leads = []
     for c in chosen:
         junk, junk_reason, pri = _classify(c)
-        hot_leads.append(_fmt_company(c, junk, junk_reason, pri))
+        hot_leads.append(
+            _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+        )
 
     return {
         "summary": summary,
@@ -949,8 +965,8 @@ def _schedule_homepage_background_refresh() -> None:
 
             db = SessionLocal()
             try:
+                payload = _build_homepage_payload(db)
                 with _homepage_build_lock:
-                    payload = _build_homepage_payload(db)
                     _set_homepage_cache(payload)
                     _set_summary_cache(True, payload["summary"])
             finally:
@@ -976,10 +992,10 @@ def warm_homepage_cache() -> None:
 
             db = SessionLocal()
             try:
+                payload = _build_homepage_payload(db)
                 with _homepage_build_lock:
                     if _homepage_cache.get("v1"):
                         return
-                    payload = _build_homepage_payload(db)
                     _set_homepage_cache(payload)
                     _set_summary_cache(True, payload["summary"])
                     logger.info(
@@ -1019,15 +1035,13 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         _schedule_homepage_background_refresh()
         return entry["data"]
 
+    # Cold miss: build **outside** the lock so other requests are not blocked for minutes on
+    # slow Postgres (lock only protects cache dict writes).
+    payload = _build_homepage_payload(db)
     with _homepage_build_lock:
         entry = _homepage_cache.get("v1")
         if entry is not None:
-            age = time.monotonic() - entry["ts"]
-            if age < _HOMEPAGE_CACHE_TTL:
-                return entry["data"]
-            _schedule_homepage_background_refresh()
             return entry["data"]
-        payload = _build_homepage_payload(db)
         _set_homepage_cache(payload)
         _set_summary_cache(True, payload["summary"])
         return payload

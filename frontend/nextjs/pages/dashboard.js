@@ -15,11 +15,37 @@ import { AutomationSpecBlock } from '../lib/automationProfile';
 import { PlainTextWithSourceLinks } from '../lib/plainText';
 import SiteNavPrimaryLinks from '../components/SiteNavPrimaryLinks';
 import { SignalScoreBadge, SignalScoreLabel, PipelineScoreLegend } from '../lib/signalScoreBadge';
+import { companyExternalHref, isWebSearchOnlyHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 
 // Static export: API host from getApiBase() / NEXT_PUBLIC_API_URL (see lib/apiBase.js).
 const API = getApiBase();
 
 // -- helpers ----------------------------------------------------------------
+
+/** Mirrors server junk patterns — hides obvious scraper fragments if API still returns them. */
+const JUNK_DISPLAY_NAME_PATTERNS = [
+  /\bessential benefits\b/i,
+  /-->/,
+  /fyi\s*-->/i,
+  /==/,
+  /--+\s*$/i,
+  /\s+fetch\s*$/i,
+  /\s+and\s+locus\s+robotics\b/i,
+  /\bbito\s+lagertechnik\s+and\b/i,
+  /\s-\s*ydr\b/i,
+  /^\s*physical\s+ai\s*$/i,
+  /^\s*tutor\s+intelligence\s*$/i,
+  /^\s*bangladesh\s+rmg\s*$/i,
+  /\blagertechnik\s+and\s+locus\b/i,
+];
+
+function isLikelyJunkDisplayName(name) {
+  if (name == null || typeof name !== 'string') return true;
+  const s = name.trim();
+  if (!s) return true;
+  return JUNK_DISPLAY_NAME_PATTERNS.some(p => p.test(s));
+}
 
 function barColor(v) {
   if (v >= 75) return 'bg-emerald-500';
@@ -389,13 +415,30 @@ function StrategicSnapshot({ leads, onSelect }) {
               {/* rank */}
               <span className="text-[10px] text-neutral-600 pl-3 group-hover:text-neutral-500 transition-colors tabular-nums">{i + 1}</span>
 
-              {/* company */}
-              <button onClick={() => onSelect(lead)} className="px-3 py-3 min-w-0 text-left w-full">
+              {/* company — div (not button) so the name can be a real <a> */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelect(lead)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect(lead);
+                  }
+                }}
+                className="px-3 py-3 min-w-0 text-left w-full cursor-pointer"
+              >
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-semibold text-emerald-500 group-hover:text-emerald-400 transition-colors leading-tight cursor-pointer">
+                    <a
+                      href={companyExternalHref(lead) || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className={`${COMPANY_NAME_LINK_CLASS} text-[12px] font-semibold leading-tight`}
+                    >
                       {lead.company_name}
-                    </span>
+                    </a>
                   </div>
                   <span className="text-[10px] text-neutral-500 truncate hidden sm:inline">
                     {[lead.industry, lead.location_city].filter(Boolean).join(' · ')}
@@ -406,7 +449,7 @@ function StrategicSnapshot({ leads, onSelect }) {
                     </p>
                   )}
                 </div>
-              </button>
+              </div>
 
               {/* signal badge */}
               <div className="hidden md:flex items-center px-2 py-2">
@@ -627,7 +670,14 @@ function AgentInsightsPanel() {
                       <div key={i} className={`border ${um.border} rounded p-4`}>
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <span className="text-sm font-medium text-neutral-100">{s.company_name}</span>
+                            <a
+                              href={companyExternalHref({ company_name: s.company_name }) || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${COMPANY_NAME_LINK_CLASS} text-sm font-medium`}
+                            >
+                              {s.company_name}
+                            </a>
                             <span className={`ml-2 badge ${um.border} ${um.text}`}>{um.label}</span>
                           </div>
                           <span className="label">{Math.round(s.confidence * 100)}% confidence</span>
@@ -922,7 +972,19 @@ function AIAnalysisModal({ lead, onClose, onSaveToggle }) {
         <div className={`flex items-start justify-between px-6 py-4 border-b ${tm.border} shrink-0`}>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h2 className="text-lg font-semibold text-neutral-100 truncate">{lead.company_name}</h2>
+              <h2 className="text-lg font-semibold text-neutral-100 truncate flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                <a
+                  href={companyExternalHref(lead) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${COMPANY_NAME_LINK_CLASS} text-lg font-semibold`}
+                >
+                  {lead.company_name}
+                </a>
+                {isWebSearchOnlyHref(lead) && (
+                  <span className="text-[10px] font-normal uppercase tracking-wide text-zinc-500">search</span>
+                )}
+              </h2>
               <TierBadge tier={lead.priority_tier} />
               {sc.signal_score != null && (
                 <span className="inline-flex items-center gap-1">
@@ -2009,9 +2071,14 @@ function IntelSearchPanel({ onOpenLead, canPerformAction, trackUsage, showPaywal
                       className="border border-neutral-800 rounded px-4 py-3 hover:border-neutral-600 transition-colors group overflow-hidden min-w-0">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
+                          <a
+                            href={companyExternalHref(r) || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${COMPANY_NAME_LINK_CLASS} text-base font-semibold`}
+                          >
                             {r.company_name}
-                          </span>
+                          </a>
                           {r.industry && (
                             <span className="label text-neutral-400">{r.industry}</span>
                           )}
@@ -2361,11 +2428,15 @@ export default function Dashboard() {
   }, []);
 
   const fetchData = useCallback(async () => {
+    const controller = new AbortController();
+    const DASHBOARD_FETCH_MS = 55000;
+    const tid = setTimeout(() => controller.abort(), DASHBOARD_FETCH_MS);
     try {
+      const init = { signal: controller.signal };
       const [leadsRes, summaryRes, healthRes] = await Promise.all([
-        fetch(`${API}/api/leads?${buildQuery()}`, liveFetchInit()),
-        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}&cb=${Date.now()}`, liveFetchInit()),
-        fetch(`${API}/api/scraper-health`, liveFetchInit()),
+        fetch(`${API}/api/leads?${buildQuery()}`, liveFetchInit(init)),
+        fetch(`${API}/api/leads/summary?exclude_junk=${excludeJunk}&cb=${Date.now()}`, liveFetchInit(init)),
+        fetch(`${API}/api/scraper-health`, liveFetchInit(init)),
       ]);
       if (!leadsRes.ok) {
         let hint = await leadsRes.text().catch(() => '');
@@ -2418,11 +2489,18 @@ export default function Dashboard() {
         }
       }
     } catch (e) {
-      setError(
-        'Cannot reach API. For localhost:3000, run FastAPI on :8000 (next dev proxies /api → :8000). ' +
-          'Command: python -m uvicorn app.main:app --reload',
-      );
+      if (e?.name === 'AbortError') {
+        setError(
+          'Request timed out waiting for the API (55s). The server may be cold or overloaded — refresh or try again.',
+        );
+      } else {
+        setError(
+          'Cannot reach API. For localhost:3000, run FastAPI on :8000 (next dev proxies /api → :8000). ' +
+            'Command: python -m uvicorn app.main:app --reload',
+        );
+      }
     } finally {
+      clearTimeout(tid);
       setLoading(false);
       setLast(new Date().toLocaleTimeString());
     }
@@ -2449,7 +2527,8 @@ export default function Dashboard() {
   }, [leads]);
 
   const filtered = leads.filter(l =>
-    !search || (l.company_name || '').toLowerCase().includes(search.toLowerCase())
+    !isLikelyJunkDisplayName(l.company_name) &&
+    (!search || (l.company_name || '').toLowerCase().includes(search.toLowerCase()))
   );
 
   const sortedForUi = useMemo(() => {
@@ -3065,7 +3144,15 @@ export default function Dashboard() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="text-xl font-semibold text-zinc-50">{lead.company_name}</span>
+                      <a
+                        href={companyExternalHref(lead) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className={`${COMPANY_NAME_LINK_CLASS} text-xl font-semibold`}
+                      >
+                        {lead.company_name}
+                      </a>
                       <TierBadge tier={lead.priority_tier} />
                       {/* Signal count badge instead of individual badges */}
                       {(lead.signals || []).length > 0 && (

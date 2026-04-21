@@ -127,6 +127,10 @@ _JUNK_SUBSTRINGS = [
     "packaging innovations", "packaging news",
     # Generic single words / non-company stubs
     "investment",
+    # Headline / slide fragments (arrow bullets, FYI asides) scraped as company.name
+    "-->",
+    "fyi-->",
+    "essential benefits",
     # Headline verb fragments
     "war just picked", "retail war",
     # Generic financial / corporate jargon scraped as names
@@ -200,6 +204,11 @@ _JUNK_SUBSTRINGS = [
     "cell therapy testing", "cloud computing",
     # Incomplete possessive country
     "china's", "india's",
+    # User-reported: merged vendor line / geography-industry stub / CMS noise
+    "lagertechnik and locus",
+    "bangladesh rmg",
+    "ydr==",
+    " - ydr",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -507,7 +516,7 @@ _JUNK_PATTERNS = [
     r"cut|slash|trim|offer|earn|post|report|sign|open|celebrat|appoint|"
     r"anticipat|forecat|project|predict|expect|extend|continu|achiev|complet|"
     r"integrat|transform|accelerat|moderniz|optim|digitiz|"
-    r"strengthen|sell|sold|partner|pivot|rebrand|restructur|consolidat|divest|"
+    r"strengthen|sell|sold|partner(?!s)|pivot|rebrand|restructur|consolidat|divest|"
     r"rev|heat|ramp|gear|kick|speed|power|pick|wind|dial|step|scale|"
     r"secur|rais|clos|land|obtain|bagg|nail|snag|pull|haul|"
     r"turn|shift|pivot|reshape|redefin|reinvent|overhaul|navigat|tackle|"
@@ -727,8 +736,8 @@ _JUNK_PATTERNS = [
     # ── Junk patterns added from user feedback (Apr 2026) ────────────────────
     # "Koch Strengthens Retail Fulfillment Strategy" / "Sweetgreen Sells Robotics Arm"
     # Catches company name + strong headline verb — expands the existing verb stem list.
-    # NOTE: "plan" omitted — matches "Plant" (noun). "partner(?!ship)" prevents "Partnership Health Plan" FP.
-    r"(?i)^(?:\S+\s+){0,3}(strengthen|sell|sold|sells|acquir|partner(?!ship)|pivot|merge|rebrand|restructur)\w*\s+\w",
+    # NOTE: "plan" omitted — matches "Plant" (noun). Exclude "Partnership …" and plural "Partners " (legal names).
+    r"(?i)^(?:\S+\s+){0,3}(strengthen|sell|sold|sells|acquir|partner(?!ship|s(?:\s|$))|pivot|merge|rebrand|restructur)\w*\s+\w",
 
     # "Wins EU Contract", "Won the Bid", "Secures Major Deal" — verb-first fragment
     r"(?i)^(wins?|won|secures?|secured|clinch(es)?|clinched|bags?|bagged|awarded?|landed?)\s+\w",
@@ -800,6 +809,22 @@ _JUNK_PATTERNS = [
     r"(?i)^(swedish|norwegian|danish|finnish|icelandic|estonian|latvian|lithuanian)\s+"
     r"(sport|sports)\s+(airline|airlines|carrier|retailer|retailers|chain|chains|"
     r"brand|brands|group)\s*[\s.?!…]*$",
+
+    # ── User-reported composites / deck garbage (Apr 2026) ───────────────────
+    # SQL/CMS fragments ("… ydr=="), double hyphen export ("CharterSync--")
+    r"==",
+    r"(?i)--+\s*$",
+    # UI/headline tail: "Lucas Systems Fetch"
+    r"(?i).{10,}\s+fetch\s*$",
+    # Two vendors concatenated in one name field
+    r"(?i)\s+and\s+locus\s+robotics\b",
+    r"(?i)\bbito\s+lagertechnik\s+and\b",
+    # Hospital + local paper slug leaked into name
+    r"(?i)\s-\s*ydr\b",
+    # Buzzword stubs mistaken for companies (exact-ish; see _JUNK_EXACT too)
+    r"(?i)^physical\s+ai\s*$",
+    r"(?i)^tutor\s+intelligence\s*$",
+    r"(?i)^bangladesh\s+rmg\s*$",
 ]
 _JUNK_RE = [re.compile(p, re.IGNORECASE) for p in _JUNK_PATTERNS]
 
@@ -877,6 +902,12 @@ _JUNK_EXACT = frozenset({
     "smoothies",
     # Generic tech headline noun pair (not a company name by itself)
     "ai agents",
+    # Headline dollar/stat fragments scraped as company names (e.g. "$46 million round")
+    "million",
+    # HR / benefits listicle fragment scraped as a company name
+    "essential benefits",
+    # Headline/UI tail merged into company.name
+    "lucas systems fetch",
     # Generic single nouns that are never company names
     "expansion", "acquisition", "merger", "investment", "contract", "deal",
     "announcement", "restructuring", "partnership", "collaboration",
@@ -1176,6 +1207,40 @@ _TARGET_FALSE_POSITIVE_PHRASES = (
     "exceeds its own target", "surpassing initial target", "exceeding its $",
 )
 
+def _signal_text_blob(signals) -> str:
+    parts = []
+    for s in signals or []:
+        t = getattr(s, "signal_text", None) or ""
+        t = re.sub(r"<[^>]+>", " ", str(t))
+        parts.append(t.lower())
+    return " ".join(parts)
+
+
+def _company_name_not_corroborated_by_signals(name: str, signals) -> bool:
+    """
+    Headline fragments stored as company.name with unrelated news bullets (e.g. "Million"
+    + Fetch Robotics / Starship stories). Require the name tokens to appear in signal text.
+    """
+    if not name or not signals or len(signals) < 2:
+        return False
+    stripped = name.strip()
+    if is_allowlisted_company_name(stripped):
+        return False
+    low = stripped.lower()
+    blob = _signal_text_blob(signals)
+    if low in blob:
+        return False
+    tokens = [t for t in re.split(r"[\s'&]+", low) if len(t) >= 3]
+    if len(tokens) >= 2:
+        return not any(tok in blob for tok in tokens)
+    if len(tokens) == 1:
+        tok = tokens[0]
+        if len(tok) < 4 or len(tok) > 18:
+            return False
+        return tok not in blob
+    return False
+
+
 def _is_target_false_positive(company_name: str, signals) -> bool:
     """Target Corp vs common-word 'target' in funding headlines (xAI, Anthropic, etc.)."""
     name_lower = (company_name or "").strip().lower()
@@ -1235,6 +1300,11 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     # Target false positive: "Target" from "exceeds its target" in xAI/Anthropic headlines
     if _is_target_false_positive(name or "", signals):
         return True, "target false positive (common-word in funding headlines)", PriorityResult("COLD", 0.0, ["target false positive"])
+
+    if _company_name_not_corroborated_by_signals(name or "", signals):
+        return True, "company name not found in signal text (mis-attributed headline fragment)", PriorityResult(
+            "COLD", 0.0, ["mis-attributed headline fragment"]
+        )
 
     # Logic engine (legal suffix, distinctive noun, structure, vendor, publication).
     # Listing APIs use classify_lead; this aligns HOT/WARM spotlight with is_valid_lead.

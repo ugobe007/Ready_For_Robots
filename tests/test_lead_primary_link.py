@@ -30,3 +30,17 @@ def test_unresolved_low_score_suggests_review():
     )
     assert out["needs_website_inference"] is True
     assert out["suggested_pipeline_action"] == "review_for_removal"
+
+
+def test_openai_inferred_url_used_when_unresolved():
+    out = enrich_lead_link_fields(
+        website=None,
+        signals=[{"source_url": "seed_v3"}],
+        overall_score=10,
+        signal_count=1,
+        llm_resolved_url="https://acmecorp.example/",
+    )
+    assert out["primary_link_kind"] == "inferred_openai"
+    assert out["primary_link_url"] == "https://acmecorp.example/"
+    assert out["identity_resolution"] == "inferred_openai"
+    assert out["needs_website_inference"] is False

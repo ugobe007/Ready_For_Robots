@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Head from 'next/head';
 import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref, isWebSearchOnlyHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 import { AutomationSpecBlock } from '../lib/automationProfile';
 import { PlainTextWithSourceLinks } from '../lib/plainText';
 
@@ -241,8 +243,9 @@ function LeadPanel({ lead: r, rank, router }) {
   )?.[1] || '→';
 
   const location = [r.location_city, r.location_state].filter(Boolean).join(', ');
-  const nameHref = r.primary_link_url || null;
+  const nameHref = companyExternalHref(r);
   const linkKind = r.primary_link_kind;
+  const searchOnly = isWebSearchOnlyHref(r);
   const reviewRemoval = r.suggested_pipeline_action === 'review_for_removal';
 
   return (
@@ -271,7 +274,7 @@ function LeadPanel({ lead: r, rank, router }) {
                   rel="noopener noreferrer"
                   data-nopropagate="1"
                   onClick={(e) => e.stopPropagation()}
-                  className="hover:underline underline-offset-2"
+                  className={COMPANY_NAME_LINK_CLASS}
                 >
                   {r.company_name}
                 </a>
@@ -279,7 +282,15 @@ function LeadPanel({ lead: r, rank, router }) {
                 r.company_name
               )}
             </h3>
-            {linkKind === 'evidence' && (
+            {searchOnly && nameHref && (
+              <span
+                className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-neutral-600 text-neutral-500"
+                title="No company or article URL on file — opens web search"
+              >
+                Search
+              </span>
+            )}
+            {linkKind === 'evidence' && !searchOnly && (
               <span
                 className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-amber-800/80 text-amber-500/90"
                 title="No company site on file — link opens news or source URL"
@@ -287,12 +298,12 @@ function LeadPanel({ lead: r, rank, router }) {
                 News
               </span>
             )}
-            {linkKind === 'website' && nameHref && (
+            {(linkKind === 'website' || linkKind === 'inferred_openai') && nameHref && !searchOnly && (
               <span
                 className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-cyan-800/80 text-cyan-500/80"
-                title="Company website"
+                title={linkKind === 'inferred_openai' ? 'Homepage inferred via OpenAI' : 'Company website'}
               >
-                Site
+                {linkKind === 'inferred_openai' ? 'AI site' : 'Site'}
               </span>
             )}
             {tier && (

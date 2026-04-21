@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Head from 'next/head';
 import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 import { AutomationSpecBlock } from '../lib/automationProfile';
 import { PlainTextWithSourceLinks } from '../lib/plainText';
 
@@ -137,8 +139,17 @@ function LeadPanel({ lead, rank, router }) {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-[10px] font-mono text-neutral-600">#{rank}</span>
-            <h3 className="text-lg font-bold text-neutral-100 group-hover:text-cyan-300 transition-colors leading-tight">
-              {lead.company_name || 'Company'}
+            <h3 className="text-lg font-bold leading-tight">
+              <a
+                href={companyExternalHref(lead) || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-nopropagate="1"
+                onClick={e => e.stopPropagation()}
+                className={`${COMPANY_NAME_LINK_CLASS} font-bold`}
+              >
+                {lead.company_name || 'Company'}
+              </a>
             </h3>
             {tier && (
               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${tierBadgeCls}`}>

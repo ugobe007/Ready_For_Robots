@@ -8,6 +8,13 @@ Used by:
 """
 from __future__ import annotations
 
+import re
+
+# Headline merge of two OEM names into one field — not a single legal entity
+_DUAL_VENDOR_JUNK = re.compile(
+    r"(?i)bito\s+lagertechnik\s+and\s+.*locus|locus\s+robotics\s+and\s+.*bito",
+)
+
 # Keep in sync with product expectations: these are globally recognized brands/tickers
 # stored as single-field “company names” by scrapers.
 ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
@@ -42,6 +49,8 @@ _BRAND_PREFIX_ALLOW = (
 def is_allowlisted_company_name(name: str) -> bool:
     """True if the normalized name is a known brand we must never mark as junk."""
     s = (name or "").strip().lower()
+    if _DUAL_VENDOR_JUNK.search(s):
+        return False
     if s in ALLOWLISTED_COMPANY_NAMES:
         return True
     for p in _BRAND_PREFIX_ALLOW:

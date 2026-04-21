@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref } from '../lib/companyExternalHref';
 
 const API_BASE = getApiBase();
 
@@ -309,8 +310,15 @@ export default function RobotCompanies() {
                         {comp.lead_score}
                       </span>
                     </td>
-                    <td style={{...tdStyle, color: '#fff', fontWeight: '500'}}>
-                      {comp.company_name}
+                    <td style={{...tdStyle, fontWeight: '500'}}>
+                      <a
+                        href={companyExternalHref(comp) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#22d3ee', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                      >
+                        {comp.company_name}
+                      </a>
                       {(comp.vendor_list_score ?? comp.lead_score) >= 90 && (
                         <span style={{ marginLeft: '6px', fontSize: '12px' }}>⭐</span>
                       )}

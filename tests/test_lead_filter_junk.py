@@ -3,7 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.services.lead_filter import classify_lead, is_junk
+from app.services.lead_filter import (
+    _company_name_not_corroborated_by_signals,
+    classify_lead,
+    is_junk,
+)
 
 
 @pytest.mark.parametrize(
@@ -290,3 +294,13 @@ def test_short_ticker_brands_not_junk_lg_bp():
 def test_quality_log_headline_fragments_are_junk(name):
     junk, reason = is_junk(name)
     assert junk is True, reason
+
+
+def test_mis_attributed_company_name_not_in_signal_text():
+    """Headline fragment as company.name with unrelated article bullets."""
+    sigs = [
+        SimpleNamespace(signal_text="Fetch Robotics raises funding."),
+        SimpleNamespace(signal_text="Starship expands fleet."),
+    ]
+    assert _company_name_not_corroborated_by_signals("HeadlineFragmentXy", sigs) is True
+    assert _company_name_not_corroborated_by_signals("Fetch Robotics", sigs) is False
