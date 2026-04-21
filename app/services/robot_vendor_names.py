@@ -22,7 +22,6 @@ KNOWN_ROBOTICS_VENDOR_NAMES: Set[str] = {
     "relay robotics",
     "relay robotics (savioke)",
     "pudu robotics",
-    "locus robotics",
     "otto motors",
     "fetch robotics",
     "diligent robotics",

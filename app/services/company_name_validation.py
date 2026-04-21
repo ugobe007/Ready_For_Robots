@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
+from app.services.known_brands import is_allowlisted_company_name
+
 # ── Major news / broadcast (whole "company" is the outlet, not a buyer record) ──
 _NEWS_OUTLET_EXACT = frozenset(
     {
@@ -369,6 +371,9 @@ def reject_as_non_company_name(name: Optional[str]) -> Tuple[bool, str]:
     raw = str(name).strip()
     low = raw.lower()
     words = raw.split()
+
+    if is_allowlisted_company_name(raw):
+        return False, ""
 
     if low in _NEWS_OUTLET_EXACT:
         return True, "news or broadcast outlet (not a buyer company record)"

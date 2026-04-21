@@ -48,6 +48,11 @@ function leadToSearchRow(lead) {
     // Signal data
     matched_signals,
     automation_profile: lead.automation_profile,
+    primary_link_url: lead.primary_link_url ?? null,
+    primary_link_kind: lead.primary_link_kind ?? null,
+    identity_resolution: lead.identity_resolution ?? null,
+    needs_website_inference: lead.needs_website_inference ?? false,
+    suggested_pipeline_action: lead.suggested_pipeline_action ?? 'keep',
   };
 }
 
@@ -236,6 +241,9 @@ function LeadPanel({ lead: r, rank, router }) {
   )?.[1] || '→';
 
   const location = [r.location_city, r.location_state].filter(Boolean).join(', ');
+  const nameHref = r.primary_link_url || null;
+  const linkKind = r.primary_link_kind;
+  const reviewRemoval = r.suggested_pipeline_action === 'review_for_removal';
 
   return (
     <div
@@ -256,8 +264,37 @@ function LeadPanel({ lead: r, rank, router }) {
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-[10px] font-mono text-neutral-600">#{rank}</span>
             <h3 className="text-lg font-bold text-neutral-100 group-hover:text-cyan-300 transition-colors leading-tight">
-              {r.company_name}
+              {nameHref ? (
+                <a
+                  href={nameHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-nopropagate="1"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:underline underline-offset-2"
+                >
+                  {r.company_name}
+                </a>
+              ) : (
+                r.company_name
+              )}
             </h3>
+            {linkKind === 'evidence' && (
+              <span
+                className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-amber-800/80 text-amber-500/90"
+                title="No company site on file — link opens news or source URL"
+              >
+                News
+              </span>
+            )}
+            {linkKind === 'website' && nameHref && (
+              <span
+                className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-cyan-800/80 text-cyan-500/80"
+                title="Company website"
+              >
+                Site
+              </span>
+            )}
             {tier && (
               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${tierBadgeCls}`}>
                 {tier}
@@ -461,7 +498,7 @@ export default function SearchPage() {
     setLoading(false);
   }, []);
 
-  async function runSearch(q, cat) {
+  const runSearch = useCallback(async (q, cat) => {
     setLoading(true);
     setResults(null);
     setIndustry(null);
@@ -475,14 +512,13 @@ export default function SearchPage() {
         const data = await r.json();
         setResults({ ...data, prepopulated: false });
       }
-      // Sync URL so links are shareable and back/forward work
       const next = {};
       if (q && q.trim()) next.q = q.trim();
       if (cat) next.category = cat;
       router.replace({ pathname: '/search', query: Object.keys(next).length ? next : {} }, undefined, { shallow: true });
     } catch {}
     setLoading(false);
-  }
+  }, [router]);
 
   // Read URL params on load — supports ?q=, ?category=, and ?industry=
   useEffect(() => {
@@ -503,7 +539,7 @@ export default function SearchPage() {
       setCategory(catVal);
       runSearch(qVal, catVal);
     }
-  }, [router.isReady, router.query.q, router.query.category, router.query.industry]);
+  }, [router.isReady, router.query.q, router.query.category, router.query.industry, loadIndustryLeads, runSearch]);
 
   // No params — show HOT leads with automation specs
   useEffect(() => {

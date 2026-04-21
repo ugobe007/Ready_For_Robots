@@ -50,6 +50,25 @@ function parseApiError(status, text) {
   return detail;
 }
 
+/** Parse JSON body; avoids opaque "Unexpected token '<'" when the CDN returns HTML. */
+function parseResponseJson(text, context) {
+  const t = String(text ?? '').trim();
+  if (!t) {
+    throw new Error(`${context}: empty response`);
+  }
+  if (t.startsWith('<')) {
+    throw new Error(
+      `${context}: received a web page instead of JSON — check API base URL (FastAPI origin, not the static site).`,
+    );
+  }
+  try {
+    return JSON.parse(t);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`${context}: invalid JSON (${msg})`);
+  }
+}
+
 export default function CrmPage() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
@@ -108,7 +127,7 @@ export default function CrmPage() {
       if (!r.ok) {
         throw new Error(parseApiError(r.status, text));
       }
-      const data = JSON.parse(text);
+      const data = parseResponseJson(text, 'GET /api/crm/teams');
       const list = Array.isArray(data) ? data : [];
       setTeams(list);
       return list;
@@ -136,7 +155,7 @@ export default function CrmPage() {
         if (!r.ok) {
           throw new Error(parseApiError(r.status, text));
         }
-        const data = JSON.parse(text);
+        const data = parseResponseJson(text, 'GET /api/crm/accounts');
         setAccounts(Array.isArray(data) ? data : []);
       } catch (e) {
         setErr(e.message || 'Failed to load accounts');
@@ -179,7 +198,15 @@ export default function CrmPage() {
     const id = Number(raw);
     const t = setTimeout(() => {
       fetch(`${API}/api/companies/${id}`, liveFetchInit())
-        .then((r) => (r.ok ? r.json() : null))
+        .then(async (r) => {
+          if (!r.ok) return null;
+          const text = await r.text();
+          try {
+            return parseResponseJson(text, 'GET /api/companies');
+          } catch {
+            return null;
+          }
+        })
         .then((d) => setCompanyPreview(d))
         .catch(() => setCompanyPreview(null));
     }, 400);
@@ -205,7 +232,7 @@ export default function CrmPage() {
       if (!r.ok) {
         throw new Error(parseApiError(r.status, text));
       }
-      const created = JSON.parse(text);
+      const created = parseResponseJson(text, 'POST /api/crm/teams');
       setNewTeamName('');
       setNewTeamSlug('');
       await loadTeams();

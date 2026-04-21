@@ -85,6 +85,10 @@ export default function App({ Component, pageProps }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
+        {/* getApiBase() prefers this over a stale bundle’s NEXT_PUBLIC_API_URL (marketing HTML-only origin). */}
+        {process.env.NODE_ENV === 'production' && (
+          <meta name="rfr-api-base" content="https://ready-2-robot.fly.dev" />
+        )}
       </Head>
       <Component {...pageProps} />
       </VisitTracker>

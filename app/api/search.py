@@ -23,6 +23,7 @@ from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.automation_profile import get_automation_profile_for_response
 from app.services.industry_inference import effective_industry_for_lead
+from app.services.lead_primary_link import enrich_lead_link_fields
 
 router = APIRouter()
 
@@ -857,6 +858,12 @@ def _run_keyword_search(
         ov = ind if ind != raw_stored else None
         automation_profile = get_automation_profile_for_response(c, industry_override=ov)
         v_bucket = _vertical_alignment_bucket(ind, c.industry, v_intent)
+        link_extras = enrich_lead_link_fields(
+            website=c.website,
+            signals=c.signals,
+            overall_score=score,
+            signal_count=len(c.signals or []),
+        )
         results.append(
             {
                 "id": c.id,
@@ -872,6 +879,7 @@ def _run_keyword_search(
                 "priority_tier": pri.tier,
                 "automation_profile": automation_profile,
                 "_v_bucket": v_bucket,
+                **link_extras,
             }
         )
 

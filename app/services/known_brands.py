@@ -11,6 +11,9 @@ from __future__ import annotations
 # Keep in sync with product expectations: these are globally recognized brands/tickers
 # stored as single-field “company names” by scrapers.
 ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
+    # Real OEM / integrator names that were false positives on robotics-vendor patterns
+    "locus robotics",
+    "bito lagertechnik",
     "ups", "dhl", "ibm", "3m", "sap", "bmw", "kfc", "cvs", "gm",
     "ge", "hp", "lg", "bp", "ab inbev", "jbs", "mcd",
     # "Best X" companies — real brands that trigger the Best-listicle junk pattern
@@ -29,8 +32,19 @@ ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
     "health plan of the redwoods", "molina healthcare",
 })
 
+# Names that share a stable prefix (legal suffix variants: GmbH, Inc., etc.)
+_BRAND_PREFIX_ALLOW = (
+    "locus robotics",
+    "bito lagertechnik",
+)
+
 
 def is_allowlisted_company_name(name: str) -> bool:
     """True if the normalized name is a known brand we must never mark as junk."""
     s = (name or "").strip().lower()
-    return s in ALLOWLISTED_COMPANY_NAMES
+    if s in ALLOWLISTED_COMPANY_NAMES:
+        return True
+    for p in _BRAND_PREFIX_ALLOW:
+        if s == p or s.startswith(p + " ") or s.startswith(p + ","):
+            return True
+    return False

@@ -10,6 +10,13 @@
 const MARKETING_HOSTS = new Set(['readyforrobots.com', 'www.readyforrobots.com']);
 /** When env is not inlined; keep in sync with Fly app URL. */
 const DEFAULT_PRODUCTION_API = 'https://ready-2-robot.fly.dev';
+
+function _isMarketingHostname(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  if (!h) return false;
+  if (MARKETING_HOSTS.has(h)) return true;
+  return h === 'readyforrobots.com' || h.endsWith('.readyforrobots.com');
+}
 /** Use same-origin only when the static app is served from the Fly app (API + static in one image). */
 const API_COHOST_SUFFIXES = ['.fly.dev'];
 
@@ -33,7 +40,7 @@ function _sanitizeEnvApiUrl(raw) {
   if (!trimmed) return '';
   const base = trimmed.replace(/\/$/, '');
   const host = _hostnameFromUrlCandidate(base);
-  if (host && MARKETING_HOSTS.has(host)) {
+  if (host && _isMarketingHostname(host)) {
     return '';
   }
   const siteRaw =
@@ -56,7 +63,31 @@ function _apiCoHostedWithPage(hostname) {
   return API_COHOST_SUFFIXES.some((suf) => h.endsWith(suf));
 }
 
+/**
+ * HTML meta tag (set in _app.js for production) wins over a bad inlined NEXT_PUBLIC_API_URL.
+ * Lets CRM/dashboard call Fly even when the marketing CDN served an old chunk.
+ */
+function _metaTagApiBase() {
+  if (typeof document === 'undefined') return '';
+  try {
+    const el = document.querySelector('meta[name="rfr-api-base"]');
+    const raw = el?.getAttribute('content')?.trim();
+    if (!raw || !/^https?:\/\//i.test(raw)) return '';
+    const cleaned = _sanitizeEnvApiUrl(raw) || raw.replace(/\/$/, '');
+    const host = _hostnameFromUrlCandidate(cleaned);
+    if (host && _isMarketingHostname(host)) return '';
+    return cleaned.replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+}
+
 function _computeApiBase() {
+  const metaFirst = _metaTagApiBase();
+  if (metaFirst) {
+    return metaFirst;
+  }
+
   const envUrl =
     typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
       ? _sanitizeEnvApiUrl(process.env.NEXT_PUBLIC_API_URL)
@@ -74,7 +105,7 @@ function _computeApiBase() {
     if (h === 'localhost' || h === '127.0.0.1') {
       return 'http://localhost:8000';
     }
-    if (MARKETING_HOSTS.has(h)) {
+    if (_isMarketingHostname(h)) {
       return DEFAULT_PRODUCTION_API;
     }
     // Preview / alternate marketing domains (e.g. *.vercel.app): same-origin would load HTML, not JSON.
@@ -97,7 +128,7 @@ export function getApiBase() {
     base = DEFAULT_PRODUCTION_API;
   }
   const host = _hostnameFromUrlCandidate(base);
-  if (host && MARKETING_HOSTS.has(host)) {
+  if (host && _isMarketingHostname(host)) {
     base = DEFAULT_PRODUCTION_API;
   }
   return base;

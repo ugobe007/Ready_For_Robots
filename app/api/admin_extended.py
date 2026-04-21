@@ -6,7 +6,7 @@ Additional endpoints for company management and system controls.
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_
 from typing import Optional
 
@@ -15,6 +15,9 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
+from app.services.lead_filter import pick_primary_score
+from app.services.lead_primary_link import enrich_lead_link_fields
+from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
 
 router = APIRouter(dependencies=[Depends(require_admin)])
 
@@ -79,6 +82,67 @@ def delete_company(company_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"status": "deleted", "company_id": company_id}
+
+
+class InferWebsitesBody(BaseModel):
+    """Batch DDG lookups for companies missing a site and evidence URL — rate-limited."""
+
+    limit: int = 12
+    dry_run: bool = False
+    min_score: float = 0.0
+
+
+@router.post("/companies/infer-websites")
+def infer_company_websites(body: InferWebsitesBody, db: Session = Depends(get_db)):
+    """
+    Best-effort: set `companies.website` from DuckDuckGo instant answers when the lead has
+    no website and no http signal `source_url` (see `lead_primary_link.enrich_lead_link_fields`).
+    """
+    cap = max(1, min(body.limit, 40))
+    rows = (
+        db.query(Company)
+        .options(joinedload(Company.signals), joinedload(Company.scores))
+        .order_by(Company.id.desc())
+        .limit(800)
+        .all()
+    )
+    candidates: list = []
+    for c in rows:
+        ps = pick_primary_score(c.scores)
+        sc = float(ps.overall_intent_score) if ps else 0.0
+        if sc < body.min_score:
+            continue
+        sigs = c.signals or []
+        ex = enrich_lead_link_fields(
+            website=c.website,
+            signals=sigs,
+            overall_score=sc,
+            signal_count=len(sigs),
+        )
+        if not ex["needs_website_inference"]:
+            continue
+        candidates.append((c, sc, ex["suggested_pipeline_action"]))
+    candidates.sort(key=lambda x: -x[1])
+    out: list = []
+    for c, sc, action in candidates[:cap]:
+        found = try_duckduckgo_company_website(c.name)
+        sleep_between_lookups(0.8)
+        item = {
+            "company_id": c.id,
+            "name": c.name,
+            "overall_score": sc,
+            "suggested_pipeline_action": action,
+            "found_website": found,
+            "applied": False,
+        }
+        if found and not body.dry_run:
+            c.website = found
+            db.add(c)
+            item["applied"] = True
+        out.append(item)
+    if not body.dry_run:
+        db.commit()
+    return {"processed": len(out), "dry_run": body.dry_run, "results": out}
 
 
 class MergeDupesBody(BaseModel):

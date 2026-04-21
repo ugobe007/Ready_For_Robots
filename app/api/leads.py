@@ -48,6 +48,7 @@ from app.services.scoring_public import get_scoring_system_public
 from app.services.automation_profile import get_automation_profile_for_response
 from app.services.lead_value import compute_lead_value
 from app.services.gtm_readiness import compute_gtm_readiness
+from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.company_domain import (
     dedupe_companies_ordered,
     dedupe_staged_lead_tuples,
@@ -527,6 +528,13 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
 
     gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
 
+    link_extras = enrich_lead_link_fields(
+        website=c.website,
+        signals=sigs,
+        overall_score=overall_100,
+        signal_count=signal_count_total,
+    )
+
     return {
         "id":             c.id,
         "company_name":   c.name,
@@ -574,6 +582,7 @@ def _fmt_company(c: Company, junk: bool, junk_reason: str, pri) -> dict:
         "share_summary": share_summary,
         "automation_profile": automation_profile,
         "gtm": gtm,
+        **link_extras,
     }
 
 

@@ -42,7 +42,7 @@ from app.services.company_name_presence import (
     wikidata_entity_likelihood,
     wikidata_verify_enabled,
 )
-from app.services.known_brands import ALLOWLISTED_COMPANY_NAMES
+from app.services.known_brands import is_allowlisted_company_name
 from app.services.lead_filter import is_junk
 from app.services.robot_vendor_names import is_known_robotics_vendor_name
 from app.services.news_publications import is_known_publication_name
@@ -359,7 +359,7 @@ def is_valid_lead(
 
     # Stage 1a: fast-pass for universally-known short brands (before junk filter
     # which can reject short all-caps names as airport codes)
-    if name.strip().lower() in ALLOWLISTED_COMPANY_NAMES:
+    if is_allowlisted_company_name(name):
         return True, ""
 
     # Stage 0b: template / placeholder tokens scraped into name fields
