@@ -587,7 +587,11 @@ def get_leads(
     industry: Optional[str] = Query(None, description="Partial industry match"),
     signal_type: Optional[str] = Query(None, description="Must have this signal type"),
     exclude_junk: bool    = Query(True,  description="Hide junk-named leads"),
-    limit: int            = Query(50, ge=1, le=LEADS_PUBLIC_MAX, description="Max results (capped)"),
+    limit: int            = Query(
+        50,
+        ge=1,
+        description="Requested page size; server clamps to LEADS_PUBLIC_MAX (50) — older clients may send 150+",
+    ),
     sort: str             = Query("score", description="score | name | signals"),
     rotation_slot: Optional[int] = Query(
         None,
@@ -595,6 +599,8 @@ def get_leads(
     ),
     db: Session           = Depends(get_db),
 ):
+    # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
+    limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
     candidates = _lead_rows_query(db)
 
     if min_score is not None:
