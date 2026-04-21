@@ -2384,13 +2384,39 @@ export default function Dashboard() {
         );
         setLeads([]);
       } else {
-        const leadsData = await leadsRes.json();
-        setLeads(leadsData);
-        setError(null);
-        fetchLiveSignals(leadsData);
+        const raw = await leadsRes.text();
+        if (raw.trimStart().startsWith('<')) {
+          setError(
+            'API returned a web page instead of JSON (wrong API host). The UI must call the FastAPI origin (e.g. https://ready-2-robot.fly.dev), not the static marketing host.',
+          );
+          setLeads([]);
+        } else {
+          const leadsData = JSON.parse(raw);
+          setLeads(leadsData);
+          setError(null);
+          fetchLiveSignals(leadsData);
+        }
       }
-      if (summaryRes.ok) setSummary(await summaryRes.json());
-      if (healthRes.ok) setHealth(await healthRes.json());
+      if (summaryRes.ok) {
+        const st = await summaryRes.text();
+        if (!st.trimStart().startsWith('<')) {
+          try {
+            setSummary(JSON.parse(st));
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+      if (healthRes.ok) {
+        const ht = await healthRes.text();
+        if (!ht.trimStart().startsWith('<')) {
+          try {
+            setHealth(JSON.parse(ht));
+          } catch {
+            /* ignore */
+          }
+        }
+      }
     } catch (e) {
       setError(
         'Cannot reach API. For localhost:3000, run FastAPI on :8000 (next dev proxies /api → :8000). ' +

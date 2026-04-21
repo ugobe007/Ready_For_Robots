@@ -10,6 +10,8 @@
 const MARKETING_HOSTS = new Set(['readyforrobots.com', 'www.readyforrobots.com']);
 /** When env is not inlined; keep in sync with Fly app URL. */
 const DEFAULT_PRODUCTION_API = 'https://ready-2-robot.fly.dev';
+/** Use same-origin only when the static app is served from the Fly app (API + static in one image). */
+const API_COHOST_SUFFIXES = ['.fly.dev'];
 
 function _hostnameFromUrlCandidate(s) {
   const t = String(s || '').trim();
@@ -48,7 +50,13 @@ function _sanitizeEnvApiUrl(raw) {
   return base;
 }
 
-export function getApiBase() {
+function _apiCoHostedWithPage(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  if (!h) return false;
+  return API_COHOST_SUFFIXES.some((suf) => h.endsWith(suf));
+}
+
+function _computeApiBase() {
   const envUrl =
     typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL
       ? _sanitizeEnvApiUrl(process.env.NEXT_PUBLIC_API_URL)
@@ -69,13 +77,30 @@ export function getApiBase() {
     if (MARKETING_HOSTS.has(h)) {
       return DEFAULT_PRODUCTION_API;
     }
-    return window.location.origin.replace(/\/$/, '');
+    // Preview / alternate marketing domains (e.g. *.vercel.app): same-origin would load HTML, not JSON.
+    if (_apiCoHostedWithPage(h)) {
+      return window.location.origin.replace(/\/$/, '');
+    }
+    return DEFAULT_PRODUCTION_API;
   }
   // SSG: NEXT_PUBLIC_SITE_URL is the marketing domain, not the API — do not use it as API base.
   if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
     return DEFAULT_PRODUCTION_API;
   }
   return 'http://127.0.0.1:8000';
+}
+
+export function getApiBase() {
+  let base = _computeApiBase();
+  base = String(base || '').trim().replace(/\/$/, '');
+  if (!base) {
+    base = DEFAULT_PRODUCTION_API;
+  }
+  const host = _hostnameFromUrlCandidate(base);
+  if (host && MARKETING_HOSTS.has(host)) {
+    base = DEFAULT_PRODUCTION_API;
+  }
+  return base;
 }
 
 /**

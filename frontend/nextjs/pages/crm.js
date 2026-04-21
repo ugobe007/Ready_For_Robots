@@ -178,7 +178,7 @@ export default function CrmPage() {
     }
     const id = Number(raw);
     const t = setTimeout(() => {
-      fetch(`${API}/api/companies/${id}`)
+      fetch(`${API}/api/companies/${id}`, liveFetchInit())
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => setCompanyPreview(d))
         .catch(() => setCompanyPreview(null));
