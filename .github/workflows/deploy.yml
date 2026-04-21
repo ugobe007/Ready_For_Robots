@@ -20,7 +20,8 @@ jobs:
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
+      # Default release-command wait (~5m) can be too short if Supabase is cold or migrations hold locks.
       - name: Deploy
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --release-command-timeout=15m --wait-timeout=10m
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
