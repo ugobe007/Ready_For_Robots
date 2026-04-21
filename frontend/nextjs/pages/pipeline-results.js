@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -8,6 +8,20 @@ import { companyExternalHref } from '../lib/companyExternalHref';
 import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 import { AutomationSpecBlock } from '../lib/automationProfile';
 import { PlainTextWithSourceLinks } from '../lib/plainText';
+
+function formatSignalTypeLabel(t) {
+  if (!t) return '';
+  return String(t).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatUrlSignalWeights(weights) {
+  if (!weights || typeof weights !== 'object') return '';
+  return Object.entries(weights)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([k, v]) => `${formatSignalTypeLabel(k)} ${v}`)
+    .join(' · ');
+}
 
 function displayHost(raw) {
   if (!raw || typeof raw !== 'string') return 'your company';
@@ -139,6 +153,14 @@ function LeadPanel({ lead, rank, router }) {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="text-[10px] font-mono text-neutral-600">#{rank}</span>
+            {lead.preview_match_score != null && (
+              <span
+                className="text-[10px] font-mono text-emerald-500/90"
+                title="Match score: your URL signal weights × this lead’s signal strengths"
+              >
+                match {Number(lead.preview_match_score).toFixed(2)}
+              </span>
+            )}
             <h3 className="text-lg font-bold leading-tight">
               <a
                 href={companyExternalHref(lead) || '#'}
@@ -287,27 +309,45 @@ export default function PipelineResults() {
 
   const [loading,  setLoading]  = useState(true);
   const [matches,  setMatches]  = useState([]);
+  const [previewMeta, setPreviewMeta] = useState(null);
 
-  useEffect(() => {
-    if (!url) return;
-    const t = setTimeout(fetchMatches, 800);
-    return () => clearTimeout(t);
-  }, [url]);
-
-  async function fetchMatches() {
+  const fetchMatches = useCallback(async () => {
     try {
-      const res = await fetch(
-        `${getApiBase()}/api/leads?limit=6&tier=HOT&sort=score&exclude_junk=true`,
-        liveFetchInit(),
-      );
+      const u = new URL(`${getApiBase()}/api/leads`);
+      u.searchParams.set('limit', '6');
+      u.searchParams.set('tier', 'HOT');
+      u.searchParams.set('sort', 'score');
+      u.searchParams.set('exclude_junk', 'true');
+      u.searchParams.set('preview_meta', 'true');
+      if (urlStr) {
+        u.searchParams.set('preview_context', urlStr);
+      }
+      const res = await fetch(u.toString(), liveFetchInit());
       const data = await res.json();
-      setMatches(Array.isArray(data) ? data.slice(0, 6) : []);
+      if (data && typeof data === 'object' && Array.isArray(data.leads)) {
+        setMatches(data.leads.slice(0, 6));
+        setPreviewMeta(data.preview || null);
+      } else if (Array.isArray(data)) {
+        setMatches(data.slice(0, 6));
+        setPreviewMeta(null);
+      } else {
+        setMatches([]);
+        setPreviewMeta(null);
+      }
     } catch {
       setMatches([]);
+      setPreviewMeta(null);
     } finally {
       setLoading(false);
     }
-  }
+  }, [urlStr]);
+
+  useEffect(() => {
+    if (!url) return;
+    setLoading(true);
+    const t = setTimeout(fetchMatches, 800);
+    return () => clearTimeout(t);
+  }, [url, fetchMatches]);
 
   if (!url) {
     return (
@@ -342,6 +382,30 @@ export default function PipelineResults() {
             <p className="text-sm text-neutral-500">
               Top automation-ready prospects · click any deal to open the full analysis and outreach playbook
             </p>
+            {(previewMeta?.inferred_industry || (previewMeta?.signal_types && previewMeta.signal_types.length > 0)) && (
+              <p className="text-sm text-neutral-400 mt-3 max-w-2xl leading-relaxed">
+                {previewMeta.inferred_industry ? (
+                  <span>
+                    Inferred vertical:{' '}
+                    <span className="text-cyan-400/95 font-medium">{previewMeta.inferred_industry}</span>
+                  </span>
+                ) : null}
+                {previewMeta.inferred_industry && previewMeta.signal_types?.length > 0 ? (
+                  <span className="text-neutral-600"> · </span>
+                ) : null}
+                {previewMeta.signal_types?.length > 0 ? (
+                  <span>
+                    Buyer signals we match on:{' '}
+                    {previewMeta.signal_types.map(formatSignalTypeLabel).join(' · ')}
+                  </span>
+                ) : null}
+              </p>
+            )}
+            {previewMeta?.signal_weights && Object.keys(previewMeta.signal_weights).length > 0 && (
+              <p className="text-xs text-neutral-500 mt-2 max-w-2xl leading-relaxed font-mono">
+                URL scores (0–100 per buyer signal): {formatUrlSignalWeights(previewMeta.signal_weights)}
+              </p>
+            )}
           </div>
 
           {/* ── Leads ── */}
@@ -360,7 +424,9 @@ export default function PipelineResults() {
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-neutral-400">
-                  <span className="text-white font-semibold">{matches.length} HOT leads</span> — ranked by signal score
+                  <span className="text-white font-semibold">{matches.length} HOT leads</span>
+                  {' '}
+                  — ranked by URL–lead signal match{previewMeta?.signal_weights && Object.keys(previewMeta.signal_weights).length > 0 ? ', then deal priority' : ' (deal priority)'}
                 </p>
                 <Link href="/dashboard"
                   className="text-xs px-3 py-2 rounded border border-neutral-700 text-neutral-400 hover:border-cyan-700 hover:text-cyan-300 transition-colors">

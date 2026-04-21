@@ -12,19 +12,23 @@ GET /api/leads
     exclude_junk  bool   default true  — remove garbage-named leads
     limit         int    default 50 (max 50; pool rotates every 5 minutes)
     sort          str    score|name|signals  default score
+    preview_context str  optional — company name or URL; scores each buyer signal dimension (0–100), matches leads by weighted signal overlap
+    preview_meta    bool optional — with preview_context, return { leads, preview } JSON instead of a bare array
 """
 import logging
 import os
 import random
 import threading
 import time
+from collections import defaultdict
 from datetime import datetime, timezone, date
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, case
+from sqlalchemy import func, case, or_
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 
@@ -58,6 +62,202 @@ from app.services.company_domain import (
 )
 
 router = APIRouter()
+
+
+def _preview_blob_for_inference(raw: str) -> str:
+    """Expand URL-ish input so hostname tokens (e.g. warehouse-robotics) participate in keyword scoring."""
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    extra = ""
+    if "://" in s or (s.count(".") >= 1 and " " not in s and "@" not in s):
+        try:
+            href = s if s.startswith("http") else f"https://{s}"
+            p = urlparse(href)
+            host = (p.hostname or "").replace("www.", "")
+            if host:
+                extra = f" {host.replace('.', ' ').replace('-', ' ')}"
+        except Exception:
+            pass
+    return f"{s}{extra}"
+
+
+def _industry_from_preview_context(raw: str) -> Optional[str]:
+    """
+    Map free-text company / URL to a DB industry substring for ilike filtering.
+    Falls back to coarse vertical hints when keyword inference returns Unknown (common for OEM names).
+    """
+    blob = _preview_blob_for_inference(raw)
+    if not blob:
+        return None
+    inf = infer_industry_from_text(blob)
+    if inf != "Unknown":
+        return inf
+    low = blob.lower()
+    if any(k in low for k in ("medical robot", "surgical robot", "healthcare robot", "hospital robot", "lab robot")):
+        return "Medical Technology"
+    if any(k in low for k in ("warehouse robot", "fulfillment robot", "logistics robot", "amr", " agv", "agv ", "3pl")):
+        return "Logistics"
+    if any(
+        k in low
+        for k in (
+            "robotics",
+            "robot ",
+            "robot.",
+            "robot-",
+            "-robot",
+            "cobot",
+            "humanoid",
+            "industrial automation",
+            "factory automation",
+        )
+    ):
+        return "Automotive & Manufacturing"
+    return None
+
+
+_VALID_PREVIEW_SIGNAL_TYPES = frozenset(SIGNAL_TYPES_HOT | SIGNAL_TYPES_WARM)
+
+# Keyword groups on startup URL / name → buyer signal_types we surface in /api/leads (subset of DB enums).
+_PREVIEW_SIGNAL_RULES: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
+    (
+        (
+            "warehouse",
+            "fulfillment",
+            "3pl",
+            "logistics",
+            "distribution",
+            "last mile",
+            "sortation",
+            "intralogistics",
+            "cross-dock",
+            "dock door",
+        ),
+        ("material_handling", "warehouse_throughput", "labor_shortage", "expansion"),
+    ),
+    (
+        (
+            "hospital",
+            "healthcare",
+            "clinical",
+            "surgical",
+            "patient",
+            "medical",
+            "pharma",
+            "diagnostic",
+            "health system",
+            "senior living",
+            "life science",
+        ),
+        ("labor_shortage", "strategic_hire", "capex", "quality_bottleneck"),
+    ),
+    (
+        (
+            "food processing",
+            "food packaging",
+            "beverage",
+            "bakery",
+            "meat processing",
+            "poultry",
+            "dairy",
+            "snack food",
+        ),
+        ("packaging_automation", "repetitive_process", "production_capacity", "quality_bottleneck"),
+    ),
+    (
+        (
+            "manufacturing",
+            "factory",
+            "assembly",
+            "oem",
+            "industrial",
+            "plant",
+            "cnc",
+            "machining",
+            "sheet metal",
+        ),
+        ("production_capacity", "repetitive_process", "capex", "labor_shortage", "quality_bottleneck"),
+    ),
+    (
+        ("amr", "agv", "autonomous mobile", "mobile robot", "fleet management", "robotaxi"),
+        ("material_handling", "warehouse_throughput", "vendor_selection", "pilot_success"),
+    ),
+    (
+        ("datacenter", "data center", "hyperscale", "colocation", "server farm", "cloud infra"),
+        ("capex", "expansion", "labor_shortage"),
+    ),
+    (
+        ("retail", "grocery", "supermarket", "micro-fulfillment", "ecommerce", "e-commerce"),
+        ("labor_shortage", "repetitive_process", "expansion"),
+    ),
+    (
+        ("construction", "built environment", "general contractor", "infrastructure"),
+        ("expansion", "capex", "labor_shortage"),
+    ),
+    (
+        ("agriculture", "agtech", "farm", "harvest", "greenhouse", "grower"),
+        ("labor_shortage", "repetitive_process", "production_capacity"),
+    ),
+    (
+        ("cleaning", "sanitation", "janitorial", "facilities service"),
+        ("repetitive_process", "labor_shortage", "service_consistency"),
+    ),
+    (
+        ("welding", "painting line", "coating", "assembly line", "end of line"),
+        ("repetitive_process", "production_capacity", "quality_bottleneck"),
+    ),
+    (
+        ("series a", "series b", "venture capital", "seed round", "growth equity"),
+        ("funding_round", "ma_activity", "expansion"),
+    ),
+)
+
+
+def _preview_signal_weights(raw: str) -> dict[str, float]:
+    """
+    Score the URL/name along each buyer signal dimension (0–100 per type).
+    Multiple keyword rules that fire stack weight on shared types (stronger fit).
+    """
+    blob = _preview_blob_for_inference(raw).lower()
+    if not blob:
+        return {}
+    acc: dict[str, float] = defaultdict(float)
+    for keywords, types in _PREVIEW_SIGNAL_RULES:
+        if any(kw in blob for kw in keywords):
+            for t in types:
+                if t in _VALID_PREVIEW_SIGNAL_TYPES:
+                    acc[t] += 1.0
+    if not acc:
+        return {}
+    peak = max(acc.values())
+    return {t: round(100.0 * (v / peak), 1) for t, v in acc.items()}
+
+
+def _normalize_signal_strength(raw) -> float:
+    try:
+        x = float(raw) if raw is not None else 0.5
+    except (TypeError, ValueError):
+        return 0.5
+    if x > 1.0:
+        x = x / 100.0
+    return max(0.0, min(1.0, x))
+
+
+def _preview_lead_match_score(c: Company, url_weights: dict[str, float]) -> float:
+    """
+    Match URL signal scores to this lead: sum over overlapping signals of
+    (url_weight/100) * lead_signal_strength — same units as weighted overlap quality.
+    """
+    if not url_weights:
+        return 0.0
+    total = 0.0
+    for s in c.signals or []:
+        t = getattr(s, "signal_type", None)
+        if t not in url_weights:
+            continue
+        uw = url_weights[t] / 100.0
+        total += uw * _normalize_signal_strength(getattr(s, "signal_strength", None))
+    return total
 
 
 def _entity_resolution_payload(db: Session, c: Company) -> Optional[dict]:
@@ -602,6 +802,14 @@ def get_leads(
     max_score: float      = Query(100.0, description="Max overall score 0-100"),
     tier: Optional[str]   = Query(None,  description="HOT | WARM | COLD"),
     industry: Optional[str] = Query(None, description="Partial industry match"),
+    preview_context: Optional[str] = Query(
+        None,
+        description="Company name or URL — match buyers by inferred vertical + overlapping buyer signal types",
+    ),
+    preview_meta: bool = Query(
+        False,
+        description="With preview_context, return JSON { leads, preview } instead of a bare array",
+    ),
     signal_type: Optional[str] = Query(None, description="Must have this signal type"),
     exclude_junk: bool    = Query(True,  description="Hide junk-named leads"),
     limit: int            = Query(
@@ -618,18 +826,51 @@ def get_leads(
 ):
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
+    preview_raw = (preview_context or "").strip()
+    preview_mode = bool(preview_raw)
+    preview_signal_weights: dict[str, float] = {}
+    effective_industry: Optional[str] = None
+    if preview_raw:
+        effective_industry = _industry_from_preview_context(preview_raw)
+        preview_signal_weights = _preview_signal_weights(preview_raw)
+    preview_signal_types = sorted(
+        preview_signal_weights.keys(),
+        key=lambda t: -preview_signal_weights[t],
+    )[:15]
+    if effective_industry is None and industry:
+        effective_industry = (industry or "").strip() or None
+
     candidates = _lead_rows_query(db)
 
     if min_score is not None:
         candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
     if max_score is not None:
         candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
-    if industry:
-        candidates = candidates.filter(Company.industry.ilike(f"%{industry}%"))
-    if signal_type:
-        candidates = candidates.having(
-            func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
-        )
+
+    if preview_mode:
+        if preview_signal_types and effective_industry:
+            candidates = candidates.having(
+                or_(
+                    Company.industry.ilike(f"%{effective_industry}%"),
+                    func.sum(
+                        case((Signal.signal_type.in_(tuple(preview_signal_types)), 1), else_=0)
+                    )
+                    > 0,
+                )
+            )
+        elif preview_signal_types:
+            candidates = candidates.having(
+                func.sum(case((Signal.signal_type.in_(tuple(preview_signal_types)), 1), else_=0)) > 0
+            )
+        elif effective_industry:
+            candidates = candidates.filter(Company.industry.ilike(f"%{effective_industry}%"))
+    else:
+        if effective_industry:
+            candidates = candidates.filter(Company.industry.ilike(f"%{effective_industry}%"))
+        if signal_type:
+            candidates = candidates.having(
+                func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
+            )
 
     # Keep the SQL candidate set bounded — never scan the full grouped table.
     candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
@@ -680,6 +921,15 @@ def get_leads(
     results = results[:pre_limit]
 
     if not results:
+        if preview_meta and preview_raw:
+            return {
+                "leads": [],
+                "preview": {
+                    "inferred_industry": effective_industry,
+                    "signal_types": preview_signal_types,
+                    "signal_weights": preview_signal_weights,
+                },
+            }
         return []
 
     ids = [r["id"] for r in results]
@@ -702,19 +952,50 @@ def get_leads(
         staged.append((c, junk, junk_reason, pri))
 
     staged = dedupe_staged_lead_tuples(staged)
-    slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
-    if len(staged) > limit:
-        span = len(staged) - limit
-        start = (slot * 1103515245) % (span + 1)
-        staged = staged[start : start + limit]
-    else:
+    if preview_mode and preview_signal_weights:
+        def _preview_match_key(tup):
+            c = tup[0]
+            pri = tup[3]
+            ms = _preview_lead_match_score(c, preview_signal_weights)
+            sc = float(getattr(pri, "score", 0) or 0)
+            return (-ms, -sc)
+
+        staged.sort(key=_preview_match_key)
+    elif preview_mode:
+        def _preview_pri_key(tup):
+            pri = tup[3]
+            return -float(getattr(pri, "score", 0) or 0)
+
+        staged.sort(key=_preview_pri_key)
+    # Pipeline preview: stable top-N for the inferred vertical (or global if inference missed).
+    if preview_mode:
         staged = staged[:limit]
+    else:
+        slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
+        if len(staged) > limit:
+            span = len(staged) - limit
+            start = (slot * 1103515245) % (span + 1)
+            staged = staged[start : start + limit]
+        else:
+            staged = staged[:limit]
 
     llm_hints = resolve_homepage_urls_for_companies([t[0] for t in staged])
-    return [
-        _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
-        for c, junk, junk_reason, pri in staged
-    ]
+    out = []
+    for c, junk, junk_reason, pri in staged:
+        row = _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+        if preview_meta and preview_raw and preview_signal_weights:
+            row["preview_match_score"] = round(_preview_lead_match_score(c, preview_signal_weights), 4)
+        out.append(row)
+    if preview_meta and preview_raw:
+        return {
+            "leads": out,
+            "preview": {
+                "inferred_industry": effective_industry,
+                "signal_types": preview_signal_types,
+                "signal_weights": preview_signal_weights,
+            },
+        }
+    return out
 
 
 @router.get("/by-id/{company_id}")
