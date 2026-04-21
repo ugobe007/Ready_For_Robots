@@ -71,11 +71,15 @@ def enrich_lead_link_fields(
     signals: Optional[Iterable[Any]],
     overall_score: float = 0.0,
     signal_count: Optional[int] = None,
+    llm_resolved_url: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Returns keys for API JSON:
-      primary_link_url, primary_link_kind ('website'|'evidence'|None),
+      primary_link_url, primary_link_kind ('website'|'evidence'|'inferred_openai'|None),
       identity_resolution, needs_website_inference, suggested_pipeline_action
+
+    ``llm_resolved_url``: optional https homepage from OpenAI batch resolve
+    (``COMPANY_URL_OPENAI_RESOLVE``); used only when website and evidence are absent.
     """
     sigs = list(signals) if signals is not None else []
     n_sig = signal_count if signal_count is not None else len(sigs)
@@ -83,6 +87,8 @@ def enrich_lead_link_fields(
 
     site_ok = _looks_like_http_url(website)
     evidence = None if site_ok else first_evidence_http_url(sigs)
+    llm_u = (llm_resolved_url or "").strip()
+    llm_ok = _looks_like_http_url(llm_u) if not site_ok and not evidence else False
 
     if site_ok:
         url = str(website).strip()
@@ -93,6 +99,11 @@ def enrich_lead_link_fields(
         url = evidence
         kind = "evidence"
         resolution = "evidence"
+        needs_inf = False
+    elif llm_ok:
+        url = llm_u
+        kind = "inferred_openai"
+        resolution = "inferred_openai"
         needs_inf = False
     else:
         url = None

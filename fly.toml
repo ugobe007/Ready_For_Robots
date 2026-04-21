@@ -14,6 +14,11 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
     # Canonical marketing site (og:url, links). Static HTML may be served from CDN on this host.
     NEXT_PUBLIC_SITE_URL  = "https://readyforrobots.com"
 
+# Run DB migrations once per deploy (before new Machines roll out). Boot then starts uvicorn immediately
+# so Fly’s proxy sees :8080 within the health-check grace window.
+[deploy]
+  release_command = "alembic upgrade head"
+
 [env]
   PORT = "8080"
   # Browsers require explicit origins when cookies/credentials are used — not "*"
@@ -29,7 +34,6 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
 
   [[http_service.checks]]
     grace_period = "60s"

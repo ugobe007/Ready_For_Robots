@@ -5,6 +5,7 @@ Lead cleanup pipeline (run from repo root).
 1. Delete companies that fail the full logic-engine gate `is_valid_lead(name)` —
    junk filter, inference gate, distinctive-word check, optional Wikidata/DNS, etc.
    (not only `is_junk`). Child rows (signals, scores, contacts, feedback) removed first.
+   Pass ``--purge-junk-only`` to delete only rows matching ``is_junk()`` (faster, narrower).
 2. Normalize `companies.name`: trim whitespace, collapse repeated spaces (safe renames only).
 3. Rename headline-like `companies.name` when a proper name can be parsed from signal text.
 4. Re-infer `companies.industry` from name + all signal texts (`infer_industry_from_text`).
@@ -22,6 +23,7 @@ Usage:
   python3 scripts/cleanup_leads.py --apply --force-industry # dangerous full industry rewrite
   python3 scripts/cleanup_leads.py --apply --limit-names 200
   python3 scripts/cleanup_leads.py --apply --skip-normalize  # skip whitespace normalization
+  python3 scripts/cleanup_leads.py --apply --purge-junk-only --skip-industry  # fast is_junk-only purge
 
 After a noisy scraper run, prefer `--skip-industry` unless you intend to refill
 industry from signal text. For ML feedback, export decisions with
@@ -81,6 +83,7 @@ from app.services.industry_inference import (
     should_skip_industry_reinfer_for_company_name,
 )
 from app.services.company_validator import is_valid_lead
+from app.services.lead_filter import is_junk
 from app.models.lead_rep_feedback import LeadRepFeedback
 from app.models.contact import Contact
 from app.models.score import Score
@@ -200,24 +203,33 @@ def _exit_if_db_not_configured() -> None:
         raise
 
 
-def phase_purge_junk(db, apply: bool, stats: Stats) -> None:
+def phase_purge_junk(db, apply: bool, stats: Stats, *, junk_only: bool = False) -> None:
     rows = db.query(Company.id, Company.name).all()
     total = len(rows)
+    mode = (
+        "is_junk() — regex/substring junk filter (fast)"
+        if junk_only
+        else "is_valid_lead() — full logic engine + classifier (slow on large DBs)"
+    )
     print(
-        f"\n── Purge scan ──  {total} companies "
-        f"(is_valid_lead runs text_classifier per row — expect ~1–5 min for thousands of rows; "
-        f"progress every 500)…",
+        f"\n── Purge scan ──  {total} companies ({mode}; progress every 500)…",
         flush=True,
     )
     to_delete = []
     for i, (cid, name) in enumerate(rows):
         if i and i % 500 == 0:
             print(f"  … processed {i}/{total} companies", flush=True)
-        ok, reason = is_valid_lead(name or "")
-        if not ok:
-            to_delete.append((cid, name, reason))
+        if junk_only:
+            bad, reason = is_junk(name or "")
+            if bad:
+                to_delete.append((cid, name, reason))
+        else:
+            ok, reason = is_valid_lead(name or "")
+            if not ok:
+                to_delete.append((cid, name, reason))
 
-    print(f"\n── Purge invalid (is_valid_lead) ──  candidates: {len(to_delete)}")
+    purge_label = "Purge junk (is_junk)" if junk_only else "Purge invalid (is_valid_lead)"
+    print(f"\n── {purge_label} ──  candidates: {len(to_delete)}")
     for cid, name, reason in to_delete[:25]:
         print(f"  id={cid}  [{reason[:72]}]  {name[:100]!r}")
     if len(to_delete) > 25:
@@ -394,6 +406,11 @@ def main() -> None:
     ap.add_argument("--skip-industry", action="store_true")
     ap.add_argument("--skip-profiles", action="store_true")
     ap.add_argument(
+        "--purge-junk-only",
+        action="store_true",
+        help="Purge phase: delete rows where is_junk() only (faster, narrower than full is_valid_lead)",
+    )
+    ap.add_argument(
         "--force-industry",
         action="store_true",
         help="Overwrite industry for every company (default: only fill empty/Unknown/Other/New)",
@@ -407,7 +424,7 @@ def main() -> None:
     if not apply:
         print(
             "DRY RUN — no writes. Pass --apply to execute.\n"
-            "Large DBs: first phase scans every row with is_valid_lead (slow); progress prints every 500 rows.\n",
+            "Large DBs: default purge uses is_valid_lead (slow); use --purge-junk-only for a fast is_junk scan.\n",
             flush=True,
         )
 
@@ -418,7 +435,7 @@ def main() -> None:
     stats = Stats()
     try:
         if not args.skip_purge:
-            phase_purge_junk(db, apply, stats)
+            phase_purge_junk(db, apply, stats, junk_only=args.purge_junk_only)
             db.expire_all()
 
         if not args.skip_normalize:

@@ -24,6 +24,7 @@ from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.automation_profile import get_automation_profile_for_response
 from app.services.industry_inference import effective_industry_for_lead
 from app.services.lead_primary_link import enrich_lead_link_fields
+from app.services.company_url_openai import resolve_homepage_urls_for_companies
 
 router = APIRouter()
 
@@ -863,6 +864,7 @@ def _run_keyword_search(
             signals=c.signals,
             overall_score=score,
             signal_count=len(c.signals or []),
+            llm_resolved_url=llm_hints.get(c.id),
         )
         results.append(
             {

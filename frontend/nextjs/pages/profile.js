@@ -17,6 +17,8 @@ import { useRouter } from 'next/router';
 import { useAuth } from './_app';
 import { supabase, authHeader } from '../lib/supabase';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 
 const API = getApiBase();
 
@@ -72,6 +74,12 @@ function ReportModal({ report, onClose }) {
   const [tab, setTab] = useState('summary');
   const d     = report.report_data  || {};
   const sc    = report.summary_card || {};
+  const comp  = d.company || {};
+  const nameHref = companyExternalHref({
+    company_name: report.company_name,
+    website: comp.website,
+    primary_link_url: comp.primary_link_url,
+  });
   const strat = d.strategy          || {};
   const um    = URGENCY_META[strat.urgency] || URGENCY_META.MONITOR;
 
@@ -90,7 +98,16 @@ function ReportModal({ report, onClose }) {
         {/* header */}
         <div className="flex items-start justify-between px-6 py-4 border-b border-neutral-800 shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-neutral-100">{report.company_name}</h2>
+            <h2 className="text-base font-semibold text-neutral-100">
+              <a
+                href={nameHref || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${COMPANY_NAME_LINK_CLASS} font-semibold`}
+              >
+                {report.company_name}
+              </a>
+            </h2>
             <p className="text-xs text-neutral-600 mt-0.5">{report.title} · saved {fmt(report.created_at)}</p>
           </div>
           <button onClick={onClose} className="text-neutral-600 hover:text-neutral-200 px-2 py-1 text-sm">✕</button>
@@ -256,7 +273,19 @@ function ReportCard({ report, onDelete, onView }) {
       onClick={() => onView(report)}>
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-neutral-100 group-hover:text-white transition-colors leading-snug">{report.company_name}</p>
+          <a
+            href={companyExternalHref({
+              company_name: report.company_name,
+              website: (report.report_data?.company || {}).website,
+              primary_link_url: (report.report_data?.company || {}).primary_link_url,
+            }) || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className={`${COMPANY_NAME_LINK_CLASS} text-sm font-semibold leading-snug block`}
+          >
+            {report.company_name}
+          </a>
           <p className="text-[10px] text-neutral-600 mt-0.5 truncate">{report.title}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -534,7 +563,14 @@ export default function ProfilePage() {
                           <div key={c.company_id} className={`border ${tm.border} rounded-lg p-4 space-y-3`}>
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-neutral-100 truncate">{c.company_name}</p>
+                                <a
+                                  href={companyExternalHref({ company_name: c.company_name, website: c.website }) || '#'}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`${COMPANY_NAME_LINK_CLASS} text-sm font-semibold truncate block`}
+                                >
+                                  {c.company_name}
+                                </a>
                                 <p className="text-xs text-neutral-500 mt-0.5">{c.industry || '—'}</p>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
@@ -620,7 +656,17 @@ export default function ProfilePage() {
                                   <div key={c.company_id} className="flex items-center justify-between border border-neutral-800 rounded px-3 py-2">
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                       {match?.tier && <TierBadge tier={match.tier} />}
-                                      <span className="text-xs text-neutral-300 truncate">{c.company_name}</span>
+                                      <a
+                                        href={companyExternalHref({
+                                          company_name: c.company_name,
+                                          website: match?.website,
+                                        }) || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`${COMPANY_NAME_LINK_CLASS} text-xs truncate`}
+                                      >
+                                        {c.company_name}
+                                      </a>
                                       {match?.score != null && <ScoreNum value={match.score} />}
                                     </div>
                                     <div className="flex gap-2 shrink-0 ml-2">

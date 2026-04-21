@@ -4,9 +4,9 @@
 
 set -e
 
-# Run migrations with a 60-second timeout so a slow/unavailable DB never blocks startup.
-# If alembic fails or times out, uvicorn still starts — static pages and health checks work.
-if [ -n "$DATABASE_URL" ]; then
+# Migrations on Fly.io run once per deploy via fly.toml [deploy].release_command (fast boot; no duplicate work).
+# Outside Fly (local / docker-compose), run migrations here so the schema is ready before traffic.
+if [ -n "$DATABASE_URL" ] && [ -z "${FLY_MACHINE_ID:-}" ]; then
   echo "Running database migrations (alembic upgrade head)..."
   if timeout 60 alembic upgrade head; then
     echo "Migrations completed."
@@ -14,6 +14,8 @@ if [ -n "$DATABASE_URL" ]; then
     echo "WARNING: alembic upgrade head failed or timed out — continuing startup."
     echo "         APIs that require schema changes may return 500 until next deploy."
   fi
+elif [ -n "$FLY_MACHINE_ID" ]; then
+  echo "Fly.io machine: migrations run at deploy (release_command); skipping boot migration."
 fi
 
 # Start Celery only if Redis is available (skip gracefully on Fly.io without Redis)

@@ -6,6 +6,8 @@ import Image from 'next/image';
 import LoginDropdown from '../components/LoginDropdown';
 import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 import { AutomationSpecBlock } from '../lib/automationProfile';
 import { stripHtml } from '../lib/plainText';
 // signalsDisplay helpers used in dashboard; index.js relies on API-side dedup/cap
@@ -724,11 +726,20 @@ export default function Signals() {
                         const sigLabel  = (topSig?.signal_label || (topSig?.signal_type || '').replace(/_/g, ' ')).toLowerCase();
                         const tierLabel = isHot ? 'HOT' : isWarm ? 'WARM' : 'EMRG';
                         const tierColor = isHot ? '#34d399' : isWarm ? '#2dd4bf' : '#94a3b8';
+                        const extUrl = companyExternalHref(lead);
                         return (
-                          <Link
+                          <div
                             key={`${feedOffset}-${i}`}
-                            href="/dashboard"
-                            className="rr-hero-ticker-row group flex items-start gap-3 py-3 px-1 -mx-1 rounded-md border-b border-white/[0.06] transition-colors last:border-b-0"
+                            role="link"
+                            tabIndex={0}
+                            onClick={() => router.push('/dashboard')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                router.push('/dashboard');
+                              }
+                            }}
+                            className="rr-hero-ticker-row group flex items-start gap-3 py-3 px-1 -mx-1 rounded-md border-b border-white/[0.06] transition-colors last:border-b-0 cursor-pointer"
                           >
                             <span
                               className="shrink-0 mt-1 w-0.5 self-stretch rounded-full"
@@ -742,9 +753,15 @@ export default function Signals() {
                                 >
                                   {tierLabel}
                                 </span>
-                                <span className={`text-sm font-semibold truncate transition-colors ${isHot ? 'text-white group-hover:text-emerald-50' : 'text-neutral-200 group-hover:text-white'}`}>
+                                <a
+                                  href={extUrl || '#'}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`${COMPANY_NAME_LINK_CLASS} text-sm font-semibold truncate`}
+                                >
                                   {lead.company_name}
-                                </span>
+                                </a>
                               </div>
                               <p className="text-[11px] text-neutral-500 truncate mt-0.5 leading-snug pl-[2.6rem]">
                                 {sigLabel && <span className="text-neutral-400">{sigLabel}</span>}
@@ -753,7 +770,7 @@ export default function Signals() {
                               </p>
                             </div>
                             <span className="rr-hero-ticker-row-arrow shrink-0 text-neutral-600 group-hover:text-[#3ecf8e] text-xs mt-1 transition-colors">→</span>
-                          </Link>
+                          </div>
                         );
                       })}
                     </div>
@@ -862,7 +879,15 @@ export default function Signals() {
                       <div className="flex-1 space-y-1.5">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <h4 className="text-base font-semibold text-neutral-100 group-hover:text-white transition-colors">
-                            {lead.company_name}
+                            <a
+                              href={companyExternalHref(lead) || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className={COMPANY_NAME_LINK_CLASS}
+                            >
+                              {lead.company_name}
+                            </a>
                           </h4>
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-full border ${
@@ -1226,13 +1251,15 @@ export default function Signals() {
                   </span>
                   <div className="rr-home-spotlight-chips">
                     {dedupeHomepageLeads(hotLeads).slice(0, 6).map((lead) => (
-                      <Link
+                      <a
                         key={lead.id}
-                        href="#leads"
-                        className="rr-home-spotlight-chip"
+                        href={companyExternalHref(lead) || '#leads'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`rr-home-spotlight-chip ${COMPANY_NAME_LINK_CLASS}`}
                       >
                         {lead.company_name}
-                      </Link>
+                      </a>
                     ))}
                   </div>
                 </div>

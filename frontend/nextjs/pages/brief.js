@@ -4,13 +4,17 @@
  */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuth } from './_app';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { companyExternalHref } from '../lib/companyExternalHref';
+import { COMPANY_NAME_LINK_CLASS } from '../lib/companyNameLinkClass';
 import IndustryBriefBlock from '../components/IndustryBriefBlock';
 
 const API = getApiBase();
 
 export default function StrategyBrief() {
+  const router = useRouter();
   const { user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [industryBrief, setIndustryBrief] = useState(null);
@@ -151,15 +155,32 @@ export default function StrategyBrief() {
                 {hotLeads.map((lead, idx) => {
                   const topSig = lead.signals?.[0];
                   return (
-                    <Link key={lead.id} href={`/?lead=${lead.id}`}
-                      className="block border border-neutral-800 rounded p-4 hover:border-red-800 hover:bg-red-950/20 transition-all group">
+                    <div
+                      key={lead.id}
+                      role="link"
+                      tabIndex={0}
+                      onClick={() => router.push(`/?lead=${lead.id}`)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          router.push(`/?lead=${lead.id}`);
+                        }
+                      }}
+                      className="block border border-neutral-800 rounded p-4 hover:border-red-800 hover:bg-red-950/20 transition-all group cursor-pointer"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-baseline gap-2 mb-1">
                             <span className="text-xs font-bold text-neutral-600">#{idx + 1}</span>
-                            <span className="text-sm font-semibold text-neutral-100 group-hover:text-emerald-400 transition-colors">
+                            <a
+                              href={companyExternalHref(lead) || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              className={`${COMPANY_NAME_LINK_CLASS} text-sm font-semibold`}
+                            >
                               {lead.company_name}
-                            </span>
+                            </a>
                           </div>
                           <div className="text-[10px] text-neutral-600 mb-2">
                             {[lead.industry, lead.location_city, lead.location_state].filter(Boolean).join(' · ')}
@@ -177,7 +198,7 @@ export default function StrategyBrief() {
                           <div className="text-[9px] text-neutral-700 mt-1">{lead.signal_count} signals</div>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -188,20 +209,37 @@ export default function StrategyBrief() {
               <h2 className="text-sm font-semibold text-yellow-400 mb-4">Warm Pipeline - Monitor & Nurture</h2>
               <div className="space-y-2">
                 {warmLeads.slice(0, 8).map((lead, idx) => (
-                  <Link key={lead.id} href={`/?lead=${lead.id}`}
-                    className="flex items-center justify-between p-3 border border-neutral-800 rounded hover:border-yellow-800 hover:bg-yellow-950/10 transition-all group">
+                  <div
+                    key={lead.id}
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/?lead=${lead.id}`)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/?lead=${lead.id}`);
+                      }
+                    }}
+                    className="flex items-center justify-between p-3 border border-neutral-800 rounded hover:border-yellow-800 hover:bg-yellow-950/10 transition-all group cursor-pointer"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-semibold text-neutral-100 group-hover:text-emerald-400 transition-colors truncate">
+                        <a
+                          href={companyExternalHref(lead) || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className={`${COMPANY_NAME_LINK_CLASS} text-xs font-semibold truncate`}
+                        >
                           {lead.company_name}
-                        </span>
+                        </a>
                         <span className="text-[10px] text-neutral-600 shrink-0">{lead.industry}</span>
                       </div>
                     </div>
                     <div className="text-[10px] text-neutral-600 ml-4 tabular-nums">
                       {Math.round(lead.score?.overall_score || 0)}
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>

@@ -255,6 +255,11 @@ def _has_distinctive_word(name: str) -> bool:
 # Catches edge-cases that escape the junk filter and generic-word check.
 # ─────────────────────────────────────────────────────────────────────────────
 _STRUCTURAL_REJECTS = [
+    # SQL / CMS / deck fragments leaked into name fields
+    re.compile(r"=="),
+    re.compile(r"(?i)--+\s*$"),
+    # Headline/UI tail: "… Systems Fetch"
+    re.compile(r"(?i).{10,}\s+fetch\s*$"),
     # Ends with a year (event/conference title)
     re.compile(r"\b20\d\d\s*$"),
     # Contains a period mid-name (sentence boundary leaked in)
