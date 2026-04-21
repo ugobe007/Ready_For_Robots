@@ -10,7 +10,7 @@ GET /api/leads
     industry      str    partial match, e.g. "hospitality"
     signal_type   str    filter to leads that have this signal type
     exclude_junk  bool   default true  — remove garbage-named leads
-    limit         int    default 200
+    limit         int    default 50 (max 50; pool rotates every 5 minutes)
     sort          str    score|name|signals  default score
 """
 import logging
@@ -201,9 +201,14 @@ def _lead_rows_query(db: Session):
     )
 
 
-# Cap how many company rows we score per request. Loading/scoring the entire table
-# materializes every GROUP BY row in Python and times out under load.
-_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "12000"))
+# Cap how many grouped company rows we load for summaries / homepage (not full-table scans).
+# Default 50 — override with PIPELINE_SUMMARY_ROW_CAP only for internal ops.
+_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "50"))
+
+# Public list endpoint: never return more than this; pool rotates on a 5-minute clock.
+LEADS_PUBLIC_MAX = 50
+LEADS_SQL_POOL_CAP = 200
+LEADS_ROTATION_SEC = 300
 
 
 def _lead_rows_query_limited(db: Session, limit: int):
@@ -212,7 +217,7 @@ def _lead_rows_query_limited(db: Session, limit: int):
     Tier counts match the full pipeline for the scored head; very low-score cold leads
     beyond this cap are omitted from summary totals (acceptable for UI cards).
     """
-    lim = max(500, min(limit, 100_000))
+    lim = max(1, min(int(limit), 100_000))
     sq = _lead_rows_query(db).subquery()
     return db.query(sq).order_by(sq.c.overall_score.desc()).limit(lim)
 
@@ -338,18 +343,13 @@ def _shuffle_spotlight_order(leads: List[Company], h_seed: int, w_seed: int) -> 
 def _spotlight_rotation_seeds(now: datetime) -> tuple[int, int, int]:
     """
     Deterministic seeds for HOT vs WARM circular picks on the homepage spotlight.
-
-    Previously only day + hour changed — same five companies for a full hour and
-    a 10-minute HTTP cache doubled staleness.  We now fold in the UTC **minute**
-    (with co-prime multipliers) so each cache rebuild surfaces a different window
-    through the ranked HOT/WARM rings while staying reproducible for debugging.
+    Changes every LEADS_ROTATION_SEC (5 minutes) so the spotlight batch rotates, not every minute.
     """
     day_o = int(now.date().toordinal())
-    hour = now.hour
-    minute = now.minute
-    h_seed = day_o * 7919 + hour * 167 + minute * 9176 + 203
-    w_seed = day_o * 9283 + hour * 263 + minute * 5843 + 411
-    return h_seed, w_seed, minute
+    slot = int(now.timestamp() // LEADS_ROTATION_SEC)
+    h_seed = day_o * 7919 + slot * 9176 + 203
+    w_seed = day_o * 9283 + slot * 5843 + 411
+    return h_seed, w_seed, slot
 
 
 def _signal_label(signal_type: str) -> str:
@@ -587,8 +587,12 @@ def get_leads(
     industry: Optional[str] = Query(None, description="Partial industry match"),
     signal_type: Optional[str] = Query(None, description="Must have this signal type"),
     exclude_junk: bool    = Query(True,  description="Hide junk-named leads"),
-    limit: int            = Query(200,   description="Max results"),
+    limit: int            = Query(50, ge=1, le=LEADS_PUBLIC_MAX, description="Max results (capped)"),
     sort: str             = Query("score", description="score | name | signals"),
+    rotation_slot: Optional[int] = Query(
+        None,
+        description="Optional 5-minute slot index for testing; default uses server clock",
+    ),
     db: Session           = Depends(get_db),
 ):
     candidates = _lead_rows_query(db)
@@ -604,8 +608,8 @@ def get_leads(
             func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
         )
 
-    # Keep the candidate set small and sorted by score for quick classification.
-    candidate_limit = min(max(limit * 10, 120), 800)
+    # Keep the SQL candidate set bounded — never scan the full grouped table.
+    candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
     if sort == "name":
         candidates = candidates.order_by(Company.name.asc())
     elif sort == "signals":
@@ -648,8 +652,8 @@ def get_leads(
     else:
         results.sort(key=lambda x: x["priority_score"], reverse=True)
 
-    # Extra headroom so domain/name dedupe can still return up to `limit` distinct entities.
-    pre_limit = min(max(limit * 5, 240), 1500)
+    # Extra headroom so domain/name dedupe can still yield `limit` distinct entities after rotation.
+    pre_limit = min(250, max(limit * 5, 80))
     results = results[:pre_limit]
 
     if not results:
@@ -674,7 +678,14 @@ def get_leads(
             continue
         staged.append((c, junk, junk_reason, pri))
 
-    staged = dedupe_staged_lead_tuples(staged)[:limit]
+    staged = dedupe_staged_lead_tuples(staged)
+    slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
+    if len(staged) > limit:
+        span = len(staged) - limit
+        start = (slot * 1103515245) % (span + 1)
+        staged = staged[start : start + limit]
+    else:
+        staged = staged[:limit]
 
     return [_fmt_company(c, junk, junk_reason, pri) for c, junk, junk_reason, pri in staged]
 
@@ -740,7 +751,7 @@ def post_lead_rep_feedback(
 # clients do not block on a slow rebuild. Cold miss (empty cache) still runs
 # synchronously. Each Fly machine has its own RAM cache; stale serving avoids
 # thundering herds when TTLs expire.
-_HOMEPAGE_CACHE_TTL = 120  # 2 minutes — pairs with per-minute rotation seeds
+_HOMEPAGE_CACHE_TTL = 300  # 5 minutes — aligned with LEADS_ROTATION_SEC
 _homepage_cache: dict = {}
 _homepage_build_lock = threading.Lock()
 _homepage_bg_refresh_lock = threading.Lock()
@@ -769,7 +780,7 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
 
 
 def _build_homepage_payload(db: Session) -> dict:
-    """Homepage: capped SQL slice + spotlight pool (classify only ~200 companies)."""
+    """Homepage: capped SQL slice (50 scored rows) + spotlight (≤50 leads), 5-minute rotation."""
     rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
@@ -795,11 +806,12 @@ def _build_homepage_payload(db: Session) -> dict:
             continue
         seen.add(row.id)
         ordered_ids.append(row.id)
-        if len(ordered_ids) >= 280:
+        if len(ordered_ids) >= 50:
             break
 
     if not ordered_ids:
         now = datetime.now(timezone.utc)
+        slot = int(now.timestamp() // LEADS_ROTATION_SEC)
         return {
             "summary": summary,
             "hotLeads": [],
@@ -808,6 +820,8 @@ def _build_homepage_payload(db: Session) -> dict:
                 "hot_slots": 35,
                 "warm_slots": 15,
                 "feed_limit": 50,
+                "rotation_period_sec": LEADS_ROTATION_SEC,
+                "rotation_slot": slot,
                 "rotation_day": str(now.date()),
                 "rotation_hour_utc": now.hour,
                 "rotation_minute_utc": now.minute,
@@ -818,7 +832,7 @@ def _build_homepage_payload(db: Session) -> dict:
     companies = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
-        .filter(Company.id.in_(ordered_ids[:220]))
+        .filter(Company.id.in_(ordered_ids[:50]))
         .all()
     )
     id_rank = {cid: i for i, cid in enumerate(ordered_ids)}
@@ -853,7 +867,7 @@ def _build_homepage_payload(db: Session) -> dict:
     hot_slots = 35
     warm_slots = 15
     now = datetime.now(timezone.utc)
-    h_seed, w_seed, minute = _spotlight_rotation_seeds(now)
+    h_seed, w_seed, rot_slot = _spotlight_rotation_seeds(now)
     hour = now.hour
 
     chosen: List[Company] = []
@@ -895,9 +909,11 @@ def _build_homepage_payload(db: Session) -> dict:
             "hot_slots": hot_slots,
             "warm_slots": warm_slots,
             "feed_limit": feed_limit,
+            "rotation_period_sec": LEADS_ROTATION_SEC,
+            "rotation_slot": rot_slot,
             "rotation_day": str(now.date()),
             "rotation_hour_utc": hour,
-            "rotation_minute_utc": minute,
+            "rotation_minute_utc": now.minute,
         },
         "scoringSystem": get_scoring_system_public(),
     }

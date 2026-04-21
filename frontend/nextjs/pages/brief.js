@@ -22,7 +22,7 @@ export default function StrategyBrief() {
     (async () => {
       try {
         const [leadsRes, reportRes] = await Promise.all([
-          fetch(`${API}/api/leads?limit=500`, liveFetchInit()),
+          fetch(`${API}/api/leads?limit=50`, liveFetchInit()),
           fetch(`${API}/api/daily-report?days=1&format=json`, liveFetchInit()),
         ]);
         const leadsData = await leadsRes.json();

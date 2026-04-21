@@ -416,7 +416,7 @@ export default function SearchPage() {
     setResults(null);
     try {
       const r = await fetch(
-        `${API}/api/leads?tier=HOT&limit=30&sort=score&exclude_junk=true`,
+        `${API}/api/leads?tier=HOT&limit=50&sort=score&exclude_junk=true`,
         liveFetchInit(),
       );
       if (!r.ok) return;
@@ -440,7 +440,7 @@ export default function SearchPage() {
     try {
       const params = new URLSearchParams({
         industry: ind,
-        limit: '60',
+        limit: '50',
         sort: 'score',
         exclude_junk: 'true',
       });

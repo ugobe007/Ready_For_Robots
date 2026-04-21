@@ -237,7 +237,7 @@ export default function Signals() {
   }, []);
 
   // Single batched fetch: summary + hot leads in one request (faster, fewer round trips, better for mobile).
-  // Fresh AbortController per request — reusing an aborted signal breaks the 2‑min poll after any timeout.
+  // Fresh AbortController per request — reusing an aborted signal breaks the 5‑min poll after any timeout.
   useEffect(() => {
     const apiBase = getApiBase();
     let cancelled = false;
@@ -350,7 +350,7 @@ export default function Signals() {
     fetchHomepage(false);
     const interval = setInterval(() => {
       fetchHomepage(true);
-    }, 120000);
+    }, 300_000);
     return () => {
       cancelled = true;
       clearInterval(interval);

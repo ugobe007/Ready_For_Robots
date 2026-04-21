@@ -2330,7 +2330,7 @@ export default function Dashboard() {
 
   const buildQuery = useCallback(() => {
     const p = new URLSearchParams();
-    p.set('limit', '150');
+    p.set('limit', '50');
     p.set('exclude_junk', excludeJunk);
     p.set('min_score', minScore);
     // Backend only knows score | name | signals — lead_value is sorted client-side after fetch
@@ -2430,7 +2430,7 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => {
-    const t = setInterval(fetchData, 30_000);
+    const t = setInterval(fetchData, 300_000);
     return () => clearInterval(t);
   }, [fetchData]);
 
@@ -3376,7 +3376,7 @@ export default function Dashboard() {
       </div>
 
       <footer className="rr-footer mt-auto">
-        Refreshes every 30s · automation signal platform
+        Refreshes every 5 min · up to 50 leads per load (rotating pool)
       </footer>
     </div>
     </>
