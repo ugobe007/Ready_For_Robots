@@ -2687,7 +2687,7 @@ export default function Dashboard() {
                     if (e.key === 'Enter') {
                       const url = e.target.value.trim();
                       if (url) {
-                        window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                        window.location.href = `/pipeline-results?url=${encodeURIComponent(url)}`;
                       }
                     }
                   }}
@@ -2697,7 +2697,7 @@ export default function Dashboard() {
                     const input = e.target.closest('div').querySelector('input');
                     const url = input.value.trim();
                     if (url) {
-                      window.location.href = `/pipeline-results?company=${encodeURIComponent(url)}`;
+                      window.location.href = `/pipeline-results?url=${encodeURIComponent(url)}`;
                     }
                   }}
                   className="px-8 py-3 rounded-lg font-semibold text-sm sm:text-base border border-emerald-500 text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 transition-all duration-200 whitespace-nowrap bg-transparent"

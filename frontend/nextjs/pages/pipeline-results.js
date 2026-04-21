@@ -300,11 +300,29 @@ function LeadPanel({ lead, rank, router }) {
   );
 }
 
+function firstQueryValue(v) {
+  if (v == null) return '';
+  return Array.isArray(v) ? (v[0] || '') : String(v);
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function PipelineResults() {
   const router = useRouter();
-  const { url } = router.query;
-  const urlStr  = Array.isArray(url) ? url[0] : url;
+  const urlQ = firstQueryValue(router.query.url).trim();
+  const companyQ = firstQueryValue(router.query.company).trim();
+  const [searchFallback, setSearchFallback] = useState('');
+
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const v = (sp.get('url') || sp.get('company') || '').trim();
+      if (v) setSearchFallback(v);
+    } catch {
+      /* ignore */
+    }
+  }, [router.asPath]);
+
+  const urlStr = urlQ || companyQ || searchFallback;
   const company = useMemo(() => displayHost(urlStr), [urlStr]);
 
   const [loading,  setLoading]  = useState(true);
@@ -343,17 +361,31 @@ export default function PipelineResults() {
   }, [urlStr]);
 
   useEffect(() => {
-    if (!url) return;
+    if (!urlStr) return;
     setLoading(true);
     const t = setTimeout(fetchMatches, 800);
     return () => clearTimeout(t);
-  }, [url, fetchMatches]);
+  }, [urlStr, fetchMatches]);
 
-  if (!url) {
+  if (!router.isReady) {
+    return (
+      <RrSiteLayout>
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <div className="inline-block w-8 h-8 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-neutral-500 text-sm">Loading…</p>
+        </div>
+      </RrSiteLayout>
+    );
+  }
+
+  if (!urlStr) {
     return (
       <RrSiteLayout>
         <div className="flex flex-col items-center justify-center py-32 gap-4">
           <p className="text-neutral-500">No company URL provided.</p>
+          <p className="text-xs text-neutral-600 max-w-sm text-center">
+            Add <code className="text-cyan-600">?url=</code> or <code className="text-cyan-600">?company=</code> to the address bar, or go back and use Preview pipeline.
+          </p>
           <Link href="/" className="px-4 py-2 border border-cyan-800 text-cyan-400 rounded hover:border-cyan-600 text-sm">
             ← Back to home
           </Link>
