@@ -2,7 +2,7 @@
  * Results — ReadyForRobots
  * URL request → scan → matched prospect cards → SCOUT activation.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Bot,
@@ -24,24 +24,40 @@ import { toast } from "sonner";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
-  "Reading product positioning and capabilities…",
-  "Scanning prospective sales leads…",
-  "Matching fit, timing, and buying signals…",
+  "Using your URL as pipeline context…",
+  "Loading pre-scored prospective sales leads…",
+  "Matching fit, timing, and buying signals from the pipeline…",
   "Explaining why each lead is relevant…",
   "Preparing SCOUT follow-up plans…",
 ];
 
-type ApiMatch = {
+type ApiLead = {
+  id: number;
   company_name?: string;
   industry?: string | null;
   location_city?: string | null;
   location_state?: string | null;
   employee_estimate?: number | null;
-  priority_tier?: string;
-  match_score?: number;
-  value_proposition?: string;
-  key_signals?: string[];
-  recommended_action?: string;
+  priority_tier?: string | null;
+  priority_score?: number;
+  priority_reasons?: string[];
+  share_summary?: string | null;
+  score?: {
+    overall_score?: number;
+    lead_value_score?: number;
+    signal_score?: number;
+  };
+  signals?: Array<{
+    signal_type?: string;
+    signal_label?: string;
+    raw_text?: string;
+    display_text?: string;
+  }>;
+  gtm?: {
+    readiness_label?: string;
+    why_now?: string[];
+    suggested_motion?: string;
+  };
 };
 
 type Prospect = {
@@ -66,19 +82,6 @@ function normalizeUrl(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-}
-
-function robotNameFromUrl(raw: string): string {
-  try {
-    return new URL(normalizeUrl(raw)).hostname.replace(/^www\./, "");
-  } catch {
-    return "Submitted robot";
-  }
-}
-
-function formatEmployees(value: number | null | undefined): string {
-  if (!value || value <= 0) return "Unknown";
-  return new Intl.NumberFormat("en-US").format(value);
 }
 
 function scoreColor(score: number): string {
@@ -108,31 +111,46 @@ Best,
 [Your name]`;
 }
 
-function mapApiMatch(match: ApiMatch, index: number): Prospect {
-  const score = Math.round(match.match_score ?? 70);
-  const signals = match.key_signals?.filter(Boolean) ?? [];
-  const signal = signals[0] || match.value_proposition || "SCOUT found a sales-fit pattern worth reviewing.";
-  const company = match.company_name || `Matched Lead ${index + 1}`;
-  const location = [match.location_city, match.location_state].filter(Boolean).join(", ") || "Location unknown";
-  const stage = match.priority_tier ? `${match.priority_tier} Lead` : score >= 80 ? "Qualified Lead" : "Review Lead";
-  const relevance = match.value_proposition || `${company} matches your automation profile based on industry fit, intent score, and active market signals.`;
+function formatEmployees(value: number | null | undefined): string {
+  if (!value || value <= 0) return "Unknown";
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function titleize(raw: string): string {
+  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function mapApiLead(lead: ApiLead, index: number): Prospect {
+  const score = Math.round(
+    lead.score?.lead_value_score ??
+      lead.score?.overall_score ??
+      lead.priority_score ??
+      70,
+  );
+  const firstSignal = lead.signals?.[0];
+  const signal = firstSignal?.display_text || firstSignal?.raw_text || lead.share_summary || "SCOUT found a sales-fit pattern worth reviewing.";
+  const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
+  const company = lead.company_name || `Matched Lead ${index + 1}`;
+  const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
+  const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
+  const relevance = lead.share_summary || whyNow.join(" ") || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
   const scoreReason = [
     `${score}/100 match score`,
-    `${signals.length || 1} relevant signal${signals.length === 1 ? "" : "s"}`,
-    match.priority_tier ? `${match.priority_tier} priority tier` : "qualified timing",
+    lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
+    ...(lead.priority_reasons || whyNow).slice(0, 2),
   ].join(" · ");
   const prospect = {
-    id: `${company}-${index}`,
+    id: String(lead.id ?? `${company}-${index}`),
     company,
-    location,
-    industry: match.industry || "Industry unknown",
-    employees: formatEmployees(match.employee_estimate),
+    location: [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "Location unknown",
+    industry: lead.industry || "Industry unknown",
+    employees: formatEmployees(lead.employee_estimate),
     score,
     signal,
-    signalType: signals.length > 1 ? "Multiple signals" : "Buying signal",
+    signalType,
     signalColor: scoreColor(score),
-    timing: timingFromScore(score),
-    action: match.recommended_action || "Reach out with a personalized automation use case",
+    timing: lead.gtm?.readiness_label ? `Stage: ${lead.gtm.readiness_label}` : timingFromScore(score),
+    action: lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
     relevance,
     scoreReason,
     draft: "",
@@ -234,18 +252,14 @@ export default function Results() {
 
     async function runScan() {
       try {
-        const response = await fetch(`${getApiBase()}/api/robot-ready/submit`, liveFetchInit({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            robot_name: robotNameFromUrl(submittedUrl),
-            url: normalizeUrl(submittedUrl),
-          }),
-        }));
+        const response = await fetch(
+          `${getApiBase()}/api/leads?limit=8&tier=HOT&sort=score&exclude_junk=true`,
+          liveFetchInit(),
+        );
         if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
         const data = await response.json();
-        const matches = Array.isArray(data?.matched_companies) ? data.matched_companies : [];
-        const mapped = matches.slice(0, 8).map(mapApiMatch);
+        const matches = Array.isArray(data) ? data : [];
+        const mapped = matches.slice(0, 8).map(mapApiLead);
         if (!mapped.length) throw new Error("No live matches returned");
         if (!cancelled) setProspects(mapped);
       } catch (error) {
@@ -253,7 +267,7 @@ export default function Results() {
         if (!cancelled) {
           setUsingFallback(true);
           setProspects(fallbackProspects);
-          toast.info("Using sample matches while SCOUT retries the live lead scan.");
+          toast.info("Using sample matches while SCOUT reloads the lead pipeline.");
         }
       } finally {
         if (!cancelled) {
@@ -279,11 +293,6 @@ export default function Results() {
   useEffect(() => {
     setSelectedIds(new Set(prospects.map((p) => p.id)));
   }, [prospects]);
-
-  const activatedProspects = useMemo(
-    () => prospects.filter((p) => activatedIds.has(p.id)),
-    [activatedIds, prospects],
-  );
 
   function submitUrl(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
