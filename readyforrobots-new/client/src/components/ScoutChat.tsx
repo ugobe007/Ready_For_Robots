@@ -36,11 +36,11 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="p-5 text-sm text-white/60 leading-relaxed">
           <p className="mb-3">
-            Pipeline chat is being connected to your ReadyForRobots account. Use{" "}
+            SCOUT can scan your URL, match prospective sales leads, and queue follow-up plans from the results page. Use{" "}
             <strong className="text-white/80">Activate Pipeline</strong> or{" "}
-            <strong className="text-white/80">Scan URL</strong> to run a live match while we finish the integration.
+            <strong className="text-white/80">Scan URL</strong> to start.
           </p>
-          <p className="text-xs text-white/35">API: FastAPI <code className="text-white/45">/api/scout/chat</code> (authenticated flows).</p>
+          <p className="text-xs text-white/35">Follow-up automation starts after you activate all matched leads or select individual leads.</p>
         </div>
       </div>
     </div>

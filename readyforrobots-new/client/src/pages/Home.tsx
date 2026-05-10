@@ -5,7 +5,7 @@
  * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
  */
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, ChevronDown, Sparkles, FileText, RefreshCw, X, Quote } from "lucide-react";
+import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, RefreshCw, X, Quote } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
@@ -48,29 +48,6 @@ function useTypewriter(text: string, speed = 55, startDelay = 600) {
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/rfr-dark-hero-eCRKfoUwPNDkc82gUhUXL9.webp";
 
-const faqs = [
-  {
-    q: "How does ReadyForRobots find buying signals?",
-    a: "We monitor 150+ sources continuously — job boards, earnings calls, press releases, OSHA filings, real estate permits, and industry news. SCOUT detects patterns that indicate a company is ready to invest in automation.",
-  },
-  {
-    q: "What types of robots does this work for?",
-    a: "Any robot category with a B2B sales motion: warehouse AMRs, service robots, industrial arms, cleaning robots, food processing automation, healthcare robots, and more. You tell us your category and we tune the signals accordingly.",
-  },
-  {
-    q: "How is this different from a lead list?",
-    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a drafted outreach message — so you reach the right buyer at the right moment.",
-  },
-  {
-    q: "Do I need to sign up to see results?",
-    a: "No. Enter your company URL above and we'll show you a sample of matched opportunities immediately — no account required. You only sign up when you want to act on them.",
-  },
-  {
-    q: "How quickly does SCOUT act on new signals?",
-    a: "Signals are detected and scored within minutes. Outreach drafts are ready within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
-  },
-];
-
 const testimonials = [
   {
     quote: "We reached the buyer 4 months before the RFP — and shaped the requirements. That deal would never have happened with a cold list.",
@@ -112,7 +89,6 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { displayed: typedText, done: typedDone } = useTypewriter("Start closing.", 65, 700);
 
   const howItWorks = useFadeUp();
@@ -121,7 +97,6 @@ export default function Home() {
   const proofSection = useFadeUp();
   const beforeAfterSection = useFadeUp();
   const testimonialsSection = useFadeUp();
-  const faqSection = useFadeUp();
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -596,48 +571,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section
-        id="faq"
-        ref={faqSection.ref as React.RefObject<HTMLElement>}
-        className={`py-16 px-6 border-t border-white/6 ${fadeUpClass(faqSection.visible)}`}
-        style={{ background: "#130828" }}
-      >
-        <div className="max-w-3xl mx-auto">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#a78bfa" }}>Questions</p>
-          <h2
-            className="font-extrabold text-white mb-2"
-            style={{ fontSize: "clamp(1.8rem, 3vw, 2.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-          >
-            Frequently asked questions
-          </h2>
-          <p className="text-sm text-white/35 mb-10">Everything you need to know before you start automating</p>
-
-          <div className="flex flex-col divide-y divide-white/6 rounded-2xl border border-white/8 overflow-hidden">
-            {faqs.map((faq, i) => {
-              const isOpen = openFaq === i;
-              return (
-                <div key={i} className="transition-colors" style={{ background: isOpen ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)" }}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
-                  >
-                    <span className="text-sm font-semibold text-white/80">{faq.q}</span>
-                    <ChevronDown className={`h-4 w-4 text-white/25 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {isOpen && (
-                    <div className="px-6 pb-5 border-t border-white/6">
-                      <p className="text-sm text-white/45 leading-relaxed pt-4">{faq.a}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
       </section>

@@ -1,95 +1,319 @@
 /**
  * Results — ReadyForRobots
- * Scanning animation → matched prospect cards with signals, scores, draft outreach
- * Violet palette: #0d0520 bg · #7c3aed accent · cream text
+ * URL request → scan → matched prospect cards → SCOUT activation.
  */
-import { useState, useEffect } from "react";
-import { ArrowRight, Zap, TrendingUp, MapPin, Users, AlertTriangle, CheckCircle2, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  MapPin,
+  MousePointer2,
+  Send,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { toast } from "sonner";
 
 const SCAN_STEPS = [
-  "Analyzing company profile…",
-  "Scanning 150+ signal sources…",
-  "Matching automation readiness patterns…",
-  "Scoring qualification factors…",
-  "Generating outreach drafts…",
-  "Pipeline ready.",
+  "Waiting for your robot or company URL…",
+  "Reading product positioning and capabilities…",
+  "Scanning prospective sales leads…",
+  "Matching fit, timing, and buying signals…",
+  "Explaining why each lead is relevant…",
+  "Preparing SCOUT follow-up plans…",
 ];
 
-const mockProspects = [
+type ApiMatch = {
+  company_name?: string;
+  industry?: string | null;
+  location_city?: string | null;
+  location_state?: string | null;
+  employee_estimate?: number | null;
+  priority_tier?: string;
+  match_score?: number;
+  value_proposition?: string;
+  key_signals?: string[];
+  recommended_action?: string;
+};
+
+type Prospect = {
+  id: string;
+  company: string;
+  location: string;
+  industry: string;
+  employees: string;
+  score: number;
+  signal: string;
+  signalType: string;
+  signalColor: string;
+  timing: string;
+  action: string;
+  relevance: string;
+  scoreReason: string;
+  draft: string;
+  stage: string;
+};
+
+function normalizeUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function robotNameFromUrl(raw: string): string {
+  try {
+    return new URL(normalizeUrl(raw)).hostname.replace(/^www\./, "");
+  } catch {
+    return "Submitted robot";
+  }
+}
+
+function formatEmployees(value: number | null | undefined): string {
+  if (!value || value <= 0) return "Unknown";
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function scoreColor(score: number): string {
+  return score >= 90 ? "#34d399" : score >= 75 ? "#a78bfa" : "#fb923c";
+}
+
+function timingFromScore(score: number): string {
+  if (score >= 90) return "Decision window: Now";
+  if (score >= 75) return "Decision window: 1-3 months";
+  return "Decision window: 3-6 months";
+}
+
+function draftOutreach(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">): string {
+  return `Subject: Automation opportunity at ${p.company}
+
+Hi [Name],
+
+SCOUT flagged ${p.company} because ${p.relevance.toLowerCase()}
+
+The strongest signal we found: ${p.signal}
+
+Recommended next step: ${p.action}
+
+Would it make sense to compare where automation could reduce labor pressure, improve throughput, or support the timing behind this signal?
+
+Best,
+[Your name]`;
+}
+
+function mapApiMatch(match: ApiMatch, index: number): Prospect {
+  const score = Math.round(match.match_score ?? 70);
+  const signals = match.key_signals?.filter(Boolean) ?? [];
+  const signal = signals[0] || match.value_proposition || "SCOUT found a sales-fit pattern worth reviewing.";
+  const company = match.company_name || `Matched Lead ${index + 1}`;
+  const location = [match.location_city, match.location_state].filter(Boolean).join(", ") || "Location unknown";
+  const stage = match.priority_tier ? `${match.priority_tier} Lead` : score >= 80 ? "Qualified Lead" : "Review Lead";
+  const relevance = match.value_proposition || `${company} matches your automation profile based on industry fit, intent score, and active market signals.`;
+  const scoreReason = [
+    `${score}/100 match score`,
+    `${signals.length || 1} relevant signal${signals.length === 1 ? "" : "s"}`,
+    match.priority_tier ? `${match.priority_tier} priority tier` : "qualified timing",
+  ].join(" · ");
+  const prospect = {
+    id: `${company}-${index}`,
+    company,
+    location,
+    industry: match.industry || "Industry unknown",
+    employees: formatEmployees(match.employee_estimate),
+    score,
+    signal,
+    signalType: signals.length > 1 ? "Multiple signals" : "Buying signal",
+    signalColor: scoreColor(score),
+    timing: timingFromScore(score),
+    action: match.recommended_action || "Reach out with a personalized automation use case",
+    relevance,
+    scoreReason,
+    draft: "",
+    stage,
+  };
+  prospect.draft = draftOutreach(prospect);
+  return prospect;
+}
+
+const fallbackProspects: Prospect[] = [
   {
-    id: 1,
+    id: "silver-peak",
     company: "Silver Peak Hospitality Group",
     location: "Phoenix, AZ",
     industry: "Hospitality",
     employees: "2,400",
     score: 94,
-    signal: "Earnings call: \"40% housekeeping vacancy, cannot staff overnight shifts\" — Q3 2026",
+    signal: "Earnings call: 40% housekeeping vacancy and difficulty staffing overnight shifts.",
     signalType: "Labor shortage",
-    signalIcon: AlertTriangle,
-    signalColor: "#f87171",
+    signalColor: "#34d399",
     timing: "Decision window: Now",
     action: "Reach out with overnight automation case study",
-    draft: `Subject: Solving Silver Peak's overnight staffing gap\n\nHi [Name],\n\nI came across your Q3 earnings call where you mentioned a 40% housekeeping vacancy and difficulty staffing overnight shifts. We work with hospitality groups facing exactly this challenge.\n\nReadyForRobots has helped similar properties automate overnight cleaning and turnover workflows — reducing labor dependency by 60% while improving consistency.\n\nWould a 15-minute call this week make sense? I can share how Marriott properties in Phoenix handled the same problem.\n\nBest,\n[Your name]`,
-    stage: "New Signal",
+    relevance: "Hospitality labor pressure maps directly to service and cleaning automation, and the staffing gap is urgent enough for immediate outreach.",
+    scoreReason: "94/100 match score · labor pain · urgent timing · high operational fit",
+    draft: "",
+    stage: "HOT Lead",
   },
   {
-    id: 2,
+    id: "desertline",
     company: "DesertLine Logistics",
     location: "Las Vegas, NV",
     industry: "Logistics",
     employees: "1,800",
     score: 88,
-    signal: "Job posting: \"Automation Engineer\" + press release: \"Opening 2 new distribution centers in Q1 2027\"",
+    signal: "Hiring an Automation Engineer while opening two new distribution centers.",
     signalType: "Expansion signal",
-    signalIcon: TrendingUp,
-    signalColor: "#34d399",
-    timing: "Decision window: 3–6 months",
+    signalColor: "#a78bfa",
+    timing: "Decision window: 1-3 months",
     action: "Contact during facility design phase",
-    draft: `Subject: Automation planning for your new DCs\n\nHi [Name],\n\nCongratulations on the two new distribution centers — that's a significant expansion. I noticed you're also hiring an Automation Engineer, which suggests you're thinking about how to build automation into the new facilities from the start.\n\nWe specialize in helping logistics companies design automation into new DCs before construction locks in the layout. Getting this right at the design stage typically saves 30–40% vs. retrofitting.\n\nWould it be worth a quick call to share what we've seen work well at similar scale?\n\nBest,\n[Your name]`,
-    stage: "Draft Ready",
+    relevance: "New facilities plus an automation hire indicate budget, ownership, and a near-term design window for robotics decisions.",
+    scoreReason: "88/100 match score · expansion · automation owner identified · strong timing",
+    draft: "",
+    stage: "WARM Lead",
   },
   {
-    id: 3,
+    id: "apex",
     company: "Apex Manufacturing Co.",
     location: "Tucson, AZ",
     industry: "Manufacturing",
     employees: "950",
     score: 79,
-    signal: "OSHA filing: 3 repetitive strain injuries in 6 months + LinkedIn: hiring \"process improvement manager\"",
+    signal: "Recent repetitive strain filings plus a new process improvement manager role.",
     signalType: "Safety signal",
-    signalIcon: AlertTriangle,
     signalColor: "#fb923c",
-    timing: "Decision window: 1–3 months",
+    timing: "Decision window: 3-6 months",
     action: "Lead with safety ROI and ergonomics case",
-    draft: `Subject: Reducing repetitive strain incidents at Apex\n\nHi [Name],\n\nI noticed Apex has had three repetitive strain injury filings in the past six months — a pattern we see frequently before companies invest in automation for high-repetition tasks.\n\nWe've helped manufacturers in similar situations reduce RSI incidents by 80%+ while improving throughput. The ROI case is usually straightforward when you factor in workers' comp, productivity loss, and turnover.\n\nYour new process improvement hire will likely be evaluating options soon. Would it make sense to connect before that process kicks off?\n\nBest,\n[Your name]`,
-    stage: "New Signal",
+    relevance: "Safety incidents and process improvement hiring create a clear reason to discuss automation for repetitive workflows.",
+    scoreReason: "79/100 match score · safety pain · process owner hiring · moderate timing",
+    draft: "",
+    stage: "Review Lead",
   },
-];
+].map((p) => ({ ...p, draft: draftOutreach(p) }));
 
 export default function Results() {
   const search = useSearch();
   const params = new URLSearchParams(search);
-  const inputUrl = params.get("url") || "yourcompany.com";
+  const initialUrl = params.get("url")?.trim() || "";
 
-  const [scanStep, setScanStep] = useState(0);
-  const [scanning, setScanning] = useState(true);
-  const [expandedDraft, setExpandedDraft] = useState<number | null>(null);
+  const [urlInput, setUrlInput] = useState(initialUrl);
+  const [submittedUrl, setSubmittedUrl] = useState(initialUrl);
+  const [scanStep, setScanStep] = useState(initialUrl ? 1 : 0);
+  const [scanning, setScanning] = useState(Boolean(initialUrl));
+  const [loading, setLoading] = useState(Boolean(initialUrl));
+  const [prospects, setProspects] = useState<Prospect[]>([]);
+  const [expandedDraft, setExpandedDraft] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [choosingScout, setChoosingScout] = useState(false);
+  const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
+  const [usingFallback, setUsingFallback] = useState(false);
+
+  const selectedCount = selectedIds.size;
+  const activatedCount = activatedIds.size;
 
   useEffect(() => {
-    if (scanStep < SCAN_STEPS.length - 1) {
-      const t = setTimeout(() => setScanStep((s) => s + 1), 600);
-      return () => clearTimeout(t);
-    } else {
-      const t = setTimeout(() => setScanning(false), 500);
-      return () => clearTimeout(t);
-    }
-  }, [scanStep]);
+    if (!submittedUrl) return;
+    setScanStep(1);
+    setScanning(true);
+    setLoading(true);
+    setProspects([]);
+    setSelectedIds(new Set());
+    setActivatedIds(new Set());
+    setChoosingScout(false);
+    setUsingFallback(false);
 
-  const scoreColor = (s: number) =>
-    s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#fb923c";
+    let cancelled = false;
+    const stepTimer = window.setInterval(() => {
+      setScanStep((current) => Math.min(current + 1, SCAN_STEPS.length - 1));
+    }, 650);
+
+    async function runScan() {
+      try {
+        const response = await fetch(`${getApiBase()}/api/robot-ready/submit`, liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            robot_name: robotNameFromUrl(submittedUrl),
+            url: normalizeUrl(submittedUrl),
+          }),
+        }));
+        if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
+        const data = await response.json();
+        const matches = Array.isArray(data?.matched_companies) ? data.matched_companies : [];
+        const mapped = matches.slice(0, 8).map(mapApiMatch);
+        if (!mapped.length) throw new Error("No live matches returned");
+        if (!cancelled) setProspects(mapped);
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          setUsingFallback(true);
+          setProspects(fallbackProspects);
+          toast.info("Using sample matches while SCOUT retries the live lead scan.");
+        }
+      } finally {
+        if (!cancelled) {
+          window.clearInterval(stepTimer);
+          setScanStep(SCAN_STEPS.length - 1);
+          window.setTimeout(() => {
+            if (!cancelled) {
+              setLoading(false);
+              setScanning(false);
+            }
+          }, 450);
+        }
+      }
+    }
+
+    runScan();
+    return () => {
+      cancelled = true;
+      window.clearInterval(stepTimer);
+    };
+  }, [submittedUrl]);
+
+  useEffect(() => {
+    setSelectedIds(new Set(prospects.map((p) => p.id)));
+  }, [prospects]);
+
+  const activatedProspects = useMemo(
+    () => prospects.filter((p) => activatedIds.has(p.id)),
+    [activatedIds, prospects],
+  );
+
+  function submitUrl(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const normalized = normalizeUrl(urlInput);
+    if (!normalized) {
+      toast.error("Enter a URL first.");
+      return;
+    }
+    setSubmittedUrl(normalized);
+    window.history.replaceState(null, "", `/results?url=${encodeURIComponent(normalized)}`);
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function activateScout(ids: string[]) {
+    if (!ids.length) {
+      toast.error("Select at least one lead for SCOUT.");
+      return;
+    }
+    setActivatedIds(new Set(ids));
+    setChoosingScout(false);
+    toast.success(`SCOUT activated for ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -97,213 +321,227 @@ export default function Results() {
 
       <main className="flex-1 pt-24 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-xs text-white/30 mb-8">
             <Link href="/" className="hover:text-white/60 transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-white/50">Results for {inputUrl}</span>
+            <span className="text-white/50">{submittedUrl ? `Results for ${submittedUrl}` : "Activate Pipeline"}</span>
           </div>
 
-          {/* Scanning state */}
-          {scanning ? (
+          {!submittedUrl && (
+            <section className="py-16">
+              <div className="rounded-3xl border border-violet-500/20 p-8 sm:p-10" style={{ background: "rgba(124,58,237,0.06)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#a78bfa" }}>
+                  Activate Pipeline
+                </p>
+                <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  Give SCOUT a URL first.
+                </h1>
+                <p className="text-sm text-white/45 max-w-xl mb-8">
+                  Paste your robot, company, or product URL. SCOUT will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
+                </p>
+                <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    placeholder="https://your-robot-company.com/product"
+                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                    style={{ background: "#7c3aed", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}
+                  >
+                    Scan URL <Zap className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            </section>
+          )}
+
+          {submittedUrl && scanning && (
             <div className="flex flex-col items-center justify-center py-24 gap-8">
-              {/* Animated ring */}
               <div className="relative h-20 w-20">
-                <div
-                  className="absolute inset-0 rounded-full border-2 border-violet-500/20 animate-ping"
-                  style={{ animationDuration: "1.5s" }}
-                />
+                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20 animate-ping" style={{ animationDuration: "1.5s" }} />
                 <div className="absolute inset-2 rounded-full border-2 border-violet-500/40 animate-spin" style={{ animationDuration: "2s" }} />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Zap className="h-6 w-6" style={{ color: "#7c3aed" }} />
                 </div>
               </div>
 
-              {/* Step log */}
               <div className="w-full max-w-sm space-y-2">
                 {SCAN_STEPS.slice(0, scanStep + 1).map((step, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 text-sm"
-                    style={{ opacity: i === scanStep ? 1 : 0.35 }}
-                  >
+                  <div key={step} className="flex items-center gap-3 text-sm" style={{ opacity: i === scanStep ? 1 : 0.35 }}>
                     {i < scanStep ? (
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                     ) : (
                       <div className="h-3.5 w-3.5 rounded-full border border-violet-500/60 shrink-0 animate-pulse" />
                     )}
-                    <span
-                      className="font-mono text-xs"
-                      style={{ color: i === scanStep ? "#c4b5fd" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}
-                    >
+                    <span className="font-mono text-xs" style={{ color: i === scanStep ? "#c4b5fd" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
                       {step}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
-          ) : (
+          )}
+
+          {submittedUrl && !loading && !scanning && (
             <>
-              {/* Results header */}
-              <div className="mb-10">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>
-                  Scan complete · {mockProspects.length} opportunities found
-                </p>
-                <h1
-                  className="font-extrabold text-white leading-tight"
-                  style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
+              <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>
+                    Scan complete · {prospects.length} opportunities found{usingFallback ? " · sample mode" : ""}
+                  </p>
+                  <h1 className="font-extrabold text-white leading-tight" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    Your matched pipeline
+                  </h1>
+                  <p className="text-sm text-white/40 mt-2">
+                    Based on <span className="text-white/60 font-medium">{submittedUrl}</span>. Select the leads you want SCOUT to develop.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setChoosingScout((current) => !current)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                  style={{ background: "#FFB000", color: "#1b1200", boxShadow: "0 8px 24px rgba(255,176,0,0.25)" }}
                 >
-                  Your matched pipeline
-                </h1>
-                <p className="text-sm text-white/40 mt-2">
-                  Based on your profile at <span className="text-white/60 font-medium">{inputUrl}</span> — sorted by signal strength
-                </p>
+                  <Bot className="h-4 w-4" /> Activate SCOUT
+                </button>
               </div>
 
-              {/* Prospect cards */}
-              <div className="space-y-4">
-                {mockProspects.map((p) => {
-                  const SignalIcon = p.signalIcon;
-                  const draftOpen = expandedDraft === p.id;
-                  return (
-                    <div
-                      key={p.id}
-                      className="rounded-2xl border border-white/8 overflow-hidden hover:border-violet-500/25 transition-colors"
-                      style={{ background: "rgba(255,255,255,0.03)" }}
+              {choosingScout && (
+                <div className="mb-5 rounded-2xl border border-amber-400/25 p-5" style={{ background: "rgba(255,176,0,0.06)" }}>
+                  <p className="text-sm font-bold mb-1" style={{ color: "#FFB000" }}>How should SCOUT follow up?</p>
+                  <p className="text-xs text-white/45 mb-4">
+                    Activate all matched leads, or only the {selectedCount} lead{selectedCount === 1 ? "" : "s"} currently selected.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => activateScout(prospects.map((p) => p.id))}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white"
+                      style={{ background: "#7c3aed" }}
                     >
-                      {/* Card header */}
+                      Activate all leads <Send className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => activateScout(Array.from(selectedIds))}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white/70"
+                    >
+                      Activate selected leads <MousePointer2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activatedCount > 0 && (
+                <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
+                  <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT service active</p>
+                  <p className="text-xs text-white/45">
+                    SCOUT is queued to personalize outreach, follow up on the strongest signal, track replies, and move {activatedCount} lead{activatedCount === 1 ? "" : "s"} into your pipeline.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {prospects.map((p) => {
+                  const draftOpen = expandedDraft === p.id;
+                  const isSelected = selectedIds.has(p.id);
+                  const isActive = activatedIds.has(p.id);
+                  return (
+                    <div key={p.id} className="rounded-2xl border border-white/8 overflow-hidden hover:border-violet-500/25 transition-colors" style={{ background: "rgba(255,255,255,0.03)" }}>
                       <div className="px-6 pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        {/* Score ring */}
+                        <label className="flex items-center gap-2 text-xs text-white/40 sm:pt-4">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelected(p.id)}
+                            className="h-4 w-4 accent-violet-500"
+                          />
+                          Select
+                        </label>
                         <div className="shrink-0 flex flex-col items-center gap-1">
-                          <div
-                            className="h-14 w-14 rounded-full border-2 flex items-center justify-center"
-                            style={{ borderColor: scoreColor(p.score), background: `${scoreColor(p.score)}12` }}
-                          >
-                            <span
-                              className="font-mono text-lg font-bold"
-                              style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}
-                            >
+                          <div className="h-14 w-14 rounded-full border-2 flex items-center justify-center" style={{ borderColor: scoreColor(p.score), background: `${scoreColor(p.score)}12` }}>
+                            <span className="font-mono text-lg font-bold" style={{ color: scoreColor(p.score), fontFamily: "'JetBrains Mono', monospace" }}>
                               {p.score}
                             </span>
                           </div>
                           <span className="text-[9px] text-white/25 uppercase tracking-widest">score</span>
                         </div>
 
-                        {/* Company info */}
                         <div className="flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h2 className="text-base font-bold text-white">{p.company}</h2>
-                            <span
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                              style={{ color: "#a78bfa", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}
-                            >
-                              {p.stage}
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#a78bfa", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(124,58,237,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(124,58,237,0.3)" }}>
+                              {isActive ? "SCOUT Active" : p.stage}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-white/35 mb-3">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />{p.location}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />{p.employees} employees
-                            </span>
+                            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
+                            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
                             <span>{p.industry}</span>
                           </div>
 
-                          {/* Signal */}
-                          <div
-                            className="flex items-start gap-2.5 p-3 rounded-xl"
-                            style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}
-                          >
-                            <SignalIcon className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
+                          <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
+                            <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>
-                                {p.signalType}
-                              </span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
                               <span className="text-xs text-white/50">{p.signal}</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Recommended action */}
+                      <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
+                          <p className="text-xs text-white/50 leading-relaxed">{p.relevance}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Score rationale</p>
+                          <p className="text-xs text-white/50 leading-relaxed">{p.scoreReason}</p>
+                        </div>
+                      </div>
+
                       <div className="px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <div className="flex items-center gap-2 flex-1">
                           <ArrowRight className="h-3.5 w-3.5 shrink-0" style={{ color: "#7c3aed" }} />
                           <span className="text-sm text-white/60">{p.action}</span>
                         </div>
-                        <span
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
-                          style={{ color: "#34d399", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}
-                        >
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ color: "#34d399", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
                           {p.timing}
                         </span>
                       </div>
 
-                      {/* Draft outreach toggle */}
+                      {isActive && (
+                        <div className="mx-6 mb-4 rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(52,211,153,0.05)" }}>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SCOUT follow-up plan</p>
+                          <p className="text-xs text-white/45 leading-relaxed">
+                            Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate if buying intent increases.
+                          </p>
+                        </div>
+                      )}
+
                       <div className="border-t border-white/6">
-                        <button
-                          onClick={() => setExpandedDraft(draftOpen ? null : p.id)}
-                          className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-white/2 transition-colors"
-                        >
+                        <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-white/2 transition-colors">
                           <div className="flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
                             <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>View drafted outreach</span>
                           </div>
-                          {draftOpen
-                            ? <ChevronUp className="h-3.5 w-3.5 text-white/25" />
-                            : <ChevronDown className="h-3.5 w-3.5 text-white/25" />
-                          }
+                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-white/25" /> : <ChevronDown className="h-3.5 w-3.5 text-white/25" />}
                         </button>
                         {draftOpen && (
                           <div className="px-6 pb-5 border-t border-white/6">
-                            <pre
-                              className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap pt-4"
-                              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                            >
+                            <pre className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                               {p.draft}
                             </pre>
-                            <div className="flex gap-2 mt-4">
-                              <button
-                                onClick={() => toast.success("Outreach approved and queued")}
-                                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-white transition-all hover:-translate-y-0.5"
-                                style={{ background: "#7c3aed", boxShadow: "0 4px 16px rgba(124,58,237,0.35)" }}
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Approve & send
-                              </button>
-                              <button
-                                onClick={() => toast.info("Opening editor…")}
-                                className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-white/60 border border-white/10 hover:border-white/20 transition-colors"
-                                style={{ background: "rgba(255,255,255,0.04)" }}
-                              >
-                                Edit draft
-                              </button>
-                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                   );
                 })}
-              </div>
-
-              {/* Bottom CTA */}
-              <div
-                className="mt-10 rounded-2xl border border-violet-500/20 p-8 text-center"
-                style={{ background: "rgba(124,58,237,0.06)" }}
-              >
-                <p className="text-sm text-white/50 mb-2">Want your full pipeline — not just a preview?</p>
-                <h3 className="font-bold text-white text-lg mb-5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Sign up to unlock all matched opportunities
-                </h3>
-                <button
-                  onClick={() => toast.success("Account creation coming soon!")}
-                  className="inline-flex items-center gap-2 text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5"
-                  style={{ background: "#7c3aed", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}
-                >
-                  Create free account <ArrowRight className="h-4 w-4" />
-                </button>
               </div>
             </>
           )}

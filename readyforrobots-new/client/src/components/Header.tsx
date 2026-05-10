@@ -5,7 +5,7 @@
  * Mobile drawer: full-height slide-in from right, includes SCOUT chat entry
  */
 import { useState, useEffect } from "react";
-import { Menu, X, ArrowRight, Zap, MessageSquare, LayoutDashboard, Radio, HelpCircle, DollarSign, ChevronRight } from "lucide-react";
+import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, DollarSign, ChevronRight, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScoutChat } from "@/components/ScoutChat";
@@ -17,8 +17,33 @@ function smoothScroll(href: string) {
   }
 }
 
+const faqs = [
+  {
+    q: "How does ReadyForRobots find buying signals?",
+    a: "We monitor 150+ sources continuously — job boards, earnings calls, press releases, OSHA filings, real estate permits, and industry news. SCOUT detects patterns that indicate a company is ready to invest in automation.",
+  },
+  {
+    q: "What types of robots does this work for?",
+    a: "Any robot category with a B2B sales motion: warehouse AMRs, service robots, industrial arms, cleaning robots, food processing automation, healthcare robots, and more. You tell us your category and we tune the signals accordingly.",
+  },
+  {
+    q: "How is this different from a lead list?",
+    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a drafted outreach message — so you reach the right buyer at the right moment.",
+  },
+  {
+    q: "Do I need to sign up to see results?",
+    a: "No. Enter your company URL above and we'll show you a sample of matched opportunities immediately — no account required. You only sign up when you want to act on them.",
+  },
+  {
+    q: "How quickly does SCOUT act on new signals?",
+    a: "Signals are detected and scored within minutes. Outreach drafts are ready within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
+  },
+];
+
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [location] = useLocation();
   const { openChat } = useScoutChat();
   const { session } = useAuth();
@@ -231,7 +256,6 @@ export default function Header() {
           {[
             { label: "About Us", href: "/#about" },
             { label: "Case Studies", href: "/#case-studies" },
-            { label: "FAQ", href: "/#faq" },
             { label: "Workspace", href: "/profile" },
           ].map((item) => (
             <Link
@@ -249,6 +273,36 @@ export default function Header() {
               <ChevronRight className="h-3.5 w-3.5 text-white/20" />
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={() => setFaqOpen((current) => !current)}
+            className="flex w-full items-center justify-between px-3 py-2.5 rounded-xl text-sm text-white/45 hover:text-white/70 hover:bg-white/4 transition-colors"
+          >
+            FAQ
+            <ChevronDown className={`h-3.5 w-3.5 text-white/20 transition-transform ${faqOpen ? "rotate-180" : ""}`} />
+          </button>
+          {faqOpen && (
+            <div className="mt-1 overflow-hidden rounded-xl border border-white/8 bg-white/[0.02]">
+              {faqs.map((faq, i) => {
+                const isOpen = openFaq === i;
+                return (
+                  <div key={faq.q} className="border-b border-white/6 last:border-b-0">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left"
+                    >
+                      <span className="text-xs font-semibold leading-snug text-white/65">{faq.q}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/20 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {isOpen && (
+                      <p className="px-3 pb-3 text-[11px] leading-relaxed text-white/40">{faq.a}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Bottom CTA */}
