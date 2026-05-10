@@ -180,7 +180,15 @@ def advance_pipeline_item(
             account.outreach_draft = body.outreach_draft
     db.commit()
     db.refresh(account)
-    return {"item": _serialize_pipeline_item(account)}
+    company = None
+    if account.company_id:
+        company = (
+            db.query(Company)
+            .options(joinedload(Company.signals), joinedload(Company.scores))
+            .filter(Company.id == account.company_id)
+            .first()
+        )
+    return {"item": _serialize_pipeline_item(account, company)}
 
 
 @router.post("/{item_id}/toggle-mode")
@@ -196,7 +204,15 @@ def toggle_pipeline_mode(item_id: str, user: dict = Depends(_require_user), db: 
     account.outreach_stage = "qualification" if account.outreach_stage == "autopilot" else "autopilot"
     db.commit()
     db.refresh(account)
-    return {"item": _serialize_pipeline_item(account)}
+    company = None
+    if account.company_id:
+        company = (
+            db.query(Company)
+            .options(joinedload(Company.signals), joinedload(Company.scores))
+            .filter(Company.id == account.company_id)
+            .first()
+        )
+    return {"item": _serialize_pipeline_item(account, company)}
 
 
 @router.post("/{item_id}/archive")
@@ -212,7 +228,15 @@ def archive_pipeline_item(item_id: str, user: dict = Depends(_require_user), db:
     account.outreach_stage = "archived"
     db.commit()
     db.refresh(account)
-    return {"archived": True, "item": _serialize_pipeline_item(account)}
+    company = None
+    if account.company_id:
+        company = (
+            db.query(Company)
+            .options(joinedload(Company.signals), joinedload(Company.scores))
+            .filter(Company.id == account.company_id)
+            .first()
+        )
+    return {"archived": True, "item": _serialize_pipeline_item(account, company)}
 
 
 @router.post("/{item_id}/generate-proposal")
