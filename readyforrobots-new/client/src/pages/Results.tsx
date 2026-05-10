@@ -27,6 +27,7 @@ import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -173,19 +174,6 @@ function formatEmployees(value: number | null | undefined): string {
 
 function titleize(raw: string): string {
   return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function scoutFingerprint(): string {
-  const key = "rfr_scout_fingerprint";
-  try {
-    const existing = localStorage.getItem(key);
-    if (existing && existing.length >= 8) return existing;
-    const generated = `web_${crypto.randomUUID()}`;
-    localStorage.setItem(key, generated);
-    return generated;
-  } catch {
-    return "web_anonymous";
-  }
 }
 
 function mapApiLead(lead: ApiLead, index: number): Prospect {

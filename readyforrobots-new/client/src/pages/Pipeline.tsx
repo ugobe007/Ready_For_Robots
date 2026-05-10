@@ -6,14 +6,17 @@
  */
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, MapPin, Zap, Filter, ChevronRight,
+  AlertTriangle, MapPin, Filter, ChevronRight,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
-  TrendingUp, Users, Clock, Target, X
+  Users, Clock, Target
 } from "lucide-react";
 import Header from "@/components/Header";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
+import { scoutFingerprint } from "@/lib/scoutFingerprint";
+import { authHeader } from "@/lib/supabase";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -35,6 +38,59 @@ interface Deal {
   notes?: string;
 }
 
+interface ScoutActivationLead {
+  id: string;
+  company: string;
+  score?: number | null;
+  signal?: string | null;
+  signalType?: string | null;
+  action?: string | null;
+}
+
+interface ScoutActivation {
+  id: number;
+  status: string;
+  statusFlow?: Array<{
+    id: string;
+    label: string;
+    description: string;
+    active: boolean;
+  }>;
+  sourceUrl?: string | null;
+  material: "upload" | "suggest" | "skip";
+  materialFilename?: string | null;
+  scope: "all" | "selected" | "top";
+  mode: "manual" | "assisted" | "autopilot";
+  leadCount: number;
+  leads: ScoutActivationLead[];
+  workPlan?: {
+    materials?: {
+      next?: string;
+    };
+    deck_strategy?: {
+      recommended_format?: string;
+      sections?: string[];
+      positioning?: string;
+      next_output?: string;
+    };
+    safety_requirements?: Array<{
+      key: string;
+      label: string;
+      required: boolean;
+    }>;
+    notification_policy?: {
+      reply?: string;
+      meeting?: string;
+      email?: string;
+    };
+    steps?: string[];
+    sending_policy?: string;
+  };
+  activityLog?: Array<{ type?: string; message?: string }>;
+  createdAt?: string | null;
+  requiresAccount?: boolean;
+}
+
 const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
@@ -48,13 +104,33 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
 const scoreColor = (s: number) =>
   s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#fb923c";
 
+const statusLabel = (status: string) =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+const formatActivationTime = (value?: string | null) => {
+  if (!value) return "just now";
+  const created = new Date(value);
+  if (Number.isNaN(created.getTime())) return "just now";
+  const diffMinutes = Math.max(0, Math.round((Date.now() - created.getTime()) / 60000));
+  if (diffMinutes < 1) return "just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${Math.round(diffHours / 24)}d ago`;
+};
+
 export default function Pipeline() {
+  const { session } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedActivationId, setSelectedActivationId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingLeads, setLoadingLeads] = useState(true);
+  const [loadingActivations, setLoadingActivations] = useState(true);
   const [loadErr, setLoadErr] = useState("");
+  const [activationErr, setActivationErr] = useState("");
 
   useEffect(() => {
     const base = getApiBase();
@@ -78,9 +154,36 @@ export default function Pipeline() {
     })();
   }, []);
 
+  useEffect(() => {
+    const base = getApiBase();
+    (async () => {
+      setLoadingActivations(true);
+      setActivationErr("");
+      try {
+        const headers = authHeader(session?.access_token);
+        const response = await fetch(
+          `${base}/api/scout/activations?fingerprint=${encodeURIComponent(scoutFingerprint())}&limit=6`,
+          liveFetchInit({ headers }),
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const payload = (await response.json()) as { activations?: ScoutActivation[] };
+        const rows = Array.isArray(payload.activations) ? payload.activations : [];
+        setActivations(rows);
+        setSelectedActivationId(rows[0]?.id ?? null);
+      } catch (e) {
+        setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
+        setActivations([]);
+        setSelectedActivationId(null);
+      } finally {
+        setLoadingActivations(false);
+      }
+    })();
+  }, [session]);
+
   const industries = ["All", ...Array.from(new Set(deals.map((d) => d.industry)))];
   const filtered = filter === "All" ? deals : deals.filter((d) => d.industry === filter);
   const selected = deals.find((d) => d.id === selectedId) ?? null;
+  const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
   const moveStage = (id: number, direction: 1 | -1) => {
     setDeals((prev) =>
@@ -106,6 +209,7 @@ export default function Pipeline() {
   const totalDeals = filtered.length;
   const hotDeals = filtered.filter((d) => d.score >= 85).length;
   const meetingDeals = filtered.filter((d) => d.stage === "Meeting Set").length;
+  const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -136,6 +240,7 @@ export default function Pipeline() {
                 <span className="text-xs text-white/40"><span className="font-mono font-bold text-white/70 mr-1">{totalDeals}</span>deals</span>
                 <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#34d399" }}>{hotDeals}</span>hot</span>
                 <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#f472b6" }}>{meetingDeals}</span>meetings</span>
+                <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#a78bfa" }}>{queuedActivations}</span>SCOUT queued</span>
                 <span className="flex items-center gap-1.5 text-xs text-white/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {loadingLeads ? "Loading…" : "SCOUT active"}
@@ -160,6 +265,212 @@ export default function Pipeline() {
                   {ind}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* ── SCOUT activation queue ── */}
+          <div className="rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
+            <div className="flex flex-col xl:flex-row">
+              <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-white/8">
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>SCOUT Queue</p>
+                    <p className="text-xs text-white/35 mt-1">Recent sales activations from Results</p>
+                  </div>
+                  <span className="text-[10px] text-white/30">{loadingActivations ? "Loading…" : `${activations.length} active`}</span>
+                </div>
+                {activationErr && (
+                  <div className="mx-4 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-100/90">
+                    {activationErr}
+                  </div>
+                )}
+                <div className="px-2 pb-3 flex xl:flex-col gap-2 overflow-x-auto">
+                  {activations.length === 0 && !loadingActivations ? (
+                    <div className="m-2 rounded-xl border border-dashed border-white/8 px-4 py-4 text-center">
+                      <p className="text-xs font-semibold text-white/45">No SCOUT activations yet</p>
+                      <p className="text-[11px] text-white/25 mt-1">Activate leads from the Results page and they will appear here.</p>
+                    </div>
+                  ) : (
+                    activations.map((activation) => {
+                      const isActive = activation.id === selectedActivation?.id;
+                      return (
+                        <button
+                          key={activation.id}
+                          onClick={() => setSelectedActivationId(activation.id)}
+                          className="min-w-[260px] xl:min-w-0 text-left rounded-xl border px-3 py-2.5 transition-all"
+                          style={
+                            isActive
+                              ? { background: "rgba(124,58,237,0.14)", borderColor: "rgba(124,58,237,0.38)" }
+                              : { background: "rgba(255,255,255,0.025)", borderColor: "rgba(255,255,255,0.07)" }
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-white/80">{activation.leadCount} leads</span>
+                            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ background: "rgba(167,139,250,0.14)", color: "#c4b5fd" }}>
+                              {statusLabel(activation.status)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-white/35 truncate">
+                            {activation.mode} · {activation.scope} · {formatActivationTime(activation.createdAt)}
+                          </p>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 p-4">
+                {selectedActivation ? (
+                  <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h2 className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                            Activation #{selectedActivation.id}
+                          </h2>
+                          <p className="text-[11px] text-white/35 mt-1">
+                            {selectedActivation.sourceUrl || "No source URL captured"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/45 capitalize">
+                            {selectedActivation.mode}
+                          </span>
+                          {selectedActivation.requiresAccount && (
+                            <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: "rgba(251,146,60,0.12)", color: "#fdba74" }}>
+                              Account required
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                          <p className="text-[10px] uppercase tracking-widest text-white/25">Materials</p>
+                          <p className="mt-1 text-xs font-semibold text-white/70 capitalize">{selectedActivation.material}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                          <p className="text-[10px] uppercase tracking-widest text-white/25">Scope</p>
+                          <p className="mt-1 text-xs font-semibold text-white/70 capitalize">{selectedActivation.scope}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                          <p className="text-[10px] uppercase tracking-widest text-white/25">Next action</p>
+                          <p className="mt-1 text-xs font-semibold text-white/70">Evaluate leads</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Status flow</p>
+                        </div>
+                        <div className="mb-3 flex gap-1 overflow-x-auto pb-1">
+                          {(selectedActivation.statusFlow || []).map((step) => (
+                            <div
+                              key={step.id}
+                              className="min-w-[96px] rounded-lg border px-2 py-1.5"
+                              style={
+                                step.active
+                                  ? { background: "rgba(124,58,237,0.16)", borderColor: "rgba(124,58,237,0.4)" }
+                                  : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }
+                              }
+                            >
+                              <p className={step.active ? "text-[10px] font-bold text-violet-200" : "text-[10px] font-semibold text-white/35"}>
+                                {step.label}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">Work plan</p>
+                        <p className="text-[11px] text-white/45 leading-relaxed">
+                          {selectedActivation.workPlan?.materials?.next || "SCOUT will evaluate the selected leads and prepare outreach."}
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
+                            <div key={step} className="flex items-start gap-2 text-[11px] text-white/40">
+                              <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#7c3aed" }} />
+                              <span>{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedActivation.workPlan?.deck_strategy && (
+                          <div className="mt-3 rounded-lg border border-violet-400/15 bg-violet-400/5 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Deck strategy</p>
+                            <p className="mt-1 text-[11px] font-semibold text-white/65">
+                              {selectedActivation.workPlan.deck_strategy.recommended_format}
+                            </p>
+                            <p className="mt-1 text-[11px] text-white/40">
+                              {selectedActivation.workPlan.deck_strategy.positioning}
+                            </p>
+                          </div>
+                        )}
+                        {(selectedActivation.workPlan?.safety_requirements || []).length > 0 && (
+                          <div className="mt-3 rounded-lg border border-white/7 bg-black/10 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Sending guardrails</p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {(selectedActivation.workPlan?.safety_requirements || []).map((item) => (
+                                <span
+                                  key={item.key}
+                                  className="rounded-full border px-2 py-1 text-[10px] font-semibold"
+                                  style={
+                                    item.required
+                                      ? { borderColor: "rgba(251,146,60,0.25)", color: "#fdba74", background: "rgba(251,146,60,0.08)" }
+                                      : { borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.02)" }
+                                  }
+                                >
+                                  {item.label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {selectedActivation.workPlan?.notification_policy && (
+                          <div className="mt-3 rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
+                            <p className="mt-1 text-[11px] text-white/45">
+                              {selectedActivation.workPlan.notification_policy.reply}
+                            </p>
+                            <p className="mt-1 text-[11px] text-white/35">
+                              {selectedActivation.workPlan.notification_policy.meeting}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-3.5 w-3.5" style={{ color: "#34d399" }} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Selected leads</p>
+                        </div>
+                        <span className="text-[10px] text-white/30">{selectedActivation.leadCount} total</span>
+                      </div>
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        {selectedActivation.leads.slice(0, 6).map((lead) => (
+                          <div key={lead.id} className="rounded-lg border border-white/6 px-3 py-2" style={{ background: "rgba(255,255,255,0.02)" }}>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-semibold text-white/75 truncate">{lead.company}</p>
+                              {typeof lead.score === "number" && (
+                                <span className="font-mono text-[10px] font-bold" style={{ color: scoreColor(lead.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                                  {lead.score}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-[11px] text-white/35 line-clamp-2">{lead.signal || lead.action || "Lead queued for SCOUT evaluation."}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-white/8 px-4 py-6 text-center">
+                    <p className="text-sm font-semibold text-white/40">SCOUT activity will appear here</p>
+                    <p className="text-[11px] text-white/25 mt-1">Use Activate SCOUT on Results to create the first work queue item.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
