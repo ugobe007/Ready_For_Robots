@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -26,15 +27,27 @@ def create_waitlist_signup(body: WaitlistSignupIn, db: Session = Depends(get_db)
     email = body.email.lower().strip()
     if "@" not in email or "." not in email.rsplit("@", 1)[-1]:
         raise HTTPException(status_code=400, detail="Valid email is required")
+
+    def _apply_fields(row: WaitlistSignup) -> None:
+        row.name = body.name or row.name or None
+        row.company = body.company or row.company or None
+        row.use_case = body.use_case or body.useCase or row.use_case or None
+        row.source = body.source or row.source or "pricing"
+
     row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
     if row is None:
         row = WaitlistSignup(email=email)
         db.add(row)
-    row.name = (body.name or row.name or None)
-    row.company = (body.company or row.company or None)
-    row.use_case = (body.use_case or body.useCase or row.use_case or None)
-    row.source = (body.source or row.source or "pricing")
-    db.commit()
+    _apply_fields(row)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
+        if row is None:
+            raise HTTPException(status_code=409, detail="Signup conflict, please retry")
+        _apply_fields(row)
+        db.commit()
     db.refresh(row)
     return {
         "ok": True,

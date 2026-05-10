@@ -12,7 +12,7 @@ class WaitlistSignup(Base):
     __tablename__ = "waitlist_signups"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String(320), nullable=False, index=True)
+    email = Column(String(320), nullable=False)
     name = Column(String(200), nullable=True)
     company = Column(String(240), nullable=True)
     use_case = Column(Text, nullable=True)

@@ -33,13 +33,7 @@ def upgrade() -> None:
             sa.PrimaryKeyConstraint("id"),
             sa.UniqueConstraint("email", name="uq_waitlist_signups_email"),
         )
-    insp = inspect(bind)
-    if "waitlist_signups" in insp.get_table_names():
-        names = {i["name"] for i in insp.get_indexes("waitlist_signups")}
-        if "ix_waitlist_signups_email" not in names:
-            op.create_index("ix_waitlist_signups_email", "waitlist_signups", ["email"], unique=False)
 
 
 def downgrade() -> None:
-    op.execute("DROP INDEX IF EXISTS ix_waitlist_signups_email")
     op.execute("DROP TABLE IF EXISTS waitlist_signups CASCADE")
