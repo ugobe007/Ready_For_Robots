@@ -2,7 +2,7 @@
 # Stage 1: Build readyforrobots-new (Vite) → static HTML/CSS/JS served by FastAPI
 FROM node:20-slim AS frontend
 WORKDIR /rfr
-RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
+RUN npm install -g pnpm@10.4.1 --force
 
 ARG VITE_PUBLIC_API_URL=""
 ARG VITE_PUBLIC_SUPABASE_URL=""

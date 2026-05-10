@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install -g pnpm@10.4.1 && cd readyforrobots-new && pnpm install --frozen-lockfile",
+  "installCommand": "npm install -g pnpm@10.4.1 --force && cd readyforrobots-new && pnpm install --frozen-lockfile",
   "buildCommand": "cd readyforrobots-new && pnpm exec vite build",
   "outputDirectory": "readyforrobots-new/dist/public",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]

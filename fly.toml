@@ -12,8 +12,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
     VITE_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
     VITE_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
 
-# Run DB migrations once per deploy (before new Machines roll out). Boot then starts uvicorn immediately
-# so Fly’s proxy sees :8080 within the health-check grace window.
+# Run DB migrations once per deploy (before new Machines roll out). If this exits 1, the whole deploy aborts:
+# check `fly logs -a ready-2-robot` (release machine), confirm `DATABASE_URL` is set (`fly secrets list`), and that
+# the DB user can run DDL. You can also run `alembic upgrade head` from CI or Supabase SQL instead, then remove
+# release_command here (not recommended unless you own migrations elsewhere).
 [deploy]
   release_command = "alembic upgrade head"
 
