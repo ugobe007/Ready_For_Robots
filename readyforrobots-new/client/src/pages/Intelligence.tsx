@@ -160,7 +160,7 @@ export default function Intelligence() {
                 ReadyForRobots Intelligence
               </p>
               <h1 className="font-extrabold leading-[0.98] tracking-tight text-white" style={{ fontSize: "clamp(2.7rem, 7vw, 5.7rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
-                Market intelligence for the automation inflection point.
+                Robot Demand Signals, Ranked
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/48">
                 The same engine that powers <span style={{ color: "#FFB000", fontWeight: 800 }}>SCOUT</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
@@ -177,9 +177,9 @@ export default function Intelligence() {
                 <a href="#report" className="inline-flex items-center gap-2 font-bold" style={{ color: "#03DAC5" }}>
                   Download report <ArrowRight className="h-4 w-4" />
                 </a>
-                <a href="#brief" className="inline-flex items-center gap-2 font-bold text-white/55 hover:text-white/80">
-                  Read the brief <ArrowRight className="h-4 w-4" />
-                </a>
+                <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/55 hover:text-white/80">
+                  Explore robot signals <ArrowRight className="h-4 w-4" />
+                </Link>
                 <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: "#FFB000" }}>
                   Activate SCOUT <Zap className="h-4 w-4" />
                 </Link>

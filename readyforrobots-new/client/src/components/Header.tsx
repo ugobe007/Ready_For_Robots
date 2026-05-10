@@ -116,16 +116,6 @@ export default function Header() {
               Live
             </span>
 
-            {/* CTA */}
-            <Link href="/results?url=">
-              <button
-                className="hidden sm:flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg border transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
-              >
-                <Zap className="h-3.5 w-3.5" /> Scan URL
-              </button>
-            </Link>
-
             {!session && (
               <Link
                 href="/login"

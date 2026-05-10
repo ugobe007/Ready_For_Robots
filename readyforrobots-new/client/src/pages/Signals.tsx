@@ -128,6 +128,73 @@ const recentSignals = [
   { company: "Cascade Fulfillment", type: "Automation Hiring", score: 76, time: "8h ago", color: "#60a5fa" },
 ];
 
+const radarSignals = [
+  { label: "Labor Pressure", value: 0.92, delta: "+0.04", trend: "up", color: "#34d399" },
+  { label: "Expansion Velocity", value: 0.84, delta: "+0.02", trend: "up", color: "#03DAC5" },
+  { label: "CapEx Intent", value: 0.76, delta: "+0.01", trend: "up", color: "#FFB000" },
+  { label: "Automation Hiring", value: 0.72, delta: "-0.01", trend: "down", color: "#fb923c" },
+  { label: "Safety Pressure", value: 0.69, delta: "+0.03", trend: "up", color: "#34d399" },
+  { label: "Partnership Fit", value: 0.64, delta: "+0.02", trend: "up", color: "#a78bfa" },
+  { label: "Deployment News", value: 0.58, delta: "-0.02", trend: "down", color: "#fb923c" },
+];
+
+function SignalRadar() {
+  return (
+    <section className="mb-10 overflow-hidden border border-white/10 p-5 lg:p-6" style={{ background: "rgba(255,255,255,0.025)", borderRadius: 20 }}>
+      <style>{`
+        @keyframes rfr-radar-sweep { 0% { transform: translateX(-18%); opacity: .08; } 35% { opacity: .42; } 100% { transform: translateX(118%); opacity: .08; } }
+        @keyframes rfr-radar-glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(3,218,197,0)); } 50% { filter: drop-shadow(0 0 10px rgba(3,218,197,.28)); } }
+      `}</style>
+      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+            Market Intelligence Robot Signals
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
+            Signals are live indicators of automation demand. SCOUT observes what companies do: hiring, expanding, funding projects, reporting labor pain, and testing vendors.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/30">
+          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
+          Updates every 5s
+        </div>
+      </div>
+
+      <div className="relative overflow-hidden border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.62)", borderRadius: 16 }}>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3" style={{ background: "linear-gradient(90deg, transparent, rgba(3,218,197,0.13), transparent)", animation: "rfr-radar-sweep 4.8s linear infinite" }} />
+        <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/28">
+          <span>Signal Radar <span style={{ color: "#03DAC5" }}>• Live</span></span>
+          <span>Intent score</span>
+        </div>
+        <div className="space-y-3">
+          {radarSignals.map((signal, i) => (
+            <div key={signal.label} className="grid grid-cols-[130px_1fr_70px] items-center gap-3 text-xs md:grid-cols-[180px_1fr_86px]">
+              <div className="truncate font-semibold text-white/55">{signal.label}</div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.round(signal.value * 100)}%`,
+                    background: `linear-gradient(90deg, ${signal.color}, ${i % 2 === 0 ? "#03DAC5" : "#FFB000"})`,
+                    animation: "rfr-radar-glow 2.6s ease-in-out infinite",
+                    animationDelay: `${i * 120}ms`,
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 font-mono">
+                <span className="font-bold text-white/70">{signal.value.toFixed(2)}</span>
+                <span style={{ color: signal.trend === "up" ? "#34d399" : "#fb923c" }}>
+                  {signal.trend === "up" ? "▲" : "▼"} {signal.delta.replace(/[+-]/, "")}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Signals() {
   const [category, setCategory] = useState("All");
   const [industry, setIndustry] = useState("All");
@@ -171,6 +238,8 @@ export default function Signals() {
               150+ sources monitored continuously. Every signal is scored, categorized, and matched to your robot category before it reaches your pipeline.
             </p>
           </div>
+
+          <SignalRadar />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
