@@ -56,10 +56,39 @@ export default function PricingPage() {
               <h2 className="text-2xl font-bold text-white">Join the pilot waitlist</h2>
               <p className="text-sm text-slate-400">Tell SCOUT what robotics market you want to pursue.</p>
             </div>
-            <input className="scout-input" required type="email" aria-label="Email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <input className="scout-input" aria-label="Name" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <input className="scout-input" aria-label="Company" placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
-            <input className="scout-input" aria-label="Robotics use case" placeholder="Robotics use case" value={form.useCase} onChange={(e) => setForm({ ...form, useCase: e.target.value })} />
+            <input
+              className="scout-input"
+              required
+              type="email"
+              autoComplete="email"
+              aria-label="Email"
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            <input
+              className="scout-input"
+              autoComplete="name"
+              aria-label="Name"
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <input
+              className="scout-input"
+              autoComplete="organization"
+              aria-label="Company"
+              placeholder="Company"
+              value={form.company}
+              onChange={(e) => setForm({ ...form, company: e.target.value })}
+            />
+            <input
+              className="scout-input"
+              aria-label="Robotics use case"
+              placeholder="Robotics use case"
+              value={form.useCase}
+              onChange={(e) => setForm({ ...form, useCase: e.target.value })}
+            />
             <button className="scout-btn-primary md:w-fit">Join waitlist</button>
             {status && <p className="text-sm text-amber-300 self-center">{status}</p>}
           </form>
