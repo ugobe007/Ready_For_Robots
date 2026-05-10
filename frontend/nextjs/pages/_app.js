@@ -1,10 +1,13 @@
 import '../styles/globals.css';
 import '../styles/robotready-design.css';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
 import { getApiBase } from '../lib/apiBase';
+
+const ScoutChat = dynamic(() => import('../components/ScoutChat'), { ssr: false });
 
 // ── Auth Context ─────────────────────────────────────────────────────────────
 export const AuthContext = createContext({ session: null, loading: true });
@@ -91,6 +94,7 @@ export default function App({ Component, pageProps }) {
         )}
       </Head>
       <Component {...pageProps} />
+      <ScoutChat />
       </VisitTracker>
     </AuthProvider>
   );

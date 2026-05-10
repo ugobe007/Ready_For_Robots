@@ -4,16 +4,15 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import app.models  # noqa: F401 — register metadata
+from app.models.company import Company
 from app.api.admin import CompanyImportPayload, CompanyRecord, import_companies
-from app.database import Base
 from app.services.company_validator import is_valid_lead
 
 
 @pytest.fixture()
 def db_session():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
-    Base.metadata.create_all(bind=engine)
+    Company.__table__.create(bind=engine)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     s = SessionLocal()
     try:

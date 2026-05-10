@@ -2302,3 +2302,208 @@ a.rr-btn-hero-primary:hover {
   color: var(--rr-muted);
   margin-bottom: 12px;
 }
+
+/* ── SCOUT marketing surfaces (how-it-works, signals, results, pricing, chat) ─ */
+.scout-page {
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(34, 211, 238, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.1), transparent 50%),
+    var(--rr-bg);
+  min-height: 60vh;
+}
+
+.scout-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rr-cyan);
+  margin-bottom: 0.5rem;
+}
+
+.scout-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--rr-radius-lg);
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(8px);
+}
+
+.scout-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--rr-text);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.95rem;
+}
+
+.scout-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.65rem 1.25rem;
+  font-weight: 600;
+  color: #042f2e;
+  background: linear-gradient(135deg, #34d399, #22d3ee);
+  border: none;
+  cursor: pointer;
+}
+
+.scout-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scout-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  color: var(--rr-text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.scout-gradient {
+  background: linear-gradient(90deg, #22d3ee, #34d399);
+}
+
+.scout-score-orb {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #042f2e;
+  background: linear-gradient(135deg, #34d399, #22d3ee);
+}
+
+.scout-chat-launch {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(15, 23, 42, 0.92);
+  color: var(--rr-text);
+  cursor: pointer;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.scout-chat-launch span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rr-cyan);
+}
+
+.scout-chat-launch strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.scout-chat-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 84px;
+  z-index: 400;
+  width: min(380px, calc(100vw - 36px));
+  max-height: min(520px, 70vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 15, 26, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.scout-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scout-chat-header button {
+  background: transparent;
+  border: none;
+  color: var(--rr-muted2);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.scout-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scout-chat-message {
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.scout-chat-message-user {
+  align-self: flex-end;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+
+.scout-chat-message-assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scout-chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scout-chat-form input {
+  flex: 1;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--rr-text);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.scout-chat-form button {
+  border-radius: 10px;
+  border: none;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #042f2e;
+  background: linear-gradient(135deg, #34d399, #22d3ee);
+}
+
+.scout-chat-form button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

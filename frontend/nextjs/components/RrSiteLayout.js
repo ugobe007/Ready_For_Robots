@@ -26,7 +26,7 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
             <Link href="/dashboard" className={navCls('dashboard')}>
               Dashboard
             </Link>
-            <Link href="/dashboard" className={navCls('pipeline')} title="Lead pipeline and sales workspace">
+            <Link href="/pipeline" className={navCls('pipeline')} title="SCOUT pipeline and sales workspace">
               Pipeline
             </Link>
             <Link href="/crm/" className={navCls('crm')} title="CRM workspaces and buyer accounts">
@@ -38,8 +38,14 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
             <Link href="/search" className={navCls('search')}>
               Search
             </Link>
-            <Link href="/about" className={navCls('about')}>
+            <Link href="/signals" className={navCls('signals')}>
               Signals
+            </Link>
+            <Link href="/how-it-works" className={navCls('how-it-works')}>
+              How It Works
+            </Link>
+            <Link href="/pricing" className={navCls('pricing')}>
+              Pricing
             </Link>
             <Link href="/newsletter" className={navCls('newsletter')}>
               📰 Newsletter
@@ -85,7 +91,7 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
                   📊 Dashboard
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/pipeline"
                   className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800"
                 >
                   🧭 Pipeline
@@ -109,7 +115,7 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
                   🔍 Search
                 </Link>
                 <Link
-                  href="/about"
+                  href="/signals"
                   className="block px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 border-b border-neutral-800"
                 >
                   ⚡ Signals
@@ -139,10 +145,16 @@ export default function RrSiteLayout({ children, active, footer = true, subNav =
                   ✨ Studio
                 </Link>
                 <Link
-                  href="/#signals"
+                  href="/how-it-works"
                   className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800"
                 >
                   💡 How It Works
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="block px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 border-b border-neutral-800"
+                >
+                  💎 Pricing
                 </Link>
                 <Link
                   href="/login"
