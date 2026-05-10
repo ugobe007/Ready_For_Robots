@@ -36,6 +36,10 @@ python3 scripts/audit_junk_names.py --limit 200
 # Purge junk names, optional headline renames, rebuild profiles; skip industry unless intentional
 python3 scripts/cleanup_leads.py --apply --skip-industry
 
+# Normalize noisy signal bodies (archives original in ``signals.ingestion_raw_text``; migration c0d1e2f3a4b5)
+python3 scripts/cleanup_signal_text.py
+python3 scripts/cleanup_signal_text.py --apply
+
 # Export for ML / spreadsheet review (stderr shows line count; stdout is JSONL only if -o omitted)
 python3 scripts/export_quality_decision_log.py -o data/quality_log.jsonl --since-id 5700
 

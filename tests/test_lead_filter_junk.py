@@ -46,6 +46,19 @@ def test_real_company_names_not_junk(name):
     assert is_junk(name)[0] is False
 
 
+def test_peak_season_exact_is_junk():
+    assert is_junk("Peak Season")[0] is True
+
+
+def test_ubs_ticker_headline_rejected_by_logic_engine_not_only_is_junk():
+    from app.services.company_validator import is_valid_lead
+
+    assert is_junk("UBS CGNX NASDAQ")[0] is False
+    ok, reason = is_valid_lead("UBS CGNX NASDAQ", skip_junk_check=False)
+    assert ok is False
+    assert "structural" in reason.lower() or "inference" in reason.lower()
+
+
 def test_scraped_article_title_too_long_is_junk():
     long_headline = (
         "Top robotics and automation companies ranked by financial performance in Q4"
@@ -258,13 +271,38 @@ def test_headline_fragments_user_reported_feb_2026(name):
     assert is_junk(name)[0] is True
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Exclusive EQT Bets",
+        "Google Cloud Team Up",
+        "Distribution Center Jobs While Increasing",
+        "Blue Jay Takes Flight Amazon",
+        "Kenco GreyOrange",
+        "San Jos",
+        "Domino Effect",
+        "Warehouse DC Operations Survey Tech",
+        "Your Warehouse",
+        "Melonee Wise",
+        "Flexkeeping Rollout Following",
+        "Kentucky distribution center",
+    ],
+)
+def test_user_reported_scraper_headline_junk_apr_2026(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+
+
 def test_classify_lead_treats_logic_engine_reject_as_junk():
     """API / spotlight use classify_lead — must hide non-company strings from HOT."""
     c = SimpleNamespace(name="Share Insights", industry="Retail", employee_estimate=None)
     junk, reason, pri = classify_lead(c, None, [])
     assert junk is True
     assert pri.tier == "COLD"
-    assert "junk" in reason.lower() or "logic engine" in reason.lower()
+    assert any(
+        tok in reason.lower()
+        for tok in ("junk", "logic", "structural", "inference", "distinctive", "filter")
+    )
 
 
 def test_classify_lead_allows_real_company():

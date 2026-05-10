@@ -9,104 +9,12 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import time
 
-
-# Comprehensive ontological keyword mappings
-SIGNAL_ONTOLOGY = {
-    # Manufacturing operational signals
-    'quality_bottleneck': [
-        'quality issues', 'defect rate', 'quality control problems', 'scrap rate',
-        'rework', 'quality bottleneck', 'inspection backlog', 'QA shortage',
-        'quality inspection delay', 'defective products', 'reject rate'
-    ],
-    'safety_incident': [
-        'workplace accident', 'safety incident', 'OSHA violation', 'injury rate',
-        'worker injury', 'safety concern', 'hazardous conditions', 'safety fine',
-        'accident investigation', 'safety training', 'PPE compliance'
-    ],
-    'production_capacity': [
-        'production capacity', 'throughput limit', 'capacity constraint',
-        'production bottleneck', 'capacity expansion', 'output increase',
-        'manufacturing capacity', 'production limit', 'capacity utilization',
-        'production volume', 'max capacity', 'capacity shortage'
-    ],
-    'warehouse_throughput': [
-        'warehouse throughput', 'shipping delay', 'fulfillment backlog',
-        'picking efficiency', 'warehouse capacity', 'distribution bottleneck',
-        'order fulfillment', 'picking speed', 'packing rate', 'warehouse productivity'
-    ],
-    'packaging_automation': [
-        'packaging line', 'packaging automation', 'packing station',
-        'packaging efficiency', 'packaging bottleneck', 'packing speed',
-        'packaging workforce', 'manual packaging', 'packaging capacity'
-    ],
-    'repetitive_process': [
-        'repetitive task', 'manual process', 'repetitive motion',
-        'assembly line work', 'repetitive strain', 'monotonous work',
-        'manual labor intensive', 'repetitive operations'
-    ],
-    'material_handling': [
-        'material handling', 'forklift', 'material transport',
-        'inventory movement', 'warehouse logistics', 'material flow',
-        'parts delivery', 'material transfer', 'goods movement'
-    ],
-    
-    # Labor signals
-    'labor_shortage': [
-        'hiring', 'labor shortage', 'workforce shortage', 'staff shortage',
-        'worker shortage', 'recruitment challenges', 'staffing crisis',
-        'understaffed', 'difficulty hiring', 'hard to fill positions',
-        'vacancy rate', 'open positions', 'employment gap'
-    ],
-    'labor_pain': [
-        'turnover rate', 'retention issues', 'attrition', 'employee burnout',
-        'overtime costs', 'labor cost increase', 'wage pressure',
-        'agency workers', 'temp workers', 'labor inflation'
-    ],
-    
-    # Strategic signals
-    'strategic_hire': [
-        'appoints', 'names', 'announces', 'joins as', 'promoted to',
-        'chief operating officer', 'VP operations', 'VP supply chain',
-        'director of operations', 'head of logistics', 'COO', 'CFO',
-        'new leadership', 'executive hire', 'joins executive team'
-    ],
-    'capex': [
-        'invests', 'investment', 'capital expenditure', 'facility expansion',
-        'new facility', 'plant expansion', 'warehouse expansion',
-        'distribution center', 'manufacturing facility', 'opens facility',
-        'breaks ground', 'construction', 'renovation', 'modernization'
-    ],
-    'expansion': [
-        'expands', 'expansion', 'growth', 'scales', 'opens new',
-        'new location', 'new market', 'international expansion',
-        'adds capacity', 'increases footprint', 'new facility'
-    ],
-    'funding_round': [
-        'raises', 'funding round', 'Series A', 'Series B', 'Series C',
-        'venture capital', 'investment', 'secures funding', 'closes round',
-        'led by', 'investors', 'valuation', 'capital raise'
-    ],
-    'ma_activity': [
-        'acquires', 'acquisition', 'merger', 'merges with', 'buys',
-        'purchased', 'takes over', 'deal', 'transaction', 'consolidation'
-    ],
-    
-    # Operational signals
-    'job_posting': [
-        'hiring', 'now hiring', 'seeking', 'looking for', 'recruiting',
-        'positions available', 'job opening', 'apply now', 'join our team',
-        'careers', 'employment opportunity'
-    ],
-    'news': [
-        'announces', 'launches', 'introduces', 'unveils', 'releases',
-        'partners with', 'collaboration', 'strategic partnership'
-    ]
-}
+from app.services.signal_classifier import classify_signals_with_fallback
 
 
 class OntologicalScraper:
-    """Parse any URL for automation intent signals using semantic pattern matching"""
-    
+    """Parse any URL for automation intent signals using the shared signal classifier."""
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
@@ -132,14 +40,14 @@ class OntologicalScraper:
             
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Extract text content
-            text_content = self._extract_text(soup)
+            text_raw = self._extract_text_raw(soup)
+            text_content = text_raw.lower()
             
             # Extract company name (best guess)
             company_name = self._extract_company_name(soup, url)
             
-            # Detect signals
-            signals = self._detect_signals(text_content)
+            # Detect signals (preserve case for SemanticParser / rules)
+            signals = self._detect_signals(text_raw, source_url=url)
             
             # Extract industry hints
             industry = self._extract_industry(text_content)
@@ -185,19 +93,14 @@ class OntologicalScraper:
             'scraped_at': datetime.utcnow().isoformat()
         }
     
-    def _extract_text(self, soup: BeautifulSoup) -> str:
-        """Extract clean text from HTML"""
-        # Remove script and style elements
+    def _extract_text_raw(self, soup: BeautifulSoup) -> str:
+        """Extract clean text from HTML (original casing for signal classifier)."""
         for script in soup(['script', 'style', 'nav', 'header', 'footer']):
             script.decompose()
         
-        # Get text
         text = soup.get_text(separator=' ', strip=True)
-        
-        # Clean up whitespace
         text = re.sub(r'\s+', ' ', text)
-        
-        return text.lower()
+        return text
     
     def _extract_company_name(self, soup: BeautifulSoup, url: str) -> str:
         """Extract company name from page"""
@@ -239,38 +142,34 @@ class OntologicalScraper:
         
         return None
     
-    def _detect_signals(self, text: str) -> List[Dict]:
-        """Detect all signals in text using ontological keywords"""
-        signals = []
-        
-        for signal_type, keywords in SIGNAL_ONTOLOGY.items():
-            # Find all keyword matches
-            matches = []
-            for keyword in keywords:
-                if keyword in text:
-                    # Extract context (50 chars before and after)
-                    for match in re.finditer(re.escape(keyword), text):
-                        start = max(0, match.start() - 50)
-                        end = min(len(text), match.end() + 50)
-                        context = text[start:end].strip()
-                        matches.append(context)
-            
-            # If we found matches, create signal
-            if matches:
-                # Calculate strength based on number of matches
-                strength = min(0.95, 0.6 + (len(matches) * 0.05))
-                
-                # Get best context (longest one)
-                best_context = max(matches, key=len) if matches else matches[0]
-                
-                signals.append({
-                    'signal_type': signal_type,
-                    'strength': strength,
-                    'raw_text': best_context,
-                    'keyword_matches': len(matches),
-                    'source_url': 'ontological_scraper'
-                })
-        
+    def _detect_signals(self, text: str, *, source_url: str = "") -> List[Dict]:
+        """
+        Classify via ontology + rules engine + fallback (same path as intelligence / SERP scrapers).
+        """
+        if not (text or "").strip():
+            return []
+
+        types = classify_signals_with_fallback(text, article_url=source_url or "")
+        if not types or types == ["news"]:
+            return []
+
+        signals: List[Dict] = []
+        seen = set()
+        snippet = text[:400].strip()
+        lower_snippet = snippet.lower()
+
+        for signal_type in types:
+            if signal_type in seen:
+                continue
+            seen.add(signal_type)
+            signals.append({
+                'signal_type': signal_type,
+                'strength': 0.75,
+                'raw_text': lower_snippet or snippet,
+                'keyword_matches': 1,
+                'source_url': source_url or 'ontological_scraper',
+            })
+
         return signals
     
     def scrape_multiple_urls(self, urls: List[str], delay: float = 2.0) -> List[Dict]:

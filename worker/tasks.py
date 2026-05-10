@@ -1,6 +1,9 @@
 import logging
-import subprocess
 import os
+import secrets
+import subprocess
+from typing import Optional
+
 from worker.celery_worker import celery_app
 from app.database import SessionLocal
 import app.models
@@ -8,6 +11,23 @@ from app.scrapers.scrape_targets import get_urls, get_news_queries
 
 # DB schema is managed by Alembic; no create_all at worker startup.
 logger = logging.getLogger(__name__)
+
+INTELLIGENCE_SCRAPER_LOCK_KEY = "intelligence_scraper_lock"
+_INTELLIGENCE_LOCK_RELEASE_LUA = """
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+else
+  return 0
+end
+"""
+
+
+def _release_intelligence_scraper_lock(r, lock_key: str, token: str) -> None:
+    """Only the worker that holds ``token`` may delete the lock (avoids deleting another run's lock)."""
+    try:
+        r.eval(_INTELLIGENCE_LOCK_RELEASE_LUA, 1, lock_key, token)
+    except Exception as exc:
+        logger.warning("Intelligence lock release failed (non-fatal): %s", exc)
 
 
 def get_db():
@@ -68,35 +88,61 @@ def run_news_scraper_task(self, queries=None, industry=None):
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
-def run_intelligence_scraper_task(self, max_articles=10):
+def run_intelligence_scraper_task(
+    self,
+    max_articles: int = 15,
+    max_queries: Optional[int] = 20,
+    enrich: bool = True,
+    enrich_limit: int = 20,
+):
     """
     Intelligence News Scraper — discovers new companies from news.
     FREE alternative to LinkedIn, Pitchbook, CB Insights.
-    Uses Redis lock to prevent duplicate runs when Beat fires multiple schedules at once.
+
+    Uses a Redis lock with a random token so only this execution releases its lock
+    (safe under retries / overlapping workers). Default ``max_queries=20`` matches
+    the in-app / cron quick run; pass ``max_queries=None`` for a full query list.
     """
     import redis
     from worker.celery_worker import celery_app as app
-    redis_url = getattr(app.conf, 'broker_url', None) or os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    lock_key = "intelligence_scraper_lock"
-    lock_ttl = 7200  # 2 hours max (task takes ~10 min)
+
+    redis_url = getattr(app.conf, "broker_url", None) or os.getenv(
+        "REDIS_URL", "redis://localhost:6379/0"
+    )
+    lock_ttl = 7200  # 2 hours ceiling for a run (bounded default ~ minutes)
 
     r = redis.from_url(redis_url)
-    acquired = r.set(lock_key, "1", nx=True, ex=lock_ttl)
+    token = secrets.token_urlsafe(24)
+    acquired = r.set(INTELLIGENCE_SCRAPER_LOCK_KEY, token, nx=True, ex=lock_ttl)
     if not acquired:
-        logger.info("Intelligence scraper already running (lock held), skipping duplicate task")
+        logger.info(
+            "Intelligence scraper already running (lock held), skipping duplicate task"
+        )
         return {"skipped": True, "reason": "another instance is running"}
 
     try:
         from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+
         db = get_db()
         try:
             scraper = IntelligenceNewsScraper(db=db)
-            stats = scraper.discover_leads(max_articles_per_query=max_articles)
+            stats = scraper.discover_leads(
+                max_articles_per_query=max_articles,
+                max_queries=max_queries,
+            )
+            if enrich:
+                enrich_stats = scraper.enrich_existing_companies(limit=enrich_limit)
+                stats["companies_enriched"] = enrich_stats.get(
+                    "companies_enriched", stats.get("companies_enriched", 0)
+                )
+                stats["signals_created"] = stats.get("signals_created", 0) + enrich_stats.get(
+                    "signals_created", 0
+                )
             logger.info(
                 "Intelligence scraper completed: %d new companies, %d enriched, %d signals",
-                stats['companies_discovered'],
-                stats['companies_enriched'],
-                stats['signals_created']
+                stats.get("companies_discovered", 0),
+                stats.get("companies_enriched", 0),
+                stats.get("signals_created", 0),
             )
             return stats
         except Exception as exc:
@@ -105,7 +151,7 @@ def run_intelligence_scraper_task(self, max_articles=10):
         finally:
             db.close()
     finally:
-        r.delete(lock_key)
+        _release_intelligence_scraper_lock(r, INTELLIGENCE_SCRAPER_LOCK_KEY, token)
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
@@ -358,7 +404,7 @@ def generate_newsletter_edition_task(self, limit=8):
 def run_all_scrapers_task(self):
     """Trigger all active scraper tasks in sequence."""
     try:
-        run_intelligence_scraper_task.delay(max_articles=10)  # FREE lead discovery
+        run_intelligence_scraper_task.delay()  # bounded defaults (20 queries + enrich)
         run_news_scraper_task.delay()
         run_company_news_task.delay(limit=80)  # XYZ company → news on XYZ
         run_enrich_companies_task.delay(limit=80)  # Enrich existing companies

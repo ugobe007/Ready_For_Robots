@@ -8,7 +8,8 @@
     "build": "npm run build --prefix frontend/nextjs",
     "start": "npm run start --prefix frontend/nextjs",
     "lint": "npm run lint --prefix frontend/nextjs",
-    "validate": "npm run lint --prefix frontend/nextjs"
+    "validate": "npm run lint --prefix frontend/nextjs",
+    "deploy:fly": "flyctl deploy"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

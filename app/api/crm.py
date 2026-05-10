@@ -5,12 +5,15 @@ CRM API — teams + accounts (Bearer JWT). Prefix: /api/crm
   POST   /api/crm/teams              — create a team; caller becomes owner
   GET    /api/crm/accounts           — list CRM accounts for a team
   POST   /api/crm/accounts           — create account (optional company_id pre-fills from companies)
+  PATCH  /api/crm/accounts/{id}     — update outreach fields (team-scoped)
+  POST   /api/crm/accounts/{id}/send-outreach — send draft via Resend (team-scoped)
 """
 
 from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -49,6 +52,7 @@ from app.api.auth_deps import _require_user
 from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount
+from app.services.resend_email import ResendEmailError, send_email_via_resend
 
 router = APIRouter()
 
@@ -120,6 +124,10 @@ class CrmAccountOut(BaseModel):
     industry: Optional[str] = None
     owner_user_id: Optional[str] = None
     created_at: Optional[str] = None
+    contact_email: Optional[str] = None
+    outreach_draft: Optional[str] = None
+    outreach_sent_at: Optional[str] = None
+    outreach_stage: Optional[str] = None
     # Enriched when company_id links to pipeline companies
     signal_score: Optional[float] = None
     overall_intent_score: Optional[float] = None
@@ -133,6 +141,16 @@ class CreateAccountIn(BaseModel):
     name: Optional[str] = None
     website: Optional[str] = None
     industry: Optional[str] = None
+
+
+class PatchCrmAccountIn(BaseModel):
+    contact_email: Optional[str] = Field(None, max_length=320)
+    outreach_draft: Optional[str] = None
+
+
+class SendOutreachIn(BaseModel):
+    contact_email: Optional[str] = Field(None, max_length=320)
+    outreach_draft: Optional[str] = None
 
 
 def _serialize_team_row(team: Team, role: str) -> dict[str, Any]:
@@ -190,7 +208,20 @@ def _serialize_account(a: CrmAccount) -> dict[str, Any]:
         "industry": a.industry,
         "owner_user_id": str(a.owner_user_id) if a.owner_user_id else None,
         "created_at": a.created_at.isoformat() if a.created_at else None,
+        "contact_email": getattr(a, "contact_email", None),
+        "outreach_draft": getattr(a, "outreach_draft", None),
+        "outreach_sent_at": a.outreach_sent_at.isoformat() if getattr(a, "outreach_sent_at", None) else None,
+        "outreach_stage": getattr(a, "outreach_stage", None),
     }
+
+
+def _crm_account_for_user(db: Session, uid: uuid.UUID, account_id: uuid.UUID) -> Optional[CrmAccount]:
+    return (
+        db.query(CrmAccount)
+        .join(TeamMember, TeamMember.team_id == CrmAccount.team_id)
+        .filter(TeamMember.user_id == uid, CrmAccount.id == account_id)
+        .first()
+    )
 
 
 def _pipeline_snapshot_for_company_row(c: Company) -> dict[str, Any]:
@@ -440,5 +471,109 @@ def create_account(
             status_code=409,
             detail="An account for this company already exists in this team",
         ) from e
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
+@router.patch("/accounts/{account_id}", response_model=CrmAccountOut)
+def patch_account(
+    account_id: str,
+    body: PatchCrmAccountIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        uid = _uid_uuid(user)
+        try:
+            aid = uuid.UUID(account_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid account id") from None
+        acct = _crm_account_for_user(db, uid, aid)
+        if not acct:
+            raise HTTPException(status_code=404, detail="Account not found or access denied")
+        patch = body.model_dump(exclude_unset=True)
+        if "contact_email" in patch:
+            acct.contact_email = patch["contact_email"]
+        if "outreach_draft" in patch:
+            acct.outreach_draft = patch["outreach_draft"]
+        db.commit()
+        db.refresh(acct)
+        pl = None
+        if acct.company_id:
+            co = (
+                db.query(Company)
+                .options(joinedload(Company.signals), joinedload(Company.scores))
+                .filter(Company.id == acct.company_id)
+                .first()
+            )
+            if co:
+                try:
+                    pl = _pipeline_snapshot_for_company_row(co)
+                except Exception:
+                    logger.warning(
+                        "CRM pipeline snapshot failed on patch company_id=%s",
+                        acct.company_id,
+                        exc_info=True,
+                    )
+        return _serialize_account_enriched(acct, pl)
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
+@router.post("/accounts/{account_id}/send-outreach")
+def send_account_outreach(
+    account_id: str,
+    body: SendOutreachIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        uid = _uid_uuid(user)
+        try:
+            aid = uuid.UUID(account_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid account id") from None
+        acct = _crm_account_for_user(db, uid, aid)
+        if not acct:
+            raise HTTPException(status_code=404, detail="Account not found or access denied")
+
+        patch = body.model_dump(exclude_unset=True)
+        contact_email = (patch.get("contact_email") or acct.contact_email or "").strip()
+        outreach_draft = (patch.get("outreach_draft") or acct.outreach_draft or "").strip()
+
+        if not contact_email or "@" not in contact_email:
+            raise HTTPException(status_code=400, detail="No contact email on file for this account")
+        if not outreach_draft:
+            raise HTTPException(status_code=400, detail="No outreach draft on file for this account")
+
+        row = db.execute(
+            text("SELECT sender_name FROM user_settings WHERE user_id = :uid"),
+            {"uid": str(uid)},
+        ).fetchone()
+        sender_name = (row.sender_name if row else None) or (user.get("email") or "SCOUT").split("@")[0]
+        subject = f"Automation opportunity — {acct.name}"
+
+        try:
+            send_email_via_resend(
+                to_email=contact_email,
+                subject=subject,
+                body_text=outreach_draft,
+                from_display_name=sender_name.strip() if sender_name else None,
+            )
+        except ResendEmailError as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e
+
+        now = datetime.now(timezone.utc)
+        acct.contact_email = contact_email
+        acct.outreach_draft = outreach_draft
+        acct.outreach_sent_at = now
+        acct.outreach_stage = "intro_sent"
+        db.commit()
+
+        return {"sent": True, "to": contact_email, "sent_at": now.isoformat()}
+    except HTTPException:
+        raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
         _raise_crm_db_error(e)

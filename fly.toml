@@ -1,5 +1,5 @@
-# fly.toml — Fly.io configuration for Ready for Robots FastAPI backend
-# Run `flyctl deploy` from the project root to deploy.
+# fly.toml — Production stack for readyforrobots.com: Vite SPA from readyforrobots-new/
+# (built in Docker) + FastAPI. Deploy from the repository root: `flyctl deploy` or `npm run deploy:fly`.
 
 app = "ready-2-robot"
 primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
@@ -7,12 +7,15 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 [build]
   dockerfile = "Dockerfile"
   [build.args]
-    NEXT_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
-    NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
-    # API host (FastAPI on Fly). Custom domain can point here; CORS must list the static site origin too.
-    NEXT_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
-    # Canonical marketing site (og:url, links). Static HTML may be served from CDN on this host.
-    NEXT_PUBLIC_SITE_URL  = "https://readyforrobots.com"
+    # Vite client (Dockerfile frontend stage) — same Supabase project and API as before.
+    VITE_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
+    VITE_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
+    VITE_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
+
+# Run DB migrations once per deploy (before new Machines roll out). Boot then starts uvicorn immediately
+# so Fly’s proxy sees :8080 within the health-check grace window.
+[deploy]
+  release_command = "alembic upgrade head"
 
 # Run DB migrations once per deploy (before new Machines roll out). Boot then starts uvicorn immediately
 # so Fly’s proxy sees :8080 within the health-check grace window.
@@ -22,7 +25,7 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 [env]
   PORT = "8080"
   # Browsers require explicit origins when cookies/credentials are used — not "*"
-  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,http://localhost:3000,http://127.0.0.1:3000"
+  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,https://ready-for-robots-ax5i.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
   # Admin emails (comma-separated) — users with access to /admin
   ADMIN_EMAILS = "ugobe07@gmail.com"
   # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)
@@ -34,7 +37,6 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
 
   [[http_service.checks]]
     grace_period = "60s"

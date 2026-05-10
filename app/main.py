@@ -30,7 +30,10 @@ from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
 from app.api.crm import router as crm_router
+from app.api.proposals import router as proposals_router
+from app.api.scout import router as scout_router
 from app.api.admin_purge import router as admin_purge_router
+from app.api.admin_partners import router as admin_partners_router
 from app.api.social_posts import router as social_posts_router
 from app.database import get_db
 import app.models
@@ -56,8 +59,15 @@ def _cors_allowed_origins() -> list[str]:
         "https://readyforrobots.com",
         "https://www.readyforrobots.com",
         "https://ready-2-robot.fly.dev",
+        # Vercel / local previews; add more origins via CORS_ORIGINS on Fly.
+        "https://ready-for-robots-ax5i.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        # Vite (readyforrobots_new_web) and other dev servers
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ]
 
 
@@ -157,6 +167,7 @@ app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
 app.include_router(social_posts_router, prefix="/api/social", tags=["social"])
 app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
 app.include_router(search_router, prefix="/api/search", tags=["search"])
@@ -170,6 +181,8 @@ app.include_router(playbook_router, prefix="/api", tags=["playbook"])
 app.include_router(robot_companies_router, tags=["robot-companies"])
 app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newsletter"])
 app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
+app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
+app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 
 
 @app.on_event("startup")
@@ -188,9 +201,9 @@ def health():
     return {"status": "ok"}
 
 
-# ── In-app scheduled scraper (no Redis/Celery required) ─────────────────────
-# On Fly.io we only run the web process; Celery beat/worker are not deployed.
-# This thread runs the intelligence scraper every N hours so leads keep flowing.
+# ── In-app scheduled scraper (fallback when no Redis/Celery) ───────────────
+# On Fly with REDIS_URL, `scripts/start_all.sh` starts Beat + worker; this thread is skipped
+# so intelligence is not scheduled twice (see `_start_scheduled_scraper`).
 
 def _scheduled_scraper_loop():
     """Run intelligence scraper on an interval. Catches and logs errors so one failure doesn't stop the loop."""
@@ -237,16 +250,25 @@ def _scheduled_scraper_loop():
 
 def _start_scheduled_scraper():
     """Start the in-app scraper loop only when running on Fly (or when explicitly enabled)."""
+    # When Redis/Celery is configured, `worker/celery_beat_schedule.py` already runs intelligence
+    # (and other scrapers). A second in-app loop duplicates work, lengthens runs, and competes for
+    # the same DB — it can look like scrapers are "stuck" or starved. Keep in-app only as fallback
+    # when there is no broker (see `scripts/start_all.sh`).
+    if os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"):
+        logger.info(
+            "In-app scheduled scraper skipped: Redis/Celery broker set (Beat owns intelligence schedule)"
+        )
+        return
     if os.getenv("FLY_APP_NAME") or os.getenv("ENABLE_SCHEDULED_SCRAPER", "").lower() in ("1", "true", "yes"):
         t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
         t.start()
         logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
 
-# ── Static frontend (Next.js export) ──────────────────────────────────────
+# ── Static frontend (Vite SPA build → static/) ────────────────────────────
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
 
 if os.path.exists(STATIC_DIR):
-    # Mount Next.js chunk assets at /_next
+    # Legacy Next export used /_next; Vite uses /assets. Mount if present.
     _next = os.path.join(STATIC_DIR, "_next")
     if os.path.exists(_next):
         app.mount("/_next", StaticFiles(directory=_next), name="nextjs_assets")

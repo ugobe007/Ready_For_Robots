@@ -27,6 +27,16 @@ def test_evaluating_hot_without_deployment():
     assert g["readiness_label"] == "Active evaluation"
 
 
+def test_low_automation_profile_confidence_softens_hot_readiness():
+    """rules_v1 profile with low confidence must not read as late-stage 'Active evaluation'."""
+    sigs = [_Sig("expansion"), _Sig("news")]
+    profile = {"source": "rules_v1", "confidence": "low"}
+    g = compute_gtm_readiness(sigs, "HOT", ["high-fit industry (Hospitality)"], profile)
+    assert g["readiness_stage"] == "evaluating"
+    assert g["readiness_label"] == "Validate automation fit"
+    assert "low" in g["suggested_motion"].lower()
+
+
 def test_exploring_cold():
     sigs = [_Sig("news")]
     g = compute_gtm_readiness(sigs, "COLD", [])

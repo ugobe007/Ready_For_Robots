@@ -7,7 +7,7 @@ Improvements over original:
 1. Rate Limiting & Anti-Bot: Random delays, user agent rotation, exponential backoff
 2. Ontology-Based Relevancy: Use CONCEPTS to filter junk news
 3. Duplicate Detection: URL + title fingerprinting
-4. Better Entity Extraction: Use ontology to classify signal types
+4. Signal typing: unified ontology + rules engine (same path as RSS scrapers)
 
 Uses Google News RSS to run targeted SERP-style searches for:
   - Specific city + industry expansion announcements
@@ -33,6 +33,7 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
 from app.services.ontology import CONCEPTS
+from app.services.signal_classifier import primary_signal_type_for_text
 from app.scrapers.news_scraper import KNOWN_COMPANIES, _COMPANY_ANNOUNCE_RE
 
 logger = logging.getLogger(__name__)
@@ -150,51 +151,6 @@ EXPANSION_QUERIES = [
     "\"minimum wage\" increase operations labor cost pressure 2026",
 ]
 
-# ─── SIGNAL CLASSIFICATION (Enhanced with Ontology) ────────────────────────────
-def _classify_signal_ontology(text: str) -> str:
-    """Use ontology to classify signal type from article content"""
-    lower = text.lower()
-    
-    # Check CONCEPTS for domain mapping
-    for concept_name, concept in CONCEPTS.items():
-        if concept.domain == 'expansion':
-            for pattern in concept.patterns:
-                if isinstance(pattern, str) and pattern.lower() in lower:
-                    return 'expansion'
-                elif re.search(pattern, lower, re.I):
-                    return 'expansion'
-        
-        elif concept.domain == 'strategic':
-            for pattern in concept.patterns:
-                if isinstance(pattern, str) and pattern.lower() in lower:
-                    return 'strategic_hire'
-                elif re.search(pattern, lower, re.I):
-                    return 'strategic_hire'
-        
-        elif concept.domain == 'labor_pain':
-            for pattern in concept.patterns:
-                if isinstance(pattern, str) and pattern.lower() in lower:
-                    return 'labor_shortage'
-                elif re.search(pattern, lower, re.I):
-                    return 'labor_shortage'
-        
-        elif concept.domain == 'automation':
-            for pattern in concept.patterns:
-                if isinstance(pattern, str) and pattern.lower() in lower:
-                    return 'automation_intent'
-                elif re.search(pattern, lower, re.I):
-                    return 'automation_intent'
-    
-    # Fallback keyword matching
-    if any(kw in lower for kw in ['funding', 'series ', 'raised $', 'capital raise']):
-        return 'funding_round'
-    if any(kw in lower for kw in ['acqui', 'merger', 'buyout']):
-        return 'ma_activity'
-    if any(kw in lower for kw in ['capex', 'capital expenditure', 'capital investment']):
-        return 'capex'
-    
-    return 'news'
-
 def _infer_industry(text: str) -> str:
     """Infer industry from article text"""
     lower = text.lower()
@@ -217,7 +173,7 @@ class EnhancedSerpScraper:
     1. Rate Limiting: Random 2-5s delays, user agent rotation, exponential backoff
     2. Ontology Relevancy: Use CONCEPTS to filter junk news (stricter for SERP)
     3. Duplicate Detection: URL + title fingerprinting
-    4. Better Entity Extraction: Use ontology to classify signal types
+    4. Signal typing: unified ``primary_signal_type_for_text`` (ontology + rules + fallback)
     
     Runs curated high-signal queries against Google News RSS for expansion + automation intent.
     """
@@ -228,6 +184,14 @@ class EnhancedSerpScraper:
         self.session_seen_fingerprints: Set[str] = set()
         self.request_count = 0
         self.last_request_time = 0.0
+
+    @staticmethod
+    def _name_is_valid(name: str) -> bool:
+        """Same lead gate as list API — inference + structure before persisting new SERP names."""
+        from app.services.company_validator import is_valid_lead
+
+        ok, _ = is_valid_lead(name or "", skip_junk_check=False)
+        return ok
 
     def _get_random_user_agent(self) -> str:
         """Return a random user agent for anti-bot protection"""
@@ -401,8 +365,10 @@ class EnhancedSerpScraper:
         if strength < 0.05:
             return False
         
-        # Use ontology for signal type classification
-        signal_type = _classify_signal_ontology(article["text"])
+        signal_type = primary_signal_type_for_text(
+            article["text"],
+            article_url=article.get("url") or "",
+        )
         
         signal = Signal(
             company_id=company.id,

@@ -11,11 +11,15 @@ Query params:
 """
 from __future__ import annotations
 
+import copy
+import logging
 import re
+import threading
+import time
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
-from typing import Dict, FrozenSet, List, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from app.database import get_db
 from app.models.company import Company
@@ -27,6 +31,57 @@ from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.company_url_openai import resolve_homepage_urls_for_companies
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+# Preset + keyword search cache (30 min TTL, stale-while-revalidate)
+_SEARCH_CACHE_TTL = 1800.0
+_search_cache: Dict[str, Dict[str, Any]] = {}
+_search_cache_lock = threading.Lock()
+_search_bg_lock = threading.Lock()
+_search_bg_in_progress: set[str] = set()
+
+
+def _search_cache_key(q: Optional[str], category: Optional[str], limit: int, resolved: Optional[str]) -> str:
+    qn = (q or "").strip().lower()[:400]
+    cat = (resolved or category or "").strip().lower()
+    return "|".join(["v1", str(int(limit)), cat, qn])
+
+
+def _schedule_search_refresh(cache_key: str, q: Optional[str], category: Optional[str], limit: int) -> None:
+    with _search_bg_lock:
+        if cache_key in _search_bg_in_progress:
+            return
+        _search_bg_in_progress.add(cache_key)
+
+    def _run():
+        try:
+            from app.database import SessionLocal
+
+            db2 = SessionLocal()
+            try:
+                resolved = CATEGORY_ALIASES.get(category, category) if category else None
+                keywords: List[str] = []
+                if resolved and resolved in CATEGORY_KEYWORDS:
+                    keywords = CATEGORY_KEYWORDS[resolved]
+                results = _run_keyword_search(db2, keywords, q, limit)
+                payload = {
+                    "results": results,
+                    "total": len(results),
+                    "query": q,
+                    "category": resolved or category,
+                    "category_label": CATEGORY_LABELS.get(resolved or category) if (resolved or category) else None,
+                }
+                with _search_cache_lock:
+                    _search_cache[cache_key] = {"ts": time.monotonic(), "data": payload}
+            finally:
+                db2.close()
+        except Exception as exc:
+            logger.warning("Search cache refresh failed: %s", exc)
+        finally:
+            with _search_bg_lock:
+                _search_bg_in_progress.discard(cache_key)
+
+    threading.Thread(target=_run, daemon=True, name="search-cache-refresh").start()
 
 # ---------------------------------------------------------------------------
 # Category → keyword seeds  (case-insensitive ILIKE on signal_text)
@@ -202,6 +257,23 @@ CATEGORY_KEYWORDS: dict = {
         "store replenishment", "back-of-store", "backroom",
         "store-level inventory", "retail distribution",
     ],
+    "cleaning_robots": [
+        "cleaning robot",
+        "cleaning robots",
+        "autonomous cleaning",
+        "robotic floor scrubber",
+        "floor cleaning robot",
+        "autonomous floor scrubber",
+        "housekeeping robot",
+        "janitorial robot",
+        "commercial cleaning robot",
+        "UV disinfection robot",
+        "disinfection robot",
+        "hospitality cleaning automation",
+        "casino housekeeping automation",
+        "hotel housekeeping automation",
+        "EVS robot",
+    ],
     "expansion": [
         "expansion", "new facility", "new warehouse", "new distribution center",
         "breaking ground", "square feet", "sf facility", "construction",
@@ -229,6 +301,7 @@ CATEGORY_LABELS: dict = {
     "inventory_management":  "Inventory Management",
     "healthcare_automation": "Healthcare Automation",
     "retail_automation":     "Retail Automation",
+    "cleaning_robots":      "Cleaning Robots",
 }
 
 # Frontend Quick Search keys → API category
@@ -909,19 +982,32 @@ def search(
     Combine a preset category (keyword seed list) with optional free-text.
     """
     resolved = CATEGORY_ALIASES.get(category, category) if category else None
+    cache_key = _search_cache_key(q, category, limit, resolved)
+    entry = _search_cache.get(cache_key)
+    now = time.monotonic()
+    if entry is not None:
+        age = now - entry["ts"]
+        if age < _SEARCH_CACHE_TTL:
+            return copy.deepcopy(entry["data"])
+        _schedule_search_refresh(cache_key, q, category, limit)
+        return copy.deepcopy(entry["data"])
+
     keywords: List[str] = []
     if resolved and resolved in CATEGORY_KEYWORDS:
         keywords = CATEGORY_KEYWORDS[resolved]
 
     results = _run_keyword_search(db, keywords, q, limit)
 
-    return {
+    payload = {
         "results": results,
         "total": len(results),
         "query": q,
         "category": resolved or category,
         "category_label": CATEGORY_LABELS.get(resolved or category) if (resolved or category) else None,
     }
+    with _search_cache_lock:
+        _search_cache[cache_key] = {"ts": time.monotonic(), "data": copy.deepcopy(payload)}
+    return payload
 
 
 @router.get("/categories")

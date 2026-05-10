@@ -34,6 +34,24 @@ def test_effective_industry_falls_back_to_stored_when_inference_unknown():
     assert eff == "Logistics"
 
 
+def test_hospitality_hotel_brand_wins_over_wrong_manufacturing_stored():
+    """Hotel operators must not stay under Automotive when DB industry is polluted."""
+    sigs = [
+        SimpleNamespace(
+            signal_text="Marriott expands robot room service and housekeeping automation across full-service brands"
+        ),
+        SimpleNamespace(signal_text="CapEx approved for central laundry and uniform manufacturing partner network"),
+    ]
+    eff = effective_industry_for_lead("Marriott International", "Manufacturing", sigs)
+    assert eff == "Hospitality"
+
+
+def test_stored_hospitality_plus_hotel_signal_flips_automotive_mislabel():
+    sig = SimpleNamespace(signal_text="Hyatt Regency deploys delivery robots for guest services and banquet operations")
+    eff = effective_industry_for_lead("PM Hotel Group", "Manufacturing", [sig])
+    assert eff == "Hospitality"
+
+
 @pytest.mark.parametrize(
     "name",
     [

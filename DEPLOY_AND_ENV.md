@@ -102,6 +102,10 @@ If you leave them empty, the app falls back to defaults in `frontend/nextjs/lib/
 
 After changing `[build.args]` in `fly.toml`, run **`flyctl deploy` again** so the Next build picks up the new values.
 
+### 4b. Vercel-only Next deployment (optional)
+
+If the static site is built on **Vercel** while the API stays on **Fly**, set the same `NEXT_PUBLIC_*` variables in the Vercel project (see `frontend/nextjs/.env.example`). On Fly, **`CORS_ORIGINS`** must list the Vercel origin (e.g. `https://ready-for-robots-ax5i.vercel.app`) or the browser will block authenticated `fetch` calls. The default list in `app/main.py` and `fly.toml` `[env]` includes that host; add any custom domain or extra preview URL the same way.
+
 ---
 
 ## 5. Local quick check (optional)
@@ -122,8 +126,10 @@ Open `http://127.0.0.1:8080/health` — should return OK.
 
 1. `flyctl auth login`
 2. Set `DATABASE_URL`, `SUPABASE_JWT_SECRET`, and any optional keys (`OPENAI_API_KEY`, `NEWSLETTER_REGEN_SECRET`).
-3. Set `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SITE_URL` in `fly.toml` `[build.args]` to your live URLs.
-4. Run `flyctl deploy` from the project root.
-5. Test the site and `/health`; test newsletter edition URL without `refresh=true` (should work for everyone).
+3. For CRM email sends: set **`RESEND_API_KEY`** and **`RESEND_FROM_EMAIL`** on Fly (`fly secrets set …`).
+4. Set `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SITE_URL` in `fly.toml` `[build.args]` to your live URLs (and mirror `NEXT_PUBLIC_*` on Vercel if you build there).
+5. Ensure **`CORS_ORIGINS`** on Fly includes every frontend origin (marketing, Fly static, Vercel, localhost).
+6. Run `flyctl deploy` from the project root.
+7. Test the site and `/health`; test newsletter edition URL without `refresh=true` (should work for everyone).
 
 For more command locations, see `BUILD_AND_DEPLOY.md`.

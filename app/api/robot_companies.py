@@ -8,13 +8,22 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from typing import Any, List, Optional
 from datetime import datetime
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.robot_company import RobotCompany
 from app.services.email_templates import get_email_template
+from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.vendor_scoring import compute_vendor_list_score
 
 router = APIRouter(prefix="/api/robot-companies", tags=["robot-companies"])
+
+
+class SendRobotCompanyEmailRequest(BaseModel):
+    to_email: str
+    template_type: str = "intro"
+    subject: Optional[str] = None
+    body: Optional[str] = None
 
 
 def _enrich_robot_company(c: RobotCompany) -> dict[str, Any]:
@@ -504,5 +513,115 @@ def log_email_sent(
         "message": "Email logged successfully",
         "company": company.company_name,
         "last_contact_date": str(company.last_contact_date)
+    }
+
+
+@router.post("/{company_id}/email/send")
+def send_email(
+    company_id: int,
+    payload: SendRobotCompanyEmailRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Send outreach email via Resend and log activity.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    company_data = {
+        "company_name": company.company_name,
+        "robot_type": company.robot_type,
+        "target_market": company.target_market,
+        "us_presence": company.us_presence,
+        "lead_score": company.lead_score,
+        "unique_selling_points": company.unique_selling_points or [],
+        "website": company.website,
+    }
+    template_type = (payload.template_type or "intro").strip() or "intro"
+    email = get_email_template(template_type, company_data)
+    subject = payload.subject or email.get("subject", "Partnership Opportunity")
+    body = payload.body or email.get("body", "")
+
+    try:
+        send_result = send_email_via_resend(
+            to_email=payload.to_email,
+            subject=subject,
+            body_text=body,
+        )
+    except ResendEmailError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    company.last_contact_date = datetime.now()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    existing = company.workflow_notes or ""
+    company.workflow_notes = (
+        f"{existing}\n[{timestamp}] Sent {template_type} email to {payload.to_email}: {subject}"
+    ).strip()
+    if company.outreach_status == "not_contacted":
+        company.outreach_status = "contacted"
+
+    db.commit()
+    db.refresh(company)
+
+    return {
+        "message": "Email sent via Resend",
+        "company": company.company_name,
+        "to_email": payload.to_email,
+        "template_type": template_type,
+        "subject": subject,
+        "resend_id": send_result.get("resend_id"),
+        "from_email": send_result.get("from_email"),
+        "reply_to": send_result.get("reply_to"),
+        "last_contact_date": str(company.last_contact_date),
+    }
+
+
+@router.post("/{company_id}/email/test-send")
+def test_send_email(
+    company_id: int,
+    payload: SendRobotCompanyEmailRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Send a test outreach email via Resend without mutating workflow state.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    company_data = {
+        "company_name": company.company_name,
+        "robot_type": company.robot_type,
+        "target_market": company.target_market,
+        "us_presence": company.us_presence,
+        "lead_score": company.lead_score,
+        "unique_selling_points": company.unique_selling_points or [],
+        "website": company.website,
+    }
+    template_type = (payload.template_type or "intro").strip() or "intro"
+    email = get_email_template(template_type, company_data)
+    raw_subject = payload.subject or email.get("subject", "Partnership Opportunity")
+    subject = f"[TEST] {raw_subject}"
+    body = payload.body or email.get("body", "")
+
+    try:
+        send_result = send_email_via_resend(
+            to_email=payload.to_email,
+            subject=subject,
+            body_text=body,
+        )
+    except ResendEmailError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return {
+        "message": "Test email sent via Resend",
+        "company": company.company_name,
+        "to_email": payload.to_email,
+        "template_type": template_type,
+        "subject": subject,
+        "resend_id": send_result.get("resend_id"),
+        "from_email": send_result.get("from_email"),
+        "reply_to": send_result.get("reply_to"),
     }
 

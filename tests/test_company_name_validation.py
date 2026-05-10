@@ -16,6 +16,9 @@ from app.services.lead_filter import is_junk
         ("SOME HEADLINE REPORT", "wire tail"),
         ("Source: Reuters Staff", "attribution prefix"),
         ("press@newswire.example.com", "email pattern"),
+        ("Nursing Homes", "facility sector stub"),
+        ("Senior Living", "sector stub two-word"),
+        ("Long-Term Care Facility", "facility sector stub hyphenated"),
     ],
 )
 def test_reject_examples(name, snippet):
@@ -30,6 +33,9 @@ def test_reject_examples(name, snippet):
         "Acme Logistics LLC",
         "Marriott International",
         "Twin Cities Automation Inc",
+        "Brookdale Senior Living",
+        "Sunrise Senior Living",
+        "Clayton Homes",
     ],
 )
 def test_allow_realistic_names(name):

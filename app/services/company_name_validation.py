@@ -298,6 +298,108 @@ HOSPITALITY_TECH_VENDORS: frozenset = frozenset(
     }
 )
 
+def _normalize_stub_phrase(name: str) -> str:
+    """Lowercase, collapse hyphens/dashes to spaces for exact-phrase matching."""
+    t = (name or "").strip().lower()
+    t = t.replace("–", "-").replace("-", " ")
+    return " ".join(t.split())
+
+
+# Headlines / RSS rows scraped as company.name — sector or facility *types*, not brands.
+# Keep conservative: full-string match only (after normalization).
+_FACILITY_SECTOR_STUB_NAMES: frozenset[str] = frozenset(
+    {
+        _normalize_stub_phrase(x)
+        for x in (
+            "Nursing Homes",
+            "Nursing Home",
+            "Assisted Living",
+            "Assisted Living Facility",
+            "Assisted Living Facilities",
+            "Memory Care",
+            "Memory Care Facility",
+            "Memory Care Facilities",
+            "Skilled Nursing",
+            "Skilled Nursing Facility",
+            "Skilled Nursing Facilities",
+            "Long Term Care",
+            "Long-Term Care",
+            "Long Term Care Facility",
+            "Long-Term Care Facility",
+            "Senior Living Facility",
+            "Senior Living Facilities",
+            "Senior Living Community",
+            "Senior Living Communities",
+            "Independent Living",
+            "Independent Living Community",
+            "Independent Living Communities",
+            "Continuing Care",
+            "Continuing Care Retirement",
+            "Retirement Homes",
+            "Retirement Home",
+            "Group Homes",
+            "Group Home",
+            "Care Homes",
+            "Care Home",
+            "Rehabilitation Center",
+            "Rehabilitation Centers",
+            "Rehabilitation Services",
+            "Outpatient Facility",
+            "Outpatient Facilities",
+            "Outpatient Center",
+            "Outpatient Centers",
+            "Urgent Care",
+            "Walk In Clinic",
+            "Walk-In Clinic",
+            "Walk In Clinics",
+            "Walk-In Clinics",
+            "Medical Office",
+            "Medical Offices",
+            "Dental Practice",
+            "Dental Practices",
+            "Surgical Center",
+            "Surgical Centers",
+            "Ambulatory Surgery Center",
+            "Ambulatory Surgery Centers",
+            "Behavioral Health Facility",
+            "Behavioral Health Facilities",
+            "Mental Health Facility",
+            "Mental Health Facilities",
+            "Substance Abuse Treatment",
+            "Residential Treatment",
+            "Residential Care",
+            "Intermediate Care",
+            "Hospice Care",
+            "Palliative Care",
+            "Home Health Care",
+            "Home Health Services",
+            "Post Acute Care",
+            "Post-Acute Care",
+            "Acute Care",
+            "Patient Care",
+            "Clinical Care",
+            "Primary Care Clinic",
+            "Primary Care Clinics",
+            "Specialty Hospital",
+            "Specialty Hospitals",
+            "Teaching Hospital",
+            "Teaching Hospitals",
+            "Community Hospital",
+            "Community Hospitals",
+            "Regional Hospital",
+            "Regional Hospitals",
+            "Childrens Hospital",
+            "Children's Hospital",
+            "Senior Living",
+            "Veterans Hospital",
+            "VA Hospital",
+            "Public Hospital",
+            "Private Hospital",
+        )
+    }
+)
+
+
 _HOSPITALITY_LEGAL_SUFFIX = re.compile(
     r"\s*(inc\.?|llc\.?|ltd\.?|corp\.?|corporation|company|co\.?|plc\.?|gmbh)\s*$",
     re.IGNORECASE,
@@ -374,6 +476,9 @@ def reject_as_non_company_name(name: Optional[str]) -> Tuple[bool, str]:
 
     if is_allowlisted_company_name(raw):
         return False, ""
+
+    if _normalize_stub_phrase(raw) in _FACILITY_SECTOR_STUB_NAMES:
+        return True, "generic care or facility sector label (not an operating company name)"
 
     if low in _NEWS_OUTLET_EXACT:
         return True, "news or broadcast outlet (not a buyer company record)"

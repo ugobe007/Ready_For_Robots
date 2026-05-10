@@ -5,6 +5,7 @@ Maps text to signal types using the robotics ontology.
 Used by the intelligence news scraper to correlate and classify
 automation opportunities with ontological meaning.
 """
+import re
 from typing import List, Optional
 from app.services.ontology import CONCEPTS
 from app.services.semantic_parser import SemanticParser
@@ -56,6 +57,78 @@ def _get_parser() -> SemanticParser:
     return _parser
 
 
+# Press headlines: COO/CEO stories often weak-trigger ontology "expansion" (growth_plan, etc.).
+_CHIEF_OR_C_SUITE = re.compile(
+    r"\bchief\s+(?:executive|operating|operations|financial|technology|marketing|information|people)\s+officer\b|"
+    r"\b(?:ceo|coo|cfo|cto|cmo|chro)\b",
+    re.I,
+)
+_EXEC_ACTION = re.compile(
+    r"\b(?:appoint|appoints|appointed|names|named|elects|elects|hires|hired|joins|joined|"
+    r"promotes|promoted|taps|tapped)\b",
+    re.I,
+)
+_ANNOUNCE_C_SUITE = re.compile(
+    r"\bannounces?\b.{0,140}\b(?:chief\s+(?:executive|operating|operations|financial|technology|marketing)\s+officer|"
+    r"\b(?:ceo|coo|cfo|cto)\b)",
+    re.I,
+)
+_STRONG_EXPANSION_CONTEXT = re.compile(
+    r"\b(?:new|additional)\s+(?:facility|facilities|warehouse|distribution\s+center|dc\b|plant|hotel|property|properties|location|locations|acres)\b|"
+    r"\b(?:breaking\s+ground|groundbreaking|ribbon\s+cutting|grand\s+opening)\b|"
+    r"\b(?:square\s+feet|sq\.?\s*ft\.?)\b|"
+    r"\b(?:capex|capital\s+expenditure|capital\s+investment)\b|"
+    r"\b(?:opens?\s+\d+|opening\s+\d+\s+(?:stores?|locations?|hotels?|sites?))\b",
+    re.I,
+)
+
+
+def text_indicates_executive_appointment(text: str) -> bool:
+    """True when copy reads primarily as a named executive / C-suite move (not facility capex)."""
+    t = (text or "").strip()
+    if not t:
+        return False
+    if _CHIEF_OR_C_SUITE.search(t) and _EXEC_ACTION.search(t):
+        return True
+    if _ANNOUNCE_C_SUITE.search(t):
+        return True
+    if _CHIEF_OR_C_SUITE.search(t) and re.search(
+        r"\b(?:svp|evp|senior\s+vice\s+president|vice\s+president|president)\b", t, re.I
+    ):
+        return True
+    return False
+
+
+def reconcile_signal_types_for_text(text: str, types: List[str]) -> List[str]:
+    """
+    Drop weak ``expansion`` / ``scale_expansion`` when the article is clearly an exec appointment
+    without facility/capex anchors. Ensures ``strategic_hire`` is present for that shape.
+
+    Call after ontology + rules + keyword merges (and after scraper keyword passes).
+    """
+    if not types:
+        return types
+    exec_appt = text_indicates_executive_appointment(text)
+    strong_x = _STRONG_EXPANSION_CONTEXT.search(text or "") is not None
+    if not exec_appt:
+        return types
+
+    filtered: List[str] = []
+    for x in types:
+        if x in ("expansion", "scale_expansion") and not strong_x:
+            continue
+        filtered.append(x)
+
+    if "strategic_hire" not in filtered:
+        filtered.insert(0, "strategic_hire")
+    else:
+        filtered = ["strategic_hire"] + [x for x in filtered if x != "strategic_hire"]
+
+    if not filtered:
+        return ["strategic_hire"]
+    return filtered
+
+
 def classify_signals_from_ontology(text: str, min_confidence: float = 0.2) -> List[str]:
     """
     Use ontology to extract signal types from text.
@@ -100,7 +173,7 @@ def classify_signals_with_fallback(
             seen.add(s)
             merged.append(s)
     if merged:
-        return merged
+        return reconcile_signal_types_for_text(text, merged)
 
     # Fallback: high-value keyword triggers
     lower = text.lower()
@@ -118,5 +191,30 @@ def classify_signals_with_fallback(
     if any(kw in lower for kw in ["robot", "automation", "AMR", "AGV", "cobot"]):
         fallback.append("automation_interest")
     if fallback:
-        return fallback
+        return reconcile_signal_types_for_text(text, fallback)
     return ["news"]
+
+
+def primary_signal_type_for_text(
+    text: str,
+    *,
+    source_channel: Optional[str] = None,
+    article_url: str = "",
+    rss_source_name: str = "",
+) -> str:
+    """
+    Single signal type for callers that store one ``signal_type`` per row (e.g. SERP).
+
+    Uses the same pipeline as RSS/intelligence scrapers: ontology (``SemanticParser`` +
+    ``CONCEPTS``), ``signal_rules_engine``, then keyword fallback — not a parallel
+    keyword-only map.
+    """
+    types = classify_signals_with_fallback(
+        text,
+        source_channel=source_channel,
+        article_url=article_url,
+        rss_source_name=rss_source_name,
+    )
+    if not types:
+        return "news"
+    return types[0]

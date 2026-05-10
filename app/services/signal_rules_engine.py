@@ -21,6 +21,13 @@ from urllib.parse import parse_qs, unquote, urlparse
 # ── Category A: phrase → (internal action, RFR signal_type) ─────────────────
 # Longer phrases first for greedy match (sorted at runtime).
 ACTION_TRIGGERS: Tuple[Tuple[str, str, str], ...] = (
+    # Executive moves — match before short tokens like "expansion" / "launching"
+    ("chief operations officer", "talent_signal", "strategic_hire"),
+    ("chief operating officer", "talent_signal", "strategic_hire"),
+    ("chief executive officer", "talent_signal", "strategic_hire"),
+    ("chief financial officer", "talent_signal", "strategic_hire"),
+    ("chief technology officer", "talent_signal", "strategic_hire"),
+    ("chief marketing officer", "talent_signal", "strategic_hire"),
     ("closing round", "fundraising_signal", "funding_round"),
     ("close round", "fundraising_signal", "funding_round"),
     ("closed round", "fundraising_signal", "funding_round"),

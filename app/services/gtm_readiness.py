@@ -6,7 +6,7 @@ buying journey (deploy / evaluate / explore) and concise “why now” bullets.
 from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Mapping
 
 from app.services.lead_filter import DEPLOYMENT_SIGNAL_TYPES
 
@@ -70,6 +70,7 @@ def compute_gtm_readiness(
     signals: Sequence[Any],
     priority_tier: str,
     priority_reasons: Optional[Sequence[str]] = None,
+    automation_profile: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Pure function — safe for API JSON. Uses signal types + tier + rule reasons.
@@ -124,10 +125,23 @@ def compute_gtm_readiness(
         "exploring": "Nurture with case studies, peer proof, and light technical content.",
     }[stage]
 
-    return {
+    out: Dict[str, Any] = {
         "readiness_stage": stage,
         "readiness_label": readiness_label,
         "why_now": why_now[:4],
         "suggested_motion": suggested_motion,
         "deployment_signal_types": deployment_hits,
     }
+
+    # When rules_v1 automation_profile says confidence is low, do not imply a late-stage
+    # buying motion — tier can be HOT from signals while the spec match is exploratory.
+    if isinstance(automation_profile, dict):
+        conf = (automation_profile.get("confidence") or "").strip().lower()
+        if conf == "low" and tier_u in ("HOT", "WARM") and stage == "evaluating":
+            out["readiness_label"] = "Validate automation fit"
+            out["suggested_motion"] = (
+                "Automation profile confidence is low — validate categories, deployment context, "
+                "and throughput with the buyer before proposing pilots or ROI-heavy discovery."
+            )
+
+    return out

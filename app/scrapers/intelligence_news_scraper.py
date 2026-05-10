@@ -48,7 +48,10 @@ from app.services.news_publications import (
 )
 from app.services.industry_inference import INDUSTRY_KEYWORDS
 from app.services.lead_filter import is_junk
-from app.services.signal_classifier import classify_signals_with_fallback
+from app.services.signal_classifier import (
+    classify_signals_with_fallback,
+    reconcile_signal_types_for_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1374,6 +1377,7 @@ class IntelligenceNewsScraper:
         for signal_type, keywords in SIGNAL_PATTERNS.items():
             if signal_type not in signals and any(kw in text_lower for kw in keywords):
                 signals.append(signal_type)
+        signals = reconcile_signal_types_for_text(text, signals)
         return signals if signals else ["news"]
     
     def _infer_industry(self, text: str) -> str:

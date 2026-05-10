@@ -1,25 +1,22 @@
 # Ready for Robots — Full-stack Fly.io image
-# Stage 1: Build Next.js frontend → static HTML/CSS/JS
+# Stage 1: Build readyforrobots-new (Vite) → static HTML/CSS/JS served by FastAPI
 FROM node:20-slim AS frontend
-WORKDIR /frontend
+WORKDIR /rfr
+RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
-# Supabase public keys
-ARG NEXT_PUBLIC_SUPABASE_URL=""
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG VITE_PUBLIC_API_URL=""
+ARG VITE_PUBLIC_SUPABASE_URL=""
+ARG VITE_PUBLIC_SUPABASE_ANON_KEY=""
+ENV VITE_PUBLIC_API_URL=$VITE_PUBLIC_API_URL
+ENV VITE_PUBLIC_SUPABASE_URL=$VITE_PUBLIC_SUPABASE_URL
+ENV VITE_PUBLIC_SUPABASE_ANON_KEY=$VITE_PUBLIC_SUPABASE_ANON_KEY
 
-# Browser API base + canonical site URL (static export; set in fly.toml [build.args])
-ARG NEXT_PUBLIC_API_URL=""
-ARG NEXT_PUBLIC_SITE_URL=""
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
-
-COPY frontend/nextjs/package*.json ./
-RUN npm ci
-COPY frontend/nextjs/ ./
-RUN npm run build
-# output: /frontend/out/ (static export)
+COPY readyforrobots-new/package.json readyforrobots-new/pnpm-lock.yaml ./
+COPY readyforrobots-new/patches ./patches
+RUN pnpm install --frozen-lockfile
+COPY readyforrobots-new/ ./
+RUN pnpm run build
+# Vite client output: /rfr/dist/public/
 
 # Stage 2: FastAPI backend + static frontend
 FROM python:3.12-slim
@@ -45,8 +42,8 @@ COPY migrations  ./migrations/
 COPY scripts/    ./scripts/
 COPY alembic.ini .
 
-# Copy built Next.js static files
-COPY --from=frontend /frontend/out ./static/
+# Copy built SPA static files
+COPY --from=frontend /rfr/dist/public ./static/
 
 EXPOSE 8080
 

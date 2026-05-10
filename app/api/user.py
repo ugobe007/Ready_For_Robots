@@ -22,6 +22,9 @@ JWT is verified against SUPABASE_JWT_SECRET env var.
   POST   /api/user/reports
   GET    /api/user/reports/{report_id}
   DELETE /api/user/reports/{report_id}
+
+  GET    /api/user/settings
+  PUT    /api/user/settings
 """
 
 import os
@@ -128,6 +131,20 @@ class SaveReportIn(BaseModel):
     report_data:  dict          # full profile payload from /api/agent/profile/{id}
 
 
+class UserSettingsOut(BaseModel):
+    sender_name: Optional[str] = None
+    sender_title: Optional[str] = None
+    sender_company: Optional[str] = None
+    sender_email: Optional[str] = None
+
+
+class UserSettingsUpdate(BaseModel):
+    sender_name: Optional[str] = None
+    sender_title: Optional[str] = None
+    sender_company: Optional[str] = None
+    sender_email: Optional[str] = None
+
+
 # ── /api/user/me ──────────────────────────────────────────────────────────────
 
 def _handle_db_schema_not_ready(ex: Exception):
@@ -205,6 +222,106 @@ def update_me(
     )
     db.commit()
     return {"ok": True}
+
+
+# ── /api/user/settings (proposal PDF / email footer) ─────────────────────────
+
+@router.get("/settings", response_model=UserSettingsOut)
+def get_user_settings(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+    try:
+        row = db.execute(
+            text("""
+                SELECT sender_name, sender_title, sender_company, sender_email
+                FROM user_settings
+                WHERE user_id = :uid
+            """),
+            {"uid": _uid(user)},
+        ).fetchone()
+    except (OperationalError, ProgrammingError) as e:
+        _handle_db_schema_not_ready(e)
+    if not row:
+        return UserSettingsOut()
+    return UserSettingsOut(
+        sender_name=row.sender_name,
+        sender_title=row.sender_title,
+        sender_company=row.sender_company,
+        sender_email=row.sender_email,
+    )
+
+
+@router.put("/settings", response_model=UserSettingsOut)
+def put_user_settings(
+    body: UserSettingsUpdate,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    _ensure_profile(db, _uid(user), user["email"])
+    uid = _uid(user)
+    try:
+        row = db.execute(
+            text("""
+                SELECT sender_name, sender_title, sender_company, sender_email
+                FROM user_settings
+                WHERE user_id = :uid
+            """),
+            {"uid": uid},
+        ).fetchone()
+    except (OperationalError, ProgrammingError) as e:
+        _handle_db_schema_not_ready(e)
+
+    cur: dict[str, Optional[str]] = {
+        "sender_name": None,
+        "sender_title": None,
+        "sender_company": None,
+        "sender_email": None,
+    }
+    if row:
+        cur.update(
+            {
+                "sender_name": row.sender_name,
+                "sender_title": row.sender_title,
+                "sender_company": row.sender_company,
+                "sender_email": row.sender_email,
+            }
+        )
+    patch = body.model_dump(exclude_unset=True)
+    cur.update(patch)
+
+    try:
+        db.execute(
+            text("""
+                INSERT INTO user_settings
+                    (user_id, sender_name, sender_title, sender_company, sender_email, updated_at)
+                VALUES
+                    (:uid, :sn, :st, :sc, :se, now())
+                ON CONFLICT (user_id) DO UPDATE SET
+                    sender_name    = EXCLUDED.sender_name,
+                    sender_title   = EXCLUDED.sender_title,
+                    sender_company = EXCLUDED.sender_company,
+                    sender_email   = EXCLUDED.sender_email,
+                    updated_at     = now()
+            """),
+            {"uid": uid, "sn": cur["sender_name"], "st": cur["sender_title"], "sc": cur["sender_company"], "se": cur["sender_email"]},
+        )
+        db.commit()
+        row = db.execute(
+            text("""
+                SELECT sender_name, sender_title, sender_company, sender_email
+                FROM user_settings
+                WHERE user_id = :uid
+            """),
+            {"uid": uid},
+        ).fetchone()
+    except (OperationalError, ProgrammingError) as e:
+        _handle_db_schema_not_ready(e)
+    if not row:
+        return UserSettingsOut()
+    return UserSettingsOut(
+        sender_name=row.sender_name,
+        sender_title=row.sender_title,
+        sender_company=row.sender_company,
+        sender_email=row.sender_email,
+    )
 
 
 # ── /api/user/saved ───────────────────────────────────────────────────────────

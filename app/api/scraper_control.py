@@ -127,7 +127,7 @@ async def run_all_scrapers(
             generate_newsletter_edition_task,
         )
         tasks = {
-            "intelligence": run_intelligence_scraper_task.delay(max_articles=15).id,
+            "intelligence": run_intelligence_scraper_task.delay().id,
             "company_news": run_company_news_task.delay(limit=80).id,
             "enrich_companies": run_enrich_companies_task.delay(limit=80).id,
             "job_boards": run_job_scraper_task.delay().id,
