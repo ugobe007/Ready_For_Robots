@@ -4,7 +4,7 @@
   "description": "Ready for Robots lead intelligence dashboard",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx --no-install next build",
     "start": "next start",
     "lint": "next lint",
     "validate": "next lint"
