@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
+import { Link } from "wouter";
 import { toast } from "sonner";
 
 const SIGNAL_TYPES = [
@@ -146,6 +147,14 @@ export default function Signals() {
 
       <main className="flex-1 pt-24 pb-20 px-6">
         <div className="max-w-6xl mx-auto">
+          <div className="sticky top-20 z-20 mb-8 rounded-2xl border border-teal-300/20 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ background: "rgba(3,218,197,0.08)", backdropFilter: "blur(16px)" }}>
+            <p className="text-sm text-white/70">
+              These signals come from the same 150+ sources analyzed in our 2026 Automation Imperative Report.
+            </p>
+            <Link href="/intelligence" className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0" style={{ color: "#03DAC5" }}>
+              Download it <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
 
           {/* Page header */}
           <div className="mb-10">

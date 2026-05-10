@@ -51,6 +51,7 @@ const tiers = [
       "Assisted autonomy mode",
       "CRM sync (HubSpot, Salesforce)",
       "Weekly pipeline report",
+      "2026 Automation Imperative report and weekly Intelligence Brief",
       "Email support",
     ],
     limitations: [],

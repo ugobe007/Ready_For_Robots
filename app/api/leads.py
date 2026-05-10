@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, case
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 
@@ -34,6 +35,8 @@ from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.lead_rep_feedback import LeadRepFeedback
+from app.models.waitlist import WaitlistSignup
+from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.lead_filter import (
     classify_lead,
     is_junk,
@@ -58,6 +61,107 @@ from app.services.company_domain import (
 )
 
 router = APIRouter()
+
+
+class ReportDownloadIn(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+    name: Optional[str] = Field(None, max_length=200)
+    company: Optional[str] = Field(None, max_length=240)
+    robot_category: Optional[str] = Field(None, alias="robotCategory", max_length=160)
+
+
+def _valid_capture_email(email: str) -> bool:
+    return "@" in email and "." in email.rsplit("@", 1)[-1]
+
+
+def _send_report_email(email: str) -> dict:
+    try:
+        result = send_email_via_resend(
+            to_email=email,
+            subject="Your 2026 Automation Imperative Report",
+            from_display_name="ReadyForRobots",
+            body_text=(
+                "Thanks for requesting The Automation Imperative report.\n\n"
+                "The report is based on ReadyForRobots signal data from 158 enterprises "
+                "and 437 detected buying signals.\n\n"
+                "Read the report online here:\n"
+                "https://readyforrobots.com/intelligence\n\n"
+                "You can also activate SCOUT against live sales leads here:\n"
+                "https://readyforrobots.com/results?url=\n"
+            ),
+        )
+        return {"sent": True, **result}
+    except ResendEmailError as exc:
+        return {"sent": False, "reason": str(exc)}
+
+
+def _notify_report_owner(row: WaitlistSignup) -> dict:
+    owner_email = (
+        os.getenv("REPORT_DOWNLOAD_NOTIFY_EMAIL")
+        or os.getenv("OWNER_EMAIL")
+        or (os.getenv("ADMIN_EMAILS", "").split(",")[0].strip() if os.getenv("ADMIN_EMAILS") else "")
+    ).strip()
+    if not owner_email:
+        return {"sent": False, "reason": "No owner notification email configured"}
+    try:
+        result = send_email_via_resend(
+            to_email=owner_email,
+            subject="New Automation Imperative report lead",
+            from_display_name="ReadyForRobots",
+            body_text=(
+                f"New report download lead:\n\n"
+                f"Name: {row.name or '-'}\n"
+                f"Email: {row.email}\n"
+                f"Company: {row.company or '-'}\n"
+                f"Robot category: {row.use_case or '-'}\n"
+                f"Source: {row.source or '-'}\n"
+            ),
+        )
+        return {"sent": True, **result}
+    except ResendEmailError as exc:
+        return {"sent": False, "reason": str(exc)}
+
+
+@router.post("/report-download")
+def capture_report_download(body: ReportDownloadIn, db: Session = Depends(get_db)):
+    email = body.email.lower().strip()
+    if not _valid_capture_email(email):
+        raise HTTPException(status_code=400, detail="Valid email is required")
+
+    row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
+    if row is None:
+        row = WaitlistSignup(email=email)
+        db.add(row)
+    row.name = body.name or row.name or None
+    row.company = body.company or row.company or None
+    row.use_case = body.robot_category or row.use_case or None
+    row.source = "report_download"
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
+        if row is None:
+            raise HTTPException(status_code=409, detail="Report download conflict, please retry")
+        row.name = body.name or row.name or None
+        row.company = body.company or row.company or None
+        row.use_case = body.robot_category or row.use_case or None
+        row.source = "report_download"
+        db.commit()
+    db.refresh(row)
+    return {
+        "ok": True,
+        "lead": {
+            "id": row.id,
+            "email": row.email,
+            "name": row.name,
+            "company": row.company,
+            "robotCategory": row.use_case,
+            "source": row.source,
+        },
+        "email": _send_report_email(row.email),
+        "ownerNotification": _notify_report_owner(row),
+    }
 
 
 def _entity_resolution_payload(db: Session, c: Company) -> Optional[dict]:

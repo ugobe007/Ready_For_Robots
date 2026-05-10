@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
 import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
 // Typewriter hook — spells out text character by character after a delay
 // Uses refs for speed/delay so re-renders don't reset the animation mid-flight
@@ -90,13 +91,54 @@ const agentFeatures = [
 
 export default function Home() {
   const { displayed: typedText, done: typedDone } = useTypewriter("Start closing.", 65, 700);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
+  const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
   const howItWorks = useFadeUp();
   const agentPitch = useFadeUp();
   const aboutSection = useFadeUp();
+  const intelligenceSection = useFadeUp();
   const proofSection = useFadeUp();
   const beforeAfterSection = useFadeUp();
   const testimonialsSection = useFadeUp();
+
+  async function submitReportDownload(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!reportForm.email.trim()) return;
+    setReportStatus("submitting");
+    try {
+      const res = await fetch(`${getApiBase()}/api/leads/report-download`, liveFetchInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reportForm),
+      }));
+      if (!res.ok) throw new Error("Report request failed");
+      setReportStatus("success");
+    } catch {
+      setReportStatus("error");
+    }
+  }
+
+  async function submitNewsletter(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setNewsletterStatus("submitting");
+    try {
+      const res = await fetch(`${getApiBase()}/api/newsletter/subscribe`, liveFetchInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail, source: "homepage_footer" }),
+      }));
+      if (!res.ok) throw new Error("Newsletter signup failed");
+      setNewsletterStatus("success");
+      setNewsletterEmail("");
+    } catch {
+      setNewsletterStatus("error");
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -180,6 +222,15 @@ export default function Home() {
             <p className="text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               No signup required · Free to start · Results in seconds
             </p>
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition-all hover:-translate-y-0.5"
+              style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.04)" }}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Download the 2026 Automation Imperative Report
+            </button>
           </div>
 
           {/* SCOUT Workflow Animation — right column */}
@@ -223,6 +274,65 @@ export default function Home() {
 
       {/* ── PIPELINE PREVIEW ── */}
       <PipelinePreview />
+
+      {/* ── MARKET INTELLIGENCE ── */}
+      <section
+        className="py-16 px-6 border-t border-white/6"
+        style={{ background: "linear-gradient(180deg, #0d0520 0%, #130828 100%)" }}
+      >
+        <div ref={intelligenceSection.ref as React.RefObject<HTMLDivElement>} className={`max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-center ${fadeUpClass(intelligenceSection.visible)}`}>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#03DAC5" }}>
+              Market Intelligence
+            </p>
+            <h2
+              className="font-extrabold text-white leading-tight mb-4"
+              style={{ fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
+            >
+              The 2026 Automation Imperative
+            </h2>
+            <p className="text-white/45 text-base leading-relaxed max-w-2xl mb-6">
+              Our enterprise intelligence report analyzes labor-intensive industries, robotics buying signals, and ROI benchmarks so sales teams know where automation demand is forming now.
+            </p>
+            <div className="grid grid-cols-3 gap-px max-w-xl mb-7" style={{ background: "rgba(255,255,255,0.08)" }}>
+              {[
+                ["158", "enterprises analyzed"],
+                ["437", "buying signals detected"],
+                ["62%", "strong buying intent"],
+              ].map(([value, label]) => (
+                <div key={label} className="p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+                  <p className="font-mono text-2xl font-bold" style={{ color: "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
+                  <p className="text-[11px] text-white/35 mt-1">{label}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="inline-flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5"
+              style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
+            >
+              <FileText className="h-4 w-4" />
+              Download Free Report
+            </button>
+          </div>
+          <div className="rounded-3xl border border-white/10 p-6 shadow-2xl shadow-black/40" style={{ background: "rgba(255,255,255,0.04)" }}>
+            <div className="rounded-2xl border border-teal-300/20 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.12), rgba(124,58,237,0.12))" }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-8" style={{ color: "#99f6e4" }}>Enterprise Intelligence Report</p>
+              <h3 className="text-2xl font-extrabold text-white leading-tight mb-4" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                The Automation Imperative
+              </h3>
+              <p className="text-sm text-white/55 leading-relaxed mb-8">
+                Labor shortages, capital availability, and leadership commitment are creating a 2026 inflection point for robotics adoption.
+              </p>
+              <div className="flex items-center justify-between border-t border-white/10 pt-4">
+                <span className="text-xs text-white/35">March 2026</span>
+                <span className="text-xs font-bold" style={{ color: "#03DAC5" }}>ReadyForRobots</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── AGENT PITCH ── */}
       <section
@@ -614,7 +724,33 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-white/6 py-6 px-6" style={{ background: "#0d0520" }}>
+      <footer className="border-t border-white/6 py-8 px-6" style={{ background: "#0d0520" }}>
+        <div className="max-w-6xl mx-auto mb-8 rounded-2xl border border-white/8 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div>
+            <p className="text-sm font-bold text-white">Get the weekly Robot Intelligence Brief</p>
+            <p className="text-xs text-white/35 mt-1">Buying signals, deployment stories, and ROI benchmarks. Free.</p>
+          </div>
+          <form onSubmit={submitNewsletter} className="flex flex-col sm:flex-row gap-2 min-w-0 lg:min-w-[420px]">
+            <input
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              type="email"
+              placeholder="work email"
+              className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            />
+            <button
+              type="submit"
+              disabled={newsletterStatus === "submitting"}
+              className="rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
+              style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
+            >
+              {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
+            </button>
+          </form>
+          {newsletterStatus === "success" && <p className="text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
+          {newsletterStatus === "error" && <p className="text-xs text-red-300">Could not subscribe. Try again.</p>}
+        </div>
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <img src="/logo-r.png" alt="" width={24} height={24} className="h-6 w-6 object-contain opacity-90" />
@@ -623,6 +759,58 @@ export default function Home() {
           <p className="text-xs text-white/20">© 2026 SCOUT by ReadyForRobots · Signal intelligence for robotics sales.</p>
         </div>
       </footer>
+      {reportOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)" }}>
+          <div className="w-full max-w-lg rounded-3xl border border-white/10 p-6 shadow-2xl" style={{ background: "#130828" }}>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#03DAC5" }}>Free Report</p>
+                <h3 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Download the Automation Imperative</h3>
+                <p className="mt-2 text-sm text-white/45">Get the enterprise intelligence report and join the Robot Intelligence Brief.</p>
+              </div>
+              <button type="button" onClick={() => setReportOpen(false)} className="rounded-xl p-2 text-white/40 hover:text-white hover:bg-white/8">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {reportStatus === "success" ? (
+              <div className="rounded-2xl border border-teal-300/20 p-5" style={{ background: "rgba(3,218,197,0.06)" }}>
+                <p className="font-bold" style={{ color: "#03DAC5" }}>Report requested.</p>
+                <p className="mt-2 text-sm text-white/45">We saved your request and will send the report using the configured ReadyForRobots email sender.</p>
+              </div>
+            ) : (
+              <form onSubmit={submitReportDownload} className="space-y-3">
+                {[
+                  ["name", "Name", "text"],
+                  ["email", "Work email", "email"],
+                  ["company", "Company", "text"],
+                  ["robotCategory", "Robot category", "text"],
+                ].map(([key, label, type]) => (
+                  <label key={key} className="block">
+                    <span className="mb-1.5 block text-xs font-semibold text-white/45">{label}</span>
+                    <input
+                      type={type}
+                      required={key === "email"}
+                      value={reportForm[key as keyof typeof reportForm]}
+                      onChange={(e) => setReportForm((current) => ({ ...current, [key]: e.target.value }))}
+                      className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-teal-300/50"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
+                    />
+                  </label>
+                ))}
+                {reportStatus === "error" && <p className="text-xs text-red-300">Could not request the report. Please try again.</p>}
+                <button
+                  type="submit"
+                  disabled={reportStatus === "submitting"}
+                  className="w-full rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
+                  style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
+                >
+                  {reportStatus === "submitting" ? "Requesting..." : "Download Free Report"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

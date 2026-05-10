@@ -9,6 +9,7 @@ import Results from "./pages/Results";
 import Pipeline from "./pages/Pipeline";
 import Signals from "./pages/Signals";
 import HowItWorks from "./pages/HowItWorks";
+import Intelligence from "./pages/Intelligence";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/results" component={Results} />
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/signals" component={Signals} />
+      <Route path="/intelligence" component={Intelligence} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/login" component={Login} />

@@ -5,7 +5,7 @@
  * Mobile drawer: full-height slide-in from right, includes SCOUT chat entry
  */
 import { useState, useEffect } from "react";
-import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, DollarSign, ChevronRight, ChevronDown } from "lucide-react";
+import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, UserRound, BriefcaseBusiness, ChevronRight, ChevronDown, Newspaper } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScoutChat } from "@/components/ScoutChat";
@@ -58,11 +58,16 @@ export default function Header() {
 
   const closeDrawer = () => setOpen(false);
 
-  const navLinks = [
+  const primaryNavLinks = [
     { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
     { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
+    { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and weekly market brief" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
-    { label: "Pricing", href: "/pricing", icon: DollarSign, desc: "Plans & pricing" },
+  ];
+
+  const accountLinks = [
+    { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
+    { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
   ];
 
   return (
@@ -84,7 +89,7 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {primaryNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -121,27 +126,13 @@ export default function Header() {
               </button>
             </Link>
 
-            {session ? (
-              <>
-                <Link
-                  href="/crm"
-                  className="hidden sm:inline text-[11px] font-semibold text-white/50 hover:text-white/90 px-2 py-1 rounded-lg hover:bg-white/5"
-                >
-                  CRM
-                </Link>
-                <Link
-                  href="/profile"
-                  className="hidden sm:inline text-[11px] font-semibold text-white/50 hover:text-white/90 px-2 py-1 rounded-lg hover:bg-white/5"
-                >
-                  Workspace
-                </Link>
-              </>
-            ) : (
+            {!session && (
               <Link
                 href="/login"
-                className="hidden sm:inline text-[11px] font-semibold text-white/50 hover:text-white/90 px-2 py-1 rounded-lg hover:bg-white/5"
+                className="hidden sm:inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
               >
-                Sign in
+                Sign up / Sign in
               </Link>
             )}
 
@@ -223,10 +214,10 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Nav links */}
+        {/* Account links */}
         <div className="px-4 pb-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">Navigate</p>
-          {navLinks.map((item) => {
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">Account</p>
+          {accountLinks.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
             return (
@@ -256,7 +247,8 @@ export default function Header() {
           {[
             { label: "About Us", href: "/#about" },
             { label: "Case Studies", href: "/#case-studies" },
-            { label: "Workspace", href: "/profile" },
+            { label: "Intelligence", href: "/intelligence" },
+            { label: "Pricing", href: "/pricing" },
           ].map((item) => (
             <Link
               key={item.label}

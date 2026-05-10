@@ -16,14 +16,82 @@ the environment, callers must send X-Newsletter-Regen-Key or an admin Bearer JWT
 import os
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Response
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.auth_deps import assert_newsletter_regen_allowed
 from app.database import get_db
+from app.models.newsletter_subscriber import NewsletterSubscriber
+from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.newsletter_service import generate_edition, read_cached_edition, write_cached_edition
 
 router = APIRouter()
+
+
+class NewsletterSubscribeIn(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+    name: Optional[str] = Field(None, max_length=200)
+    company: Optional[str] = Field(None, max_length=240)
+    robot_category: Optional[str] = Field(None, alias="robotCategory", max_length=160)
+    source: Optional[str] = Field("newsletter", max_length=120)
+
+
+def _valid_email(email: str) -> bool:
+    return "@" in email and "." in email.rsplit("@", 1)[-1]
+
+
+def _subscribe_row(db: Session, body: NewsletterSubscribeIn) -> NewsletterSubscriber:
+    email = body.email.lower().strip()
+    row = db.query(NewsletterSubscriber).filter(NewsletterSubscriber.email == email).first()
+    if row is None:
+        row = NewsletterSubscriber(email=email)
+        db.add(row)
+    row.name = body.name or row.name or None
+    row.company = body.company or row.company or None
+    row.robot_category = body.robot_category or row.robot_category or None
+    row.source = body.source or row.source or "newsletter"
+    row.status = "active"
+    row.consent_text = "Requested the ReadyForRobots Robot Intelligence Brief."
+    row.subscriber_metadata = {
+        **(row.subscriber_metadata or {}),
+        "last_source": body.source or "newsletter",
+    }
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        row = db.query(NewsletterSubscriber).filter(NewsletterSubscriber.email == email).first()
+        if row is None:
+            raise
+        row.name = body.name or row.name or None
+        row.company = body.company or row.company or None
+        row.robot_category = body.robot_category or row.robot_category or None
+        row.source = body.source or row.source or "newsletter"
+        row.status = "active"
+        db.commit()
+    db.refresh(row)
+    return row
+
+
+def _try_send_welcome(email: str) -> dict:
+    try:
+        result = send_email_via_resend(
+            to_email=email,
+            subject="Welcome to the Robot Intelligence Brief",
+            from_display_name="ReadyForRobots",
+            body_text=(
+                "Thanks for subscribing to the Robot Intelligence Brief.\n\n"
+                "You'll get robotics buying signals, deployment stories, vendor movement, "
+                "and ROI benchmarks from ReadyForRobots.\n\n"
+                "Start exploring live signals here: https://readyforrobots.com/signals\n"
+                "Activate SCOUT here: https://readyforrobots.com/results?url=\n"
+            ),
+        )
+        return {"sent": True, **result}
+    except ResendEmailError as exc:
+        return {"sent": False, "reason": str(exc)}
 
 def _cache_max_age_hours() -> float:
     try:
@@ -70,6 +138,26 @@ def get_newsletter_edition(
     except OSError:
         pass
     return data
+
+
+@router.post("/subscribe")
+def subscribe_newsletter(body: NewsletterSubscribeIn, db: Session = Depends(get_db)):
+    email = body.email.lower().strip()
+    if not _valid_email(email):
+        raise HTTPException(status_code=400, detail="Valid email is required")
+    row = _subscribe_row(db, body)
+    send_result = _try_send_welcome(row.email)
+    return {
+        "ok": True,
+        "subscriber": {
+            "id": row.id,
+            "email": row.email,
+            "status": row.status,
+            "source": row.source,
+            "createdAt": row.created_at.isoformat() if row.created_at else None,
+        },
+        "email": send_result,
+    }
 
 
 @router.post("/generate")
