@@ -1,14 +1,13 @@
 // ReadyForRobots — SecondaryNav Component
 // Design: Clean Workflow / Elevated SaaS
 // A slim secondary navigation bar below the main header
-// Links scroll to in-page anchor sections: About Us, How It Works, Questions
+// Links scroll to in-page anchor sections: About Us, How It Works
 
-import { BookOpen, Zap, HelpCircle, ArrowRight } from "lucide-react";
+import { BookOpen, Zap, ArrowRight } from "lucide-react";
 
 const links = [
   { label: "About Us", href: "#about", icon: BookOpen },
   { label: "How It Works", href: "#how-it-works", icon: Zap },
-  { label: "Questions", href: "#faq", icon: HelpCircle },
 ];
 
 export default function SecondaryNav() {

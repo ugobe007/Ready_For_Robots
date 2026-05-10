@@ -9,3 +9,4 @@ from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement
 from app.models.lead_rep_feedback import LeadRepFeedback
 from app.models.partner_trade_show import PartnerTradeShow
 from app.models.scout_chat import ScoutMessage, ScoutProfile, ScoutSession
+from app.models.waitlist import WaitlistSignup
