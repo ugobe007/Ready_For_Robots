@@ -24,7 +24,7 @@ export default function PricingPage() {
         body: JSON.stringify({ ...form, source: 'pricing' }),
       }));
       if (!response.ok) throw new Error('Waitlist request failed');
-      setStatus('You’re on the waitlist. SCOUT will follow up soon.');
+      setStatus('You\'re on the waitlist. SCOUT will follow up soon.');
       setForm({ email: '', name: '', company: '', useCase: '' });
     } catch {
       setStatus('Could not join the waitlist. Check your email and try again.');
