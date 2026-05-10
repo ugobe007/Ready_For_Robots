@@ -49,6 +49,13 @@ frontend/nextjs/node_modules.old*/
 
 # Next.js static export — macOS Finder "Duplicate" creates `name 2.ext` (never commit)
 frontend/nextjs/out/**/* 2.*
+frontend/nextjs/pages/* 2.*
+frontend/nextjs/pages/* 3.*
+frontend/nextjs/pages/* 4.*
+frontend/nextjs/pages/* 5.*
+
+# Next.js static export emits new hashed assets; tracked legacy files remain tracked.
+frontend/nextjs/out/_next/static/**/*
 
 # OS
 .DS_Store
