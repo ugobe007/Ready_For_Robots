@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ScoutChat } from "./components/ScoutChat";
 
 function Router() {
   return (
@@ -40,10 +41,12 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <ScoutChat>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ScoutChat>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
