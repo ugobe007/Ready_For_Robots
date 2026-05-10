@@ -17,15 +17,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 [deploy]
   release_command = "alembic upgrade head"
 
-# Run DB migrations once per deploy (before new Machines roll out). Boot then starts uvicorn immediately
-# so Fly’s proxy sees :8080 within the health-check grace window.
-[deploy]
-  release_command = "alembic upgrade head"
-
 [env]
   PORT = "8080"
   # Browsers require explicit origins when cookies/credentials are used — not "*"
-  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,https://ready-for-robots-ax5i.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,https://ready-for-robots.vercel.app,https://ready-for-robots-ax5i.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
   # Admin emails (comma-separated) — users with access to /admin
   ADMIN_EMAILS = "ugobe07@gmail.com"
   # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)

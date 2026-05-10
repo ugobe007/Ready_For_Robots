@@ -60,6 +60,7 @@ def _cors_allowed_origins() -> list[str]:
         "https://www.readyforrobots.com",
         "https://ready-2-robot.fly.dev",
         # Vercel / local previews; add more origins via CORS_ORIGINS on Fly.
+        "https://ready-for-robots.vercel.app",
         "https://ready-for-robots-ax5i.vercel.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
