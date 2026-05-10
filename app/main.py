@@ -32,6 +32,7 @@ from app.api.newsletter import router as newsletter_router
 from app.api.crm import router as crm_router
 from app.api.proposals import router as proposals_router
 from app.api.scout import router as scout_router
+from app.api.waitlist import router as waitlist_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.social_posts import router as social_posts_router
@@ -184,6 +185,7 @@ app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newslette
 app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
+app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 
 
 @app.on_event("startup")
