@@ -1,1 +1,7 @@
-{}
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install && npm run install:web",
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/nextjs/out",
+  "trailingSlash": true
+}
