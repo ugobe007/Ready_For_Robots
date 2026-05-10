@@ -215,10 +215,11 @@ def scout_scan_for_results(body: ScanForResultsBody, db: Session = Depends(get_d
             .first()
         )
         if company is None:
+            escaped_dom = dom.replace("%", "\\%").replace("_", "\\_")
             company = (
                 db.query(Company)
                 .options(joinedload(Company.signals), joinedload(Company.scores))
-                .filter(Company.website.ilike(f"%{dom}%"))
+                .filter(Company.website.ilike(f"%{escaped_dom}%"))
                 .first()
             )
     payload = serialize_company_result(company, url=raw, name=None)

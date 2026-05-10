@@ -395,64 +395,6 @@ def _dedup_top_signals(sigs: list, n: int = LEAD_RESPONSE_MAX_SIGNALS) -> list:
     return merged[:n]
 
 
-def _normalize_share_excerpt(raw: str) -> str:
-    """Strip HTML nbsp entities / chars and collapse duplicate headline sentences for share copy."""
-    s = (raw or "").replace("&nbsp;", " ").replace("\xa0", " ")
-    s = re.sub(r"\s+", " ", s.strip())
-    parts = re.split(r"\.\s+", s)
-    merged: list[str] = []
-    for p in parts:
-        p = p.strip()
-        if not p:
-            continue
-        if merged and p.lower().startswith(merged[-1].lower() + " "):
-            tail = p[len(merged[-1]) :].strip()
-            if tail:
-                merged[-1] = f"{merged[-1]}. {tail}"
-            continue
-        merged.append(p)
-    return ". ".join(merged) + ("." if merged else "")
-
-
-def _text_suggests_leadership_hire(text: str) -> bool:
-    if not text:
-        return False
-    t = text.replace("&nbsp;", " ").replace("\xa0", " ")
-    tl = t.lower()
-    if "chief operating officer" in tl or "chief executive officer" in tl:
-        return True
-    if re.search(r"\b(?:coo|ceo|cfo|cto)\b", tl) and re.search(
-        r"\b(?:names|appointed|appoints|hires|named)\b", tl
-    ):
-        return True
-    return False
-
-
-def _evidence_display_label(signal) -> str:
-    """Label for a single signal row (hire-shaped expansion reads as leadership)."""
-    st = getattr(signal, "signal_type", "") or ""
-    txt = getattr(signal, "signal_text", "") or ""
-    if st == "expansion" and _text_suggests_leadership_hire(txt):
-        return "Leadership Hire"
-    return _signal_label(st)
-
-
-def _pick_evidence_signal(sigs: list):
-    """Pick the signal row to feature as lead evidence (prefers hire typing when the story matches)."""
-    if not sigs:
-        return None
-    strategic = next((s for s in sigs if getattr(s, "signal_type", "") == "strategic_hire"), None)
-    expansion_hires = [
-        s
-        for s in sigs
-        if getattr(s, "signal_type", "") == "expansion"
-        and _text_suggests_leadership_hire(getattr(s, "signal_text", "") or "")
-    ]
-    if strategic and expansion_hires:
-        return strategic
-    return sorted(sigs, key=lambda x: float(getattr(x, "signal_strength", 0) or 0), reverse=True)[0]
-
-
 # Industry-to-automation-context map (mirrors newsletter_service logic)
 _INDUSTRY_AUTOMATION_CTX: dict[str, tuple[str, str]] = {
     "logistics": ("autonomous mobile robots and warehouse automation", "labor-intensive picking and last-mile delivery"),
