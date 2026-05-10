@@ -53,10 +53,10 @@ def create_waitlist_signup(body: WaitlistSignupIn, db: Session = Depends(get_db)
         "signup": {
             "id": row.id,
             "email": row.email,
-            "name": row.name,
-            "company": row.company,
-            "useCase": row.use_case,
-            "source": row.source,
+            "name": body.name,
+            "company": body.company,
+            "useCase": body.use_case,
+            "source": body.source,
             "createdAt": row.created_at.isoformat() if row.created_at else None,
         },
     }
