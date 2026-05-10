@@ -17,8 +17,7 @@ class WaitlistSignupIn(BaseModel):
     email: str = Field(..., min_length=3, max_length=320)
     name: Optional[str] = Field(None, max_length=200)
     company: Optional[str] = Field(None, max_length=240)
-    useCase: Optional[str] = Field(None, max_length=2000)
-    use_case: Optional[str] = Field(None, max_length=2000)
+    use_case: Optional[str] = Field(None, alias="useCase", max_length=2000)
     source: Optional[str] = Field(None, max_length=120)
 
 
@@ -31,7 +30,7 @@ def create_waitlist_signup(body: WaitlistSignupIn, db: Session = Depends(get_db)
     def _apply_fields(row: WaitlistSignup) -> None:
         row.name = body.name or row.name or None
         row.company = body.company or row.company or None
-        row.use_case = body.use_case or body.useCase or row.use_case or None
+        row.use_case = body.use_case or row.use_case or None
         row.source = body.source or row.source or "pricing"
 
     row = db.query(WaitlistSignup).filter(WaitlistSignup.email == email).first()
