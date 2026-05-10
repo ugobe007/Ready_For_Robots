@@ -170,8 +170,14 @@ def advance_pipeline_item(
     if not account:
         raise HTTPException(status_code=404, detail="Pipeline item not found or access denied")
     stages = ["qualification", "research", "drafted", "intro_sent", "proposal", "won"]
+    allowed_stages = stages + ["autopilot", "archived"]
     current = account.outreach_stage or "qualification"
-    next_stage = body.stage if body and body.stage else stages[min(len(stages) - 1, stages.index(current) + 1)] if current in stages else "research"
+    if body and body.stage:
+        if body.stage not in allowed_stages:
+            raise HTTPException(status_code=400, detail="Invalid stage value")
+        next_stage = body.stage
+    else:
+        next_stage = stages[min(len(stages) - 1, stages.index(current) + 1)] if current in stages else "research"
     account.outreach_stage = next_stage
     if body:
         if body.contact_email is not None:

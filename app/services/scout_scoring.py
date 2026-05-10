@@ -77,7 +77,7 @@ def scout_score_for_company(company: Company | None, url: str | None = None, nam
                 "recognizableProblem": 7,
                 "customerValue": 5,
             },
-            "weights": FACTOR_WEIGHTS,
+            "weights": FACTOR_WEIGHTS.copy(),
             "summary": f"SCOUT has enough public signal to monitor {fallback_name}, but needs more evidence before calling it sales-ready.",
         }
 
@@ -104,7 +104,7 @@ def scout_score_for_company(company: Company | None, url: str | None = None, nam
         "total": total,
         "band": band,
         "factors": factors,
-        "weights": FACTOR_WEIGHTS,
+        "weights": FACTOR_WEIGHTS.copy(),
         "summary": f"{company.name} is a {band.lower()} SCOUT opportunity with {len(getattr(company, 'signals', None) or [])} tracked signal(s).",
     }
 
