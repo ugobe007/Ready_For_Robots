@@ -13,14 +13,11 @@
 --   GitHub Action, or wherever you run `alembic upgrade head`).
 --
 --   This script uses CREATE TABLE IF NOT EXISTS (safe to re-run in Supabase).
---   The Python Alembic migration uses plain CREATE TABLE. If you run this SQL first AND
---   later something else runs the same Alembic revision on the same DB, you can get
---   "relation already exists". Then stamp Alembic once on that same database:
---
---     INSERT INTO alembic_version (version_num)
---     SELECT 'e2f3a4b5c6d7' WHERE NOT EXISTS (
---       SELECT 1 FROM alembic_version WHERE version_num = 'e2f3a4b5c6d7'
---     );
+--   The Alembic revision e2f3a4b5c6d7 is idempotent the same way: it skips objects
+--   that already exist, so `alembic upgrade head` on deploy is safe after this SQL.
+--   (Legacy: if you ever hit DuplicateTable on an older image, stamp once:
+--     INSERT INTO alembic_version (version_num) SELECT 'e2f3a4b5c6d7' WHERE NOT EXISTS
+--     (SELECT 1 FROM alembic_version WHERE version_num = 'e2f3a4b5c6d7'); )
 --
 --   If your API host runs `alembic upgrade head` on every deploy, you usually do not
 --   need this .sql file—only run it when you want to apply schema directly in Supabase.
