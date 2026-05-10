@@ -539,33 +539,65 @@ export default function Results() {
                 <button
                   type="button"
                   onClick={() => setChoosingScout((current) => !current)}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
-                  style={{ background: "#FFB000", color: "#1b1200", boxShadow: "0 8px 24px rgba(255,176,0,0.25)" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(14,165,233,0.72))",
+                    borderColor: "rgba(196,181,253,0.35)",
+                    boxShadow: "0 14px 36px rgba(124,58,237,0.28), inset 0 1px 0 rgba(255,255,255,0.18)",
+                  }}
                 >
                   <Bot className="h-4 w-4" /> Activate SCOUT
                 </button>
               </div>
 
               {choosingScout && (
-                <div className="mb-5 rounded-2xl border border-amber-400/25 p-5" style={{ background: "rgba(255,176,0,0.06)" }}>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-sm font-bold mb-1" style={{ color: "#FFB000" }}>Activate SCOUT sales motion</p>
-                      <p className="text-xs text-white/45 max-w-2xl">
-                        SCOUT can use your sales materials, pick the strongest leads, build strategy and cadence, draft outreach, monitor replies, and ping you when a lead becomes active.
-                      </p>
+                <div
+                  className="relative mb-6 overflow-hidden rounded-3xl border p-5 sm:p-6"
+                  style={{
+                    background:
+                      "radial-gradient(circle at top left, rgba(124,58,237,0.22), transparent 34%), radial-gradient(circle at top right, rgba(45,212,191,0.14), transparent 30%), rgba(9,6,24,0.92)",
+                    borderColor: "rgba(196,181,253,0.18)",
+                    boxShadow: "0 24px 80px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-violet-300/50 to-transparent" />
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border"
+                        style={{ background: "rgba(124,58,237,0.16)", borderColor: "rgba(196,181,253,0.25)" }}
+                      >
+                        <Bot className="h-5 w-5 text-violet-200" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-teal-200/70">SCOUT sales motion</p>
+                        <h2 className="mt-1 text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                          Activate follow-up automation
+                        </h2>
+                        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/50">
+                          Choose materials, lead scope, and operating mode. SCOUT will turn this results set into a structured sales motion with strategy, drafts, activity timing, reply monitoring, and user alerts.
+                        </p>
+                      </div>
                     </div>
-                    {!isSignedIn && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/45">
-                        <LockKeyhole className="h-3 w-3" /> Sending requires account
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2.5 py-1 text-[10px] font-bold text-emerald-100/70">
+                        <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads queued
                       </span>
-                    )}
+                      {!isSignedIn && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-100/75">
+                          <LockKeyhole className="h-3 w-3" /> Account required to send
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="mt-5 grid gap-4">
-                    <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">1. Sales materials</p>
-                      <div className="grid gap-2 md:grid-cols-3">
+                  <div className="mt-6 grid gap-5">
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-400/15 text-[10px] font-bold text-violet-100">1</span>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Sales materials</p>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
                         {MATERIAL_OPTIONS.map((option) => {
                           const Icon = option.icon;
                           const active = materialChoice === option.id;
@@ -574,24 +606,33 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setMaterialChoice(option.id)}
-                              className="rounded-xl border p-3 text-left transition-all"
+                              className="group rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5"
                               style={active
-                                ? { borderColor: "rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.08)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                                ? { borderColor: "rgba(196,181,253,0.45)", background: "linear-gradient(135deg, rgba(124,58,237,0.18), rgba(45,212,191,0.06))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)" }}
                             >
-                              <div className="mb-2 flex items-center gap-2">
-                                <Icon className="h-4 w-4" style={{ color: active ? "#FFB000" : "rgba(255,255,255,0.35)" }} />
-                                <span className="text-xs font-bold text-white/75">{option.title}</span>
+                              <div className="mb-3 flex items-center justify-between gap-3">
+                                <span
+                                  className="flex h-8 w-8 items-center justify-center rounded-xl border"
+                                  style={{
+                                    borderColor: active ? "rgba(196,181,253,0.28)" : "rgba(255,255,255,0.08)",
+                                    background: active ? "rgba(196,181,253,0.12)" : "rgba(255,255,255,0.03)",
+                                  }}
+                                >
+                                  <Icon className="h-4 w-4" style={{ color: active ? "#c4b5fd" : "rgba(255,255,255,0.35)" }} />
+                                </span>
+                                {active && <CheckCircle2 className="h-4 w-4 text-teal-200" />}
                               </div>
-                              <p className="text-[11px] leading-relaxed text-white/40">{option.desc}</p>
+                              <span className="text-xs font-bold text-white/80">{option.title}</span>
+                              <p className="mt-1.5 text-[11px] leading-relaxed text-white/42">{option.desc}</p>
                             </button>
                           );
                         })}
                       </div>
                       {materialChoice === "upload" && (
-                        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 bg-white/[0.03] px-3 py-2.5 text-xs text-white/45 hover:border-amber-400/35">
+                        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-white/12 bg-white/[0.025] px-4 py-3 text-xs text-white/50 hover:border-violet-300/35">
                           <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-bold" style={{ color: "#FFB000" }}>Browse</span>
+                          <span className="font-bold text-violet-200">Browse</span>
                           <input
                             type="file"
                             className="hidden"
@@ -602,9 +643,17 @@ export default function Results() {
                       )}
                     </div>
 
-                    <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">2. Lead scope</p>
-                      <div className="grid gap-2 md:grid-cols-3">
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-400/15 text-[10px] font-bold text-sky-100">2</span>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Lead scope</p>
+                        </div>
+                        <p className="text-[11px] text-white/35">
+                          {selectedCount} selected
+                        </p>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
                         {SCOPE_OPTIONS.map((option) => {
                           const active = scopeChoice === option.id;
                           return (
@@ -612,40 +661,14 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setScopeChoice(option.id)}
-                              className="rounded-xl border p-3 text-left transition-all"
+                              className="rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5"
                               style={active
-                                ? { borderColor: "rgba(124,58,237,0.55)", background: "rgba(124,58,237,0.12)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
-                            >
-                              <p className="text-xs font-bold text-white/75">{option.title}</p>
-                              <p className="mt-1 text-[11px] leading-relaxed text-white/40">{option.desc}</p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <p className="mt-2 text-[11px] text-white/30">
-                        Current selection: {selectedCount} lead{selectedCount === 1 ? "" : "s"} checked.
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">3. Automation mode</p>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {MODE_OPTIONS.map((option) => {
-                          const active = modeChoice === option.id;
-                          return (
-                            <button
-                              key={option.id}
-                              type="button"
-                              onClick={() => setModeChoice(option.id)}
-                              className="rounded-xl border p-3 text-left transition-all"
-                              style={active
-                                ? { borderColor: "rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.08)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                                ? { borderColor: "rgba(56,189,248,0.42)", background: "linear-gradient(135deg, rgba(56,189,248,0.14), rgba(124,58,237,0.07))" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-white/75">{option.title}</p>
-                                {option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-white/25" />}
+                                <p className="text-xs font-bold text-white/80">{option.title}</p>
+                                {active && <CheckCircle2 className="h-4 w-4 text-sky-200" />}
                               </div>
                               <p className="mt-1 text-[11px] leading-relaxed text-white/40">{option.desc}</p>
                             </button>
@@ -654,23 +677,56 @@ export default function Results() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                      <p className="mb-2 text-xs font-bold text-white/70">SCOUT will start with:</p>
-                      <div className="grid gap-2 text-[11px] text-white/45 md:grid-cols-4">
-                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Lead evaluation</span>
-                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5" /> Sales strategy</span>
-                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5" /> Activity schedule</span>
-                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reply alerts</span>
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-300/15 text-[10px] font-bold text-teal-100">3</span>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Automation mode</p>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        {MODE_OPTIONS.map((option) => {
+                          const active = modeChoice === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => setModeChoice(option.id)}
+                              className="rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5"
+                              style={active
+                                ? { borderColor: "rgba(45,212,191,0.42)", background: "linear-gradient(135deg, rgba(45,212,191,0.13), rgba(124,58,237,0.06))" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)" }}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-white/80">{option.title}</p>
+                                {active ? <CheckCircle2 className="h-4 w-4 text-teal-200" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-white/25" />}
+                              </div>
+                              <p className="mt-1 text-[11px] leading-relaxed text-white/40">{option.desc}</p>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                      <p className="mb-3 text-xs font-bold text-white/72">SCOUT will start with</p>
+                      <div className="grid gap-2 text-[11px] text-white/50 md:grid-cols-4">
+                        <span className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2"><FileText className="h-3.5 w-3.5 text-violet-200" /> Lead evaluation</span>
+                        <span className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2"><Presentation className="h-3.5 w-3.5 text-sky-200" /> Sales strategy</span>
+                        <span className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2"><CalendarCheck className="h-3.5 w-3.5 text-teal-200" /> Activity schedule</span>
+                        <span className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2"><Bell className="h-3.5 w-3.5 text-emerald-200" /> Reply alerts</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <button
                         type="button"
                         onClick={() => activateScout()}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                        style={{ background: "#7c3aed" }}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-xs font-bold text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                        style={{
+                          background: "linear-gradient(135deg, #7c3aed, #0ea5e9)",
+                          borderColor: "rgba(196,181,253,0.28)",
+                          boxShadow: "0 12px 28px rgba(14,165,233,0.18)",
+                        }}
                       >
                         {activatingScout ? "Creating activation..." : "Start SCOUT activation"} <Send className="h-3.5 w-3.5" />
                       </button>
@@ -680,10 +736,13 @@ export default function Results() {
                           activateScout({ mode: "manual", material: "skip", scope: "top" });
                         }}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white/70 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-5 py-3 text-xs font-bold text-white/65 transition-all hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
+                      <p className="text-[11px] text-white/30 sm:ml-auto">
+                        Drafts first. Sending stays gated by account and safety rules.
+                      </p>
                     </div>
                   </div>
                 </div>
