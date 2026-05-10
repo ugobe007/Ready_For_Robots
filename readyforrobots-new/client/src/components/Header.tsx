@@ -119,8 +119,8 @@ export default function Header() {
             {/* CTA */}
             <Link href="/results?url=">
               <button
-                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5"
-                style={{ color: "#03DAC5", border: "1px solid rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.06)" }}
+                className="hidden sm:flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-lg border transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
               >
                 <Zap className="h-3.5 w-3.5" /> Scan URL
               </button>
@@ -202,15 +202,15 @@ export default function Header() {
           >
             <div
               className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg, #03DAC5, #7c3aed)" }}
+              style={{ color: "#FFB000", border: "1.5px solid rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
             >
-              <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
+              <Zap className="h-4 w-4" strokeWidth={2.5} />
             </div>
             <div className="text-left flex-1">
               <p className="text-sm font-bold leading-none" style={{ color: "#FFB000" }}>Activate Pipeline</p>
               <p className="text-[11px] text-white/40 mt-0.5">Ask your AI sales agent anything</p>
             </div>
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#03DAC5" }} />
+            <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#FFB000" }} />
           </button>
         </div>
 

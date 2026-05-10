@@ -22,7 +22,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" style={{ color: "#03DAC5" }} />
+            <MessageSquare className="h-4 w-4" style={{ color: "#FFB000" }} />
             <span className="text-sm font-semibold text-white">SCOUT</span>
           </div>
           <button
@@ -61,16 +61,16 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
           onClick={() => setOpen(true)}
           className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
           style={{
-            color: "#03DAC5",
-            border: "1.5px solid rgba(3,218,197,0.5)",
+            color: "#FFB000",
+            border: "1.5px solid #FFB000",
             background: "rgba(13,5,32,0.85)",
             backdropFilter: "blur(12px)",
-            boxShadow: "0 4px 20px rgba(3,218,197,0.12)",
+            boxShadow: "0 4px 20px rgba(255,176,0,0.12)",
           }}
         >
           <MessageSquare className="h-4 w-4" />
           Talk to SCOUT
-          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#FFB000" }} />
         </button>
       )}
     </ScoutChatContext.Provider>

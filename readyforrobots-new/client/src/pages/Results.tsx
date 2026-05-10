@@ -466,8 +466,8 @@ export default function Results() {
 
           {!submittedUrl && (
             <section className="py-16">
-              <div className="rounded-3xl border border-violet-500/20 p-8 sm:p-10" style={{ background: "rgba(124,58,237,0.06)" }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#a78bfa" }}>
+              <div className="rounded-3xl border border-amber-400/25 p-8 sm:p-10" style={{ background: "rgba(255,176,0,0.035)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
                   Activate Pipeline
                 </p>
                 <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
@@ -481,12 +481,12 @@ export default function Results() {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
-                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-amber-400/70"
                   />
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
-                    style={{ background: "#7c3aed", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                    style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
                   >
                     Scan URL <Zap className="h-4 w-4" />
                   </button>
@@ -498,10 +498,10 @@ export default function Results() {
           {submittedUrl && scanning && (
             <div className="flex flex-col items-center justify-center py-24 gap-8">
               <div className="relative h-20 w-20">
-                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20 animate-ping" style={{ animationDuration: "1.5s" }} />
-                <div className="absolute inset-2 rounded-full border-2 border-violet-500/40 animate-spin" style={{ animationDuration: "2s" }} />
+                <div className="absolute inset-0 rounded-full border-2 border-amber-400/20 animate-ping" style={{ animationDuration: "1.5s" }} />
+                <div className="absolute inset-2 rounded-full border-2 border-amber-400/45 animate-spin" style={{ animationDuration: "2s" }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Zap className="h-6 w-6" style={{ color: "#7c3aed" }} />
+                  <Zap className="h-6 w-6" style={{ color: "#FFB000" }} />
                 </div>
               </div>
 
@@ -511,9 +511,9 @@ export default function Results() {
                     {i < scanStep ? (
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                     ) : (
-                      <div className="h-3.5 w-3.5 rounded-full border border-violet-500/60 shrink-0 animate-pulse" />
+                      <div className="h-3.5 w-3.5 rounded-full border border-amber-400/70 shrink-0 animate-pulse" />
                     )}
-                    <span className="font-mono text-xs" style={{ color: i === scanStep ? "#c4b5fd" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
+                    <span className="font-mono text-xs" style={{ color: i === scanStep ? "#FFB000" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
                       {step}
                     </span>
                   </div>
