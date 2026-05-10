@@ -8,13 +8,16 @@ Skill endpoints (scanCompany, …) can follow.
 from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.api.auth_deps import optional_user
 from app.database import get_db
-from app.models.scout_chat import ScoutSession
+from app.models.scout_chat import ScoutActivation, ScoutSession
+from app.models.user_profile import UserProfile
 from app.services import scout_chat_service as scsvc
 from app.services.scout_llm import scout_chat_completion
 
@@ -59,6 +62,47 @@ class ChatBody(BaseModel):
     sessionContext: Optional[Dict[str, Any]] = None  # camelCase alias (ScoutChat prototype)
 
 
+class ActivationLead(BaseModel):
+    id: str = Field(..., min_length=1, max_length=120)
+    company: str = Field(..., min_length=1, max_length=240)
+    score: Optional[int] = None
+    signal: Optional[str] = Field(None, max_length=1200)
+    signalType: Optional[str] = Field(None, max_length=120)
+    action: Optional[str] = Field(None, max_length=800)
+    timing: Optional[str] = Field(None, max_length=160)
+    relevance: Optional[str] = Field(None, max_length=1600)
+
+
+class ActivationBody(BaseModel):
+    fingerprint: str = Field(..., min_length=8, max_length=80)
+    source_url: Optional[str] = Field(None, max_length=512)
+    sourceUrl: Optional[str] = Field(None, max_length=512)
+    material_choice: Optional[Literal["upload", "suggest", "skip"]] = None
+    materialChoice: Optional[Literal["upload", "suggest", "skip"]] = None
+    material_filename: Optional[str] = Field(None, max_length=512)
+    materialFilename: Optional[str] = Field(None, max_length=512)
+    scope_choice: Optional[Literal["all", "selected", "top"]] = None
+    scopeChoice: Optional[Literal["all", "selected", "top"]] = None
+    mode_choice: Optional[Literal["manual", "assisted", "autopilot"]] = None
+    modeChoice: Optional[Literal["manual", "assisted", "autopilot"]] = None
+    leads: List[ActivationLead] = Field(..., min_length=1, max_length=50)
+
+    def source(self) -> Optional[str]:
+        return self.source_url or self.sourceUrl
+
+    def material(self) -> str:
+        return self.material_choice or self.materialChoice or "suggest"
+
+    def filename(self) -> Optional[str]:
+        return self.material_filename or self.materialFilename
+
+    def scope(self) -> str:
+        return self.scope_choice or self.scopeChoice or "top"
+
+    def mode(self) -> str:
+        return self.mode_choice or self.modeChoice or "manual"
+
+
 def _serialize_message(m: Any) -> Dict[str, Any]:
     return {
         "id": m.id,
@@ -67,6 +111,35 @@ def _serialize_message(m: Any) -> Dict[str, Any]:
         "skillInvoked": m.skill_invoked,
         "skillData": m.skill_data,
         "createdAt": m.created_at.isoformat() if m.created_at else None,
+    }
+
+
+def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
+    material = body.material()
+    mode = body.mode()
+    return {
+        "materials": {
+            "choice": material,
+            "next": {
+                "upload": "Parse deck, extract proof points, and align messaging to selected leads.",
+                "suggest": "Generate deck outline, ROI story, objection handling, and lead-specific talk track.",
+                "skip": "Start with lead research and draft outreach using available signals.",
+            }[material],
+            "filename": body.filename(),
+        },
+        "steps": [
+            "Evaluate each selected lead and confirm sales angle.",
+            "Build lead-specific strategy, ROI thesis, and activity schedule.",
+            "Draft email and introduction sequence for review.",
+            "Track replies and move responding leads to active pipeline.",
+            "Ping user when a lead responds or meeting scheduling is needed.",
+        ],
+        "mode": mode,
+        "sending_policy": {
+            "manual": "Drafts only until user takes action.",
+            "assisted": "Ask before sending each message.",
+            "autopilot": "Send and reply within account guardrails.",
+        }[mode],
     }
 
 
@@ -149,4 +222,83 @@ def scout_chat(body: ChatBody, db: Session = Depends(get_db)):
     scsvc.append_message(db, sess.id, "scout", reply)
 
     return {"reply": reply, "sessionId": sess.id}
+
+
+@router.post("/activations")
+def scout_create_activation(
+    body: ActivationBody,
+    db: Session = Depends(get_db),
+    user: Optional[dict] = Depends(optional_user),
+):
+    sess, _ = scsvc.upsert_session(db, body.fingerprint)
+    user_id = None
+    if user and user.get("uid"):
+        try:
+            candidate_user_id = UUID(str(user["uid"]))
+            if db.query(UserProfile.id).filter(UserProfile.id == candidate_user_id).first():
+                user_id = candidate_user_id
+                sess.user_id = user_id
+        except (TypeError, ValueError):
+            user_id = None
+    if body.source():
+        sess.company_url = body.source()
+    db.commit()
+
+    leads = [lead.dict() for lead in body.leads]
+    activation = ScoutActivation(
+        session_id=sess.id,
+        user_id=user_id,
+        source_url=body.source(),
+        material_choice=body.material(),
+        material_filename=body.filename(),
+        scope_choice=body.scope(),
+        mode_choice=body.mode(),
+        status="queued" if body.mode() == "manual" else "preview" if user_id is None else "queued",
+        lead_ids=[lead["id"] for lead in leads],
+        leads_snapshot=leads,
+        work_plan=_activation_work_plan(body),
+        activity_log=[
+            {
+                "type": "activation_created",
+                "message": f"SCOUT activation created for {len(leads)} lead(s).",
+            },
+            {
+                "type": "materials",
+                "message": f"Material path: {body.material()}",
+            },
+            {
+                "type": "mode",
+                "message": f"Automation mode: {body.mode()}",
+            },
+        ],
+    )
+    db.add(activation)
+    db.flush()
+    scsvc.append_message(
+        db,
+        sess.id,
+        "scout",
+        f"SCOUT activation queued for {len(leads)} lead(s) in {body.mode()} mode.",
+        "activateScout",
+        {
+            "activationId": activation.id,
+            "leadCount": len(leads),
+            "mode": body.mode(),
+            "scope": body.scope(),
+            "material": body.material(),
+        },
+    )
+    db.commit()
+    db.refresh(activation)
+    return {
+        "id": activation.id,
+        "status": activation.status,
+        "leadCount": len(leads),
+        "mode": activation.mode_choice,
+        "scope": activation.scope_choice,
+        "material": activation.material_choice,
+        "workPlan": activation.work_plan,
+        "activityLog": activation.activity_log,
+        "requiresAccount": activation.status == "preview",
+    }
 

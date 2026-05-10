@@ -1,4 +1,4 @@
-"""SCOUT marketing chat persistence (anonymous fingerprint + optional auth user)."""
+"""SCOUT marketing chat and activation persistence."""
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -48,4 +48,24 @@ class ScoutProfile(Base):
     drafts_approved = Column(JSONB, nullable=False, server_default="[]")
     signals_seen = Column(JSONB, nullable=False, server_default="[]")
     inferred_needs = Column(Text, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ScoutActivation(Base):
+    __tablename__ = "scout_activations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(Integer, ForeignKey("scout_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="SET NULL"), nullable=True, index=True)
+    source_url = Column(String(512), nullable=True)
+    material_choice = Column(String(32), nullable=False)
+    material_filename = Column(String(512), nullable=True)
+    scope_choice = Column(String(32), nullable=False)
+    mode_choice = Column(String(32), nullable=False)
+    status = Column(String(32), nullable=False, server_default="queued")
+    lead_ids = Column(JSONB, nullable=False, server_default="[]")
+    leads_snapshot = Column(JSONB, nullable=False, server_default="[]")
+    work_plan = Column(JSONB, nullable=False, server_default="{}")
+    activity_log = Column(JSONB, nullable=False, server_default="[]")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -5,21 +5,29 @@
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  Bell,
   Bot,
+  CalendarCheck,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   FileText,
+  LockKeyhole,
   MapPin,
   MousePointer2,
+  Presentation,
   Send,
+  Sparkles,
   TrendingUp,
+  UploadCloud,
   Users,
   Zap,
 } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
+import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const SCAN_STEPS = [
@@ -78,6 +86,53 @@ type Prospect = {
   stage: string;
 };
 
+type MaterialChoice = "upload" | "suggest" | "skip";
+type ScopeChoice = "all" | "selected" | "top";
+type ModeChoice = "manual" | "assisted" | "autopilot";
+
+const MATERIAL_OPTIONS: Array<{
+  id: MaterialChoice;
+  title: string;
+  desc: string;
+  icon: typeof UploadCloud;
+}> = [
+  {
+    id: "upload",
+    title: "Upload sales deck",
+    desc: "Give SCOUT your current presentation so follow-up uses your actual positioning.",
+    icon: UploadCloud,
+  },
+  {
+    id: "suggest",
+    title: "Suggest deck strategy",
+    desc: "SCOUT proposes a deck format, proof points, and ROI story for you to implement.",
+    icon: Presentation,
+  },
+  {
+    id: "skip",
+    title: "Skip materials",
+    desc: "Start with lead evaluation, sales strategy, activity schedule, and draft outreach.",
+    icon: Sparkles,
+  },
+];
+
+const SCOPE_OPTIONS: Array<{ id: ScopeChoice; title: string; desc: string }> = [
+  { id: "all", title: "Activate all leads", desc: "SCOUT works every matched lead in this results set." },
+  { id: "selected", title: "Use selected leads", desc: "Only the leads you checked below move into SCOUT activation." },
+  { id: "top", title: "Let SCOUT prioritize", desc: "SCOUT starts with the strongest three leads by score and signal quality." },
+];
+
+const MODE_OPTIONS: Array<{
+  id: ModeChoice;
+  title: string;
+  desc: string;
+  gated: boolean;
+}> = [
+  { id: "manual", title: "Manual", desc: "SCOUT evaluates leads and drafts strategy/emails for review.", gated: false },
+  { id: "assisted", title: "Assisted", desc: "SCOUT drafts, asks before sending, then tracks replies.", gated: true },
+  { id: "autopilot", title: "Autopilot", desc: "SCOUT sends, replies, follows up, and schedules meetings.", gated: true },
+];
+
 function normalizeUrl(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "";
@@ -118,6 +173,19 @@ function formatEmployees(value: number | null | undefined): string {
 
 function titleize(raw: string): string {
   return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function scoutFingerprint(): string {
+  const key = "rfr_scout_fingerprint";
+  try {
+    const existing = localStorage.getItem(key);
+    if (existing && existing.length >= 8) return existing;
+    const generated = `web_${crypto.randomUUID()}`;
+    localStorage.setItem(key, generated);
+    return generated;
+  } catch {
+    return "web_anonymous";
+  }
 }
 
 function mapApiLead(lead: ApiLead, index: number): Prospect {
@@ -218,6 +286,7 @@ export default function Results() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const initialUrl = params.get("url")?.trim() || "";
+  const { session } = useAuth();
 
   const [urlInput, setUrlInput] = useState(initialUrl);
   const [submittedUrl, setSubmittedUrl] = useState(initialUrl);
@@ -230,9 +299,16 @@ export default function Results() {
   const [choosingScout, setChoosingScout] = useState(false);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
   const [usingFallback, setUsingFallback] = useState(false);
+  const [materialChoice, setMaterialChoice] = useState<MaterialChoice>("suggest");
+  const [scopeChoice, setScopeChoice] = useState<ScopeChoice>("top");
+  const [modeChoice, setModeChoice] = useState<ModeChoice>("manual");
+  const [deckFileName, setDeckFileName] = useState("");
+  const [activationId, setActivationId] = useState<number | null>(null);
+  const [activatingScout, setActivatingScout] = useState(false);
 
   const selectedCount = selectedIds.size;
   const activatedCount = activatedIds.size;
+  const isSignedIn = Boolean(session);
 
   useEffect(() => {
     if (!submittedUrl) return;
@@ -243,6 +319,12 @@ export default function Results() {
     setSelectedIds(new Set());
     setActivatedIds(new Set());
     setChoosingScout(false);
+    setMaterialChoice("suggest");
+    setScopeChoice("top");
+    setModeChoice("manual");
+    setDeckFileName("");
+    setActivationId(null);
+    setActivatingScout(false);
     setUsingFallback(false);
 
     let cancelled = false;
@@ -314,14 +396,72 @@ export default function Results() {
     });
   }
 
-  function activateScout(ids: string[]) {
+  function activationIdsForScope(scope = scopeChoice): string[] {
+    if (scope === "all") return prospects.map((p) => p.id);
+    if (scope === "selected") return Array.from(selectedIds);
+    return [...prospects]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((p) => p.id);
+  }
+
+  async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
+    const scope = overrides.scope ?? scopeChoice;
+    const mode = overrides.mode ?? modeChoice;
+    const material = overrides.material ?? materialChoice;
+    const ids = activationIdsForScope(scope);
     if (!ids.length) {
       toast.error("Select at least one lead for SCOUT.");
       return;
     }
-    setActivatedIds(new Set(ids));
-    setChoosingScout(false);
-    toast.success(`SCOUT activated for ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
+    setScopeChoice(scope);
+    setModeChoice(mode);
+    setMaterialChoice(material);
+    setActivatingScout(true);
+    try {
+      const selectedLeads = prospects
+        .filter((p) => ids.includes(p.id))
+        .map((p) => ({
+          id: p.id,
+          company: p.company,
+          score: p.score,
+          signal: p.signal,
+          signalType: p.signalType,
+          action: p.action,
+          timing: p.timing,
+          relevance: p.relevance,
+        }));
+      const response = await fetch(`${getApiBase()}/api/scout/activations`, liveFetchInit({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader(session?.access_token),
+        },
+        body: JSON.stringify({
+          fingerprint: scoutFingerprint(),
+          sourceUrl: submittedUrl,
+          materialChoice: material,
+          materialFilename: deckFileName || undefined,
+          scopeChoice: scope,
+          modeChoice: mode,
+          leads: selectedLeads,
+        }),
+      }));
+      if (!response.ok) throw new Error(await response.text());
+      const activation = await response.json();
+      setActivationId(Number(activation.id) || null);
+      setActivatedIds(new Set(ids));
+      setChoosingScout(false);
+      if (activation.requiresAccount) {
+        toast.info("SCOUT preview is saved. Sign in to send emails, track replies, and schedule meetings.");
+      } else {
+        toast.success(`SCOUT activation #${activation.id} created for ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not activate SCOUT.");
+    } finally {
+      setActivatingScout(false);
+    }
   }
 
   return (
@@ -420,26 +560,143 @@ export default function Results() {
 
               {choosingScout && (
                 <div className="mb-5 rounded-2xl border border-amber-400/25 p-5" style={{ background: "rgba(255,176,0,0.06)" }}>
-                  <p className="text-sm font-bold mb-1" style={{ color: "#FFB000" }}>How should SCOUT follow up?</p>
-                  <p className="text-xs text-white/45 mb-4">
-                    Activate all matched leads, or only the {selectedCount} lead{selectedCount === 1 ? "" : "s"} currently selected.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      type="button"
-                      onClick={() => activateScout(prospects.map((p) => p.id))}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white"
-                      style={{ background: "#7c3aed" }}
-                    >
-                      Activate all leads <Send className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => activateScout(Array.from(selectedIds))}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white/70"
-                    >
-                      Activate selected leads <MousePointer2 className="h-3.5 w-3.5" />
-                    </button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold mb-1" style={{ color: "#FFB000" }}>Activate SCOUT sales motion</p>
+                      <p className="text-xs text-white/45 max-w-2xl">
+                        SCOUT can use your sales materials, pick the strongest leads, build strategy and cadence, draft outreach, monitor replies, and ping you when a lead becomes active.
+                      </p>
+                    </div>
+                    {!isSignedIn && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/45">
+                        <LockKeyhole className="h-3 w-3" /> Sending requires account
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-5 grid gap-4">
+                    <div>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">1. Sales materials</p>
+                      <div className="grid gap-2 md:grid-cols-3">
+                        {MATERIAL_OPTIONS.map((option) => {
+                          const Icon = option.icon;
+                          const active = materialChoice === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => setMaterialChoice(option.id)}
+                              className="rounded-xl border p-3 text-left transition-all"
+                              style={active
+                                ? { borderColor: "rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.08)" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                            >
+                              <div className="mb-2 flex items-center gap-2">
+                                <Icon className="h-4 w-4" style={{ color: active ? "#FFB000" : "rgba(255,255,255,0.35)" }} />
+                                <span className="text-xs font-bold text-white/75">{option.title}</span>
+                              </div>
+                              <p className="text-[11px] leading-relaxed text-white/40">{option.desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {materialChoice === "upload" && (
+                        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 bg-white/[0.03] px-3 py-2.5 text-xs text-white/45 hover:border-amber-400/35">
+                          <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
+                          <span className="font-bold" style={{ color: "#FFB000" }}>Browse</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.ppt,.pptx"
+                            onChange={(e) => setDeckFileName(e.target.files?.[0]?.name || "")}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">2. Lead scope</p>
+                      <div className="grid gap-2 md:grid-cols-3">
+                        {SCOPE_OPTIONS.map((option) => {
+                          const active = scopeChoice === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => setScopeChoice(option.id)}
+                              className="rounded-xl border p-3 text-left transition-all"
+                              style={active
+                                ? { borderColor: "rgba(124,58,237,0.55)", background: "rgba(124,58,237,0.12)" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                            >
+                              <p className="text-xs font-bold text-white/75">{option.title}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-white/40">{option.desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-2 text-[11px] text-white/30">
+                        Current selection: {selectedCount} lead{selectedCount === 1 ? "" : "s"} checked.
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/30">3. Automation mode</p>
+                      <div className="grid gap-2 md:grid-cols-3">
+                        {MODE_OPTIONS.map((option) => {
+                          const active = modeChoice === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => setModeChoice(option.id)}
+                              className="rounded-xl border p-3 text-left transition-all"
+                              style={active
+                                ? { borderColor: "rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.08)" }
+                                : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-white/75">{option.title}</p>
+                                {option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-white/25" />}
+                              </div>
+                              <p className="mt-1 text-[11px] leading-relaxed text-white/40">{option.desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                      <p className="mb-2 text-xs font-bold text-white/70">SCOUT will start with:</p>
+                      <div className="grid gap-2 text-[11px] text-white/45 md:grid-cols-4">
+                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Lead evaluation</span>
+                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5" /> Sales strategy</span>
+                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5" /> Activity schedule</span>
+                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reply alerts</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => activateScout()}
+                        disabled={activatingScout}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        style={{ background: "#7c3aed" }}
+                      >
+                        {activatingScout ? "Creating activation..." : "Start SCOUT activation"} <Send className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          activateScout({ mode: "manual", material: "skip", scope: "top" });
+                        }}
+                        disabled={activatingScout}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white/70 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -448,7 +705,8 @@ export default function Results() {
                 <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
                   <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT service active</p>
                   <p className="text-xs text-white/45">
-                    SCOUT is queued to personalize outreach, follow up on the strongest signal, track replies, and move {activatedCount} lead{activatedCount === 1 ? "" : "s"} into your pipeline.
+                    {activationId ? `Activation #${activationId}: ` : ""}
+                    SCOUT is queued to evaluate each lead, develop a sales strategy, draft emails and introductions, schedule activities, track replies, and ping you when a lead becomes active.
                   </p>
                 </div>
               )}
