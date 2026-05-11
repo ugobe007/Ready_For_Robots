@@ -3,11 +3,63 @@
  * Signal library: browse all 14 signal types, filter by category and industry
  * Violet palette: #0d0520 bg · #7c3aed accent · cream text
  */
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { Link } from "wouter";
 import { toast } from "sonner";
+
+type ApiLead = {
+  id?: number | string;
+  company_name?: string;
+  industry?: string | null;
+  priority_tier?: string | null;
+  priority_score?: number;
+  priority_reasons?: string[];
+  share_summary?: string | null;
+  score?: number | {
+    overall_score?: number;
+    overall_intent_score?: number;
+    lead_value_score?: number;
+    signal_score?: number;
+  };
+  signals?: Array<{
+    signal_type?: string;
+    signal_label?: string;
+    raw_text?: string;
+    display_text?: string;
+    text?: string;
+  }>;
+  gtm?: {
+    readiness_label?: string;
+    suggested_motion?: string;
+    why_now?: string[];
+  };
+};
+
+type OpportunityTrack = "Sales" | "Partnership";
+
+type LiveOpportunitySignal = {
+  id: string;
+  company: string;
+  type: string;
+  text: string;
+  score: number;
+  track: OpportunityTrack;
+  time: string;
+  color: string;
+  industry: string;
+};
+
+const MARKET_COLORS = {
+  emerald: "#065f46",
+  emeraldBright: "#10b981",
+  amber: "#b45309",
+  amberBright: "#f59e0b",
+  teal: "#03DAC5",
+  violet: "#a78bfa",
+};
 
 const SIGNAL_TYPES = [
   {
@@ -119,31 +171,111 @@ const SIGNAL_TYPES = [
 const CATEGORIES = ["All", "Operational", "Growth", "Financial", "Intent", "External"];
 const INDUSTRIES = ["All", "Logistics", "Hospitality", "Healthcare", "Manufacturing", "Food Processing", "Retail"];
 
-const recentSignals = [
-  { company: "Silver Peak Hospitality", type: "Labor Shortage", score: 94, time: "2m ago", color: "#f87171" },
-  { company: "DesertLine Logistics", type: "Expansion Signal", score: 88, time: "18m ago", color: "#34d399" },
-  { company: "Apex Manufacturing", type: "Safety Signal", score: 79, time: "1h ago", color: "#fb923c" },
-  { company: "Harbor Fresh Foods", type: "CapEx Announcement", score: 85, time: "3h ago", color: "#a78bfa" },
-  { company: "Ridgeline Hotels", type: "Labor Shortage", score: 91, time: "5h ago", color: "#f87171" },
-  { company: "Cascade Fulfillment", type: "Automation Hiring", score: 76, time: "8h ago", color: "#60a5fa" },
+const fallbackLiveSignals: LiveOpportunitySignal[] = [
+  { id: "silver-peak", company: "Silver Peak Hospitality", type: "Labor Shortage", score: 94, time: "2m ago", color: MARKET_COLORS.emeraldBright, track: "Sales", industry: "Hospitality", text: "40% housekeeping vacancy and overnight staffing pressure." },
+  { id: "desertline", company: "DesertLine Logistics", type: "Expansion Signal", score: 88, time: "18m ago", color: MARKET_COLORS.emerald, track: "Sales", industry: "Logistics", text: "Opening two distribution centers with throughput pressure." },
+  { id: "apex", company: "Apex Manufacturing", type: "Safety Signal", score: 79, time: "1h ago", color: MARKET_COLORS.amberBright, track: "Sales", industry: "Manufacturing", text: "Manual handling injuries indicate a strong automation case." },
+  { id: "harbor", company: "Harbor Fresh Foods", type: "CapEx Announcement", score: 85, time: "3h ago", color: MARKET_COLORS.amber, track: "Sales", industry: "Food Processing", text: "$12M facility upgrade creates budget timing." },
+  { id: "ridgeline", company: "Ridgeline Hotels", type: "Integrator Fit", score: 91, time: "5h ago", color: MARKET_COLORS.emeraldBright, track: "Partnership", industry: "Hospitality", text: "Regional operating footprint maps to channel partner coverage." },
+  { id: "cascade", company: "Cascade Fulfillment", type: "Automation Hiring", score: 76, time: "8h ago", color: MARKET_COLORS.amberBright, track: "Partnership", industry: "Logistics", text: "Automation engineer hiring suggests active vendor evaluation." },
 ];
 
-const radarSignals = [
-  { label: "Labor Pressure", value: 0.92, delta: "+0.04", trend: "up", color: "#34d399" },
-  { label: "Expansion Velocity", value: 0.84, delta: "+0.02", trend: "up", color: "#03DAC5" },
-  { label: "CapEx Intent", value: 0.76, delta: "+0.01", trend: "up", color: "#FFB000" },
-  { label: "Automation Hiring", value: 0.72, delta: "-0.01", trend: "down", color: "#fb923c" },
-  { label: "Safety Pressure", value: 0.69, delta: "+0.03", trend: "up", color: "#34d399" },
-  { label: "Partnership Fit", value: 0.64, delta: "+0.02", trend: "up", color: "#a78bfa" },
-  { label: "Deployment News", value: 0.58, delta: "-0.02", trend: "down", color: "#fb923c" },
-];
+function titleize(raw: string): string {
+  return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
-function SignalRadar() {
+function leadScore(lead: ApiLead): number {
+  if (typeof lead.score === "number") return Math.round(lead.score);
+  const structured = lead.score || {};
+  return Math.round(
+    structured.lead_value_score ??
+      structured.overall_score ??
+      structured.overall_intent_score ??
+      structured.signal_score ??
+      lead.priority_score ??
+      70,
+  );
+}
+
+function opportunityTrack(lead: ApiLead): OpportunityTrack {
+  const text = [
+    lead.gtm?.suggested_motion,
+    lead.share_summary,
+    ...(lead.priority_reasons || []),
+    ...(lead.gtm?.why_now || []),
+  ].join(" ").toLowerCase();
+  return /(partner|partnership|channel|integrator|distributor|co-sell|alliance)/.test(text) ? "Partnership" : "Sales";
+}
+
+function signalColor(signalType: string, track: OpportunityTrack): string {
+  const type = signalType.toLowerCase();
+  if (track === "Partnership") return MARKET_COLORS.amberBright;
+  if (/(capex|safety|hiring|leadership)/.test(type)) return MARKET_COLORS.amber;
+  return MARKET_COLORS.emeraldBright;
+}
+
+function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySignal {
+  const firstSignal = lead.signals?.[0];
+  const type = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "demand_signal");
+  const track = opportunityTrack(lead);
+  const text =
+    firstSignal?.display_text ||
+    firstSignal?.raw_text ||
+    firstSignal?.text ||
+    lead.share_summary ||
+    lead.gtm?.suggested_motion ||
+    "SCOUT found a scored automation opportunity worth reviewing.";
+  return {
+    id: String(lead.id ?? `${lead.company_name || "lead"}-${index}`),
+    company: lead.company_name || `Scored Lead ${index + 1}`,
+    type,
+    text: String(text).slice(0, 150),
+    score: leadScore(lead),
+    track,
+    time: index < 3 ? `${Math.max(index * 4 + 2, 2)}m ago` : "live",
+    color: signalColor(type, track),
+    industry: lead.industry || "Market",
+  };
+}
+
+function buildRadarRows(signals: LiveOpportunitySignal[], activeIndex: number) {
+  const groups = new Map<string, { label: string; track: OpportunityTrack; count: number; total: number; color: string }>();
+  signals.forEach((signal) => {
+    const key = `${signal.track}:${signal.type}`;
+    const current = groups.get(key) || { label: signal.type, track: signal.track, count: 0, total: 0, color: signal.color };
+    current.count += 1;
+    current.total += signal.score;
+    current.color = signal.color;
+    groups.set(key, current);
+  });
+
+  return Array.from(groups.values())
+    .map((row, index) => {
+      const average = row.total / row.count;
+      const pulse = index === activeIndex % Math.max(groups.size, 1) ? 0.04 : 0;
+      const value = Math.min(0.98, average / 100 + Math.min(row.count * 0.015, 0.06) + pulse);
+      return {
+        label: row.label,
+        track: row.track,
+        value,
+        delta: `+${Math.max(1, row.count + Math.round((average - 70) / 10)).toString().padStart(2, "0")}`,
+        color: row.track === "Partnership" ? MARKET_COLORS.amberBright : row.color,
+      };
+    })
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 7);
+}
+
+function SignalRadar({ signals, loading, activeIndex }: { signals: LiveOpportunitySignal[]; loading: boolean; activeIndex: number }) {
+  const radarRows = useMemo(() => buildRadarRows(signals, activeIndex), [signals, activeIndex]);
+  const activeSignal = signals[activeIndex % Math.max(signals.length, 1)];
+
   return (
-    <section className="mb-10 overflow-hidden border border-white/10 p-5 lg:p-6" style={{ background: "rgba(255,255,255,0.025)", borderRadius: 20 }}>
+    <section className="mb-10 overflow-hidden border p-5 lg:p-6" style={{ background: "linear-gradient(135deg, rgba(6,95,70,0.16), rgba(13,5,32,0.84) 46%, rgba(180,83,9,0.14))", borderColor: "rgba(16,185,129,0.18)", borderRadius: 20 }}>
       <style>{`
-        @keyframes rfr-radar-sweep { 0% { transform: translateX(-18%); opacity: .08; } 35% { opacity: .42; } 100% { transform: translateX(118%); opacity: .08; } }
-        @keyframes rfr-radar-glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(3,218,197,0)); } 50% { filter: drop-shadow(0 0 10px rgba(3,218,197,.28)); } }
+        @keyframes rfr-radar-sweep { 0% { transform: translateX(-18%); opacity: .08; } 35% { opacity: .48; } 100% { transform: translateX(118%); opacity: .08; } }
+        @keyframes rfr-radar-glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(16,185,129,0)); } 50% { filter: drop-shadow(0 0 12px rgba(245,158,11,.24)); } }
+        @keyframes rfr-live-rise { 0% { transform: translateY(3px); opacity: .48; } 100% { transform: translateY(0); opacity: 1; } }
       `}</style>
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
@@ -151,31 +283,36 @@ function SignalRadar() {
             Market Intelligence Robot Signals
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
-            Signals are live indicators of automation demand. SCOUT observes what companies do: hiring, expanding, funding projects, reporting labor pain, and testing vendors.
+            A live feed of analyzed and scored sales leads. Signal intensity shifts as SCOUT finds stronger sales motions, partnership fits, and timing windows.
           </p>
         </div>
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/30">
-          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
-          Updates every 5s
+          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: MARKET_COLORS.emeraldBright }} />
+          {loading ? "Syncing leads" : "Live signal feed"}
         </div>
       </div>
 
-      <div className="relative overflow-hidden border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.62)", borderRadius: 16 }}>
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3" style={{ background: "linear-gradient(90deg, transparent, rgba(3,218,197,0.13), transparent)", animation: "rfr-radar-sweep 4.8s linear infinite" }} />
+      <div className="relative overflow-hidden border p-4" style={{ background: "rgba(13,5,32,0.72)", borderColor: "rgba(245,158,11,0.16)", borderRadius: 16 }}>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.15), rgba(245,158,11,0.11), transparent)", animation: "rfr-radar-sweep 4.8s linear infinite" }} />
         <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/28">
-          <span>Signal Radar <span style={{ color: "#03DAC5" }}>• Live</span></span>
-          <span>Intent score</span>
+          <span>Signal Radar <span style={{ color: MARKET_COLORS.emeraldBright }}>Live</span></span>
+          <span>Opportunity intensity</span>
         </div>
         <div className="space-y-3">
-          {radarSignals.map((signal, i) => (
-            <div key={signal.label} className="grid grid-cols-[130px_1fr_70px] items-center gap-3 text-xs md:grid-cols-[180px_1fr_86px]">
-              <div className="truncate font-semibold text-white/55">{signal.label}</div>
+          {radarRows.map((signal, i) => (
+            <div key={`${signal.track}-${signal.label}`} className="grid grid-cols-[132px_1fr_74px] items-center gap-3 text-xs md:grid-cols-[210px_1fr_96px]" style={{ animation: "rfr-live-rise .42s ease-out both", animationDelay: `${i * 55}ms` }}>
+              <div>
+                <div className="truncate font-semibold text-white/62">{signal.label}</div>
+                <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: signal.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
+                  {signal.track}
+                </div>
+              </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${Math.round(signal.value * 100)}%`,
-                    background: `linear-gradient(90deg, ${signal.color}, ${i % 2 === 0 ? "#03DAC5" : "#FFB000"})`,
+                    background: `linear-gradient(90deg, ${signal.track === "Partnership" ? MARKET_COLORS.amber : MARKET_COLORS.emerald}, ${signal.color})`,
                     animation: "rfr-radar-glow 2.6s ease-in-out infinite",
                     animationDelay: `${i * 120}ms`,
                   }}
@@ -183,13 +320,28 @@ function SignalRadar() {
               </div>
               <div className="flex items-center justify-end gap-2 font-mono">
                 <span className="font-bold text-white/70">{signal.value.toFixed(2)}</span>
-                <span style={{ color: signal.trend === "up" ? "#34d399" : "#fb923c" }}>
-                  {signal.trend === "up" ? "▲" : "▼"} {signal.delta.replace(/[+-]/, "")}
+                <span style={{ color: signal.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
+                  +{signal.delta.replace(/[+-]/, "")}
                 </span>
               </div>
             </div>
           ))}
         </div>
+        {activeSignal && (
+          <div className="mt-5 flex flex-col gap-2 rounded-xl border border-white/8 p-3 sm:flex-row sm:items-center sm:justify-between" style={{ background: "rgba(255,255,255,0.035)" }}>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: activeSignal.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
+                Now scoring {activeSignal.track.toLowerCase()} opportunity
+              </p>
+              <p className="mt-1 text-xs text-white/55">
+                <span className="font-semibold text-white/75">{activeSignal.company}</span> · {activeSignal.text}
+              </p>
+            </div>
+            <span className="font-mono text-sm font-bold" style={{ color: activeSignal.color }}>
+              {activeSignal.score}/100
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -200,6 +352,9 @@ export default function Signals() {
   const [industry, setIndustry] = useState("All");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [liveSignals, setLiveSignals] = useState<LiveOpportunitySignal[]>(fallbackLiveSignals);
+  const [loadingLiveSignals, setLoadingLiveSignals] = useState(true);
+  const [activeSignalIndex, setActiveSignalIndex] = useState(0);
 
   const filtered = SIGNAL_TYPES.filter((s) => {
     const matchCat = category === "All" || s.category === category;
@@ -207,6 +362,50 @@ export default function Signals() {
     const matchSearch = search === "" || s.name.toLowerCase().includes(search.toLowerCase()) || s.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchInd && matchSearch;
   });
+
+  const orderedLiveSignals = useMemo(() => {
+    if (!liveSignals.length) return [];
+    const start = activeSignalIndex % liveSignals.length;
+    return [...liveSignals.slice(start), ...liveSignals.slice(0, start)];
+  }, [liveSignals, activeSignalIndex]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLiveSignals() {
+      try {
+        const response = await fetch(
+          `${getApiBase()}/api/leads?limit=12&tier=HOT&sort=score&exclude_junk=true`,
+          liveFetchInit(),
+        );
+        if (!response.ok) throw new Error(`Live signal feed failed with ${response.status}`);
+        const data = await response.json();
+        const leads = Array.isArray(data) ? data : [];
+        const mapped = leads.map(mapLeadToLiveSignal).filter((signal) => signal.score > 0);
+        if (!mapped.length) throw new Error("No scored leads returned");
+        if (!cancelled) setLiveSignals(mapped);
+      } catch (error) {
+        console.info(error);
+        if (!cancelled) setLiveSignals(fallbackLiveSignals);
+      } finally {
+        if (!cancelled) setLoadingLiveSignals(false);
+      }
+    }
+
+    loadLiveSignals();
+    const refreshTimer = window.setInterval(loadLiveSignals, 30000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(refreshTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveSignalIndex((current) => current + 1);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -239,7 +438,7 @@ export default function Signals() {
             </p>
           </div>
 
-          <SignalRadar />
+          <SignalRadar signals={liveSignals} loading={loadingLiveSignals} activeIndex={activeSignalIndex} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -405,17 +604,17 @@ export default function Signals() {
                 style={{ background: "rgba(255,255,255,0.02)" }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <Zap className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
+                  <Zap className="h-3.5 w-3.5" style={{ color: MARKET_COLORS.amberBright }} />
                   <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Live feed</span>
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: MARKET_COLORS.emeraldBright }} />
                 </div>
                 <div className="space-y-3">
-                  {recentSignals.map((sig, i) => (
-                    <div key={i} className="flex items-start gap-3">
+                  {orderedLiveSignals.slice(0, 6).map((sig) => (
+                    <div key={sig.id} className="flex items-start gap-3">
                       <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-1.5" style={{ background: sig.color }} />
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-white/70">{sig.company}</p>
-                        <p className="text-[10px] text-white/35">{sig.type}</p>
+                        <p className="text-[10px] text-white/35">{sig.type} · {sig.track}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5">
                         <span
