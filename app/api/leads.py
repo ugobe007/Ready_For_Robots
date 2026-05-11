@@ -16,6 +16,7 @@ GET /api/leads
 import logging
 import os
 import random
+import re
 import threading
 import time
 from datetime import datetime, timezone, date
@@ -367,6 +368,10 @@ def _aggregate_lead_rows(rows, exclude_junk: bool):
             junk_count += 1
             if exclude_junk:
                 continue
+            total += 1
+            cold += 1
+            total_signals += int(row.signal_count or 0)
+            continue
         pri = _row_priority(row)
         total += 1
         total_signals += int(row.signal_count or 0)
@@ -464,16 +469,21 @@ def _signal_label(signal_type: str) -> str:
 
 def _dedup_top_signals(sigs: list, n: int = LEAD_RESPONSE_MAX_SIGNALS) -> list:
     """
-    Return at most `n` signals, one per unique signal_type, strongest first.
-    Guarantees zero duplicates by type — a lead with 200 `news` rows shows ONE.
+    Return at most `n` signals, strongest first, without repeating the same
+    signal type or the same underlying article text.
     """
     seen_types: set = set()
+    seen_texts: set = set()
     deduped = []
     for s in sorted(sigs, key=lambda x: float(getattr(x, "signal_strength", None) or 0), reverse=True):
         t = getattr(s, "signal_type", None) or "unknown"
-        if t not in seen_types:
-            seen_types.add(t)
-            deduped.append(s)
+        text_key = re.sub(r"\s+", " ", (getattr(s, "signal_text", None) or "").strip().lower())
+        if t in seen_types or (text_key and text_key in seen_texts):
+            continue
+        seen_types.add(t)
+        if text_key:
+            seen_texts.add(text_key)
+        deduped.append(s)
         if len(deduped) >= n:
             break
     return deduped
@@ -900,6 +910,8 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=exclude_junk
     )
+    companies_in_database = db.query(func.count(Company.id)).scalar() or 0
+    signals_in_database = db.query(func.count(Signal.id)).scalar() or 0
     return {
         "total": total,
         "hot": hot,
@@ -908,6 +920,10 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
         "junk_filtered": junk_count,
         "total_signals": total_signals,
         "by_industry": by_industry,
+        "companies_in_database": int(companies_in_database),
+        "signals_in_database": int(signals_in_database),
+        "summary_tier_slice_size": len(rows),
+        "leads_list_max_per_request": LEADS_PUBLIC_MAX,
     }
 
 

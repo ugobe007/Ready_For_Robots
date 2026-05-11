@@ -3,10 +3,10 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import Column, DateTime, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.types import JSONB
 
 
 class NewsletterSubscriber(Base):

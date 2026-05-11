@@ -28,6 +28,7 @@ Usage:
 import logging
 import random
 import re
+import ssl
 import time
 import urllib.request
 import urllib.parse
@@ -54,6 +55,16 @@ from app.services.signal_classifier import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _news_ssl_context() -> ssl.SSLContext:
+    """Use certifi when available so local macOS Python can verify RSS TLS."""
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 # ── High-Intent Industry Keywords (expansion, automation, labor pain) ─────────
 DISCOVERY_QUERIES = [
@@ -776,7 +787,7 @@ class IntelligenceNewsScraper:
                 "User-Agent": "Mozilla/5.0 (compatible; ReadyForRobots/1.0)"
             })
             
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=15, context=_news_ssl_context()) as resp:
                 xml_data = resp.read()
             
             root = ET.fromstring(xml_data)
@@ -1410,6 +1421,7 @@ class IntelligenceNewsScraper:
         # Ask "what is this?" before spending resources on blocklist lookups or writes.
         # Hard-reject if the classifier is confident the candidate is not a company name.
         from app.services.text_classifier import classify, EntityType
+
         tc = classify(name)
         _HARD_REJECT_TYPES = {
             EntityType.PERSON_NAME,

@@ -1,9 +1,9 @@
 """SCOUT marketing chat and activation persistence."""
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.database import Base
+from app.models.types import JSONB, UUID
 
 
 class ScoutSession(Base):

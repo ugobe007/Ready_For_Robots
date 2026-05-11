@@ -225,7 +225,11 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
     except ImportError:
         return None
 
-    client = OpenAI(api_key=key)
+    try:
+        timeout = float(os.getenv("INDUSTRY_BRIEF_OPENAI_TIMEOUT", "20"))
+    except ValueError:
+        timeout = 20.0
+    client = OpenAI(api_key=key, timeout=timeout)
     model = os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini")
     totals = analytics.get("totals") or {}
     ind_rolled = dict(_rollup_industry_counts(analytics.get("industries"), limit=12))

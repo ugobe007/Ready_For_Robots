@@ -61,7 +61,8 @@ export default function Header() {
   const primaryNavLinks = [
     { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
     { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
-    { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and weekly market brief" },
+    { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
+    { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
   ];
 

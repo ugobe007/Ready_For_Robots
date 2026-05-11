@@ -772,7 +772,7 @@ export default function Results() {
                             <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
                             <div>
                               <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                              <span className="text-xs text-white/50">{p.signal}</span>
+                              <span className="text-xs font-semibold" style={{ color: "#FFB000" }}>{p.signal}</span>
                             </div>
                           </div>
                         </div>
@@ -781,6 +781,9 @@ export default function Results() {
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
                           <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
+                          <p className="mb-2 border-l-2 pl-3 text-xs font-semibold leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+                            “{p.signal}”
+                          </p>
                           <p className="text-xs text-white/50 leading-relaxed">{p.relevance}</p>
                         </div>
                         <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>

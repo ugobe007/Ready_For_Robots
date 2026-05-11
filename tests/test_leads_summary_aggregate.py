@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import app.models  # noqa: F401 — register metadata
-from app.api.leads import _aggregate_lead_rows_from_map, _companies_by_ids, _compute_pipeline_summary
+from app.api.leads import _aggregate_lead_rows, _compute_pipeline_summary
 from app.database import Base
 from app.models.company import Company
 from app.models.score import Score
@@ -87,10 +87,7 @@ def test_aggregate_excludes_logic_engine_junk_when_exclude_junk(db_session):
         _sql_like_row(bad, overall_score=95.0, signal_count=0, hot_hits=0, warm_hits=0),
         _sql_like_row(good, overall_score=82.0, signal_count=1, hot_hits=1, warm_hits=0),
     ]
-    by_id = _companies_by_ids(db_session, [bad.id, good.id])
-    total, hot, warm, cold, junk_count, _by_ind, _ts = _aggregate_lead_rows_from_map(
-        rows, by_id, exclude_junk=True
-    )
+    total, hot, warm, cold, junk_count, _by_ind, _ts = _aggregate_lead_rows(rows, exclude_junk=True)
     assert junk_count >= 1
     assert total == 1
     assert hot + warm + cold == 1
@@ -123,10 +120,7 @@ def test_aggregate_include_junk_as_cold_when_exclude_junk_false(db_session):
     )
     db_session.commit()
     rows = [_sql_like_row(bad, overall_score=70.0, signal_count=0, hot_hits=0, warm_hits=0)]
-    by_id = _companies_by_ids(db_session, [bad.id])
-    total, hot, warm, cold, junk_count, _, _ = _aggregate_lead_rows_from_map(
-        rows, by_id, exclude_junk=False
-    )
+    total, hot, warm, cold, junk_count, _, _ = _aggregate_lead_rows(rows, exclude_junk=False)
     assert total == 1
     assert junk_count == 1
     assert cold == 1 and hot == 0 and warm == 0

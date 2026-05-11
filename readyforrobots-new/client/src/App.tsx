@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import Signals from "./pages/Signals";
 import HowItWorks from "./pages/HowItWorks";
 import Intelligence from "./pages/Intelligence";
+import Newsletter from "./pages/Newsletter";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/signals" component={Signals} />
       <Route path="/intelligence" component={Intelligence} />
+      <Route path="/newsletter" component={Newsletter} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/login" component={Login} />

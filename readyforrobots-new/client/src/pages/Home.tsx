@@ -5,7 +5,7 @@
  * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
  */
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, RefreshCw, X, Quote } from "lucide-react";
+import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, RefreshCw, X, Quote, Mail } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
@@ -70,6 +70,25 @@ const testimonials = [
   },
 ];
 
+type NewsletterStory = {
+  category?: string;
+  company?: string;
+  headline?: string;
+  snippet?: string;
+  summary?: string;
+  impact?: string;
+  economics?: string;
+};
+
+type NewsletterEdition = {
+  latestEdition?: {
+    date?: string;
+    headline?: string;
+    subheadline?: string;
+  };
+  topStories?: NewsletterStory[];
+};
+
 const beforeAfter = [
   { before: "Cold lists with no context", after: "Signal-triggered outreach with exact buying reason" },
   { before: "Reach out and hope for the right timing", after: "Contact during the decision window, not after" },
@@ -96,6 +115,7 @@ export default function Home() {
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [dailyBrief, setDailyBrief] = useState<NewsletterEdition | null>(null);
 
   const howItWorks = useFadeUp();
   const agentPitch = useFadeUp();
@@ -104,6 +124,19 @@ export default function Home() {
   const proofSection = useFadeUp();
   const beforeAfterSection = useFadeUp();
   const testimonialsSection = useFadeUp();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${getApiBase()}/api/newsletter/edition?limit=3`, liveFetchInit())
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.topStories) setDailyBrief(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function submitReportDownload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -274,6 +307,83 @@ export default function Home() {
 
       {/* ── PIPELINE PREVIEW ── */}
       <PipelinePreview />
+
+      {/* ── DAILY ROBOT INTELLIGENCE BRIEF ── */}
+      <section className="px-6 py-16 border-t border-white/6" style={{ background: "#0d0520" }}>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(255,176,0,0.05), rgba(124,58,237,0.05))" }}>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>
+                    Today's Robot Intelligence Brief
+                  </p>
+                </div>
+                <h2 className="max-w-2xl text-3xl font-extrabold leading-tight text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  {dailyBrief?.latestEdition?.headline || "Fresh robot demand signals, updated daily."}
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
+                  {dailyBrief?.latestEdition?.subheadline || "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine."}
+                </p>
+              </div>
+              <Link href="/newsletter" className="inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+                Read the brief
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {(dailyBrief?.topStories?.length ? dailyBrief.topStories : [
+                { category: "Signal", headline: "Labor pressure rising", snippet: "SCOUT is watching labor shortage, expansion, CapEx, and deployment signals for robotics vendors." },
+                { category: "Industry", headline: "Logistics remains active", snippet: "Warehouse automation and material handling continue to generate strong sales motion." },
+                { category: "Action", headline: "Turn signals into outreach", snippet: "Use the daily brief to spot which accounts deserve a SCOUT activation." },
+              ]).slice(0, 3).map((story, index) => (
+                <div key={`${story.company || story.headline || index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.58)" }}>
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: index === 1 ? "#FFB000" : "#03DAC5" }}>
+                    {story.category || "Signal"}
+                  </p>
+                  <p className="text-sm font-bold leading-snug text-white/88">{story.headline || story.company || "Signal story"}</p>
+                  <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-white/40">{story.snippet || story.summary || "Fresh signal intelligence from ReadyForRobots."}</p>
+                  {(story.impact || story.economics) && (
+                    <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      {[story.impact, story.economics].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.035)" }}>
+            <Mail className="mb-5 h-5 w-5" style={{ color: "#03DAC5" }} />
+            <p className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Get the brief daily</p>
+            <p className="mt-3 text-sm leading-relaxed text-white/42">
+              A short, signal-driven digest of robot demand, buyer timing, and where SCOUT sees sales or partnership motion.
+            </p>
+            <form onSubmit={submitNewsletter} className="mt-5 space-y-2">
+              <input
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                type="email"
+                placeholder="work email"
+                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
+                style={{ background: "rgba(255,255,255,0.04)" }}
+              />
+              <button
+                type="submit"
+                disabled={newsletterStatus === "submitting"}
+                className="w-full rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
+                style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
+              >
+                {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
+              </button>
+            </form>
+            {newsletterStatus === "success" && <p className="mt-3 text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
+            {newsletterStatus === "error" && <p className="mt-3 text-xs text-red-300">Could not subscribe. Try again.</p>}
+          </div>
+        </div>
+      </section>
 
       {/* ── MARKET INTELLIGENCE ── */}
       <section

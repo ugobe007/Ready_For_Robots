@@ -209,6 +209,11 @@ _JUNK_SUBSTRINGS = [
     "bangladesh rmg",
     "ydr==",
     " - ydr",
+    # Market report fragments that look like companies in RSS extraction
+    "machine market",
+    "equipment market",
+    "systems market",
+    "system market",
 ]
 
 # Regex patterns on the raw (original-case) name
@@ -917,6 +922,20 @@ _JUNK_EXACT = frozenset({
     "warehouse robotics use", "warehouse robotics adoption",
     "semiconductor sourcing", "component sourcing", "chip sourcing",
     "size share",
+    # User-reported scraper headline fragments (Apr 2026)
+    "peak season",
+    "exclusive eqt bets",
+    "google cloud team up",
+    "distribution center jobs while increasing",
+    "blue jay takes flight amazon",
+    "kenco greyorange",
+    "san jos",
+    "domino effect",
+    "warehouse dc operations survey tech",
+    "your warehouse",
+    "melonee wise",
+    "flexkeeping rollout following",
+    "kentucky distribution center",
     # Location + facility stubs (not operating companies)
     "tampa plant", "tampa facility", "german facility", "german plant",
     "french facility", "japanese facility", "chinese facility",

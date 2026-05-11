@@ -2,10 +2,10 @@
 import uuid
 
 from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.types import JSONB, UUID
 
 
 class OrganizationProfile(Base):

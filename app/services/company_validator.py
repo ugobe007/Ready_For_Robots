@@ -268,6 +268,8 @@ _STRUCTURAL_REJECTS = [
     re.compile(r"\s+and\s+\w+\s*$", re.IGNORECASE),
     # All words are 3 letters or fewer (likely an acronym chain or noise)
     re.compile(r"^([A-Z]{1,3}\s+){2,}[A-Z]{1,3}\s*$"),
+    # Stock/ticker headline chains: "UBS CGNX NASDAQ" is not a company name.
+    re.compile(r"^[A-Z]{2,6}(?:\s+[A-Z]{2,6}){2,}$"),
     # PR / news headline: "[Brand] Strengthens Position|Presence|Leadership …"
     re.compile(r"(?i)\bstrengthens\s+(position|presence|leadership)\b"),
     # Deck / SEO fragments: "Share Insights", "Using … Robotics"
