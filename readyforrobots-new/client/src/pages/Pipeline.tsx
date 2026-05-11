@@ -11,6 +11,7 @@ import {
   Users, Clock, Target
 } from "lucide-react";
 import Header from "@/components/Header";
+import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -130,6 +131,7 @@ export default function Pipeline() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
+  const [industryQuery, setIndustryQuery] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedActivationId, setSelectedActivationId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
@@ -186,8 +188,11 @@ export default function Pipeline() {
     })();
   }, [session]);
 
-  const industries = ["All", ...Array.from(new Set(deals.map((d) => d.industry)))];
-  const filtered = filter === "All" ? deals : deals.filter((d) => d.industry === filter);
+  const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
+  const resolvedIndustryFilter = industryQuery.trim() || filter;
+  const filtered = !resolvedIndustryFilter || resolvedIndustryFilter === "All"
+    ? deals
+    : deals.filter((d) => d.industry.toLowerCase().includes(resolvedIndustryFilter.toLowerCase()));
   const selected = deals.find((d) => d.id === selectedId) ?? null;
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
@@ -235,7 +240,7 @@ export default function Pipeline() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SCOUT</p>
                 <h1 className="font-extrabold text-white text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Live pipeline
+                  Active Signals → Live Pipeline
                 </h1>
                 <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
                   SCOUT pulls scored leads from your database — find, engage, and book meetings from one surface.
@@ -255,22 +260,32 @@ export default function Pipeline() {
             </div>
 
             {/* Industry filter */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Filter className="h-3 w-3 text-white/20" />
-              {industries.map((ind) => (
+            <div className="relative w-full sm:w-[320px]">
+              <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
+              <input
+                value={industryQuery}
+                onChange={(e) => {
+                  setIndustryQuery(e.target.value);
+                  setFilter("All");
+                }}
+                list="pipeline-industries"
+                placeholder="Filter by industry..."
+                className="w-full rounded-xl border border-white/10 bg-white/[0.035] py-2.5 pl-9 pr-9 text-xs font-semibold text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+              />
+              {industryQuery && (
                 <button
-                  key={ind}
-                  onClick={() => setFilter(ind)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all"
-                  style={
-                    filter === ind
-                      ? { background: "#7c3aed", borderColor: "#7c3aed", color: "#fff" }
-                      : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }
-                  }
+                  type="button"
+                  onClick={() => setIndustryQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/35 hover:text-white/70"
                 >
-                  {ind}
+                  Clear
                 </button>
-              ))}
+              )}
+              <datalist id="pipeline-industries">
+                {industries.map((ind) => (
+                  <option key={ind} value={ind} />
+                ))}
+              </datalist>
             </div>
           </div>
 
@@ -474,6 +489,14 @@ export default function Pipeline() {
                   <div className="rounded-xl border border-dashed border-white/8 px-4 py-6 text-center">
                     <p className="text-sm font-semibold text-white/40">SCOUT activity will appear here</p>
                     <p className="text-[11px] text-white/25 mt-1">Use Activate SCOUT on Results to create the first work queue item.</p>
+                    <Link
+                      href="/results?url="
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                      style={{ color: "#FFB000", borderColor: "#FFB000" }}
+                    >
+                      <Target className="h-3.5 w-3.5" />
+                      Activate SCOUT
+                    </Link>
                   </div>
                 )}
               </div>
