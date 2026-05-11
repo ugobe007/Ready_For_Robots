@@ -291,8 +291,8 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
   return (
     <section className="mb-10 overflow-hidden border p-5 lg:p-6" style={{ background: "radial-gradient(circle at 18% 18%, rgba(16,185,129,0.2), transparent 28%), radial-gradient(circle at 82% 20%, rgba(245,158,11,0.18), transparent 30%), linear-gradient(135deg, rgba(3,7,18,0.96), rgba(13,5,32,0.92) 52%, rgba(6,95,70,0.22))", borderColor: "rgba(16,185,129,0.22)", borderRadius: 24, boxShadow: "0 28px 90px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
       <style>{`
-        @keyframes rfr-radar-sweep { 0% { transform: translateX(-18%); opacity: .08; } 32% { opacity: .72; } 100% { transform: translateX(118%); opacity: .08; } }
-        @keyframes rfr-signal-pip { 0% { left: -148px; transform: translateY(-50%) scale(.92); opacity: 0; } 10% { opacity: .98; } 78% { opacity: .98; } 100% { left: calc(100% + 16px); transform: translateY(-50%) scale(1); opacity: 0; } }
+        @keyframes rfr-radar-sweep { 0% { transform: translateX(-22%); opacity: .05; } 38% { opacity: .42; } 100% { transform: translateX(122%); opacity: .05; } }
+        @keyframes rfr-marker-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .72; } 50% { transform: translate(-50%, -50%) scale(1.28); opacity: 1; } }
         @keyframes rfr-card-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 34px rgba(245,158,11,.16); } }
         @keyframes rfr-live-rise { 0% { transform: translateY(3px); opacity: .48; } 100% { transform: translateY(0); opacity: 1; } }
       `}</style>
@@ -305,7 +305,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
             Live Robot Demand Radar
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
-            Signal lanes move as SCOUT scores live sales leads and partnership opportunities, then elevates the strongest account on the board.
+            SCOUT groups scored leads into signal lanes, marks where demand is strongest, and elevates the account worth reviewing now.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -326,10 +326,10 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
       <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
         <div className="relative min-h-[390px] overflow-hidden border p-4" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018))", borderColor: "rgba(255,255,255,0.1)", borderRadius: 18 }}>
           <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "42px 42px" }} />
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.26), rgba(245,158,11,0.18), transparent)", animation: "rfr-radar-sweep 5.4s linear infinite" }} />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.2), rgba(245,158,11,0.12), transparent)", animation: "rfr-radar-sweep 10s linear infinite" }} />
           <div className="relative mb-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
             <span>{loading ? "Syncing scored leads" : "150+ sources scanning"}</span>
-            <span style={{ color: MARKET_COLORS.emeraldBright }}>lead packets moving</span>
+            <span style={{ color: MARKET_COLORS.emeraldBright }}>live scoring markers</span>
           </div>
 
           <div className="relative space-y-4">
@@ -354,25 +354,30 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                   <div className="relative h-12 overflow-hidden rounded-2xl border" style={{ background: activeLane ? "rgba(255,255,255,0.055)" : "rgba(2,6,23,0.52)", borderColor: activeLane ? (row.track === "Partnership" ? "rgba(245,158,11,0.28)" : "rgba(16,185,129,0.28)") : "rgba(255,255,255,0.08)" }}>
                     <div className="absolute inset-y-1 left-2 rounded-full" style={{ width: `${Math.round(row.value * 92)}%`, background: `linear-gradient(90deg, ${row.track === "Partnership" ? "rgba(180,83,9,0.14)" : "rgba(6,95,70,0.16)"}, transparent)` }} />
                     <div className="absolute left-0 right-0 top-1/2 h-px bg-white/10" />
-                    {pipSignals.map((signal, pipIndex) => (
+                    {pipSignals.map((signal, pipIndex) => {
+                      const markerLeft = Math.min(92, Math.max(8, signal.score - pipIndex * 7));
+                      const isActiveMarker = activeSignal?.id === signal.id;
+                      return (
                       <div
                         key={`${row.label}-${signal.id}-${pipIndex}`}
-                        className="absolute top-1/2 flex h-7 min-w-[118px] items-center gap-2 rounded-full border px-2"
+                        className="absolute top-1/2 h-3 w-3 rounded-full"
                         title={`${signal.company}: ${signal.text}`}
                         style={{
-                          left: -148,
+                          left: `${markerLeft}%`,
                           background: row.track === "Partnership" ? "rgba(180,83,9,0.92)" : "rgba(6,95,70,0.92)",
                           borderColor: row.track === "Partnership" ? "rgba(245,158,11,0.56)" : "rgba(16,185,129,0.56)",
-                          boxShadow: `0 0 20px ${row.track === "Partnership" ? "rgba(245,158,11,.38)" : "rgba(16,185,129,.42)"}`,
-                          animation: `rfr-signal-pip ${6.2 + pipIndex * 0.85}s linear infinite`,
-                          animationDelay: `${rowIndex * 0.34 + pipIndex * 1.35}s`,
+                          boxShadow: `0 0 ${isActiveMarker ? 24 : 14}px ${row.track === "Partnership" ? "rgba(245,158,11,.48)" : "rgba(16,185,129,.48)"}`,
+                          transform: "translate(-50%, -50%)",
+                          animation: isActiveMarker ? "rfr-marker-pulse 2.4s ease-in-out infinite" : undefined,
                         }}
-                      >
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/80" />
-                        <span className="max-w-[72px] truncate text-[10px] font-bold text-white/90">{signal.company}</span>
-                        <span className="font-mono text-[10px] font-black text-white">{signal.score}</span>
+                      />
+                      );
+                    })}
+                    {pipSignals[0] && (
+                      <div className="absolute bottom-1 left-3 max-w-[72%] truncate text-[10px] font-semibold text-white/32">
+                        {pipSignals[0].company} · {pipSignals[0].score}
                       </div>
-                    ))}
+                    )}
                     <div className="absolute bottom-1 right-3 font-mono text-[10px] font-bold text-white/25">{row.delta} signals</div>
                   </div>
                 </div>
