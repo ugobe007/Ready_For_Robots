@@ -331,6 +331,9 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
             <span>{loading ? "Syncing scored leads" : "150+ sources scanning"}</span>
             <span style={{ color: MARKET_COLORS.emeraldBright }}>live scoring markers</span>
           </div>
+          <div className="relative mb-4 rounded-2xl border border-white/8 px-3 py-2 text-xs leading-relaxed text-white/42" style={{ background: "rgba(255,255,255,0.03)" }}>
+            Each circle is a scored lead. Its lane shows the signal type, its color shows sales vs partnership motion, and its position shows intent strength.
+          </div>
 
           <div className="relative space-y-4">
             {radarRows.map((row, rowIndex) => {
@@ -360,7 +363,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                       return (
                       <div
                         key={`${row.label}-${signal.id}-${pipIndex}`}
-                        className="absolute top-1/2 h-3 w-3 rounded-full"
+                        className="absolute top-1/2 flex h-5 w-5 items-center justify-center rounded-full border"
                         title={`${signal.company}: ${signal.text}`}
                         style={{
                           left: `${markerLeft}%`,
@@ -370,7 +373,9 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                           transform: "translate(-50%, -50%)",
                           animation: isActiveMarker ? "rfr-marker-pulse 2.4s ease-in-out infinite" : undefined,
                         }}
-                      />
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                      </div>
                       );
                     })}
                     {pipSignals[0] && (
