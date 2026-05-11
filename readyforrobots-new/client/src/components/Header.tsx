@@ -66,6 +66,7 @@ export default function Header() {
   ];
 
   const accountLinks = [
+    { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
     { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
     { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
   ];
@@ -118,11 +119,11 @@ export default function Header() {
 
             {!session && (
               <Link
-                href="/login"
+                href="/signup"
                 className="hidden sm:inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
                 style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
               >
-                Sign up / Sign in
+                Sign up
               </Link>
             )}
 

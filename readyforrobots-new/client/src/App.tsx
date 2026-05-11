@@ -12,6 +12,7 @@ import HowItWorks from "./pages/HowItWorks";
 import Intelligence from "./pages/Intelligence";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
 import Admin from "./pages/Admin";
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/crm" component={Crm} />
       <Route path="/admin" component={Admin} />

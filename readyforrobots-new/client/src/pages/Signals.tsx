@@ -293,6 +293,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
       <style>{`
         @keyframes rfr-radar-sweep { 0% { transform: translateX(-22%); opacity: .05; } 38% { opacity: .42; } 100% { transform: translateX(122%); opacity: .05; } }
         @keyframes rfr-marker-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .72; } 50% { transform: translate(-50%, -50%) scale(1.28); opacity: 1; } }
+        @keyframes rfr-radar-ring { 0% { transform: translate(-50%, -50%) scale(.55); opacity: .62; } 70% { opacity: .14; } 100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; } }
         @keyframes rfr-card-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(16,185,129,0); } 50% { box-shadow: 0 0 34px rgba(245,158,11,.16); } }
         @keyframes rfr-live-rise { 0% { transform: translateY(3px); opacity: .48; } 100% { transform: translateY(0); opacity: 1; } }
       `}</style>
@@ -361,21 +362,36 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                       const markerLeft = Math.min(92, Math.max(8, signal.score - pipIndex * 7));
                       const isActiveMarker = activeSignal?.id === signal.id;
                       return (
-                      <div
-                        key={`${row.label}-${signal.id}-${pipIndex}`}
-                        className="absolute top-1/2 flex h-5 w-5 items-center justify-center rounded-full border"
-                        title={`${signal.company}: ${signal.text}`}
-                        style={{
-                          left: `${markerLeft}%`,
-                          background: row.track === "Partnership" ? "rgba(180,83,9,0.92)" : "rgba(6,95,70,0.92)",
-                          borderColor: row.track === "Partnership" ? "rgba(245,158,11,0.56)" : "rgba(16,185,129,0.56)",
-                          boxShadow: `0 0 ${isActiveMarker ? 24 : 14}px ${row.track === "Partnership" ? "rgba(245,158,11,.48)" : "rgba(16,185,129,.48)"}`,
-                          transform: "translate(-50%, -50%)",
-                          animation: isActiveMarker ? "rfr-marker-pulse 2.4s ease-in-out infinite" : undefined,
-                        }}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
-                      </div>
+                        <div
+                          key={`${row.label}-${signal.id}-${pipIndex}`}
+                          className="absolute top-1/2"
+                          title={`${signal.company}: ${signal.text}`}
+                          style={{ left: `${markerLeft}%` }}
+                        >
+                          {isActiveMarker && [0, 1, 2].map((ring) => (
+                            <span
+                              key={ring}
+                              className="pointer-events-none absolute left-0 top-0 h-6 w-6 rounded-full border"
+                              style={{
+                                borderColor: row.track === "Partnership" ? "rgba(245,158,11,0.58)" : "rgba(16,185,129,0.58)",
+                                animation: "rfr-radar-ring 2.4s ease-out infinite",
+                                animationDelay: `${ring * 0.46}s`,
+                              }}
+                            />
+                          ))}
+                          <span
+                            className="absolute left-0 top-0 flex h-5 w-5 items-center justify-center rounded-full border"
+                            style={{
+                              background: row.track === "Partnership" ? "rgba(180,83,9,0.92)" : "rgba(6,95,70,0.92)",
+                              borderColor: row.track === "Partnership" ? "rgba(245,158,11,0.56)" : "rgba(16,185,129,0.56)",
+                              boxShadow: `0 0 ${isActiveMarker ? 24 : 14}px ${row.track === "Partnership" ? "rgba(245,158,11,.48)" : "rgba(16,185,129,.48)"}`,
+                              transform: "translate(-50%, -50%)",
+                              animation: isActiveMarker ? "rfr-marker-pulse 2.4s ease-in-out infinite" : undefined,
+                            }}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                          </span>
+                        </div>
                       );
                     })}
                     {pipSignals[0] && (
@@ -432,6 +448,13 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                     : "Prioritize outreach now with a use-case tied directly to this buying trigger."}
                 </p>
               </div>
+              <Link
+                href="/signup"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-black text-black transition-all hover:-translate-y-0.5"
+                style={{ background: "#FFB000" }}
+              >
+                Sign up to work this signal
+              </Link>
             </div>
           )}
         </div>
