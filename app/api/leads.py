@@ -309,7 +309,7 @@ def _lead_rows_query(db: Session):
 
 # Cap how many grouped company rows we load for summaries / homepage (not full-table scans).
 # Default 50 — override with PIPELINE_SUMMARY_ROW_CAP only for internal ops.
-_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "50"))
+_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "100000"))
 
 # Public list endpoint: never return more than this; pool rotates on a 5-minute clock.
 LEADS_PUBLIC_MAX = 50

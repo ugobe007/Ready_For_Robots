@@ -52,6 +52,14 @@ type LiveOpportunitySignal = {
   industry: string;
 };
 
+type LeadSummary = {
+  total?: number;
+  hot?: number;
+  warm?: number;
+  cold?: number;
+  total_signals?: number;
+};
+
 const MARKET_COLORS = {
   emerald: "#065f46",
   emeraldBright: "#10b981",
@@ -266,13 +274,19 @@ function buildRadarRows(signals: LiveOpportunitySignal[], activeIndex: number) {
     .slice(0, 7);
 }
 
-function SignalRadar({ signals, loading, activeIndex }: { signals: LiveOpportunitySignal[]; loading: boolean; activeIndex: number }) {
+function formatMetric(value: number | string): string {
+  if (typeof value === "string") return value;
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function SignalRadar({ signals, summary, loading, activeIndex }: { signals: LiveOpportunitySignal[]; summary: LeadSummary | null; loading: boolean; activeIndex: number }) {
   const radarRows = useMemo(() => buildRadarRows(signals, activeIndex), [signals, activeIndex]);
   const activeSignal = signals[activeIndex % Math.max(signals.length, 1)];
-  const salesCount = signals.filter((signal) => signal.track === "Sales").length;
-  const partnershipCount = signals.filter((signal) => signal.track === "Partnership").length;
   const hotCount = signals.filter((signal) => signal.score >= 85).length;
-  const avgScore = signals.length ? Math.round(signals.reduce((sum, signal) => sum + signal.score, 0) / signals.length) : 0;
+  const totalLeads = summary?.total ?? signals.length;
+  const hotLeads = summary?.hot ?? hotCount;
+  const warmLeads = summary?.warm ?? 0;
+  const totalSignals = summary?.total_signals ?? signals.length;
 
   return (
     <section className="mb-10 overflow-hidden border p-5 lg:p-6" style={{ background: "radial-gradient(circle at 18% 18%, rgba(16,185,129,0.2), transparent 28%), radial-gradient(circle at 82% 20%, rgba(245,158,11,0.18), transparent 30%), linear-gradient(135deg, rgba(3,7,18,0.96), rgba(13,5,32,0.92) 52%, rgba(6,95,70,0.22))", borderColor: "rgba(16,185,129,0.22)", borderRadius: 24, boxShadow: "0 28px 90px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
@@ -296,10 +310,10 @@ function SignalRadar({ signals, loading, activeIndex }: { signals: LiveOpportuni
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            ["Hot", hotCount || signals.length, MARKET_COLORS.emeraldBright],
-            ["Sales", salesCount, MARKET_COLORS.emeraldBright],
-            ["Partners", partnershipCount, MARKET_COLORS.amberBright],
-            ["Avg", avgScore || "--", MARKET_COLORS.violet],
+            ["Leads", formatMetric(totalLeads), MARKET_COLORS.emeraldBright],
+            ["Hot", formatMetric(hotLeads), MARKET_COLORS.emeraldBright],
+            ["Warm", formatMetric(warmLeads), MARKET_COLORS.amberBright],
+            ["Signals", formatMetric(totalSignals), MARKET_COLORS.violet],
           ].map(([label, value, color]) => (
             <div key={String(label)} className="rounded-xl border border-white/8 px-3 py-2 text-right" style={{ background: "rgba(255,255,255,0.035)" }}>
               <div className="font-mono text-lg font-black" style={{ color: String(color) }}>{value}</div>
@@ -422,6 +436,7 @@ export default function Signals() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [liveSignals, setLiveSignals] = useState<LiveOpportunitySignal[]>(fallbackLiveSignals);
+  const [leadSummary, setLeadSummary] = useState<LeadSummary | null>(null);
   const [loadingLiveSignals, setLoadingLiveSignals] = useState(true);
   const [activeSignalIndex, setActiveSignalIndex] = useState(0);
 
@@ -440,6 +455,17 @@ export default function Signals() {
 
   useEffect(() => {
     let cancelled = false;
+
+    async function loadLeadSummary() {
+      try {
+        const response = await fetch(`${getApiBase()}/api/leads/summary?exclude_junk=true`, liveFetchInit());
+        if (!response.ok) throw new Error(`Lead summary failed with ${response.status}`);
+        const data = await response.json();
+        if (!cancelled) setLeadSummary(data);
+      } catch (error) {
+        console.info(error);
+      }
+    }
 
     async function loadLiveSignals() {
       try {
@@ -461,8 +487,12 @@ export default function Signals() {
       }
     }
 
+    loadLeadSummary();
     loadLiveSignals();
-    const refreshTimer = window.setInterval(loadLiveSignals, 30000);
+    const refreshTimer = window.setInterval(() => {
+      loadLeadSummary();
+      loadLiveSignals();
+    }, 30000);
     return () => {
       cancelled = true;
       window.clearInterval(refreshTimer);
@@ -507,7 +537,7 @@ export default function Signals() {
             </p>
           </div>
 
-          <SignalRadar signals={liveSignals} loading={loadingLiveSignals} activeIndex={activeSignalIndex} />
+          <SignalRadar signals={liveSignals} summary={leadSummary} loading={loadingLiveSignals} activeIndex={activeSignalIndex} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
