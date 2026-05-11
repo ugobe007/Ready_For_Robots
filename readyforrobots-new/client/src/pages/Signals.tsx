@@ -61,13 +61,25 @@ type LeadSummary = {
 };
 
 const MARKET_COLORS = {
-  emerald: "#065f46",
-  emeraldBright: "#10b981",
+  emerald: "#00D27A",
+  emeraldBright: "#34F5A5",
   amber: "#FFB000",
   amberBright: "#FFB000",
   teal: "#03DAC5",
-  violet: "#a78bfa",
+  violet: "#C084FC",
 };
+
+const RADAR_SIGNAL_ROWS = [
+  { label: "Labor Shortage", track: "Sales" as OpportunityTrack, baseline: 0.82 },
+  { label: "Expansion Signal", track: "Sales" as OpportunityTrack, baseline: 0.76 },
+  { label: "CapEx Announcement", track: "Sales" as OpportunityTrack, baseline: 0.72 },
+  { label: "Safety Signal", track: "Sales" as OpportunityTrack, baseline: 0.66 },
+  { label: "Automation Hiring", track: "Sales" as OpportunityTrack, baseline: 0.62 },
+  { label: "Leadership Change", track: "Sales" as OpportunityTrack, baseline: 0.58 },
+  { label: "Contract Win", track: "Partnership" as OpportunityTrack, baseline: 0.54 },
+  { label: "Integrator Fit", track: "Partnership" as OpportunityTrack, baseline: 0.5 },
+  { label: "Industry News Trigger", track: "Partnership" as OpportunityTrack, baseline: 0.46 },
+];
 
 const SIGNAL_TYPES = [
   {
@@ -87,7 +99,7 @@ const SIGNAL_TYPES = [
     id: "expansion",
     name: "Expansion Signal",
     icon: TrendingUp,
-    color: "#34d399",
+    color: MARKET_COLORS.emeraldBright,
     category: "Growth",
     description: "New facilities, new markets, or significant headcount growth — companies building capacity need automation baked in.",
     sources: ["Press releases", "Real estate permits", "LinkedIn company updates", "Earnings calls"],
@@ -113,7 +125,7 @@ const SIGNAL_TYPES = [
     id: "capex",
     name: "CapEx Announcement",
     icon: DollarSign,
-    color: "#a78bfa",
+    color: MARKET_COLORS.violet,
     category: "Financial",
     description: "Capital expenditure announcements signal budget allocation for equipment and infrastructure.",
     sources: ["Earnings calls", "SEC filings", "Press releases", "Industry news"],
@@ -126,7 +138,7 @@ const SIGNAL_TYPES = [
     id: "hiring",
     name: "Automation Hiring",
     icon: Briefcase,
-    color: "#60a5fa",
+    color: MARKET_COLORS.teal,
     category: "Intent",
     description: "Job postings for automation engineers, robotics technicians, or process improvement roles signal active evaluation.",
     sources: ["LinkedIn", "Indeed", "Glassdoor", "Company career pages"],
@@ -152,7 +164,7 @@ const SIGNAL_TYPES = [
     id: "leadership",
     name: "Leadership Change",
     icon: Building2,
-    color: "#fbbf24",
+    color: MARKET_COLORS.amberBright,
     category: "Intent",
     description: "New COO, VP of Operations, or Head of Manufacturing often signals a mandate to modernize operations.",
     sources: ["LinkedIn", "Press releases", "Company announcements"],
@@ -165,7 +177,7 @@ const SIGNAL_TYPES = [
     id: "contract",
     name: "Contract Win",
     icon: Globe,
-    color: "#34d399",
+    color: MARKET_COLORS.emeraldBright,
     category: "Growth",
     description: "Major contract wins create immediate capacity pressure — the perfect moment to propose automation.",
     sources: ["Press releases", "Government contract databases", "Industry news"],
@@ -257,21 +269,22 @@ function buildRadarRows(signals: LiveOpportunitySignal[], activeIndex: number) {
     groups.set(key, current);
   });
 
-  return Array.from(groups.values())
-    .map((row, index) => {
-      const average = row.total / row.count;
-      const pulse = index === activeIndex % Math.max(groups.size, 1) ? 0.04 : 0;
-      const value = Math.min(0.98, average / 100 + Math.min(row.count * 0.015, 0.06) + pulse);
-      return {
-        label: row.label,
-        track: row.track,
-        value,
-        delta: `+${Math.max(1, row.count + Math.round((average - 70) / 10)).toString().padStart(2, "0")}`,
-        color: row.track === "Partnership" ? MARKET_COLORS.amberBright : row.color,
-      };
-    })
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 7);
+  return RADAR_SIGNAL_ROWS.map((seed, index) => {
+    const salesMatch = groups.get(`Sales:${seed.label}`);
+    const partnerMatch = groups.get(`Partnership:${seed.label}`);
+    const matched = salesMatch || partnerMatch;
+    const average = matched ? matched.total / matched.count : seed.baseline * 100;
+    const pulse = index === activeIndex % RADAR_SIGNAL_ROWS.length ? 0.035 : 0;
+    const value = Math.min(0.98, Math.max(0.22, average / 100 + (matched ? Math.min(matched.count * 0.02, 0.08) : 0) + pulse));
+    return {
+      label: seed.label,
+      track: matched?.track || seed.track,
+      value,
+      delta: `+${Math.max(1, (matched?.count || 0) + Math.round((average - 58) / 12)).toString().padStart(2, "0")}`,
+      color: (matched?.track || seed.track) === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright,
+    };
+  })
+    .sort((a, b) => b.value - a.value);
 }
 
 function formatMetric(value: number | string): string {
@@ -343,8 +356,8 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                 0.98,
                 Math.max(0.16, row.value + (activeLane ? 0.16 : sameMotion ? 0.05 : -0.03)),
               );
-              const barColor = row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright;
-              const barBase = row.track === "Partnership" ? MARKET_COLORS.amber : MARKET_COLORS.emerald;
+              const barColor = row.track === "Partnership" ? MARKET_COLORS.amberBright : row.label === "CapEx Announcement" ? MARKET_COLORS.violet : row.label === "Automation Hiring" ? MARKET_COLORS.teal : MARKET_COLORS.emeraldBright;
+              const barBase = row.track === "Partnership" ? "#FF7A00" : row.label === "CapEx Announcement" ? "#7C3AED" : row.label === "Automation Hiring" ? "#0891B2" : MARKET_COLORS.emerald;
               return (
                 <div
                   key={`${row.track}-${row.label}`}

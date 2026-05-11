@@ -107,6 +107,12 @@ const scoreColor = (s: number) =>
 const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
+const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">) =>
+  deal.stage === "New Signal" ? deal.signalType : deal.stage;
+
+const displayStageColor = (deal: Pick<Deal, "stage" | "signalColor">) =>
+  deal.stage === "New Signal" ? deal.signalColor : STAGE_META[deal.stage].color;
+
 const formatActivationTime = (value?: string | null) => {
   if (!value) return "just now";
   const created = new Date(value);
@@ -534,9 +540,9 @@ export default function Pipeline() {
                                   <span className="text-[10px] text-white/30 shrink-0">{deal.location}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-                                    style={{ color: deal.signalColor, background: `${deal.signalColor}15` }}
+                                    style={{ color: displayStageColor(deal), background: `${displayStageColor(deal)}15` }}
                                   >
-                                    {deal.signalType}
+                                    {displayStageLabel(deal)}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
@@ -597,9 +603,9 @@ export default function Pipeline() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span
                         className="text-[10px] font-bold px-2 py-1 rounded-full"
-                        style={{ color: STAGE_META[selected.stage].color, background: `${STAGE_META[selected.stage].color}15`, border: `1px solid ${STAGE_META[selected.stage].color}25` }}
+                        style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
                       >
-                        {selected.stage}
+                        {displayStageLabel(selected)}
                       </span>
                       {selected.contact && (
                         <span className="text-[11px] text-white/40">
