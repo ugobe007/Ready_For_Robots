@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { cleanAndClampText } from "@/lib/text";
 export type HomepageLeadRow = {
   id: number;
   company_name?: string;
@@ -47,11 +48,9 @@ const STATIC_FALLBACK: HomepageLeadRow[] = [
 ];
 
 function heroSubline(lead: HomepageLeadRow): string {
-  const need = (lead.core_need || "").replace(/\n/g, " ").trim();
-  if (need.length > 72) return need.slice(0, 69) + "…";
+  const need = cleanAndClampText(lead.core_need, 72);
   if (need) return need;
-  const t = lead.signals?.[0]?.display_text?.trim() || "";
-  if (t.length > 72) return t.slice(0, 69) + "…";
+  const t = cleanAndClampText(lead.signals?.[0]?.display_text, 72);
   if (t) return t;
   return lead.industry || "";
 }

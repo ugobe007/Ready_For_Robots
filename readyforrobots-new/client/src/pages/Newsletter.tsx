@@ -3,6 +3,7 @@ import { ArrowRight, BarChart3, Mail, Radio, RefreshCw, Send, Zap } from "lucide
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { cleanScrapedText } from "@/lib/text";
 
 type NewsletterStory = {
   category?: string;
@@ -100,6 +101,8 @@ export default function Newsletter() {
 
   const stories = (edition?.topStories?.length ? edition.topStories : fallbackStories).slice(0, 8);
   const brief = edition?.industryBrief;
+  const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
+  const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "A daily digest of buying signals, deployment stories, vendor movement, and sales timing for robotics teams.";
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -115,10 +118,10 @@ export default function Newsletter() {
                   Robot Intelligence Brief
                 </p>
                 <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-white lg:text-6xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {edition?.latestEdition?.headline || "Daily robot demand intelligence."}
+                  {headline}
                 </h1>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/48">
-                  {edition?.latestEdition?.subheadline || "A daily digest of buying signals, deployment stories, vendor movement, and sales timing for robotics teams."}
+                  {subheadline}
                 </p>
               </div>
               <form onSubmit={subscribe} className="rounded-2xl border border-white/10 p-5" style={{ background: "rgba(13,5,32,0.62)" }}>
@@ -161,13 +164,13 @@ export default function Newsletter() {
               <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_360px]">
                 <div>
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#a78bfa" }}>Strategic take</p>
-                  <p className="text-lg leading-relaxed text-white/70">{brief.executive_take}</p>
+                  <p className="break-words text-lg leading-relaxed text-white/70">{cleanScrapedText(brief.executive_take)}</p>
                 </div>
                 <div className="space-y-3">
                   {(brief.watch_next || brief.macro_trends || []).slice(0, 3).map((item, index) => (
                     <div key={`${item}-${index}`} className="flex items-start gap-3 rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
                       <Radio className="mt-0.5 h-4 w-4 shrink-0" style={{ color: index === 0 ? "#FFB000" : "#03DAC5" }} />
-                      <p className="text-sm leading-relaxed text-white/50">{item}</p>
+                      <p className="break-words text-sm leading-relaxed text-white/50">{cleanScrapedText(item)}</p>
                     </div>
                   ))}
                 </div>
@@ -180,7 +183,7 @@ export default function Newsletter() {
               <article key={`${story.company || story.headline || index}`} className="rounded-3xl border border-white/8 p-5 transition-colors hover:border-teal-300/25" style={{ background: "rgba(255,255,255,0.03)" }}>
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: index % 2 ? "#FFB000" : "#03DAC5", borderColor: index % 2 ? "rgba(255,176,0,0.28)" : "rgba(3,218,197,0.28)", background: index % 2 ? "rgba(255,176,0,0.06)" : "rgba(3,218,197,0.06)" }}>
-                    {story.category || "Signal"}
+                    {cleanScrapedText(story.category) || "Signal"}
                   </span>
                   {story.signalStrength && (
                     <span className="font-mono text-xs font-bold text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -189,13 +192,13 @@ export default function Newsletter() {
                   )}
                 </div>
                 <h2 className="text-xl font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {story.headline || story.company || "Signal story"}
+                  {cleanScrapedText(story.headline || story.company) || "Signal story"}
                 </h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/45">
-                  {story.snippet || story.summary || "Fresh signal intelligence from ReadyForRobots."}
+                <p className="mt-3 break-words text-sm leading-relaxed text-white/45">
+                  {cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots."}
                 </p>
                 <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {[story.roi, story.economics, story.impact].filter(Boolean).map((item) => (
+                  {[story.roi, story.economics, story.impact].map((item) => cleanScrapedText(item)).filter(Boolean).map((item) => (
                     <div key={item} className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
                       <p className="text-[11px] font-bold text-white/48">{item}</p>
                     </div>

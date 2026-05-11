@@ -12,6 +12,7 @@ import PipelinePreview from "@/components/PipelinePreview";
 import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { cleanScrapedText } from "@/lib/text";
 
 // Typewriter hook — spells out text character by character after a delay
 // Uses refs for speed/delay so re-renders don't reset the animation mid-flight
@@ -173,6 +174,9 @@ export default function Home() {
     }
   }
 
+  const briefHeadline = cleanScrapedText(dailyBrief?.latestEdition?.headline) || "Fresh robot demand signals, updated daily.";
+  const briefSubheadline = cleanScrapedText(dailyBrief?.latestEdition?.subheadline) || "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
@@ -321,10 +325,10 @@ export default function Home() {
                   </p>
                 </div>
                 <h2 className="max-w-2xl text-3xl font-extrabold leading-tight text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {dailyBrief?.latestEdition?.headline || "Fresh robot demand signals, updated daily."}
+                  {briefHeadline}
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
-                  {dailyBrief?.latestEdition?.subheadline || "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine."}
+                  {briefSubheadline}
                 </p>
               </div>
               <Link href="/newsletter" className="inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
@@ -338,20 +342,24 @@ export default function Home() {
                 { category: "Signal", headline: "Labor pressure rising", snippet: "SCOUT is watching labor shortage, expansion, CapEx, and deployment signals for robotics vendors." },
                 { category: "Industry", headline: "Logistics remains active", snippet: "Warehouse automation and material handling continue to generate strong sales motion." },
                 { category: "Action", headline: "Turn signals into outreach", snippet: "Use the daily brief to spot which accounts deserve a SCOUT activation." },
-              ]).slice(0, 3).map((story, index) => (
+              ]).slice(0, 3).map((story, index) => {
+                const headline = cleanScrapedText(story.headline || story.company) || "Signal story";
+                const snippet = cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots.";
+                return (
                 <div key={`${story.company || story.headline || index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.58)" }}>
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: index === 1 ? "#FFB000" : "#03DAC5" }}>
-                    {story.category || "Signal"}
+                    {cleanScrapedText(story.category) || "Signal"}
                   </p>
-                  <p className="text-sm font-bold leading-snug text-white/88">{story.headline || story.company || "Signal story"}</p>
-                  <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-white/40">{story.snippet || story.summary || "Fresh signal intelligence from ReadyForRobots."}</p>
+                  <p className="break-words text-sm font-bold leading-snug text-white/88">{headline}</p>
+                  <p className="mt-2 line-clamp-4 break-words text-xs leading-relaxed text-white/40">{snippet}</p>
                   {(story.impact || story.economics) && (
-                    <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-widest text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                      {[story.impact, story.economics].filter(Boolean).join(" · ")}
+                    <p className="mt-4 break-words font-mono text-[10px] font-bold uppercase tracking-widest text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      {[story.impact, story.economics].map((item) => cleanScrapedText(item)).filter(Boolean).join(" · ")}
                     </p>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
 

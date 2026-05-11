@@ -29,6 +29,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
+import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 
 const SCAN_STEPS = [
@@ -184,12 +185,12 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
       70,
   );
   const firstSignal = lead.signals?.[0];
-  const signal = firstSignal?.display_text || firstSignal?.raw_text || lead.share_summary || "SCOUT found a sales-fit pattern worth reviewing.";
+  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.share_summary || "") || "SCOUT found a sales-fit pattern worth reviewing.";
   const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
   const company = lead.company_name || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
-  const relevance = lead.share_summary || whyNow.join(" ") || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
+  const relevance = cleanScrapedText(lead.share_summary || whyNow.join(" ")) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
   const scoreReason = [
     `${score}/100 match score`,
     lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
@@ -768,11 +769,11 @@ export default function Results() {
                             <span>{p.industry}</span>
                           </div>
 
-                          <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
+                          <div className="flex min-w-0 items-start gap-2.5 p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
                             <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
-                            <div>
+                            <div className="min-w-0">
                               <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                              <span className="text-xs font-semibold" style={{ color: "#FFB000" }}>{p.signal}</span>
+                              <span className="break-words text-xs font-semibold" style={{ color: "#FFB000" }}>{p.signal}</span>
                             </div>
                           </div>
                         </div>
@@ -781,10 +782,10 @@ export default function Results() {
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
                           <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
-                          <p className="mb-2 border-l-2 pl-3 text-xs font-semibold leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+                          <p className="mb-2 break-words border-l-2 pl-3 text-xs font-semibold leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
                             “{p.signal}”
                           </p>
-                          <p className="text-xs text-white/50 leading-relaxed">{p.relevance}</p>
+                          <p className="break-words text-xs text-white/50 leading-relaxed">{p.relevance}</p>
                         </div>
                         <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
                           <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Score rationale</p>

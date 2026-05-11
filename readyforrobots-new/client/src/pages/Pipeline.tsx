@@ -18,6 +18,7 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
+import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -125,6 +126,12 @@ const formatActivationTime = (value?: string | null) => {
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${Math.round(diffHours / 24)}d ago`;
 };
+
+const activationSourceLabel = (sourceUrl?: string | null) =>
+  cleanAndClampText(sourceUrl, 96) || "No source URL captured";
+
+const activationLeadText = (lead: ScoutActivationLead) =>
+  cleanAndClampText(lead.signal || lead.action, 160) || "Lead queued for SCOUT evaluation.";
 
 export default function Pipeline() {
   const { session } = useAuth();
@@ -350,8 +357,8 @@ export default function Pipeline() {
                           <h2 className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                             Activation #{selectedActivation.id}
                           </h2>
-                          <p className="text-[11px] text-white/35 mt-1">
-                            {selectedActivation.sourceUrl || "No source URL captured"}
+                          <p className="mt-1 break-all text-[11px] text-white/35">
+                            {activationSourceLabel(selectedActivation.sourceUrl)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -404,14 +411,14 @@ export default function Pipeline() {
                           ))}
                         </div>
                         <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">Work plan</p>
-                        <p className="text-[11px] text-white/45 leading-relaxed">
-                          {selectedActivation.workPlan?.materials?.next || "SCOUT will evaluate the selected leads and prepare outreach."}
+                        <p className="break-words text-[11px] text-white/45 leading-relaxed">
+                          {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SCOUT will evaluate the selected leads and prepare outreach."}
                         </p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
                           {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
                             <div key={step} className="flex items-start gap-2 text-[11px] text-white/40">
                               <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#7c3aed" }} />
-                              <span>{step}</span>
+                              <span className="break-words">{cleanScrapedText(step)}</span>
                             </div>
                           ))}
                         </div>
@@ -419,10 +426,10 @@ export default function Pipeline() {
                           <div className="mt-3 rounded-lg border border-violet-400/15 bg-violet-400/5 p-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Deck strategy</p>
                             <p className="mt-1 text-[11px] font-semibold text-white/65">
-                              {selectedActivation.workPlan.deck_strategy.recommended_format}
+                              {cleanScrapedText(selectedActivation.workPlan.deck_strategy.recommended_format)}
                             </p>
                             <p className="mt-1 text-[11px] text-white/40">
-                              {selectedActivation.workPlan.deck_strategy.positioning}
+                              {cleanScrapedText(selectedActivation.workPlan.deck_strategy.positioning)}
                             </p>
                           </div>
                         )}
@@ -450,10 +457,10 @@ export default function Pipeline() {
                           <div className="mt-3 rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
                             <p className="mt-1 text-[11px] text-white/45">
-                              {selectedActivation.workPlan.notification_policy.reply}
+                              {cleanScrapedText(selectedActivation.workPlan.notification_policy.reply)}
                             </p>
                             <p className="mt-1 text-[11px] text-white/35">
-                              {selectedActivation.workPlan.notification_policy.meeting}
+                              {cleanScrapedText(selectedActivation.workPlan.notification_policy.meeting)}
                             </p>
                           </div>
                         )}
@@ -479,7 +486,7 @@ export default function Pipeline() {
                                 </span>
                               )}
                             </div>
-                            <p className="mt-1 text-[11px] text-white/35 line-clamp-2">{lead.signal || lead.action || "Lead queued for SCOUT evaluation."}</p>
+                            <p className="mt-1 line-clamp-2 break-words text-[11px] text-white/35">{activationLeadText(lead)}</p>
                           </div>
                         ))}
                       </div>
@@ -645,11 +652,11 @@ export default function Pipeline() {
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="text-[11px] text-white/50 leading-relaxed">{selected.signal}</p>
+                        <p className="break-words text-[11px] text-white/50 leading-relaxed">{selected.signal}</p>
                       </div>
                     </div>
                     {selected.notes && (
-                      <p className="mt-2 text-[10px] text-white/25 italic leading-relaxed border-t border-white/5 pt-2">{selected.notes}</p>
+                      <p className="mt-2 break-words border-t border-white/5 pt-2 text-[10px] italic leading-relaxed text-white/25">{selected.notes}</p>
                     )}
                   </div>
 
@@ -683,7 +690,7 @@ export default function Pipeline() {
 
                     {selected.outreachBody && (
                       <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <pre className="text-[11px] text-white/55 leading-relaxed whitespace-pre-wrap font-sans">
+                        <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-white/55">
                           {selected.outreachBody}
                         </pre>
                       </div>

@@ -3,6 +3,7 @@ import { ArrowRight, BarChart3, Building2, Database, FileText, Mail, Radio, Sear
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { cleanScrapedText } from "@/lib/text";
 
 type Story = {
   title?: string;
@@ -284,8 +285,8 @@ export default function Intelligence() {
                 <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
                   {(stories.length ? stories : fallbackStories).slice(0, 3).map((story, i) => (
                     <div key={`${story.title || story.company || i}`} className="border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.45)", borderRadius: 14 }}>
-                      <p className="mb-2 text-sm font-bold text-white/85">{story.title || story.company || "Signal story"}</p>
-                      <p className="text-xs leading-relaxed text-white/36">{story.summary || "Fresh signal intelligence from ReadyForRobots."}</p>
+                      <p className="break-words mb-2 text-sm font-bold text-white/85">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
+                      <p className="break-words text-xs leading-relaxed text-white/36">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
                     </div>
                   ))}
                 </div>

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -220,7 +221,7 @@ function leadScore(lead: ApiLead): number {
 function opportunityTrack(lead: ApiLead): OpportunityTrack {
   const text = [
     lead.gtm?.suggested_motion,
-    lead.share_summary,
+    cleanScrapedText(lead.share_summary),
     ...(lead.priority_reasons || []),
     ...(lead.gtm?.why_now || []),
   ].join(" ").toLowerCase();
@@ -249,7 +250,7 @@ function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySigna
     id: String(lead.id ?? `${lead.company_name || "lead"}-${index}`),
     company: lead.company_name || `Scored Lead ${index + 1}`,
     type,
-    text: String(text).slice(0, 150),
+    text: cleanAndClampText(String(text), 150) || "SCOUT found a scored automation opportunity worth reviewing.",
     score: leadScore(lead),
     track,
     time: index < 3 ? `${Math.max(index * 4 + 2, 2)}m ago` : "live",
