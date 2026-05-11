@@ -177,6 +177,15 @@ function titleize(raw: string): string {
   return raw.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function cleanRelevanceCopy(raw: string, quotedSignal: string): string {
+  const cleaned = cleanScrapedText(raw);
+  return cleaned
+    .replace(/\bKey evidence\s*[-:]\s*[^.]+(?:\.\s*|$)/gi, "")
+    .replace(quotedSignal, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function mapApiLead(lead: ApiLead, index: number): Prospect {
   const score = Math.round(
     lead.score?.lead_value_score ??
@@ -190,7 +199,7 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
   const company = lead.company_name || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
-  const relevance = cleanScrapedText(lead.share_summary || whyNow.join(" ")) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
+  const relevance = cleanRelevanceCopy(lead.share_summary || whyNow.join(" "), signal) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
   const scoreReason = [
     `${score}/100 match score`,
     lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
@@ -468,7 +477,7 @@ export default function Results() {
           {!submittedUrl && (
             <section className="py-16">
               <div className="rounded-3xl border border-amber-400/25 p-8 sm:p-10" style={{ background: "rgba(255,176,0,0.035)" }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
+                <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
                   Activate Pipeline
                 </p>
                 <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
@@ -514,7 +523,7 @@ export default function Results() {
                     ) : (
                       <div className="h-3.5 w-3.5 rounded-full border border-amber-400/70 shrink-0 animate-pulse" />
                     )}
-                    <span className="font-mono text-xs" style={{ color: i === scanStep ? "#FFB000" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
+                    <span className="font-mono text-xs font-normal" style={{ color: i === scanStep ? "#FFB000" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
                       {step}
                     </span>
                   </div>
@@ -527,7 +536,7 @@ export default function Results() {
             <>
               <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>
+                  <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>
                     Scan complete · {prospects.length} opportunities found{usingFallback ? " · sample mode" : ""}
                   </p>
                   <h1 className="font-extrabold text-white leading-tight" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
@@ -553,7 +562,7 @@ export default function Results() {
                     <div className="flex items-start gap-3">
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
-                        <p className="text-sm font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        <p className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                           Activate SCOUT sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/48">
@@ -576,8 +585,8 @@ export default function Results() {
                   <div className="mt-4 grid gap-4">
                     <div className="border-b border-white/8 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-bold" style={{ color: "#c4b5fd" }}>01</span>
-                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#c4b5fd" }}>Sales materials</p>
+                        <span className="text-[10px] font-normal" style={{ color: "#c4b5fd" }}>01</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest" style={{ color: "#c4b5fd" }}>Sales materials</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MATERIAL_OPTIONS.map((option) => {
@@ -608,7 +617,7 @@ export default function Results() {
                       {materialChoice === "upload" && (
                         <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 bg-white/[0.025] px-3 py-2.5 text-xs text-white/50 hover:border-violet-300/35">
                           <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-bold text-violet-200">Browse</span>
+                          <span className="font-normal text-violet-200">Browse</span>
                           <input
                             type="file"
                             className="hidden"
@@ -622,8 +631,8 @@ export default function Results() {
                     <div className="border-b border-white/8 pb-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-sky-200">02</span>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-sky-200">Lead scope</p>
+                          <span className="text-[10px] font-normal text-sky-200">02</span>
+                          <p className="text-[10px] font-normal uppercase tracking-widest text-sky-200">Lead scope</p>
                         </div>
                         <p className="text-[11px] text-white/35">
                           {selectedCount} selected
@@ -655,8 +664,8 @@ export default function Results() {
 
                     <div className="border-b border-white/8 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-teal-200">03</span>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-200">Automation mode</p>
+                        <span className="text-[10px] font-normal text-teal-200">03</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest text-teal-200">Automation mode</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MODE_OPTIONS.map((option) => {
@@ -683,7 +692,7 @@ export default function Results() {
                     </div>
 
                     <div>
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-200">SCOUT starts with</p>
+                      <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SCOUT starts with</p>
                       <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-white/48 md:grid-cols-4">
                         <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-violet-200" /> Lead evaluation</span>
                         <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-sky-200" /> Sales strategy</span>
@@ -756,7 +765,7 @@ export default function Results() {
                           <span className="text-[9px] text-white/25 uppercase tracking-widest">score</span>
                         </div>
 
-                        <div className="flex-1">
+                        <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h2 className="text-base font-bold text-white">{p.company}</h2>
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#a78bfa", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(124,58,237,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(124,58,237,0.3)" }}>
@@ -769,26 +778,26 @@ export default function Results() {
                             <span>{p.industry}</span>
                           </div>
 
-                          <div className="flex min-w-0 items-start gap-2.5 p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
+                          <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
                             <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
                             <div className="min-w-0">
                               <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                              <span className="break-words text-xs font-semibold" style={{ color: "#FFB000" }}>{p.signal}</span>
+                              <span className="mt-1 block break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000", overflowWrap: "anywhere" }}>{p.signal}</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
-                          <p className="mb-2 break-words border-l-2 pl-3 text-xs font-semibold leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+                        <div className="min-w-0 rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
+                          <p className="mb-3 block break-words rounded-lg border-l-2 px-3 py-2 text-sm font-normal leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000", background: "rgba(255,176,0,0.07)", overflowWrap: "anywhere" }}>
                             “{p.signal}”
                           </p>
-                          <p className="break-words text-xs text-white/50 leading-relaxed">{p.relevance}</p>
+                          <p className="break-words text-xs text-white/50 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
                         </div>
-                        <div className="rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Score rationale</p>
+                        <div className="min-w-0 rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Score rationale</p>
                           <p className="text-xs text-white/50 leading-relaxed">{p.scoreReason}</p>
                         </div>
                       </div>

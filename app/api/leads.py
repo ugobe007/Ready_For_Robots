@@ -53,6 +53,7 @@ from app.services.automation_profile import get_automation_profile_for_response
 from app.services.lead_value import compute_lead_value
 from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.lead_primary_link import enrich_lead_link_fields
+from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
 from app.services.company_url_openai import resolve_homepage_urls_for_companies
 from app.services.company_domain import (
     dedupe_companies_ordered,
@@ -585,8 +586,7 @@ def _build_share_blurb(
     top = deduped[0] if deduped else None
     s3 = ""
     if top:
-        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
-        raw = _re.sub(r"<[^>]+>", "", raw).strip()
+        raw = strip_extraction_artifacts(getattr(top, "signal_text", None))
         top_label = _signal_label(getattr(top, "signal_type", ""))
         if raw and len(raw) > 20:
             excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
@@ -695,7 +695,8 @@ def _fmt_company(
                 "signal_label":    _signal_label(sig.signal_type),
                 "strength":        sig.signal_strength,
                 "weighted_score":  compute_weighted_score(sig),
-                "raw_text":        sig.signal_text,
+                "display_text":     format_signal_for_sales(sig.signal_text),
+                "raw_text":        strip_extraction_artifacts(sig.signal_text),
                 "source_url":      sig.source_url,
             }
             for sig in sigs_for_response

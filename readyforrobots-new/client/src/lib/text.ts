@@ -10,11 +10,21 @@ export function decodeBasicHtmlEntities(raw: string): string {
 
 export function cleanScrapedText(raw: string | null | undefined): string {
   return decodeBasicHtmlEntities(raw || "")
-    .replace(/\bsource_url\s*[:=]?\s*<a\b[\s\S]*?<\/a>/gi, "")
+    .replace(/<\s*a\s*href\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
+    .replace(/<\s*ahref\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
+    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, "$1")
+    .replace(/\bsource_url\s*[:=]?\s*/gi, "")
     .replace(/\bsource_url\s*[:=]?\s*https?:\/\/\S+/gi, "")
-    .replace(/<a\b[^>]*href=["']https?:\/\/[^"']+["'][^>]*>[\s\S]*?<\/a>/gi, "")
     .replace(/href=["'][^"']+["']/gi, "")
+    .replace(/href=https?:\/\/[^\s>]+/gi, "")
+    .replace(/\bahref=["'][^"']+["']/gi, "")
+    .replace(/\bahref=https?:\/\/[^\s>]+/gi, "")
+    .replace(/\b(?:target|rel|class|style|title)=["'][^"']*["']/gi, "")
+    .replace(/https?:\/\/[^\s"'<>]+/gi, "")
+    .replace(/\b(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s"'<>]*)?/gi, "")
+    .replace(/\b(?:ca|cc|ved|usg)=[^\s"'<>]+/gi, "")
     .replace(/<[^>]+>/g, "")
+    .replace(/(^|\s)>+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
