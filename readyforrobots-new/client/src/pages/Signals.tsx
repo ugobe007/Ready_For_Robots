@@ -346,47 +346,58 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
               const barColor = row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright;
               const barBase = row.track === "Partnership" ? MARKET_COLORS.amber : MARKET_COLORS.emerald;
               return (
-                <div key={`${row.track}-${row.label}`} className="relative" style={{ animation: "rfr-live-rise .42s ease-out both", animationDelay: `${rowIndex * 65}ms` }}>
-                  <div className="mb-2 flex items-center justify-between gap-3">
+                <div
+                  key={`${row.track}-${row.label}`}
+                  className="relative rounded-2xl border p-3"
+                  style={{
+                    animation: "rfr-live-rise .42s ease-out both",
+                    animationDelay: `${rowIndex * 65}ms`,
+                    background: activeLane ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.018)",
+                    borderColor: activeLane ? (row.track === "Partnership" ? "rgba(255,176,0,0.24)" : "rgba(16,185,129,0.24)") : "rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div className="grid gap-3 md:grid-cols-[180px_1fr_74px] md:items-center">
                     <div>
-                      <div className="flex items-center gap-2 text-sm font-black text-white">
-                        {activeLane && <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }} />}
-                        {row.label}
+                      <div className="flex items-center gap-2 text-base font-black" style={{ color: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
+                        {activeLane && <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }} />}
+                        <span>{row.label}</span>
                       </div>
-                      <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
-                        {row.track} lane
+                      <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/35">
+                        {row.track} motion
                       </div>
                     </div>
-                    <div className="font-mono text-xs font-bold text-white/58">{Math.round(adjustedValue * 100)} strength</div>
-                  </div>
-                  <div className="relative h-14 overflow-hidden rounded-2xl border" style={{ background: activeLane ? "rgba(255,255,255,0.055)" : "rgba(2,6,23,0.52)", borderColor: activeLane ? (row.track === "Partnership" ? "rgba(255,176,0,0.32)" : "rgba(16,185,129,0.32)") : "rgba(255,255,255,0.08)" }}>
-                    <div
-                      className="absolute inset-y-1.5 left-1.5 overflow-hidden rounded-2xl transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.round(adjustedValue * 94)}%`,
-                        background: `linear-gradient(90deg, ${barBase}, ${barColor})`,
-                        boxShadow: activeLane ? `0 0 26px ${row.track === "Partnership" ? "rgba(255,176,0,.32)" : "rgba(16,185,129,.32)"}` : "none",
-                      }}
-                    >
-                      <div
-                        className="absolute inset-y-0 w-1/2"
-                        style={{
-                          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)",
-                          animation: activeLane ? "rfr-bar-sheen 2.2s ease-in-out infinite" : undefined,
-                        }}
-                      />
-                    </div>
-                    <div className="absolute inset-y-0 left-[25%] w-px bg-white/8" />
-                    <div className="absolute inset-y-0 left-[50%] w-px bg-white/8" />
-                    <div className="absolute inset-y-0 left-[75%] w-px bg-white/8" />
-                    <div className="absolute bottom-1 left-3 max-w-[72%] truncate text-[10px] font-semibold text-white/40">
-                      {activeLane ? (
-                        <>Matched to {activeSignal?.company}</>
-                      ) : (
-                        <>Adjusted by current {activeSignal?.track.toLowerCase()} opportunity</>
-                      )}
+
+                    <div>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <span className="truncate text-xs font-semibold text-white/45">
+                          {activeLane ? `Matched to ${activeSignal?.company}` : `${row.delta} scored signals`}
+                        </span>
+                        <span className="font-mono text-xs font-bold text-white/50">{Math.round(adjustedValue * 100)}%</span>
                       </div>
-                    <div className="absolute bottom-1 right-3 font-mono text-[10px] font-bold text-white/25">{row.delta} signals</div>
+                      <div className="relative h-3 overflow-hidden rounded-full bg-white/[0.075]">
+                        <div
+                          className="absolute inset-y-0 left-0 overflow-hidden rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: `${Math.round(adjustedValue * 100)}%`,
+                            background: `linear-gradient(90deg, ${barBase}, ${barColor})`,
+                            boxShadow: activeLane ? `0 0 22px ${row.track === "Partnership" ? "rgba(255,176,0,.26)" : "rgba(16,185,129,.26)"}` : "none",
+                          }}
+                        >
+                          <div
+                            className="absolute inset-y-0 w-1/2"
+                            style={{
+                              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.24), transparent)",
+                              animation: activeLane ? "rfr-bar-sheen 2.2s ease-in-out infinite" : undefined,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="font-mono text-left text-sm font-black md:text-right" style={{ color: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
+                      {Math.round(adjustedValue * 100)}
+                      <span className="ml-1 text-[10px] font-bold text-white/25">strength</span>
+                    </div>
                   </div>
                 </div>
               );
