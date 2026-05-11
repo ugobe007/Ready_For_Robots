@@ -75,7 +75,7 @@ function ConfidenceArc({ score }: { score: number }) {
   const circumference = Math.PI * radius; // half circle
   const progress = (score / 100) * circumference;
   const color =
-    score >= 90 ? "#059669" : score >= 75 ? "#2563EB" : "#F59E0B";
+    score >= 90 ? "#059669" : score >= 75 ? "#2563EB" : "#FFB000";
 
   return (
     <div className="flex flex-col items-center gap-0.5">

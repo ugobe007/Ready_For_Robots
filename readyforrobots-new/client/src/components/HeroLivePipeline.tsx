@@ -170,7 +170,7 @@ export default function HeroLivePipeline() {
                       className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0"
                       style={{
                         background:
-                          i === 0 ? "#7c3aed" : i === 1 ? "rgba(139,92,246,0.85)" : "rgba(245,158,11,0.85)",
+                          i === 0 ? "#7c3aed" : i === 1 ? "rgba(139,92,246,0.85)" : "rgba(255,176,0,0.85)",
                       }}
                     >
                       {(lead.company_name || "?").charAt(0)}

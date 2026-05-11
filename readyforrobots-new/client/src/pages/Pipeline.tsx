@@ -96,13 +96,13 @@ const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualifie
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
   "New Signal":    { color: "#a78bfa", dot: "#a78bfa", label: "New Signal",    desc: "Just detected" },
   "Draft Ready":   { color: "#60a5fa", dot: "#60a5fa", label: "Draft Ready",   desc: "Outreach drafted" },
-  "Outreach Sent": { color: "#fb923c", dot: "#fb923c", label: "Outreach Sent", desc: "Awaiting reply" },
+  "Outreach Sent": { color: "#FFB000", dot: "#FFB000", label: "Outreach Sent", desc: "Awaiting reply" },
   "Qualified":     { color: "#34d399", dot: "#34d399", label: "Qualified",     desc: "Engaged buyer" },
   "Meeting Set":   { color: "#f472b6", dot: "#f472b6", label: "Meeting Set",   desc: "On the calendar" },
 };
 
 const scoreColor = (s: number) =>
-  s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#fb923c";
+  s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#FFB000";
 
 const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());

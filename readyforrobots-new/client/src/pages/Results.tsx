@@ -141,7 +141,7 @@ function normalizeUrl(raw: string): string {
 }
 
 function scoreColor(score: number): string {
-  return score >= 90 ? "#34d399" : score >= 75 ? "#a78bfa" : "#fb923c";
+  return score >= 90 ? "#34d399" : score >= 75 ? "#a78bfa" : "#FFB000";
 }
 
 function timingFromScore(score: number): string {
@@ -260,7 +260,7 @@ const fallbackProspects: Prospect[] = [
     score: 79,
     signal: "Recent repetitive strain filings plus a new process improvement manager role.",
     signalType: "Safety signal",
-    signalColor: "#fb923c",
+    signalColor: "#FFB000",
     timing: "Decision window: 3-6 months",
     action: "Lead with safety ROI and ergonomics case",
     relevance: "Safety incidents and process improvement hiring create a clear reason to discuss automation for repetitive workflows.",

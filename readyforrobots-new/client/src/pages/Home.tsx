@@ -410,7 +410,7 @@ export default function Home() {
                 { value: "150+", label: "Sources monitored", color: "#8b5cf6" },
                 { value: "24/7", label: "Always working", color: "#03DAC5" },
                 { value: "14", label: "Signal types tracked", color: "#8b5cf6" },
-                { value: "<48h", label: "Signal to outreach", color: "#f59e0b" },
+                { value: "<48h", label: "Signal to outreach", color: "#FFB000" },
               ].map((stat) => (
                 <div key={stat.label} className="px-5 py-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <p className="font-mono text-xl font-bold mb-0.5" style={{ color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -426,7 +426,7 @@ export default function Home() {
               {[
                 { label: "New signal: Silver Peak Hospitality", time: "just now", dot: "#03DAC5" },
                 { label: "Outreach drafted: DesertLine Logistics", time: "4m ago", dot: "#8b5cf6" },
-                { label: "Follow-up queued: Apex Manufacturing", time: "1h ago", dot: "#f59e0b" },
+                { label: "Follow-up queued: Apex Manufacturing", time: "1h ago", dot: "#FFB000" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
