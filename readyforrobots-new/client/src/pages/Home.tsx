@@ -277,6 +277,42 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── READYFORROBOTS INTRO ── */}
+      <section className="px-6 py-14 border-t border-white/6" style={{ background: "#0d0520" }}>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <div>
+            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#FFB000" }}>
+              What ReadyForRobots does
+            </p>
+            <h2 className="max-w-xl text-3xl font-extrabold leading-tight text-white lg:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              We help robot companies find buyers before the market becomes obvious.
+            </h2>
+          </div>
+
+          <div>
+            <p className="text-base leading-relaxed text-white/50">
+              ReadyForRobots monitors public market signals, scores companies for automation intent, and matches those buyers to the robot products most likely to solve their operational problem. Instead of giving robotics sales teams a cold list, we show why a company is ready, what triggered the signal, and how to start the conversation.
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[
+                ["Find", "Labor gaps, expansions, CapEx, hiring, and deployment news."],
+                ["Match", "Buyer pain mapped to robot categories and vendor positioning."],
+                ["Act", "Ranked sales leads with timing, evidence, and outreach prompts."],
+              ].map(([label, copy], index) => (
+                <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+                  <p className="mb-2 font-mono text-xs font-bold" style={{ color: index === 1 ? "#03DAC5" : "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
+                  <p className="text-xs leading-relaxed text-white/38">{copy}</p>
+                </div>
+              ))}
+            </div>
+            <Link href="/results?url=" className="mt-6 inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+              Scan your robot URL <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ── */}
       <section id="how-it-works" className="py-14 px-6" style={{ background: "#0d0520" }}>
         <div className="max-w-6xl mx-auto">
