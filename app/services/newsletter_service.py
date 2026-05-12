@@ -4,11 +4,17 @@ Generates top stories from hot/warm leads for daily brief and social sharing.
 """
 import os
 import json
+import html
+import re
+import ssl
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.company import Company
@@ -16,6 +22,7 @@ from app.models.score import Score
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
+from app.services.news_publications import strip_trailing_news_attribution
 
 def _industry_display(raw) -> str:
     """Never expose 'Unknown' in newsletter content."""
@@ -54,6 +61,28 @@ SIGNAL_CATEGORIES = {
     "equipment_integration": "Equipment Integration",
     "rfp_posted": "RFP Posted",
     "government_contract": "Gov Contract",
+}
+
+NEWS_BRIEF_QUERIES = [
+    "robotics automation innovation market trends 2026",
+    "warehouse robotics automation deployment news 2026",
+    "service robots hospitality healthcare restaurant news 2026",
+    "robotics startup funding automation AI robots 2026",
+]
+
+NEWS_SIGNAL_TYPES = {
+    "news",
+    "automation_interest",
+    "automation_intent",
+    "pilot_success",
+    "robot_installation",
+    "roi_documented",
+    "vendor_selection",
+    "scale_expansion",
+    "competitive_response",
+    "funding_round",
+    "innovation",
+    "technology_trend",
 }
 
 # Industry-specific automation framing used in summaries
@@ -230,6 +259,153 @@ def _truncate(text: str, max_len: int) -> str:
     if len(text) <= max_len:
         return text
     return text[: max_len - 3].rsplit(" ", 1)[0] + "..."
+
+
+def _news_ssl_context() -> ssl.SSLContext:
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
+def _clean_news_text(text: str) -> str:
+    t = html.unescape(text or "")
+    t = re.sub(r"<[^>]+>", " ", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\bsource_url\b.*$", "", t, flags=re.IGNORECASE).strip()
+    return t
+
+
+def _news_category(text: str, signal_type: str = "") -> str:
+    low = f"{signal_type} {text}".lower()
+    if any(k in low for k in ("funding", "series a", "series b", "investment", "raise")):
+        return "Funding"
+    if any(k in low for k in ("innovation", "ai", "computer vision", "autonomous", "new robot", "launch")):
+        return "Innovation"
+    if any(k in low for k in ("trend", "market", "adoption", "forecast", "demand")):
+        return "Trend"
+    if any(k in low for k in ("deploy", "pilot", "installation", "rollout", "fleet")):
+        return "Deployment"
+    if any(k in low for k in ("labor", "staffing", "shortage", "wage", "turnover")):
+        return "Signal"
+    return "News"
+
+
+def _news_item_key(title: str, url: str = "") -> str:
+    key = (title or url or "").lower()
+    key = re.sub(r"https?://", "", key)
+    key = re.sub(r"[^a-z0-9]+", " ", key).strip()
+    return key[:160]
+
+
+def _fetch_live_news_items(limit: int = 6) -> List[Dict[str, Any]]:
+    """Small Google News RSS sweep for the newsletter's market-news section."""
+    if os.getenv("NEWSLETTER_LIVE_NEWS", "1").strip().lower() in {"0", "false", "no"}:
+        return []
+
+    items: List[Dict[str, Any]] = []
+    seen: set = set()
+    for query in NEWS_BRIEF_QUERIES:
+        if len(items) >= limit:
+            break
+        try:
+            encoded = urllib.parse.quote(query)
+            url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; ReadyForRobots/1.0)"},
+            )
+            with urllib.request.urlopen(req, timeout=5, context=_news_ssl_context()) as resp:
+                root = ET.fromstring(resp.read())
+            channel = root.find("channel")
+            if channel is None:
+                continue
+            for item in channel.findall("item")[:3]:
+                source_el = item.find("source")
+                source = _clean_news_text(source_el.text if source_el is not None else "")
+                raw_title = _clean_news_text(item.findtext("title") or "")
+                title = strip_trailing_news_attribution(raw_title, source)
+                snippet = _clean_news_text(item.findtext("description") or "")
+                link = (item.findtext("link") or "").strip()
+                key = _news_item_key(title, link)
+                if not title or key in seen:
+                    continue
+                seen.add(key)
+                items.append(
+                    {
+                        "category": _news_category(f"{title} {snippet}", "news"),
+                        "headline": _truncate(title, 120),
+                        "snippet": _truncate(snippet or title, 220),
+                        "source": source or "Google News",
+                        "url": link,
+                        "published": item.findtext("pubDate") or "",
+                        "kind": "market_news",
+                    }
+                )
+                if len(items) >= limit:
+                    break
+        except Exception:
+            continue
+    return items[:limit]
+
+
+def build_news_brief(db: Session, limit: int = 8) -> List[Dict[str, Any]]:
+    """Build newsletter-ready market news, innovation, trend, and signal items."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    rows = (
+        db.query(Signal, Company.name)
+        .join(Company, Company.id == Signal.company_id)
+        .filter(Signal.created_at >= cutoff)
+        .filter(Signal.signal_type.in_(tuple(sorted(NEWS_SIGNAL_TYPES))))
+        .order_by(desc(Signal.created_at), desc(Signal.signal_strength))
+        .limit(80)
+        .all()
+    )
+
+    items: List[Dict[str, Any]] = []
+    seen: set = set()
+    for sig, company_name in rows:
+        raw = _clean_news_text(getattr(sig, "signal_text", "") or "")
+        if len(raw) < 24:
+            continue
+        sentence_parts = re.split(r"(?<=[.!?])\s+", raw)
+        title = sentence_parts[0].strip()
+        if len(title) < 20 and len(sentence_parts) > 1:
+            title = f"{title} {sentence_parts[1]}".strip()
+        snippet = " ".join(sentence_parts[1:3]).strip() or raw
+        if company_name and company_name.lower() not in title.lower():
+            title = f"{company_name}: {title}"
+        key = _news_item_key(title, getattr(sig, "source_url", "") or "")
+        if key in seen:
+            continue
+        seen.add(key)
+        signal_type = getattr(sig, "signal_type", "") or "news"
+        items.append(
+            {
+                "category": _news_category(raw, signal_type),
+                "headline": _truncate(title, 120),
+                "snippet": _truncate(snippet, 240),
+                "source": "ReadyForRobots signal graph",
+                "url": getattr(sig, "source_url", "") or "",
+                "published": getattr(sig, "created_at", None).isoformat() if getattr(sig, "created_at", None) else "",
+                "signalType": _sig_label(signal_type),
+                "strength": round(float(getattr(sig, "signal_strength", 0) or 0) * 10, 1),
+                "kind": "scraped_signal",
+            }
+        )
+        if len(items) >= limit:
+            break
+
+    if len(items) < limit:
+        for item in _fetch_live_news_items(limit=limit - len(items)):
+            key = _news_item_key(item.get("headline", ""), item.get("url", ""))
+            if key and key not in seen:
+                seen.add(key)
+                items.append(item)
+
+    return items[:limit]
 
 
 def get_cache_path() -> Path:
@@ -410,6 +586,7 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         use_cache=True,
         force_refresh=False,
     )
+    news_brief = build_news_brief(db, limit=8)
 
     return {
         "latestEdition": {
@@ -419,9 +596,11 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             "subheadline": subheadline,
         },
         "industryBrief": industry_brief,
+        "newsBrief": news_brief,
         "topStories": stories,
         "summary": {
             "total_leads": len(stories),
+            "news_items": len(news_brief),
             "generated_at": now.isoformat(),
         },
     }
