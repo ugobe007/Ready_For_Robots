@@ -1,6 +1,6 @@
 /**
  * How It Works — ReadyForRobots
- * Design: Dark violet 60-30-10. Flat open layout — no padded panels, no buttons.
+ * Design: Dark violet 60-30-10. Flat open layout with amber SCOUT CTAs.
  * Robot image anchored right of hero. Inline text, numbered steps, clean dividers.
  * Typography: Sora headlines · Inter body · JetBrains Mono scores/labels
  */
@@ -77,6 +77,13 @@ const DIV = () => (
   </div>
 );
 
+const SCOUT_CTA_STYLE = {
+  color: "#FFB000",
+  border: "1.5px solid #FFB000",
+  background: "transparent",
+  fontFamily: "Sora, sans-serif",
+};
+
 export default function HowItWorks() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0d0520", color: "#f0eaff" }}>
@@ -89,26 +96,44 @@ export default function HowItWorks() {
 
             {/* Left */}
             <div className="pb-16 lg:pb-0 pt-8">
-              <p className="text-xs font-mono tracking-widest uppercase mb-6" style={{ color: "#7c3aed" }}>
-                How It Works
+              <p className="text-xs font-mono tracking-widest uppercase mb-6" style={{ color: "#FFB000" }}>
+                Meet SCOUT
               </p>
               <h1
                 className="font-bold leading-none mb-6"
                 style={{ fontFamily: "Sora, sans-serif", fontSize: "clamp(2.4rem, 4.5vw, 3.8rem)", color: "#ffffff" }}
               >
-                Your AI sales agent,{" "}
-                <span style={{ color: "#a78bfa" }}>explained.</span>
+                How SCOUT turns signals into{" "}
+                <span style={{ color: "#FFB000" }}>sales motion.</span>
               </h1>
               <p className="text-base leading-relaxed mb-10 max-w-lg" style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}>
-                ReadyForRobots monitors the market, scores every signal, drafts personalized outreach,
-                and advances your pipeline — automatically, or with as much human oversight as you want.
+                SCOUT is your AI sales and partnership agent for robotics. It scans the market,
+                scores buyer intent, matches each lead to your robot category, drafts outreach,
+                and advances the pipeline with as much human oversight as you want.
               </p>
+
+              <div className="mb-10 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/results?url="
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                  style={SCOUT_CTA_STYLE}
+                >
+                  Activate SCOUT <Zap size={15} />
+                </Link>
+                <Link
+                  href="/intelligence"
+                  className="inline-flex items-center gap-2 text-sm font-bold text-white/50 transition-colors hover:text-white/75"
+                  style={{ fontFamily: "Sora, sans-serif" }}
+                >
+                  See the scoring model <ArrowRight size={15} />
+                </Link>
+              </div>
 
               {/* Inline stats */}
               <div className="flex flex-wrap gap-x-8 gap-y-3">
                 {[["150+", "data sources"], ["24/7", "monitoring"], ["<2 min", "signal to draft"], ["70+", "score threshold"]].map(([num, label]) => (
                   <div key={label} className="flex items-baseline gap-2">
-                    <span className="font-mono font-bold text-xl" style={{ color: "#a78bfa" }}>{num}</span>
+                    <span className="font-mono font-bold text-xl" style={{ color: label === "signal to draft" ? "#FFB000" : "#a78bfa" }}>{num}</span>
                     <span className="text-sm" style={{ color: "#6b7280" }}>{label}</span>
                   </div>
                 ))}
@@ -281,7 +306,7 @@ export default function HowItWorks() {
             Autonomy Modes
           </p>
           <h2 className="font-bold text-2xl mb-12" style={{ fontFamily: "Sora, sans-serif", color: "#ffffff" }}>
-            You choose how much the agent does.
+            You choose how much SCOUT does.
           </h2>
           <div className="grid lg:grid-cols-3 gap-0">
             {autonomyModes.map((m, mi) => {
@@ -332,11 +357,11 @@ export default function HowItWorks() {
               </p>
             </div>
             <Link
-              href="/"
-              className="inline-flex items-center gap-2 font-semibold text-sm"
-              style={{ color: "#a78bfa", fontFamily: "Sora, sans-serif" }}
+              href="/results?url="
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+              style={SCOUT_CTA_STYLE}
             >
-              Start automating <ArrowRight size={15} />
+              Activate SCOUT <ArrowRight size={15} />
             </Link>
           </div>
         </div>
