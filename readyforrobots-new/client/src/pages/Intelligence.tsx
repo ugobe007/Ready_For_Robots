@@ -130,7 +130,7 @@ export default function Intelligence() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getApiBase()}/api/newsletter/edition?limit=3`, liveFetchInit())
+    fetch(`${getApiBase()}/api/newsletter/edition?limit=3&cb=${Date.now()}`, liveFetchInit())
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data?.topStories) setStories(data.topStories);

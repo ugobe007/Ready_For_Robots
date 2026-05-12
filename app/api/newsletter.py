@@ -114,7 +114,9 @@ def get_newsletter_edition(
     Cache TTL defaults to 1.5h (NEWSLETTER_CACHE_MAX_AGE_HOURS) so content
     does not stay frozen for a day when Celery is off. Stale cache → regenerate.
     """
-    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
+    response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     max_age = _cache_max_age_hours()
 
     if refresh:
