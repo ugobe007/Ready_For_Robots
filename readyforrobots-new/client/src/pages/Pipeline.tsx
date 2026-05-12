@@ -93,6 +93,16 @@ interface ScoutActivation {
   requiresAccount?: boolean;
 }
 
+interface LeadSummary {
+  total?: number;
+  hot?: number;
+  warm?: number;
+  cold?: number;
+  total_signals?: number;
+  companies_in_database?: number;
+  signals_in_database?: number;
+}
+
 const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
@@ -133,9 +143,38 @@ const activationSourceLabel = (sourceUrl?: string | null) =>
 const activationLeadText = (lead: ScoutActivationLead) =>
   cleanAndClampText(lead.signal || lead.action, 160) || "Lead queued for SCOUT evaluation.";
 
+const formatMetric = (value?: number) =>
+  typeof value === "number" ? new Intl.NumberFormat("en-US").format(value) : "—";
+
+function PipelineMetric({
+  label,
+  value,
+  sub,
+  color,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/28">{label}</p>
+        <span className="h-2 w-2 rounded-full" style={{ background: color, boxShadow: `0 0 18px ${color}66` }} />
+      </div>
+      <p className="font-mono text-2xl font-bold leading-none" style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>
+        {value}
+      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-white/35">{sub}</p>
+    </div>
+  );
+}
+
 export default function Pipeline() {
   const { session } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
   const [industryQuery, setIndustryQuery] = useState("");
@@ -153,14 +192,20 @@ export default function Pipeline() {
       setLoadingLeads(true);
       setLoadErr("");
       try {
-        const r = await fetch(`${base}/api/leads?limit=24&exclude_junk=true&sort=score`, liveFetchInit());
-        if (!r.ok) throw new Error(await r.text());
-        const rows = (await r.json()) as ApiLead[];
+        const [summaryResponse, leadsResponse] = await Promise.all([
+          fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
+          fetch(`${base}/api/leads?limit=24&exclude_junk=true&sort=score`, liveFetchInit()),
+        ]);
+        if (!summaryResponse.ok) throw new Error(await summaryResponse.text());
+        if (!leadsResponse.ok) throw new Error(await leadsResponse.text());
+        setSummary((await summaryResponse.json()) as LeadSummary);
+        const rows = (await leadsResponse.json()) as ApiLead[];
         const mapped = Array.isArray(rows) ? rows.map(mapApiLeadToDeal) : [];
         setDeals(mapped);
         setSelectedId(mapped[0]?.id ?? null);
       } catch (e) {
         setLoadErr(e instanceof Error ? e.message : "Could not load pipeline");
+        setSummary(null);
         setDeals([]);
         setSelectedId(null);
       } finally {
@@ -224,9 +269,10 @@ export default function Pipeline() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const totalDeals = filtered.length;
-  const hotDeals = filtered.filter((d) => d.score >= 85).length;
-  const meetingDeals = filtered.filter((d) => d.stage === "Meeting Set").length;
+  const totalDeals = summary?.total ?? filtered.length;
+  const hotDeals = summary?.hot ?? filtered.filter((d) => d.score >= 85).length;
+  const warmDeals = summary?.warm ?? filtered.filter((d) => d.score >= 65 && d.score < 85).length;
+  const visibleDeals = filtered.length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
@@ -250,19 +296,8 @@ export default function Pipeline() {
                   Active Signals → Live Pipeline
                 </h1>
                 <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
-                  SCOUT pulls scored leads from your database — find, engage, and book meetings from one surface.
+                  Authoritative database counts up top. A focused working slice below.
                 </p>
-              </div>
-              {/* Inline stats */}
-              <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-white/10">
-                <span className="text-xs text-white/40"><span className="font-mono font-bold text-white/70 mr-1">{totalDeals}</span>deals</span>
-                <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#34d399" }}>{hotDeals}</span>hot</span>
-                <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#f472b6" }}>{meetingDeals}</span>meetings</span>
-                <span className="text-xs text-white/40"><span className="font-mono font-bold mr-1" style={{ color: "#a78bfa" }}>{queuedActivations}</span>SCOUT queued</span>
-                <span className="flex items-center gap-1.5 text-xs text-white/30">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {loadingLeads ? "Loading…" : "SCOUT active"}
-                </span>
               </div>
             </div>
 
@@ -295,6 +330,33 @@ export default function Pipeline() {
               </datalist>
             </div>
           </div>
+
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <PipelineMetric
+              label="Database total"
+              value={formatMetric(totalDeals)}
+              sub={`${formatMetric(summary?.total_signals)} scored buying signals`}
+              color="#ffffff"
+            />
+            <PipelineMetric
+              label="Hot leads"
+              value={formatMetric(hotDeals)}
+              sub="Ready for direct sales motion"
+              color="#34d399"
+            />
+            <PipelineMetric
+              label="Warm leads"
+              value={formatMetric(warmDeals)}
+              sub="Sequence, monitor, and enrich"
+              color="#FFB000"
+            />
+            <PipelineMetric
+              label="Working slice"
+              value={formatMetric(visibleDeals)}
+              sub={`${formatMetric(queuedActivations)} SCOUT activations queued`}
+              color="#a78bfa"
+            />
+          </section>
 
           {/* ── SCOUT activation queue ── */}
           <div className="rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>

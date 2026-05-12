@@ -24,6 +24,33 @@ const signalStats = [
   ["62%", "strong buying intent"],
 ];
 
+const scoringModel = [
+  {
+    label: "Intent score",
+    value: "40%",
+    color: "#FFB000",
+    copy: "Weights urgent public signals: labor gaps, expansion, CapEx, funding, executive hires, and robotics pilots.",
+  },
+  {
+    label: "Robot fit",
+    value: "30%",
+    color: "#03DAC5",
+    copy: "Maps the buyer’s operating pain to robot categories like AMRs, service robots, cleaning, healthcare logistics, or food automation.",
+  },
+  {
+    label: "Timing window",
+    value: "20%",
+    color: "#a78bfa",
+    copy: "Prioritizes signals that imply a current buying window: new facility design, budget planning, staffing urgency, or active vendor review.",
+  },
+  {
+    label: "Sales motion",
+    value: "10%",
+    color: "#34d399",
+    copy: "Turns the signal into an action: who to contact, what proof point to lead with, and why now.",
+  },
+];
+
 function IntelligenceFlow() {
   const stages = [
     { icon: Database, label: "Source", copy: "150+ feeds", color: "#03DAC5" },
@@ -160,7 +187,7 @@ export default function Intelligence() {
               <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>
                 ReadyForRobots Intelligence
               </p>
-              <h1 className="font-extrabold leading-[0.98] tracking-tight text-white" style={{ fontSize: "clamp(2.7rem, 7vw, 5.7rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <h1 className="font-extrabold leading-[1.02] tracking-tight text-white" style={{ fontSize: "clamp(2.25rem, 5.4vw, 4.55rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                 Robot Demand Signals, Ranked
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/48">
@@ -188,6 +215,57 @@ export default function Intelligence() {
             </div>
 
             <IntelligenceFlow />
+          </section>
+
+          <section className="mb-14 overflow-hidden border border-white/10" style={{ background: "rgba(255,255,255,0.035)", borderRadius: 20 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="border-b border-white/8 p-6 lg:border-b-0 lg:border-r lg:p-8">
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>Lead scoring model</p>
+                <h2 className="max-w-xl text-2xl font-extrabold leading-tight text-white lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  We score the buyer first, then match it to the robot sales motion.
+                </h2>
+                <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/45">
+                  SCOUT does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
+                </p>
+                <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden border border-white/8" style={{ background: "rgba(255,255,255,0.08)", borderRadius: 14 }}>
+                  {[
+                    ["HOT", "Act now"],
+                    ["WARM", "Sequence"],
+                    ["EMERGING", "Watch"],
+                    ["PARTNER", "Channel fit"],
+                  ].map(([tier, action]) => (
+                    <div key={tier} className="p-3" style={{ background: "rgba(13,5,32,0.72)" }}>
+                      <p className="font-mono text-sm font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
+                      <p className="mt-1 text-[11px] text-white/35">{action}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 lg:p-8">
+                <div className="space-y-4">
+                  {scoringModel.map((item) => (
+                    <div key={item.label}>
+                      <div className="mb-2 flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-bold text-white/82">{item.label}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-white/38">{item.copy}</p>
+                        </div>
+                        <span className="shrink-0 font-mono text-sm font-bold" style={{ color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>{item.value}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/8">
+                        <div className="h-full rounded-full" style={{ width: item.value, background: item.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 border-l-2 px-4 py-2" style={{ borderColor: "#FFB000" }}>
+                  <p className="text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
+                    Example: a warehouse expansion plus automation hiring scores differently for an AMR vendor than it does for a surgical robotics company. The lead stays the same; the opportunity ranking changes based on robot fit.
+                  </p>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section id="report" className="mb-14 grid grid-cols-1 gap-px overflow-hidden border border-white/10 lg:grid-cols-[1fr_380px]" style={{ background: "rgba(255,255,255,0.08)", borderRadius: 20 }}>
