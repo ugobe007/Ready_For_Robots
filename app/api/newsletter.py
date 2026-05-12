@@ -95,9 +95,9 @@ def _try_send_welcome(email: str) -> dict:
 
 def _cache_max_age_hours() -> float:
     try:
-        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "1.5"))
+        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "18"))
     except ValueError:
-        return 1.5
+        return 18
 
 
 @router.get("/edition")
@@ -111,8 +111,8 @@ def get_newsletter_edition(
 ):
     """
     Fresh newsletter edition: hot leads with actionable signals.
-    Cache TTL defaults to 1.5h (NEWSLETTER_CACHE_MAX_AGE_HOURS) so content
-    does not stay frozen for a day when Celery is off. Stale cache → regenerate.
+    Cache TTL defaults to same-day freshness (NEWSLETTER_CACHE_MAX_AGE_HOURS).
+    The cache still turns over when the calendar day changes.
     """
     response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
     response.headers["Pragma"] = "no-cache"

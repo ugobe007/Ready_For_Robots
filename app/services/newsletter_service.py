@@ -536,7 +536,8 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
         with open(path) as f:
             data = json.load(f)
         if "newsBrief" not in data:
-            return None
+            data["newsBrief"] = []
+            data.setdefault("summary", {})["news_items"] = 0
         gen = data.get("summary", {}).get("generated_at")
         if not gen:
             return None
