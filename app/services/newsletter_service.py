@@ -4,13 +4,11 @@ Generates top stories from hot/warm leads for daily brief and social sharing.
 """
 import os
 import json
-import html
-import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import desc, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.company import Company
@@ -56,21 +54,6 @@ SIGNAL_CATEGORIES = {
     "equipment_integration": "Equipment Integration",
     "rfp_posted": "RFP Posted",
     "government_contract": "Gov Contract",
-}
-
-NEWS_SIGNAL_TYPES = {
-    "news",
-    "automation_interest",
-    "automation_intent",
-    "pilot_success",
-    "robot_installation",
-    "roi_documented",
-    "vendor_selection",
-    "scale_expansion",
-    "competitive_response",
-    "funding_round",
-    "innovation",
-    "technology_trend",
 }
 
 # Industry-specific automation framing used in summaries
@@ -247,86 +230,6 @@ def _truncate(text: str, max_len: int) -> str:
     if len(text) <= max_len:
         return text
     return text[: max_len - 3].rsplit(" ", 1)[0] + "..."
-
-
-def _clean_news_text(text: str) -> str:
-    t = html.unescape(text or "")
-    t = re.sub(r"<[^>]+>", " ", t)
-    t = re.sub(r"\s+", " ", t).strip()
-    t = re.sub(r"\bsource_url\b.*$", "", t, flags=re.IGNORECASE).strip()
-    return t
-
-
-def _news_category(text: str, signal_type: str = "") -> str:
-    low = f"{signal_type} {text}".lower()
-    if any(k in low for k in ("funding", "series a", "series b", "investment", "raise")):
-        return "Funding"
-    if any(k in low for k in ("innovation", "ai", "computer vision", "autonomous", "new robot", "launch")):
-        return "Innovation"
-    if any(k in low for k in ("trend", "market", "adoption", "forecast", "demand")):
-        return "Trend"
-    if any(k in low for k in ("deploy", "pilot", "installation", "rollout", "fleet")):
-        return "Deployment"
-    if any(k in low for k in ("labor", "staffing", "shortage", "wage", "turnover")):
-        return "Signal"
-    return "News"
-
-
-def _news_item_key(title: str, url: str = "") -> str:
-    key = (title or url or "").lower()
-    key = re.sub(r"https?://", "", key)
-    key = re.sub(r"[^a-z0-9]+", " ", key).strip()
-    return key[:160]
-
-
-def build_news_brief(db: Session, limit: int = 8) -> List[Dict[str, Any]]:
-    """Build newsletter-ready market news from already-ingested signals only."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    rows = (
-        db.query(Signal, Company.name)
-        .join(Company, Company.id == Signal.company_id)
-        .filter(Signal.created_at >= cutoff)
-        .filter(Signal.signal_type.in_(tuple(sorted(NEWS_SIGNAL_TYPES))))
-        .order_by(desc(Signal.created_at), desc(Signal.signal_strength))
-        .limit(80)
-        .all()
-    )
-
-    items: List[Dict[str, Any]] = []
-    seen: set = set()
-    for sig, company_name in rows:
-        raw = _clean_news_text(getattr(sig, "signal_text", "") or "")
-        if len(raw) < 24:
-            continue
-        sentence_parts = re.split(r"(?<=[.!?])\s+", raw)
-        title = sentence_parts[0].strip()
-        if len(title) < 20 and len(sentence_parts) > 1:
-            title = f"{title} {sentence_parts[1]}".strip()
-        snippet = " ".join(sentence_parts[1:3]).strip() or raw
-        if company_name and company_name.lower() not in title.lower():
-            title = f"{company_name}: {title}"
-        key = _news_item_key(title, getattr(sig, "source_url", "") or "")
-        if key in seen:
-            continue
-        seen.add(key)
-        signal_type = getattr(sig, "signal_type", "") or "news"
-        items.append(
-            {
-                "category": _news_category(raw, signal_type),
-                "headline": _truncate(title, 120),
-                "snippet": _truncate(snippet, 240),
-                "source": "ReadyForRobots signal graph",
-                "url": getattr(sig, "source_url", "") or "",
-                "published": getattr(sig, "created_at", None).isoformat() if getattr(sig, "created_at", None) else "",
-                "signalType": _sig_label(signal_type),
-                "strength": round(float(getattr(sig, "signal_strength", 0) or 0) * 10, 1),
-                "kind": "scraped_signal",
-            }
-        )
-        if len(items) >= limit:
-            break
-
-    return items[:limit]
 
 
 def get_cache_path() -> Path:
@@ -507,8 +410,6 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         use_cache=True,
         force_refresh=False,
     )
-    news_brief = build_news_brief(db, limit=8)
-
     return {
         "latestEdition": {
             "date": date_str,
@@ -517,11 +418,9 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             "subheadline": subheadline,
         },
         "industryBrief": industry_brief,
-        "newsBrief": news_brief,
         "topStories": stories,
         "summary": {
             "total_leads": len(stories),
-            "news_items": len(news_brief),
             "generated_at": now.isoformat(),
         },
     }
@@ -535,9 +434,6 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
     try:
         with open(path) as f:
             data = json.load(f)
-        if "newsBrief" not in data:
-            data["newsBrief"] = []
-            data.setdefault("summary", {})["news_items"] = 0
         gen = data.get("summary", {}).get("generated_at")
         if not gen:
             return None

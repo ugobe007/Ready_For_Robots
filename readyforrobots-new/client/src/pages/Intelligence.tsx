@@ -12,12 +12,6 @@ type Story = {
   score?: number;
 };
 
-const fallbackStories: Story[] = [
-  { title: "Hospitality labor pressure", summary: "Service robot demand concentrates where staffing gaps are now visible in public signals." },
-  { title: "Logistics leads adoption", summary: "Warehouse and fulfillment operators show the highest signal density across expansion and hiring patterns." },
-  { title: "ROI pressure rises", summary: "Buyers are framing robotics around payback, staffing resilience, and throughput guarantees." },
-];
-
 const signalStats = [
   ["158", "enterprises analyzed"],
   ["437", "buying signals detected"],
@@ -360,14 +354,16 @@ export default function Intelligence() {
                 <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/42">
                   Each issue packages new signals, deployment stories, vendor movement, and ROI language so teams know where to act before the market does.
                 </p>
-                <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
-                  {(stories.length ? stories : fallbackStories).slice(0, 3).map((story, i) => (
-                    <div key={`${story.title || story.company || i}`} className="border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.45)", borderRadius: 14 }}>
-                      <p className="break-words mb-2 text-sm font-bold text-white/85">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
-                      <p className="break-words text-xs leading-relaxed text-white/36">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
-                    </div>
-                  ))}
-                </div>
+                {stories.length > 0 && (
+                  <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    {stories.slice(0, 3).map((story, i) => (
+                      <div key={`${story.title || story.company || i}`} className="border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.45)", borderRadius: 14 }}>
+                        <p className="break-words mb-2 text-sm font-bold text-white/85">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
+                        <p className="break-words text-xs leading-relaxed text-white/36">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <form onSubmit={subscribe} className="border border-white/8 p-5" style={{ background: "rgba(13,5,32,0.55)", borderRadius: 16 }}>
                 <Mail className="mb-4 h-5 w-5" style={{ color: "#03DAC5" }} />

@@ -374,12 +374,9 @@ export default function Home() {
               </Link>
             </div>
 
+            {dailyBrief?.topStories?.length ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              {(dailyBrief?.topStories?.length ? dailyBrief.topStories : [
-                { category: "Signal", headline: "Labor pressure rising", snippet: "SCOUT is watching labor shortage, expansion, CapEx, and deployment signals for robotics vendors." },
-                { category: "Industry", headline: "Logistics remains active", snippet: "Warehouse automation and material handling continue to generate strong sales motion." },
-                { category: "Action", headline: "Turn signals into outreach", snippet: "Use the daily brief to spot which accounts deserve a SCOUT activation." },
-              ]).slice(0, 3).map((story, index) => {
+              {dailyBrief.topStories.slice(0, 3).map((story, index) => {
                 const headline = cleanScrapedText(story.headline || story.company) || "Signal story";
                 const snippet = cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots.";
                 return (
@@ -398,6 +395,7 @@ export default function Home() {
               );
               })}
             </div>
+            ) : null}
           </div>
 
           <div className="rounded-3xl border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.035)" }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, Mail, Newspaper, Radio, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Mail, Radio, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -18,23 +18,18 @@ type NewsletterStory = {
   fullText?: string;
 };
 
-type NewsBriefItem = {
-  category?: string;
-  headline?: string;
-  snippet?: string;
-  source?: string;
-  url?: string;
-  published?: string;
-  signalType?: string;
-  strength?: number;
-  kind?: string;
+type BriefTextItem = string | {
+  title?: string;
+  detail?: string;
+  audience?: string;
+  insight?: string;
 };
 
 type IndustryBrief = {
   executive_take?: string;
-  macro_trends?: string[];
-  strategic_implications?: string[];
-  watch_next?: string[];
+  macro_trends?: BriefTextItem[];
+  strategic_implications?: BriefTextItem[];
+  watch_next?: BriefTextItem[];
 };
 
 type NewsletterEdition = {
@@ -45,36 +40,24 @@ type NewsletterEdition = {
     subheadline?: string;
   };
   industryBrief?: IndustryBrief;
-  newsBrief?: NewsBriefItem[];
   topStories?: NewsletterStory[];
   summary?: {
     total_leads?: number;
-    news_items?: number;
     generated_at?: string;
   };
 };
 
-const fallbackStories: NewsletterStory[] = [
-  {
-    category: "Signal",
-    headline: "Daily robot demand signals are updating",
-    snippet: "SCOUT watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news for robotics vendors.",
-  },
-  {
-    category: "Market",
-    headline: "Logistics, hospitality, and healthcare remain active",
-    snippet: "The daily brief packages where demand is moving and which signals are turning into sales or partnership opportunities.",
-  },
-  {
-    category: "Action",
-    headline: "Use the brief to activate SCOUT",
-    snippet: "Every daily edition points toward accounts and signal types worth turning into outreach, research, or partnership motion.",
-  },
-];
-
 function shortDate(value?: string) {
   if (!value) return "Updated daily";
   return value;
+}
+
+function briefText(item: BriefTextItem | undefined): string {
+  if (!item) return "";
+  if (typeof item === "string") return cleanScrapedText(item);
+  const title = cleanScrapedText(item.title || item.audience || "");
+  const detail = cleanScrapedText(item.detail || item.insight || "");
+  return [title, detail].filter(Boolean).join(title && detail ? " — " : "");
 }
 
 export default function Newsletter() {
@@ -87,7 +70,7 @@ export default function Newsletter() {
     fetch(`${getApiBase()}/api/newsletter/edition?limit=8&cb=${Date.now()}`, liveFetchInit())
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.topStories) setEdition(data);
+        if (!cancelled && data?.latestEdition) setEdition(data);
       })
       .catch(() => undefined);
     return () => {
@@ -113,11 +96,11 @@ export default function Newsletter() {
     }
   }
 
-  const stories = (edition?.topStories?.length ? edition.topStories : fallbackStories).slice(0, 8);
-  const newsBrief = (edition?.newsBrief || []).slice(0, 8);
+  const stories = (edition?.topStories || []).slice(0, 8);
   const brief = edition?.industryBrief;
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
   const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "A daily digest of buying signals, deployment stories, vendor movement, and sales timing for robotics teams.";
+  const strategicItems = (brief?.strategic_implications || brief?.watch_next || brief?.macro_trends || []).map(briefText).filter(Boolean).slice(0, 4);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -160,12 +143,11 @@ export default function Newsletter() {
             </div>
           </section>
 
-          <section className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-5">
+          <section className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-4">
             {[
               ["Edition", edition?.latestEdition?.edition || "Daily"],
               ["Updated", shortDate(edition?.latestEdition?.date)],
-              ["News", String(edition?.summary?.news_items ?? newsBrief.length)],
-              ["Leads", String(edition?.summary?.total_leads || stories.length)],
+              ["Leads", String(edition?.summary?.total_leads ?? stories.length)],
               ["Cadence", "Every day"],
             ].map(([label, value], index) => (
               <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
@@ -183,10 +165,10 @@ export default function Newsletter() {
                   <p className="break-words text-lg leading-relaxed text-white/70">{cleanScrapedText(brief.executive_take)}</p>
                 </div>
                 <div className="space-y-3">
-                  {(brief.watch_next || brief.macro_trends || []).slice(0, 3).map((item, index) => (
+                  {strategicItems.map((item, index) => (
                     <div key={`${item}-${index}`} className="flex items-start gap-3 rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
                       <Radio className="mt-0.5 h-4 w-4 shrink-0" style={{ color: index === 0 ? "#FFB000" : "#03DAC5" }} />
-                      <p className="break-words text-sm leading-relaxed text-white/50">{cleanScrapedText(item)}</p>
+                      <p className="break-words text-sm leading-relaxed text-white/50">{item}</p>
                     </div>
                   ))}
                 </div>
@@ -194,105 +176,46 @@ export default function Newsletter() {
             </section>
           )}
 
-          {newsBrief.length > 0 && (
-            <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.04), rgba(255,255,255,0.025))" }}>
-              <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          {stories.length > 0 && (
+            <>
+              <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-                    <Newspaper className="h-3.5 w-3.5" />
-                    News, innovations, trends
-                  </p>
-                  <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-white md:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                    Market news and signal watch
-                  </h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
-                    A separate readout for robotics news, innovation moves, trend shifts, and important signals SCOUT is picking up before they become lead cards.
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", background: "rgba(255,176,0,0.06)" }}>
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Scraped from news + signal graph
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Sales lead cards</p>
+                  <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Accounts moving from signal to opportunity</h2>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                {newsBrief.map((item, index) => {
-                  const category = cleanScrapedText(item.category) || "News";
-                  const headlineText = cleanScrapedText(item.headline) || "Robotics news signal";
-                  const source = cleanScrapedText(item.source);
-                  return (
-                    <article key={`${headlineText}-${index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
-                      <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: index % 2 ? "#03DAC5" : "#FFB000", borderColor: index % 2 ? "rgba(3,218,197,0.25)" : "rgba(255,176,0,0.28)", background: index % 2 ? "rgba(3,218,197,0.06)" : "rgba(255,176,0,0.07)" }}>
-                          {category}
+              <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {stories.map((story, index) => (
+                  <article key={`${story.company || story.headline || index}`} className="rounded-3xl border border-white/8 p-5 transition-colors hover:border-teal-300/25" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: index % 2 ? "#FFB000" : "#03DAC5", borderColor: index % 2 ? "rgba(255,176,0,0.28)" : "rgba(3,218,197,0.28)", background: index % 2 ? "rgba(255,176,0,0.06)" : "rgba(3,218,197,0.06)" }}>
+                        {cleanScrapedText(story.category) || "Signal"}
+                      </span>
+                      {story.signalStrength && (
+                        <span className="font-mono text-xs font-bold text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          {story.signalStrength}/10 strength
                         </span>
-                        {item.signalType && (
-                          <span className="rounded-full border border-white/8 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/35">
-                            {cleanScrapedText(item.signalType)}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="break-words text-base font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                        {item.url ? (
-                          <a href={item.url} target="_blank" rel="noreferrer" className="transition-colors hover:text-teal-200">
-                            {headlineText}
-                          </a>
-                        ) : headlineText}
-                      </h3>
-                      <p className="mt-3 break-words text-sm leading-relaxed" style={{ color: "#FFB000" }}>
-                        {cleanScrapedText(item.snippet) || "Important robotics market signal detected."}
-                      </p>
-                      <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-white/30">
-                        {source && <span>{source}</span>}
-                        {item.strength ? <span>{item.strength}/10 strength</span> : null}
-                        <span className="inline-flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          Signal watch
-                        </span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Sales lead cards</p>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Accounts moving from signal to opportunity</h2>
-            </div>
-          </div>
-
-          <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {stories.map((story, index) => (
-              <article key={`${story.company || story.headline || index}`} className="rounded-3xl border border-white/8 p-5 transition-colors hover:border-teal-300/25" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: index % 2 ? "#FFB000" : "#03DAC5", borderColor: index % 2 ? "rgba(255,176,0,0.28)" : "rgba(3,218,197,0.28)", background: index % 2 ? "rgba(255,176,0,0.06)" : "rgba(3,218,197,0.06)" }}>
-                    {cleanScrapedText(story.category) || "Signal"}
-                  </span>
-                  {story.signalStrength && (
-                    <span className="font-mono text-xs font-bold text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                      {story.signalStrength}/10 strength
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-xl font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {cleanScrapedText(story.headline || story.company) || "Signal story"}
-                </h2>
-                <p className="mt-3 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
-                  {cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots."}
-                </p>
-                <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {[story.roi, story.economics, story.impact].map((item) => cleanScrapedText(item)).filter(Boolean).map((item) => (
-                    <div key={item} className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
-                      <p className="text-[11px] font-bold text-white/48">{item}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </section>
+                    <h2 className="text-xl font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                      {cleanScrapedText(story.headline || story.company) || "Signal story"}
+                    </h2>
+                    <p className="mt-3 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
+                      {cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots."}
+                    </p>
+                    <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      {[story.roi, story.economics, story.impact].map((item) => cleanScrapedText(item)).filter(Boolean).map((item) => (
+                        <div key={item} className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
+                          <p className="text-[11px] font-bold text-white/48">{item}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </section>
+            </>
+          )}
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5 text-sm">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: "#FFB000" }}>

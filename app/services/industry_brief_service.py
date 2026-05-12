@@ -201,7 +201,7 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
 
     return {
         "executive_take": _harmonize_executive_take(" ".join(lines)),
-        "macro_trends": macro[:5] or [{"title": "Building dataset", "detail": "Run scrapers to populate strategic trends."}],
+        "macro_trends": macro[:5],
         "strategic_implications": strategic,
         "risks_and_unknowns": [
             "Signal text is news-derived — verify budget authority on key accounts.",
