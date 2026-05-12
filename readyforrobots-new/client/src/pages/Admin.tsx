@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Database, DownloadCloud, Play, RefreshCw, Shield, UploadCloud } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, Database, DownloadCloud, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,53 @@ type AdminStats = {
   recent_companies?: Array<{ id?: number; name?: string; industry?: string; source?: string; created_at?: string }>;
 };
 
+type AdminUserStats = {
+  total_users?: number;
+  active_users?: number;
+  total_saved?: number;
+  total_reports?: number;
+  total_lists?: number;
+  waitlist_signups?: number;
+  newsletter_subscribers?: number;
+};
+
+type AdminUser = {
+  id?: string;
+  email?: string;
+  created_at?: string;
+  last_active?: string;
+  saved_count?: number;
+  reports_count?: number;
+  lists_count?: number;
+};
+
+type AdminActivity = {
+  type?: string;
+  label?: string;
+  actor?: string;
+  detail?: string;
+  created_at?: string;
+};
+
+type SiteAnalytics = {
+  site_visits?: number;
+  total_calculations?: number;
+  robot_searches?: number;
+  email_captures?: number;
+  conversion_rate?: number;
+  avg_payback_months?: number;
+  hot_count?: number;
+  warm_count?: number;
+  cold_count?: number;
+  new_companies?: number;
+  new_signals?: number;
+  insights?: {
+    hottest_trend?: string;
+    opportunity?: string;
+    action_item?: string;
+  };
+};
+
 type ScrapeTargets = {
   summary?: Record<string, number>;
   targets?: Array<{ url?: string; label?: string; scraper?: string; industries?: string[]; signal_types?: string[]; active?: boolean }>;
@@ -24,6 +71,12 @@ type AdminMe = { email?: string; is_admin?: boolean };
 
 const INDUSTRIES = ["", "Logistics", "Hospitality", "Healthcare", "Food Service", "Automotive & Manufacturing"];
 const SCRAPERS = ["all", "job_board", "hotel_dir", "rss_feed", "news", "serp", "logistics", "score_recalc"];
+const TIME_RANGES = [
+  { label: "7D", value: "7d" },
+  { label: "30D", value: "30d" },
+  { label: "90D", value: "90d" },
+  { label: "All", value: "all" },
+] as const;
 
 function formatNumber(value?: number) {
   if (value == null) return "—";
@@ -40,15 +93,35 @@ function AdminCard({ label, value, sub }: { label: string; value: string; sub?: 
   );
 }
 
+function formatDate(value?: string) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function activityColor(type?: string) {
+  if (type === "saved_company") return "#FFB000";
+  if (type === "ai_report") return "#a78bfa";
+  if (type === "newsletter_subscriber") return "#03DAC5";
+  if (type === "waitlist_signup") return "#34d399";
+  return "rgba(255,255,255,0.42)";
+}
+
 export default function Admin() {
   const api = getApiBase();
   const { session, loading: authLoading } = useAuth();
   const [me, setMe] = useState<AdminMe | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [userStats, setUserStats] = useState<AdminUserStats | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [activity, setActivity] = useState<AdminActivity[]>([]);
+  const [analytics, setAnalytics] = useState<SiteAnalytics | null>(null);
   const [targets, setTargets] = useState<ScrapeTargets | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [timeRange, setTimeRange] = useState<(typeof TIME_RANGES)[number]["value"]>("30d");
   const [urls, setUrls] = useState("");
   const [urlIndustry, setUrlIndustry] = useState("");
   const [scrapeNow, setScrapeNow] = useState(false);
@@ -85,24 +158,42 @@ export default function Admin() {
       setMe(meData);
       if (!meData.is_admin) {
         setStats(null);
+        setUserStats(null);
+        setUsers([]);
+        setActivity([]);
+        setAnalytics(null);
         setTargets(null);
         return;
       }
 
-      const [statsRes, targetsRes] = await Promise.all([
+      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = await Promise.all([
         adminFetch("/api/admin/stats"),
+        adminFetch("/api/admin/users/stats"),
+        adminFetch("/api/admin/users"),
+        adminFetch("/api/admin/activity?limit=40"),
+        adminFetch(`/api/analytics?range=${timeRange}`),
         adminFetch("/api/admin/scrape/targets"),
       ]);
       if (!statsRes.ok) throw new Error(`Stats failed with ${statsRes.status}`);
+      if (!userStatsRes.ok) throw new Error(`User stats failed with ${userStatsRes.status}`);
+      if (!usersRes.ok) throw new Error(`Users failed with ${usersRes.status}`);
+      if (!activityRes.ok) throw new Error(`Activity failed with ${activityRes.status}`);
+      if (!analyticsRes.ok) throw new Error(`Site metrics failed with ${analyticsRes.status}`);
       if (!targetsRes.ok) throw new Error(`Targets failed with ${targetsRes.status}`);
       setStats(await statsRes.json());
+      setUserStats(await userStatsRes.json());
+      const usersData = await usersRes.json() as { users?: AdminUser[] };
+      setUsers(usersData.users || []);
+      const activityData = await activityRes.json() as { activity?: AdminActivity[] };
+      setActivity(activityData.activity || []);
+      setAnalytics(await analyticsRes.json());
       setTargets(await targetsRes.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {
       setLoading(false);
     }
-  }, [adminFetch, session?.access_token]);
+  }, [adminFetch, session?.access_token, timeRange]);
 
   useEffect(() => {
     if (!authLoading) void loadAdmin();
@@ -208,9 +299,24 @@ export default function Admin() {
           <div>
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>Admin console</p>
             <h1 className="text-4xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>ReadyForRobots Ops</h1>
-            <p className="mt-3 text-sm text-white/42">Manage data, scrapers, and operational health for the live service.</p>
+            <p className="mt-3 text-sm text-white/42">Review users, site activity, metrics, scrapers, and operational health for the live service.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div className="mr-1 flex rounded-xl border border-white/10 p-1">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.value}
+                  onClick={() => setTimeRange(range.value)}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
+                  style={{
+                    color: timeRange === range.value ? "#0d0520" : "rgba(255,255,255,0.52)",
+                    background: timeRange === range.value ? "#FFB000" : "transparent",
+                  }}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
             <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/60">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
@@ -222,6 +328,91 @@ export default function Admin() {
 
         {message && <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-200">{message}</div>}
         {error && <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm text-red-200">{error}</div>}
+
+        <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <Users className="h-4 w-4" style={{ color: "#FFB000" }} />
+            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Users and accounts</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <AdminCard label="Users" value={formatNumber(userStats?.total_users)} sub={`${formatNumber(userStats?.active_users)} active in 7 days`} />
+            <AdminCard label="Saved Companies" value={formatNumber(userStats?.total_saved)} sub="Buyer accounts tracking leads" />
+            <AdminCard label="Reports" value={formatNumber(userStats?.total_reports)} sub={`${formatNumber(userStats?.total_lists)} saved lists`} />
+            <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SCOUT · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" style={{ color: "#03DAC5" }} />
+            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Site metrics</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()}`} />
+            <AdminCard label="ROI Runs" value={formatNumber(analytics?.total_calculations)} sub={`${formatNumber(analytics?.email_captures)} emails captured`} />
+            <AdminCard label="Robot Searches" value={formatNumber(analytics?.robot_searches)} />
+            <AdminCard label="Conversion" value={`${analytics?.conversion_rate ?? 0}%`} sub="Email capture rate" />
+            <AdminCard label="Lead Mix" value={formatNumber((analytics?.hot_count || 0) + (analytics?.warm_count || 0))} sub={`${formatNumber(analytics?.hot_count)} hot · ${formatNumber(analytics?.warm_count)} warm`} />
+          </div>
+        </section>
+
+        <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Recent users</p>
+              <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/35">{formatNumber(users.length)} shown</span>
+            </div>
+            <div className="max-h-[380px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
+                <span>User</span>
+                <span>Saved</span>
+                <span>Reports</span>
+                <span>Last active</span>
+              </div>
+              {(users.length ? users : [{ email: "No users yet" }]).slice(0, 30).map((user, index) => (
+                <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-white/6 py-3 text-xs">
+                  <div className="min-w-0">
+                    <p className="truncate text-white/72">{user.email || "Unknown user"}</p>
+                    <p className="mt-1 truncate text-[10px] text-white/28">{user.id || "—"}</p>
+                  </div>
+                  <span className="font-mono text-white/45">{formatNumber(user.saved_count)}</span>
+                  <span className="font-mono text-white/45">{formatNumber(user.reports_count)}</span>
+                  <span className="text-white/35">{formatDate(user.last_active || user.created_at)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <div className="mb-4 flex items-center gap-2">
+              <Activity className="h-4 w-4" style={{ color: "#FFB000" }} />
+              <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent activity</p>
+            </div>
+            <div className="max-h-[380px] space-y-2 overflow-y-auto pr-1">
+              {(activity.length ? activity : [{ label: "No recent activity yet", detail: "User saves, reports, signups, and newsletter subscribers will appear here." }]).map((item, index) => (
+                <div key={`${item.type}-${item.created_at}-${index}`} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold text-white/75">{item.label}</p>
+                    <span className="shrink-0 text-[10px] text-white/28">{formatDate(item.created_at)}</span>
+                  </div>
+                  <p className="mt-1 truncate text-[11px]" style={{ color: activityColor(item.type) }}>{item.actor || "ReadyForRobots"}</p>
+                  <p className="mt-1 break-words text-[11px] text-white/35">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {analytics?.insights && (
+          <section className="mb-8 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.08), rgba(3,218,197,0.04))" }}>
+            <p className="mb-3 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Operator notes</p>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {[analytics.insights.hottest_trend, analytics.insights.opportunity, analytics.insights.action_item].filter(Boolean).map((item) => (
+                <p key={item} className="rounded-xl border border-white/8 px-3 py-3 text-xs leading-relaxed text-white/55" style={{ background: "rgba(13,5,32,0.38)" }}>{item}</p>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-4">
           <AdminCard label="Companies" value={formatNumber(stats?.totals?.companies)} />

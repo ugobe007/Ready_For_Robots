@@ -68,6 +68,26 @@ type ApiLead = {
     why_now?: string[];
     suggested_motion?: string;
   };
+  match_score?: number;
+  value_proposition?: string;
+  recommended_action?: string;
+  key_signals?: string[];
+};
+
+type RobotReadyResponse = {
+  robot_name?: string;
+  submitted_url?: string;
+  robot_capabilities?: {
+    type?: string;
+    use_case?: string;
+    capabilities?: string[];
+    profile_score?: number;
+  };
+  matched_companies?: ApiLead[];
+  overall_strategy?: string;
+  estimated_deal_value?: number;
+  top_industry?: string;
+  total_leads?: number;
 };
 
 type Prospect = {
@@ -188,23 +208,25 @@ function cleanRelevanceCopy(raw: string, quotedSignal: string): string {
 
 function mapApiLead(lead: ApiLead, index: number): Prospect {
   const score = Math.round(
-    lead.score?.lead_value_score ??
+    lead.match_score ??
+      lead.score?.lead_value_score ??
       lead.score?.overall_score ??
       lead.priority_score ??
       70,
   );
   const firstSignal = lead.signals?.[0];
-  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.share_summary || "") || "SCOUT found a sales-fit pattern worth reviewing.";
+  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.key_signals?.[0] || lead.share_summary || "") || "SCOUT found a sales-fit pattern worth reviewing.";
   const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
   const company = lead.company_name || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
-  const relevance = cleanRelevanceCopy(lead.share_summary || whyNow.join(" "), signal) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
+  const relevance = cleanRelevanceCopy(lead.value_proposition || lead.share_summary || whyNow.join(" "), signal) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
   const scoreReason = [
     `${score}/100 match score`,
     lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
+    lead.match_score ? "matched to scanned URL profile" : "",
     ...(lead.priority_reasons || whyNow).slice(0, 2),
-  ].join(" · ");
+  ].filter(Boolean).join(" · ");
   const prospect = {
     id: String(lead.id ?? `${company}-${index}`),
     company,
@@ -216,7 +238,7 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     signalType,
     signalColor: scoreColor(score),
     timing: lead.gtm?.readiness_label ? `Stage: ${lead.gtm.readiness_label}` : timingFromScore(score),
-    action: lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
+    action: lead.recommended_action || lead.gtm?.suggested_motion || "Reach out with a personalized automation use case",
     relevance,
     scoreReason,
     draft: "",
@@ -332,22 +354,26 @@ export default function Results() {
 
     async function runScan() {
       try {
-        const response = await fetch(
-          `${getApiBase()}/api/leads?limit=8&tier=HOT&sort=score&exclude_junk=true`,
-          liveFetchInit(),
-        );
+        const response = await fetch(`${getApiBase()}/api/robot-ready/submit`, liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            robot_name: new URL(submittedUrl).hostname.replace(/^www\./, ""),
+            url: submittedUrl,
+          }),
+        }));
         if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
-        const data = await response.json();
-        const matches = Array.isArray(data) ? data : [];
+        const data = await response.json() as RobotReadyResponse;
+        const matches = Array.isArray(data.matched_companies) ? data.matched_companies : [];
         const mapped = matches.slice(0, 8).map(mapApiLead);
-        if (!mapped.length) throw new Error("No live matches returned");
+        if (!mapped.length) throw new Error("No URL-specific matches returned");
         if (!cancelled) setProspects(mapped);
       } catch (error) {
         console.error(error);
         if (!cancelled) {
           setUsingFallback(true);
           setProspects(fallbackProspects);
-          toast.info("Using sample matches while SCOUT reloads the lead pipeline.");
+          toast.info("Using sample matches while SCOUT reloads the URL-specific matcher.");
         }
       } finally {
         if (!cancelled) {

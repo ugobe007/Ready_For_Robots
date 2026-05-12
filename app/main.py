@@ -199,6 +199,11 @@ def startup():
         warm_homepage_cache()
     except Exception as exc:
         logger.warning("Homepage cache warm-up could not be scheduled: %s", exc)
+    try:
+        from app.api.robot_ready import warm_robot_ready_candidate_cache
+        warm_robot_ready_candidate_cache()
+    except Exception as exc:
+        logger.warning("Robot-ready candidate cache warm-up could not be scheduled: %s", exc)
 
 
 @app.get("/health")

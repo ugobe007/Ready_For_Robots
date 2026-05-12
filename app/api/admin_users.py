@@ -4,13 +4,71 @@ Admin User Management API
 Endpoints for managing users, viewing activity, and account stats.
 Requires admin (email in ADMIN_EMAILS).
 """
-from fastapi import APIRouter, Depends
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from app.database import get_db
 from app.api.auth_deps import require_admin
 
 router = APIRouter(dependencies=[Depends(require_admin)])
+
+
+def _iso(value):
+    return value.isoformat() if value else None
+
+
+def _table_exists(db: Session, table_name: str) -> bool:
+    return table_name in inspect(db.bind).get_table_names()
+
+
+def _seven_day_cutoff() -> datetime:
+    return datetime.now(timezone.utc) - timedelta(days=7)
+
+
+@router.get("/users/stats")
+def get_user_stats(db: Session = Depends(get_db)):
+    """
+    Get aggregate user statistics.
+    Returns: { total_users, active_users, total_saved, total_reports, total_lists }
+    """
+    if not _table_exists(db, "user_profiles"):
+        return {
+            "total_users": 0,
+            "active_users": 0,
+            "total_saved": 0,
+            "total_reports": 0,
+            "total_lists": 0,
+            "waitlist_signups": 0,
+            "newsletter_subscribers": 0,
+        }
+
+    cutoff = _seven_day_cutoff()
+    total_users = db.execute(text("SELECT COUNT(*) FROM user_profiles")).scalar() or 0
+    active_users = db.execute(
+        text("""
+            SELECT COUNT(*)
+            FROM user_profiles
+            WHERE COALESCE(updated_at, created_at) >= :cutoff
+        """),
+        {"cutoff": cutoff},
+    ).scalar() or 0
+
+    def count_table(table_name: str) -> int:
+        if not _table_exists(db, table_name):
+            return 0
+        return db.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar() or 0
+
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "total_saved": count_table("user_saved_companies"),
+        "total_reports": count_table("ai_reports"),
+        "total_lists": count_table("user_lists"),
+        "waitlist_signups": count_table("waitlist_signups"),
+        "newsletter_subscribers": count_table("newsletter_subscribers"),
+    }
 
 
 @router.get("/users")
@@ -19,6 +77,9 @@ def list_users(db: Session = Depends(get_db)):
     List all registered users with their activity stats.
     Returns: { users: [{ id, email, created_at, saved_count, reports_count, lists_count, last_active }] }
     """
+    if not _table_exists(db, "user_profiles"):
+        return {"users": [], "total": 0}
+
     query = text("""
         SELECT 
             up.id,
@@ -52,16 +113,138 @@ def list_users(db: Session = Depends(get_db)):
     users = []
     for row in rows:
         users.append({
-            "id": row.id,
+            "id": str(row.id),
             "email": row.email,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-            "last_active": row.last_active.isoformat() if row.last_active else None,
+            "created_at": _iso(row.created_at),
+            "last_active": _iso(row.last_active),
             "saved_count": row.saved_count,
             "reports_count": row.reports_count,
             "lists_count": row.lists_count,
         })
     
     return {"users": users, "total": len(users)}
+
+
+@router.get("/activity")
+def list_recent_activity(
+    limit: int = Query(30, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """
+    Recent user and site activity across user tables, lead captures, and newsletter signups.
+    """
+    activity = []
+
+    if _table_exists(db, "user_profiles"):
+        rows = db.execute(
+            text("""
+                SELECT id, email, created_at
+                FROM user_profiles
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "user_signup",
+            "label": "User signed up",
+            "actor": row.email or "Unknown user",
+            "detail": str(row.id),
+            "created_at": _iso(row.created_at),
+        } for row in rows)
+
+    if _table_exists(db, "user_saved_companies"):
+        rows = db.execute(
+            text("""
+                SELECT user_id, company_name, industry, saved_at
+                FROM user_saved_companies
+                ORDER BY saved_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "saved_company",
+            "label": "Saved company",
+            "actor": str(row.user_id),
+            "detail": f"{row.company_name or 'Company'} · {row.industry or 'Unknown'}",
+            "created_at": _iso(row.saved_at),
+        } for row in rows)
+
+    if _table_exists(db, "ai_reports"):
+        rows = db.execute(
+            text("""
+                SELECT user_id, company_name, title, created_at
+                FROM ai_reports
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "ai_report",
+            "label": "Generated report",
+            "actor": str(row.user_id),
+            "detail": row.title or row.company_name or "AI report",
+            "created_at": _iso(row.created_at),
+        } for row in rows)
+
+    if _table_exists(db, "user_lists"):
+        rows = db.execute(
+            text("""
+                SELECT user_id, name, created_at
+                FROM user_lists
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "user_list",
+            "label": "Created list",
+            "actor": str(row.user_id),
+            "detail": row.name or "User list",
+            "created_at": _iso(row.created_at),
+        } for row in rows)
+
+    if _table_exists(db, "waitlist_signups"):
+        rows = db.execute(
+            text("""
+                SELECT email, company, source, created_at
+                FROM waitlist_signups
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "waitlist_signup",
+            "label": "SCOUT signup",
+            "actor": row.email,
+            "detail": row.company or row.source or "Waitlist",
+            "created_at": _iso(row.created_at),
+        } for row in rows)
+
+    if _table_exists(db, "newsletter_subscribers"):
+        rows = db.execute(
+            text("""
+                SELECT email, company, source, created_at
+                FROM newsletter_subscribers
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        ).fetchall()
+        activity.extend({
+            "type": "newsletter_subscriber",
+            "label": "Newsletter subscriber",
+            "actor": row.email,
+            "detail": row.company or row.source or "Robot Intelligence Brief",
+            "created_at": _iso(row.created_at),
+        } for row in rows)
+
+    activity.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+    return {"activity": activity[:limit], "total": len(activity)}
 
 
 @router.get("/users/{user_id}/activity")
@@ -165,31 +348,3 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
         return {"status": "error", "message": str(e)}
 
 
-@router.get("/users/stats")
-def get_user_stats(db: Session = Depends(get_db)):
-    """
-    Get aggregate user statistics.
-    Returns: { total_users, active_users, total_saved, total_reports, total_lists }
-    """
-    stats_query = text("""
-        SELECT 
-            COUNT(DISTINCT up.id) as total_users,
-            COUNT(DISTINCT CASE WHEN up.updated_at > NOW() - INTERVAL '7 days' THEN up.id END) as active_users,
-            COUNT(DISTINCT usc.id) as total_saved,
-            COUNT(DISTINCT ur.id) as total_reports,
-            COUNT(DISTINCT ul.id) as total_lists
-        FROM user_profiles up
-        LEFT JOIN user_saved_companies usc ON up.id = usc.user_id
-        LEFT JOIN ai_reports ur ON up.id = ur.user_id
-        LEFT JOIN user_lists ul ON up.id = ul.user_id
-    """)
-    
-    row = db.execute(stats_query).fetchone()
-    
-    return {
-        "total_users": row.total_users or 0,
-        "active_users": row.active_users or 0,
-        "total_saved": row.total_saved or 0,
-        "total_reports": row.total_reports or 0,
-        "total_lists": row.total_lists or 0
-    }

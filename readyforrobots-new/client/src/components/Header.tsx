@@ -182,10 +182,11 @@ export default function Header() {
           </button>
         </div>
 
-        {/* SCOUT entry — prominent at top */}
+        {/* Pipeline entry — prominent at top */}
         <div className="px-4 pt-4 pb-3">
-          <button
-            onClick={() => { closeDrawer(); openChat(); }}
+          <Link
+            href="/results?url="
+            onClick={closeDrawer}
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all hover:bg-amber-400/8"
             style={{
               border: "1.5px solid rgba(255,176,0,0.4)",
@@ -200,10 +201,10 @@ export default function Header() {
             </div>
             <div className="text-left flex-1">
               <p className="text-sm font-bold leading-none" style={{ color: "#FFB000" }}>Activate Pipeline</p>
-              <p className="text-[11px] text-white/40 mt-0.5">Ask your AI sales agent anything</p>
+              <p className="text-[11px] text-white/40 mt-0.5">Scan your URL and match live opportunities</p>
             </div>
             <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#FFB000" }} />
-          </button>
+          </Link>
         </div>
 
         {/* Account links */}
@@ -291,7 +292,7 @@ export default function Header() {
 
         {/* Bottom CTA */}
         <div className="mt-auto px-4 py-5 border-t border-white/8">
-          <Link href="/" onClick={closeDrawer}>
+          <Link href="/results?url=" onClick={closeDrawer}>
             <button
               className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl transition-all active:scale-95"
               style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.06)" }}
