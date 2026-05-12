@@ -164,7 +164,7 @@ export default function Newsletter() {
             {[
               ["Edition", edition?.latestEdition?.edition || "Daily"],
               ["Updated", shortDate(edition?.latestEdition?.date)],
-              ["News", String(edition?.summary?.news_items || newsBrief.length || "Live")],
+              ["News", String(edition?.summary?.news_items ?? newsBrief.length)],
               ["Leads", String(edition?.summary?.total_leads || stories.length)],
               ["Cadence", "Every day"],
             ].map(([label, value], index) => (
@@ -194,73 +194,68 @@ export default function Newsletter() {
             </section>
           )}
 
-          <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.04), rgba(255,255,255,0.025))" }}>
-            <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-              <div>
-                <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-                  <Newspaper className="h-3.5 w-3.5" />
-                  News, innovations, trends
-                </p>
-                <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-white md:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Market news and signal watch
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
-                  A separate readout for robotics news, innovation moves, trend shifts, and important signals SCOUT is picking up before they become lead cards.
-                </p>
+          {newsBrief.length > 0 && (
+            <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.04), rgba(255,255,255,0.025))" }}>
+              <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                  <p className="mb-3 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
+                    <Newspaper className="h-3.5 w-3.5" />
+                    News, innovations, trends
+                  </p>
+                  <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-white md:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    Market news and signal watch
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
+                    A separate readout for robotics news, innovation moves, trend shifts, and important signals SCOUT is picking up before they become lead cards.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", background: "rgba(255,176,0,0.06)" }}>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Scraped from news + signal graph
+                </div>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", background: "rgba(255,176,0,0.06)" }}>
-                <Sparkles className="h-3.5 w-3.5" />
-                Scraped from news + signal graph
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {(newsBrief.length ? newsBrief : [
-                {
-                  category: "News",
-                  headline: "Robotics market news is being collected",
-                  snippet: "Run the daily scrapers to populate this section with innovation, trend, deployment, funding, and buyer-signal news.",
-                  source: "ReadyForRobots",
-                },
-              ]).map((item, index) => {
-                const category = cleanScrapedText(item.category) || "News";
-                const headlineText = cleanScrapedText(item.headline) || "Robotics news signal";
-                const source = cleanScrapedText(item.source);
-                return (
-                  <article key={`${headlineText}-${index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: index % 2 ? "#03DAC5" : "#FFB000", borderColor: index % 2 ? "rgba(3,218,197,0.25)" : "rgba(255,176,0,0.28)", background: index % 2 ? "rgba(3,218,197,0.06)" : "rgba(255,176,0,0.07)" }}>
-                        {category}
-                      </span>
-                      {item.signalType && (
-                        <span className="rounded-full border border-white/8 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/35">
-                          {cleanScrapedText(item.signalType)}
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {newsBrief.map((item, index) => {
+                  const category = cleanScrapedText(item.category) || "News";
+                  const headlineText = cleanScrapedText(item.headline) || "Robotics news signal";
+                  const source = cleanScrapedText(item.source);
+                  return (
+                    <article key={`${headlineText}-${index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: index % 2 ? "#03DAC5" : "#FFB000", borderColor: index % 2 ? "rgba(3,218,197,0.25)" : "rgba(255,176,0,0.28)", background: index % 2 ? "rgba(3,218,197,0.06)" : "rgba(255,176,0,0.07)" }}>
+                          {category}
                         </span>
-                      )}
-                    </div>
-                    <h3 className="break-words text-base font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                      {item.url ? (
-                        <a href={item.url} target="_blank" rel="noreferrer" className="transition-colors hover:text-teal-200">
-                          {headlineText}
-                        </a>
-                      ) : headlineText}
-                    </h3>
-                    <p className="mt-3 break-words text-sm leading-relaxed" style={{ color: "#FFB000" }}>
-                      {cleanScrapedText(item.snippet) || "Important robotics market signal detected."}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-white/30">
-                      {source && <span>{source}</span>}
-                      {item.strength ? <span>{item.strength}/10 strength</span> : null}
-                      <span className="inline-flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        Signal watch
-                      </span>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+                        {item.signalType && (
+                          <span className="rounded-full border border-white/8 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/35">
+                            {cleanScrapedText(item.signalType)}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="break-words text-base font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        {item.url ? (
+                          <a href={item.url} target="_blank" rel="noreferrer" className="transition-colors hover:text-teal-200">
+                            {headlineText}
+                          </a>
+                        ) : headlineText}
+                      </h3>
+                      <p className="mt-3 break-words text-sm leading-relaxed" style={{ color: "#FFB000" }}>
+                        {cleanScrapedText(item.snippet) || "Important robotics market signal detected."}
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-white/30">
+                        {source && <span>{source}</span>}
+                        {item.strength ? <span>{item.strength}/10 strength</span> : null}
+                        <span className="inline-flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          Signal watch
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>

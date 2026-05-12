@@ -21,6 +21,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@1.5
 
       - name: Deploy
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --wait-timeout 10m --release-command-timeout 10m
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

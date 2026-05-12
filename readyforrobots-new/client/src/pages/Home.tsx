@@ -241,7 +241,7 @@ export default function Home() {
             {/* Subheadline */}
             <p className="text-base text-white/60 leading-relaxed mb-6 max-w-lg" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               ReadyForRobots helps robot companies find buyers from live market signals.{" "}
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting, qualifying, outreach, and scheduling....<br />
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting, qualifying, outreach, and scheduling.<br />
               Your team just closes.
             </p>
 

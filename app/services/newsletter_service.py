@@ -6,10 +6,6 @@ import os
 import json
 import html
 import re
-import ssl
-import urllib.parse
-import urllib.request
-import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -22,7 +18,6 @@ from app.models.score import Score
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
-from app.services.news_publications import strip_trailing_news_attribution
 
 def _industry_display(raw) -> str:
     """Never expose 'Unknown' in newsletter content."""
@@ -62,13 +57,6 @@ SIGNAL_CATEGORIES = {
     "rfp_posted": "RFP Posted",
     "government_contract": "Gov Contract",
 }
-
-NEWS_BRIEF_QUERIES = [
-    "robotics automation innovation market trends 2026",
-    "warehouse robotics automation deployment news 2026",
-    "service robots hospitality healthcare restaurant news 2026",
-    "robotics startup funding automation AI robots 2026",
-]
 
 NEWS_SIGNAL_TYPES = {
     "news",
@@ -261,15 +249,6 @@ def _truncate(text: str, max_len: int) -> str:
     return text[: max_len - 3].rsplit(" ", 1)[0] + "..."
 
 
-def _news_ssl_context() -> ssl.SSLContext:
-    try:
-        import certifi
-
-        return ssl.create_default_context(cafile=certifi.where())
-    except Exception:
-        return ssl.create_default_context()
-
-
 def _clean_news_text(text: str) -> str:
     t = html.unescape(text or "")
     t = re.sub(r"<[^>]+>", " ", t)
@@ -300,59 +279,8 @@ def _news_item_key(title: str, url: str = "") -> str:
     return key[:160]
 
 
-def _fetch_live_news_items(limit: int = 6) -> List[Dict[str, Any]]:
-    """Small Google News RSS sweep for the newsletter's market-news section."""
-    if os.getenv("NEWSLETTER_LIVE_NEWS", "1").strip().lower() in {"0", "false", "no"}:
-        return []
-
-    items: List[Dict[str, Any]] = []
-    seen: set = set()
-    for query in NEWS_BRIEF_QUERIES:
-        if len(items) >= limit:
-            break
-        try:
-            encoded = urllib.parse.quote(query)
-            url = f"https://news.google.com/rss/search?q={encoded}&hl=en-US&gl=US&ceid=US:en"
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "Mozilla/5.0 (compatible; ReadyForRobots/1.0)"},
-            )
-            with urllib.request.urlopen(req, timeout=5, context=_news_ssl_context()) as resp:
-                root = ET.fromstring(resp.read())
-            channel = root.find("channel")
-            if channel is None:
-                continue
-            for item in channel.findall("item")[:3]:
-                source_el = item.find("source")
-                source = _clean_news_text(source_el.text if source_el is not None else "")
-                raw_title = _clean_news_text(item.findtext("title") or "")
-                title = strip_trailing_news_attribution(raw_title, source)
-                snippet = _clean_news_text(item.findtext("description") or "")
-                link = (item.findtext("link") or "").strip()
-                key = _news_item_key(title, link)
-                if not title or key in seen:
-                    continue
-                seen.add(key)
-                items.append(
-                    {
-                        "category": _news_category(f"{title} {snippet}", "news"),
-                        "headline": _truncate(title, 120),
-                        "snippet": _truncate(snippet or title, 220),
-                        "source": source or "Google News",
-                        "url": link,
-                        "published": item.findtext("pubDate") or "",
-                        "kind": "market_news",
-                    }
-                )
-                if len(items) >= limit:
-                    break
-        except Exception:
-            continue
-    return items[:limit]
-
-
 def build_news_brief(db: Session, limit: int = 8) -> List[Dict[str, Any]]:
-    """Build newsletter-ready market news, innovation, trend, and signal items."""
+    """Build newsletter-ready market news from already-ingested signals only."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     rows = (
         db.query(Signal, Company.name)
@@ -397,13 +325,6 @@ def build_news_brief(db: Session, limit: int = 8) -> List[Dict[str, Any]]:
         )
         if len(items) >= limit:
             break
-
-    if len(items) < limit:
-        for item in _fetch_live_news_items(limit=limit - len(items)):
-            key = _news_item_key(item.get("headline", ""), item.get("url", ""))
-            if key and key not in seen:
-                seen.add(key)
-                items.append(item)
 
     return items[:limit]
 
@@ -614,6 +535,8 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
     try:
         with open(path) as f:
             data = json.load(f)
+        if "newsBrief" not in data:
+            return None
         gen = data.get("summary", {}).get("generated_at")
         if not gen:
             return None
