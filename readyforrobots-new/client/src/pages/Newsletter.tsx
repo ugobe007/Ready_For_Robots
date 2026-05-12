@@ -194,7 +194,7 @@ export default function Newsletter() {
                 <h2 className="text-xl font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {cleanScrapedText(story.headline || story.company) || "Signal story"}
                 </h2>
-                <p className="mt-3 break-words text-sm leading-relaxed text-white/45">
+                <p className="mt-3 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
                   {cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots."}
                 </p>
                 <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">

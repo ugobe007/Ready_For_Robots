@@ -380,19 +380,18 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             "_score": base_score,
         })
 
-    # Sort: recency first (newest signals), then score — fresh content wins
-    newest_days_ago = min(s["_recency"][0] for s in stories) if stories else 0
-    all_stale = newest_days_ago > 7
-
+    # Sort: recency first (newest signals), then score — fresh content wins.
+    # Rotate within the top pool each day so the public brief does not freeze on
+    # the same headlines when the highest-scored signal set is unchanged.
     stories.sort(key=lambda x: (x.pop("_recency", (999, 0)), -x.pop("_score", 0)))
 
-    # Day-based rotation: when no fresh signals, rotate so different leads appear each day
-    if all_stale and len(stories) > limit:
+    if len(stories) > limit:
         day_seed = int(now.strftime("%j"))
         pool_size = min(24, len(stories))
+        top_pool = stories[:pool_size]
         start_idx = (day_seed * 7) % pool_size
-        rotated = stories[start_idx:] + stories[:start_idx]
-        stories = rotated[:limit]
+        rotated_pool = top_pool[start_idx:] + top_pool[:start_idx]
+        stories = rotated_pool[:limit]
     else:
         stories = stories[:limit]
 
@@ -428,7 +427,7 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
     }
 
 
-def read_cached_edition(max_age_hours: int = 25) -> Optional[Dict[str, Any]]:
+def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
     """Read cached edition if it exists and is fresh. Returns None if stale or missing."""
     path = get_cache_path()
     if not path.exists():
@@ -441,6 +440,10 @@ def read_cached_edition(max_age_hours: int = 25) -> Optional[Dict[str, Any]]:
             return None
         gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
         age = datetime.now(timezone.utc) - gen_dt
+        # A "daily" brief should turn over with the calendar even if the prior cache
+        # is still within its hour-based TTL.
+        if gen_dt.date() != datetime.now(timezone.utc).date():
+            return None
         if age > timedelta(hours=max_age_hours):
             return None
         return data

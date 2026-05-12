@@ -241,7 +241,7 @@ export default function Home() {
             {/* Subheadline */}
             <p className="text-base text-white/60 leading-relaxed mb-6 max-w-lg" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               ReadyForRobots helps robot companies find buyers from live market signals.{" "}
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting, qualifying, outreach, and scheduling.<br />
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting, qualifying, outreach, and scheduling....<br />
               Your team just closes.
             </p>
 
@@ -388,7 +388,7 @@ export default function Home() {
                     {cleanScrapedText(story.category) || "Signal"}
                   </p>
                   <p className="break-words text-sm font-bold leading-snug text-white/88">{headline}</p>
-                  <p className="mt-2 line-clamp-4 break-words text-xs leading-relaxed text-white/40">{snippet}</p>
+                  <p className="mt-2 line-clamp-4 break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000" }}>{snippet}</p>
                   {(story.impact || story.economics) && (
                     <p className="mt-4 break-words font-mono text-[10px] font-bold uppercase tracking-widest text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                       {[story.impact, story.economics].map((item) => cleanScrapedText(item)).filter(Boolean).join(" · ")}

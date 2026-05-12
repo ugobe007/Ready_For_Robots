@@ -95,9 +95,9 @@ def _try_send_welcome(email: str) -> dict:
 
 def _cache_max_age_hours() -> float:
     try:
-        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "24.0"))
+        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "1.5"))
     except ValueError:
-        return 24.0
+        return 1.5
 
 
 @router.get("/edition")
