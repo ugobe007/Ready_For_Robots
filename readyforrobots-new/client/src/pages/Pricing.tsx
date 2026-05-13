@@ -1,6 +1,6 @@
 /**
  * Pricing — ReadyForRobots
- * Three-tier pricing: Free Preview · Growth · Enterprise
+ * Three-tier pricing: Starter · Pro · Premium
  * Violet palette: #0d0520 bg · #7c3aed accent · cream text
  */
 import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle } from "lucide-react";
@@ -11,85 +11,100 @@ import { useState } from "react";
 
 const tiers = [
   {
-    name: "Preview",
-    price: "Free",
-    period: "",
-    tagline: "See your pipeline before you commit",
-    color: "#60a5fa",
-    icon: HelpCircle,
-    cta: "Start for free",
+    name: "Starter",
+    price: "$19",
+    period: "/month",
+    tagline: "Start finding real robot-ready buyers",
+    color: "#03DAC5",
+    icon: Zap,
+    cta: "Start Starter",
     ctaAction: "signup",
     features: [
-      "3 matched prospects per scan",
+      "URL scan and buyer matching",
+      "Starter pipeline view",
       "Signal type identification",
-      "Company overview and location",
-      "Confidence score",
-      "1 outreach draft preview",
-      "No account required",
+      "Lead score and why-now context",
+      "Outreach draft previews",
+      "Daily newsletter and market signal brief",
     ],
     limitations: [
-      "No full pipeline access",
-      "No CRM integration",
-      "No auto-outreach",
+      "Limited saved leads",
+      "Manual SCOUT workflow",
     ],
     highlight: false,
   },
   {
-    name: "Growth",
-    price: "$490",
+    name: "Pro",
+    price: "$49",
     period: "/month",
-    tagline: "Your full automated sales pipeline",
-    color: "#7c3aed",
-    icon: Zap,
-    cta: "Start free trial",
+    tagline: "Run a focused robotics sales pipeline",
+    color: "#FFB000",
+    icon: Cpu,
+    cta: "Start Pro",
     ctaAction: "trial",
     features: [
-      "Unlimited matched prospects",
-      "All 14 signal types",
-      "Full outreach draft library",
+      "Everything in Starter",
+      "Expanded lead matching",
+      "Research agent updates on WARM and HOT leads",
       "Pipeline Kanban board",
-      "Assisted autonomy mode",
-      "CRM sync (HubSpot, Salesforce)",
-      "Weekly pipeline report",
-      "2026 Automation Imperative report and weekly Intelligence Brief",
-      "Email support",
+      "Improved outreach drafts by industry",
+      "CRM profile enrichment",
+      "Weekly pipeline and research summary",
     ],
     limitations: [],
     highlight: true,
     badge: "Most popular",
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    tagline: "For teams with a defined ICP at scale",
-    color: "#f472b6",
-    icon: Cpu,
-    cta: "Talk to sales",
+    name: "Premium",
+    price: "$129",
+    period: "/month",
+    tagline: "For teams ready to act on more accounts",
+    color: "#a78bfa",
+    icon: Shield,
+    cta: "Start Premium",
     ctaAction: "sales",
     features: [
-      "Everything in Growth",
-      "Auto autonomy mode",
-      "Custom signal tuning",
-      "Dedicated account manager",
-      "Multi-user team access",
-      "Custom CRM integrations",
-      "SLA and uptime guarantee",
-      "Quarterly strategy reviews",
+      "Everything in Pro",
+      "Priority SCOUT research coverage",
+      "More saved leads and team workflow",
+      "Premium signal monitoring",
+      "Advanced CRM-ready lead context",
+      "Priority support queue",
+      "Monthly strategy review prompts",
     ],
     limitations: [],
     highlight: false,
   },
 ];
 
+const supportServices = [
+  {
+    title: "Customer support",
+    copy: "Help turning signals into workflows, outreach steps, and account review habits.",
+  },
+  {
+    title: "Technical support",
+    copy: "Assistance with CRM setup, data handoff, scoring questions, and operational troubleshooting.",
+  },
+  {
+    title: "Robot integration",
+    copy: "Introductions to local implementation partners for site review, system integration, and deployment planning.",
+  },
+  {
+    title: "Installation support",
+    copy: "Optional help coordinating qualified local vendors for installation, training, and post-install checks.",
+  },
+];
+
 const faqs = [
   {
     q: "Is there a contract or commitment?",
-    a: "No. Growth is month-to-month. You can cancel any time. Enterprise contracts are annual with custom terms.",
+    a: "No. Starter, Pro, and Premium are month-to-month. You can cancel any time.",
   },
   {
-    q: "What's included in the free trial?",
-    a: "Full Growth access for 14 days — no credit card required. You'll see your complete matched pipeline, all signal types, and full outreach drafts.",
+    q: "Which plan should I start with?",
+    a: "Starter is best for testing the workflow. Pro is best for active sales teams. Premium is best when you want more research coverage, team workflow, and priority support.",
   },
   {
     q: "How do you define a 'matched prospect'?",
@@ -97,11 +112,11 @@ const faqs = [
   },
   {
     q: "Can I use this with my existing CRM?",
-    a: "Yes. Growth includes native sync with HubSpot and Salesforce. Enterprise includes custom integrations for any CRM.",
+    a: "Yes. Pro and Premium include CRM-ready lead context. Technical support and deeper CRM setup can be added as an optional service.",
   },
   {
-    q: "What if I sell multiple robot categories?",
-    a: "Each Growth subscription covers one robot category. Enterprise includes multi-category support. Contact us to discuss your setup.",
+    q: "Do you help with robot deployment services?",
+    a: "Yes. Customer support, technical support, integration, and installation support can be arranged as add-on services through qualified local partners.",
   },
 ];
 
@@ -130,10 +145,10 @@ export default function Pricing() {
               className="font-extrabold text-white leading-tight mb-4"
               style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Simple, transparent pricing
+              Simple pricing for robot sales teams
             </h1>
             <p className="text-sm text-white/40 max-w-xl mx-auto">
-              Start free. See your pipeline. Upgrade when you're ready to act on it.
+              Start with signal intelligence, then add SCOUT workflow support as your pipeline grows.
             </p>
           </div>
 
@@ -229,6 +244,27 @@ export default function Pricing() {
             })}
           </div>
 
+          {/* Services note */}
+          <section className="mb-16 rounded-2xl border border-amber-300/15 p-6" style={{ background: "rgba(255,176,0,0.045)" }}>
+            <div className="mb-5 flex items-start gap-4">
+              <HelpCircle className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "#FFB000" }} />
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: "#FFB000" }}>Optional support services</p>
+                <p className="text-xs text-white/38 leading-relaxed max-w-3xl">
+                  Some customers need help beyond software. ReadyForRobots can coordinate additional support for customer success, technical setup, integration planning, and robot installation through vetted local partners. Service pricing is scoped separately based on need.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+              {supportServices.map((service) => (
+                <div key={service.title} className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
+                  <p className="text-xs font-bold mb-2" style={{ color: "#FFB000" }}>{service.title}</p>
+                  <p className="text-[11px] leading-relaxed text-white/38">{service.copy}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Comparison note */}
           <div
             className="rounded-2xl border border-white/6 p-6 flex items-start gap-4 mb-16"
@@ -238,7 +274,7 @@ export default function Pricing() {
             <div>
               <p className="text-sm font-semibold text-white/70 mb-1">No risk. No lock-in.</p>
               <p className="text-xs text-white/35 leading-relaxed">
-                The free preview requires no account. The Growth trial requires no credit card. We'd rather you see the pipeline quality before you commit — because once you do, you'll understand why it works.
+                Starter, Pro, and Premium are designed to be easy to try and easy to grow into. Additional service work is optional and scoped separately from the software subscription.
               </p>
             </div>
           </div>
