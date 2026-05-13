@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText } from "@/lib/text";
+import { toast } from "sonner";
 
 type SupplyCompany = {
   robot_company: {
@@ -30,8 +31,33 @@ type SupplyCompany = {
   cta: { signup: string; meeting: string };
 };
 
+type DraftState = {
+  to: string;
+  subject: string;
+  body: string;
+  approved: boolean;
+  sending: boolean;
+  sent: boolean;
+  expanded: boolean;
+};
+
+function initialDraft(row: SupplyCompany): DraftState {
+  const contact = row.contact_strategy.primary?.contact || row.robot_company.contact_email || "";
+  const to = contact.includes("@") ? contact : "";
+  return {
+    to,
+    subject: row.email.subject,
+    body: row.email.body,
+    approved: false,
+    sending: false,
+    sent: false,
+    expanded: false,
+  };
+}
+
 export default function SupplyPipeline() {
   const [rows, setRows] = useState<SupplyCompany[]>([]);
+  const [drafts, setDrafts] = useState<Record<number, DraftState>>({});
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -46,6 +72,7 @@ export default function SupplyPipeline() {
         const payload = await response.json();
         const companies = Array.isArray(payload.companies) ? payload.companies : [];
         setRows(companies);
+        setDrafts(Object.fromEntries(companies.map((row: SupplyCompany) => [row.robot_company.id, initialDraft(row)])));
         setSelectedId(companies[0]?.robot_company?.id ?? null);
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Could not load supply pipeline");
@@ -56,6 +83,91 @@ export default function SupplyPipeline() {
   }, []);
 
   const selected = rows.find((row) => row.robot_company.id === selectedId) ?? rows[0];
+  const selectedDraft = selected ? drafts[selected.robot_company.id] : null;
+  const approvedCount = Object.values(drafts).filter((draft) => draft.approved && !draft.sent).length;
+  const sentCount = Object.values(drafts).filter((draft) => draft.sent).length;
+
+  const patchDraft = (id: number, patch: Partial<DraftState>) => {
+    setDrafts((current) => ({
+      ...current,
+      [id]: { ...current[id], ...patch },
+    }));
+  };
+
+  const approveDraft = (id: number) => {
+    patchDraft(id, { approved: true });
+    toast.success("Draft approved for operator send.");
+  };
+
+  const approveAll = () => {
+    setDrafts((current) =>
+      Object.fromEntries(
+        Object.entries(current).map(([id, draft]) => [
+          id,
+          draft.sent ? draft : { ...draft, approved: true },
+        ]),
+      ),
+    );
+    toast.success("All unsent drafts approved.");
+  };
+
+  const sendOne = async (row: SupplyCompany, test = false) => {
+    const id = row.robot_company.id;
+    const draft = drafts[id];
+    if (!draft) return;
+    if (!draft.to || !draft.to.includes("@")) {
+      toast.error("Add a valid recipient email before sending.");
+      return;
+    }
+    if (!draft.approved && !test) {
+      toast.error("Approve the draft before sending.");
+      return;
+    }
+    patchDraft(id, { sending: true });
+    try {
+      const endpoint = test ? "test-send" : "send";
+      const response = await fetch(
+        `${getApiBase()}/api/robot-companies/${id}/email/${endpoint}`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to_email: draft.to,
+            template_type: "supply_pipeline",
+            subject: draft.subject,
+            body: draft.body,
+          }),
+        }),
+      );
+      if (!response.ok) throw new Error(await response.text());
+      patchDraft(id, { sending: false, sent: !test || draft.sent });
+      toast.success(test ? "Test email sent." : `Sent outreach to ${row.robot_company.company_name}.`);
+    } catch (e) {
+      patchDraft(id, { sending: false });
+      toast.error(e instanceof Error ? e.message : "Could not send email.");
+    }
+  };
+
+  const bulkSendApproved = async () => {
+    const approvedRows = rows.filter((row) => {
+      const draft = drafts[row.robot_company.id];
+      return draft?.approved && !draft.sent;
+    });
+    if (!approvedRows.length) {
+      toast.info("No approved unsent drafts.");
+      return;
+    }
+    for (const row of approvedRows) {
+      // Sequential sends make failures visible and avoid provider rate spikes.
+      await sendOne(row);
+    }
+  };
+
+  const copyDraft = async () => {
+    if (!selectedDraft) return;
+    await navigator.clipboard.writeText(`To: ${selectedDraft.to}\nSubject: ${selectedDraft.subject}\n\n${selectedDraft.body}`);
+    toast.success("Draft copied.");
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
@@ -71,18 +183,38 @@ export default function SupplyPipeline() {
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
             SCOUT researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
           </p>
+          <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{approvedCount} approved</span>
+            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{sentCount} sent</span>
+            <button
+              type="button"
+              onClick={approveAll}
+              className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
+            >
+              Bulk approve all
+            </button>
+            <button
+              type="button"
+              onClick={() => void bulkSendApproved()}
+              className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c]"
+            >
+              Bulk send approved
+            </button>
+            <p className="text-[11px] text-white/35">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
+          </div>
           {err && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{err}</p>}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-2xl border border-white/10 bg-white/[0.025]">
               <div className="border-b border-white/8 px-4 py-3">
                 <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${rows.length} robot companies`}</p>
-                <p className="mt-1 text-[11px] text-white/35">Review only. No emails send automatically.</p>
+                <p className="mt-1 text-[11px] text-white/35">Approve/send queue for marketplace supply.</p>
               </div>
               <div className="max-h-[680px] overflow-y-auto p-2">
                 {rows.map((row) => {
                   const company = row.robot_company;
                   const active = company.id === selected?.robot_company.id;
+                  const draft = drafts[company.id];
                   return (
                     <button
                       key={company.id}
@@ -100,13 +232,24 @@ export default function SupplyPipeline() {
                       <p className="mt-1 truncate text-[11px] text-white/35">
                         {company.robot_type || "robotics"} · {company.target_market || "market TBD"}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {draft?.approved && !draft.sent && (
+                          <span className="rounded-full bg-violet-400/12 px-2 py-0.5 text-[9px] font-bold text-violet-100">Approved</span>
+                        )}
+                        {draft?.sent && (
+                          <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Sent</span>
+                        )}
+                        {!draft?.to && (
+                          <span className="rounded-full bg-amber-400/12 px-2 py-0.5 text-[9px] font-bold text-amber-100">Needs email</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
             </aside>
 
-            {selected && (
+            {selected && selectedDraft && (
               <section className="grid gap-4">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -135,6 +278,25 @@ export default function SupplyPipeline() {
                       </p>
                     </div>
                   </div>
+                  <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
+                    <button
+                      type="button"
+                      onClick={() => patchDraft(selected.robot_company.id, { expanded: !selectedDraft.expanded })}
+                      className="text-xs font-bold text-amber-300 underline"
+                    >
+                      {selectedDraft.expanded ? "Hide details" : "Show details"}
+                    </button>
+                    {selectedDraft.expanded && (
+                      <div className="mt-3 grid gap-2 text-xs text-white/45 md:grid-cols-2">
+                        <p><span className="text-white/70">Website:</span> {selected.robot_company.website || "Unknown"}</p>
+                        <p><span className="text-white/70">Contact:</span> {selected.robot_company.contact_email || selected.contact_strategy.primary?.contact || "Research needed"}</p>
+                        <p><span className="text-white/70">Robot type:</span> {selected.robot_company.robot_type || "Unknown"}</p>
+                        <p><span className="text-white/70">Target market:</span> {selected.robot_company.target_market || "Unknown"}</p>
+                        <p><span className="text-white/70">Lead score:</span> {selected.robot_company.lead_score ?? "Unknown"}</p>
+                        <p><span className="text-white/70">Vendor score:</span> {selected.robot_company.vendor_list_score ?? "Unknown"}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
@@ -148,6 +310,7 @@ export default function SupplyPipeline() {
                         </div>
                         <p className="mt-1 text-[11px] text-white/35">{lead.industry || "industry unknown"}</p>
                         <p className="mt-2 text-[11px] leading-relaxed text-white/48">{cleanAndClampText(lead.why_match, 150)}</p>
+                        <p className="mt-2 text-[10px] leading-relaxed text-white/30">{cleanAndClampText(lead.signal, 130)}</p>
                       </div>
                     ))}
                   </div>
@@ -155,18 +318,77 @@ export default function SupplyPipeline() {
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-[10px] uppercase tracking-widest text-white/30">Draft email for review</p>
-                    <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] font-bold text-amber-100">
-                      Review before send
+                    <p className="text-[10px] uppercase tracking-widest text-white/30">Editable outreach draft</p>
+                    <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
+                      selectedDraft.sent
+                        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+                        : selectedDraft.approved
+                        ? "border-violet-400/30 bg-violet-400/10 text-violet-100"
+                        : "border-amber-400/30 bg-amber-400/10 text-amber-100"
+                    }`}>
+                      {selectedDraft.sent ? "Sent" : selectedDraft.approved ? "Approved" : "Needs approval"}
                     </span>
                   </div>
-                  <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-white/30">Subject</p>
-                    <p className="mt-1 text-sm font-bold text-amber-100">{selected.email.subject}</p>
+                  <div className="grid gap-3">
+                    <label className="block">
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipient</span>
+                      <input
+                        value={selectedDraft.to}
+                        onChange={(e) => patchDraft(selected.robot_company.id, { to: e.target.value, approved: false })}
+                        placeholder="partner@robotcompany.com"
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Subject</span>
+                      <input
+                        value={selectedDraft.subject}
+                        onChange={(e) => patchDraft(selected.robot_company.id, { subject: e.target.value, approved: false })}
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Body</span>
+                      <textarea
+                        value={selectedDraft.body}
+                        onChange={(e) => patchDraft(selected.robot_company.id, { body: e.target.value, approved: false })}
+                        rows={14}
+                        className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-sm leading-relaxed text-white outline-none"
+                      />
+                    </label>
                   </div>
-                  <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-white/8 bg-black/15 p-4 font-sans text-sm leading-relaxed text-white/68">
-                    {selected.email.body}
-                  </pre>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => approveDraft(selected.robot_company.id)}
+                      className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void sendOne(selected, true)}
+                      disabled={selectedDraft.sending || !selectedDraft.to}
+                      className="rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/75 disabled:opacity-50"
+                    >
+                      Send test
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void sendOne(selected)}
+                      disabled={selectedDraft.sending || !selectedDraft.approved || !selectedDraft.to}
+                      className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
+                    >
+                      {selectedDraft.sending ? "Sending..." : "Send approved"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void copyDraft()}
+                      className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-white/55"
+                    >
+                      Copy
+                    </button>
+                  </div>
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
                     <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.signup}</p>
                     <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.meeting}</p>
