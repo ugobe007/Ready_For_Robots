@@ -282,6 +282,26 @@ _STRUCTURAL_REJECTS = [
     re.compile(r"(?i)^these\s+\w+\s+companies\s*$"),
     re.compile(r"(?i)^[A-Za-z][A-Za-z&]+\s+hopes\s+\w+"),
     re.compile(r"(?i)^[A-Z]{2,4}'s\s+\S+\s+lab\s*$"),
+    # Event / category / publication strings that look title-cased enough to
+    # pass generic name checks but are not operating buyer accounts.
+    re.compile(r"(?i)^sponsor\s+\w"),
+    re.compile(r"(?i)^first\s+fully\s+autonomous\b"),
+    re.compile(
+        r"(?i)^(chinese|american|us|u\.s\.|japanese|korean|german|dutch|swedish|"
+        r"french|british|canadian|australian)\s+(humanoids?|robots?|androids?)\s*$"
+    ),
+    re.compile(
+        r"(?i)^(dutch|american|us|u\.s\.|japanese|korean|german|swedish|french|"
+        r"british|canadian|australian)\s+(hospitality|hotel|restaurant|logistics|"
+        r"healthcare)\s+operating\s+system\s+\w+"
+    ),
+    re.compile(
+        r"(?i)^(california|texas|florida|new\s+york|nj|ny|ca|tx|fl)\s+health\s+"
+        r"workers?\s+helps?\s+patients?\b"
+    ),
+    re.compile(r"(?i)\s+-\s+hotel\s+technology\s+news\s*$"),
+    re.compile(r"(?i)^(qsr|nj|ny|ca|tx|fl|us|u\.s\.)\s+(operators?|restaurants?|hotels?|retailers?)\s*$"),
+    re.compile(r"(?i)^(supply\s+chain|hospitality|logistics|restaurant|hotel)\s+consultanc(?:y|ies)\s+[A-Z]"),
 ]
 
 
@@ -344,6 +364,11 @@ def is_valid_lead(
                 EntityType.PERSON_NAME,
                 EntityType.CITY_OR_TOWN,
                 EntityType.COUNTRY,
+                EntityType.SECTOR_DESCRIPTOR,
+                EntityType.FACILITY_DESCRIPTOR,
+                EntityType.POPULATION_GROUP,
+                EntityType.DESCRIPTOR_ONLY,
+                EntityType.MALFORMED_ENTITY,
                 EntityType.SAYING,
                 EntityType.EQUIPMENT_CAT,
                 EntityType.MARKET_FRAGMENT,
@@ -400,6 +425,11 @@ def is_valid_lead(
                 EntityType.PERSON_NAME,
                 EntityType.CITY_OR_TOWN,
                 EntityType.COUNTRY,
+                EntityType.SECTOR_DESCRIPTOR,
+                EntityType.FACILITY_DESCRIPTOR,
+                EntityType.POPULATION_GROUP,
+                EntityType.DESCRIPTOR_ONLY,
+                EntityType.MALFORMED_ENTITY,
                 EntityType.SAYING,
                 EntityType.EQUIPMENT_CAT,
                 EntityType.MARKET_FRAGMENT,

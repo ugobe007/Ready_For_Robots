@@ -92,6 +92,35 @@ class InferWebsitesBody(BaseModel):
     min_score: float = 0.0
 
 
+class LeadResearchBody(BaseModel):
+    company_id: Optional[int] = None
+    limit: int = 10
+    dry_run: bool = True
+    lookback_days: int = 30
+
+
+@router.post("/lead-research/run")
+def run_lead_research_admin(body: LeadResearchBody, db: Session = Depends(get_db)):
+    """Trigger a one-company or bounded-batch lead research run."""
+    from app.services.lead_research_agent import research_active_leads, research_company_updates
+
+    if body.company_id:
+        summary = research_company_updates(
+            db,
+            body.company_id,
+            dry_run=body.dry_run,
+            lookback_days=body.lookback_days,
+            notify=not body.dry_run,
+        )
+        return summary.__dict__
+    return research_active_leads(
+        db,
+        limit=max(1, min(body.limit, 50)),
+        dry_run=body.dry_run,
+        lookback_days=body.lookback_days,
+    )
+
+
 @router.post("/companies/infer-websites")
 def infer_company_websites(body: InferWebsitesBody, db: Session = Depends(get_db)):
     """

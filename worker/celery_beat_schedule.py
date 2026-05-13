@@ -129,6 +129,13 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=16, minute=30),
         'kwargs': {'limit': 80},
     },
+    # ── LEAD RESEARCH AGENT ── Profile updates + in-app notifications.
+    # Task itself is gated by LEAD_RESEARCH_AGENT_ENABLED=1 until reviewed.
+    'lead-research-daily': {
+        'task': 'worker.tasks.research_active_leads_task',
+        'schedule': crontab(hour=10, minute=15),
+        'kwargs': {'limit': 50, 'dry_run': False, 'lookback_days': 30},
+    },
     # ── ENRICH EXISTING ── Add signals to companies with fewest (daily 7am UTC)
     'enrich-existing-companies': {
         'task': 'worker.tasks.run_enrich_companies_task',

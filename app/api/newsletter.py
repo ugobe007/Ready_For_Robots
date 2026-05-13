@@ -100,6 +100,13 @@ def _cache_max_age_hours() -> float:
         return 18
 
 
+def _strategic_brief_days() -> int:
+    try:
+        return max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
+    except ValueError:
+        return 7
+
+
 @router.get("/edition")
 def get_newsletter_edition(
     response: Response,
@@ -123,7 +130,13 @@ def get_newsletter_edition(
         assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
         from app.services.industry_brief_service import build_industry_brief_payload
 
-        build_industry_brief_payload(db, days=1, analytics=None, use_cache=True, force_refresh=True)
+        build_industry_brief_payload(
+            db,
+            days=_strategic_brief_days(),
+            analytics=None,
+            use_cache=True,
+            force_refresh=True,
+        )
         data = generate_edition(db, limit=limit)
         write_cached_edition(data)
         return data
@@ -181,7 +194,13 @@ def trigger_newsletter_generate(
 
         db = SessionLocal()
         try:
-            build_industry_brief_payload(db, days=1, analytics=None, use_cache=True, force_refresh=True)
+            build_industry_brief_payload(
+                db,
+                days=_strategic_brief_days(),
+                analytics=None,
+                use_cache=True,
+                force_refresh=True,
+            )
             data = generate_edition(db, limit=limit)
             write_cached_edition(data)
         finally:

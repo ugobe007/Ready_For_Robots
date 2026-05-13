@@ -17,6 +17,12 @@ from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
+def _strategic_brief_days() -> int:
+    try:
+        return max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
+    except ValueError:
+        return 7
+
 def _industry_display(raw) -> str:
     """Never expose 'Unknown' in newsletter content."""
     s = (raw or "").strip()
@@ -405,7 +411,7 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
 
     industry_brief = build_industry_brief_payload(
         db,
-        days=1,
+        days=_strategic_brief_days(),
         analytics=None,
         use_cache=True,
         force_refresh=False,
@@ -444,6 +450,11 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
         if gen_dt.date() != datetime.now(timezone.utc).date():
             return None
         if age > timedelta(hours=max_age_hours):
+            return None
+        brief = data.get("industryBrief") or {}
+        if brief.get("period_days") != _strategic_brief_days():
+            return None
+        if "**" in str(brief.get("executive_take") or ""):
             return None
         return data
     except Exception:

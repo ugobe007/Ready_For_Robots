@@ -13,6 +13,10 @@ snippets by their *structural grammar template*:
   QUESTION          → interrogative openers signal article titles
   PERSON_NAME       → FirstName + LastName pattern (no corporate suffix)
   GEOGRAPHIC        → city / country / state identifiers
+  SECTOR_DESCRIPTOR → industry or buyer-persona category, not a named account
+  FACILITY_DESCRIPTOR → facility/location type, not a named account
+  POPULATION_GROUP  → demographic/workforce group, not a named account
+  MALFORMED_ENTITY  → real-looking name embedded in a broken headline fragment
   SAYING / QUOTE    → quoted text or proverbial patterns
   COMPANY_NAME      → proper noun, no finite verb, distinctive word present
 
@@ -33,6 +37,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
+from app.services.semantic_roles import parse_semantic_roles
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Entity types
@@ -43,6 +49,11 @@ class EntityType(Enum):
     PERSON_NAME      = "person_name"
     CITY_OR_TOWN     = "city_or_town"
     COUNTRY          = "country"
+    SECTOR_DESCRIPTOR = "sector_descriptor"
+    FACILITY_DESCRIPTOR = "facility_descriptor"
+    POPULATION_GROUP = "population_group"
+    DESCRIPTOR_ONLY = "descriptor_without_object"
+    MALFORMED_ENTITY = "malformed_entity_string"
     DESCRIPTION      = "description"
     SAYING           = "saying"
     ARTICLE_HEADLINE = "article_headline"
@@ -86,6 +97,7 @@ _HEADLINE_VERBS = re.compile(
     r"\b(expands?|continues?|launches?|hires?|opens?|closes?|acquires?|deploys?|announces?|"
     r"reveals?|unveils?|signs?|wins?|loses?|raises?|cuts?|gains?|drops?|rises?|falls?|"
     r"grows?|shrinks?|invests?|plans?|aims?|targets?|secures?|lands?|names?|appoints?|"
+    r"makes?|builds?|scales?|tests?|trials?|pilots?|"
     r"promotes?|retires?|resigns?|files?|sues?|settles?|recalls?|halts?|pauses?|"
     r"reports?|posts?|earns?|beats?|misses?|warns?|says?|stated?|confirmed?|denied?|"
     r"celebrated?|highlighted?|completed?|delivered?|implemented?|transformed?|"
@@ -319,6 +331,53 @@ _MARKET_FRAGMENT = re.compile(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Template: ONTOLOGICAL NON-COMPANY DESCRIPTORS
+# ─────────────────────────────────────────────────────────────────────────────
+
+_REGION_MODIFIER = (
+    r"(?:u\.s\.|us|american|north\s+american|europe|european|asia|asian|"
+    r"n\.j\.|nj|philly(?:-area)?|california|texas|florida|new\s+york|"
+    r"chicago|atlanta|dfw|dallas|houston|bay\s+area)"
+)
+
+_SECTOR_DESCRIPTOR = re.compile(
+    rf"^(?:{_REGION_MODIFIER}\s+)?("
+    r"hospitality|restaurants?|qsr|third\s+party\s+logistics|3pl|"
+    r"logistics|supply\s+chain|manufacturers?|retailers?|hotels?|"
+    r"healthcare|hospitals?|airports?|operators?|robotics?|robots?|"
+    r"strategic\s+business|scaling\s+restaurants"
+    r")\s*$",
+    re.IGNORECASE,
+)
+
+_FACILITY_DESCRIPTOR = re.compile(
+    rf"^(?:{_REGION_MODIFIER}\s+)?("
+    r"logistics\s+park|industrial\s+park|business\s+park|warehouse\s+park|"
+    r"distribution\s+centers?|fulfillment\s+centers?|warehouses?|"
+    r"hospitals?|clinics?|hotels?|restaurants?|airports?|facilities|"
+    r"hospitality\s+robots|hospitality\s+robots\s+strategic\s+business"
+    r")\s*$",
+    re.IGNORECASE,
+)
+
+_POPULATION_GROUP = re.compile(
+    rf"^(?:{_REGION_MODIFIER}\s+)?("
+    r"elderly\s+americans|older\s+adults|seniors?|patients?|"
+    r"health\s+workers?|hospital\s+workers?|restaurant\s+workers?|"
+    r"warehouse\s+workers?|factory\s+workers?|travelers?|guests?|"
+    r"consumers?|customers?|operators?"
+    r")\s*$",
+    re.IGNORECASE,
+)
+
+_MALFORMED_ENTITY_STRING = re.compile(
+    r"(?i)^([A-Z][A-Za-z0-9&'.-]+(?:\s+[A-Z][A-Za-z0-9&'.-]+){0,4})\s+"
+    r"(and\s*$|and\s+(the\s+)?(technology|business|market|industry|automation|robots?)|"
+    r"to\s+(open|expand|deploy|launch|hire))"
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Template: COMPANY NAME positive signals
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -376,6 +435,7 @@ def classify(text: str) -> TextClassification:
     low = raw.lower()
     evidence: List[str] = []
     confidence = 0.5  # default mid-confidence until a template fires
+    roles = parse_semantic_roles(raw)
 
     # ── Hard headline / deck artefacts (before legal-suffix fast-pass) ─────────
     # Real operating names almost never end in "?" or use "Inside X" magazine decks.
@@ -430,13 +490,77 @@ def classify(text: str) -> TextClassification:
         evidence.append(f"market report fragment: {mf.group(0)!r}")
         return TextClassification(EntityType.MARKET_FRAGMENT, 0.87, evidence, False)
 
-    # 5. Equipment category label
+    # 5. Comparison operators. This must run before object-head parsing because
+    # comparison sentences often end with population/facility objects.
+    comp = _COMPARISON.search(raw)
+    if comp:
+        evidence.append(f"comparison construct: {comp.group(0)!r}")
+        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.82, evidence, False)
+
+    # 6. Ontological non-company descriptors
+    if roles.object_kind == "candidate_object":
+        evidence.extend(roles.evidence)
+        evidence.append(f"candidate object: {roles.object_candidate!r}")
+        return TextClassification(EntityType.MALFORMED_ENTITY, 0.78, evidence, False)
+
+    if roles.object_kind == "malformed_entity_string":
+        evidence.extend(roles.evidence)
+        evidence.append(f"candidate object: {roles.object_candidate!r}")
+        return TextClassification(EntityType.MALFORMED_ENTITY, 0.84, evidence, False)
+
+    malformed = _MALFORMED_ENTITY_STRING.search(raw)
+    if malformed:
+        evidence.append("proper-name span embedded in malformed headline fragment")
+        evidence.append(f"candidate span: {malformed.group(1)!r}")
+        return TextClassification(EntityType.MALFORMED_ENTITY, 0.84, evidence, False)
+
+    if roles.object_kind == "sector_descriptor":
+        evidence.extend(roles.evidence)
+        evidence.append(f"head object: {roles.head_object!r}")
+        return TextClassification(EntityType.SECTOR_DESCRIPTOR, 0.88, evidence, False)
+
+    if roles.object_kind == "facility_descriptor":
+        evidence.extend(roles.evidence)
+        evidence.append(f"head object: {roles.head_object!r}")
+        return TextClassification(EntityType.FACILITY_DESCRIPTOR, 0.88, evidence, False)
+
+    if roles.object_kind == "population_group":
+        evidence.extend(roles.evidence)
+        evidence.append(f"head object: {roles.head_object!r}")
+        return TextClassification(EntityType.POPULATION_GROUP, 0.88, evidence, False)
+
+    if roles.object_kind == "descriptor_without_object":
+        evidence.extend(roles.evidence)
+        evidence.append("descriptor-only token has no buyer-account object")
+        return TextClassification(EntityType.DESCRIPTOR_ONLY, 0.90, evidence, False)
+
+    if roles.object_kind == "abstract_descriptor":
+        evidence.extend(roles.evidence)
+        evidence.append(f"head object: {roles.head_object!r}")
+        return TextClassification(EntityType.DESCRIPTION, 0.78, evidence, False)
+
+    sector = _SECTOR_DESCRIPTOR.search(raw)
+    if sector:
+        evidence.append(f"sector/category descriptor: {sector.group(1)!r}")
+        return TextClassification(EntityType.SECTOR_DESCRIPTOR, 0.88, evidence, False)
+
+    facility = _FACILITY_DESCRIPTOR.search(raw)
+    if facility:
+        evidence.append(f"facility/location descriptor: {facility.group(1)!r}")
+        return TextClassification(EntityType.FACILITY_DESCRIPTOR, 0.88, evidence, False)
+
+    population = _POPULATION_GROUP.search(raw)
+    if population:
+        evidence.append(f"population/workforce group: {population.group(1)!r}")
+        return TextClassification(EntityType.POPULATION_GROUP, 0.88, evidence, False)
+
+    # 7. Equipment category label
     eq = _EQUIPMENT_CAT.search(raw)
     if eq:
         evidence.append(f"equipment category label: {eq.group(0)!r}")
         return TextClassification(EntityType.EQUIPMENT_CAT, 0.85, evidence, False)
 
-    # 6. Conjugated verb — strongest structural negative signal for company names
+    # 8. Conjugated verb — strongest structural negative signal for company names
     verb = _has_conjugated_verb(raw)
     if verb:
         evidence.append(f"conjugated verb present: {verb!r}")
@@ -446,7 +570,7 @@ def classify(text: str) -> TextClassification:
             return TextClassification(EntityType.DESCRIPTION, 0.91, evidence, False)
         return TextClassification(EntityType.ARTICLE_HEADLINE, 0.85, evidence, False)
 
-    # 7. Possessive fragment (without verb — still a fragment, not a company name)
+    # 9. Possessive fragment (without verb — still a fragment, not a company name)
     if _POSSESSIVE.search(raw):
         # Allow: "O'Brien's", "McDonald's" — single possessive word = brand name
         words = raw.split()
@@ -455,20 +579,14 @@ def classify(text: str) -> TextClassification:
             return TextClassification(EntityType.DESCRIPTION, 0.75, evidence, False)
         # 1–2 word possessives can be brand names ("McDonald's", "Wendy's") — continue
 
-    # 8. Comparison operators
-    comp = _COMPARISON.search(raw)
-    if comp:
-        evidence.append(f"comparison construct: {comp.group(0)!r}")
-        return TextClassification(EntityType.ARTICLE_HEADLINE, 0.82, evidence, False)
-
-    # 9. Article/section opener ("the hotel", "a company", etc.)
+    # 10. Article/section opener ("the hotel", "a company", etc.)
     if _ARTICLE_OPENER.match(raw):
         evidence.append("starts with article + generic noun")
         return TextClassification(EntityType.DESCRIPTION, 0.80, evidence, False)
 
     # ── POSITIVE IDENTIFICATION ────────────────────────────────────────────────
 
-    # 10. Person name
+    # 11. Person name
     if _is_person_name(raw):
         evidence.append(f"first-name pattern: {raw.split()[0]!r} is a common first name")
         return TextClassification(EntityType.PERSON_NAME, 0.78, evidence, False)

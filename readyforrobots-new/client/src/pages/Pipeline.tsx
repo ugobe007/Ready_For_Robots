@@ -38,6 +38,25 @@ interface Deal {
   outreachSubject?: string;
   outreachBody?: string;
   notes?: string;
+  researchUpdates?: Array<{
+    id: number;
+    update_type?: string;
+    title?: string;
+    summary?: string;
+    source_url?: string | null;
+    source_domain?: string | null;
+    detected_at?: string | null;
+    significance_score?: number;
+  }>;
+  lastResearchedAt?: string | null;
+  latestMaterialUpdate?: {
+    id: number;
+    title?: string;
+    summary?: string;
+    source_domain?: string | null;
+    detected_at?: string | null;
+    significance_score?: number;
+  } | null;
 }
 
 interface ScoutActivationLead {
@@ -146,6 +165,13 @@ const activationLeadText = (lead: ScoutActivationLead) =>
 const formatMetric = (value?: number) =>
   typeof value === "number" ? new Intl.NumberFormat("en-US").format(value) : "—";
 
+const formatResearchTime = (value?: string | null) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
 function PipelineMetric({
   label,
   value,
@@ -182,6 +208,7 @@ export default function Pipeline() {
   const [selectedActivationId, setSelectedActivationId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingLeads, setLoadingLeads] = useState(true);
+  const [loadingResearch, setLoadingResearch] = useState(false);
   const [loadingActivations, setLoadingActivations] = useState(true);
   const [loadErr, setLoadErr] = useState("");
   const [activationErr, setActivationErr] = useState("");
@@ -213,6 +240,27 @@ export default function Pipeline() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const existing = deals.find((deal) => deal.id === selectedId);
+    if (existing?.researchUpdates) return;
+    const base = getApiBase();
+    (async () => {
+      setLoadingResearch(true);
+      try {
+        const response = await fetch(`${base}/api/leads/by-id/${selectedId}`, liveFetchInit());
+        if (!response.ok) throw new Error(await response.text());
+        const lead = (await response.json()) as ApiLead;
+        const mapped = mapApiLeadToDeal(lead);
+        setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+      } catch {
+        // Research is additive; keep the core pipeline usable if detail enrichment misses.
+      } finally {
+        setLoadingResearch(false);
+      }
+    })();
+  }, [selectedId, deals]);
 
   useEffect(() => {
     const base = getApiBase();
@@ -719,6 +767,59 @@ export default function Pipeline() {
                     </div>
                     {selected.notes && (
                       <p className="mt-2 break-words border-t border-white/5 pt-2 text-[10px] italic leading-relaxed text-white/25">{selected.notes}</p>
+                    )}
+                  </div>
+
+                  {/* Latest research */}
+                  <div className="px-5 py-3 border-b border-white/6">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Latest Research</p>
+                      {selected.lastResearchedAt && (
+                        <span className="text-[10px] text-white/25">
+                          Checked {formatResearchTime(selected.lastResearchedAt)}
+                        </span>
+                      )}
+                    </div>
+                    {loadingResearch && !selected.researchUpdates ? (
+                      <p className="text-[11px] leading-relaxed text-white/35">SCOUT is loading cited updates…</p>
+                    ) : (selected.researchUpdates || []).length > 0 ? (
+                      <div className="space-y-2">
+                        {(selected.researchUpdates || []).slice(0, 3).map((update) => (
+                          <div
+                            key={update.id}
+                            className="rounded-lg border p-2.5"
+                            style={{ borderColor: "rgba(255,176,0,0.18)", background: "rgba(255,176,0,0.06)" }}
+                          >
+                            <div className="mb-1 flex items-center justify-between gap-2">
+                              <p className="break-words text-[11px] font-semibold" style={{ color: "#FFB000" }}>
+                                {cleanAndClampText(update.title, 120) || "Research update"}
+                              </p>
+                              {typeof update.significance_score === "number" && (
+                                <span className="shrink-0 font-mono text-[10px] text-white/35">
+                                  {Math.round(update.significance_score * 100)}
+                                </span>
+                              )}
+                            </div>
+                            <p className="break-words text-[11px] leading-relaxed text-white/48">
+                              {cleanAndClampText(update.summary, 220)}
+                            </p>
+                            <div className="mt-1.5 flex items-center gap-2 text-[10px] text-white/25">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatResearchTime(update.detected_at) || "recent"}</span>
+                              {update.source_domain && (
+                                <>
+                                  <span>·</span>
+                                  <span className="break-all">{update.source_domain}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] leading-relaxed text-white/35">
+                        No material research updates yet. SCOUT will add cited changes as fresh signals arrive.
+                      </p>
                     )}
                   </div>
 

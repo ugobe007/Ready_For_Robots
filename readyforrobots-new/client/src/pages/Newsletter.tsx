@@ -62,19 +62,35 @@ function briefText(item: BriefTextItem | undefined): string {
 
 export default function Newsletter() {
   const [edition, setEdition] = useState<NewsletterEdition | null>(null);
+  const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">("loading");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getApiBase()}/api/newsletter/edition?limit=8&cb=${Date.now()}`, liveFetchInit())
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    fetch(`${getApiBase()}/api/newsletter/edition?limit=8&cb=${Date.now()}`, liveFetchInit({
+      signal: controller.signal,
+    }))
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.latestEdition) setEdition(data);
+        if (cancelled) return;
+        if (data?.latestEdition) {
+          setEdition(data);
+          setLoadStatus("ready");
+        } else {
+          setLoadStatus("error");
+        }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setLoadStatus("error");
+      })
+      .finally(() => window.clearTimeout(timeout));
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
     };
   }, []);
 
@@ -157,6 +173,20 @@ export default function Newsletter() {
             ))}
           </section>
 
+          {loadStatus === "loading" && (
+            <section className="mb-10 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,255,255,0.035)" }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Loading live brief</p>
+              <p className="mt-3 text-sm leading-relaxed text-white/45">Pulling the latest ReadyForRobots signal edition.</p>
+            </section>
+          )}
+
+          {loadStatus === "error" && (
+            <section className="mb-10 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.05)" }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>Brief is refreshing</p>
+              <p className="mt-3 text-sm leading-relaxed text-white/50">The live signal feed is rebuilding. The daily brief will repopulate as soon as the API cache responds.</p>
+            </section>
+          )}
+
           {brief?.executive_take && (
             <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,255,255,0.035)" }}>
               <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_360px]">
@@ -168,7 +198,7 @@ export default function Newsletter() {
                   {strategicItems.map((item, index) => (
                     <div key={`${item}-${index}`} className="flex items-start gap-3 rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
                       <Radio className="mt-0.5 h-4 w-4 shrink-0" style={{ color: index === 0 ? "#FFB000" : "#03DAC5" }} />
-                      <p className="break-words text-sm leading-relaxed text-white/50">{item}</p>
+                      <p className="break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>{item}</p>
                     </div>
                   ))}
                 </div>
@@ -207,7 +237,7 @@ export default function Newsletter() {
                     <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                       {[story.roi, story.economics, story.impact].map((item) => cleanScrapedText(item)).filter(Boolean).map((item) => (
                         <div key={item} className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
-                          <p className="text-[11px] font-bold text-white/48">{item}</p>
+                          <p className="text-[11px] font-normal" style={{ color: "#FFB000" }}>{item}</p>
                         </div>
                       ))}
                     </div>

@@ -485,6 +485,21 @@ _JUNK_PATTERNS = [
     # Only if no proper noun qualifier before the action word
     r"(?i)^([A-Z]\w+)\s+(advancing|emerging|expanding|evolving|accelerating|transforming|disrupting|navigating)\s*$",
 
+    # Buyer-opportunity gate support: event/category/publication strings that
+    # were passing as title-case company names and inflating HOT.
+    r"(?i)^sponsor\s+\w",
+    r"(?i)^first\s+fully\s+autonomous\b",
+    r"(?i)^(chinese|american|us|u\.s\.|japanese|korean|german|dutch|swedish|"
+    r"french|british|canadian|australian)\s+(humanoids?|robots?|androids?)\s*$",
+    r"(?i)^(dutch|american|us|u\.s\.|japanese|korean|german|swedish|french|"
+    r"british|canadian|australian)\s+(hospitality|hotel|restaurant|logistics|"
+    r"healthcare)\s+operating\s+system\s+\w+",
+    r"(?i)^(california|texas|florida|new\s+york|nj|ny|ca|tx|fl)\s+health\s+"
+    r"workers?\s+helps?\s+patients?\b",
+    r"(?i)\s+-\s+hotel\s+technology\s+news\s*$",
+    r"(?i)^(qsr|nj|ny|ca|tx|fl|us|u\.s\.)\s+(operators?|restaurants?|hotels?|retailers?)\s*$",
+    r"(?i)^(supply\s+chain|hospitality|logistics|restaurant|hotel)\s+consultanc(?:y|ies)\s+[A-Z]",
+
     # "Cold Storage" alone, "Computer Vision" alone — generic tech/logistics category
     # (real companies have a proper name like "Lineage Cold Storage")
     r"(?i)^cold\s+storage\s*$",
@@ -1071,6 +1086,77 @@ DEPLOYMENT_SIGNAL_TYPES = frozenset({
     "robot_installation", "pilot_success", "scale_expansion", "vendor_selection", "rfp_posted",
 })
 
+# Buyer-opportunity gate: a lead must show end-customer buying intent before it
+# can be treated as a sales opportunity. This protects HOT/WARM from article
+# subjects, vendor funding stories, category names, and event/sponsorship noise.
+BUYER_DIRECT_SIGNAL_TYPES = frozenset({
+    "labor_pain",
+    "labor_shortage",
+    "capex",
+    "quality_bottleneck",
+    "safety_incident",
+    "production_capacity",
+    "warehouse_throughput",
+    "packaging_automation",
+    "repetitive_process",
+    "material_handling",
+    "robot_installation",
+    "pilot_success",
+    "scale_expansion",
+    "vendor_selection",
+    "roi_documented",
+    "economics_driven",
+    "competitive_response",
+    "problem_solution",
+    "government_contract",
+    "rfp_posted",
+})
+
+BUYER_EXPANSION_RE = re.compile(
+    r"\b(new|opening|opened|opens|build(?:ing)?|construction|breaks?\s+ground|"
+    r"expan(?:d|ds|ded|sion)|renovat(?:e|es|ed|ion)|facility|warehouse|"
+    r"distribution\s+center|fulfillment\s+center|plant|factory|hotel|property|"
+    r"resort|terminal|gate|sq\.?\s*ft|square\s+feet)\b",
+    re.IGNORECASE,
+)
+
+BUYER_OPERATIONS_HIRE_RE = re.compile(
+    r"\b(?:vp|svp|evp|vice\s+president|director|head|chief|manager|lead)\s+"
+    r"(?:of\s+)?(?:operations?|automation|robotics?|supply\s+chain|warehouse|"
+    r"fulfillment|manufacturing|facilit(?:y|ies)|logistics|engineering)\b|"
+    r"\b(?:operations?|automation|robotics?|supply\s+chain|warehouse|fulfillment|"
+    r"manufacturing|facilit(?:y|ies)|logistics)\s+"
+    r"(?:vp|svp|evp|vice\s+president|director|head|chief|manager|lead)\b",
+    re.IGNORECASE,
+)
+
+BUYER_TEXT_EVIDENCE_RE = re.compile(
+    r"\b(labor\s+shortage|worker\s+shortage|staff(?:ing)?\s+shortage|"
+    r"vacanc(?:y|ies)|understaffed|turnover|wage\s+pressure|overtime|"
+    r"capex|capital\s+(?:expenditure|investment)|budget(?:ed|ing)?|"
+    r"rfp|request\s+for\s+proposal|procurement|vendor\s+selection|"
+    r"deployed?|deploying|deployment|install(?:s|ed|ing|ation)?|pilot(?:s|ing|ed)?|"
+    r"rollout|go-live|went\s+live|fleet\s+of\s+robots|robot\s+staff|"
+    r"unveil(?:s|ed|ing)?\s+(?:.*\b)?(?:robot|robotic|automation)|"
+    r"evaluating\s+(?:robot|automation)|implement(?:s|ed|ing)?\s+(?:robot|automation)|"
+    r"throughput\s+bottleneck|capacity\s+constraint|at\s+capacity|"
+    r"quality\s+(?:issue|problem|bottleneck)|safety\s+(?:incident|risk)|"
+    r"repetitive\s+(?:task|work|process)|material\s+handling|"
+    r"housekeeping|room\s+service|back-of-house|kitchen\s+automation)\b",
+    re.IGNORECASE,
+)
+
+SELLER_OR_PUBLISHER_CONTEXT_RE = re.compile(
+    r"\b(sponsor(?:s|ed|ing)?|summit|conference|webinar|expo|trade\s+show|"
+    r"press\s+release|pr\s+newswire|globenewswire|business\s+wire|"
+    r"robotics?\s+(?:firm|startup|vendor|maker|manufacturer|company)|"
+    r"automation\s+(?:platform|vendor|software|startup|provider|solution)|"
+    r"healthtech\s+automation\s+platform|deeptech\s+startup|"
+    r"consultanc(?:y|ies)\s+(?:appoints?|hires?|names?)|"
+    r"raises?\s+\$|funding\s+round|series\s+[abc])\b",
+    re.IGNORECASE,
+)
+
 # ─── Priority scoring knobs (Hot / Warm / Emerging) — also surfaced on /api/leads/scoring-system ───
 # Tuned looser (Mar 2026 v2): lower composite floors, higher boosts, broader HOT signal set.
 PRIORITY_COMPOSITE_CAP = 100.0
@@ -1235,6 +1321,42 @@ def _signal_text_blob(signals) -> str:
     return " ".join(parts)
 
 
+def _buyer_opportunity_gate(signals) -> tuple[bool, str]:
+    """
+    Require evidence that the record is an end-customer buying opportunity, not
+    just a robotics/news/vendor headline. Empty signal sets are allowed to stay
+    as non-promoted COLD records; records with signals must prove buyer intent.
+    """
+    sigs = list(signals or [])
+    if not sigs:
+        return True, ""
+
+    sig_types = [getattr(s, "signal_type", None) or "" for s in sigs]
+    blob = _signal_text_blob(sigs)
+
+    direct_types = {t for t in sig_types if t in BUYER_DIRECT_SIGNAL_TYPES}
+    has_direct_type = bool(direct_types)
+    has_expansion_evidence = "expansion" in sig_types and bool(BUYER_EXPANSION_RE.search(blob))
+    has_operations_hire = "strategic_hire" in sig_types and bool(BUYER_OPERATIONS_HIRE_RE.search(blob))
+    has_text_evidence = bool(BUYER_TEXT_EVIDENCE_RE.search(blob))
+
+    has_buyer_intent = (
+        has_direct_type
+        or has_expansion_evidence
+        or has_operations_hire
+        or has_text_evidence
+    )
+    has_seller_context = bool(SELLER_OR_PUBLISHER_CONTEXT_RE.search(blob))
+
+    if has_seller_context and not has_buyer_intent:
+        return False, "seller/vendor or publisher story, not a buyer opportunity"
+
+    if not has_buyer_intent:
+        return False, "no buyer-intent signal found (labor, expansion, capex, RFP, deployment, or operations hiring)"
+
+    return True, ""
+
+
 def _company_name_not_corroborated_by_signals(name: str, signals) -> bool:
     """
     Headline fragments stored as company.name with unrelated news bullets (e.g. "Million"
@@ -1332,6 +1454,12 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     ok_logic, logic_reason = is_valid_lead(name or "", skip_junk_check=True)
     if not ok_logic:
         return True, f"logic engine: {logic_reason}", PriorityResult("COLD", 0.0, [logic_reason])
+
+    ok_buyer, buyer_reason = _buyer_opportunity_gate(signals)
+    if not ok_buyer:
+        return True, f"buyer opportunity gate: {buyer_reason}", PriorityResult(
+            "COLD", 0.0, [buyer_reason]
+        )
 
     score = pick_primary_score(scores_or_one)
     overall = getattr(score, "overall_intent_score", 0.0) if score else 0.0

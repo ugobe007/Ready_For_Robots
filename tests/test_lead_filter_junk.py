@@ -287,6 +287,9 @@ def test_headline_fragments_user_reported_feb_2026(name):
         "Flexkeeping Rollout Following",
         "Kentucky distribution center",
         "Container Stacking Machine Market",
+        "Chinese humanoids",
+        "Dutch hospitality operating system Mews",
+        "California health workers helps patients",
     ],
 )
 def test_user_reported_scraper_headline_junk_apr_2026(name):
@@ -311,6 +314,110 @@ def test_classify_lead_allows_real_company():
     junk, reason, pri = classify_lead(c, None, [])
     assert junk is False
     assert reason == ""
+
+
+@pytest.mark.parametrize(
+    "name,signal_type,text",
+    [
+        (
+            "Sponsor Oracle Hospitality Summit",
+            "expansion",
+            "RobosizeME to Sponsor Oracle Hospitality Summit 2026, Brings Time-Saving Workflow Automations to OHIP Users",
+        ),
+        (
+            "First Fully Autonomous Telehealth AI",
+            "labor_shortage",
+            "First Fully Autonomous Telehealth AI Robot Enables Remote Clinicians to Navigate Hospitals Without Staff Assistance",
+        ),
+        (
+            "NJ restaurants",
+            "strategic_hire",
+            "NJ restaurants say robot waiters are here to stay. Here's how dining out will change.",
+        ),
+        (
+            "QSR Operators",
+            "labor_shortage",
+            "QSR Operators Report Staffing Shortages as 70% Cite Unfilled Positions Heading into Busiest Season",
+        ),
+        (
+            "Brisbane Skytower - Hotel Technology News",
+            "automation_interest",
+            "Brisbane Skytower adopts hotel technology according to Hotel Technology News",
+        ),
+    ],
+)
+def test_classify_lead_blocks_headline_or_category_names_before_hot(name, signal_type, text):
+    c = SimpleNamespace(name=name, industry="Hospitality", employee_estimate=None)
+    sigs = [SimpleNamespace(signal_type=signal_type, signal_text=text)]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+    assert (
+        "junk" in reason.lower()
+        or "logic" in reason.lower()
+        or "buyer opportunity" in reason.lower()
+    )
+
+
+def test_classify_lead_blocks_seller_story_without_buyer_intent():
+    c = SimpleNamespace(name="Morphle Labs", industry="Healthcare", employee_estimate=None)
+    sigs = [
+        SimpleNamespace(
+            signal_type="funding_round",
+            signal_text="Deeptech startup Morphle Labs raises $5M in Series A round for its healthtech automation platform.",
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+    assert "buyer opportunity" in reason.lower()
+
+
+def test_classify_lead_allows_real_buyer_deployment_signal():
+    c = SimpleNamespace(name="Millennium Hotels & Resorts", industry="Hospitality", employee_estimate=1000)
+    score = SimpleNamespace(overall_intent_score=62.0, last_calculated_at=None, id=1)
+    sigs = [
+        SimpleNamespace(
+            signal_type="automation_interest",
+            signal_text="Millennium Hotels & Resorts pilots autonomous service delivery robot to support room service operations.",
+        )
+    ]
+    junk, reason, pri = classify_lead(c, [score], sigs)
+    assert junk is False
+    assert reason == ""
+    assert pri.tier in {"HOT", "WARM", "COLD"}
+
+
+@pytest.mark.parametrize("name", ["Six Flags", "Fresh Blends"])
+def test_real_customer_names_are_not_fast_delete_junk(name):
+    """Real accounts may fail current-opportunity gating, but are not name junk."""
+    assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "N.J. logistics park",
+        "US hospitality",
+        "Third Party Logistics",
+        "Elderly Americans",
+        "Philly-area hospitals",
+        "MGM Springfield and the technology",
+        "MGM Springfield and",
+        "Scaling Restaurants",
+        "Hospitality Robots Strategic Business",
+    ],
+)
+def test_ontology_descriptor_names_fail_logic_engine(name):
+    from app.services.company_validator import is_valid_lead
+
+    ok, reason = is_valid_lead(name)
+    assert ok is False
+    assert (
+        "text_classifier" in reason
+        or "inference gate" in reason
+        or "structural" in reason.lower()
+    ), reason
 
 
 def test_short_ticker_brands_not_junk_lg_bp():

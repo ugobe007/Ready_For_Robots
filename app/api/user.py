@@ -28,8 +28,9 @@ JWT is verified against SUPABASE_JWT_SECRET env var.
 """
 
 import os
+import uuid
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
@@ -39,12 +40,20 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from app.database import get_db
 from app.api.auth_deps import _is_admin, _require_user, _verify_jwt, _extract_email
+from app.models.lead_research import UserNotification
 
 router = APIRouter()
 
 
 def _uid(user: dict) -> str:
     return user["uid"]
+
+
+def _uid_uuid(user: dict):
+    try:
+        return uuid.UUID(str(_uid(user)))
+    except (TypeError, ValueError):
+        return _uid(user)
 
 
 # ── Helpers: ensure profile exists ────────────────────────────────────────────
@@ -404,6 +413,78 @@ def unsave_company(
         text("DELETE FROM user_saved_companies WHERE user_id = :uid AND company_id = :cid"),
         {"uid": _uid(user), "cid": company_id},
     )
+    db.commit()
+    return {"ok": True}
+
+
+# ── /api/user/notifications ──────────────────────────────────────────────────
+
+def _notification_payload(row: UserNotification) -> dict:
+    return {
+        "id": row.id,
+        "company_id": row.company_id,
+        "research_update_id": row.research_update_id,
+        "notification_type": row.notification_type,
+        "title": row.title,
+        "body": row.body,
+        "delivery_state": row.delivery_state,
+        "payload": row.payload or {},
+        "read_at": row.read_at.isoformat() if row.read_at else None,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+@router.get("/notifications")
+def list_notifications(
+    unread_only: bool = False,
+    limit: int = 30,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    _ensure_profile(db, _uid(user), user["email"])
+    query = db.query(UserNotification).filter(UserNotification.user_id == _uid_uuid(user))
+    if unread_only:
+        query = query.filter(UserNotification.read_at.is_(None))
+    rows = query.order_by(UserNotification.created_at.desc()).limit(max(1, min(limit, 100))).all()
+    unread_count = (
+        db.query(UserNotification.id)
+        .filter(UserNotification.user_id == _uid_uuid(user), UserNotification.read_at.is_(None))
+        .count()
+    )
+    return {
+        "notifications": [_notification_payload(row) for row in rows],
+        "unread_count": unread_count,
+    }
+
+
+@router.post("/notifications/{notification_id}/read")
+def mark_notification_read(
+    notification_id: int,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    row = (
+        db.query(UserNotification)
+        .filter(UserNotification.id == notification_id, UserNotification.user_id == _uid_uuid(user))
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    row.read_at = datetime.now(timezone.utc)
+    db.add(row)
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/notifications/read-all")
+def mark_all_notifications_read(
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    db.query(UserNotification).filter(
+        UserNotification.user_id == _uid_uuid(user),
+        UserNotification.read_at.is_(None),
+    ).update({"read_at": datetime.now(timezone.utc)}, synchronize_session=False)
     db.commit()
     return {"ok": True}
 

@@ -1,0 +1,19 @@
+company_id,current_name,object_candidate,object_kind,verb_anchor,entity_type,candidate_valid,candidate_validation_reason,existing_company_id,existing_company_name,recommended_action,industry,signal_count,score_count
+811,Rivian Spinout Mind Robotics,Mind Robotics,candidate_object,,malformed_entity_string,False,"junk filter: name pattern matches automation/robotics vendor, not a buyer",,,review_candidate_invalid,Automotive & Manufacturing,2,1
+820,Dutch hospitality operating system Mews,Mews,candidate_object,,malformed_entity_string,False,"junk filter: hospitality or logistics tech vendor (sells to operators, not a buyer)",,,review_candidate_invalid,Healthcare,3,1
+848,Supply chain consultancy SCALA,SCALA,candidate_object,,malformed_entity_string,True,,,,rename_candidate_after_review,Logistics,3,1
+901,Rivian spin-out Mind Robotics,Mind Robotics,candidate_object,,malformed_entity_string,False,"junk filter: name pattern matches automation/robotics vendor, not a buyer",,,review_candidate_invalid,Automotive & Manufacturing,3,1
+2705,Singapore Champions Robotics Adoption And,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Healthcare,1,1
+3867,Oxford Spinout Stateful Robotics,Stateful Robotics,candidate_object,,malformed_entity_string,False,"junk filter: name pattern matches automation/robotics vendor, not a buyer",,,review_candidate_invalid,Unknown,2,1
+4485,Egis and,Egis,malformed_entity_string,,malformed_entity_string,True,,,,rename_candidate_after_review,Airports & Aviation,2,1
+5326,Competitive Strategies and Market Leaders,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Medical Technology,1,1
+5792,AI and Automation Talent Demand Doubles as Tech,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Unknown,1,0
+6025,inaugurates Phase II and,,sentence_or_headline,inaugurates,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Airports & Aviation,1,0
+6101,LigoLab Highlights AI and Automation Insights,,sentence_or_headline,Highlights,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Unknown,2,0
+6443,Life Science Automation and Robotics Market,,abstract_descriptor,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Automotive & Manufacturing,1,0
+6719,NVIDIA and robotics companies,NVIDIA,malformed_entity_string,,malformed_entity_string,True,,,,rename_candidate_after_review,Healthcare,1,0
+6789,Programs to Codify and,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Unknown,1,0
+7022,Nvidia and,Nvidia,malformed_entity_string,,malformed_entity_string,True,,,,rename_candidate_after_review,Automotive & Manufacturing,1,0
+7203,SUSE and Industry Leaders,SUSE,malformed_entity_string,,malformed_entity_string,True,,,,rename_candidate_after_review,Unknown,1,0
+7569,Pacious on AI and,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Hospitality,1,0
+7940,AI and robotics poised,,unknown,,malformed_entity_string,False,no extracted candidate object,,,review_malformed_without_candidate,Logistics,1,0

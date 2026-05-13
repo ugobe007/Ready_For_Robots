@@ -8,6 +8,8 @@ Validates semantic entity type classification across the key template categories
   - question opener → ARTICLE_HEADLINE
   - person name → PERSON_NAME
   - geographic → CITY_OR_TOWN / COUNTRY
+  - ontological descriptors → SECTOR_DESCRIPTOR / FACILITY_DESCRIPTOR / POPULATION_GROUP
+  - malformed entity strings → MALFORMED_ENTITY
   - saying / quote → SAYING
   - equipment category → EQUIPMENT_CAT
   - market fragment → MARKET_FRAGMENT
@@ -17,6 +19,7 @@ Validates semantic entity type classification across the key template categories
 import pytest
 
 from app.services.text_classifier import classify, is_company_name, EntityType
+from app.services.semantic_roles import parse_semantic_roles
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -200,6 +203,98 @@ def test_geographic_names(name, expected):
         f"{name!r} → {tc.entity_type.value} (expected {expected.value})\nevidence: {tc.evidence}"
     )
     assert tc.is_valid_company is False
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("US hospitality", EntityType.SECTOR_DESCRIPTOR),
+    ("Third Party Logistics", EntityType.SECTOR_DESCRIPTOR),
+    ("Scaling Restaurants", EntityType.SECTOR_DESCRIPTOR),
+    ("Strategic Business", EntityType.SECTOR_DESCRIPTOR),
+    ("N.J. logistics park", EntityType.FACILITY_DESCRIPTOR),
+    ("Philly-area hospitals", EntityType.SECTOR_DESCRIPTOR),
+    ("Hospitality Robots Strategic Business", EntityType.FACILITY_DESCRIPTOR),
+    ("Elderly Americans", EntityType.POPULATION_GROUP),
+    ("US restaurant", EntityType.SECTOR_DESCRIPTOR),
+])
+def test_ontological_non_company_descriptors(text, expected):
+    tc = classify(text)
+    assert tc.entity_type == expected, (
+        f"{text!r} -> {tc.entity_type.value} (expected {expected.value})\nevidence: {tc.evidence}"
+    )
+    assert tc.is_valid_company is False
+
+
+@pytest.mark.parametrize("text", [
+    "MGM Springfield and the technology",
+    "MGM Springfield and",
+])
+def test_malformed_entity_strings_are_not_company_names(text):
+    tc = classify(text)
+    assert tc.entity_type in {EntityType.MALFORMED_ENTITY, EntityType.DESCRIPTION}, (
+        f"{text!r} -> {tc.entity_type.value}\nevidence: {tc.evidence}"
+    )
+    assert tc.is_valid_company is False
+
+
+@pytest.mark.parametrize(
+    "text,head,kind,candidate,verb",
+    [
+        ("US restaurant", "restaurant", "sector_descriptor", "", ""),
+        ("Hospitality Robots Strategic Business", "strategic business", "facility_descriptor", "", ""),
+        ("MGM Springfield and the technology", "technology", "malformed_entity_string", "MGM Springfield", ""),
+        ("Supply chain consultancy SCALA", "SCALA", "candidate_object", "SCALA", ""),
+        ("Dutch hospitality operating system Mews", "Mews", "candidate_object", "Mews", ""),
+        ("Rivian spin-out Mind Robotics", "Mind Robotics", "candidate_object", "Mind Robotics", ""),
+        ("Data Center Robotics Business", "Business", "abstract_descriptor", "", ""),
+        ("Scaling Robots", "scaling robots", "sector_descriptor", "", ""),
+    ("US Manufacturers Make Big", "", "sentence_or_headline", "", "Make"),
+    ("BESTSELLER", "BESTSELLER", "descriptor_without_object", "", ""),
+        ("BESTSTELLER", "BESTSTELLER", "descriptor_without_object", "", ""),
+    ],
+)
+def test_semantic_role_parser_identifies_object_not_descriptors(text, head, kind, candidate, verb):
+    roles = parse_semantic_roles(text)
+    assert roles.head_object == head
+    assert roles.object_kind == kind
+    assert roles.object_candidate == candidate
+    assert roles.verb_anchor == verb
+
+
+def test_bestseller_is_descriptor_not_company_object():
+    tc = classify("BESTSELLER")
+    assert tc.entity_type == EntityType.DESCRIPTOR_ONLY
+    assert tc.is_valid_company is False
+
+
+@pytest.mark.parametrize(
+    "text,candidate",
+    [
+        ("Dutch hospitality operating system Mews", "Mews"),
+        ("Supply chain consultancy SCALA", "SCALA"),
+        ("Rivian spin-out Mind Robotics", "Mind Robotics"),
+    ],
+)
+def test_descriptor_prefix_with_nested_company_candidate_is_repair_candidate(text, candidate):
+    tc = classify(text)
+    roles = parse_semantic_roles(text)
+    assert tc.entity_type == EntityType.MALFORMED_ENTITY
+    assert roles.object_candidate == candidate
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Competitive Strategies and Market Leaders",
+        "AI and Automation Talent Demand Doubles as Tech",
+        "Programs to Codify and",
+        "Hospitality Robot Fuels Innovative Learning",
+        "Life Science Automation and Robotics Market",
+    ],
+)
+def test_generic_fragments_are_not_repair_candidates(text):
+    roles = parse_semantic_roles(text)
+    assert roles.object_candidate == ""
+    assert roles.object_kind != "candidate_object"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

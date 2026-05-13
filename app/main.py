@@ -243,8 +243,12 @@ def _scheduled_scraper_loop():
                 ndb = SessionLocal()
                 try:
                     # Refresh strategic brief first so newsletter embed matches post-scrape data.
+                    try:
+                        strategic_days = max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
+                    except ValueError:
+                        strategic_days = 7
                     build_industry_brief_payload(
-                        ndb, days=1, analytics=None, use_cache=True, force_refresh=True
+                        ndb, days=strategic_days, analytics=None, use_cache=True, force_refresh=True
                     )
                     edition = generate_edition(ndb, limit=8)
                     write_cached_edition(edition)

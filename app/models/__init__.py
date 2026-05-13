@@ -19,5 +19,6 @@ from app.models.marketplace import (
 )
 from app.models.newsletter_subscriber import NewsletterSubscriber
 from app.models.partner_trade_show import PartnerTradeShow
+from app.models.lead_research import LeadResearchUpdate, UserNotification
 from app.models.scout_chat import ScoutActivation, ScoutMessage, ScoutProfile, ScoutSession
 from app.models.waitlist import WaitlistSignup

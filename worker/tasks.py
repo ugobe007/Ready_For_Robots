@@ -202,6 +202,64 @@ def run_company_news_task(self, limit=80):
 
 
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def research_lead_updates_task(
+    self,
+    company_id: int,
+    dry_run: bool = False,
+    lookback_days: int = 30,
+):
+    """Research one lead and persist cited profile updates + in-app notifications."""
+    from app.services.lead_research_agent import research_company_updates
+
+    db = get_db()
+    try:
+        summary = research_company_updates(
+            db,
+            int(company_id),
+            dry_run=dry_run,
+            lookback_days=lookback_days,
+            notify=not dry_run,
+        )
+        return summary.__dict__
+    except Exception as exc:
+        db.rollback()
+        logger.error("Lead research task failed for company %s: %s", company_id, exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=1, default_retry_delay=300)
+def research_active_leads_task(
+    self,
+    limit: int = 50,
+    dry_run: bool = False,
+    lookback_days: int = 30,
+):
+    """Research a bounded HOT/WARM/saved/recent lead batch."""
+    if os.getenv("LEAD_RESEARCH_AGENT_ENABLED", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        logger.info("Lead research agent disabled; set LEAD_RESEARCH_AGENT_ENABLED=1 to run scheduled batches")
+        return {"skipped": True, "reason": "LEAD_RESEARCH_AGENT_ENABLED is not enabled"}
+
+    from app.services.lead_research_agent import research_active_leads
+
+    db = get_db()
+    try:
+        return research_active_leads(
+            db,
+            limit=max(1, min(int(limit), 200)),
+            dry_run=dry_run,
+            lookback_days=lookback_days,
+        )
+    except Exception as exc:
+        db.rollback()
+        logger.error("Active lead research batch failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
 def run_enrich_companies_task(self, limit=50):
     """
     Enrich existing companies by searching news for their names.

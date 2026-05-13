@@ -74,10 +74,10 @@ def _signals_window_phrase(period_days: int, signal_count: int) -> str:
     """Harmonized opening line for heuristic and prompt guidance."""
     n = int(signal_count or 0)
     if period_days <= 1:
-        return f"In the past 24 hours we discovered **{n}** opportunity signals."
+        return f"In the past 24 hours we discovered {n} opportunity signals."
     if period_days == 7:
-        return f"In the past week we discovered **{n}** opportunity signals."
-    return f"Over the last {period_days} days we discovered **{n}** opportunity signals."
+        return f"In the past week we discovered {n} opportunity signals."
+    return f"Over the last {period_days} days we discovered {n} opportunity signals."
 
 
 def _theme_label(key: str) -> str:
@@ -151,51 +151,114 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
     """Rule-based brief when no LLM — still useful for dashboards."""
     totals = analytics.get("totals") or {}
     sig_n = totals.get("signals") or 0
+    company_n = totals.get("companies_with_signals") or 0
     period_days = int(analytics.get("period_days") or 1)
     top_auto = list((analytics.get("automation_types_inferred") or {}).items())[:3]
     top_robot = list((analytics.get("robot_types_needed") or {}).items())[:3]
     top_ind = _rollup_industry_counts(analytics.get("industries"), limit=5)
-    lines = [_signals_window_phrase(period_days, sig_n)]
+    top_signal = list((analytics.get("signal_types") or {}).items())[:5]
+    top_tasks = list((analytics.get("common_tasks_to_automate") or {}).items())[:4]
+    top_companies = analytics.get("top_companies_by_signals") or []
+    roi_summary = analytics.get("calculator_roi_summary") or {}
+
+    window_phrase = _signals_window_phrase(period_days, sig_n).rstrip(".")
+    opening = f"{window_phrase} across {company_n} companies." if company_n else f"{window_phrase}."
+    lines = [opening]
     if top_auto:
         lines.append(
-            "Top automation themes we're seeing: "
+            "The strongest automation themes are "
             + ", ".join(f"{_theme_label(k)} ({v})" for k, v in top_auto)
-            + "."
+            + ", which points to buyers moving from general interest toward operational projects."
         )
     if top_robot:
         lines.append(
-            "Robot categories trending: " + ", ".join(f"{k} ({v})" for k, v in top_robot) + "."
+            "Robot categories trending are "
+            + ", ".join(f"{k} ({v})" for k, v in top_robot)
+            + ", suggesting near-term demand around movement, service consistency, and labor substitution."
         )
     if top_ind:
         lines.append(
-            "Industries most active in this window: "
+            "Industries most active in this window are "
             + ", ".join(f"{lab} ({v})" for lab, v in top_ind)
-            + "."
+            + "; sales teams should prioritize accounts where these industry signals overlap with expansion, hiring, or budget language."
         )
+    if not top_auto and snippets:
+        companies = ", ".join(s.get("company", "") for s in snippets[:3] if s.get("company"))
+        if companies:
+            lines.append(
+                f"The signal set is thin, but recent evidence from {companies} is still useful for account monitoring and targeted follow-up."
+            )
 
     macro = []
     for k, v in top_auto[:4]:
         macro.append(
             {
                 "title": _theme_label(k),
-                "detail": f"{v} signals in this window point to sustained activity in this theme.",
+                "detail": f"{v} signals in this rolling window point to buyer activity around this theme. Treat these accounts as timing-sensitive when the signal is paired with hiring, facility movement, capex, or customer-service pressure.",
             }
         )
+    if top_signal:
+        macro.append(
+            {
+                "title": "Signal mix",
+                "detail": "Most visible signal types: "
+                + ", ".join(f"{_theme_label(k)} ({v})" for k, v in top_signal[:4])
+                + ". This mix helps separate active buying windows from broad market noise.",
+            }
+        )
+    if top_tasks:
+        macro.append(
+            {
+                "title": "Operational jobs to automate",
+                "detail": "Common task language includes "
+                + ", ".join(f"{k} ({v})" for k, v in top_tasks)
+                + ", giving sales teams practical hooks for discovery and outreach.",
+            }
+        )
+    if not macro and snippets:
+        macro.append(
+            {
+                "title": "Thin but active signal set",
+                "detail": "The current window has limited volume, so the right action is account monitoring, not broad market extrapolation.",
+            }
+        )
+
+    company_examples = ", ".join(
+        c.get("name", "") for c in top_companies[:3] if isinstance(c, dict) and c.get("name")
+    )
+    company_clause = (
+        f" Current high-activity accounts include {company_examples}."
+        if company_examples
+        else ""
+    )
+    roi_clause = ""
+    if roi_summary.get("avg_payback_months") or roi_summary.get("avg_roi_1_year_pct"):
+        roi_parts = []
+        if roi_summary.get("avg_payback_months"):
+            roi_parts.append(f"{roi_summary['avg_payback_months']} month average payback")
+        if roi_summary.get("avg_roi_1_year_pct"):
+            roi_parts.append(f"{roi_summary['avg_roi_1_year_pct']}% first-year ROI")
+        roi_clause = " Calculator activity indicates " + " and ".join(roi_parts) + "."
+
     strategic = [
         {
             "audience": "Robotics & automation vendors",
-            "insight": "Prioritize outreach where labor_replacement and new_facility signals cluster — buyers are budgeting and expanding footprint.",
+            "insight": "Prioritize accounts where expansion, labor pressure, and operational bottlenecks appear together. Those clusters are stronger buying-timing indicators than generic robotics news." + company_clause,
         },
         {
-            "audience": "Investors & corp dev",
-            "insight": "Track funding_round + capex pairings; they often precede a 6–12 month procurement window for automation.",
+            "audience": "Sales leaders",
+            "insight": "Use the signal type as the outreach reason, then map it to a concrete automation use case. Lead cards should explain the pain, the matching robot category, and why the timing is now." + roi_clause,
+        },
+        {
+            "audience": "Partnership teams",
+            "insight": "Watch industries with repeated facility, staffing, or service consistency signals. These markets can create channel opportunities with integrators, distributors, and service providers before direct vendor demand is obvious.",
         },
     ]
     if snippets:
         strategic.append(
             {
-                "audience": "Sales leaders",
-                "insight": "Lead with ROI and pilot language when signals mention trials or payback — vocabulary match improves reply rates.",
+                "audience": "Market intelligence",
+                "insight": "Validate thin daily windows against the rolling trend before changing positioning. A low-volume day can still matter if it reinforces a week-long pattern.",
             }
         )
 
@@ -208,8 +271,10 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
             "Geographic and sub-industry coverage may be uneven; cross-check before territory planning.",
         ],
         "watch_next": [
-            "Executive hire + expansion in same quarter (integration spend).",
-            "Labor shortage + capex in logistics and hospitality (AMR/cleaning fit).",
+            "Expansion, facility opening, or renovation language paired with automation hiring.",
+            "Labor shortage and wage-pressure mentions in logistics, hospitality, healthcare, and food service.",
+            "Capex, funding, or budget language that suggests a 60- to 180-day procurement window.",
+            "Repeated signals from the same account, which should move the lead from market watch to active SCOUT outreach.",
         ],
         "source": "heuristic",
         "model": None,

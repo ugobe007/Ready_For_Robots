@@ -36,6 +36,7 @@ from app.models.score import Score
 from app.models.company import Company
 from app.models.signal import Signal
 from app.models.lead_rep_feedback import LeadRepFeedback
+from app.models.lead_research import LeadResearchUpdate
 from app.models.waitlist import WaitlistSignup
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.lead_filter import (
@@ -620,6 +621,8 @@ def _fmt_company(
     junk_reason: str,
     pri,
     llm_homepage_url: Optional[str] = None,
+    include_research: bool = False,
+    db: Optional[Session] = None,
 ) -> dict:
     s = pick_primary_score(c.scores)
     sigs = c.signals or []
@@ -657,7 +660,7 @@ def _fmt_company(
         llm_resolved_url=llm_homepage_url,
     )
 
-    return {
+    payload = {
         "id":             c.id,
         "company_name":   c.name,
         "website":        c.website,
@@ -707,6 +710,47 @@ def _fmt_company(
         "gtm": gtm,
         **link_extras,
     }
+    if include_research and db is not None:
+        research_updates = _lead_research_payload(db, c.id)
+        payload["research_updates"] = research_updates
+        payload["last_researched_at"] = _last_researched_at(c, research_updates)
+        payload["latest_material_update"] = research_updates[0] if research_updates else None
+    return payload
+
+
+def _research_update_row(row: LeadResearchUpdate) -> dict:
+    return {
+        "id": row.id,
+        "company_id": row.company_id,
+        "update_type": row.update_type,
+        "title": row.title,
+        "summary": row.summary,
+        "source_url": row.source_url,
+        "source_domain": row.source_domain,
+        "detected_at": row.detected_at.isoformat() if row.detected_at else None,
+        "significance_score": round(float(row.significance_score or 0), 3),
+        "status": row.status,
+    }
+
+
+def _lead_research_payload(db: Session, company_id: int, limit: int = 6) -> list[dict]:
+    rows = (
+        db.query(LeadResearchUpdate)
+        .filter(LeadResearchUpdate.company_id == company_id)
+        .order_by(LeadResearchUpdate.significance_score.desc(), LeadResearchUpdate.detected_at.desc())
+        .limit(max(1, min(limit, 25)))
+        .all()
+    )
+    return [_research_update_row(row) for row in rows]
+
+
+def _last_researched_at(c: Company, research_updates: list[dict]) -> Optional[str]:
+    meta = c.crm_metadata or {}
+    research_meta = meta.get("research_agent") if isinstance(meta, dict) else None
+    if isinstance(research_meta, dict) and research_meta.get("last_researched_at"):
+        return research_meta["last_researched_at"]
+    dates = [item.get("detected_at") for item in research_updates if item.get("detected_at")]
+    return max(dates) if dates else None
 
 
 @router.get("")
@@ -845,11 +889,27 @@ def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Lead not found")
     junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
     llm_hints = resolve_homepage_urls_for_companies([c])
-    payload = _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+    payload = _fmt_company(
+        c,
+        junk,
+        junk_reason,
+        pri,
+        llm_homepage_url=llm_hints.get(c.id),
+        include_research=True,
+        db=db,
+    )
     er = _entity_resolution_payload(db, c)
     if er:
         payload["entity_resolution"] = er
     return payload
+
+
+@router.get("/{company_id}/research")
+def get_lead_research(company_id: int, limit: int = Query(10, ge=1, le=25), db: Session = Depends(get_db)):
+    exists = db.query(Company.id).filter(Company.id == company_id).first()
+    if not exists:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return {"company_id": company_id, "research_updates": _lead_research_payload(db, company_id, limit=limit)}
 
 
 class RepFeedbackIn(BaseModel):

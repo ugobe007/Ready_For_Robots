@@ -14,6 +14,25 @@ export interface ApiLead {
   priority_tier?: string | null;
   share_summary?: string | null;
   signals?: Array<{ signal_type?: string; display_text?: string; text?: string }>;
+  research_updates?: Array<{
+    id: number;
+    update_type?: string;
+    title?: string;
+    summary?: string;
+    source_url?: string | null;
+    source_domain?: string | null;
+    detected_at?: string | null;
+    significance_score?: number;
+  }>;
+  last_researched_at?: string | null;
+  latest_material_update?: {
+    id: number;
+    title?: string;
+    summary?: string;
+    source_domain?: string | null;
+    detected_at?: string | null;
+    significance_score?: number;
+  } | null;
   gtm?: { suggested_motion?: string };
 }
 
@@ -79,5 +98,8 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     outreachSubject: `${lead.company_name || "Team"} — automation fit`,
     outreachBody: `Hi,\n\n${text}\n\nI'd like to share how teams in your space are using automation to move faster — worth a brief call?\n\n— SCOUT`,
     notes: cleanScrapedText(lead.share_summary) || undefined,
+    researchUpdates: lead.research_updates,
+    lastResearchedAt: lead.last_researched_at || null,
+    latestMaterialUpdate: lead.latest_material_update || null,
   };
 }
