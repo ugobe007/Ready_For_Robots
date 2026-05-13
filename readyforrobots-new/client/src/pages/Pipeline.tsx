@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle, MapPin, Filter, ChevronRight,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
-  Users, Clock, Target
+  Users, Clock, Target, Newspaper
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Link } from "wouter";
@@ -122,6 +122,13 @@ interface LeadSummary {
   signals_in_database?: number;
 }
 
+interface MarketSnippet {
+  label: string;
+  headline: string;
+  detail: string;
+  color: string;
+}
+
 const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
@@ -165,6 +172,45 @@ const activationLeadText = (lead: ScoutActivationLead) =>
 const formatMetric = (value?: number) =>
   typeof value === "number" ? new Intl.NumberFormat("en-US").format(value) : "—";
 
+const DEFAULT_MARKET_SNIPPET: MarketSnippet = {
+  label: "Market movement",
+  headline: "SCOUT is watching live buyer signals",
+  detail: "As the pipeline loads, SCOUT is looking for expansion, labor, budget, procurement, deployment, and partnership signals that indicate robot demand is moving.",
+  color: "#FFB000",
+};
+
+function marketSnippetFromDeals(deals: Deal[]): MarketSnippet {
+  const first = deals.find((deal) => deal.signal && deal.signal !== "Buying signal detected");
+  if (!first) return DEFAULT_MARKET_SNIPPET;
+  const insightByIndustry = industryMarketInsight(first.industry);
+  return {
+    label: `${first.signalType} movement`,
+    headline: `${first.company} is moving in ${first.industry || "the market"}`,
+    detail: `${cleanAndClampText(first.signal, 180)} ${insightByIndustry}`,
+    color: first.signalColor || "#FFB000",
+  };
+}
+
+function industryMarketInsight(industry: string): string {
+  const value = (industry || "").toLowerCase();
+  if (value.includes("hospital") || value.includes("healthcare")) {
+    return "Hospitals are showing more interest in off-hours cleaning, internal delivery, and logistics support where robots reduce staff walking time.";
+  }
+  if (value.includes("hotel") || value.includes("hospitality")) {
+    return "Hotels are pairing off-hours cleaning robots with daytime service robots to protect guest experience while labor stays tight.";
+  }
+  if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment")) {
+    return "Logistics hubs are moving fastest where expansion, throughput pressure, and labor availability overlap.";
+  }
+  if (value.includes("airport") || value.includes("aviation")) {
+    return "Airports are watching service, cleaning, and terminal-support robots around peak passenger windows and night-shift operations.";
+  }
+  if (value.includes("manufactur") || value.includes("automotive")) {
+    return "Manufacturers are treating robotics as targeted relief for quality, safety, and material-flow bottlenecks rather than broad replacement.";
+  }
+  return "SCOUT is watching for accounts where signal timing suggests a real sales motion, not just a generic news headline.";
+}
+
 const formatResearchTime = (value?: string | null) => {
   if (!value) return "";
   const date = new Date(value);
@@ -201,6 +247,7 @@ export default function Pipeline() {
   const { session } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
+  const [marketSnippet, setMarketSnippet] = useState<MarketSnippet>(DEFAULT_MARKET_SNIPPET);
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
   const [industryQuery, setIndustryQuery] = useState("");
@@ -208,6 +255,7 @@ export default function Pipeline() {
   const [selectedActivationId, setSelectedActivationId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [loadingLeads, setLoadingLeads] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingResearch, setLoadingResearch] = useState(false);
   const [loadingActivations, setLoadingActivations] = useState(true);
   const [loadErr, setLoadErr] = useState("");
@@ -215,30 +263,47 @@ export default function Pipeline() {
 
   useEffect(() => {
     const base = getApiBase();
+    let cancelled = false;
+
     (async () => {
       setLoadingLeads(true);
       setLoadErr("");
       try {
-        const [summaryResponse, leadsResponse] = await Promise.all([
-          fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
-          fetch(`${base}/api/leads?limit=24&exclude_junk=true&sort=score`, liveFetchInit()),
-        ]);
-        if (!summaryResponse.ok) throw new Error(await summaryResponse.text());
+        const leadsResponse = await fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit());
         if (!leadsResponse.ok) throw new Error(await leadsResponse.text());
-        setSummary((await summaryResponse.json()) as LeadSummary);
         const rows = (await leadsResponse.json()) as ApiLead[];
         const mapped = Array.isArray(rows) ? rows.map(mapApiLeadToDeal) : [];
+        if (cancelled) return;
         setDeals(mapped);
         setSelectedId(mapped[0]?.id ?? null);
+        setMarketSnippet(marketSnippetFromDeals(mapped));
       } catch (e) {
+        if (cancelled) return;
         setLoadErr(e instanceof Error ? e.message : "Could not load pipeline");
-        setSummary(null);
         setDeals([]);
         setSelectedId(null);
       } finally {
-        setLoadingLeads(false);
+        if (!cancelled) setLoadingLeads(false);
       }
     })();
+
+    (async () => {
+      setLoadingSummary(true);
+      try {
+        const summaryResponse = await fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit());
+        if (!summaryResponse.ok) throw new Error(await summaryResponse.text());
+        const payload = (await summaryResponse.json()) as LeadSummary;
+        if (!cancelled) setSummary(payload);
+      } catch {
+        if (!cancelled) setSummary(null);
+      } finally {
+        if (!cancelled) setLoadingSummary(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -383,7 +448,7 @@ export default function Pipeline() {
             <PipelineMetric
               label="Database total"
               value={formatMetric(totalDeals)}
-              sub={`${formatMetric(summary?.total_signals)} scored buying signals`}
+              sub={loadingSummary ? "Refreshing market totals..." : `${formatMetric(summary?.total_signals)} scored buying signals`}
               color="#ffffff"
             />
             <PipelineMetric
@@ -404,6 +469,40 @@ export default function Pipeline() {
               sub={`${formatMetric(queuedActivations)} SCOUT activations queued`}
               color="#a78bfa"
             />
+          </section>
+
+          <section
+            className="rounded-2xl border px-4 py-3"
+            style={{ background: "rgba(255,176,0,0.045)", borderColor: "rgba(255,176,0,0.16)" }}
+          >
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <div
+                  className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border"
+                  style={{ borderColor: `${marketSnippet.color}44`, background: `${marketSnippet.color}12` }}
+                >
+                  <Newspaper className="h-4 w-4" style={{ color: marketSnippet.color }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#FFB000" }}>
+                    {marketSnippet.label}
+                  </p>
+                  <h2 className="mt-1 break-words text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    {marketSnippet.headline}
+                  </h2>
+                  <p className="mt-1 break-words text-[12px] leading-relaxed" style={{ color: "#FFB000" }}>
+                    {marketSnippet.detail}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/newsletter"
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold"
+                style={{ color: "#FFB000" }}
+              >
+                Read daily brief <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </section>
 
           {/* ── SCOUT activation queue ── */}
