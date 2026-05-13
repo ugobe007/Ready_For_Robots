@@ -497,6 +497,8 @@ _INDUSTRY_AUTOMATION_CTX: dict[str, tuple[str, str]] = {
     "supply chain": ("AMRs and warehouse orchestration software", "throughput bottlenecks and labor shortages"),
     "warehouse": ("AMRs, AS/RS, and goods-to-person systems", "picking efficiency and labor replacement"),
     "fulfillment": ("goods-to-person robots and automated conveyors", "order fulfillment speed and accuracy"),
+    "casino": ("commercial cleaning robots, delivery robots, and housekeeping automation", "housekeeping labor pressure and guest-service consistency"),
+    "gaming": ("commercial cleaning robots, delivery robots, and housekeeping automation", "high-traffic facilities and service consistency"),
     "hospitality": ("room service robots and housekeeping automation", "labor vacancies and service consistency"),
     "hotel": ("delivery robots and back-of-house automation", "housekeeping labor shortages and service consistency"),
     "healthcare": ("hospital logistics robots and disinfection bots", "staff walking time and infection control"),

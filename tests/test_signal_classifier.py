@@ -26,3 +26,15 @@ def merged_types(text: str):
 def test_primary_signal_type_funding_fallback():
     text = "Startup closes venture capital round at high valuation."
     assert primary_signal_type_for_text(text) == "funding_round"
+
+
+def test_ontology_trigger_expression_maps_to_high_intent():
+    text = "Our leadership has approved a budget for automation."
+    types = classify_signals_with_fallback(text, article_url="https://www.prnewswire.com/news/test")
+    assert types[0] == "automation_intent"
+
+
+def test_ontology_buying_phrase_maps_to_automation_interest():
+    text = "The operator announced a strategic automation investment to streamline operations."
+    types = classify_signals_with_fallback(text)
+    assert "automation_interest" in types or "automation_intent" in types

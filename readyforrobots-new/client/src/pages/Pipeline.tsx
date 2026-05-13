@@ -193,11 +193,11 @@ function marketSnippetFromDeals(deals: Deal[]): MarketSnippet {
 
 function industryMarketInsight(industry: string): string {
   const value = (industry || "").toLowerCase();
-  if (value.includes("hospital") || value.includes("healthcare")) {
-    return "Hospitals are showing more interest in off-hours cleaning, internal delivery, and logistics support where robots reduce staff walking time.";
-  }
-  if (value.includes("hotel") || value.includes("hospitality")) {
+  if (/\b(casino|gaming|resort casino|hotel|hotels|hospitality|resort|resorts|lodging)\b/.test(value)) {
     return "Hotels are pairing off-hours cleaning robots with daytime service robots to protect guest experience while labor stays tight.";
+  }
+  if (/\b(hospital|hospitals|healthcare|health care|health system|medical|clinic|clinics)\b/.test(value)) {
+    return "Hospitals are showing more interest in off-hours cleaning, internal delivery, and logistics support where robots reduce staff walking time.";
   }
   if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment")) {
     return "Logistics hubs are moving fastest where expansion, throughput pressure, and labor availability overlap.";

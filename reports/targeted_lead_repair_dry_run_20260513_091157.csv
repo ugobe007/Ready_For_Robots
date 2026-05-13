@@ -1,0 +1,19 @@
+company_id,current_name,current_industry,score,signal_count,signal_types,proposed_action,target_name,target_industry,canonical_id,delete,reason
+820,Dutch hospitality operating system Mews,Healthcare,61.38,3,automation_interest,delete_artifact,,,,True,"Mews is a hospitality software vendor/seller, not a buyer account."
+1122,Trailborn - Hospitality Net,Healthcare,50.95,1,automation_interest,merge_into_clean_name,Trailborn,Hospitality,new_or_first_target_after_rename,False,Duplicate/suffix artifact from Hospitality Net; real hotel brand.
+1362,First Hospitality - Hospitality Net,Healthcare,54.74,1,strategic_hire,merge_into_clean_name,First Hospitality,Hospitality,new_or_first_target_after_rename,False,Duplicate/suffix artifact from Hospitality Net; real hotel operator.
+1393,Hospitality SaaS,Healthcare,48.67,2,funding_round,delete_artifact,,,,True,"Market/investment topic, not a buyer company."
+2856,Room00 Next Gen Hospitality,Healthcare,58.37,3,"automation_interest,news",update_industry,Room00 Next Gen Hospitality,Hospitality,,False,Real hospitality operator/brand expansion signal; wrong Healthcare industry.
+2865,Hospitality AI-Driven,Healthcare,37.42,3,news,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+2993,Crown Resorts,Healthcare,41.29,2,news,update_industry,Crown Resorts,Casinos & Gaming,,False,Real casino/resort operator; wrong Healthcare industry.
+3349,Peregrine Hospitality - Hospitality Net,Healthcare,56.32,1,strategic_hire,rename_update_industry,Peregrine Hospitality,Hospitality,,False,Real hospitality operator; remove publication suffix and fix industry.
+3444,Hospitality Advantages,Healthcare,37.42,2,news,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+4051,Las Vegas Hospitality,Healthcare,56.62,3,automation_interest,delete_artifact,,,,True,"Market/topic title, not a buyer company."
+4385,Trailborn - hospitalitynet,Healthcare,53.32,1,automation_interest,merge_into_clean_name,Trailborn,Hospitality,new_or_first_target_after_rename,False,Duplicate/suffix artifact from hospitalitynet.org; real hotel brand.
+4386,First Hospitality - hospitalitynet,Healthcare,58.96,1,strategic_hire,merge_into_clean_name,First Hospitality,Hospitality,new_or_first_target_after_rename,False,Duplicate/suffix artifact from hospitalitynet.org; real hotel operator.
+5045,Hospitality Labor ITB,Healthcare,46.92,3,automation_interest,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+5780,Immigration Policy and the Hospitality Workforce,Healthcare,0.0,1,labor_shortage,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+6034,Research: Hospitality Technology Tops $1 Billion,Healthcare,0.0,1,expansion,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+6260,Key Hospitality Technology Trends to Watch,Healthcare,0.0,1,strategic_hire,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+6774,Enhancing hospitality,Healthcare,0.0,1,automation_interest,delete_artifact,,,,True,"Article/topic title, not a buyer company."
+3520,Wynn Las Vegas,Hospitality,49.61,1,expansion,merge_duplicate_wynn,Wynn Las Vegas,Hospitality,7550,False,Exact duplicate Wynn Las Vegas; canonical chosen by signal count then score.

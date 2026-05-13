@@ -13,23 +13,26 @@ import re
 from datetime import datetime, timezone
 
 # ---------------------------------------------------------------------------
-# Signal type weights — how strongly each type predicts a robot purchase
+# Signal type weights — extended from Robot Automation Signal Ontology scoring guide.
 # ---------------------------------------------------------------------------
 SIGNAL_TYPE_WEIGHTS: dict[str, float] = {
-    "strategic_hire":      1.00,  # SVP/Dir of Automation = highest direct intent
-    "capex":               0.95,  # committed capital spend
-    "quality_bottleneck":  0.93,  # quality issues = immediate automation need
-    "safety_incident":     0.92,  # safety problems = urgent automation driver
-    "labor_shortage":      0.90,  # primary pain point robots solve
-    "production_capacity": 0.88,  # maxed out capacity = automation to scale
-    "warehouse_throughput":0.87,  # throughput constraints = clear ROI opportunity
-    "packaging_automation":0.86,  # end-of-line packaging = proven robot use case
-    "repetitive_process":  0.85,  # repetitive work = ideal for automation
-    "expansion":           0.85,  # new facility = new equipment opportunity
-    "material_handling":   0.83,  # forklift/logistics pain = AMR/AGV opportunity
-    "funding_round":       0.80,  # has capital + growth phase
+    "automation_intent":   1.00,  # trigger expression / active automation decision
+    "vendor_selection":    0.98,  # RFP/proposal/vendor-selection language
+    "strategic_hire":      0.96,  # job title signal
+    "capex":               0.92,  # CapEx / financial signal
+    "expansion":           0.90,  # facility/expansion signal
+    "quality_bottleneck":  0.88,  # quality issues = immediate automation need
+    "safety_incident":     0.86,  # regulatory / safety pain
+    "production_capacity": 0.84,  # maxed out capacity = automation to scale
+    "warehouse_throughput":0.82,  # throughput constraints = clear ROI opportunity
+    "job_posting":         0.80,  # active automation hiring
+    "labor_shortage":      0.78,  # pain words with co-occurrence
+    "packaging_automation":0.78,  # end-of-line packaging = proven robot use case
+    "repetitive_process":  0.76,  # repetitive work = ideal for automation
+    "material_handling":   0.75,  # forklift/logistics pain = AMR/AGV opportunity
+    "funding_round":       0.72,  # has capital + growth phase
     "ma_activity":         0.75,  # integration disruption creates openings
-    "job_posting":         0.65,  # indirect but ongoing need
+    "automation_interest": 0.68,  # buying signal phrase / medium confidence
     "news":                0.52,  # awareness — slightly less punishing for tiering context
 }
 DEFAULT_TYPE_WEIGHT = 0.55
@@ -121,6 +124,17 @@ def compute_weighted_score(signal) -> float:
     age_w = _age_factor(created_at)
 
     text = getattr(signal, "signal_text", "") or ""
+    try:
+        from app.services.robot_signal_ontology import ontology_signal_points
+        from app.services.signal_rules_engine import infer_source_channel
+
+        source_url = getattr(signal, "source_url", "") or ""
+        source_channel = infer_source_channel(source_url)
+        ontology_points = ontology_signal_points(text, signal_type=signal_type.lower(), source_channel=source_channel)
+        if ontology_points:
+            base = max(base, ontology_points / 100)
+    except Exception:
+        pass
 
     # ── Context guard: qualify the robot boost by sentence intent ─────────────
     # Three classes of false-positive automation context:

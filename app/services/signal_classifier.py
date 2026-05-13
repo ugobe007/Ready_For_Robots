@@ -8,6 +8,7 @@ automation opportunities with ontological meaning.
 import re
 from typing import List, Optional
 from app.services.ontology import CONCEPTS
+from app.services.robot_signal_ontology import signal_types_from_ontology_matches
 from app.services.semantic_parser import SemanticParser
 from app.services.signal_rules_engine import infer_source_channel, rules_engine_signal_types
 
@@ -163,12 +164,13 @@ def classify_signals_with_fallback(
     (RSS ``<source>``) — see ``infer_source_channel`` in ``signal_rules_engine``.
     """
     ontology_signals = classify_signals_from_ontology(text, min_confidence=0.2)
+    vocabulary_signals = signal_types_from_ontology_matches(text)
     channel = source_channel or infer_source_channel(article_url, rss_source_name)
     rules_signals = rules_engine_signal_types(text, source_channel=channel)
 
     merged: List[str] = []
     seen = set()
-    for s in ontology_signals + rules_signals:
+    for s in vocabulary_signals + ontology_signals + rules_signals:
         if s not in seen:
             seen.add(s)
             merged.append(s)

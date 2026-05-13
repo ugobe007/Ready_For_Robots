@@ -6,6 +6,23 @@ Similar to pythh.ai investor/startup scraping system
 """
 from celery.schedules import crontab
 
+# Source Monitoring Taxonomy from Robot Automation Signal Ontology.md.
+# This keeps the polling intent close to the executable schedule.
+SOURCE_MONITORING_TAXONOMY = {
+    "linkedin_job_postings": {"signal_types": ["Job Title Signals", "Hiring Intent"], "frequency": "Daily"},
+    "earnings_calls": {"signal_types": ["CapEx Signals", "Trigger Expressions", "Pain Words"], "frequency": "Quarterly"},
+    "press_releases": {"signal_types": ["Expansion Signals", "Contract Wins", "Trigger Expressions"], "frequency": "Daily"},
+    "osha_filings": {"signal_types": ["Safety Signals", "Pain Words"], "frequency": "Weekly"},
+    "real_estate_permits": {"signal_types": ["Expansion/Facility Signals"], "frequency": "Weekly"},
+    "sec_filings": {"signal_types": ["CapEx Signals", "Financial Signals"], "frequency": "Quarterly"},
+    "industry_news": {"signal_types": ["News Triggers", "Regulatory Signals"], "frequency": "Daily"},
+    "company_career_pages": {"signal_types": ["Job Title Signals", "Hiring Intent"], "frequency": "Daily"},
+    "glassdoor_indeed_reviews": {"signal_types": ["Pain Words", "Labor Shortage Signals"], "frequency": "Weekly"},
+    "government_contract_databases": {"signal_types": ["Contract Win Signals", "Defense Signals"], "frequency": "Weekly"},
+    "linkedin_company_updates": {"signal_types": ["Expansion Signals", "Leadership Changes"], "frequency": "Daily"},
+    "local_business_news": {"signal_types": ["Facility Signals", "Expansion Signals"], "frequency": "Daily"},
+}
+
 # Celery Beat Schedule - runs scrapers automatically
 CELERYBEAT_SCHEDULE = {
     # ── INTELLIGENCE NEWS SCRAPER ── FREE lead discovery (runs 3x daily)
@@ -41,7 +58,7 @@ CELERYBEAT_SCHEDULE = {
         },
     },
     
-    # ── NEWS SCRAPERS ── Run every 2 hours during business hours
+    # ── NEWS SCRAPERS ── Industry news + local business news (daily / intraday)
     'news-scraper-morning': {
         'task': 'worker.tasks.run_news_scraper_task',
         'schedule': crontab(hour='6,8,10', minute=0),  # 6am, 8am, 10am UTC
@@ -59,7 +76,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour='7,15', minute=30),  # 7:30am, 3:30pm UTC
     },
     
-    # ── JOB BOARD SCRAPERS ── Run every 6 hours
+    # ── JOB BOARD SCRAPERS ── LinkedIn-like job/career-page signals (daily / intraday)
     'job-board-hospitality': {
         'task': 'worker.tasks.run_job_scraper_task',
         'schedule': crontab(hour='*/6', minute=15),
@@ -76,7 +93,7 @@ CELERYBEAT_SCHEDULE = {
         'kwargs': {'industry': 'healthcare'},
     },
     
-    # ── RSS FEEDS ── Run every 4 hours
+    # ── RSS FEEDS ── Press releases, trade publications, regulatory/news triggers
     'rss-feeds-all': {
         'task': 'worker.tasks.run_rss_scraper_task',
         'schedule': crontab(hour='*/4', minute=30),
@@ -94,19 +111,19 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=4, minute=0),
     },
     
-    # ── SERP SCRAPER ── Run every 8 hours for expansion/growth signals
+    # ── SERP SCRAPER ── Local business news + facility/permit-like expansion searches
     'serp-expansion-signals': {
         'task': 'worker.tasks.run_serp_scraper_task',
         'schedule': crontab(hour='0,8,16', minute=45),
     },
     
-    # ── RFP MARKETPLACE ── Run daily at 5am UTC
+    # ── RFP MARKETPLACE ── Government contracts / procurement signals
     'rfp-marketplace-daily': {
         'task': 'worker.tasks.run_rfp_marketplace_scraper_task',
         'schedule': crontab(hour=5, minute=0),
     },
     
-    # ── LINKEDIN SCRAPER ── Run twice daily (requires auth)
+    # ── LINKEDIN SCRAPER ── LinkedIn job postings + company updates (requires auth)
     'linkedin-company-scraper': {
         'task': 'worker.tasks.run_linkedin_scraper_task',
         'schedule': crontab(hour='9,17', minute=0),  # 9am, 5pm UTC

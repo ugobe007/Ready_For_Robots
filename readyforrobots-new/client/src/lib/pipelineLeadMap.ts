@@ -80,11 +80,11 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
 
 function industryInsight(industry?: string | null): string {
   const value = (industry || "").toLowerCase();
-  if (value.includes("hospital") || value.includes("healthcare") || value.includes("medical")) {
-    return "I have noticed hospitals are separating off-hours support work from daytime patient-facing service: cleaning robots can cover overnight corridors and public spaces, while delivery or service robots help move supplies during peak clinical hours.";
-  }
-  if (value.includes("hotel") || value.includes("hospitality") || value.includes("resort")) {
+  if (/\b(casino|gaming|resort casino|hotel|hotels|hospitality|resort|resorts|lodging)\b/.test(value)) {
     return "I have noticed hotels are using cleaning robots for off-hours floor care, while service robots handle daytime delivery, amenities, and back-of-house runs that pull staff away from guests.";
+  }
+  if (/\b(hospital|hospitals|healthcare|health care|health system|medical|clinic|clinics)\b/.test(value)) {
+    return "I have noticed hospitals are separating off-hours support work from daytime patient-facing service: cleaning robots can cover overnight corridors and public spaces, while delivery or service robots help move supplies during peak clinical hours.";
   }
   if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment") || value.includes("3pl")) {
     return "I have noticed logistics hubs are pairing AMRs, autonomous cleaning, and material-handling automation so overnight floor readiness and daytime throughput can improve without adding more temporary labor.";
