@@ -26,6 +26,10 @@ def send_email_via_resend(
     subject: str,
     body_text: str,
     from_display_name: str | None = None,
+    reply_to: str | None = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
+    idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     """
     Send an email with Resend.
@@ -39,7 +43,7 @@ def send_email_via_resend(
     """
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     from_email = (os.getenv("RESEND_FROM_EMAIL") or "").strip()
-    reply_to = (os.getenv("RESEND_REPLY_TO") or "").strip()
+    default_reply_to = (os.getenv("RESEND_REPLY_TO") or "").strip()
 
     if not api_key:
         raise ResendEmailError("Missing RESEND_API_KEY")
@@ -54,16 +58,27 @@ def send_email_via_resend(
         "subject": subject,
         "text": body_text,
     }
-    if reply_to:
-        payload["reply_to"] = reply_to
+    clean_cc = [x.strip() for x in (cc or []) if x and "@" in x]
+    clean_bcc = [x.strip() for x in (bcc or []) if x and "@" in x]
+    if clean_cc:
+        payload["cc"] = clean_cc
+    if clean_bcc:
+        payload["bcc"] = clean_bcc
+    effective_reply_to = (reply_to or default_reply_to).strip()
+    if effective_reply_to:
+        payload["reply_to"] = effective_reply_to
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key[:256]
 
     try:
         resp = requests.post(
             "https://api.resend.com/emails",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             json=payload,
             timeout=20,
         )
@@ -80,5 +95,26 @@ def send_email_via_resend(
     return {
         "resend_id": data.get("id"),
         "from_email": from_email,
-        "reply_to": reply_to or None,
+        "reply_to": effective_reply_to or None,
+        "cc": clean_cc,
+        "bcc": clean_bcc,
     }
+
+
+def fetch_resend_received_email(email_id: str) -> dict[str, Any]:
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key:
+        raise ResendEmailError("Missing RESEND_API_KEY")
+    if not email_id:
+        raise ResendEmailError("email_id is required")
+    try:
+        resp = requests.get(
+            f"https://api.resend.com/emails/receiving/{email_id}",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=20,
+        )
+    except requests.RequestException as exc:
+        raise ResendEmailError(f"Resend receive lookup failed: {exc}") from exc
+    if resp.status_code >= 400:
+        raise ResendEmailError(f"Resend receive lookup rejected ({resp.status_code}): {resp.text}")
+    return resp.json() if resp.content else {}

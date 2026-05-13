@@ -153,7 +153,7 @@ function SignalBadge({ type }) {
     labor_shortage:    { label: 'LABOR GAP',  bg: 'bg-red-900/30',     border: 'border-red-700',     text: 'text-red-400' },
     job_posting:       { label: 'HIRING',     bg: 'bg-yellow-900/30',  border: 'border-yellow-700',  text: 'text-yellow-400' },
     strategic_hire:    { label: 'EXEC HIRE',  bg: 'bg-cyan-900/30',    border: 'border-cyan-700',    text: 'text-cyan-400' },
-    ma_activity:       { label: 'M&A',        bg: 'bg-pink-900/30',    border: 'border-pink-700',    text: 'text-pink-400' },
+    ma_activity:       { label: 'M&A',        bg: 'bg-amber-900/30',    border: 'border-amber-700',    text: 'text-amber-400' },
     news:              { label: 'NEWS',       bg: 'bg-blue-900/30',    border: 'border-blue-700',    text: 'text-blue-400' },
   };
   const meta = SIGNAL_META[type] || { label: type?.toUpperCase() || 'SIGNAL', bg: 'bg-neutral-900/30', border: 'border-neutral-700', text: 'text-neutral-400' };

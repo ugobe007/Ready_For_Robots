@@ -113,6 +113,14 @@ interface ScoutActivation {
   requiresAccount?: boolean;
 }
 
+type ScoutAutomationLevel = "manual" | "assisted" | "auto";
+
+interface UserSettings {
+  scout_automation_level?: ScoutAutomationLevel;
+  reply_forwarding_enabled?: boolean;
+  reply_forward_email?: string | null;
+}
+
 interface LeadSummary {
   total?: number;
   hot?: number;
@@ -137,7 +145,7 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
   "Draft Ready":   { color: "#60a5fa", dot: "#60a5fa", label: "Draft Ready",   desc: "Outreach drafted" },
   "Outreach Sent": { color: "#FFB000", dot: "#FFB000", label: "Outreach Sent", desc: "Awaiting reply" },
   "Qualified":     { color: "#34d399", dot: "#34d399", label: "Qualified",     desc: "Engaged buyer" },
-  "Meeting Set":   { color: "#f472b6", dot: "#f472b6", label: "Meeting Set",   desc: "On the calendar" },
+  "Meeting Set":   { color: "#FFB000", dot: "#FFB000", label: "Meeting Set",   desc: "On the calendar" },
 };
 
 const scoreColor = (s: number) =>
@@ -239,6 +247,8 @@ export default function Pipeline() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingResearch, setLoadingResearch] = useState(false);
   const [loadingActivations, setLoadingActivations] = useState(true);
+  const [advancingLeadId, setAdvancingLeadId] = useState<number | null>(null);
+  const [automationLevel, setAutomationLevel] = useState<ScoutAutomationLevel>("assisted");
   const [loadErr, setLoadErr] = useState("");
   const [activationErr, setActivationErr] = useState("");
 
@@ -334,6 +344,24 @@ export default function Pipeline() {
     })();
   }, [session]);
 
+  useEffect(() => {
+    if (!session?.access_token) {
+      setAutomationLevel("assisted");
+      return;
+    }
+    const base = getApiBase();
+    (async () => {
+      try {
+        const response = await fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHeader(session.access_token) }));
+        if (!response.ok) return;
+        const settings = (await response.json()) as UserSettings;
+        if (settings.scout_automation_level) setAutomationLevel(settings.scout_automation_level);
+      } catch {
+        // Settings are advisory for the Pipeline UI; default assisted keeps the flow usable.
+      }
+    })();
+  }, [session]);
+
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const resolvedIndustryFilter = industryQuery.trim() || filter;
   const filtered = !resolvedIndustryFilter || resolvedIndustryFilter === "All"
@@ -361,6 +389,79 @@ export default function Pipeline() {
     setCopied(true);
     toast.success("Draft copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleAdvanceLead = async (deal: Deal) => {
+    if (!session?.access_token) {
+      const next = `/pipeline?lead=${deal.id}`;
+      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
+      return;
+    }
+    setAdvancingLeadId(deal.id);
+    const base = getApiBase();
+    const headers = { ...authHeader(session.access_token), "Content-Type": "application/json" };
+    try {
+      const createResponse = await fetch(
+        `${base}/api/crm/accounts`,
+        liveFetchInit({
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            company_id: deal.id,
+            name: deal.company,
+            industry: deal.industry,
+          }),
+        }),
+      );
+      if (!createResponse.ok) throw new Error(await createResponse.text());
+      const account = (await createResponse.json()) as { id: string };
+      const patchResponse = await fetch(
+        `${base}/api/crm/accounts/${account.id}`,
+        liveFetchInit({
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            outreach_draft: deal.outreachBody || "",
+            outreach_stage: automationLevel === "manual" ? "draft_approved" : "draft_ready",
+          }),
+        }),
+      );
+      if (!patchResponse.ok) throw new Error(await patchResponse.text());
+
+      if (automationLevel === "auto" && deal.contact) {
+        const sendResponse = await fetch(
+          `${base}/api/crm/accounts/${account.id}/send-outreach`,
+          liveFetchInit({
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              contact_email: deal.contact,
+              subject: deal.outreachSubject,
+              outreach_draft: deal.outreachBody,
+              send_identity: "scout",
+            }),
+          }),
+        );
+        if (!sendResponse.ok) throw new Error(await sendResponse.text());
+        setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Outreach Sent", updatedAt: "just now" } : d)));
+        toast.success("Sent by SCOUT. Replies will return to SCOUT and notify you.");
+        return;
+      }
+
+      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Draft Ready", updatedAt: "just now" } : d)));
+      if (automationLevel === "manual") {
+        copyDraft();
+        toast.success("Lead captured in CRM. Draft approved for manual send.");
+      } else if (!deal.contact) {
+        toast.success("Lead captured in CRM. Add a recipient email before SCOUT sends.");
+      } else {
+        toast.success("Lead captured in CRM. SCOUT is ready when you approve send.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not advance lead with SCOUT");
+    } finally {
+      setAdvancingLeadId(null);
+    }
   };
 
   const totalDeals = summary?.total ?? filtered.length;
@@ -965,11 +1066,16 @@ export default function Pipeline() {
                     </button>
                     {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
                       <button
-                        onClick={() => moveStage(selected.id, 1)}
+                        onClick={() => handleAdvanceLead(selected)}
+                        disabled={advancingLeadId === selected.id}
                         className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                        style={{ background: "#7c3aed", color: "#fff", border: "1px solid #7c3aed" }}
+                        style={{
+                          background: advancingLeadId === selected.id ? "rgba(124,58,237,0.45)" : "#7c3aed",
+                          color: "#fff",
+                          border: "1px solid #7c3aed",
+                        }}
                       >
-                        Advance
+                        {advancingLeadId === selected.id ? "Advancing..." : "Advance with SCOUT"}
                         <ArrowRight className="h-3 w-3" />
                       </button>
                     )}

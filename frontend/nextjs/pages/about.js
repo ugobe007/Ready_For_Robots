@@ -20,12 +20,12 @@ const SIGNAL_TYPES = [
   { type: 'capex', icon: '🏗️', name: 'CapEx Investment', color: 'orange', example: 'Facility upgrades = modernization' },
   { type: 'automation_interest', icon: '⚙️', name: 'Automation Interest', color: 'yellow', example: 'Mentions robotics in earnings calls' },
   { type: 'news', icon: '📰', name: 'News Signals', color: 'indigo', example: 'Press releases reveal intent' },
-  { type: 'job_posting', icon: '💼', name: 'Job Postings', color: 'pink', example: 'Hiring patterns show growth' },
+  { type: 'job_posting', icon: '💼', name: 'Job Postings', color: 'amber', example: 'Hiring patterns show growth' },
   { type: 'rfp', icon: '📋', name: 'RFP Activity', color: 'teal', example: 'Active procurement signals' },
   { type: 'government_contract', icon: '🏛️', name: 'Gov Contracts', color: 'gray', example: 'Public sector opportunities' },
   { type: 'directory_listing', icon: '📍', name: 'Directory Updates', color: 'lime', example: 'Facility additions detected' },
   { type: 'tech_adoption', icon: '💻', name: 'Tech Adoption', color: 'sky', example: 'Software signals automation readiness' },
-  { type: 'financial_signal', icon: '📊', name: 'Financial Signals', color: 'rose', example: 'Revenue growth enables investment' }
+  { type: 'financial_signal', icon: '📊', name: 'Financial Signals', color: 'orange', example: 'Revenue growth enables investment' }
 ];
 
 export default function SignalIntelligencePage() {
@@ -108,12 +108,12 @@ export default function SignalIntelligencePage() {
       orange: type === 'text' ? 'text-orange-400' : type === 'bg' ? 'bg-orange-600' : 'border-orange-600',
       yellow: type === 'text' ? 'text-yellow-400' : type === 'bg' ? 'bg-yellow-600' : 'border-yellow-600',
       indigo: type === 'text' ? 'text-indigo-400' : type === 'bg' ? 'bg-indigo-600' : 'border-indigo-600',
-      pink: type === 'text' ? 'text-pink-400' : type === 'bg' ? 'bg-pink-600' : 'border-pink-600',
+      amber: type === 'text' ? 'text-amber-400' : type === 'bg' ? 'bg-amber-600' : 'border-amber-600',
       teal: type === 'text' ? 'text-teal-400' : type === 'bg' ? 'bg-teal-600' : 'border-teal-600',
       gray: type === 'text' ? 'text-gray-400' : type === 'bg' ? 'bg-gray-600' : 'border-gray-600',
       lime: type === 'text' ? 'text-lime-400' : type === 'bg' ? 'bg-lime-600' : 'border-lime-600',
       sky: type === 'text' ? 'text-sky-400' : type === 'bg' ? 'bg-sky-600' : 'border-sky-600',
-      rose: type === 'text' ? 'text-rose-400' : type === 'bg' ? 'bg-rose-600' : 'border-rose-600',
+      orange: type === 'text' ? 'text-orange-400' : type === 'bg' ? 'bg-orange-600' : 'border-orange-600',
     };
     return colors[color] || colors.emerald;
   };

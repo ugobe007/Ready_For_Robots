@@ -30,6 +30,7 @@ from app.api.playbook import router as playbook_router
 from app.api.robot_companies import router as robot_companies_router
 from app.api.newsletter import router as newsletter_router
 from app.api.crm import router as crm_router
+from app.api.webhooks import router as webhooks_router
 from app.api.marketplace import router as marketplace_router
 from app.api.proposals import router as proposals_router
 from app.api.scout import router as scout_router
@@ -184,6 +185,7 @@ app.include_router(playbook_router, prefix="/api", tags=["playbook"])
 app.include_router(robot_companies_router, tags=["robot-companies"])
 app.include_router(newsletter_router, prefix="/api/newsletter", tags=["newsletter"])
 app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
+app.include_router(webhooks_router, prefix="/api/webhooks", tags=["webhooks"])
 app.include_router(marketplace_router, prefix="/api/marketplace", tags=["marketplace"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])

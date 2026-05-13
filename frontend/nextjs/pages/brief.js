@@ -77,7 +77,7 @@ export default function StrategyBrief() {
     funding_round:  { label: 'Funding Rounds', icon: '💰', color: 'text-violet-400', border: 'border-violet-700' },
     strategic_hire: { label: 'Executive Hires', icon: '👔', color: 'text-blue-400', border: 'border-blue-700' },
     capex:          { label: 'CapEx Signals', icon: '🏗️', color: 'text-cyan-400', border: 'border-cyan-700' },
-    ma_activity:    { label: 'M&A Activity', icon: '🤝', color: 'text-pink-400', border: 'border-pink-700' },
+    ma_activity:    { label: 'M&A Activity', icon: '🤝', color: 'text-amber-400', border: 'border-amber-700' },
     expansion:      { label: 'Expansions', icon: '📈', color: 'text-emerald-400', border: 'border-emerald-700' },
     labor_shortage: { label: 'Labor Gaps', icon: '⚠️', color: 'text-red-400', border: 'border-red-800' },
   };

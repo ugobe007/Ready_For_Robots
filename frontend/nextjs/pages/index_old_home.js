@@ -13,7 +13,7 @@ const SIGNAL_META = {
   funding_round: { label: 'Funding', color: 'violet' },
   strategic_hire: { label: 'Exec Hire', color: 'blue' },
   capex: { label: 'CapEx', color: 'cyan' },
-  ma_activity: { label: 'M&A', color: 'pink' },
+  ma_activity: { label: 'M&A', color: 'amber' },
   expansion: { label: 'Expand', color: 'emerald' },
   job_posting: { label: 'Hiring', color: 'amber' },
   labor_shortage: { label: 'Labor Gap', color: 'red' },

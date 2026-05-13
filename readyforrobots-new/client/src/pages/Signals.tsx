@@ -152,7 +152,7 @@ const SIGNAL_TYPES = [
     id: "news",
     name: "Industry News Trigger",
     icon: Newspaper,
-    color: "#f472b6",
+    color: MARKET_COLORS.amber,
     category: "External",
     description: "Regulatory changes, competitor moves, or industry events that create urgency for automation adoption.",
     sources: ["Industry publications", "Trade associations", "Government announcements"],
@@ -785,7 +785,7 @@ export default function Signals() {
                     { label: "Signals detected", value: "1,204", color: "#a78bfa" },
                     { label: "Hot leads identified", value: "38", color: "#34d399" },
                     { label: "Outreach drafts ready", value: "24", color: "#60a5fa" },
-                    { label: "Sources monitored", value: "150+", color: "#f472b6" },
+                    { label: "Sources monitored", value: "150+", color: MARKET_COLORS.amber },
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between">
                       <span className="text-xs text-white/35">{stat.label}</span>

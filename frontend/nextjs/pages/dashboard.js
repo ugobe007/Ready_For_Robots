@@ -90,7 +90,7 @@ const SIGNAL_META = {
   funding_round:         { label: 'Funding',      border: 'border-violet-700',  text: 'text-violet-400'  },
   strategic_hire:        { label: 'Exec Hire',    border: 'border-blue-700',    text: 'text-blue-400'    },
   capex:                 { label: 'CapEx',        border: 'border-cyan-700',    text: 'text-cyan-400'    },
-  ma_activity:           { label: 'M&A',          border: 'border-pink-700',    text: 'text-pink-400'    },
+  ma_activity:           { label: 'M&A',          border: 'border-amber-700',    text: 'text-amber-400'    },
   expansion:             { label: 'Expand',       border: 'border-emerald-800', text: 'text-emerald-400' },
   job_posting:           { label: 'Hiring',       border: 'border-amber-700',   text: 'text-amber-400'   },
   labor_shortage:        { label: 'Labor Gap',    border: 'border-red-800',     text: 'text-red-400'     },
@@ -322,7 +322,7 @@ function gtmReadinessDisplay(lead) {
   }
   const stage = g.readiness_stage;
   const color =
-    stage === 'deploying' ? 'text-rose-400' :
+    stage === 'deploying' ? 'text-amber-400' :
     stage === 'evaluating' ? 'text-amber-400' :
     'text-zinc-500';
   const sub = Array.isArray(g.why_now) && g.why_now[0] ? g.why_now[0] : null;

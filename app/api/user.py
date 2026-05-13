@@ -145,6 +145,18 @@ class UserSettingsOut(BaseModel):
     sender_title: Optional[str] = None
     sender_company: Optional[str] = None
     sender_email: Optional[str] = None
+    scout_automation_level: str = "assisted"
+    reply_forwarding_enabled: bool = True
+    reply_forward_email: Optional[str] = None
+    scout_message_style: Optional[str] = None
+    scout_preferred_channel: str = "email"
+    scout_meeting_preference: Optional[str] = None
+    scout_default_cc: Optional[str] = None
+    scout_default_bcc: Optional[str] = None
+    scout_persona_traits: Optional[str] = None
+    scout_collateral_policy: str = "selective"
+    scout_collateral_links: Optional[str] = None
+    scout_background_briefing_enabled: bool = True
 
 
 class UserSettingsUpdate(BaseModel):
@@ -152,6 +164,18 @@ class UserSettingsUpdate(BaseModel):
     sender_title: Optional[str] = None
     sender_company: Optional[str] = None
     sender_email: Optional[str] = None
+    scout_automation_level: Optional[str] = None
+    reply_forwarding_enabled: Optional[bool] = None
+    reply_forward_email: Optional[str] = None
+    scout_message_style: Optional[str] = None
+    scout_preferred_channel: Optional[str] = None
+    scout_meeting_preference: Optional[str] = None
+    scout_default_cc: Optional[str] = None
+    scout_default_bcc: Optional[str] = None
+    scout_persona_traits: Optional[str] = None
+    scout_collateral_policy: Optional[str] = None
+    scout_collateral_links: Optional[str] = None
+    scout_background_briefing_enabled: Optional[bool] = None
 
 
 # ── /api/user/me ──────────────────────────────────────────────────────────────
@@ -240,7 +264,11 @@ def get_user_settings(user: dict = Depends(_require_user), db: Session = Depends
     try:
         row = db.execute(
             text("""
-                SELECT sender_name, sender_title, sender_company, sender_email
+                SELECT sender_name, sender_title, sender_company, sender_email,
+                       scout_automation_level, reply_forwarding_enabled, reply_forward_email,
+                       scout_message_style, scout_preferred_channel, scout_meeting_preference,
+                       scout_default_cc, scout_default_bcc, scout_persona_traits,
+                       scout_collateral_policy, scout_collateral_links, scout_background_briefing_enabled
                 FROM user_settings
                 WHERE user_id = :uid
             """),
@@ -255,6 +283,18 @@ def get_user_settings(user: dict = Depends(_require_user), db: Session = Depends
         sender_title=row.sender_title,
         sender_company=row.sender_company,
         sender_email=row.sender_email,
+        scout_automation_level=row.scout_automation_level or "assisted",
+        reply_forwarding_enabled=bool(row.reply_forwarding_enabled),
+        reply_forward_email=row.reply_forward_email,
+        scout_message_style=row.scout_message_style,
+        scout_preferred_channel=row.scout_preferred_channel or "email",
+        scout_meeting_preference=row.scout_meeting_preference,
+        scout_default_cc=row.scout_default_cc,
+        scout_default_bcc=row.scout_default_bcc,
+        scout_persona_traits=row.scout_persona_traits,
+        scout_collateral_policy=row.scout_collateral_policy or "selective",
+        scout_collateral_links=row.scout_collateral_links,
+        scout_background_briefing_enabled=bool(row.scout_background_briefing_enabled),
     )
 
 
@@ -269,7 +309,11 @@ def put_user_settings(
     try:
         row = db.execute(
             text("""
-                SELECT sender_name, sender_title, sender_company, sender_email
+                SELECT sender_name, sender_title, sender_company, sender_email,
+                       scout_automation_level, reply_forwarding_enabled, reply_forward_email,
+                       scout_message_style, scout_preferred_channel, scout_meeting_preference,
+                       scout_default_cc, scout_default_bcc, scout_persona_traits,
+                       scout_collateral_policy, scout_collateral_links, scout_background_briefing_enabled
                 FROM user_settings
                 WHERE user_id = :uid
             """),
@@ -283,6 +327,18 @@ def put_user_settings(
         "sender_title": None,
         "sender_company": None,
         "sender_email": None,
+        "scout_automation_level": "assisted",
+        "reply_forwarding_enabled": True,
+        "reply_forward_email": None,
+        "scout_message_style": None,
+        "scout_preferred_channel": "email",
+        "scout_meeting_preference": None,
+        "scout_default_cc": None,
+        "scout_default_bcc": None,
+        "scout_persona_traits": None,
+        "scout_collateral_policy": "selective",
+        "scout_collateral_links": None,
+        "scout_background_briefing_enabled": True,
     }
     if row:
         cur.update(
@@ -291,31 +347,88 @@ def put_user_settings(
                 "sender_title": row.sender_title,
                 "sender_company": row.sender_company,
                 "sender_email": row.sender_email,
+                "scout_automation_level": row.scout_automation_level or "assisted",
+                "reply_forwarding_enabled": bool(row.reply_forwarding_enabled),
+                "reply_forward_email": row.reply_forward_email,
+                "scout_message_style": row.scout_message_style,
+                "scout_preferred_channel": row.scout_preferred_channel or "email",
+                "scout_meeting_preference": row.scout_meeting_preference,
+                "scout_default_cc": row.scout_default_cc,
+                "scout_default_bcc": row.scout_default_bcc,
+                "scout_persona_traits": row.scout_persona_traits,
+                "scout_collateral_policy": row.scout_collateral_policy or "selective",
+                "scout_collateral_links": row.scout_collateral_links,
+                "scout_background_briefing_enabled": bool(row.scout_background_briefing_enabled),
             }
         )
     patch = body.model_dump(exclude_unset=True)
+    if "scout_automation_level" in patch and patch["scout_automation_level"] not in ("manual", "assisted", "auto"):
+        raise HTTPException(status_code=400, detail="scout_automation_level must be manual, assisted, or auto")
+    if "scout_preferred_channel" in patch and patch["scout_preferred_channel"] not in ("email", "phone", "meeting"):
+        raise HTTPException(status_code=400, detail="scout_preferred_channel must be email, phone, or meeting")
+    if "scout_collateral_policy" in patch and patch["scout_collateral_policy"] not in ("none", "selective", "all"):
+        raise HTTPException(status_code=400, detail="scout_collateral_policy must be none, selective, or all")
     cur.update(patch)
 
     try:
         db.execute(
             text("""
                 INSERT INTO user_settings
-                    (user_id, sender_name, sender_title, sender_company, sender_email, updated_at)
+                    (user_id, sender_name, sender_title, sender_company, sender_email,
+                     scout_automation_level, reply_forwarding_enabled, reply_forward_email,
+                     scout_message_style, scout_preferred_channel, scout_meeting_preference,
+                     scout_default_cc, scout_default_bcc, scout_persona_traits,
+                     scout_collateral_policy, scout_collateral_links, scout_background_briefing_enabled, updated_at)
                 VALUES
-                    (:uid, :sn, :st, :sc, :se, now())
+                    (:uid, :sn, :st, :sc, :se, :sal, :rfe, :rfe_email,
+                     :sms, :spc, :smp, :scc, :sbcc, :spt, :scp, :scl, :sbbe, now())
                 ON CONFLICT (user_id) DO UPDATE SET
                     sender_name    = EXCLUDED.sender_name,
                     sender_title   = EXCLUDED.sender_title,
                     sender_company = EXCLUDED.sender_company,
                     sender_email   = EXCLUDED.sender_email,
+                    scout_automation_level = EXCLUDED.scout_automation_level,
+                    reply_forwarding_enabled = EXCLUDED.reply_forwarding_enabled,
+                    reply_forward_email = EXCLUDED.reply_forward_email,
+                    scout_message_style = EXCLUDED.scout_message_style,
+                    scout_preferred_channel = EXCLUDED.scout_preferred_channel,
+                    scout_meeting_preference = EXCLUDED.scout_meeting_preference,
+                    scout_default_cc = EXCLUDED.scout_default_cc,
+                    scout_default_bcc = EXCLUDED.scout_default_bcc,
+                    scout_persona_traits = EXCLUDED.scout_persona_traits,
+                    scout_collateral_policy = EXCLUDED.scout_collateral_policy,
+                    scout_collateral_links = EXCLUDED.scout_collateral_links,
+                    scout_background_briefing_enabled = EXCLUDED.scout_background_briefing_enabled,
                     updated_at     = now()
             """),
-            {"uid": uid, "sn": cur["sender_name"], "st": cur["sender_title"], "sc": cur["sender_company"], "se": cur["sender_email"]},
+            {
+                "uid": uid,
+                "sn": cur["sender_name"],
+                "st": cur["sender_title"],
+                "sc": cur["sender_company"],
+                "se": cur["sender_email"],
+                "sal": cur["scout_automation_level"],
+                "rfe": cur["reply_forwarding_enabled"],
+                "rfe_email": cur["reply_forward_email"],
+                "sms": cur["scout_message_style"],
+                "spc": cur["scout_preferred_channel"],
+                "smp": cur["scout_meeting_preference"],
+                "scc": cur["scout_default_cc"],
+                "sbcc": cur["scout_default_bcc"],
+                "spt": cur["scout_persona_traits"],
+                "scp": cur["scout_collateral_policy"],
+                "scl": cur["scout_collateral_links"],
+                "sbbe": cur["scout_background_briefing_enabled"],
+            },
         )
         db.commit()
         row = db.execute(
             text("""
-                SELECT sender_name, sender_title, sender_company, sender_email
+                SELECT sender_name, sender_title, sender_company, sender_email,
+                       scout_automation_level, reply_forwarding_enabled, reply_forward_email,
+                       scout_message_style, scout_preferred_channel, scout_meeting_preference,
+                       scout_default_cc, scout_default_bcc, scout_persona_traits,
+                       scout_collateral_policy, scout_collateral_links, scout_background_briefing_enabled
                 FROM user_settings
                 WHERE user_id = :uid
             """),
@@ -330,6 +443,18 @@ def put_user_settings(
         sender_title=row.sender_title,
         sender_company=row.sender_company,
         sender_email=row.sender_email,
+        scout_automation_level=row.scout_automation_level or "assisted",
+        reply_forwarding_enabled=bool(row.reply_forwarding_enabled),
+        reply_forward_email=row.reply_forward_email,
+        scout_message_style=row.scout_message_style,
+        scout_preferred_channel=row.scout_preferred_channel or "email",
+        scout_meeting_preference=row.scout_meeting_preference,
+        scout_default_cc=row.scout_default_cc,
+        scout_default_bcc=row.scout_default_bcc,
+        scout_persona_traits=row.scout_persona_traits,
+        scout_collateral_policy=row.scout_collateral_policy or "selective",
+        scout_collateral_links=row.scout_collateral_links,
+        scout_background_briefing_enabled=bool(row.scout_background_briefing_enabled),
     )
 
 
