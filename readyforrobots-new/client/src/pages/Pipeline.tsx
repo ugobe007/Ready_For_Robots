@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { marketInsightForIndustry } from "@/lib/industryContext";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -182,33 +183,13 @@ const DEFAULT_MARKET_SNIPPET: MarketSnippet = {
 function marketSnippetFromDeals(deals: Deal[]): MarketSnippet {
   const first = deals.find((deal) => deal.signal && deal.signal !== "Buying signal detected");
   if (!first) return DEFAULT_MARKET_SNIPPET;
-  const insightByIndustry = industryMarketInsight(first.industry);
+  const insightByIndustry = marketInsightForIndustry(first.industry);
   return {
     label: `${first.signalType} movement`,
     headline: `${first.company} is moving in ${first.industry || "the market"}`,
     detail: `${cleanAndClampText(first.signal, 180)} ${insightByIndustry}`,
     color: first.signalColor || "#FFB000",
   };
-}
-
-function industryMarketInsight(industry: string): string {
-  const value = (industry || "").toLowerCase();
-  if (/\b(casino|gaming|resort casino|hotel|hotels|hospitality|resort|resorts|lodging)\b/.test(value)) {
-    return "Hotels are pairing off-hours cleaning robots with daytime service robots to protect guest experience while labor stays tight.";
-  }
-  if (/\b(hospital|hospitals|healthcare|health care|health system|medical|clinic|clinics)\b/.test(value)) {
-    return "Hospitals are showing more interest in off-hours cleaning, internal delivery, and logistics support where robots reduce staff walking time.";
-  }
-  if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment")) {
-    return "Logistics hubs are moving fastest where expansion, throughput pressure, and labor availability overlap.";
-  }
-  if (value.includes("airport") || value.includes("aviation")) {
-    return "Airports are watching service, cleaning, and terminal-support robots around peak passenger windows and night-shift operations.";
-  }
-  if (value.includes("manufactur") || value.includes("automotive")) {
-    return "Manufacturers are treating robotics as targeted relief for quality, safety, and material-flow bottlenecks rather than broad replacement.";
-  }
-  return "SCOUT is watching for accounts where signal timing suggests a real sales motion, not just a generic news headline.";
 }
 
 const formatResearchTime = (value?: string | null) => {

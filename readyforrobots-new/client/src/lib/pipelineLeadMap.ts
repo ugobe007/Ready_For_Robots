@@ -1,6 +1,7 @@
 /** Map FastAPI /api/leads row → Pipeline UI deal shape (stages are local until CRM sync exists). */
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
+import { outreachInsightForIndustry } from "@/lib/industryContext";
 
 export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -79,26 +80,7 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
 }
 
 function industryInsight(industry?: string | null): string {
-  const value = (industry || "").toLowerCase();
-  if (/\b(casino|gaming|resort casino|hotel|hotels|hospitality|resort|resorts|lodging)\b/.test(value)) {
-    return "I have noticed hotels are using cleaning robots for off-hours floor care, while service robots handle daytime delivery, amenities, and back-of-house runs that pull staff away from guests.";
-  }
-  if (/\b(hospital|hospitals|healthcare|health care|health system|medical|clinic|clinics)\b/.test(value)) {
-    return "I have noticed hospitals are separating off-hours support work from daytime patient-facing service: cleaning robots can cover overnight corridors and public spaces, while delivery or service robots help move supplies during peak clinical hours.";
-  }
-  if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment") || value.includes("3pl")) {
-    return "I have noticed logistics hubs are pairing AMRs, autonomous cleaning, and material-handling automation so overnight floor readiness and daytime throughput can improve without adding more temporary labor.";
-  }
-  if (value.includes("airport") || value.includes("aviation")) {
-    return "I have noticed airports are using autonomous cleaning and delivery robots around off-peak passenger windows, then shifting service robots into daytime terminal, concession, and baggage-adjacent support workflows.";
-  }
-  if (value.includes("manufactur") || value.includes("automotive") || value.includes("factory")) {
-    return "I have noticed manufacturers are using mobile robots and inspection automation around shift changes, quality bottlenecks, and material movement rather than treating robotics as a single all-or-nothing plant project.";
-  }
-  if (value.includes("restaurant") || value.includes("qsr") || value.includes("food")) {
-    return "I have noticed restaurants and food-service operators are using robots in narrow operating windows: cleaning after close, prep or runner support during rush periods, and back-of-house automation where labor pressure is highest.";
-  }
-  return "I have noticed operators are moving toward practical robotics deployments that start with narrow, high-friction workflows: off-hours cleaning, repetitive transport, service delivery, and support tasks that free staff for higher-value work.";
+  return outreachInsightForIndustry(industry);
 }
 
 function signalOpening(signalType: string, signalText: string): string {
