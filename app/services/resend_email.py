@@ -22,7 +22,7 @@ def _format_from_header(from_email: str, display_name: str | None) -> str:
 
 def send_email_via_resend(
     *,
-    to_email: str,
+    to_email: str | list[str],
     subject: str,
     body_text: str,
     from_display_name: str | None = None,
@@ -49,12 +49,13 @@ def send_email_via_resend(
         raise ResendEmailError("Missing RESEND_API_KEY")
     if not from_email:
         raise ResendEmailError("Missing RESEND_FROM_EMAIL")
-    if not to_email or "@" not in to_email:
+    to_emails = _email_list(to_email)
+    if not to_emails:
         raise ResendEmailError("Recipient email is required")
 
     payload: dict[str, Any] = {
         "from": _format_from_header(from_email, from_display_name),
-        "to": [to_email],
+        "to": to_emails,
         "subject": subject,
         "text": body_text,
     }
@@ -95,10 +96,30 @@ def send_email_via_resend(
     return {
         "resend_id": data.get("id"),
         "from_email": from_email,
+        "to": to_emails,
         "reply_to": effective_reply_to or None,
         "cc": clean_cc,
         "bcc": clean_bcc,
     }
+
+
+def _email_list(value: str | list[str]) -> list[str]:
+    if isinstance(value, list):
+        raw_values = value
+    else:
+        raw_values = str(value or "").replace(";", ",").split(",")
+    emails = []
+    seen: set[str] = set()
+    for item in raw_values:
+        email = str(item or "").strip()
+        if "@" not in email:
+            continue
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        emails.append(email)
+    return emails
 
 
 def fetch_resend_received_email(email_id: str) -> dict[str, Any]:

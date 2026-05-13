@@ -10,19 +10,26 @@ from sqlalchemy.orm import joinedload
 from typing import Any, List, Optional
 from datetime import datetime
 from pydantic import BaseModel
+import re
+from urllib.parse import urljoin, urlparse
+
+import requests
+from bs4 import BeautifulSoup
 
 from app.database import get_db
 from app.models.company import Company
 from app.models.robot_company import RobotCompany
+from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 from app.services.vendor_scoring import compute_vendor_list_score
 
 router = APIRouter(prefix="/api/robot-companies", tags=["robot-companies"])
 
 
 class SendRobotCompanyEmailRequest(BaseModel):
-    to_email: str
+    to_email: str | list[str]
     template_type: str = "intro"
     subject: Optional[str] = None
     body: Optional[str] = None
@@ -114,25 +121,431 @@ def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> st
     return "Buyer has active automation signals that may fit this robot category."
 
 
-def _contact_strategy(rc: RobotCompany) -> dict[str, Any]:
+ROLE_INBOXES = ("partnerships", "events", "marketing", "sales")
+CONTACT_RESEARCH_PATHS = (
+    "",
+    "/about",
+    "/company",
+    "/leadership",
+    "/team",
+    "/contact",
+    "/partners",
+    "/partnerships",
+    "/events",
+)
+CONTACT_RESEARCH_TITLES = (
+    "chief revenue officer",
+    "chief marketing officer",
+    "chief commercial officer",
+    "vp sales",
+    "vice president sales",
+    "head of sales",
+    "head of partnerships",
+    "partnerships",
+    "business development",
+    "channel",
+    "marketing",
+    "events",
+    "sales",
+    "founder",
+    "ceo",
+)
+
+
+def _contact_strategy(rc: RobotCompany, research: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    domain = normalize_website_domain(getattr(rc, "website", None))
+    role_inboxes = _role_inbox_emails(domain)
+    research = research or {}
+    decision_maker_candidates = _decision_maker_email_candidates(rc, domain, research)
     targets = []
-    if rc.partnerships_contact:
-        targets.append({"role": "Partnerships", "contact": rc.partnerships_contact, "priority": 1})
-    if rc.sales_contact:
-        targets.append({"role": "Sales leadership", "contact": rc.sales_contact, "priority": 2})
-    if rc.contact_email:
-        targets.append({"role": "General contact", "contact": rc.contact_email, "priority": 3})
+    partnerships_email = _clean_email(getattr(rc, "partnerships_contact", None))
+    sales_email = _clean_email(getattr(rc, "sales_contact", None))
+    contact_email = _clean_email(getattr(rc, "contact_email", None))
+    if partnerships_email:
+        targets.append({"role": "Partnerships", "contact": partnerships_email, "priority": 1, "source": "stored"})
+    if sales_email:
+        targets.append({"role": "Sales leadership", "contact": sales_email, "priority": 2, "source": "stored"})
+    if contact_email:
+        targets.append({"role": "General contact", "contact": contact_email, "priority": 3, "source": "stored"})
+    targets.extend(decision_maker_candidates)
+    targets.extend(role_inboxes)
+    targets = _dedupe_contact_targets(targets)
     if not targets:
-        targets.append({"role": "Market development or partnerships leader", "contact": rc.website, "priority": 4})
+        targets.append({"role": "Research needed", "contact": None, "priority": 9, "source": "missing"})
+    policy_recipients = _dedupe_emails(
+        [target["contact"] for target in role_inboxes]
+        + [target["contact"] for target in decision_maker_candidates]
+    )
     return {
         "primary": targets[0],
         "targets": targets,
+        "recommended_to": policy_recipients,
+        "communication_policy": {
+            "role_inboxes": [target["contact"] for target in role_inboxes],
+            "decision_maker_patterns": [
+                "first.last@domain",
+                "firstinitiallast@domain",
+                "last@domain",
+                "first@domain",
+            ],
+            "research_sources": [
+                source
+                for source in [
+                    getattr(rc, "website", None),
+                    getattr(rc, "linkedin_url", None),
+                    *(research.get("sources") or []),
+                    *(research.get("linkedin_urls") or []),
+                ]
+                if source
+            ],
+            "researched_decision_makers": research.get("decision_makers") or [],
+            "research_status": research.get("status") or "not_run",
+        },
         "research_notes": [
-            "Confirm current U.S. market owner or partnerships lead.",
+            "Research the company URL and LinkedIn to identify current partnerships, marketing, events, sales, and business development decision makers.",
             "Look for VP Sales, Head of Partnerships, Channel, or Business Development.",
-            "Use LinkedIn/company site if direct email is missing.",
+            "Send role inbox outreach to partnerships, events, marketing, and sales when direct decision-maker emails are missing.",
+            "When a decision-maker name is known, verify likely email patterns before sending.",
         ],
     }
+
+
+def _clean_email(value: Any) -> Optional[str]:
+    raw = str(value or "").strip()
+    if not raw or raw.startswith(("http://", "https://")):
+        return None
+    if "@" not in raw:
+        return None
+    return raw.strip("<> ,;")
+
+
+def _role_inbox_emails(domain: Optional[str]) -> list[dict[str, Any]]:
+    if not domain:
+        return []
+    return [
+        {
+            "role": f"{local.title()} inbox",
+            "contact": f"{local}@{domain}",
+            "priority": index + 4,
+            "source": "domain_inferred",
+            "needs_verification": True,
+        }
+        for index, local in enumerate(ROLE_INBOXES)
+    ]
+
+
+def _decision_maker_email_candidates(
+    rc: RobotCompany,
+    domain: Optional[str],
+    research: Optional[dict[str, Any]] = None,
+) -> list[dict[str, Any]]:
+    if not domain:
+        return []
+    candidates = []
+    for first, last, source, title in _decision_maker_names(rc, research):
+        patterns = [
+            (f"{first}.{last}@{domain}", "first.last"),
+            (f"{first[0]}{last}@{domain}", "firstinitiallast"),
+            (f"{last}@{domain}", "last"),
+            (f"{first}@{domain}", "first"),
+        ]
+        for offset, (email, pattern) in enumerate(patterns):
+            candidates.append(
+                {
+                    "role": f"Decision maker ({first.title()} {last.title()})",
+                    "contact": email,
+                    "priority": 20 + offset,
+                    "source": source,
+                    "title": title,
+                    "pattern": pattern,
+                    "needs_verification": True,
+                }
+            )
+    return candidates
+
+
+def _decision_maker_names(
+    rc: RobotCompany,
+    research: Optional[dict[str, Any]] = None,
+) -> list[tuple[str, str, str, Optional[str]]]:
+    values = [getattr(rc, "sales_contact", None), getattr(rc, "partnerships_contact", None)]
+    for container in [getattr(rc, "market_intelligence", None), getattr(rc, "workflow_history", None)]:
+        values.extend(_flatten_strings(container))
+    names: list[tuple[str, str, str, Optional[str]]] = []
+    for person in (research or {}).get("decision_makers") or []:
+        first = str(person.get("first_name") or "").strip().lower()
+        last = str(person.get("last_name") or "").strip().lower()
+        if first and last:
+            names.append((first, last, "website_research", person.get("title")))
+    for value in values:
+        if not value or "@" in str(value):
+            continue
+        for first, last in re.findall(r"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b", str(value)):
+            names.append((first.lower(), last.lower(), "decision_maker_inferred", None))
+    seen: set[tuple[str, str]] = set()
+    deduped: list[tuple[str, str, str, Optional[str]]] = []
+    for first, last, source, title in names:
+        key = (first, last)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append((first, last, source, title))
+    return deduped[:3]
+
+
+def _flatten_strings(value: Any) -> list[str]:
+    if not value:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        out: list[str] = []
+        for item in value.values():
+            out.extend(_flatten_strings(item))
+        return out
+    if isinstance(value, list):
+        out = []
+        for item in value:
+            out.extend(_flatten_strings(item))
+        return out
+    return []
+
+
+def _research_robot_company_contacts(
+    rc: RobotCompany,
+    *,
+    enabled: bool = True,
+    max_pages: int = 2,
+    timeout: float = 1.5,
+) -> dict[str, Any]:
+    if not enabled:
+        return {"status": "skipped", "decision_makers": [], "sources": [], "linkedin_urls": []}
+    website = getattr(rc, "website", None)
+    domain = normalize_website_domain(website)
+    if not website or not domain:
+        return {"status": "missing_website", "decision_makers": [], "sources": [], "linkedin_urls": []}
+
+    cache_key = f"{domain}:{getattr(rc, 'updated_at', None) or ''}"
+    cached = shared_cache_get("robot_contact_research", cache_key)
+    if cached:
+        return cached
+
+    decision_makers: list[dict[str, Any]] = []
+    linkedin_urls: list[str] = []
+    sources: list[str] = []
+    for url in _contact_research_urls(website)[:max_pages]:
+        html = _fetch_contact_research_page(url, timeout=timeout)
+        if not html:
+            continue
+        sources.append(url)
+        extracted = _extract_contact_research(html, url)
+        decision_makers.extend(extracted["decision_makers"])
+        linkedin_urls.extend(extracted["linkedin_urls"])
+        if len(_dedupe_people(decision_makers)) >= 3:
+            break
+
+    decision_makers = _dedupe_people(decision_makers)[:3]
+    result = {
+        "status": "found" if decision_makers else ("checked" if sources else "unavailable"),
+        "decision_makers": decision_makers,
+        "sources": _dedupe_emails_or_urls(sources),
+        "linkedin_urls": _dedupe_emails_or_urls(linkedin_urls)[:5],
+    }
+    shared_cache_set("robot_contact_research", cache_key, result, ttl_sec=24 * 60 * 60)
+    return result
+
+
+def _contact_research_urls(website: str) -> list[str]:
+    base = website if "://" in str(website) else f"https://{website}"
+    parsed = urlparse(base)
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    return [urljoin(root, path) for path in CONTACT_RESEARCH_PATHS]
+
+
+def _fetch_contact_research_page(url: str, *, timeout: float) -> Optional[str]:
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": "ReadyForRobots/1.0 (contact research)"},
+            timeout=timeout,
+            allow_redirects=True,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code >= 400:
+        return None
+    content_type = response.headers.get("content-type", "")
+    if "text/html" not in content_type and "application/xhtml" not in content_type and content_type:
+        return None
+    return response.text[:250_000]
+
+
+def _extract_contact_research(html: str, source_url: str) -> dict[str, Any]:
+    soup = BeautifulSoup(html, "html.parser")
+    linkedin_urls = _extract_linkedin_profile_urls(soup, source_url)
+    text = soup.get_text("\n", strip=True)
+    candidates = _extract_people_from_text(text, source_url)
+    candidates.extend(_extract_people_from_linkedin_links(soup, source_url))
+    return {
+        "decision_makers": _dedupe_people(candidates)[:5],
+        "linkedin_urls": linkedin_urls,
+    }
+
+
+def _extract_linkedin_profile_urls(soup: BeautifulSoup, source_url: str) -> list[str]:
+    urls = []
+    for anchor in soup.find_all("a", href=True):
+        href = urljoin(source_url, str(anchor.get("href") or ""))
+        low = href.lower()
+        if "linkedin.com/in/" in low or "linkedin.com/company/" in low:
+            urls.append(href.split("?")[0].rstrip("/"))
+    return _dedupe_emails_or_urls(urls)
+
+
+def _extract_people_from_linkedin_links(soup: BeautifulSoup, source_url: str) -> list[dict[str, Any]]:
+    people = []
+    for anchor in soup.find_all("a", href=True):
+        href = urljoin(source_url, str(anchor.get("href") or ""))
+        if "linkedin.com/in/" not in href.lower():
+            continue
+        label = anchor.get_text(" ", strip=True)
+        match = re.search(r"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b", label)
+        if not match:
+            slug = href.rstrip("/").split("/in/", 1)[-1].split("/", 1)[0]
+            match = re.match(r"([a-zA-Z]+)-([a-zA-Z]+)", slug)
+        if match:
+            first, last = match.group(1), match.group(2)
+            people.append(
+                {
+                    "first_name": first.title(),
+                    "last_name": last.title(),
+                    "title": None,
+                    "source_url": href.split("?")[0].rstrip("/"),
+                    "source": "linkedin_profile_link",
+                }
+            )
+    return people
+
+
+def _extract_people_from_text(text: str, source_url: str) -> list[dict[str, Any]]:
+    normalized = re.sub(r"\s+", " ", text or " ").strip()
+    if not normalized:
+        return []
+    title_pattern = "|".join(re.escape(title) for title in sorted(CONTACT_RESEARCH_TITLES, key=len, reverse=True))
+    patterns = [
+        rf"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b[^.|\n]{{0,90}}?\b({title_pattern})\b",
+        rf"\b({title_pattern})\b[^.|\n]{{0,90}}?\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b",
+    ]
+    people: list[dict[str, Any]] = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, normalized, flags=re.IGNORECASE):
+            groups = match.groups()
+            if len(groups) != 3:
+                continue
+            if groups[0].lower() in CONTACT_RESEARCH_TITLES:
+                title, first, last = groups[0], groups[1], groups[2]
+            else:
+                first, last, title = groups[0], groups[1], groups[2]
+            if _looks_like_person_name(first, last):
+                people.append(
+                    {
+                        "first_name": first.title(),
+                        "last_name": last.title(),
+                        "title": title.title(),
+                        "source_url": source_url,
+                        "source": "website_text",
+                    }
+                )
+    return people
+
+
+def _looks_like_person_name(first: str, last: str) -> bool:
+    bad = {
+        "About",
+        "Contact",
+        "Company",
+        "Marketing",
+        "Partnerships",
+        "Business",
+        "Development",
+        "Privacy",
+        "Terms",
+        "Ready",
+        "Robots",
+    }
+    if first in bad or last in bad:
+        return False
+    return bool(re.match(r"^[A-Z][a-z]{1,24}$", first) and re.match(r"^[A-Z][a-z]{1,24}$", last))
+
+
+def _dedupe_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[tuple[str, str]] = set()
+    deduped = []
+    for person in people:
+        first = str(person.get("first_name") or "").strip()
+        last = str(person.get("last_name") or "").strip()
+        key = (first.lower(), last.lower())
+        if not first or not last or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(person)
+    return deduped
+
+
+def _dedupe_emails_or_urls(values: list[Any]) -> list[str]:
+    seen: set[str] = set()
+    deduped = []
+    for value in values:
+        item = str(value or "").strip()
+        key = item.lower()
+        if not item or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    return deduped
+
+
+def _dedupe_contact_targets(targets: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    deduped = []
+    for target in sorted(targets, key=lambda row: row.get("priority", 99)):
+        contact = (target.get("contact") or "").strip().lower()
+        if not contact or contact in seen:
+            continue
+        seen.add(contact)
+        deduped.append(target)
+    return deduped
+
+
+def _dedupe_emails(values: list[Any]) -> list[str]:
+    seen: set[str] = set()
+    emails = []
+    for value in values:
+        email = str(value or "").strip()
+        if "@" not in email:
+            continue
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        emails.append(email)
+    return emails
+
+
+def _recommended_response_playbook(matches: list[dict[str, Any]]) -> str:
+    if not matches:
+        return "Recommended timing: reply within 1 business day once your team signs up.\nSuggested next step: ask Ready For Robots to route the first qualified buyer opportunity and confirm your preferred territory."
+    lead_lines = "\n".join(
+        f"- {m['company_name']}: respond within 1 business day; propose a 20-minute qualification call; ask about timeline, site count, budget owner, and pilot requirements."
+        for m in matches[:3]
+    )
+    return f"""Suggested timing and next steps for your sales team:
+{lead_lines}
+
+Preformatted response sequence:
+1. Same day: acknowledge the opportunity and ask Ready For Robots for buyer context, buying timeline, and preferred introduction path.
+2. Within 24 hours: send the buyer a short qualification note with two meeting windows and one relevant customer/use-case proof point.
+3. Within 3 business days: if there is no response, follow up with a pilot-oriented question and ask whether procurement, operations, or facilities should be included."""
 
 
 def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
@@ -141,6 +554,7 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
         f"- {m['company_name']} ({m.get('industry') or 'industry unknown'}): {m.get('why_match')}"
         for m in matches[:3]
     ) or "- We have buyer matches ready to review once your team is onboarded."
+    response_playbook = _recommended_response_playbook(matches)
     body = f"""Hi {rc.company_name} team,
 
 Ready For Robots is building a two-sided robotics marketplace: buyers with live automation signals on one side, and robot companies that can serve those opportunities on the other.
@@ -151,6 +565,8 @@ SCOUT matched {rc.company_name} to these buyer opportunities:
 
 We only show three matches in this note, but the full workflow can deliver qualified leads directly to your inbox with context, timing, and why each buyer appears ready for outreach.
 
+{response_playbook}
+
 The next step is to create a Ready For Robots account so your team can receive lead matches, review the buyer context, and decide which opportunities to pursue. Would you be open to setting up a short call with Ready For Robots this week so we can show you the lead flow and confirm the right markets for {rc.company_name}?
 
 Best,
@@ -158,14 +574,16 @@ Ready For Robots"""
     return {"subject": subject, "body": body}
 
 
-def _supply_agent_row(db: Session, rc: RobotCompany) -> dict[str, Any]:
+def _supply_agent_row(db: Session, rc: RobotCompany, *, research_contacts: bool = True) -> dict[str, Any]:
     matches = _match_buyer_leads(db, rc, limit=3)
-    contact = _contact_strategy(rc)
+    research = _research_robot_company_contacts(rc, enabled=research_contacts)
+    contact = _contact_strategy(rc, research)
     draft = _vendor_signup_email(rc, matches)
     enriched = _enrich_robot_company(rc)
     return {
         "robot_company": enriched,
         "contact_strategy": contact,
+        "contact_research": research,
         "lead_matches": matches,
         "email": draft,
         "cta": {
@@ -584,6 +1002,8 @@ def supply_side_agent(
     limit: int = Query(10, ge=1, le=50),
     min_score: int = Query(0, ge=0, le=100),
     search: Optional[str] = None,
+    research_contacts: bool = Query(True, description="Run bounded official-site contact research"),
+    research_limit: int = Query(4, ge=0, le=10, description="Maximum rows to live-research per request"),
     db: Session = Depends(get_db),
 ):
     """
@@ -596,7 +1016,10 @@ def supply_side_agent(
     if search:
         query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
     companies = query.order_by(RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()).limit(limit).all()
-    rows = [_supply_agent_row(db, rc) for rc in companies]
+    rows = [
+        _supply_agent_row(db, rc, research_contacts=research_contacts and index < research_limit)
+        for index, rc in enumerate(companies)
+    ]
     return {
         "agent": "robot_company_supply_pipeline",
         "review_required": True,
@@ -733,7 +1156,7 @@ def send_email(
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     existing = company.workflow_notes or ""
     company.workflow_notes = (
-        f"{existing}\n[{timestamp}] Sent {template_type} email to {payload.to_email}: {subject}"
+        f"{existing}\n[{timestamp}] Sent {template_type} email to {send_result.get('to') or payload.to_email}: {subject}"
     ).strip()
     if company.outreach_status == "not_contacted":
         company.outreach_status = "contacted"
@@ -744,7 +1167,7 @@ def send_email(
     return {
         "message": "Email sent via Resend",
         "company": company.company_name,
-        "to_email": payload.to_email,
+        "to_email": send_result.get("to") or payload.to_email,
         "template_type": template_type,
         "subject": subject,
         "resend_id": send_result.get("resend_id"),

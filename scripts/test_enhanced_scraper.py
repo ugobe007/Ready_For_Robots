@@ -11,7 +11,12 @@ Demonstrates improvements:
 import os
 import sys
 
-os.environ['DATABASE_URL'] = 'postgresql://postgres:J5GW9sTXA0CHU1Mq@db.lmoyydlhlgdyqbxkmkuz.supabase.co:5432/postgres'
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
+except ImportError:
+    pass
 
 from app.scrapers.news_scraper_enhanced import EnhancedNewsScraper
 from app.database import SessionLocal

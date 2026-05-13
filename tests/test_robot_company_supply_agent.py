@@ -1,4 +1,9 @@
-from app.api.robot_companies import _vendor_signup_email
+from app.api.robot_companies import (
+    _contact_strategy,
+    _extract_contact_research,
+    _research_robot_company_contacts,
+    _vendor_signup_email,
+)
 
 
 class _RobotCompany:
@@ -20,3 +25,90 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "Buyer 5" not in email["body"]
     assert "create a Ready For Robots account" in email["body"]
     assert "short call" in email["body"]
+
+
+def test_contact_strategy_infers_role_email_from_website_not_url():
+    company = _RobotCompany()
+    company.website = "https://www.unitree.com"
+    company.partnerships_contact = None
+    company.sales_contact = None
+    company.contact_email = None
+
+    strategy = _contact_strategy(company)
+
+    assert strategy["primary"]["contact"] == "partnerships@unitree.com"
+    assert strategy["primary"]["source"] == "domain_inferred"
+    assert strategy["primary"]["needs_verification"] is True
+    assert "https://www.unitree.com" not in [target["contact"] for target in strategy["targets"]]
+    assert strategy["recommended_to"] == [
+        "partnerships@unitree.com",
+        "events@unitree.com",
+        "marketing@unitree.com",
+        "sales@unitree.com",
+    ]
+
+
+def test_contact_strategy_adds_decision_maker_email_patterns():
+    company = _RobotCompany()
+    company.website = "https://www.dexmate.ai"
+    company.partnerships_contact = "Jane Smith, Head of Partnerships"
+    company.sales_contact = None
+    company.contact_email = None
+
+    strategy = _contact_strategy(company)
+
+    assert "partnerships@dexmate.ai" in strategy["recommended_to"]
+    assert "jane.smith@dexmate.ai" in strategy["recommended_to"]
+    assert "jsmith@dexmate.ai" in strategy["recommended_to"]
+    assert "smith@dexmate.ai" in strategy["recommended_to"]
+    assert "jane@dexmate.ai" in strategy["recommended_to"]
+
+
+def test_contact_research_extracts_decision_maker_and_linkedin():
+    html = """
+    <html><body>
+      <section>Jane Smith Head of Partnerships leads channel strategy.</section>
+      <a href="https://www.linkedin.com/in/jane-smith/">Jane Smith</a>
+    </body></html>
+    """
+
+    research = _extract_contact_research(html, "https://dexmate.ai/team")
+
+    assert research["decision_makers"][0]["first_name"] == "Jane"
+    assert research["decision_makers"][0]["last_name"] == "Smith"
+    assert research["decision_makers"][0]["title"] == "Head Of Partnerships"
+    assert "https://www.linkedin.com/in/jane-smith" in research["linkedin_urls"]
+
+
+def test_contact_strategy_uses_website_research_names():
+    company = _RobotCompany()
+    company.website = "https://www.dexmate.ai"
+    company.partnerships_contact = None
+    company.sales_contact = None
+    company.contact_email = None
+
+    strategy = _contact_strategy(
+        company,
+        {
+            "status": "found",
+            "decision_makers": [
+                {"first_name": "Jane", "last_name": "Smith", "title": "Head of Partnerships"}
+            ],
+            "sources": ["https://www.dexmate.ai/team"],
+            "linkedin_urls": ["https://www.linkedin.com/in/jane-smith"],
+        },
+    )
+
+    assert "jane.smith@dexmate.ai" in strategy["recommended_to"]
+    assert strategy["communication_policy"]["research_status"] == "found"
+    assert strategy["communication_policy"]["researched_decision_makers"][0]["title"] == "Head of Partnerships"
+
+
+def test_contact_research_can_be_disabled():
+    company = _RobotCompany()
+    company.website = "https://www.dexmate.ai"
+
+    research = _research_robot_company_contacts(company, enabled=False)
+
+    assert research["status"] == "skipped"
+    assert research["decision_makers"] == []

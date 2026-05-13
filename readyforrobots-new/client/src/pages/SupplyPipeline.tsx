@@ -16,8 +16,35 @@ type SupplyCompany = {
     vendor_list_score?: number | null;
   };
   contact_strategy: {
-    primary?: { role?: string; contact?: string | null };
+    primary?: { role?: string; contact?: string | null; source?: string; needs_verification?: boolean };
+    targets?: Array<{ role?: string; contact?: string | null; source?: string; needs_verification?: boolean }>;
+    recommended_to?: string[];
+    communication_policy?: {
+      role_inboxes?: string[];
+      decision_maker_patterns?: string[];
+      research_sources?: string[];
+      researched_decision_makers?: Array<{
+        first_name?: string;
+        last_name?: string;
+        title?: string | null;
+        source_url?: string;
+        source?: string;
+      }>;
+      research_status?: string;
+    };
     research_notes?: string[];
+  };
+  contact_research?: {
+    status?: string;
+    decision_makers?: Array<{
+      first_name?: string;
+      last_name?: string;
+      title?: string | null;
+      source_url?: string;
+      source?: string;
+    }>;
+    sources?: string[];
+    linkedin_urls?: string[];
   };
   lead_matches: Array<{
     id: number;
@@ -42,7 +69,8 @@ type DraftState = {
 };
 
 function initialDraft(row: SupplyCompany): DraftState {
-  const contact = row.contact_strategy.primary?.contact || row.robot_company.contact_email || "";
+  const recommended = row.contact_strategy.recommended_to || [];
+  const contact = recommended.length ? recommended.join(", ") : row.contact_strategy.primary?.contact || row.robot_company.contact_email || "";
   const to = contact.includes("@") ? contact : "";
   return {
     to,
@@ -115,7 +143,11 @@ export default function SupplyPipeline() {
     const id = row.robot_company.id;
     const draft = drafts[id];
     if (!draft) return;
-    if (!draft.to || !draft.to.includes("@")) {
+    const recipients = draft.to
+      .split(/[;,]/)
+      .map((email) => email.trim())
+      .filter((email) => email.includes("@"));
+    if (!recipients.length) {
       toast.error("Add a valid recipient email before sending.");
       return;
     }
@@ -132,7 +164,7 @@ export default function SupplyPipeline() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            to_email: draft.to,
+            to_email: recipients,
             template_type: "supply_pipeline",
             subject: draft.subject,
             body: draft.body,
@@ -270,14 +302,74 @@ export default function SupplyPipeline() {
                       <p className="text-[10px] uppercase tracking-widest text-white/30">Who to contact</p>
                       <p className="mt-1 text-sm font-bold text-white/80">{selected.contact_strategy.primary?.role || "Partnerships"}</p>
                       <p className="mt-1 break-all text-xs text-white/45">{selected.contact_strategy.primary?.contact || selected.robot_company.contact_email || "Research contact first"}</p>
+                      {selected.contact_strategy.primary?.needs_verification && (
+                        <p className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-1 text-[10px] font-bold text-amber-100">
+                          Inferred email. Verify before sending.
+                        </p>
+                      )}
                     </div>
                     <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3 md:col-span-2">
                       <p className="text-[10px] uppercase tracking-widest text-white/30">Research checklist</p>
                       <p className="mt-1 text-xs leading-relaxed text-white/45">
                         {(selected.contact_strategy.research_notes || []).join(" ")}
                       </p>
+                      <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+                        Policy: send to role inboxes first
+                        {" "}
+                        {(selected.contact_strategy.communication_policy?.role_inboxes || []).join(", ") || "after domain research"}.
+                        Named decision makers use first.last, first initial + last, last, and first-name patterns.
+                      </p>
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                        Research status: {selected.contact_research?.status || selected.contact_strategy.communication_policy?.research_status || "not run"}
+                      </p>
                     </div>
                   </div>
+                  {!!(selected.contact_research?.decision_makers || []).length && (
+                    <div className="mt-3 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Researched decision makers</p>
+                      <div className="mt-2 grid gap-2 md:grid-cols-3">
+                        {(selected.contact_research?.decision_makers || []).map((person) => (
+                          <div key={`${person.first_name}-${person.last_name}-${person.source_url}`} className="rounded-lg border border-white/8 bg-black/10 p-2">
+                            <p className="text-xs font-bold text-white/80">
+                              {[person.first_name, person.last_name].filter(Boolean).join(" ")}
+                            </p>
+                            <p className="mt-1 text-[10px] text-white/40">{person.title || "Decision maker"}</p>
+                            {person.source_url && (
+                              <a href={person.source_url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-[10px] text-emerald-200/70 underline">
+                                Source
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(selected.contact_strategy.targets || []).length > 1 && (
+                    <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-white/30">Email candidates</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(selected.contact_strategy.targets || []).map((target) => (
+                          <button
+                            key={`${target.role}-${target.contact}`}
+                            type="button"
+                            onClick={() => target.contact && patchDraft(selected.robot_company.id, { to: target.contact, approved: false })}
+                            className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-white/55 hover:border-amber-400/40 hover:text-amber-100"
+                          >
+                            {target.role}: {target.contact || "research"}
+                          </button>
+                        ))}
+                      </div>
+                      {!!selected.contact_strategy.recommended_to?.length && (
+                        <button
+                          type="button"
+                          onClick={() => patchDraft(selected.robot_company.id, { to: selected.contact_strategy.recommended_to?.join(", ") || "", approved: false })}
+                          className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[10px] font-bold text-amber-100"
+                        >
+                          Use policy recipients
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
                     <button
                       type="button"
@@ -289,7 +381,9 @@ export default function SupplyPipeline() {
                     {selectedDraft.expanded && (
                       <div className="mt-3 grid gap-2 text-xs text-white/45 md:grid-cols-2">
                         <p><span className="text-white/70">Website:</span> {selected.robot_company.website || "Unknown"}</p>
-                        <p><span className="text-white/70">Contact:</span> {selected.robot_company.contact_email || selected.contact_strategy.primary?.contact || "Research needed"}</p>
+                        <p><span className="text-white/70">Policy recipients:</span> {(selected.contact_strategy.recommended_to || []).join(", ") || "Research needed"}</p>
+                        <p><span className="text-white/70">Research pages:</span> {(selected.contact_research?.sources || []).length || 0}</p>
+                        <p><span className="text-white/70">LinkedIn links:</span> {(selected.contact_research?.linkedin_urls || []).length || 0}</p>
                         <p><span className="text-white/70">Robot type:</span> {selected.robot_company.robot_type || "Unknown"}</p>
                         <p><span className="text-white/70">Target market:</span> {selected.robot_company.target_market || "Unknown"}</p>
                         <p><span className="text-white/70">Lead score:</span> {selected.robot_company.lead_score ?? "Unknown"}</p>
@@ -331,13 +425,16 @@ export default function SupplyPipeline() {
                   </div>
                   <div className="grid gap-3">
                     <label className="block">
-                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipient</span>
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipients</span>
                       <input
                         value={selectedDraft.to}
                         onChange={(e) => patchDraft(selected.robot_company.id, { to: e.target.value, approved: false })}
-                        placeholder="partner@robotcompany.com"
+                        placeholder="partnerships@robotcompany.com, events@robotcompany.com, marketing@robotcompany.com, sales@robotcompany.com"
                         className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
                       />
+                      <span className="mt-1 block text-[10px] text-white/30">
+                        Separate multiple recipients with commas. Inferred role inboxes and decision-maker patterns should be verified before live send.
+                      </span>
                     </label>
                     <label className="block">
                       <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Subject</span>
