@@ -141,9 +141,9 @@ export default function Crm() {
               <tbody>
                 {accounts.map((a) => (
                   <tr key={a.id} className="border-b border-white/5 text-white/80">
-                    <td className="px-3 py-2">{a.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-violet-300/90">{a.company_id ?? "—"}</td>
-                    <td className="px-3 py-2 text-xs">{a.outreach_stage || "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#FFB000" }}>{a.name}</td>
+                    <td className="px-3 py-2 font-mono text-xs" style={{ color: "#FFB000" }}>{a.company_id ?? "—"}</td>
+                    <td className="px-3 py-2 text-xs" style={{ color: "#FFB000" }}>{a.outreach_stage || "—"}</td>
                     <td className="px-3 py-2 text-xs truncate max-w-[140px]">{a.contact_email || "—"}</td>
                   </tr>
                 ))}

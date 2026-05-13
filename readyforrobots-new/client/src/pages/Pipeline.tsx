@@ -762,7 +762,7 @@ export default function Pipeline() {
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="break-words text-[11px] text-white/50 leading-relaxed">{selected.signal}</p>
+                        <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>{selected.signal}</p>
                       </div>
                     </div>
                     {selected.notes && (
@@ -795,12 +795,12 @@ export default function Pipeline() {
                                 {cleanAndClampText(update.title, 120) || "Research update"}
                               </p>
                               {typeof update.significance_score === "number" && (
-                                <span className="shrink-0 font-mono text-[10px] text-white/35">
+                                <span className="shrink-0 font-mono text-[10px]" style={{ color: "#FFB000" }}>
                                   {Math.round(update.significance_score * 100)}
                                 </span>
                               )}
                             </div>
-                            <p className="break-words text-[11px] leading-relaxed text-white/48">
+                            <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>
                               {cleanAndClampText(update.summary, 220)}
                             </p>
                             <div className="mt-1.5 flex items-center gap-2 text-[10px] text-white/25">
@@ -845,9 +845,9 @@ export default function Pipeline() {
                     </div>
 
                     {selected.outreachSubject && (
-                      <div className="mb-2 p-2.5 rounded-lg" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                      <div className="mb-2 p-2.5 rounded-lg" style={{ background: "rgba(255,176,0,0.06)", border: "1px solid rgba(255,176,0,0.18)" }}>
                         <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Subject</p>
-                        <p className="text-xs font-semibold text-white/80">{selected.outreachSubject}</p>
+                        <p className="text-xs font-semibold" style={{ color: "#FFB000" }}>{selected.outreachSubject}</p>
                       </div>
                     )}
 

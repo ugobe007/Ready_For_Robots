@@ -18,6 +18,21 @@ type NewsletterStory = {
   fullText?: string;
 };
 
+type ResearchFinding = {
+  company_id?: number;
+  company?: string;
+  industry?: string;
+  category?: string;
+  title?: string;
+  summary?: string;
+  source_domain?: string | null;
+  detected_at?: string | null;
+  significance_score?: number;
+  pipeline_url?: string;
+  scout_url?: string;
+  action_label?: string;
+};
+
 type BriefTextItem = string | {
   title?: string;
   detail?: string;
@@ -40,9 +55,11 @@ type NewsletterEdition = {
     subheadline?: string;
   };
   industryBrief?: IndustryBrief;
+  researchFindings?: ResearchFinding[];
   topStories?: NewsletterStory[];
   summary?: {
     total_leads?: number;
+    research_findings?: number;
     generated_at?: string;
   };
 };
@@ -113,6 +130,7 @@ export default function Newsletter() {
   }
 
   const stories = (edition?.topStories || []).slice(0, 8);
+  const researchFindings = (edition?.researchFindings || []).slice(0, 5);
   const brief = edition?.industryBrief;
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
   const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "A daily digest of buying signals, deployment stories, vendor movement, and sales timing for robotics teams.";
@@ -164,7 +182,7 @@ export default function Newsletter() {
               ["Edition", edition?.latestEdition?.edition || "Daily"],
               ["Updated", shortDate(edition?.latestEdition?.date)],
               ["Leads", String(edition?.summary?.total_leads ?? stories.length)],
-              ["Cadence", "Every day"],
+              ["Research", `${edition?.summary?.research_findings ?? researchFindings.length} findings`],
             ].map(([label, value], index) => (
               <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">{label}</p>
@@ -202,6 +220,64 @@ export default function Newsletter() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </section>
+          )}
+
+          {researchFindings.length > 0 && (
+            <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,176,0,0.045)" }}>
+              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>SCOUT research findings</p>
+                  <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    Key updates the research agent found today
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
+                    Material account changes that can update CRM context, scoring, and the next sales action.
+                  </p>
+                </div>
+                <Link href="/pipeline" className="inline-flex items-center gap-2 text-sm font-bold" style={{ color: "#FFB000" }}>
+                  Open SCOUT pipeline <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {researchFindings.map((finding, index) => (
+                  <article key={`${finding.company_id || finding.company}-${index}`} className="rounded-2xl border border-amber-300/15 p-4" style={{ background: "rgba(13,5,32,0.58)" }}>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <span className="rounded-full border border-amber-300/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: "#FFB000", background: "rgba(255,176,0,0.07)" }}>
+                        {cleanScrapedText(finding.category) || "Research"}
+                      </span>
+                      {typeof finding.significance_score === "number" && (
+                        <span className="font-mono text-[11px] font-bold" style={{ color: "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>
+                          {Math.round(finding.significance_score * 100)} signal
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="break-words text-base font-bold text-white">
+                      {cleanScrapedText(finding.company) || "Sales lead"}
+                    </h3>
+                    <p className="mt-2 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
+                      {cleanScrapedText(finding.summary || finding.title) || "SCOUT found a material account update worth review."}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-white/28">
+                      {finding.industry && <span>{cleanScrapedText(finding.industry)}</span>}
+                      {finding.source_domain && (
+                        <>
+                          <span>·</span>
+                          <span className="break-all">{finding.source_domain}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <Link href={finding.pipeline_url || "/pipeline"} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: "#FFB000" }}>
+                        {finding.action_label || "Act with SCOUT"} <Zap className="h-3.5 w-3.5" />
+                      </Link>
+                      <Link href={finding.scout_url || "/results?url="} className="inline-flex items-center gap-1.5 text-xs font-bold text-white/45 hover:text-white/75">
+                        Activate workflow <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </article>
+                ))}
               </div>
             </section>
           )}

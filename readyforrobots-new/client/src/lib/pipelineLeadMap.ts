@@ -78,6 +78,80 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
   return { type: label, text, color };
 }
 
+function industryInsight(industry?: string | null): string {
+  const value = (industry || "").toLowerCase();
+  if (value.includes("hospital") || value.includes("healthcare") || value.includes("medical")) {
+    return "I have noticed hospitals are separating off-hours support work from daytime patient-facing service: cleaning robots can cover overnight corridors and public spaces, while delivery or service robots help move supplies during peak clinical hours.";
+  }
+  if (value.includes("hotel") || value.includes("hospitality") || value.includes("resort")) {
+    return "I have noticed hotels are using cleaning robots for off-hours floor care, while service robots handle daytime delivery, amenities, and back-of-house runs that pull staff away from guests.";
+  }
+  if (value.includes("logistics") || value.includes("warehouse") || value.includes("fulfillment") || value.includes("3pl")) {
+    return "I have noticed logistics hubs are pairing AMRs, autonomous cleaning, and material-handling automation so overnight floor readiness and daytime throughput can improve without adding more temporary labor.";
+  }
+  if (value.includes("airport") || value.includes("aviation")) {
+    return "I have noticed airports are using autonomous cleaning and delivery robots around off-peak passenger windows, then shifting service robots into daytime terminal, concession, and baggage-adjacent support workflows.";
+  }
+  if (value.includes("manufactur") || value.includes("automotive") || value.includes("factory")) {
+    return "I have noticed manufacturers are using mobile robots and inspection automation around shift changes, quality bottlenecks, and material movement rather than treating robotics as a single all-or-nothing plant project.";
+  }
+  if (value.includes("restaurant") || value.includes("qsr") || value.includes("food")) {
+    return "I have noticed restaurants and food-service operators are using robots in narrow operating windows: cleaning after close, prep or runner support during rush periods, and back-of-house automation where labor pressure is highest.";
+  }
+  return "I have noticed operators are moving toward practical robotics deployments that start with narrow, high-friction workflows: off-hours cleaning, repetitive transport, service delivery, and support tasks that free staff for higher-value work.";
+}
+
+function signalOpening(signalType: string, signalText: string): string {
+  const lowerType = signalType.toLowerCase();
+  if (lowerType.includes("labor") || lowerType.includes("job")) {
+    return `I saw the labor and hiring signal around your team: ${signalText}`;
+  }
+  if (lowerType.includes("expansion") || lowerType.includes("capacity")) {
+    return `I saw the expansion signal around your operation: ${signalText}`;
+  }
+  if (lowerType.includes("capex") || lowerType.includes("funding")) {
+    return `I saw the budget or investment signal around your organization: ${signalText}`;
+  }
+  if (lowerType.includes("automation") || lowerType.includes("robot")) {
+    return `I saw the automation signal around your team: ${signalText}`;
+  }
+  return `I saw this market signal connected to your organization: ${signalText}`;
+}
+
+function outreachSubject(companyName?: string, signalType?: string): string {
+  const company = companyName || "your team";
+  const signal = signalType && signalType !== "News" ? signalType.toLowerCase() : "operations signal";
+  return `${company}: practical automation angle from a ${signal}`;
+}
+
+function outreachBody(lead: ApiLead, signalType: string, signalText: string): string {
+  const company = lead.company_name || "your team";
+  const insight = industryInsight(lead.industry);
+  const opening = signalOpening(signalType, signalText);
+  const suggestedMotion = cleanAndClampText(lead.gtm?.suggested_motion, 180);
+
+  const motionLine = suggestedMotion
+    ? `The practical next step may be to pressure-test this against ${suggestedMotion.toLowerCase()}.`
+    : "The practical next step may be to identify one contained workflow where automation can prove value without disrupting the broader operation.";
+
+  return [
+    "Hi,",
+    "",
+    opening,
+    "",
+    insight,
+    "",
+    `That is why ${company} stood out. This does not look like a generic robotics pitch; it looks like a timing question: where is the team feeling the most operational drag, and which workflow could be improved first?`,
+    "",
+    motionLine,
+    "",
+    "Would it be useful if I sent over a short view of the workflows that usually map to this kind of signal?",
+    "",
+    "Best,",
+    "SCOUT",
+  ].join("\n");
+}
+
 export function mapApiLeadToDeal(lead: ApiLead) {
   const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);
@@ -95,8 +169,8 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     updatedAt: "live",
     contact: undefined as string | undefined,
     contactTitle: undefined as string | undefined,
-    outreachSubject: `${lead.company_name || "Team"} — automation fit`,
-    outreachBody: `Hi,\n\n${text}\n\nI'd like to share how teams in your space are using automation to move faster — worth a brief call?\n\n— SCOUT`,
+    outreachSubject: outreachSubject(lead.company_name, type),
+    outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.share_summary) || undefined,
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,

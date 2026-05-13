@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.company import Company
+from app.models.lead_research import LeadResearchUpdate
 from app.models.score import Score
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
@@ -238,6 +239,43 @@ def _truncate(text: str, max_len: int) -> str:
     return text[: max_len - 3].rsplit(" ", 1)[0] + "..."
 
 
+def _research_agent_findings(db: Session, *, limit: int = 5, days: int = 1) -> List[Dict[str, Any]]:
+    """Daily SCOUT research-agent findings for the newsletter."""
+    since = datetime.now(timezone.utc) - timedelta(days=max(1, days))
+    rows = (
+        db.query(LeadResearchUpdate, Company)
+        .join(Company, Company.id == LeadResearchUpdate.company_id)
+        .filter(LeadResearchUpdate.detected_at >= since)
+        .filter(LeadResearchUpdate.significance_score >= 0.72)
+        .filter(LeadResearchUpdate.update_type != "news")
+        .order_by(LeadResearchUpdate.significance_score.desc(), LeadResearchUpdate.detected_at.desc())
+        .limit(max(1, min(limit, 12)))
+        .all()
+    )
+    findings: List[Dict[str, Any]] = []
+    for update, company in rows:
+        signal_label = _sig_label(update.update_type)
+        findings.append(
+            {
+                "company_id": company.id,
+                "company": company.name,
+                "industry": _industry_display(company.industry),
+                "update_type": update.update_type,
+                "category": signal_label,
+                "title": update.title,
+                "summary": _truncate(update.summary or "", 260),
+                "source_url": update.source_url,
+                "source_domain": update.source_domain,
+                "detected_at": update.detected_at.isoformat() if update.detected_at else None,
+                "significance_score": round(float(update.significance_score or 0), 3),
+                "pipeline_url": f"/pipeline?lead={company.id}",
+                "scout_url": "/results?url=",
+                "action_label": "Act on this finding with SCOUT",
+            }
+        )
+    return findings
+
+
 def get_cache_path() -> Path:
     """Path to cached newsletter edition JSON (persists for 24h)."""
     env_path = os.getenv("NEWSLETTER_CACHE_DIR")
@@ -416,6 +454,7 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         use_cache=True,
         force_refresh=False,
     )
+    research_findings = _research_agent_findings(db, limit=5, days=1)
     return {
         "latestEdition": {
             "date": date_str,
@@ -424,9 +463,11 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             "subheadline": subheadline,
         },
         "industryBrief": industry_brief,
+        "researchFindings": research_findings,
         "topStories": stories,
         "summary": {
             "total_leads": len(stories),
+            "research_findings": len(research_findings),
             "generated_at": now.isoformat(),
         },
     }
@@ -453,6 +494,8 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
             return None
         brief = data.get("industryBrief") or {}
         if brief.get("period_days") != _strategic_brief_days():
+            return None
+        if "researchFindings" not in data:
             return None
         if "**" in str(brief.get("executive_take") or ""):
             return None
