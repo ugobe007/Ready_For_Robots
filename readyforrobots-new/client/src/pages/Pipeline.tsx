@@ -249,6 +249,10 @@ export default function Pipeline() {
   const [loadingActivations, setLoadingActivations] = useState(true);
   const [advancingLeadId, setAdvancingLeadId] = useState<number | null>(null);
   const [automationLevel, setAutomationLevel] = useState<ScoutAutomationLevel>("assisted");
+  const [activationControlBusy, setActivationControlBusy] = useState(false);
+  const [messageNote, setMessageNote] = useState("");
+  const [timingNote, setTimingNote] = useState("");
+  const [cadenceNote, setCadenceNote] = useState("");
   const [loadErr, setLoadErr] = useState("");
   const [activationErr, setActivationErr] = useState("");
 
@@ -461,6 +465,38 @@ export default function Pipeline() {
       toast.error(e instanceof Error ? e.message : "Could not advance lead with SCOUT");
     } finally {
       setAdvancingLeadId(null);
+    }
+  };
+
+  const controlActivation = async (action: "pause" | "resume" | "update_plan") => {
+    if (!selectedActivation || !session?.access_token) {
+      toast.info("Sign in to control SCOUT activity.");
+      return;
+    }
+    setActivationControlBusy(true);
+    try {
+      const response = await fetch(
+        `${getApiBase()}/api/scout/activations/${selectedActivation.id}/control`,
+        liveFetchInit({
+          method: "PATCH",
+          headers: { ...authHeader(session.access_token), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action,
+            message_note: messageNote,
+            timing_note: timingNote,
+            cadence_note: cadenceNote,
+          }),
+        }),
+      );
+      if (!response.ok) throw new Error(await response.text());
+      const updated = (await response.json()) as ScoutActivation;
+      setActivations((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+      setSelectedActivationId(updated.id);
+      toast.success(action === "pause" ? "SCOUT paused for review." : action === "resume" ? "SCOUT resumed in approval-gated mode." : "SCOUT plan updated.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update SCOUT activity");
+    } finally {
+      setActivationControlBusy(false);
     }
   };
 
@@ -755,6 +791,61 @@ export default function Pipeline() {
                             </p>
                           </div>
                         )}
+                        <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/80">Interrupt / adjust SCOUT</p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+                            SCOUT can work in the background, but you can pause it or change the message, timing, and cadence before any outbound step.
+                          </p>
+                          <div className="mt-3 grid gap-2">
+                            <textarea
+                              value={messageNote}
+                              onChange={(e) => setMessageNote(e.target.value)}
+                              rows={2}
+                              placeholder="Message changes, e.g. shorter, more technical, ask for call first..."
+                              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
+                            />
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <input
+                                value={timingNote}
+                                onChange={(e) => setTimingNote(e.target.value)}
+                                placeholder="Timing, e.g. wait until next Tuesday"
+                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
+                              />
+                              <input
+                                value={cadenceNote}
+                                onChange={(e) => setCadenceNote(e.target.value)}
+                                placeholder="Cadence, e.g. follow up once after 5 days"
+                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
+                              />
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void controlActivation("pause")}
+                              disabled={activationControlBusy}
+                              className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] font-bold text-amber-100 disabled:opacity-50"
+                            >
+                              Pause SCOUT
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void controlActivation("update_plan")}
+                              disabled={activationControlBusy}
+                              className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-violet-100 disabled:opacity-50"
+                            >
+                              Save adjustments
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void controlActivation("resume")}
+                              disabled={activationControlBusy}
+                              className="rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 disabled:opacity-50"
+                            >
+                              Resume review queue
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

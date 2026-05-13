@@ -15,8 +15,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.api.auth_deps import optional_user
+from app.api.auth_deps import _require_user, optional_user
+from app.api.crm import _ensure_default_team
+from app.api.user import _ensure_profile
 from app.database import get_db
+from app.models.crm import CrmAccount
 from app.models.scout_chat import ScoutActivation, ScoutSession
 from app.models.user_profile import UserProfile
 from app.services import scout_chat_service as scsvc
@@ -29,6 +32,7 @@ ACTIVATION_STATUSES = [
     "evaluating",
     "drafted",
     "awaiting_approval",
+    "paused",
     "sent",
     "replied",
     "meeting_booked",
@@ -39,6 +43,7 @@ ACTIVATION_STATUS_META = {
     "evaluating": "SCOUT is evaluating lead fit and sales angles.",
     "drafted": "Strategy and outreach drafts are ready.",
     "awaiting_approval": "Drafts are waiting for user approval.",
+    "paused": "User interrupted SCOUT to adjust message, timing, or cadence.",
     "sent": "Outreach has been sent and SCOUT is watching for replies.",
     "replied": "A lead has replied and needs attention.",
     "meeting_booked": "A meeting has been booked.",
@@ -124,6 +129,13 @@ class ActivationBody(BaseModel):
         return self.mode_choice or self.modeChoice or "manual"
 
 
+class ActivationControlBody(BaseModel):
+    action: Literal["pause", "resume", "update_plan"]
+    message_note: Optional[str] = Field(None, max_length=2000)
+    timing_note: Optional[str] = Field(None, max_length=1000)
+    cadence_note: Optional[str] = Field(None, max_length=1000)
+
+
 def _serialize_message(m: Any) -> Dict[str, Any]:
     return {
         "id": m.id,
@@ -157,13 +169,15 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
         ],
         "mode": mode,
         "sending_policy": {
-            "manual": "Drafts only until user takes action.",
+            "manual": "Drafts only until user approves the next step.",
             "assisted": "Ask before sending each message.",
-            "autopilot": "Send and reply within account guardrails.",
+            "autopilot": "Prepare work in the background, but keep outbound activity visible and interruptible.",
         }[mode],
         "safety_requirements": [
             {"key": "sender_identity", "label": "Verified sender identity", "required": mode in {"assisted", "autopilot"}},
-            {"key": "approval_rules", "label": "Message approval rules", "required": mode != "manual"},
+            {"key": "approval_rules", "label": "Message approval required before every send", "required": True},
+            {"key": "crm_capture", "label": "Leads saved to your CRM", "required": True},
+            {"key": "interrupt_controls", "label": "User can pause or change message, timing, and cadence", "required": True},
             {"key": "unsubscribe", "label": "Unsubscribe and compliance footer", "required": mode in {"assisted", "autopilot"}},
             {"key": "daily_send_cap", "label": "Daily send cap", "required": mode in {"assisted", "autopilot"}},
             {"key": "suppression_list", "label": "Suppression list check", "required": mode in {"assisted", "autopilot"}},
@@ -172,6 +186,11 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
             "reply": "Create an in-app alert when a lead replies and mark the activation as replied.",
             "meeting": "Create an in-app alert when scheduling is needed or a meeting is booked.",
             "email": "Email notifications stay off until sender identity and account notification settings are configured.",
+        },
+        "user_feedback_loop": {
+            "next_checkpoint": "Review CRM accounts, approve or edit SCOUT drafts, then explicitly approve sending.",
+            "interrupt": "Pause SCOUT any time to change message, timing, or follow-up cadence.",
+            "autopilot_guardrail": "Autopilot prepares work in the background, but outbound messages remain visible with interruption controls.",
         },
     }
     if material == "suggest":
@@ -217,6 +236,17 @@ def _serialize_activation(row: ScoutActivation) -> Dict[str, Any]:
         "updatedAt": row.updated_at.isoformat() if row.updated_at else None,
         "requiresAccount": row.user_id is None and row.mode_choice in {"assisted", "autopilot"},
     }
+
+
+def _activation_for_user(db: Session, activation_id: int, user_id: UUID) -> ScoutActivation:
+    row = (
+        db.query(ScoutActivation)
+        .filter(ScoutActivation.id == activation_id, ScoutActivation.user_id == user_id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Activation not found")
+    return row
 
 
 @router.post("/session")
@@ -334,23 +364,46 @@ def scout_chat(body: ChatBody, db: Session = Depends(get_db)):
 def scout_create_activation(
     body: ActivationBody,
     db: Session = Depends(get_db),
-    user: Optional[dict] = Depends(optional_user),
+    user: dict = Depends(_require_user),
 ):
     sess, _ = scsvc.upsert_session(db, body.fingerprint)
-    user_id = None
-    if user and user.get("uid"):
-        try:
-            candidate_user_id = UUID(str(user["uid"]))
-            if db.query(UserProfile.id).filter(UserProfile.id == candidate_user_id).first():
-                user_id = candidate_user_id
-                sess.user_id = user_id
-        except (TypeError, ValueError):
-            user_id = None
+    try:
+        user_id = UUID(str(user["uid"]))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Sign in before activating SCOUT") from None
+    _ensure_profile(db, str(user_id), user.get("email") or "")
+    team = _ensure_default_team(db, user_id, user.get("email") or "")
+    sess.user_id = user_id
     if body.source():
         sess.company_url = body.source()
-    db.commit()
 
     leads = [lead.dict() for lead in body.leads]
+    captured_accounts = []
+    for lead in body.leads:
+        company_id = None
+        try:
+            company_id = int(lead.id)
+        except (TypeError, ValueError):
+            company_id = None
+        existing = None
+        if company_id is not None:
+            existing = (
+                db.query(CrmAccount)
+                .filter(CrmAccount.team_id == team.id, CrmAccount.company_id == company_id)
+                .first()
+            )
+        account = existing
+        if not account:
+            account = CrmAccount(
+                team_id=team.id,
+                company_id=company_id,
+                name=lead.company,
+                owner_user_id=user_id,
+                outreach_stage="review_required",
+            )
+            db.add(account)
+            db.flush()
+        captured_accounts.append({"crm_account_id": str(account.id), "company": lead.company, "company_id": company_id})
     activation = ScoutActivation(
         session_id=sess.id,
         user_id=user_id,
@@ -359,14 +412,19 @@ def scout_create_activation(
         material_filename=body.filename(),
         scope_choice=body.scope(),
         mode_choice=body.mode(),
-        status="queued",
+        status="awaiting_approval",
         lead_ids=[lead["id"] for lead in leads],
         leads_snapshot=leads,
         work_plan=_activation_work_plan(body),
         activity_log=[
             {
-                "type": "activation_created",
-                "message": f"SCOUT activation created for {len(leads)} lead(s).",
+                "type": "review_queue_created",
+                "message": f"SCOUT review queue created for {len(leads)} lead(s). Leads were saved to CRM; no outbound action will run until approved.",
+            },
+            {
+                "type": "crm_capture",
+                "message": "Lead accounts captured in CRM for user review.",
+                "accounts": captured_accounts,
             },
             {
                 "type": "materials",
@@ -378,7 +436,7 @@ def scout_create_activation(
             },
             {
                 "type": "status",
-                "message": ACTIVATION_STATUS_META["queued"],
+                "message": ACTIVATION_STATUS_META["awaiting_approval"],
             },
         ],
     )
@@ -388,7 +446,7 @@ def scout_create_activation(
         db,
         sess.id,
         "scout",
-        f"SCOUT activation queued for {len(leads)} lead(s) in {body.mode()} mode.",
+        f"SCOUT created an approval-gated review queue for {len(leads)} lead(s) in {body.mode()} mode.",
         "activateScout",
         {
             "activationId": activation.id,
@@ -411,4 +469,47 @@ def scout_create_activation(
         "activityLog": activation.activity_log,
         "requiresAccount": activation.status == "preview",
     }
+
+
+@router.patch("/activations/{activation_id}/control")
+def scout_control_activation(
+    activation_id: int,
+    body: ActivationControlBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    try:
+        user_id = UUID(str(user["uid"]))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Sign in required") from None
+    activation = _activation_for_user(db, activation_id, user_id)
+    log = list(activation.activity_log or [])
+    if body.action == "pause":
+        activation.status = "paused"
+        log.append({"type": "paused", "message": "User interrupted SCOUT automation for review."})
+    elif body.action == "resume":
+        activation.status = "awaiting_approval"
+        log.append({"type": "resumed", "message": "User resumed SCOUT review queue. Sends still require approval."})
+    else:
+        plan = dict(activation.work_plan or {})
+        plan["user_adjustments"] = {
+            "message_note": body.message_note,
+            "timing_note": body.timing_note,
+            "cadence_note": body.cadence_note,
+        }
+        activation.work_plan = plan
+        activation.status = "awaiting_approval"
+        log.append(
+            {
+                "type": "plan_updated",
+                "message": "User adjusted SCOUT message, timing, or follow-up cadence.",
+                "message_note": body.message_note,
+                "timing_note": body.timing_note,
+                "cadence_note": body.cadence_note,
+            }
+        )
+    activation.activity_log = log
+    db.commit()
+    db.refresh(activation)
+    return _serialize_activation(activation)
 

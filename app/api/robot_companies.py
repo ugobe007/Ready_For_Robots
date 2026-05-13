@@ -6,11 +6,13 @@ Focus: Chinese companies entering U.S. market
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 from typing import Any, List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 
 from app.database import get_db
+from app.models.company import Company
 from app.models.robot_company import RobotCompany
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -24,6 +26,154 @@ class SendRobotCompanyEmailRequest(BaseModel):
     template_type: str = "intro"
     subject: Optional[str] = None
     body: Optional[str] = None
+
+
+def _split_terms(*values: Any) -> set[str]:
+    terms: set[str] = set()
+    for value in values:
+        if not value:
+            continue
+        raw = str(value).lower().replace("/", " ").replace("-", " ")
+        for part in raw.replace("&", " ").replace(",", " ").split():
+            if len(part) >= 3:
+                terms.add(part.strip())
+    return terms
+
+
+def _robot_market_terms(rc: RobotCompany) -> set[str]:
+    terms = _split_terms(rc.robot_type, rc.target_market, rc.product_category)
+    aliases = {
+        "amr": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+        "cobot": {"manufacturing", "assembly", "industrial", "production"},
+        "industrial": {"manufacturing", "assembly", "production", "factory"},
+        "service": {"hospitality", "healthcare", "retail", "cleaning"},
+        "vision": {"inspection", "quality", "manufacturing", "safety"},
+        "humanoid": {"warehouse", "manufacturing", "service", "hospitality"},
+    }
+    for term in list(terms):
+        terms.update(aliases.get(term, set()))
+    return terms
+
+
+def _lead_terms(company: Company) -> set[str]:
+    profile = company.automation_profile or {}
+    requirements = []
+    if isinstance(profile, dict):
+        requirements = profile.get("requirements") or profile.get("automation_requirements") or []
+    signal_terms = [s.signal_type for s in (company.signals or [])[:5]]
+    return _split_terms(company.industry, company.sub_industry, company.crm_metadata, requirements, signal_terms)
+
+
+def _lead_score(company: Company, vendor_terms: set[str]) -> float:
+    score = 0.0
+    if company.scores:
+        score += max(float(s.overall_intent_score or 0) for s in company.scores)
+    lead_terms = _lead_terms(company)
+    overlap = vendor_terms.intersection(lead_terms)
+    score += min(25.0, len(overlap) * 6.0)
+    score += min(15.0, len(company.signals or []) * 2.5)
+    return round(score, 1)
+
+
+def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[dict[str, Any]]:
+    vendor_terms = _robot_market_terms(rc)
+    candidates = (
+        db.query(Company)
+        .options(joinedload(Company.signals), joinedload(Company.scores))
+        .filter(Company.is_internal.is_(True))
+        .order_by(Company.updated_at.desc().nullslast(), Company.created_at.desc().nullslast())
+        .limit(300)
+        .all()
+    )
+    ranked = sorted(
+        (
+            {
+                "id": c.id,
+                "company_name": c.name,
+                "industry": c.industry,
+                "location": ", ".join(x for x in [c.location_city, c.location_state] if x) or None,
+                "score": _lead_score(c, vendor_terms),
+                "signal": (c.signals[0].signal_text if c.signals else None),
+                "signal_type": (c.signals[0].signal_type if c.signals else None),
+                "why_match": _why_match(rc, c, vendor_terms),
+            }
+            for c in candidates
+        ),
+        key=lambda row: row["score"],
+        reverse=True,
+    )
+    return [row for row in ranked if row["score"] > 0][:limit]
+
+
+def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> str:
+    overlap = sorted(vendor_terms.intersection(_lead_terms(company)))
+    if overlap:
+        return f"Matches {rc.company_name}'s market around {', '.join(overlap[:4])}."
+    if company.industry and rc.target_market:
+        return f"{company.industry} lead aligns with target market: {rc.target_market}."
+    return "Buyer has active automation signals that may fit this robot category."
+
+
+def _contact_strategy(rc: RobotCompany) -> dict[str, Any]:
+    targets = []
+    if rc.partnerships_contact:
+        targets.append({"role": "Partnerships", "contact": rc.partnerships_contact, "priority": 1})
+    if rc.sales_contact:
+        targets.append({"role": "Sales leadership", "contact": rc.sales_contact, "priority": 2})
+    if rc.contact_email:
+        targets.append({"role": "General contact", "contact": rc.contact_email, "priority": 3})
+    if not targets:
+        targets.append({"role": "Market development or partnerships leader", "contact": rc.website, "priority": 4})
+    return {
+        "primary": targets[0],
+        "targets": targets,
+        "research_notes": [
+            "Confirm current U.S. market owner or partnerships lead.",
+            "Look for VP Sales, Head of Partnerships, Channel, or Business Development.",
+            "Use LinkedIn/company site if direct email is missing.",
+        ],
+    }
+
+
+def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
+    subject = f"3 buyer leads for {rc.company_name}"
+    lead_lines = "\n".join(
+        f"- {m['company_name']} ({m.get('industry') or 'industry unknown'}): {m.get('why_match')}"
+        for m in matches[:3]
+    ) or "- We have buyer matches ready to review once your team is onboarded."
+    body = f"""Hi {rc.company_name} team,
+
+Ready For Robots is building a two-sided robotics marketplace: buyers with live automation signals on one side, and robot companies that can serve those opportunities on the other.
+
+SCOUT matched {rc.company_name} to these buyer opportunities:
+
+{lead_lines}
+
+We only show three matches in this note, but the full workflow can deliver qualified leads directly to your inbox with context, timing, and why each buyer appears ready for outreach.
+
+The next step is to create a Ready For Robots account so your team can receive lead matches, review the buyer context, and decide which opportunities to pursue. Would you be open to setting up a short call with Ready For Robots this week so we can show you the lead flow and confirm the right markets for {rc.company_name}?
+
+Best,
+Ready For Robots"""
+    return {"subject": subject, "body": body}
+
+
+def _supply_agent_row(db: Session, rc: RobotCompany) -> dict[str, Any]:
+    matches = _match_buyer_leads(db, rc, limit=3)
+    contact = _contact_strategy(rc)
+    draft = _vendor_signup_email(rc, matches)
+    enriched = _enrich_robot_company(rc)
+    return {
+        "robot_company": enriched,
+        "contact_strategy": contact,
+        "lead_matches": matches,
+        "email": draft,
+        "cta": {
+            "signup": "Create a Ready For Robots account to receive matched leads in your inbox.",
+            "meeting": "Set up a short call with Ready For Robots to tune target markets and lead delivery.",
+        },
+        "review_required": True,
+    }
 
 
 def _enrich_robot_company(c: RobotCompany) -> dict[str, Any]:
@@ -426,6 +576,33 @@ def get_upcoming_actions(days: int = 7, db: Session = Depends(get_db)):
         ],
         "count": len(companies),
         "days": days
+    }
+
+
+@router.get("/agent/supply-side")
+def supply_side_agent(
+    limit: int = Query(10, ge=1, le=50),
+    min_score: int = Query(0, ge=0, le=100),
+    search: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Research robot companies, identify who to contact, match up to 3 buyer leads,
+    and draft signup/meeting outreach for review.
+    """
+    query = db.query(RobotCompany)
+    if min_score:
+        query = query.filter(RobotCompany.lead_score >= min_score)
+    if search:
+        query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
+    companies = query.order_by(RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()).limit(limit).all()
+    rows = [_supply_agent_row(db, rc) for rc in companies]
+    return {
+        "agent": "robot_company_supply_pipeline",
+        "review_required": True,
+        "instructions": "Review contact strategy and drafted email before sending. Each email shows only 3 buyer matches.",
+        "companies": rows,
+        "count": len(rows),
     }
 
 

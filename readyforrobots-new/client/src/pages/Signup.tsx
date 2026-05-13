@@ -11,18 +11,24 @@ export default function Signup() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
 
+  const nextPath = () => {
+    if (typeof window === "undefined") return "/profile";
+    const next = new URLSearchParams(window.location.search).get("next");
+    return next && next.startsWith("/") ? next : "/profile";
+  };
+
   useEffect(() => {
     if (!supabase) return;
     const client: NonNullable<typeof supabase> = supabase;
 
     async function afterSignup() {
       const { data } = await client.auth.getSession();
-      if (data?.session) setLocation("/profile");
+      if (data?.session) setLocation(nextPath());
     }
 
     void afterSignup();
     const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
-      if (session) setLocation("/profile");
+      if (session) setLocation(nextPath());
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -34,7 +40,7 @@ export default function Signup() {
       return;
     }
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup` : "/signup";
+    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
     if (error) {
       setStatus("error");
@@ -47,7 +53,7 @@ export default function Signup() {
     if (!email.trim() || !supabase) return;
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup` : "/signup";
+    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },

@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
+import SupplyPipeline from "./pages/SupplyPipeline";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScoutChat } from "./components/ScoutChat";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/crm" component={Crm} />
+      <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

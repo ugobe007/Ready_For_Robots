@@ -430,6 +430,12 @@ export default function Results() {
   }
 
   async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
+    if (!session?.access_token) {
+      const next = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/results";
+      toast.info("Sign up or sign in before SCOUT can save leads to CRM or prepare outbound work.");
+      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
+      return;
+    }
     const scope = overrides.scope ?? scopeChoice;
     const mode = overrides.mode ?? modeChoice;
     const material = overrides.material ?? materialChoice;
@@ -476,11 +482,7 @@ export default function Results() {
       setActivationId(Number(activation.id) || null);
       setActivatedIds(new Set(ids));
       setChoosingScout(false);
-      if (activation.requiresAccount) {
-        toast.info("SCOUT preview is saved. Sign in to send emails, track replies, and schedule meetings.");
-      } else {
-        toast.success(`SCOUT activation #${activation.id} created for ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
-      }
+      toast.success(`SCOUT review queue #${activation.id} created. Leads are saved to CRM and waiting for your approval.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not activate SCOUT.");
     } finally {
@@ -592,13 +594,13 @@ export default function Results() {
                           Activate SCOUT sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/48">
-                          Choose materials, lead scope, and operating mode. SCOUT will turn this results set into a structured sales motion with strategy, drafts, activity timing, reply monitoring, and user alerts.
+                          Choose materials, lead scope, and operating mode. SCOUT will save leads to CRM, prepare a reviewable workflow, and wait for your confirmation before outbound messages or follow-ups.
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2.5 py-1 text-[10px] font-bold text-emerald-100/70">
-                        <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads queued
+                        <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads selected for review
                       </span>
                       {!isSignedIn && (
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-100/75">
@@ -748,7 +750,7 @@ export default function Results() {
                         Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
                       <p className="text-[11px] text-white/30 sm:ml-auto">
-                        Drafts first. Sending stays gated by account and safety rules.
+                        Auth first. CRM capture first. Sending stays gated by your review.
                       </p>
                     </div>
                   </div>
@@ -757,10 +759,10 @@ export default function Results() {
 
               {activatedCount > 0 && (
                 <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
-                  <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT service active</p>
+                  <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT review queue created</p>
                   <p className="text-xs text-white/45">
                     {activationId ? `Activation #${activationId}: ` : ""}
-                    SCOUT is queued to evaluate each lead, develop a sales strategy, draft emails and introductions, schedule activities, track replies, and ping you when a lead becomes active.
+                    Leads were saved to CRM. Review SCOUT's workflow, drafts, timing, and cadence before any outbound action begins.
                   </p>
                 </div>
               )}
@@ -795,7 +797,7 @@ export default function Results() {
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h2 className="text-base font-bold text-white">{p.company}</h2>
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#a78bfa", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(124,58,237,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(124,58,237,0.3)" }}>
-                              {isActive ? "SCOUT Active" : p.stage}
+                              {isActive ? "Review Queued" : p.stage}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-white/35 mb-3">
