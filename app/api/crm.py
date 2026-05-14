@@ -55,7 +55,9 @@ from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount
 from app.models.outreach import OutreachMessage
+from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
 
 router = APIRouter()
 
@@ -137,6 +139,8 @@ class CrmAccountOut(BaseModel):
     overall_intent_score: Optional[float] = None
     lead_value_score: Optional[float] = None
     pipeline_priority_tier: Optional[str] = None
+    workflow_intelligence: Optional[dict[str, Any]] = None
+    prospect_search: Optional[dict[str, Any]] = None
 
 
 class CreateAccountIn(BaseModel):
@@ -434,7 +438,31 @@ def _serialize_account_enriched(a: CrmAccount, pipeline: Optional[dict[str, Any]
         )
     else:
         base.update(pipeline)
+    base["workflow_intelligence"] = None
     return base
+
+
+def _attach_workflow_intelligence(db: Session, account: CrmAccount, payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        payload["workflow_intelligence"] = crm_workflow_intelligence(db, account)
+    except Exception:
+        logger.warning("CRM workflow intelligence failed for account=%s", account.id, exc_info=True)
+        payload["workflow_intelligence"] = None
+    payload["prospect_search"] = {
+        "provider": "apollo",
+        "organization_name": account.name,
+        "organization_domain": _domain_from_url(account.website),
+        "recommended_titles": recommended_prospect_titles(account.industry, account.outreach_stage),
+    }
+    return payload
+
+
+def _domain_from_url(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw = value.strip().lower()
+    raw = raw.removeprefix("https://").removeprefix("http://").removeprefix("www.")
+    return raw.split("/", 1)[0] or None
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -571,7 +599,7 @@ def list_accounts(
                     pl = _pipeline_snapshot_for_company_row(by_id[a.company_id])
                 except Exception:
                     logger.warning("CRM pipeline snapshot failed for company_id=%s", a.company_id, exc_info=True)
-            out.append(_serialize_account_enriched(a, pl))
+            out.append(_attach_workflow_intelligence(db, a, _serialize_account_enriched(a, pl)))
         return out
     except HTTPException:
         raise
@@ -655,7 +683,7 @@ def create_account(
                         row.company_id,
                         exc_info=True,
                     )
-        return _serialize_account_enriched(row, pl)
+        return _attach_workflow_intelligence(db, row, _serialize_account_enriched(row, pl))
     except HTTPException:
         raise
     except IntegrityError as e:
@@ -711,7 +739,7 @@ def patch_account(
                         acct.company_id,
                         exc_info=True,
                     )
-        return _serialize_account_enriched(acct, pl)
+        return _attach_workflow_intelligence(db, acct, _serialize_account_enriched(acct, pl))
     except HTTPException:
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
@@ -894,6 +922,23 @@ def send_account_outreach(
         acct.outreach_draft = outreach_draft
         acct.outreach_sent_at = now
         acct.outreach_stage = "intro_sent"
+        record_sales_experience(
+            db,
+            event_type="crm_outreach_sent",
+            outcome="sent",
+            team_id=acct.team_id,
+            user_id=uid,
+            crm_account_id=acct.id,
+            company_id=acct.company_id,
+            channel="email",
+            confidence=0.82,
+            payload={
+                "outreach_message_id": str(msg.id),
+                "subject": subject,
+                "cc": cc,
+                "bcc": bcc,
+            },
+        )
         db.commit()
 
         return {

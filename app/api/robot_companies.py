@@ -30,6 +30,7 @@ from app.models.supply_outreach import SupplyOutreachMessage
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.sales_learning_agent import record_sales_experience
 from app.services.shared_api_cache import shared_cache_get, shared_cache_set
 from app.services.vendor_scoring import compute_vendor_list_score
 
@@ -678,6 +679,22 @@ def _create_crm_supply_tracking_copy(
         sent_at=now,
     )
     db.add(message)
+    record_sales_experience(
+        db,
+        event_type="supply_outreach_sent",
+        outcome="sent",
+        team_id=team.id,
+        user_id=uid,
+        crm_account_id=account.id,
+        robot_company_id=company.id,
+        channel="email",
+        confidence=0.82,
+        payload={
+            "supply_outreach_message_id": str(supply_message.id),
+            "crm_outreach_message_id": str(message.id),
+            "all_recipients": to_emails,
+        },
+    )
     return account, message
 
 

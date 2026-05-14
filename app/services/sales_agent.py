@@ -14,6 +14,7 @@ from app.models.robot_company import RobotCompany
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.sales_learning_agent import capture_sales_action_experience
 
 
 @dataclass(frozen=True)
@@ -308,9 +309,23 @@ def execute_sales_agent_action(
                 payload={"reply_to": reply_to, "automation_level": opportunity.automation_level},
             )
         )
+        capture_sales_action_experience(
+            db,
+            opportunity=opportunity,
+            action=action,
+            outcome="sent",
+            payload={"recipient": recipient, "reply_to": reply_to},
+        )
     except ResendEmailError as exc:
         action.status = "failed"
         action.error = str(exc)
+        capture_sales_action_experience(
+            db,
+            opportunity=opportunity,
+            action=action,
+            outcome="failed",
+            payload={"recipient": recipient, "error": str(exc)},
+        )
     return action
 
 

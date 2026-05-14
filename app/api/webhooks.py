@@ -19,6 +19,7 @@ from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, fetch_resend_received_email, send_email_via_resend
+from app.services.sales_learning_agent import record_sales_experience
 from app.services.sales_agent import handle_crm_reply_first_response, handle_supply_reply_first_response
 
 router = APIRouter()
@@ -217,6 +218,17 @@ async def resend_inbound_webhook(
         db.add(reply)
         if account:
             account.outreach_stage = "replied"
+            record_sales_experience(
+                db,
+                event_type="email_reply_received",
+                outcome="replied",
+                team_id=msg.team_id,
+                user_id=msg.sender_user_id,
+                crm_account_id=msg.crm_account_id,
+                company_id=msg.company_id,
+                channel="email",
+                payload={"outreach_message_id": str(msg.id), "outreach_reply_id": str(reply.id)},
+            )
         _notify_and_forward(db, msg, reply, account)
         agent_action = handle_crm_reply_first_response(db, msg, reply, account)
         db.commit()

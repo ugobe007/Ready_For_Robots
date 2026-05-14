@@ -8,11 +8,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
+from urllib.parse import urlparse
 
 from app.api.auth_deps import _require_user
 from app.database import get_db
 from app.models.crm import CrmAccount, TeamMember
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
+from app.services.apollo_client import (
+    ApolloAPIError,
+    ApolloConfigError,
+    ApolloProspectClient,
+    recommended_prospect_titles,
+)
+from app.services.sales_learning_agent import scraper_learning_report
 from app.services.sales_agent import create_automated_next_action, execute_sales_agent_action
 
 router = APIRouter()
@@ -28,6 +36,15 @@ class AutomateActionIn(BaseModel):
     force: bool = True
 
 
+class ProspectSearchIn(BaseModel):
+    organization_name: Optional[str] = Field(None, max_length=240)
+    organization_domain: Optional[str] = Field(None, max_length=240)
+    industry: Optional[str] = Field(None, max_length=120)
+    titles: Optional[list[str]] = None
+    locations: Optional[list[str]] = None
+    per_page: int = Field(10, ge=1, le=25)
+
+
 def _uid_uuid(user: dict) -> uuid.UUID:
     return uuid.UUID(str(user["uid"]))
 
@@ -37,6 +54,12 @@ def _db_uuid(db: Session, value: uuid.UUID | str | None):
         return None
     if db.bind and db.bind.dialect.name == "sqlite":
         return str(value)
+    return value if isinstance(value, uuid.UUID) else uuid.UUID(str(value))
+
+
+def _crm_uuid(value: uuid.UUID | str | None) -> uuid.UUID | None:
+    if value is None:
+        return None
     return value if isinstance(value, uuid.UUID) else uuid.UUID(str(value))
 
 
@@ -69,6 +92,14 @@ def _latest_recipient(db: Session, opportunity: SalesOpportunity) -> str | None:
         account = db.query(CrmAccount).filter(CrmAccount.id == opportunity.crm_account_id).first()
         return account.contact_email if account else None
     return None
+
+
+def _domain_from_url(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw = value.strip()
+    parsed = urlparse(raw if "://" in raw else f"https://{raw}")
+    return parsed.netloc.lower().removeprefix("www.") or None
 
 
 def _serialize_message(row: SalesMessage) -> dict[str, Any]:
@@ -174,6 +205,80 @@ def list_sales_opportunities(
         query = query.filter(SalesOpportunity.team_id == requested)
     rows = query.order_by(desc(SalesOpportunity.updated_at)).limit(100).all()
     return [_serialize_opportunity(db, row) for row in rows]
+
+
+@router.get("/learning")
+def get_sales_learning_report(
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        return {"experience_events": 0, "source_domain_priorities": [], "signal_type_priorities": [], "scraper_guidance": []}
+    return scraper_learning_report(db)
+
+
+@router.post("/prospects/search")
+def search_sales_prospects(
+    payload: ProspectSearchIn,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        raise HTTPException(status_code=404, detail="No workspace found for user")
+    titles = payload.titles or recommended_prospect_titles(payload.industry)
+    try:
+        result = ApolloProspectClient().search_people(
+            organization_name=payload.organization_name,
+            organization_domain=payload.organization_domain,
+            titles=titles,
+            locations=payload.locations,
+            per_page=payload.per_page,
+        )
+    except ApolloConfigError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ApolloAPIError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "prospects": result["prospects"],
+        "pagination": result["pagination"],
+        "request": result["request"],
+        "recommended_titles": titles,
+    }
+
+
+@router.get("/opportunities/{opportunity_id}/prospects")
+def prospects_for_sales_opportunity(
+    opportunity_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    opportunity = _opportunity_or_404(db, opportunity_id, _team_ids_for_user(db, _uid_uuid(user)))
+    account = db.query(CrmAccount).filter(CrmAccount.id == _crm_uuid(opportunity.crm_account_id)).first() if opportunity.crm_account_id else None
+    organization_name = account.name if account else opportunity.title
+    domain = _domain_from_url(account.website if account else None)
+    industry = account.industry if account else None
+    titles = recommended_prospect_titles(industry, opportunity.current_stage)
+    try:
+        result = ApolloProspectClient().search_people(
+            organization_name=organization_name,
+            organization_domain=domain,
+            titles=titles,
+            per_page=10,
+        )
+    except ApolloConfigError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ApolloAPIError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "opportunity_id": str(opportunity.id),
+        "organization_name": organization_name,
+        "organization_domain": domain,
+        "prospects": result["prospects"],
+        "pagination": result["pagination"],
+        "recommended_titles": titles,
+    }
 
 
 @router.get("/opportunities/{opportunity_id}")
