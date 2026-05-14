@@ -16,6 +16,20 @@ type Account = {
   outreach_draft?: string | null;
   outreach_sent_at?: string | null;
   latest_outreach_message_id?: string | null;
+  workflow_intelligence?: {
+    recommended_action?: string;
+    priority_score?: number;
+    experience_count?: number;
+    sent_count?: number;
+    reply_count?: number;
+    failed_count?: number;
+  } | null;
+  prospect_search?: {
+    provider?: string;
+    organization_name?: string | null;
+    organization_domain?: string | null;
+    recommended_titles?: string[];
+  } | null;
 };
 
 type UserSettings = {
@@ -508,6 +522,34 @@ export default function Crm() {
               )}
             </div>
             <aside className="rounded-xl border border-white/10 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <div className="mb-5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">SCOUT workflow intelligence</p>
+                <p className="mt-2 text-sm font-bold text-white">
+                  {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SCOUT activity on this account."}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/55">
+                  <span>Priority: {selectedAccount.workflow_intelligence?.priority_score ?? "—"}</span>
+                  <span>Events: {selectedAccount.workflow_intelligence?.experience_count ?? 0}</span>
+                  <span>Sent: {selectedAccount.workflow_intelligence?.sent_count ?? 0}</span>
+                  <span>Replies: {selectedAccount.workflow_intelligence?.reply_count ?? 0}</span>
+                </div>
+              </div>
+              <div className="mb-5 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-[10px] uppercase tracking-widest text-white/30">Apollo prospect search</p>
+                <p className="mt-2 text-xs text-white/55">
+                  Search target: {selectedAccount.prospect_search?.organization_domain || selectedAccount.prospect_search?.organization_name || selectedAccount.name}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(selectedAccount.prospect_search?.recommended_titles || []).map((title) => (
+                    <span key={title} className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-white/50">
+                      {title}
+                    </span>
+                  ))}
+                </div>
+                <Link href="/sales-console" className="mt-3 inline-flex text-[11px] font-bold text-amber-200 underline">
+                  Open Sales Console to find prospects
+                </Link>
+              </div>
               <p className="text-[10px] uppercase tracking-widest text-white/30">User checkpoints</p>
               <ol className="mt-3 space-y-3 text-xs text-white/55">
                 <li><span className="font-bold text-white/80">1. Lead captured:</span> user signs in and the account is saved to CRM.</li>

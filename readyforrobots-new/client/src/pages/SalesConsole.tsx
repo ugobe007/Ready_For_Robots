@@ -47,6 +47,24 @@ type SalesOpportunity = {
   actions?: SalesAction[];
 };
 
+type ApolloProspect = {
+  id?: string | null;
+  name?: string | null;
+  title?: string | null;
+  email?: string | null;
+  email_status?: string | null;
+  linkedin_url?: string | null;
+  organization_name?: string | null;
+  organization_domain?: string | null;
+};
+
+type SalesLearningReport = {
+  experience_events: number;
+  source_domain_priorities?: { key: string; score: number; positive_events?: number; negative_events?: number }[];
+  signal_type_priorities?: { key: string; score: number; positive_events?: number; negative_events?: number }[];
+  scraper_guidance?: string[];
+};
+
 const AUTOMATION_LEVELS = [
   { value: "manual", label: "Manual" },
   { value: "first_reply_auto", label: "First reply auto" },
@@ -71,8 +89,13 @@ export default function SalesConsole() {
   const [rows, setRows] = useState<SalesOpportunity[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [selected, setSelected] = useState<SalesOpportunity | null>(null);
+  const [prospects, setProspects] = useState<ApolloProspect[]>([]);
+  const [prospectTitles, setProspectTitles] = useState<string[]>([]);
+  const [learningReport, setLearningReport] = useState<SalesLearningReport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [prospectBusy, setProspectBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [prospectMsg, setProspectMsg] = useState("");
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -111,9 +134,24 @@ export default function SalesConsole() {
   }, [loadRows]);
 
   useEffect(() => {
+    if (!session?.access_token) return;
+    (async () => {
+      try {
+        const data = (await authFetch("/api/sales/learning")) as SalesLearningReport;
+        setLearningReport(data);
+      } catch {
+        setLearningReport(null);
+      }
+    })();
+  }, [authFetch, session?.access_token]);
+
+  useEffect(() => {
     if (!selectedId || !session?.access_token) return;
     (async () => {
       setBusy(true);
+      setProspects([]);
+      setProspectTitles([]);
+      setProspectMsg("");
       try {
         const detail = (await authFetch(`/api/sales/opportunities/${selectedId}`)) as SalesOpportunity;
         setSelected(detail);
@@ -124,6 +162,27 @@ export default function SalesConsole() {
       }
     })();
   }, [authFetch, selectedId, session?.access_token]);
+
+  const loadProspects = async () => {
+    if (!selected) return;
+    setProspectBusy(true);
+    setProspectMsg("");
+    try {
+      const result = await authFetch(`/api/sales/opportunities/${selected.id}/prospects`);
+      setProspects(Array.isArray(result.prospects) ? result.prospects : []);
+      setProspectTitles(Array.isArray(result.recommended_titles) ? result.recommended_titles : []);
+      setProspectMsg(
+        result.prospects?.length
+          ? `Apollo found ${result.prospects.length} likely decision-makers for this opportunity.`
+          : "Apollo returned no prospects for this account yet.",
+      );
+    } catch (e) {
+      setProspects([]);
+      setProspectMsg(e instanceof Error ? e.message : "Could not search Apollo prospects.");
+    } finally {
+      setProspectBusy(false);
+    }
+  };
 
   const setAutomation = async (level: string) => {
     if (!selected) return;
@@ -224,6 +283,31 @@ export default function SalesConsole() {
 
         {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">{msg}</div>}
 
+        <section className="mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">SCOUT learning memory</p>
+            <p className="mt-3 text-3xl font-black" style={{ color: "#03DAC5" }}>
+              {learningReport?.experience_events ?? 0}
+            </p>
+            <p className="mt-1 text-sm text-white/50">sales events captured from sends, replies, and failures</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Best source signal</p>
+            <p className="mt-3 text-lg font-bold text-white">
+              {learningReport?.source_domain_priorities?.[0]?.key || "Waiting for replies"}
+            </p>
+            <p className="mt-1 text-sm text-white/45">
+              SCOUT uses positive reply history to guide scraper priorities.
+            </p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Scraper guidance</p>
+            <p className="mt-3 text-sm leading-relaxed text-white/60">
+              {learningReport?.scraper_guidance?.[0] || "Guidance appears after SCOUT observes enough outreach outcomes."}
+            </p>
+          </div>
+        </section>
+
         <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
             <div className="flex items-center justify-between">
@@ -297,6 +381,51 @@ export default function SalesConsole() {
                 <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
                   <p className="text-xs font-bold uppercase tracking-widest text-white/35">Next best action</p>
                   <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "SCOUT will generate the next action from the latest conversation context."}</p>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-white/35">Apollo prospect search</p>
+                      <p className="mt-2 text-sm text-white/60">
+                        Find likely decision-makers for this opportunity and use them to route the next SCOUT outreach.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => void loadProspects()}
+                      disabled={prospectBusy}
+                      className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/75 hover:bg-white/8 disabled:opacity-50"
+                    >
+                      {prospectBusy ? "Searching Apollo..." : "Find prospects"}
+                    </button>
+                  </div>
+                  {prospectTitles.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {prospectTitles.map((title) => (
+                        <span key={title} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/50">
+                          {title}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {prospectMsg && <p className="mt-3 text-xs text-amber-100/80">{prospectMsg}</p>}
+                  {prospects.length > 0 && (
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {prospects.slice(0, 6).map((person, idx) => (
+                        <div key={person.id || `${person.name}-${idx}`} className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+                          <p className="font-bold text-white">{person.name || "Unnamed prospect"}</p>
+                          <p className="mt-1 text-xs text-white/50">{person.title || "Title unavailable"}</p>
+                          <p className="mt-1 text-xs text-white/35">{person.organization_name || person.organization_domain || "Organization unavailable"}</p>
+                          {person.email && <p className="mt-2 text-xs" style={{ color: "#03DAC5" }}>{person.email}</p>}
+                          {person.linkedin_url && (
+                            <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs text-amber-200 underline">
+                              LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 grid gap-6 xl:grid-cols-2">
