@@ -1,12 +1,16 @@
 """Marketplace/workspace API for vendor, buyer, RFQ, and SCOUT automation objects."""
 from __future__ import annotations
 
+import json
+import os
+import shutil
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -17,11 +21,14 @@ from app.database import get_db
 from app.models.crm import Team, TeamMember
 from app.models.marketplace import (
     BuyerProfile,
+    MarketplaceCommercialDocument,
+    MarketplaceIntegrationConnection,
     OrganizationAsset,
     OrganizationProfile,
     Rfq,
     RfqProposal,
     RfqRequirement,
+    RfqScheduleEvent,
     VendorProfile,
 )
 
@@ -30,6 +37,9 @@ router = APIRouter()
 
 OrganizationType = Literal["vendor", "buyer", "admin"]
 AssetType = Literal["product_spec", "deck", "case_study", "pricing", "compliance", "proposal", "other"]
+CommercialDocumentType = Literal["proposal", "quote", "invoice", "purchase_order"]
+CommercialDocumentStatus = Literal["draft", "issued", "accepted", "rejected", "paid", "void"]
+ConnectionType = Literal["mcp_server", "vendor_api", "erp", "crm", "storage", "infra"]
 
 
 class OrganizationProfileBody(BaseModel):
@@ -45,6 +55,9 @@ class OrganizationProfileBody(BaseModel):
     service_regions: list[str] = Field(default_factory=list, max_length=50)
     procurement_categories: list[str] = Field(default_factory=list, max_length=50)
     facility_types: list[str] = Field(default_factory=list, max_length=50)
+    decision_makers: list[dict[str, Any]] = Field(default_factory=list, max_length=100)
+    procurement_workflow: dict[str, Any] = Field(default_factory=dict)
+    po_preferences: dict[str, Any] = Field(default_factory=dict)
 
 
 class AssetBody(BaseModel):
@@ -67,12 +80,18 @@ class RfqBody(BaseModel):
     team_id: Optional[uuid.UUID] = None
     title: str = Field(..., min_length=1, max_length=240)
     summary: Optional[str] = None
+    project_description: Optional[str] = None
+    timeline_summary: Optional[str] = None
     automation_category: Optional[str] = Field(None, max_length=120)
     status: Literal["draft", "published"] = "draft"
     budget_min: Optional[Decimal] = None
     budget_max: Optional[Decimal] = None
     currency: str = Field("USD", max_length=8)
     due_at: Optional[datetime] = None
+    decision_makers: list[dict[str, Any]] = Field(default_factory=list, max_length=100)
+    workflow_process: dict[str, Any] = Field(default_factory=dict)
+    technical_specs: dict[str, Any] = Field(default_factory=dict)
+    schedule: list[dict[str, Any]] = Field(default_factory=list, max_length=50)
     evaluation_criteria: list[str] = Field(default_factory=list, max_length=50)
     requirements: list[RfqRequirementBody] = Field(default_factory=list, max_length=100)
 
@@ -87,12 +106,73 @@ class ProposalBody(BaseModel):
     asset_ids: list[str] = Field(default_factory=list, max_length=100)
 
 
+class ScheduleEventBody(BaseModel):
+    event_type: str = Field("deadline", max_length=64)
+    title: str = Field(..., min_length=1, max_length=240)
+    description: Optional[str] = None
+    due_at: datetime
+    reminder_offsets: list[int] = Field(default_factory=list, max_length=20)
+    email_recipients: list[str] = Field(default_factory=list, max_length=100)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class CommercialDocumentBody(BaseModel):
+    rfq_id: Optional[uuid.UUID] = None
+    proposal_id: Optional[uuid.UUID] = None
+    buyer_team_id: uuid.UUID
+    vendor_team_id: uuid.UUID
+    document_type: CommercialDocumentType
+    status: CommercialDocumentStatus = "draft"
+    document_number: Optional[str] = Field(None, max_length=120)
+    title: Optional[str] = Field(None, max_length=240)
+    amount: Optional[Decimal] = None
+    currency: str = Field("USD", max_length=8)
+    due_at: Optional[datetime] = None
+    issued_at: Optional[datetime] = None
+    asset_ids: list[str] = Field(default_factory=list, max_length=100)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class IntegrationConnectionBody(BaseModel):
+    team_id: Optional[uuid.UUID] = None
+    connection_type: ConnectionType = "mcp_server"
+    name: str = Field(..., min_length=1, max_length=180)
+    status: Literal["draft", "active", "paused", "error"] = "draft"
+    base_url: Optional[str] = Field(None, max_length=1024)
+    mcp_server_url: Optional[str] = Field(None, max_length=1024)
+    auth_type: Optional[str] = Field(None, max_length=64)
+    secret_ref: Optional[str] = Field(None, max_length=240)
+    allowed_scopes: list[str] = Field(default_factory=list, max_length=100)
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
 def _uid_uuid(user: dict) -> uuid.UUID:
     return uuid.UUID(str(user["uid"]))
 
 
 def _money(v: Optional[Decimal]) -> Optional[float]:
     return float(v) if v is not None else None
+
+
+def _upload_root() -> Path:
+    return Path(os.getenv("MARKETPLACE_UPLOAD_DIR") or "uploads/marketplace").resolve()
+
+
+def _safe_filename(filename: str) -> str:
+    base = Path(filename or "upload.bin").name
+    return "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in base)[:160] or "upload.bin"
+
+
+def _parse_metadata(raw: Optional[str]) -> dict[str, Any]:
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="metadata must be valid JSON") from exc
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="metadata must be a JSON object")
+    return data
 
 
 def _team_for_user(db: Session, uid: uuid.UUID, team_id: uuid.UUID) -> Team:
@@ -207,12 +287,18 @@ def _serialize_rfq(row: Rfq, requirements: Optional[list[RfqRequirement]] = None
         "buyerTeamId": str(row.buyer_team_id),
         "title": row.title,
         "summary": row.summary,
+        "projectDescription": row.project_description,
+        "timelineSummary": row.timeline_summary,
         "automationCategory": row.automation_category,
         "status": row.status,
         "budgetMin": _money(row.budget_min),
         "budgetMax": _money(row.budget_max),
         "currency": row.currency,
         "dueAt": row.due_at.isoformat() if row.due_at else None,
+        "decisionMakers": row.decision_makers or [],
+        "workflowProcess": row.workflow_process or {},
+        "technicalSpecs": row.technical_specs or {},
+        "schedule": row.schedule or [],
         "evaluationCriteria": row.evaluation_criteria or [],
         "scoutSummary": row.scout_summary or {},
         "requirements": [
@@ -240,6 +326,61 @@ def _serialize_proposal(row: RfqProposal) -> dict[str, Any]:
         "currency": row.currency,
         "assetIds": row.asset_ids or [],
         "scoutResponsePlan": row.scout_response_plan or {},
+        "createdAt": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _serialize_commercial_document(row: MarketplaceCommercialDocument) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "rfqId": str(row.rfq_id) if row.rfq_id else None,
+        "proposalId": str(row.proposal_id) if row.proposal_id else None,
+        "buyerTeamId": str(row.buyer_team_id),
+        "vendorTeamId": str(row.vendor_team_id),
+        "documentType": row.document_type,
+        "status": row.status,
+        "documentNumber": row.document_number,
+        "title": row.title,
+        "amount": _money(row.amount),
+        "currency": row.currency,
+        "dueAt": row.due_at.isoformat() if row.due_at else None,
+        "issuedAt": row.issued_at.isoformat() if row.issued_at else None,
+        "assetIds": row.asset_ids or [],
+        "payload": row.payload or {},
+        "createdAt": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _serialize_connection(row: MarketplaceIntegrationConnection) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "teamId": str(row.team_id),
+        "connectionType": row.connection_type,
+        "name": row.name,
+        "status": row.status,
+        "baseUrl": row.base_url,
+        "mcpServerUrl": row.mcp_server_url,
+        "authType": row.auth_type,
+        "secretRef": row.secret_ref,
+        "allowedScopes": row.allowed_scopes or [],
+        "config": row.config or {},
+        "lastCheckedAt": row.last_checked_at.isoformat() if row.last_checked_at else None,
+        "createdAt": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _serialize_schedule_event(row: RfqScheduleEvent) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "rfqId": str(row.rfq_id),
+        "eventType": row.event_type,
+        "title": row.title,
+        "description": row.description,
+        "dueAt": row.due_at.isoformat() if row.due_at else None,
+        "reminderOffsets": row.reminder_offsets or [],
+        "emailRecipients": row.email_recipients or [],
+        "status": row.status,
+        "payload": row.payload or {},
         "createdAt": row.created_at.isoformat() if row.created_at else None,
     }
 
@@ -286,6 +427,9 @@ def put_organization_profile(
         if buyer:
             buyer.procurement_categories = body.procurement_categories
             buyer.facility_types = body.facility_types
+            buyer.decision_makers = body.decision_makers
+            buyer.procurement_workflow = body.procurement_workflow
+            buyer.po_preferences = body.po_preferences
     db.commit()
     db.refresh(profile)
     return _serialize_org(team, profile)
@@ -330,6 +474,41 @@ def create_asset(
     return _serialize_asset(asset)
 
 
+@router.post("/assets/upload")
+def upload_asset(
+    team_id: Optional[str] = Form(None),
+    asset_type: AssetType = Form("other"),
+    visibility: Literal["private", "rfq_response", "public"] = Form("private"),
+    metadata: Optional[str] = Form(None),
+    file: UploadFile = File(...),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    parsed_team_id = uuid.UUID(team_id) if team_id else None
+    team = _resolve_team(db, user, parsed_team_id)
+    safe_name = _safe_filename(file.filename or "upload.bin")
+    storage_dir = _upload_root() / str(team.id)
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    storage_name = f"{uuid.uuid4()}_{safe_name}"
+    storage_path = storage_dir / storage_name
+    with storage_path.open("wb") as out:
+        shutil.copyfileobj(file.file, out)
+    asset = OrganizationAsset(
+        team_id=team.id,
+        uploaded_by_user_id=_uid_uuid(user),
+        asset_type=asset_type,
+        filename=safe_name,
+        mime_type=file.content_type,
+        storage_path=str(storage_path),
+        visibility=visibility,
+        asset_metadata={**_parse_metadata(metadata), "bytes": storage_path.stat().st_size},
+    )
+    db.add(asset)
+    db.commit()
+    db.refresh(asset)
+    return _serialize_asset(asset)
+
+
 @router.get("/rfqs")
 def list_rfqs(
     team_id: Optional[uuid.UUID] = Query(None),
@@ -366,12 +545,18 @@ def create_rfq(
         created_by_user_id=_uid_uuid(user),
         title=body.title,
         summary=body.summary,
+        project_description=body.project_description,
+        timeline_summary=body.timeline_summary,
         automation_category=body.automation_category,
         status=body.status,
         budget_min=body.budget_min,
         budget_max=body.budget_max,
         currency=body.currency,
         due_at=body.due_at,
+        decision_makers=body.decision_makers,
+        workflow_process=body.workflow_process,
+        technical_specs=body.technical_specs,
+        schedule=body.schedule,
         evaluation_criteria=body.evaluation_criteria,
         scout_summary={
             "next": "SCOUT can match this RFQ to vendor profiles, draft clarifying questions, and score submitted proposals.",
@@ -394,6 +579,38 @@ def create_rfq(
     db.commit()
     db.refresh(row)
     return _serialize_rfq(row, reqs)
+
+
+@router.post("/rfqs/{rfq_id}/schedule")
+def create_rfq_schedule_event(
+    rfq_id: uuid.UUID,
+    body: ScheduleEventBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    rfq = db.query(Rfq).filter(Rfq.id == rfq_id).first()
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    _team_for_user(db, _uid_uuid(user), rfq.buyer_team_id)
+    event = RfqScheduleEvent(
+        rfq_id=rfq.id,
+        event_type=body.event_type,
+        title=body.title,
+        description=body.description,
+        due_at=body.due_at,
+        reminder_offsets=body.reminder_offsets,
+        email_recipients=body.email_recipients,
+        payload={
+            **body.payload,
+            "email_status": "scheduled",
+            "next": "SCOUT should email prospective robot companies before this deadline.",
+        },
+    )
+    db.add(event)
+    rfq.schedule = [*(rfq.schedule or []), {"title": body.title, "due_at": body.due_at.isoformat(), "event_type": body.event_type}]
+    db.commit()
+    db.refresh(event)
+    return _serialize_schedule_event(event)
 
 
 @router.post("/rfqs/{rfq_id}/proposals")
@@ -431,3 +648,98 @@ def create_or_update_proposal(
     db.commit()
     db.refresh(proposal)
     return _serialize_proposal(proposal)
+
+
+@router.post("/commercial-documents")
+def create_commercial_document(
+    body: CommercialDocumentBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    # Either side can create a commercial document if they belong to the buyer or vendor workspace.
+    uid = _uid_uuid(user)
+    try:
+        _team_for_user(db, uid, body.vendor_team_id)
+    except HTTPException:
+        _team_for_user(db, uid, body.buyer_team_id)
+    doc = MarketplaceCommercialDocument(
+        rfq_id=body.rfq_id,
+        proposal_id=body.proposal_id,
+        buyer_team_id=body.buyer_team_id,
+        vendor_team_id=body.vendor_team_id,
+        created_by_user_id=uid,
+        document_type=body.document_type,
+        status=body.status,
+        document_number=body.document_number,
+        title=body.title,
+        amount=body.amount,
+        currency=body.currency,
+        due_at=body.due_at,
+        issued_at=body.issued_at,
+        asset_ids=body.asset_ids,
+        payload=body.payload,
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return _serialize_commercial_document(doc)
+
+
+@router.get("/commercial-documents")
+def list_commercial_documents(
+    team_id: Optional[uuid.UUID] = Query(None),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    team = _resolve_team(db, user, team_id)
+    rows = (
+        db.query(MarketplaceCommercialDocument)
+        .filter((MarketplaceCommercialDocument.buyer_team_id == team.id) | (MarketplaceCommercialDocument.vendor_team_id == team.id))
+        .order_by(MarketplaceCommercialDocument.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    return {"documents": [_serialize_commercial_document(row) for row in rows]}
+
+
+@router.post("/connections")
+def create_integration_connection(
+    body: IntegrationConnectionBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    team = _resolve_team(db, user, body.team_id)
+    row = MarketplaceIntegrationConnection(
+        team_id=team.id,
+        created_by_user_id=_uid_uuid(user),
+        connection_type=body.connection_type,
+        name=body.name,
+        status=body.status,
+        base_url=body.base_url,
+        mcp_server_url=body.mcp_server_url,
+        auth_type=body.auth_type,
+        # Store a reference to a secret manager entry, never raw credentials.
+        secret_ref=body.secret_ref,
+        allowed_scopes=body.allowed_scopes,
+        config=body.config,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return _serialize_connection(row)
+
+
+@router.get("/connections")
+def list_integration_connections(
+    team_id: Optional[uuid.UUID] = Query(None),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    team = _resolve_team(db, user, team_id)
+    rows = (
+        db.query(MarketplaceIntegrationConnection)
+        .filter(MarketplaceIntegrationConnection.team_id == team.id)
+        .order_by(MarketplaceIntegrationConnection.created_at.desc())
+        .all()
+    )
+    return {"connections": [_serialize_connection(row) for row in rows]}

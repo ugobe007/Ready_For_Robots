@@ -1,4 +1,5 @@
 FastAPI
+python-multipart
 SQLAlchemy
 psycopg2-binary
 playwright

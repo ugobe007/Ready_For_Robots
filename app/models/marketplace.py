@@ -44,6 +44,9 @@ class BuyerProfile(Base):
     procurement_categories = Column(JSONB, nullable=False, server_default="[]")
     facility_types = Column(JSONB, nullable=False, server_default="[]")
     buying_process = Column(JSONB, nullable=False, server_default="{}")
+    decision_makers = Column(JSONB, nullable=False, server_default="[]")
+    procurement_workflow = Column(JSONB, nullable=False, server_default="{}")
+    po_preferences = Column(JSONB, nullable=False, server_default="{}")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -71,12 +74,18 @@ class Rfq(Base):
     created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="SET NULL"), nullable=True, index=True)
     title = Column(String(240), nullable=False)
     summary = Column(Text, nullable=True)
+    project_description = Column(Text, nullable=True)
+    timeline_summary = Column(Text, nullable=True)
     automation_category = Column(String(120), nullable=True)
     status = Column(String(32), nullable=False, server_default="draft")
     budget_min = Column(Numeric(18, 2), nullable=True)
     budget_max = Column(Numeric(18, 2), nullable=True)
     currency = Column(String(8), nullable=False, server_default="USD")
     due_at = Column(DateTime(timezone=True), nullable=True)
+    decision_makers = Column(JSONB, nullable=False, server_default="[]")
+    workflow_process = Column(JSONB, nullable=False, server_default="{}")
+    technical_specs = Column(JSONB, nullable=False, server_default="{}")
+    schedule = Column(JSONB, nullable=False, server_default="[]")
     evaluation_criteria = Column(JSONB, nullable=False, server_default="[]")
     scout_summary = Column(JSONB, nullable=False, server_default="{}")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -126,3 +135,62 @@ class RfqProposal(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (UniqueConstraint("rfq_id", "vendor_team_id", name="uq_rfq_proposals_rfq_vendor"),)
+
+
+class MarketplaceCommercialDocument(Base):
+    __tablename__ = "marketplace_commercial_documents"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfq_id = Column(UUID(as_uuid=True), ForeignKey("rfqs.id", ondelete="CASCADE"), nullable=True, index=True)
+    proposal_id = Column(UUID(as_uuid=True), ForeignKey("rfq_proposals.id", ondelete="SET NULL"), nullable=True, index=True)
+    buyer_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    vendor_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="SET NULL"), nullable=True, index=True)
+    document_type = Column(String(32), nullable=False, index=True)
+    status = Column(String(32), nullable=False, server_default="draft", index=True)
+    document_number = Column(String(120), nullable=True, index=True)
+    title = Column(String(240), nullable=True)
+    amount = Column(Numeric(18, 2), nullable=True)
+    currency = Column(String(8), nullable=False, server_default="USD")
+    due_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    issued_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    asset_ids = Column(JSONB, nullable=False, server_default="[]")
+    payload = Column(JSONB, nullable=False, server_default="{}")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class MarketplaceIntegrationConnection(Base):
+    __tablename__ = "marketplace_integration_connections"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="SET NULL"), nullable=True, index=True)
+    connection_type = Column(String(32), nullable=False, index=True)
+    name = Column(String(180), nullable=False)
+    status = Column(String(32), nullable=False, server_default="draft", index=True)
+    base_url = Column(String(1024), nullable=True)
+    mcp_server_url = Column(String(1024), nullable=True)
+    auth_type = Column(String(64), nullable=True)
+    secret_ref = Column(String(240), nullable=True)
+    allowed_scopes = Column(JSONB, nullable=False, server_default="[]")
+    config = Column(JSONB, nullable=False, server_default="{}")
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class RfqScheduleEvent(Base):
+    __tablename__ = "rfq_schedule_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rfq_id = Column(UUID(as_uuid=True), ForeignKey("rfqs.id", ondelete="CASCADE"), nullable=False, index=True)
+    event_type = Column(String(64), nullable=False, index=True)
+    title = Column(String(240), nullable=False)
+    description = Column(Text, nullable=True)
+    due_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    reminder_offsets = Column(JSONB, nullable=False, server_default="[]")
+    email_recipients = Column(JSONB, nullable=False, server_default="[]")
+    status = Column(String(32), nullable=False, server_default="scheduled", index=True)
+    payload = Column(JSONB, nullable=False, server_default="{}")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
