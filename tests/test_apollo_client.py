@@ -21,9 +21,19 @@ class _Response:
 
 def test_apollo_client_requires_api_key(monkeypatch):
     monkeypatch.delenv("APOLLO_API_KEY", raising=False)
+    monkeypatch.delenv("Apollo_API_Key", raising=False)
 
     with pytest.raises(ApolloConfigError):
         ApolloProspectClient()
+
+
+def test_apollo_client_accepts_existing_fly_secret_casing(monkeypatch):
+    monkeypatch.delenv("APOLLO_API_KEY", raising=False)
+    monkeypatch.setenv("Apollo_API_Key", "mixed-case-key")
+
+    client = ApolloProspectClient()
+
+    assert client.api_key == "mixed-case-key"
 
 
 def test_recommended_titles_reflect_industry_and_stage():

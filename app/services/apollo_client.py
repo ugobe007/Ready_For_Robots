@@ -51,7 +51,7 @@ def recommended_prospect_titles(industry: str | None = None, stage: str | None =
 
 class ApolloProspectClient:
     def __init__(self, api_key: str | None = None, base_url: str = APOLLO_BASE_URL):
-        self.api_key = (api_key or os.getenv("APOLLO_API_KEY") or "").strip()
+        self.api_key = (api_key or os.getenv("APOLLO_API_KEY") or os.getenv("Apollo_API_Key") or "").strip()
         self.base_url = base_url.rstrip("/")
         if not self.api_key:
             raise ApolloConfigError("Missing APOLLO_API_KEY")
