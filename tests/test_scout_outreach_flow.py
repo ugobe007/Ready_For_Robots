@@ -4,6 +4,7 @@ import hmac
 import json
 
 from app.api.crm import _reply_address
+from app.api.robot_companies import _supply_reply_address
 from app.api.webhooks import _extract_addresses, _token_from_addresses, _verify_resend_signature
 
 
@@ -11,6 +12,13 @@ def test_reply_address_uses_plus_token(monkeypatch):
     monkeypatch.setenv("SCOUT_REPLY_DOMAIN", "reply.readyforrobots.com")
 
     assert _reply_address("abc123") == "reply+abc123@reply.readyforrobots.com"
+
+
+def test_supply_reply_address_uses_supply_local_part(monkeypatch):
+    monkeypatch.setenv("SCOUT_REPLY_DOMAIN", "reply.readyforrobots.com")
+    monkeypatch.setenv("SUPPLY_REPLY_LOCAL_PART", "vendors")
+
+    assert _supply_reply_address("vendor_token") == "vendors+vendor_token@reply.readyforrobots.com"
 
 
 def test_inbound_reply_token_extracted_from_address():

@@ -46,6 +46,18 @@ type SupplyCompany = {
     sources?: string[];
     linkedin_urls?: string[];
   };
+  outreach_history?: Array<{
+    id: string;
+    status?: string;
+    is_test?: boolean;
+    to_emails?: string[];
+    subject?: string;
+    reply_to?: string | null;
+    resend_id?: string | null;
+    approved_at?: string | null;
+    sent_at?: string | null;
+    created_at?: string | null;
+  }>;
   lead_matches: Array<{
     id: number;
     company_name: string;
@@ -66,6 +78,9 @@ type DraftState = {
   sending: boolean;
   sent: boolean;
   expanded: boolean;
+  trackingId?: string;
+  replyTo?: string;
+  lastAction?: string;
 };
 
 function initialDraft(row: SupplyCompany): DraftState {
@@ -80,6 +95,9 @@ function initialDraft(row: SupplyCompany): DraftState {
     sending: false,
     sent: false,
     expanded: false,
+    trackingId: row.outreach_history?.[0]?.id,
+    replyTo: row.outreach_history?.[0]?.reply_to || undefined,
+    lastAction: row.outreach_history?.[0]?.status,
   };
 }
 
@@ -122,31 +140,76 @@ export default function SupplyPipeline() {
     }));
   };
 
-  const approveDraft = (id: number) => {
-    patchDraft(id, { approved: true });
-    toast.success("Draft approved for operator send.");
+  const approveDraft = async (row: SupplyCompany) => {
+    const id = row.robot_company.id;
+    const draft = drafts[id];
+    if (!draft) return;
+    const recipients = parseRecipients(draft.to);
+    if (!recipients.length) {
+      toast.error("Add a valid recipient email before approving.");
+      return;
+    }
+    if (!draft.subject.trim() || !draft.body.trim()) {
+      toast.error("Subject and body are required before approval.");
+      return;
+    }
+    patchDraft(id, { sending: true });
+    try {
+      const response = await fetch(
+        `${getApiBase()}/api/robot-companies/${id}/email/approve`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to_email: recipients,
+            template_type: "supply_pipeline",
+            subject: draft.subject,
+            body: draft.body,
+            payload: {
+              operator_checkpoint: "Approved from supply pipeline review console",
+              buyer_matches: row.lead_matches.slice(0, 3).map((lead) => lead.company_name),
+            },
+          }),
+        }),
+      );
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      patchDraft(id, {
+        approved: true,
+        sending: false,
+        trackingId: result.supply_outreach_message_id,
+        replyTo: result.reply_to,
+        lastAction: result.status || "draft_approved",
+      });
+      toast.success("Draft approved and tracked.");
+    } catch (e) {
+      patchDraft(id, { sending: false });
+      toast.error(e instanceof Error ? e.message : "Could not approve draft.");
+    }
   };
 
   const approveAll = () => {
-    setDrafts((current) =>
-      Object.fromEntries(
-        Object.entries(current).map(([id, draft]) => [
-          id,
-          draft.sent ? draft : { ...draft, approved: true },
-        ]),
-      ),
-    );
-    toast.success("All unsent drafts approved.");
+    void (async () => {
+      for (const row of rows) {
+        const draft = drafts[row.robot_company.id];
+        if (draft && !draft.sent && !draft.approved) {
+          await approveDraft(row);
+        }
+      }
+    })();
   };
+
+  const parseRecipients = (value: string) =>
+    value
+      .split(/[;,]/)
+      .map((email) => email.trim())
+      .filter((email) => email.includes("@"));
 
   const sendOne = async (row: SupplyCompany, test = false) => {
     const id = row.robot_company.id;
     const draft = drafts[id];
     if (!draft) return;
-    const recipients = draft.to
-      .split(/[;,]/)
-      .map((email) => email.trim())
-      .filter((email) => email.includes("@"));
+    const recipients = parseRecipients(draft.to);
     if (!recipients.length) {
       toast.error("Add a valid recipient email before sending.");
       return;
@@ -172,7 +235,14 @@ export default function SupplyPipeline() {
         }),
       );
       if (!response.ok) throw new Error(await response.text());
-      patchDraft(id, { sending: false, sent: !test || draft.sent });
+      const result = await response.json();
+      patchDraft(id, {
+        sending: false,
+        sent: !test || draft.sent,
+        trackingId: result.supply_outreach_message_id || draft.trackingId,
+        replyTo: result.reply_to || draft.replyTo,
+        lastAction: result.status || (test ? "test_sent" : "sent"),
+      });
       toast.success(test ? "Test email sent." : `Sent outreach to ${row.robot_company.company_name}.`);
     } catch (e) {
       patchDraft(id, { sending: false });
@@ -270,6 +340,9 @@ export default function SupplyPipeline() {
                         )}
                         {draft?.sent && (
                           <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Sent</span>
+                        )}
+                        {draft?.lastAction && !draft.sent && (
+                          <span className="rounded-full bg-white/8 px-2 py-0.5 text-[9px] font-bold text-white/45">{draft.lastAction}</span>
                         )}
                         {!draft?.to && (
                           <span className="rounded-full bg-amber-400/12 px-2 py-0.5 text-[9px] font-bold text-amber-100">Needs email</span>
@@ -384,6 +457,8 @@ export default function SupplyPipeline() {
                         <p><span className="text-white/70">Policy recipients:</span> {(selected.contact_strategy.recommended_to || []).join(", ") || "Research needed"}</p>
                         <p><span className="text-white/70">Research pages:</span> {(selected.contact_research?.sources || []).length || 0}</p>
                         <p><span className="text-white/70">LinkedIn links:</span> {(selected.contact_research?.linkedin_urls || []).length || 0}</p>
+                        <p><span className="text-white/70">Tracking ID:</span> {selectedDraft.trackingId || "Not tracked yet"}</p>
+                        <p><span className="text-white/70">Reply path:</span> {selectedDraft.replyTo || "Created on approval/send"}</p>
                         <p><span className="text-white/70">Robot type:</span> {selected.robot_company.robot_type || "Unknown"}</p>
                         <p><span className="text-white/70">Target market:</span> {selected.robot_company.target_market || "Unknown"}</p>
                         <p><span className="text-white/70">Lead score:</span> {selected.robot_company.lead_score ?? "Unknown"}</p>
@@ -423,6 +498,23 @@ export default function SupplyPipeline() {
                       {selectedDraft.sent ? "Sent" : selectedDraft.approved ? "Approved" : "Needs approval"}
                     </span>
                   </div>
+                  {!!(selected.outreach_history || []).length && (
+                    <div className="mb-4 rounded-xl border border-white/8 bg-black/10 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-white/30">Tracked outreach history</p>
+                      <div className="mt-2 grid gap-2">
+                        {(selected.outreach_history || []).slice(0, 3).map((item) => (
+                          <div key={item.id} className="rounded-lg border border-white/8 bg-white/[0.025] p-2 text-[11px] text-white/45">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-bold text-white/65">{item.is_test ? "Test" : "Live"} · {item.status || "tracked"}</span>
+                              <span>{item.sent_at || item.approved_at || item.created_at || ""}</span>
+                            </div>
+                            <p className="mt-1 truncate">{item.subject}</p>
+                            <p className="mt-1 truncate">To: {(item.to_emails || []).join(", ")}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="grid gap-3">
                     <label className="block">
                       <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipients</span>
@@ -457,8 +549,9 @@ export default function SupplyPipeline() {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => approveDraft(selected.robot_company.id)}
-                      className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
+                      onClick={() => void approveDraft(selected)}
+                      disabled={selectedDraft.sending}
+                      className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
                     >
                       Approve
                     </button>

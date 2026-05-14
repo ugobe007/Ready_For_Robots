@@ -16,7 +16,10 @@ from app.database import SessionLocal
 from app.models.crm import CrmAccount
 from app.models.lead_research import UserNotification
 from app.models.outreach import OutreachMessage, OutreachReply
+from app.models.robot_company import RobotCompany
+from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, fetch_resend_received_email, send_email_via_resend
+from app.services.sales_agent import handle_crm_reply_first_response, handle_supply_reply_first_response
 
 router = APIRouter()
 
@@ -133,6 +136,28 @@ def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply,
             pass
 
 
+def _capture_supply_reply(
+    db: Session,
+    msg: SupplyOutreachMessage,
+    data: dict[str, Any],
+    to_addresses: list[str],
+) -> SupplyOutreachReply:
+    reply = SupplyOutreachReply(
+        supply_outreach_message_id=msg.id,
+        robot_company_id=msg.robot_company_id,
+        from_email=(_extract_addresses(data.get("from")) or [None])[0],
+        to_email=", ".join(to_addresses) if to_addresses else None,
+        subject=data.get("subject"),
+        body_text=data.get("text") or data.get("body") or data.get("html"),
+        raw_payload=data,
+        received_at=datetime.now(timezone.utc),
+    )
+    db.add(reply)
+    msg.status = "replied"
+    db.commit()
+    return reply
+
+
 @router.post("/resend/inbound")
 async def resend_inbound_webhook(
     request: Request,
@@ -155,6 +180,26 @@ async def resend_inbound_webhook(
     try:
         msg = db.query(OutreachMessage).filter(OutreachMessage.reply_token == token).first()
         if not msg:
+            supply_msg = (
+                db.query(SupplyOutreachMessage)
+                .filter(SupplyOutreachMessage.reply_token == token)
+                .first()
+            )
+            if supply_msg:
+                supply_reply = _capture_supply_reply(db, supply_msg, data, to_addresses)
+                robot_company = (
+                    db.query(RobotCompany)
+                    .filter(RobotCompany.id == supply_msg.robot_company_id)
+                    .first()
+                )
+                agent_action = handle_supply_reply_first_response(db, supply_msg, supply_reply, robot_company)
+                db.commit()
+                return {
+                    "ok": True,
+                    "supply_outreach_reply_id": str(supply_reply.id),
+                    "sales_agent_action_id": str(agent_action.id),
+                    "sales_agent_action_status": agent_action.status,
+                }
             return {"ok": True, "ignored": "unknown_reply_token"}
         account = db.query(CrmAccount).filter(CrmAccount.id == msg.crm_account_id).first()
         reply = OutreachReply(
@@ -173,7 +218,13 @@ async def resend_inbound_webhook(
         if account:
             account.outreach_stage = "replied"
         _notify_and_forward(db, msg, reply, account)
+        agent_action = handle_crm_reply_first_response(db, msg, reply, account)
         db.commit()
-        return {"ok": True, "outreach_reply_id": str(reply.id)}
+        return {
+            "ok": True,
+            "outreach_reply_id": str(reply.id),
+            "sales_agent_action_id": str(agent_action.id),
+            "sales_agent_action_status": agent_action.status,
+        }
     finally:
         db.close()

@@ -1,9 +1,31 @@
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.api.robot_companies import (
+    _create_supply_outreach_record,
     _contact_strategy,
     _extract_contact_research,
+    _request_emails,
     _research_robot_company_contacts,
+    _supply_outreach_history,
     _vendor_signup_email,
 )
+from app.database import Base
+import app.models  # noqa: F401 - register SQLAlchemy models
+
+
+@pytest.fixture()
+def db_session():
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
 
 
 class _RobotCompany:
@@ -112,3 +134,34 @@ def test_contact_research_can_be_disabled():
 
     assert research["status"] == "skipped"
     assert research["decision_makers"] == []
+
+
+def test_request_emails_splits_and_dedupes_policy_recipients():
+    emails = _request_emails(
+        "partnerships@unitree.com, events@unitree.com; partnerships@unitree.com"
+    )
+
+    assert emails == ["partnerships@unitree.com", "events@unitree.com"]
+
+
+def test_supply_outreach_record_history_tracks_approval(db_session):
+    company = _RobotCompany()
+    company.id = 101
+    message = _create_supply_outreach_record(
+        db_session,
+        company,
+        to_emails=["partnerships@unitree.com", "events@unitree.com"],
+        subject="3 buyer leads for Unitree",
+        body="Review these buyer matches.",
+        template_type="supply_pipeline",
+        status="draft_approved",
+        payload={"operator_checkpoint": "approved"},
+    )
+    db_session.commit()
+
+    history = _supply_outreach_history(db_session, 101)
+
+    assert str(message.id) == history[0]["id"]
+    assert history[0]["status"] == "draft_approved"
+    assert history[0]["to_emails"] == ["partnerships@unitree.com", "events@unitree.com"]
+    assert history[0]["approved_at"] is not None

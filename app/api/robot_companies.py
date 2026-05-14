@@ -8,9 +8,12 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from typing import Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
+import os
 import re
+import secrets
+import uuid
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -19,6 +22,7 @@ from bs4 import BeautifulSoup
 from app.database import get_db
 from app.models.company import Company
 from app.models.robot_company import RobotCompany
+from app.models.supply_outreach import SupplyOutreachMessage
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -33,6 +37,14 @@ class SendRobotCompanyEmailRequest(BaseModel):
     template_type: str = "intro"
     subject: Optional[str] = None
     body: Optional[str] = None
+
+
+class ApproveSupplyOutreachRequest(BaseModel):
+    to_email: str | list[str]
+    template_type: str = "supply_pipeline"
+    subject: str
+    body: str
+    payload: Optional[dict[str, Any]] = None
 
 
 def _split_terms(*values: Any) -> set[str]:
@@ -150,6 +162,15 @@ CONTACT_RESEARCH_TITLES = (
     "founder",
     "ceo",
 )
+
+
+def _reply_domain() -> str:
+    return (os.getenv("SCOUT_REPLY_DOMAIN") or "readyforrobots.com").strip()
+
+
+def _supply_reply_address(reply_token: str) -> str:
+    local = (os.getenv("SUPPLY_REPLY_LOCAL_PART") or "supply").strip()
+    return f"{local}+{reply_token}@{_reply_domain()}"
 
 
 def _contact_strategy(rc: RobotCompany, research: Optional[dict[str, Any]] = None) -> dict[str, Any]:
@@ -532,6 +553,71 @@ def _dedupe_emails(values: list[Any]) -> list[str]:
     return emails
 
 
+def _request_emails(value: str | list[str]) -> list[str]:
+    if isinstance(value, list):
+        raw_values = value
+    else:
+        raw_values = str(value or "").replace(";", ",").split(",")
+    return _dedupe_emails(raw_values)
+
+
+def _require_supply_outreach_payload(payload: ApproveSupplyOutreachRequest) -> tuple[list[str], str, str]:
+    to_emails = _request_emails(payload.to_email)
+    subject = (payload.subject or "").strip()
+    body = (payload.body or "").strip()
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="At least one recipient email is required")
+    if not subject:
+        raise HTTPException(status_code=400, detail="Subject is required")
+    if not body:
+        raise HTTPException(status_code=400, detail="Body is required")
+    return to_emails, subject, body
+
+
+def _create_supply_outreach_record(
+    db: Session,
+    company: RobotCompany,
+    *,
+    to_emails: list[str],
+    subject: str,
+    body: str,
+    template_type: str,
+    status: str,
+    is_test: bool = False,
+    send_result: Optional[dict[str, Any]] = None,
+    payload: Optional[dict[str, Any]] = None,
+) -> SupplyOutreachMessage:
+    now = datetime.now(timezone.utc)
+    reply_token = secrets.token_urlsafe(18)
+    msg = SupplyOutreachMessage(
+        id=_uuid_for_session(db),
+        robot_company_id=company.id,
+        to_emails=to_emails,
+        from_email=(send_result or {}).get("from_email"),
+        reply_to=_supply_reply_address(reply_token),
+        reply_token=reply_token,
+        subject=subject,
+        body_text=body,
+        template_type=(template_type or "supply_pipeline").strip() or "supply_pipeline",
+        resend_id=(send_result or {}).get("resend_id"),
+        status=status,
+        is_test=is_test,
+        payload=payload or {},
+        approved_at=now if status in {"draft_approved", "test_sent", "sent"} else None,
+        sent_at=now if status in {"test_sent", "sent"} else None,
+    )
+    db.add(msg)
+    return msg
+
+
+def _uuid_for_session(db: Session):
+    value = uuid.uuid4()
+    bind = db.get_bind()
+    if bind is not None and bind.dialect.name == "sqlite":
+        return str(value)
+    return value
+
+
 def _recommended_response_playbook(matches: list[dict[str, Any]]) -> str:
     if not matches:
         return "Recommended timing: reply within 1 business day once your team signs up.\nSuggested next step: ask Ready For Robots to route the first qualified buyer opportunity and confirm your preferred territory."
@@ -580,10 +666,12 @@ def _supply_agent_row(db: Session, rc: RobotCompany, *, research_contacts: bool 
     contact = _contact_strategy(rc, research)
     draft = _vendor_signup_email(rc, matches)
     enriched = _enrich_robot_company(rc)
+    history = _supply_outreach_history(db, rc.id)
     return {
         "robot_company": enriched,
         "contact_strategy": contact,
         "contact_research": research,
+        "outreach_history": history,
         "lead_matches": matches,
         "email": draft,
         "cta": {
@@ -592,6 +680,31 @@ def _supply_agent_row(db: Session, rc: RobotCompany, *, research_contacts: bool 
         },
         "review_required": True,
     }
+
+
+def _supply_outreach_history(db: Session, robot_company_id: int, limit: int = 5) -> list[dict[str, Any]]:
+    rows = (
+        db.query(SupplyOutreachMessage)
+        .filter(SupplyOutreachMessage.robot_company_id == robot_company_id)
+        .order_by(SupplyOutreachMessage.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": str(row.id),
+            "status": row.status,
+            "is_test": bool(row.is_test),
+            "to_emails": row.to_emails or [],
+            "subject": row.subject,
+            "reply_to": row.reply_to,
+            "resend_id": row.resend_id,
+            "approved_at": row.approved_at.isoformat() if row.approved_at else None,
+            "sent_at": row.sent_at.isoformat() if row.sent_at else None,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in rows
+    ]
 
 
 def _enrich_robot_company(c: RobotCompany) -> dict[str, Any]:
@@ -1029,6 +1142,43 @@ def supply_side_agent(
     }
 
 
+@router.post("/{company_id}/email/approve")
+def approve_supply_outreach(
+    company_id: int,
+    payload: ApproveSupplyOutreachRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Persist an operator-approved supply-side draft before any live send.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    to_emails, subject, body = _require_supply_outreach_payload(payload)
+    msg = _create_supply_outreach_record(
+        db,
+        company,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        template_type=payload.template_type,
+        status="draft_approved",
+        payload=payload.payload,
+    )
+    company.workflow_stage = company.workflow_stage or "outreach"
+    company.next_action = "Send approved Ready For Robots supply outreach"
+    db.commit()
+    db.refresh(msg)
+    return {
+        "approved": True,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
+        "to_email": msg.to_emails,
+        "approved_at": msg.approved_at.isoformat() if msg.approved_at else None,
+        "reply_to": msg.reply_to,
+    }
+
+
 @router.get("/{company_id}/email")
 def generate_email(
     company_id: int,
@@ -1142,37 +1292,65 @@ def send_email(
     email = get_email_template(template_type, company_data)
     subject = payload.subject or email.get("subject", "Partnership Opportunity")
     body = payload.body or email.get("body", "")
+    to_emails = _request_emails(payload.to_email)
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="At least one recipient email is required")
+    reply_token = secrets.token_urlsafe(18)
+    reply_to = _supply_reply_address(reply_token)
 
     try:
         send_result = send_email_via_resend(
-            to_email=payload.to_email,
+            to_email=to_emails,
             subject=subject,
             body_text=body,
+            reply_to=reply_to,
+            idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
         )
     except ResendEmailError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    company.last_contact_date = datetime.now()
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    msg = SupplyOutreachMessage(
+        id=_uuid_for_session(db),
+        robot_company_id=company.id,
+        to_emails=to_emails,
+        from_email=send_result.get("from_email"),
+        reply_to=reply_to,
+        reply_token=reply_token,
+        subject=subject,
+        body_text=body,
+        template_type=template_type,
+        resend_id=send_result.get("resend_id"),
+        status="sent",
+        is_test=False,
+        payload={"source": "supply_pipeline"},
+        approved_at=datetime.now(timezone.utc),
+        sent_at=datetime.now(timezone.utc),
+    )
+    db.add(msg)
+    company.last_contact_date = datetime.now(timezone.utc)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
     existing = company.workflow_notes or ""
     company.workflow_notes = (
-        f"{existing}\n[{timestamp}] Sent {template_type} email to {send_result.get('to') or payload.to_email}: {subject}"
+        f"{existing}\n[{timestamp}] Sent {template_type} email to {send_result.get('to') or to_emails}: {subject}"
     ).strip()
     if company.outreach_status == "not_contacted":
         company.outreach_status = "contacted"
 
     db.commit()
     db.refresh(company)
+    db.refresh(msg)
 
     return {
         "message": "Email sent via Resend",
         "company": company.company_name,
-        "to_email": send_result.get("to") or payload.to_email,
+        "to_email": send_result.get("to") or to_emails,
         "template_type": template_type,
         "subject": subject,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
         "resend_id": send_result.get("resend_id"),
         "from_email": send_result.get("from_email"),
-        "reply_to": send_result.get("reply_to"),
+        "reply_to": reply_to,
         "last_contact_date": str(company.last_contact_date),
     }
 
@@ -1204,24 +1382,44 @@ def test_send_email(
     raw_subject = payload.subject or email.get("subject", "Partnership Opportunity")
     subject = f"[TEST] {raw_subject}"
     body = payload.body or email.get("body", "")
+    to_emails = _request_emails(payload.to_email)
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="At least one recipient email is required")
 
     try:
         send_result = send_email_via_resend(
-            to_email=payload.to_email,
+            to_email=to_emails,
             subject=subject,
             body_text=body,
+            idempotency_key=f"supply-outreach-test/{company.id}/{'-'.join(to_emails)[:120]}",
         )
     except ResendEmailError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    msg = _create_supply_outreach_record(
+        db,
+        company,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        template_type=template_type,
+        status="test_sent",
+        is_test=True,
+        send_result=send_result,
+        payload={"source": "supply_pipeline_test"},
+    )
+    db.commit()
+    db.refresh(msg)
 
     return {
         "message": "Test email sent via Resend",
         "company": company.company_name,
-        "to_email": payload.to_email,
+        "to_email": send_result.get("to") or to_emails,
         "template_type": template_type,
         "subject": subject,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
         "resend_id": send_result.get("resend_id"),
         "from_email": send_result.get("from_email"),
-        "reply_to": send_result.get("reply_to"),
+        "reply_to": msg.reply_to,
     }
 
