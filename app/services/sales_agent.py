@@ -213,6 +213,107 @@ def handle_supply_reply_first_response(
     )
 
 
+def create_automated_next_action(
+    db: Session,
+    opportunity: SalesOpportunity,
+    *,
+    action_type: str = "automated_follow_up",
+    recipient: str | None = None,
+    reply_to: str | None = None,
+) -> SalesAgentAction:
+    next_action = opportunity.next_best_action or {}
+    intent = str(next_action.get("intent") or "general_interest")
+    recommendation = str(
+        next_action.get("recommendation")
+        or "Advance the opportunity with a short, useful next step."
+    )
+    subject = f"Next step: {opportunity.title}"
+    body = f"""Hi,
+
+SCOUT is keeping this opportunity moving.
+
+Recommended next step:
+{recommendation}
+
+Suggested action:
+Please share the best next detail or time window so we can keep the process moving without unnecessary back-and-forth.
+
+Best,
+SCOUT"""
+    action = SalesAgentAction(
+        id=_new_uuid(db),
+        sales_opportunity_id=_uuid_value(db, opportunity.id),
+        action_type=action_type,
+        status="planned",
+        risk_level="low",
+        requires_approval=False,
+        stage_before=opportunity.current_stage,
+        stage_after=opportunity.current_stage,
+        detected_intent=intent,
+        recommendation=recommendation,
+        draft_subject=subject,
+        draft_body=body,
+        payload={"auto_policy": opportunity.automation_level, "generated_from": "sales_console"},
+    )
+    db.add(action)
+    db.flush()
+    if recipient:
+        execute_sales_agent_action(db, opportunity, action, recipient=recipient, reply_to=reply_to)
+    return action
+
+
+def execute_sales_agent_action(
+    db: Session,
+    opportunity: SalesOpportunity,
+    action: SalesAgentAction,
+    *,
+    recipient: str,
+    reply_to: str | None = None,
+) -> SalesAgentAction:
+    if action.status == "sent":
+        return action
+    if not recipient or "@" not in recipient:
+        action.status = "blocked"
+        action.error = "No recipient email available"
+        return action
+    if action.requires_approval and opportunity.automation_level not in {"auto", "full_auto"}:
+        action.status = "awaiting_approval"
+        action.error = "Approval required by automation policy"
+        return action
+    try:
+        send_result = send_email_via_resend(
+            to_email=recipient,
+            subject=action.draft_subject or f"Re: {opportunity.title}",
+            body_text=action.draft_body or action.recommendation or "SCOUT is following up on this opportunity.",
+            from_display_name="SCOUT",
+            reply_to=reply_to,
+            idempotency_key=f"sales-agent-action/{action.id}",
+        )
+        action.status = "sent"
+        action.resend_id = send_result.get("resend_id")
+        action.sent_at = datetime.now(timezone.utc)
+        opportunity.last_outbound_at = action.sent_at
+        db.add(
+            SalesMessage(
+                id=_new_uuid(db),
+                sales_opportunity_id=_uuid_value(db, opportunity.id),
+                direction="outbound",
+                source_type="sales_agent_action",
+                source_id=str(action.id),
+                from_email=send_result.get("from_email"),
+                to_email=recipient,
+                subject=action.draft_subject,
+                body_text=action.draft_body,
+                detected_intent=action.detected_intent,
+                payload={"reply_to": reply_to, "automation_level": opportunity.automation_level},
+            )
+        )
+    except ResendEmailError as exc:
+        action.status = "failed"
+        action.error = str(exc)
+    return action
+
+
 def _get_or_create_opportunity(
     db: Session,
     *,
@@ -339,32 +440,12 @@ def _handle_first_response(
         action.error = "No reply recipient email"
         return action
     try:
-        send_result = send_email_via_resend(
-            to_email=recipient,
-            subject=plan.draft_subject,
-            body_text=plan.draft_body,
-            from_display_name="SCOUT",
+        execute_sales_agent_action(
+            db,
+            opportunity,
+            action,
+            recipient=recipient,
             reply_to=reply_to,
-            idempotency_key=idempotency_key,
-        )
-        action.status = "sent"
-        action.resend_id = send_result.get("resend_id")
-        action.sent_at = datetime.now(timezone.utc)
-        opportunity.last_outbound_at = action.sent_at
-        db.add(
-            SalesMessage(
-                id=_new_uuid(db),
-                sales_opportunity_id=_uuid_value(db, opportunity.id),
-                direction="outbound",
-                source_type="sales_agent_action",
-                source_id=str(action.id),
-                from_email=send_result.get("from_email"),
-                to_email=recipient,
-                subject=plan.draft_subject,
-                body_text=plan.draft_body,
-                detected_intent=plan.detected_intent,
-                payload={"reply_to": reply_to},
-            )
         )
     except ResendEmailError as exc:
         action.status = "failed"

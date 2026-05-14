@@ -62,6 +62,7 @@ export default function Header() {
     { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
     { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
     { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
+    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review SCOUT replies and automated next actions" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
     { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
@@ -71,6 +72,7 @@ export default function Header() {
     { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
     { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
     { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
+    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review SCOUT opportunity actions" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "Manage RFPs and vendor docs" },
   ];
 

@@ -10,7 +10,12 @@ from app.models.crm import CrmAccount, Team
 from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.services import sales_agent
-from app.services.sales_agent import classify_sales_intent, handle_crm_reply_first_response, plan_sales_reply
+from app.services.sales_agent import (
+    classify_sales_intent,
+    create_automated_next_action,
+    handle_crm_reply_first_response,
+    plan_sales_reply,
+)
 
 
 @pytest.fixture()
@@ -148,3 +153,36 @@ def test_handle_crm_reply_only_sends_first_reply_once(db_session, monkeypatch):
     assert len(calls) == 1
     statuses = [row.status for row in db_session.query(SalesAgentAction).order_by(SalesAgentAction.created_at).all()]
     assert statuses == ["sent", "skipped"]
+
+
+def test_create_automated_next_action_sends_when_recipient_available(db_session, monkeypatch):
+    sent = {}
+
+    def fake_send_email(**kwargs):
+        sent.update(kwargs)
+        return {"resend_id": "next_email", "from_email": "scout@readyforrobots.com"}
+
+    monkeypatch.setattr(sales_agent, "send_email_via_resend", fake_send_email)
+    opportunity = SalesOpportunity(
+        id=str(uuid.uuid4()),
+        opportunity_type="crm",
+        title="DexMate opportunity",
+        current_stage="qualified",
+        automation_level="auto",
+        next_best_action={"intent": "meeting_requested", "recommendation": "Book a technical qualification call."},
+    )
+    db_session.add(opportunity)
+    db_session.commit()
+
+    action = create_automated_next_action(
+        db_session,
+        opportunity,
+        recipient="buyer@example.com",
+        reply_to="reply+token@readyforrobots.com",
+    )
+    db_session.commit()
+
+    assert action.status == "sent"
+    assert action.resend_id == "next_email"
+    assert sent["to_email"] == "buyer@example.com"
+    assert db_session.query(SalesMessage).filter(SalesMessage.direction == "outbound").count() == 1

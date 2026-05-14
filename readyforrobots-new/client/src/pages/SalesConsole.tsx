@@ -1,0 +1,359 @@
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "wouter";
+import Header from "@/components/Header";
+import { useAuth } from "@/contexts/AuthContext";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { authHeader } from "@/lib/supabase";
+import { toast } from "sonner";
+
+type SalesMessage = {
+  id: string;
+  direction: "inbound" | "outbound";
+  from_email?: string | null;
+  to_email?: string | null;
+  subject?: string | null;
+  body_text?: string | null;
+  detected_intent?: string | null;
+  created_at?: string | null;
+};
+
+type SalesAction = {
+  id: string;
+  action_type: string;
+  status: string;
+  risk_level?: string | null;
+  requires_approval?: boolean;
+  detected_intent?: string | null;
+  recommendation?: string | null;
+  draft_subject?: string | null;
+  draft_body?: string | null;
+  error?: string | null;
+  sent_at?: string | null;
+  created_at?: string | null;
+};
+
+type SalesOpportunity = {
+  id: string;
+  opportunity_type: string;
+  title: string;
+  current_stage: string;
+  status: string;
+  automation_level: string;
+  next_best_action?: { intent?: string; recommendation?: string; stage_after?: string };
+  last_inbound_at?: string | null;
+  last_outbound_at?: string | null;
+  latest_message?: SalesMessage | null;
+  messages?: SalesMessage[];
+  actions?: SalesAction[];
+};
+
+const AUTOMATION_LEVELS = [
+  { value: "manual", label: "Manual" },
+  { value: "first_reply_auto", label: "First reply auto" },
+  { value: "auto", label: "Automated" },
+  { value: "full_auto", label: "Full auto" },
+];
+
+function formatDate(value?: string | null) {
+  if (!value) return "Not yet";
+  return new Date(value).toLocaleString();
+}
+
+function statusColor(status: string) {
+  if (status === "sent") return "#03DAC5";
+  if (status === "failed" || status === "blocked") return "#FF6B6B";
+  if (status === "awaiting_approval") return "#FFB000";
+  return "rgba(255,255,255,0.6)";
+}
+
+export default function SalesConsole() {
+  const { session, loading } = useAuth();
+  const [rows, setRows] = useState<SalesOpportunity[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [selected, setSelected] = useState<SalesOpportunity | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const authFetch = useCallback(
+    async (path: string, init: RequestInit = {}) => {
+      const token = session?.access_token;
+      if (!token) throw new Error("Not signed in");
+      const response = await fetch(
+        `${getApiBase()}${path}`,
+        liveFetchInit({ ...init, headers: { ...authHeader(token), ...init.headers } }),
+      );
+      const text = await response.text();
+      if (!response.ok) throw new Error(text || response.statusText);
+      return text ? JSON.parse(text) : null;
+    },
+    [session?.access_token],
+  );
+
+  const loadRows = useCallback(async () => {
+    if (!session?.access_token) return;
+    setBusy(true);
+    setMsg("");
+    try {
+      const data = (await authFetch("/api/sales/opportunities")) as SalesOpportunity[];
+      const list = Array.isArray(data) ? data : [];
+      setRows(list);
+      setSelectedId((prev) => (list.some((row) => row.id === prev) ? prev : list[0]?.id ?? ""));
+      if (!list.length) setSelected(null);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not load SCOUT sales console");
+    } finally {
+      setBusy(false);
+    }
+  }, [authFetch, session?.access_token]);
+
+  useEffect(() => {
+    void loadRows();
+  }, [loadRows]);
+
+  useEffect(() => {
+    if (!selectedId || !session?.access_token) return;
+    (async () => {
+      setBusy(true);
+      try {
+        const detail = (await authFetch(`/api/sales/opportunities/${selectedId}`)) as SalesOpportunity;
+        setSelected(detail);
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Could not load opportunity");
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [authFetch, selectedId, session?.access_token]);
+
+  const setAutomation = async (level: string) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      const updated = (await authFetch(`/api/sales/opportunities/${selected.id}/automation`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automation_level: level }),
+      })) as SalesOpportunity;
+      setSelected(updated);
+      setRows((prev) => prev.map((row) => (row.id === updated.id ? { ...row, automation_level: updated.automation_level } : row)));
+      toast.success("SCOUT automation updated.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update automation.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const automateNext = async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      const result = await authFetch(`/api/sales/opportunities/${selected.id}/actions/automate-next`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: true }),
+      });
+      setSelected(result.opportunity);
+      toast.success(`SCOUT action ${result.action.status}.`);
+      await loadRows();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not automate next action.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const automateAction = async (action: SalesAction) => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      const result = await authFetch(`/api/sales/actions/${action.id}/automate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: true }),
+      });
+      setSelected(result.opportunity);
+      toast.success(`SCOUT action ${result.action.status}.`);
+      await loadRows();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not automate action.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen bg-[#0d0520] text-white" />;
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-[#0d0520] text-white">
+        <Header />
+        <main className="max-w-3xl mx-auto px-6 pt-32">
+          <h1 className="text-3xl font-bold">SCOUT Sales Console</h1>
+          <p className="mt-4 text-white/60">Sign in to see automated replies, opportunity stage movement, and next-best actions.</p>
+          <Link href="/login?next=/sales-console" className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold" style={{ background: "#03DAC5", color: "#0d0520" }}>
+            Sign in
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0d0520] text-white">
+      <Header />
+      <main className="max-w-7xl mx-auto px-6 pt-28 pb-16">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>SCOUT operator layer</p>
+            <h1 className="mt-3 text-4xl md:text-5xl font-black tracking-tight">Sales Console</h1>
+            <p className="mt-3 max-w-2xl text-white/60">
+              Review what SCOUT heard, what it did automatically, and the next action it will run to advance the opportunity.
+            </p>
+          </div>
+          <button
+            onClick={() => void loadRows()}
+            disabled={busy}
+            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">{msg}</div>}
+
+        <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-white/45">Opportunities</h2>
+              <span className="text-xs text-white/35">{rows.length} active</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              {rows.map((row) => (
+                <button
+                  key={row.id}
+                  onClick={() => setSelectedId(row.id)}
+                  className="w-full rounded-2xl border p-4 text-left transition hover:bg-white/[0.06]"
+                  style={{
+                    borderColor: selectedId === row.id ? "rgba(3,218,197,0.45)" : "rgba(255,255,255,0.08)",
+                    background: selectedId === row.id ? "rgba(3,218,197,0.08)" : "rgba(255,255,255,0.025)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-bold text-white">{row.title}</p>
+                    <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase text-white/45">{row.opportunity_type}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-white/45">Stage: {row.current_stage}</p>
+                  <p className="mt-1 text-xs text-white/35">Intent: {row.next_best_action?.intent || row.latest_message?.detected_intent || "unknown"}</p>
+                </button>
+              ))}
+              {!rows.length && !busy && (
+                <div className="rounded-2xl border border-white/10 p-5 text-sm text-white/45">
+                  No sales opportunities yet. They appear here when SCOUT captures inbound replies.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            {selected ? (
+              <>
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/35">{selected.opportunity_type} opportunity</p>
+                    <h2 className="mt-2 text-3xl font-black">{selected.title}</h2>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Stage: {selected.current_stage}</span>
+                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Status: {selected.status}</span>
+                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Last inbound: {formatDate(selected.last_inbound_at)}</span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-[#0d0520]/60 p-4 xl:w-80">
+                    <label className="text-xs font-bold uppercase tracking-widest text-white/35">Automation mode</label>
+                    <select
+                      value={selected.automation_level}
+                      onChange={(event) => void setAutomation(event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-sm text-white outline-none"
+                    >
+                      {AUTOMATION_LEVELS.map((level) => (
+                        <option key={level.value} value={level.value} className="bg-[#0d0520]">
+                          {level.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => void automateNext()}
+                      disabled={busy}
+                      className="mt-3 w-full rounded-xl px-4 py-2 text-sm font-black disabled:opacity-50"
+                      style={{ background: "#03DAC5", color: "#0d0520" }}
+                    >
+                      Automate next action
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/35">Next best action</p>
+                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "SCOUT will generate the next action from the latest conversation context."}</p>
+                </div>
+
+                <div className="mt-6 grid gap-6 xl:grid-cols-2">
+                  <section>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Actions</h3>
+                    <div className="mt-3 space-y-3">
+                      {(selected.actions || []).map((action) => (
+                        <div key={action.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-bold text-white">{action.action_type.replace(/_/g, " ")}</p>
+                              <p className="mt-1 text-xs" style={{ color: statusColor(action.status) }}>Status: {action.status}</p>
+                            </div>
+                            {action.status !== "sent" && (
+                              <button
+                                onClick={() => void automateAction(action)}
+                                disabled={busy}
+                                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
+                              >
+                                Automate
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-3 text-sm text-white/60">{action.recommendation}</p>
+                          {action.error && <p className="mt-2 text-xs text-red-300">{action.error}</p>}
+                        </div>
+                      ))}
+                      {!(selected.actions || []).length && <p className="text-sm text-white/40">No actions recorded yet.</p>}
+                    </div>
+                  </section>
+
+                  <section>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Messages</h3>
+                    <div className="mt-3 space-y-3">
+                      {(selected.messages || []).map((message) => (
+                        <div key={message.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="font-bold text-white">{message.direction === "inbound" ? "Inbound" : "Outbound"}</p>
+                            <span className="text-xs text-white/35">{formatDate(message.created_at)}</span>
+                          </div>
+                          <p className="mt-2 text-xs text-white/45">{message.subject || "No subject"}</p>
+                          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm text-white/65">{message.body_text || "No body captured."}</p>
+                        </div>
+                      ))}
+                      {!(selected.messages || []).length && <p className="text-sm text-white/40">No messages recorded yet.</p>}
+                    </div>
+                  </section>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-2xl border border-white/10 p-8 text-white/45">
+                Select an opportunity to inspect SCOUT activity.
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

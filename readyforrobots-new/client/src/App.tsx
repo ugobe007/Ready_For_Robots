@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
+import SalesConsole from "./pages/SalesConsole";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
 import Admin from "./pages/Admin";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/crm" component={Crm} />
+      <Route path="/sales-console" component={SalesConsole} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/admin" component={Admin} />
