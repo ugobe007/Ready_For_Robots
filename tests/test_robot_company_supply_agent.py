@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.api.robot_companies import (
+    _create_crm_supply_tracking_copy,
     _create_supply_outreach_record,
     _contact_strategy,
     _extract_contact_research,
@@ -11,6 +12,8 @@ from app.api.robot_companies import (
     _supply_outreach_history,
     _vendor_signup_email,
 )
+from app.models.crm import CrmAccount
+from app.models.outreach import OutreachMessage
 from app.database import Base
 import app.models  # noqa: F401 - register SQLAlchemy models
 
@@ -165,3 +168,44 @@ def test_supply_outreach_record_history_tracks_approval(db_session):
     assert history[0]["status"] == "draft_approved"
     assert history[0]["to_emails"] == ["partnerships@unitree.com", "events@unitree.com"]
     assert history[0]["approved_at"] is not None
+
+
+def test_supply_send_creates_crm_tracking_copy(db_session):
+    user_id = "a1111111-1111-4111-8111-111111111111"
+    company = _RobotCompany()
+    company.id = 202
+    company.website = "https://dexmate.ai"
+    company.target_market = "warehouse"
+    supply_message = _create_supply_outreach_record(
+        db_session,
+        company,
+        to_emails=["partnerships@dexmate.ai", "sales@dexmate.ai"],
+        subject="3 buyer leads for DexMate",
+        body="Review these buyer matches.",
+        template_type="supply_pipeline",
+        status="sent",
+        send_result={"from_email": "outreach@readyforrobots.com", "resend_id": "email_123"},
+        payload={"operator_checkpoint": "sent"},
+    )
+    db_session.flush()
+
+    account, message = _create_crm_supply_tracking_copy(
+        db_session,
+        company,
+        user={"uid": user_id, "email": "operator@example.com"},
+        to_emails=["partnerships@dexmate.ai", "sales@dexmate.ai"],
+        subject="3 buyer leads for DexMate",
+        body="Review these buyer matches.",
+        reply_to=supply_message.reply_to,
+        send_result={"from_email": "outreach@readyforrobots.com", "resend_id": "email_123"},
+        supply_message=supply_message,
+    )
+    db_session.commit()
+
+    assert db_session.query(CrmAccount).count() == 1
+    assert db_session.query(OutreachMessage).count() == 1
+    assert account.name == "DexMate Robotics"
+    assert account.outreach_stage == "supply_outreach_sent"
+    assert message.to_email == "partnerships@dexmate.ai"
+    assert message.payload["all_recipients"] == ["partnerships@dexmate.ai", "sales@dexmate.ai"]
+    assert message.payload["supply_outreach_message_id"] == str(supply_message.id)

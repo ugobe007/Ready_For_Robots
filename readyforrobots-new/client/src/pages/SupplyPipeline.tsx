@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText } from "@/lib/text";
 import { toast } from "sonner";
 
@@ -80,6 +82,8 @@ type DraftState = {
   expanded: boolean;
   trackingId?: string;
   replyTo?: string;
+  crmAccountId?: string;
+  crmOutreachMessageId?: string;
   lastAction?: string;
 };
 
@@ -102,6 +106,7 @@ function initialDraft(row: SupplyCompany): DraftState {
 }
 
 export default function SupplyPipeline() {
+  const { session } = useAuth();
   const [rows, setRows] = useState<SupplyCompany[]>([]);
   const [drafts, setDrafts] = useState<Record<number, DraftState>>({});
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -128,7 +133,7 @@ export default function SupplyPipeline() {
     })();
   }, []);
 
-  const selected = rows.find((row) => row.robot_company.id === selectedId) ?? rows[0];
+  const selected = selectedId == null ? null : rows.find((row) => row.robot_company.id === selectedId) ?? null;
   const selectedDraft = selected ? drafts[selected.robot_company.id] : null;
   const approvedCount = Object.values(drafts).filter((draft) => draft.approved && !draft.sent).length;
   const sentCount = Object.values(drafts).filter((draft) => draft.sent).length;
@@ -218,14 +223,20 @@ export default function SupplyPipeline() {
       toast.error("Approve the draft before sending.");
       return;
     }
+    if (!test && !session?.access_token) {
+      toast.error("Sign in before sending live outreach so SCOUT can copy the message to your CRM.");
+      return;
+    }
     patchDraft(id, { sending: true });
     try {
       const endpoint = test ? "test-send" : "send";
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.access_token) Object.assign(headers, authHeader(session.access_token));
       const response = await fetch(
         `${getApiBase()}/api/robot-companies/${id}/email/${endpoint}`,
         liveFetchInit({
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             to_email: recipients,
             template_type: "supply_pipeline",
@@ -241,9 +252,14 @@ export default function SupplyPipeline() {
         sent: !test || draft.sent,
         trackingId: result.supply_outreach_message_id || draft.trackingId,
         replyTo: result.reply_to || draft.replyTo,
+        crmAccountId: result.crm_account_id || draft.crmAccountId,
+        crmOutreachMessageId: result.crm_outreach_message_id || draft.crmOutreachMessageId,
         lastAction: result.status || (test ? "test_sent" : "sent"),
       });
-      toast.success(test ? "Test email sent." : `Sent outreach to ${row.robot_company.company_name}.`);
+      if (!test) {
+        setSelectedId(null);
+      }
+      toast.success(test ? "Test email sent." : `Sent outreach to ${row.robot_company.company_name} and copied it to CRM.`);
     } catch (e) {
       patchDraft(id, { sending: false });
       toast.error(e instanceof Error ? e.message : "Could not send email.");
@@ -566,10 +582,10 @@ export default function SupplyPipeline() {
                     <button
                       type="button"
                       onClick={() => void sendOne(selected)}
-                      disabled={selectedDraft.sending || !selectedDraft.approved || !selectedDraft.to}
+                      disabled={selectedDraft.sending || selectedDraft.sent || !selectedDraft.approved || !selectedDraft.to}
                       className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
                     >
-                      {selectedDraft.sending ? "Sending..." : "Send approved"}
+                      {selectedDraft.sent ? "Sent" : selectedDraft.sending ? "Sending..." : "Send approved"}
                     </button>
                     <button
                       type="button"
@@ -578,7 +594,32 @@ export default function SupplyPipeline() {
                     >
                       Copy
                     </button>
+                    <div
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${
+                        selectedDraft.sent
+                          ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
+                          : "border-white/10 bg-white/[0.025] text-white/35"
+                      }`}
+                      title={selectedDraft.sent ? "Outreach sent and copied to CRM." : "Send approved outreach to complete this checkpoint."}
+                    >
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded border ${
+                          selectedDraft.sent ? "border-emerald-300 bg-emerald-400 text-[#0d0520]" : "border-white/20"
+                        }`}
+                      >
+                        {selectedDraft.sent ? "✓" : ""}
+                      </span>
+                      Sent checkpoint
+                    </div>
                   </div>
+                  {selectedDraft.sent && (
+                    <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/8 p-3 text-xs text-emerald-100">
+                      <p className="font-bold">Workflow checkpoint complete: email sent and activity copied to CRM.</p>
+                      <p className="mt-1 text-emerald-100/70">
+                        CRM account: {selectedDraft.crmAccountId || "tracked"} · Message: {selectedDraft.crmOutreachMessageId || selectedDraft.trackingId || "tracked"}
+                      </p>
+                    </div>
+                  )}
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
                     <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.signup}</p>
                     <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.meeting}</p>

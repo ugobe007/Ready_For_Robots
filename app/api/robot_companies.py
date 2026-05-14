@@ -20,7 +20,11 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.database import get_db
+from app.api.auth_deps import _require_user
+from app.api.crm import _ensure_default_team, _uid_uuid
 from app.models.company import Company
+from app.models.crm import CrmAccount
+from app.models.outreach import OutreachMessage
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
 from app.services.company_domain import normalize_website_domain
@@ -610,11 +614,85 @@ def _create_supply_outreach_record(
     return msg
 
 
+def _create_crm_supply_tracking_copy(
+    db: Session,
+    company: RobotCompany,
+    *,
+    user: dict[str, Any],
+    to_emails: list[str],
+    subject: str,
+    body: str,
+    reply_to: str,
+    send_result: dict[str, Any],
+    supply_message: SupplyOutreachMessage,
+) -> tuple[CrmAccount, OutreachMessage]:
+    uid = _uid_uuid(user)
+    team = _ensure_default_team(db, uid, user.get("email") or "")
+    account = (
+        db.query(CrmAccount)
+        .filter(CrmAccount.team_id == team.id, CrmAccount.name == company.company_name)
+        .first()
+    )
+    if not account:
+        account = CrmAccount(
+            team_id=team.id,
+            name=company.company_name,
+            website=company.website,
+            industry=company.target_market,
+            owner_user_id=uid,
+        )
+        db.add(account)
+        db.flush()
+    now = datetime.now(timezone.utc)
+    primary_to = to_emails[0]
+    account.website = account.website or company.website
+    account.industry = account.industry or company.target_market
+    account.owner_user_id = account.owner_user_id or uid
+    account.contact_email = primary_to
+    account.outreach_draft = body
+    account.outreach_sent_at = now
+    account.outreach_stage = "supply_outreach_sent"
+    message = OutreachMessage(
+        id=_uuid_for_session(db),
+        team_id=_uuid_for_json_uuid_column(db, team.id),
+        crm_account_id=_uuid_for_json_uuid_column(db, account.id),
+        company_id=None,
+        sender_user_id=_uuid_for_json_uuid_column(db, uid),
+        to_email=primary_to,
+        from_email=send_result.get("from_email"),
+        reply_to=reply_to,
+        reply_token=secrets.token_urlsafe(18),
+        subject=subject,
+        body_text=body,
+        send_identity="scout",
+        resend_id=send_result.get("resend_id"),
+        status="sent",
+        payload={
+            "source": "supply_pipeline",
+            "supply_outreach_message_id": str(supply_message.id),
+            "robot_company_id": company.id,
+            "robot_company_name": company.company_name,
+            "all_recipients": to_emails,
+            "checkpoint": "Supply outreach sent and copied to CRM.",
+        },
+        sent_at=now,
+    )
+    db.add(message)
+    return account, message
+
+
 def _uuid_for_session(db: Session):
     value = uuid.uuid4()
     bind = db.get_bind()
     if bind is not None and bind.dialect.name == "sqlite":
         return str(value)
+    return value
+
+
+def _uuid_for_json_uuid_column(db: Session, value: Any):
+    bind = db.get_bind()
+    if bind is not None and bind.dialect.name == "sqlite":
+        return str(value) if value is not None else None
     return value
 
 
@@ -1271,6 +1349,7 @@ def send_email(
     company_id: int,
     payload: SendRobotCompanyEmailRequest,
     db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
 ):
     """
     Send outreach email via Resend and log activity.
@@ -1327,6 +1406,17 @@ def send_email(
         sent_at=datetime.now(timezone.utc),
     )
     db.add(msg)
+    crm_account, crm_message = _create_crm_supply_tracking_copy(
+        db,
+        company,
+        user=user,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        reply_to=reply_to,
+        send_result=send_result,
+        supply_message=msg,
+    )
     company.last_contact_date = datetime.now(timezone.utc)
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
     existing = company.workflow_notes or ""
@@ -1339,6 +1429,8 @@ def send_email(
     db.commit()
     db.refresh(company)
     db.refresh(msg)
+    db.refresh(crm_account)
+    db.refresh(crm_message)
 
     return {
         "message": "Email sent via Resend",
@@ -1351,6 +1443,9 @@ def send_email(
         "resend_id": send_result.get("resend_id"),
         "from_email": send_result.get("from_email"),
         "reply_to": reply_to,
+        "crm_account_id": str(crm_account.id),
+        "crm_outreach_message_id": str(crm_message.id),
+        "workflow_checkpoint": "Sent checkpoint recorded and copied to CRM.",
         "last_contact_date": str(company.last_contact_date),
     }
 
