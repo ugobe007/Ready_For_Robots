@@ -55,6 +55,7 @@ from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount
 from app.models.outreach import OutreachMessage
+from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
@@ -329,9 +330,9 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     lines: list[str] = [
         "Hello,",
         "",
-        "I am Cal with Ready For Robots.",
+        CAL_INTRO,
         "",
-        "We track automation buying signals and help teams decide where robotics might be worth a practical look.",
+        BUYER_SIGNAL_EXPLANATION,
         "",
         f"{acct.name} stood out because there may be an automation angle in {industry}.",
     ]
@@ -358,7 +359,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
         lines.append(collateral)
-    lines.extend(["", "Best,", "Cal", "Robot Automation Team", "Ready For Robots"])
+    lines.extend(["", cal_signature()])
     return "\n".join(lines)
 
 

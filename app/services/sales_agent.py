@@ -15,6 +15,7 @@ from app.models.robot_company import RobotCompany
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature, max_signature
 from app.services.sales_learning_agent import capture_sales_action_experience
 
 
@@ -136,7 +137,7 @@ def plan_sales_reply(
     elif intent == "negative":
         stage = "lost"
         recommendation = "Respect the response and stop active outreach."
-        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal\nRobot Automation Team\nReady For Robots"
+        body = f"Thanks for letting us know. We will pause outreach here.\n\n{cal_signature()}"
     elif intent == "nurture":
         stage = "nurture"
         recommendation = "Respect timing and ask permission to follow up later."
@@ -186,10 +187,7 @@ To make the next step useful, could you share:
 
 {close}
 
-Best,
-Cal
-Robot Automation Team
-Ready For Robots"""
+{cal_signature()}"""
 
 
 def _max_reply_body(*, opener: str, questions: list[str], close: str) -> str:
@@ -203,9 +201,7 @@ To make the next step useful, could you share:
 
 {close}
 
-Best,
-Max @ Technical Support Lead
-Ready For Robots"""
+{max_signature()}"""
 
 
 def _technical_question_needs_management(text: str, subject: str | None = None) -> bool:
@@ -324,19 +320,16 @@ def create_automated_next_action(
     subject = f"Next step: {opportunity.title}"
     body = f"""Hi,
 
-I am Cal with Ready For Robots.
+{CAL_INTRO}
 
-We track automation buying signals and help teams turn the strongest ones into practical next steps.
+{BUYER_SIGNAL_EXPLANATION}
 
 For this opportunity, the next useful step looks like:
 {recommendation}
 
 Could you share the best detail or time window so we can keep this moving without unnecessary back-and-forth?
 
-Best,
-Cal
-Robot Automation Team
-Ready For Robots"""
+{cal_signature()}"""
     action = SalesAgentAction(
         id=_new_uuid(db),
         sales_opportunity_id=_uuid_value(db, opportunity.id),

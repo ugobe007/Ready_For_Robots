@@ -98,7 +98,7 @@ def _fetch_received_if_needed(data: dict[str, Any]) -> dict[str, Any]:
 
 def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply, account: CrmAccount | None) -> None:
     title = f"Reply received from {reply.from_email or 'sales opportunity'}"
-    body = f"{account.name if account else 'A lead'} replied to Cal's outreach."
+    body = f"{account.name if account else 'A lead'} replied to Cal. Review the thread and decide whether the next step should be handled by Cal, Max, or you."
     if msg.sender_user_id:
         db.add(
             UserNotification(
@@ -127,6 +127,7 @@ def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply,
                     f"Cal captured a reply from {reply.from_email or 'unknown sender'}.\n\n"
                     f"Account: {account.name if account else msg.crm_account_id}\n"
                     f"Subject: {reply.subject or ''}\n\n"
+                    "Use the admin workflow queue to decide the next step.\n\n"
                     f"{reply.body_text or ''}"
                 ),
                 from_display_name="Cal",

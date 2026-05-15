@@ -28,6 +28,7 @@ from app.models.crm import CrmAccount
 from app.models.outreach import OutreachMessage
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
+from app.services.agent_messaging import CAL_INTRO, VENDOR_SIGNAL_EXPLANATION, cal_signature
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -793,9 +794,9 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
     response_playbook = _recommended_response_playbook(matches)
     body = f"""Hello {rc.company_name} team,
 
-I am Cal with Ready For Robots.
+{CAL_INTRO}
 
-We find automation sales leads and rank them by buying signals, so stronger signals point to warmer accounts.
+{VENDOR_SIGNAL_EXPLANATION}
 
 I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
 
@@ -809,10 +810,7 @@ If this is relevant, I can set up a Ready For Robots account for {possessive} te
 
 Open to a quick 15-minute call next week?
 
-Best,
-Cal
-Robot Automation Team
-Ready For Robots"""
+{cal_signature()}"""
     return {"subject": subject, "body": body}
 
 

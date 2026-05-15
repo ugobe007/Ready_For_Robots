@@ -2,6 +2,7 @@
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { outreachInsightForIndustry } from "@/lib/industryContext";
+import { BUYER_SIGNAL_EXPLANATION, CAL_INTRO, CAL_SIGNATURE } from "@/lib/agentMessaging";
 
 export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -119,9 +120,9 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
   return [
     "Hello,",
     "",
-    "I am Cal with Ready For Robots.",
+    CAL_INTRO,
     "",
-    "We track automation buying signals and help teams decide where robotics might be worth a practical look.",
+    BUYER_SIGNAL_EXPLANATION,
     "",
     opening,
     "",
@@ -133,10 +134,7 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
     "",
     "Worth a quick exchange to see whether there is a useful automation angle here?",
     "",
-    "Best,",
-    "Cal",
-    "Robot Automation Team",
-    "Ready For Robots",
+    CAL_SIGNATURE,
   ].join("\n");
 }
 

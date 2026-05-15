@@ -55,6 +55,14 @@ const PERSONA_TRAITS = [
   { id: "whitepapers", label: "Whitepapers/studies" },
 ];
 
+const VOICE_FEEDBACK = [
+  { label: "Too generic", instruction: "Use one specific signal hook and remove generic claims." },
+  { label: "Too long", instruction: "Keep the email under 140 words unless the customer has already replied." },
+  { label: "Too salesy", instruction: "Use lower-pressure language and admit uncertainty when the fit is not confirmed." },
+  { label: "Better hook needed", instruction: "Lead with the clearest why-now signal before explaining Ready For Robots." },
+  { label: "Good tone", instruction: "Keep this tone: concise, human, specific, and low-pressure." },
+];
+
 export default function Crm() {
   const { session, loading } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -189,6 +197,16 @@ export default function Crm() {
   const toggleTrait = (id: string) => {
     setSelectedTraits((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
     setStyleApproved(false);
+  };
+
+  const applyVoiceFeedback = (instruction: string) => {
+    setStyleInstruction((current) => {
+      const lines = current.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (lines.includes(instruction)) return current;
+      return [...lines, instruction].join("\n");
+    });
+    setStyleApproved(false);
+    setMsg("Cal voice feedback saved locally. Click Draft with Cal to apply it to the next draft.");
   };
 
   const draftWithScout = async () => {
@@ -491,6 +509,21 @@ export default function Crm() {
                   className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-white/25"
                 />
               </label>
+              <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.025] p-3">
+                <p className="mb-2 text-[10px] uppercase tracking-widest text-white/30">Teach Cal from this draft</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {VOICE_FEEDBACK.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => applyVoiceFeedback(item.instruction)}
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/55 hover:border-amber-300/35 hover:text-amber-100"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {scoutStyleGuidance() && (
                 <div className="mt-3 rounded-lg border border-violet-500/20 bg-violet-500/10 p-3 text-[11px] leading-relaxed text-violet-100/85">
                   {scoutStyleGuidance()}

@@ -5,6 +5,33 @@ Personalized email scripts for different workflow stages
 from datetime import datetime
 from typing import Dict, Optional
 
+from app.services.agent_messaging import CAL_INTRO, VENDOR_SIGNAL_EXPLANATION, cal_signature
+
+
+def _focus(company_data: Dict) -> str:
+    parts = [
+        company_data.get("robot_type"),
+        company_data.get("product_category"),
+        company_data.get("target_market"),
+    ]
+    cleaned = []
+    seen = set()
+    for part in parts:
+        value = str(part or "").strip()
+        key = value.lower()
+        if not value or key in {"unknown", "none", "null"} or key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(value)
+    return " and ".join(cleaned[:2]) if cleaned else "robot automation"
+
+
+def _vendor_context(company_data: Dict) -> str:
+    lead_score = company_data.get("lead_score")
+    if isinstance(lead_score, (int, float)) and lead_score >= 85:
+        return "Your company is showing up as a high-priority vendor fit in our system."
+    return "Your company looked relevant to a few automation demand patterns we are tracking."
+
 
 def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     """
@@ -21,43 +48,23 @@ def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     target_market = company_data.get('target_market', 'automation')
     us_presence = company_data.get('us_presence', 'none')
     
-    # Personalize based on U.S. presence
-    if us_presence == 'none':
-        angle = "breaking into the U.S. market"
-        value_prop = "We specialize in connecting Chinese robotics companies with U.S. distributors, system integrators, and end customers."
-    elif us_presence == 'distributor':
-        angle = "expanding your U.S. distributor network"
-        value_prop = "We help established robotics companies scale their U.S. presence through strategic partnerships with regional distributors and system integrators."
-    else:
-        angle = "growing your U.S. market share"
-        value_prop = "We connect robotics companies with qualified system integrators and end customers across North America."
+    focus = _focus(company_data)
+    market_note = "U.S. market entry" if us_presence == "none" else "U.S. growth"
+    subject = f"Automation sales leads for {company_name}"
     
-    subject = f"U.S. Market Entry Partnership - {company_name}"
-    
-    body = f"""Hi [First Name],
+    body = f"""Hello,
 
-I came across {company_name} and was impressed by your {robot_type} solutions for {target_market}. I noticed you're {angle}, and I think there's a strong fit for collaboration.
+{CAL_INTRO}
 
-{value_prop}
+{VENDOR_SIGNAL_EXPLANATION}
 
-**What We Offer:**
-• Access to 500+ vetted U.S. system integrators and distributors
-• Market entry strategy and localization support
-• Trade show coordination (Automate, ProMat, MODEX)
-• Lead generation and customer introductions
+I came across {company_name} because your work around {focus} looks relevant to the kind of automation demand we are seeing. {_vendor_context(company_data)}
 
-**Why This Matters Now:**
-The U.S. {target_market} automation market is growing 23% YoY, with strong demand for proven {robot_type} technology. Companies that establish partnerships in Q1 2026 are capturing the early-mover advantage.
+If {market_note} is a priority, I can send over a few matched accounts and the signal context behind them. No pressure to chase all of them; the goal is to see whether any are worth a real sales conversation.
 
-Would you be open to a 20-minute call next week to explore how we can accelerate your U.S. growth?
+Open to a quick 15-minute call next week?
 
-Best regards,
-[Your Name]
-Ready For Robots
-www.readyforrobots.com
-
-P.S. We recently helped [Similar Company] expand from 2 to 15 U.S. distributors in 6 months. Happy to share that playbook.
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,
@@ -73,36 +80,19 @@ def generate_demo_request_email(company_data: Dict, contact_response: Optional[s
     company_name = company_data.get('company_name', 'Your Company')
     robot_type = company_data.get('robot_type', 'robotics')
     
-    subject = f"Demo Request: Technical Review of {company_name} {robot_type.upper()}"
+    subject = f"Quick technical fit check for {company_name}"
     
-    body = f"""Hi [First Name],
+    body = f"""Hello,
 
-Thanks for getting back to me! {contact_response or "I appreciate your interest in exploring the U.S. market."}
+{CAL_INTRO}
 
-To best support your U.S. market entry, I'd like to schedule a technical demo of your {robot_type} solutions. This will help us:
+{contact_response or "Thanks for the reply."}
 
-1. **Understand Your Technology** - Specs, capabilities, unique advantages
-2. **Identify Target Customers** - Which U.S. industries/applications are the best fit
-3. **Map Partner Network** - Which of our 500+ integrators align with your tech
-4. **Build Go-to-Market Plan** - Positioning, pricing, support requirements
+The useful next step is a quick technical fit check, not a long presentation. I want to understand where your {robot_type} works best, what constraints matter, and which buyer signals should route to your team.
 
-**Proposed Agenda (60 minutes):**
-• Product demonstration (30 min)
-• U.S. market opportunity discussion (15 min)
-• Partnership model and next steps (15 min)
+Open to a 20-minute review next week?
 
-**Availability:**
-I'm flexible on timing. What works best for your team?
-- [Date Option 1] at [Time] EST
-- [Date Option 2] at [Time] EST
-- Or suggest a time that works for you
-
-Looking forward to seeing your technology in action!
-
-Best,
-[Your Name]
-Ready For Robots
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,
@@ -119,46 +109,19 @@ def generate_partnership_proposal_email(company_data: Dict, demo_notes: Optional
     robot_type = company_data.get('robot_type', 'robotics')
     target_market = company_data.get('target_market', 'automation')
     
-    subject = f"Partnership Proposal: U.S. Market Entry Plan for {company_name}"
+    subject = f"Next step for {company_name}"
     
-    body = f"""Hi [First Name],
+    body = f"""Hello,
 
-Thank you for the excellent demo last week. Your {robot_type} technology is impressive, and I can see strong market fit in the U.S. {target_market} sector.
+{CAL_INTRO}
 
-Based on our discussion, I've outlined a partnership approach:
+Thanks again for walking through {company_name}. Based on what we discussed, I think the next step should stay focused: confirm the buyer categories where your {robot_type} is strongest, then map those to the hottest signal types we are seeing.
 
-**PHASE 1: Market Entry Foundation (Months 1-2)**
-• Identify 10-15 target system integrators aligned with your technology
-• Localize marketing materials and technical documentation
-• Set up demo unit program for qualified partners
-• Plan trade show presence (Automate 2026 or ProMat 2026)
+I can put that into a short plan with the accounts, signal context, and suggested route for each one.
 
-**PHASE 2: Partner Onboarding (Months 2-4)**
-• Introduce your team to vetted integrators
-• Facilitate technical training and certification
-• Support first customer deployments
-• Generate case studies and success stories
+Open to a 20-minute review?
 
-**PHASE 3: Scale & Growth (Months 4-12)**
-• Expand to 20-30 active integrator partnerships
-• Regional market penetration (focus on [region based on tech])
-• End customer lead generation program
-• Quarterly business reviews and optimization
-
-**Investment & Terms:**
-I've attached a detailed proposal with partnership structure, pricing, and expected ROI.
-
-**Next Steps:**
-Let's schedule a 30-minute call to review the proposal and address any questions. 
-
-Are you available [Date/Time options]?
-
-Best regards,
-[Your Name]
-Ready For Robots
-
-Attachment: Partnership_Proposal_{company_name}.pdf
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,
@@ -184,62 +147,46 @@ def generate_followup_email(company_data: Dict, previous_contact: str, days_sinc
         tone = "last attempt"
         urgency = "I'll assume this isn't a priority right now, but wanted to reach out one last time..."
     
-    subject = f"Re: U.S. Market Entry Partnership - {company_name}"
+    subject = f"Re: Automation sales leads for {company_name}"
     
     if tone == "friendly reminder":
-        body = f"""Hi [First Name],
+        body = f"""Hello,
 
-{urgency}
+{CAL_INTRO}
 
-I sent a note last week about helping {company_name} expand into the U.S. {robot_type} market. 
+Following up on my note about {company_name} and the automation sales leads we are seeing around {robot_type}.
 
-Quick recap:
-• We connect Chinese robotics companies with U.S. distributors/integrators
-• 500+ vetted partners in our network
-• Full market entry support (demos, trade shows, lead gen)
+{VENDOR_SIGNAL_EXPLANATION}
 
-Is this something worth exploring? Even a quick 15-minute call could clarify if there's a fit.
+If this is close to a market you care about, a quick 15-minute call would tell us whether the signal context is useful.
 
-Best,
-[Your Name]
-"""
+{cal_signature()}"""
     
     elif tone == "value-added followup":
-        body = f"""Hi [First Name],
+        body = f"""Hello,
 
-{urgency}
+{CAL_INTRO}
 
-I've been tracking the U.S. {robot_type} market and thought this might interest you:
+I wanted to send one more useful angle rather than just bump the same email.
 
-**Recent Trends:**
-• 3 new Chinese {robot_type} companies entered U.S. in Q4 2025
-• Average time to first customer: 4-6 months with distributor network
-• Trade show ROI: Companies exhibiting at Automate see 3x more inbound leads
+We are seeing more buyer activity around {robot_type}, and the warmer accounts usually have a specific signal behind them: hiring, expansion, budget movement, RFP language, or public operational pressure.
 
-**Opportunity:**
-Automate 2026 (May) is coming up. Early booth reservations are closing in 2 weeks. If you're considering U.S. expansion, this could be a strategic entry point.
+If that would help {company_name}, I can send a few examples and the context behind each one.
 
-Would you like to discuss a trade show strategy + distributor outreach plan?
+Open to a quick look next week?
 
-Best,
-[Your Name]
-"""
+{cal_signature()}"""
     
     else:  # last attempt
-        body = f"""Hi [First Name],
+        body = f"""Hello,
 
-{urgency}
+{CAL_INTRO}
 
-I understand timing might not be right for U.S. market expansion. No worries at all.
+I will close the loop here.
 
-If things change, I'm here to help. We're always tracking the {robot_type} market and would be happy to reconnect when it makes sense for {company_name}.
+If automation lead flow becomes relevant for {company_name}, I am happy to reconnect and share what we are seeing around {robot_type}.
 
-Feel free to reach out anytime.
-
-Best regards,
-[Your Name]
-Ready For Robots
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,
@@ -255,38 +202,19 @@ def generate_trade_show_invitation_email(company_data: Dict, trade_show: str, da
     company_name = company_data.get('company_name', 'Your Company')
     robot_type = company_data.get('robot_type', 'robotics')
     
-    subject = f"Meet at {trade_show} {date.split('-')[0]} - U.S. Market Entry Discussion"
+    subject = f"Will {company_name} be at {trade_show}?"
     
-    body = f"""Hi [First Name],
+    body = f"""Hello,
 
-Are you planning to attend {trade_show} in {date}? It's one of the best events for {robot_type} companies looking to break into the U.S. market.
+{CAL_INTRO}
 
-**Why {trade_show} Matters:**
-• 30,000+ qualified buyers and integrators
-• Direct access to decision-makers in {robot_type} adoption
-• Perfect venue for product demos and partnership discussions
+Are you planning to attend {trade_show} in {date}? I am asking because we track automation sales leads by buying signal, and events are often where warmer accounts become real conversations.
 
-**Let's Meet:**
-If you're attending, I'd love to schedule 30 minutes to:
-1. Introduce you to potential U.S. distributors (we'll have 10+ at the show)
-2. Review your technology and market positioning
-3. Discuss partnership opportunities
+If {company_name} will be there, I can compare your {robot_type} focus against the accounts we are seeing and flag the ones worth meeting.
 
-If you're NOT attending but interested in U.S. expansion, we can arrange virtual introductions to integrators who will be there.
+Open to a quick 15-minute call before the show?
 
-**My Schedule:**
-I'm available:
-• [Date] 10am-12pm, 2pm-4pm
-• [Date] 9am-11am, 1pm-5pm
-
-Let me know what works!
-
-Best,
-[Your Name]
-Ready For Robots
-
-P.S. We're hosting a private reception for Chinese robotics companies on [Date] evening. Would love to have {company_name} join if you're in town.
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,
@@ -304,42 +232,23 @@ def generate_hot_lead_priority_email(company_data: Dict) -> Dict[str, str]:
     lead_score = company_data.get('lead_score', 85)
     unique_selling_points = company_data.get('unique_selling_points', [])
     
-    subject = f"🔥 U.S. Market Opportunity for {company_name} - High Priority"
+    subject = f"Warm automation accounts for {company_name}"
     
-    usp_bullets = "\n".join([f"• {usp}" for usp in unique_selling_points[:3]]) if unique_selling_points else f"• Cutting-edge {robot_type} technology"
+    usp_line = ", ".join(unique_selling_points[:3]) if unique_selling_points else f"{robot_type} technology"
     
-    body = f"""Hi [First Name],
+    body = f"""Hello,
 
-I've been tracking {company_name} and I'm reaching out because you're uniquely positioned for rapid U.S. market success.
+{CAL_INTRO}
 
-**Why You Stand Out:**
-{usp_bullets}
+{VENDOR_SIGNAL_EXPLANATION}
 
-**The Opportunity:**
-We have 3 U.S. system integrators actively searching for {robot_type} solutions RIGHT NOW. They're:
-• Currently evaluating competitive products
-• Ready to commit to partnerships in Q1 2026
-• Looking for proven technology with strong support
+{company_name} is showing up as a higher-priority fit in our system. The reason is not just that you make {robot_type}; it is the combination of your focus ({usp_line}) and the sales signals we are seeing from potential buyers.
 
-**Fast Track Process:**
-If you're interested, I can arrange introductions THIS WEEK. Here's the timeline:
-• Day 1-2: Share your tech overview with integrators
-• Day 3-5: Schedule demo calls
-• Week 2: Partnership discussions if there's mutual fit
+If useful, I can send the first few accounts and why each one looks warm.
 
-This is time-sensitive - they're making decisions in the next 2-3 weeks.
+Open to a quick 15-minute call this week?
 
-Can we connect for 15 minutes in the next 48 hours?
-
-**Calendar Link:** [Insert scheduling link]
-**Direct Line:** [Phone number]
-
-Best,
-[Your Name]
-Ready For Robots
-
-P.S. Score: {lead_score}/100 - You're in the top 5% of companies we track for U.S. market readiness.
-"""
+{cal_signature()}"""
     
     return {
         "subject": subject,

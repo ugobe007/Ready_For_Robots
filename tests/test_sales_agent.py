@@ -65,7 +65,7 @@ def test_plan_sales_reply_routes_technical_questions_to_max():
     assert plan.payload["copied_by"] == "cal"
     assert plan.payload["management_escalation_required"] is False
     assert "Cal copied me on this" in plan.draft_body
-    assert "Max @ Technical Support Lead" in plan.draft_body
+    assert "Max\nTechnical Support Lead" in plan.draft_body
 
 
 def test_plan_sales_reply_escalates_risky_technical_questions_to_management():
@@ -196,7 +196,7 @@ def test_handle_crm_technical_reply_sends_from_max_and_copies_support(db_session
     assert action.payload["responder_persona"] == "max"
     assert sent["from_display_name"] == "Max"
     assert sent["cc"] == ["max@readyforrobots.com"]
-    assert "Max @ Technical Support Lead" in sent["body_text"]
+    assert "Max\nTechnical Support Lead" in sent["body_text"]
 
 
 def test_handle_crm_risky_technical_reply_notifies_management(db_session, monkeypatch):

@@ -26,6 +26,7 @@ import {
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
+import { BUYER_SIGNAL_EXPLANATION, CAL_INTRO, CAL_SIGNATURE } from "@/lib/agentMessaging";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -176,9 +177,9 @@ function draftOutreach(p: Pick<Prospect, "company" | "signal" | "relevance" | "a
 
 Hello,
 
-I am Cal with Ready For Robots.
+${CAL_INTRO}
 
-We track automation buying signals and help teams decide where robotics might be worth a practical look.
+${BUYER_SIGNAL_EXPLANATION}
 
 ${p.company} stood out because ${p.relevance.toLowerCase()}
 
@@ -188,10 +189,7 @@ The practical next step may be: ${p.action}
 
 Worth a quick exchange to see whether there is a useful automation angle here?
 
-Best,
-Cal
-Robot Automation Team
-Ready For Robots`;
+${CAL_SIGNATURE}`;
 }
 
 function formatEmployees(value: number | null | undefined): string {
