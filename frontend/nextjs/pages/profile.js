@@ -495,7 +495,7 @@ export default function ProfilePage() {
             <Link href="/search" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-cyan-700 hover:text-cyan-400 transition-colors">Search</Link>
             <Link href="/newsletter" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-emerald-700 hover:text-emerald-400 transition-colors">Newsletter</Link>
             <Link href="/roi-calculator" className="text-xs border border-neutral-700 text-neutral-400 rounded px-3 py-1.5 hover:border-yellow-700 hover:text-yellow-400 transition-colors">ROI Calculator</Link>
-            {isAdmin && <Link href="/admin" className="text-xs border border-amber-800 text-amber-400 rounded px-3 py-1.5 hover:border-amber-600 transition-colors">Admin</Link>}
+            {isAdmin && <Link href="https://ready-2-robot.fly.dev/admin" className="text-xs border border-amber-800 text-amber-400 rounded px-3 py-1.5 hover:border-amber-600 transition-colors">Admin</Link>}
           </div>
         </header>
 

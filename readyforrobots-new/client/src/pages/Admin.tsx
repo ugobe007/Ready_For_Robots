@@ -128,6 +128,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "">("");
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -203,6 +204,7 @@ export default function Admin() {
     e.preventDefault();
     setMessage("");
     setError("");
+    setActionBusy("urls");
     try {
       const payload = {
         urls: urls.split(/\s+/).map((url) => url.trim()).filter(Boolean),
@@ -217,6 +219,8 @@ export default function Admin() {
       await loadAdmin();
     } catch (err) {
       setError(err instanceof Error ? err.message : "URL import failed.");
+    } finally {
+      setActionBusy("");
     }
   }
 
@@ -224,6 +228,7 @@ export default function Admin() {
     e.preventDefault();
     setMessage("");
     setError("");
+    setActionBusy("companies");
     try {
       const companies = JSON.parse(companyJson);
       const res = await adminFetch("/api/admin/import/companies", { method: "POST", body: JSON.stringify({ companies }) });
@@ -233,6 +238,8 @@ export default function Admin() {
       await loadAdmin();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Company import failed. Check the JSON format.");
+    } finally {
+      setActionBusy("");
     }
   }
 
@@ -240,6 +247,7 @@ export default function Admin() {
     e.preventDefault();
     setMessage("");
     setError("");
+    setActionBusy("scraper");
     try {
       const res = await adminFetch("/api/admin/scrape/trigger", {
         method: "POST",
@@ -250,6 +258,50 @@ export default function Admin() {
       setMessage(data.status === "queued" ? `${triggerScraper} scraper queued.` : data.reason || "Scraper request accepted.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Scraper trigger failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runSystemAction(kind: "cache" | "reindex") {
+    setMessage("");
+    setError("");
+    setActionBusy(kind);
+    try {
+      const path = kind === "cache" ? "/api/admin/system/cache/clear" : "/api/admin/system/reindex";
+      const res = await adminFetch(path, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.detail || data?.message || `${kind} action failed.`);
+      setMessage(data?.message || (kind === "cache" ? "Cache cleared." : "Database reindex queued."));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `${kind} action failed.`);
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function exportAllData() {
+    setMessage("");
+    setError("");
+    setActionBusy("export");
+    try {
+      const res = await adminFetch("/api/admin/export/all");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.detail || "Export failed.");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `readyforrobots-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setMessage("Export downloaded.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed.");
+    } finally {
+      setActionBusy("");
     }
   }
 
@@ -414,6 +466,63 @@ export default function Admin() {
           </section>
         )}
 
+        <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
+          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>System controls</p>
+            <p className="mb-4 text-xs leading-relaxed text-white/42">
+              These actions use the same authenticated admin session, so failures are shown here instead of opening unauthenticated tabs.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void runSystemAction("cache")}
+                disabled={!!actionBusy}
+                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+              >
+                {actionBusy === "cache" ? "Clearing..." : "Clear cache"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void runSystemAction("reindex")}
+                disabled={!!actionBusy}
+                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+              >
+                {actionBusy === "reindex" ? "Reindexing..." : "Reindex database"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void exportAllData()}
+                disabled={!!actionBusy}
+                className="rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-50"
+                style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}
+              >
+                {actionBusy === "export" ? "Exporting..." : "Export all data"}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Operational shortcuts</p>
+            <p className="mb-4 text-xs leading-relaxed text-white/42">
+              Admin remains the single ops home. Use these links for the dedicated work consoles.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/crm" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+                Buyer CRM
+              </Link>
+              <Link href="/sales-console" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+                Sales Console
+              </Link>
+              <Link href="/supply-pipeline" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+                Supply Pipeline
+              </Link>
+              <Link href="/marketplace" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+                Marketplace
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-4">
           <AdminCard label="Companies" value={formatNumber(stats?.totals?.companies)} />
           <AdminCard label="Signals" value={formatNumber(stats?.totals?.signals)} />
@@ -458,8 +567,8 @@ export default function Admin() {
               <input type="checkbox" checked={scrapeNow} onChange={(e) => setScrapeNow(e.target.checked)} className="accent-violet-500" />
               Scrape now
             </label>
-            <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
-              Import URLs
+            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-50" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+              {actionBusy === "urls" ? "Importing..." : "Import URLs"}
             </button>
           </form>
 
@@ -467,8 +576,8 @@ export default function Admin() {
             <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#a78bfa" }} />
             <p className="text-sm font-bold text-white">Import Companies</p>
             <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="mt-3 min-h-40 w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 font-mono text-[11px] text-white outline-none" />
-            <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-violet-200">
-              Import Companies
+            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-violet-200 disabled:opacity-50">
+              {actionBusy === "companies" ? "Importing..." : "Import Companies"}
             </button>
           </form>
 
@@ -481,8 +590,8 @@ export default function Admin() {
             <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#160d2a] px-3 py-2 text-xs text-white/70">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "All industries"}</option>)}
             </select>
-            <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-300/45 px-4 py-2.5 text-xs font-bold text-teal-200">
-              Queue Scraper
+            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-300/45 px-4 py-2.5 text-xs font-bold text-teal-200 disabled:opacity-50">
+              {actionBusy === "scraper" ? "Queueing..." : "Queue Scraper"}
             </button>
           </form>
         </section>

@@ -19,7 +19,7 @@ const TOOLS = [
   { href: '/robot-ready', label: 'Robot Ready' },
   { href: '/brief', label: 'Brief' },
   { href: '/pipeline-health', label: 'Pipeline health' },
-  { href: '/admin', label: 'Admin' },
+  { href: 'https://ready-2-robot.fly.dev/admin', label: 'Admin' },
   { href: '/profile', label: 'Profile' },
 ];
 

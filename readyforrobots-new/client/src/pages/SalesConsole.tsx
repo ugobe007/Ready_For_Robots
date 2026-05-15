@@ -27,6 +27,7 @@ type SalesAction = {
   recommendation?: string | null;
   draft_subject?: string | null;
   draft_body?: string | null;
+  payload?: Record<string, unknown>;
   error?: string | null;
   sent_at?: string | null;
   created_at?: string | null;
@@ -35,6 +36,8 @@ type SalesAction = {
 type SalesOpportunity = {
   id: string;
   opportunity_type: string;
+  crm_account_id?: string | null;
+  robot_company_id?: number | null;
   title: string;
   current_stage: string;
   status: string;
@@ -84,6 +87,11 @@ function statusColor(status: string) {
   return "rgba(255,255,255,0.6)";
 }
 
+function actionLabel(action: SalesAction) {
+  const persona = action.payload?.responder_persona === "max" ? "Max" : "Cal";
+  return `${persona}: ${action.action_type.replace(/_/g, " ")}`;
+}
+
 export default function SalesConsole() {
   const { session, loading } = useAuth();
   const [rows, setRows] = useState<SalesOpportunity[]>([]);
@@ -96,6 +104,7 @@ export default function SalesConsole() {
   const [prospectBusy, setProspectBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [prospectMsg, setProspectMsg] = useState("");
+  const [recipientOverride, setRecipientOverride] = useState("");
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -123,7 +132,7 @@ export default function SalesConsole() {
       setSelectedId((prev) => (list.some((row) => row.id === prev) ? prev : list[0]?.id ?? ""));
       if (!list.length) setSelected(null);
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Could not load SCOUT sales console");
+      setMsg(e instanceof Error ? e.message : "Could not load sales console");
     } finally {
       setBusy(false);
     }
@@ -155,6 +164,7 @@ export default function SalesConsole() {
       try {
         const detail = (await authFetch(`/api/sales/opportunities/${selectedId}`)) as SalesOpportunity;
         setSelected(detail);
+        setRecipientOverride(detail.latest_message?.direction === "inbound" ? detail.latest_message.from_email || "" : "");
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Could not load opportunity");
       } finally {
@@ -195,7 +205,7 @@ export default function SalesConsole() {
       })) as SalesOpportunity;
       setSelected(updated);
       setRows((prev) => prev.map((row) => (row.id === updated.id ? { ...row, automation_level: updated.automation_level } : row)));
-      toast.success("SCOUT automation updated.");
+      toast.success("Automation updated.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not update automation.");
     } finally {
@@ -210,10 +220,10 @@ export default function SalesConsole() {
       const result = await authFetch(`/api/sales/opportunities/${selected.id}/actions/automate-next`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force: true }),
+        body: JSON.stringify({ force: true, recipient: recipientOverride || undefined }),
       });
       setSelected(result.opportunity);
-      toast.success(`SCOUT action ${result.action.status}.`);
+      toast.success(`Action ${result.action.status}.`);
       await loadRows();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not automate next action.");
@@ -229,10 +239,10 @@ export default function SalesConsole() {
       const result = await authFetch(`/api/sales/actions/${action.id}/automate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force: true }),
+        body: JSON.stringify({ force: true, recipient: recipientOverride || undefined }),
       });
       setSelected(result.opportunity);
-      toast.success(`SCOUT action ${result.action.status}.`);
+      toast.success(`Action ${result.action.status}.`);
       await loadRows();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not automate action.");
@@ -250,8 +260,8 @@ export default function SalesConsole() {
       <div className="min-h-screen bg-[#0d0520] text-white">
         <Header />
         <main className="max-w-3xl mx-auto px-6 pt-32">
-          <h1 className="text-3xl font-bold">SCOUT Sales Console</h1>
-          <p className="mt-4 text-white/60">Sign in to see automated replies, opportunity stage movement, and next-best actions.</p>
+          <h1 className="text-3xl font-bold">Sales Console</h1>
+          <p className="mt-4 text-white/60">Sign in to see Cal and Max replies, opportunity stage movement, and next-best actions.</p>
           <Link href="/login?next=/sales-console" className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold" style={{ background: "#03DAC5", color: "#0d0520" }}>
             Sign in
           </Link>
@@ -266,30 +276,38 @@ export default function SalesConsole() {
       <main className="max-w-7xl mx-auto px-6 pt-28 pb-16">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>SCOUT operator layer</p>
+            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>Cal and Max operator layer</p>
             <h1 className="mt-3 text-4xl md:text-5xl font-black tracking-tight">Sales Console</h1>
             <p className="mt-3 max-w-2xl text-white/60">
-              Review what SCOUT heard, what it did automatically, and the next action it will run to advance the opportunity.
+              Review inbound replies, see what Cal or Max already sent, and decide the next action to advance each opportunity.
             </p>
           </div>
-          <button
-            onClick={() => void loadRows()}
-            disabled={busy}
-            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
-          >
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/crm" className="rounded-xl px-4 py-2 text-sm font-black" style={{ background: "#03DAC5", color: "#0d0520" }}>
+              Draft buyer email
+            </Link>
+            <Link href="/supply-pipeline" className="rounded-xl border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200">
+              Draft robot-company email
+            </Link>
+            <button
+              onClick={() => void loadRows()}
+              disabled={busy}
+              className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">{msg}</div>}
 
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">SCOUT learning memory</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Workflow memory</p>
             <p className="mt-3 text-3xl font-black" style={{ color: "#03DAC5" }}>
               {learningReport?.experience_events ?? 0}
             </p>
-            <p className="mt-1 text-sm text-white/50">sales events captured from sends, replies, and failures</p>
+            <p className="mt-1 text-sm text-white/50">sales events captured from sends, replies, failures, and escalations</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-white/35">Best source signal</p>
@@ -297,14 +315,33 @@ export default function SalesConsole() {
               {learningReport?.source_domain_priorities?.[0]?.key || "Waiting for replies"}
             </p>
             <p className="mt-1 text-sm text-white/45">
-              SCOUT uses positive reply history to guide scraper priorities.
+              Cal uses positive reply history to guide scraper priorities.
             </p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-white/35">Scraper guidance</p>
             <p className="mt-3 text-sm leading-relaxed text-white/60">
-              {learningReport?.scraper_guidance?.[0] || "Guidance appears after SCOUT observes enough outreach outcomes."}
+              {learningReport?.scraper_guidance?.[0] || "Guidance appears after Cal observes enough outreach outcomes."}
             </p>
+          </div>
+        </section>
+
+        <section className="mt-8 grid gap-4 md:grid-cols-4">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Open opportunities</p>
+            <p className="mt-2 text-3xl font-black text-white">{rows.length}</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Need action</p>
+            <p className="mt-2 text-3xl font-black text-amber-200">{rows.filter((row) => row.next_best_action?.recommendation).length}</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Buyer replies</p>
+            <p className="mt-2 text-3xl font-black" style={{ color: "#03DAC5" }}>{rows.filter((row) => row.last_inbound_at).length}</p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Technical escalations</p>
+            <p className="mt-2 text-3xl font-black text-violet-100">{rows.filter((row) => row.current_stage === "technical_escalation").length}</p>
           </div>
         </section>
 
@@ -335,7 +372,7 @@ export default function SalesConsole() {
               ))}
               {!rows.length && !busy && (
                 <div className="rounded-2xl border border-white/10 p-5 text-sm text-white/45">
-                  No sales opportunities yet. They appear here when SCOUT captures inbound replies.
+                  No sales opportunities yet. They appear here when Cal captures inbound replies.
                 </div>
               )}
             </div>
@@ -367,6 +404,13 @@ export default function SalesConsole() {
                         </option>
                       ))}
                     </select>
+                    <label className="mt-3 block text-xs font-bold uppercase tracking-widest text-white/35">Reply recipient</label>
+                    <input
+                      value={recipientOverride}
+                      onChange={(event) => setRecipientOverride(event.target.value)}
+                      placeholder="buyer@example.com"
+                      className="mt-2 w-full rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                    />
                     <button
                       onClick={() => void automateNext()}
                       disabled={busy}
@@ -380,7 +424,19 @@ export default function SalesConsole() {
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
                   <p className="text-xs font-bold uppercase tracking-widest text-white/35">Next best action</p>
-                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "SCOUT will generate the next action from the latest conversation context."}</p>
+                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "Cal will generate the next action from the latest conversation context."}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {selected.crm_account_id && (
+                      <Link href="/crm" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
+                        Open CRM draft tools
+                      </Link>
+                    )}
+                    {selected.opportunity_type === "supply" && (
+                      <Link href="/supply-pipeline" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
+                        Open Supply Pipeline draft tools
+                      </Link>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
@@ -388,7 +444,7 @@ export default function SalesConsole() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-white/35">Apollo prospect search</p>
                       <p className="mt-2 text-sm text-white/60">
-                        Find likely decision-makers for this opportunity and use them to route the next SCOUT outreach.
+                        Find likely decision-makers for this opportunity and use them to route the next Cal outreach.
                       </p>
                     </div>
                     <button
@@ -436,8 +492,9 @@ export default function SalesConsole() {
                         <div key={action.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-bold text-white">{action.action_type.replace(/_/g, " ")}</p>
+                              <p className="font-bold text-white">{actionLabel(action)}</p>
                               <p className="mt-1 text-xs" style={{ color: statusColor(action.status) }}>Status: {action.status}</p>
+                              <p className="mt-1 text-[11px] text-white/35">Intent: {action.detected_intent || "unknown"} · Risk: {action.risk_level || "unknown"}</p>
                             </div>
                             {action.status !== "sent" && (
                               <button
@@ -450,6 +507,12 @@ export default function SalesConsole() {
                             )}
                           </div>
                           <p className="mt-3 text-sm text-white/60">{action.recommendation}</p>
+                          {action.draft_subject && <p className="mt-3 text-xs font-bold text-white/45">Subject: {action.draft_subject}</p>}
+                          {action.draft_body && (
+                            <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/8 bg-black/20 p-3 text-xs leading-relaxed text-white/60">
+                              {action.draft_body}
+                            </pre>
+                          )}
                           {action.error && <p className="mt-2 text-xs text-red-300">{action.error}</p>}
                         </div>
                       ))}

@@ -42,6 +42,10 @@ function Router() {
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/admin" component={Admin} />
+      <Route path="/readyforrobots/admin" component={Admin} />
+      <Route path="/readyforrobots/crm" component={Crm} />
+      <Route path="/readyforrobots/sales-console" component={SalesConsole} />
+      <Route path="/readyforrobots/supply-pipeline" component={SupplyPipeline} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

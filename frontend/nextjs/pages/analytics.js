@@ -58,7 +58,7 @@ export default function Analytics() {
               <Link href="/" className="text-neutral-400 hover:text-emerald-400 transition">
                 Dashboard
               </Link>
-              <Link href="/admin" className="text-neutral-400 hover:text-emerald-400 transition">
+              <Link href="https://ready-2-robot.fly.dev/admin" className="text-neutral-400 hover:text-emerald-400 transition">
                 Admin
               </Link>
             </nav>

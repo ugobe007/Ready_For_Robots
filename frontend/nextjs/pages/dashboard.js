@@ -2686,7 +2686,7 @@ export default function Dashboard() {
                   <Link href="/brief" onClick={() => setShowMenu(false)}>
                     <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">📋 Brief</div>
                   </Link>
-                  <Link href="/admin" onClick={() => setShowMenu(false)}>
+                  <Link href="https://ready-2-robot.fly.dev/admin" onClick={() => setShowMenu(false)}>
                     <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">⚙️ Admin</div>
                   </Link>
                   <Link href="/profile" onClick={() => setShowMenu(false)}>

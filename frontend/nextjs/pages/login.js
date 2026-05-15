@@ -56,7 +56,7 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data?.is_admin) {
-            router.replace('/admin');
+            window.location.replace('https://ready-2-robot.fly.dev/admin');
             return;
           }
         } else if (process.env.NODE_ENV === 'development') {

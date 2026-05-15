@@ -73,7 +73,7 @@ export default function SiteTopNav({ session }) {
                 {mobileLink('/pilot-calculator', '🧪 Pilot', 'text-cyan-400')}
                 {mobileLink('/robot-ready', '🤖 Robot Ready', 'text-emerald-400')}
                 {mobileLink('/brief', '📋 Brief', 'text-cyan-400')}
-                {mobileLink('/admin', '⚙️ Admin', 'text-emerald-400')}
+                {mobileLink('https://ready-2-robot.fly.dev/admin', '⚙️ Admin', 'text-emerald-400')}
                 {mobileLink('/profile', '♡ Profile', 'text-neutral-300')}
               </MobileNavSection>
             </div>

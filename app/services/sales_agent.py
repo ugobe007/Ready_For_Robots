@@ -1,9 +1,10 @@
 """SCOUT sales-agent planning and automated first replies."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
+import os
 import uuid
 
 from sqlalchemy.orm import Session
@@ -27,6 +28,7 @@ class SalesAgentPlan:
     recommendation: str
     draft_subject: str
     draft_body: str
+    payload: dict = field(default_factory=dict)
 
 
 def classify_sales_intent(text: str, subject: str | None = None) -> str:
@@ -60,6 +62,7 @@ def plan_sales_reply(
     if not subject.lower().startswith("re:"):
         subject = f"Re: {subject}"
 
+    payload = {}
     if intent == "pricing_request":
         stage = "quote_requested"
         recommendation = "Acknowledge pricing interest, avoid firm commitments, ask for scope, and offer a qualification call."
@@ -74,14 +77,35 @@ def plan_sales_reply(
             "If helpful, we can set up a short call to confirm scope and route the right quote/proposal path.",
         )
     elif intent == "technical_specs_request":
-        stage = "needs_info"
-        recommendation = "Acknowledge the technical question and ask for constraints before sending final specs."
-        body = _reply_body(
-            sender_email,
-            "Thanks. We can help map the technical requirements to the right robotics solution and supporting materials.",
-            ["payload or throughput needs", "site constraints", "systems that need integration"],
-            "Once we have those constraints, I can route the right specs and proposal materials.",
+        needs_management = _technical_question_needs_management(inbound_text, inbound_subject)
+        stage = "technical_escalation" if needs_management else "needs_info"
+        recommendation = (
+            "Max should acknowledge the technical question and escalate to management before answering."
+            if needs_management
+            else "Cal should copy Max to answer the technical question and collect constraints before sending final specs."
         )
+        body = _max_reply_body(
+            opener=(
+                "Cal copied me on this. I want to get the technical answer right, so I am checking with management before I give you a firm answer."
+                if needs_management
+                else "Cal copied me on this. I can help narrow the technical requirements and map them to the right robotics solution or support materials."
+            ),
+            questions=(
+                ["the exact requirement or standard you need answered", "site or workflow context", "deadline for a confirmed answer"]
+                if needs_management
+                else ["payload or throughput needs", "site constraints", "systems that need integration"]
+            ),
+            close=(
+                "I will come back with a confirmed answer rather than guess."
+                if needs_management
+                else "Once I have those constraints, I can route the right specs and proposal materials."
+            ),
+        )
+        payload = {
+            "responder_persona": "max",
+            "copied_by": "cal",
+            "management_escalation_required": needs_management,
+        }
     elif intent == "proposal_requested":
         stage = "proposal_requested"
         recommendation = "Confirm proposal interest and ask for decision criteria plus deadline."
@@ -136,11 +160,17 @@ def plan_sales_reply(
         detected_intent=intent,
         stage_after=stage,
         action_type="automated_first_reply",
-        risk_level="low" if intent not in {"pricing_request", "proposal_requested", "procurement_request"} else "medium",
+        risk_level=(
+            "medium"
+            if intent in {"pricing_request", "proposal_requested", "procurement_request"}
+            or (intent == "technical_specs_request" and (payload or {}).get("management_escalation_required"))
+            else "low"
+        ),
         requires_approval=False,
         recommendation=recommendation,
         draft_subject=subject,
         draft_body=body,
+        payload=payload if intent == "technical_specs_request" else {},
     )
 
 
@@ -159,6 +189,67 @@ To make the next step useful, could you share:
 Best,
 Cal @ Robot Automation Team
 Ready For Robots"""
+
+
+def _max_reply_body(*, opener: str, questions: list[str], close: str) -> str:
+    question_lines = "\n".join(f"- {q}" for q in questions)
+    return f"""Hi,
+
+{opener}
+
+To make the next step useful, could you share:
+{question_lines}
+
+{close}
+
+Best,
+Max @ Technical Support Lead
+Ready For Robots"""
+
+
+def _technical_question_needs_management(text: str, subject: str | None = None) -> bool:
+    blob = f"{subject or ''} {text or ''}".lower()
+    management_terms = [
+        "certification",
+        "certified",
+        "compliance",
+        "liability",
+        "guarantee",
+        "warranty",
+        "indemn",
+        "legal",
+        "contract",
+        "exact spec",
+        "final spec",
+        "iso ",
+        "ansi",
+        "osha",
+        "sla",
+        "security review",
+        "custom api",
+    ]
+    return any(term in blob for term in management_terms)
+
+
+def _admin_emails() -> list[str]:
+    values = (os.getenv("MAX_ESCALATION_EMAILS") or os.getenv("ADMIN_EMAILS") or "").replace(";", ",").split(",")
+    emails: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        email = value.strip()
+        if "@" not in email:
+            continue
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        emails.append(email)
+    return emails
+
+
+def _max_support_copy_email() -> str | None:
+    value = (os.getenv("MAX_TECH_SUPPORT_EMAIL") or "").strip()
+    return value if "@" in value else None
 
 
 def handle_crm_reply_first_response(db: Session, msg: OutreachMessage, reply: OutreachReply, account: CrmAccount | None) -> SalesAgentAction:
@@ -284,17 +375,30 @@ def execute_sales_agent_action(
         action.error = "Approval required by automation policy"
         return action
     try:
+        action_payload = action.payload or {}
+        from_display_name = "Max" if action_payload.get("responder_persona") == "max" else "Cal"
+        cc: list[str] = []
+        max_copy = _max_support_copy_email()
+        if action_payload.get("copied_by") == "cal" and max_copy:
+            cc.append(max_copy)
         send_result = send_email_via_resend(
             to_email=recipient,
             subject=action.draft_subject or f"Re: {opportunity.title}",
             body_text=action.draft_body or action.recommendation or "Cal is following up on this opportunity on behalf of Ready For Robots.",
-            from_display_name="Cal",
+            from_display_name=from_display_name,
             reply_to=reply_to,
+            cc=cc or None,
             idempotency_key=f"sales-agent-action/{action.id}",
         )
         action.status = "sent"
         action.resend_id = send_result.get("resend_id")
         action.sent_at = datetime.now(timezone.utc)
+        if cc:
+            action.payload = {
+                **(action.payload or {}),
+                "cc": cc,
+                "responder_display_name": from_display_name,
+            }
         opportunity.last_outbound_at = action.sent_at
         db.add(
             SalesMessage(
@@ -308,9 +412,16 @@ def execute_sales_agent_action(
                 subject=action.draft_subject,
                 body_text=action.draft_body,
                 detected_intent=action.detected_intent,
-                payload={"reply_to": reply_to, "automation_level": opportunity.automation_level},
+                payload={
+                    "reply_to": reply_to,
+                    "automation_level": opportunity.automation_level,
+                    "persona": from_display_name,
+                    "cc": cc,
+                },
             )
         )
+        if action_payload.get("management_escalation_required"):
+            _notify_management_for_technical_question(opportunity, action, recipient)
         capture_sales_action_experience(
             db,
             opportunity=opportunity,
@@ -446,7 +557,12 @@ def _handle_first_response(
         recommendation=plan.recommendation,
         draft_subject=plan.draft_subject,
         draft_body=plan.draft_body,
-        payload={"source_type": source_type, "source_id": source_id, "auto_policy": "first_reply_only"},
+        payload={
+            "source_type": source_type,
+            "source_id": source_id,
+            "auto_policy": "first_reply_only",
+            **(plan.payload or {}),
+        },
     )
     db.add(action)
     db.flush()
@@ -473,3 +589,42 @@ def _handle_first_response(
 def _new_uuid(db: Session):
     value = uuid.uuid4()
     return str(value) if db.bind and db.bind.dialect.name == "sqlite" else value
+
+
+def _notify_management_for_technical_question(
+    opportunity: SalesOpportunity,
+    action: SalesAgentAction,
+    recipient: str,
+) -> None:
+    admin_emails = _admin_emails()
+    if not admin_emails:
+        action.payload = {
+            **(action.payload or {}),
+            "management_escalation_status": "missing_admin_email",
+        }
+        return
+    try:
+        send_email_via_resend(
+            to_email=admin_emails,
+            subject=f"Max needs help: {opportunity.title}",
+            body_text=(
+                "Max received a technical question that needs management confirmation before a firm answer is sent.\n\n"
+                f"Opportunity: {opportunity.title}\n"
+                f"Customer: {recipient}\n"
+                f"Detected intent: {action.detected_intent}\n\n"
+                f"Draft sent to customer:\n{action.draft_body or ''}"
+            ),
+            from_display_name="Max",
+            idempotency_key=f"max-management-escalation/{action.id}",
+        )
+        action.payload = {
+            **(action.payload or {}),
+            "management_escalation_status": "sent",
+            "management_escalation_recipients": admin_emails,
+        }
+    except ResendEmailError as exc:
+        action.payload = {
+            **(action.payload or {}),
+            "management_escalation_status": "failed",
+            "management_escalation_error": str(exc),
+        }

@@ -311,12 +311,19 @@ export default function Crm() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
       <main className="flex-1 pt-24 pb-12 px-4 max-w-4xl mx-auto w-full">
-        <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
-          CRM · SCOUT accounts
-        </h1>
-        <p className="text-xs text-white/40 mb-6">
-          Workspaces, buyer accounts, and SCOUT-domain outreach through Resend.
-        </p>
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
+              CRM · Buyer email draft tools
+            </h1>
+            <p className="text-xs text-white/40">
+              Review, edit, approve, and send buyer outreach from Cal. Replies come back to CRM and Sales Console.
+            </p>
+          </div>
+          <Link href="/sales-console" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-white/65">
+            Open Sales Console
+          </Link>
+        </div>
         {msg && <p className="text-sm text-amber-200/90 mb-4 border border-amber-500/30 rounded p-2">{msg}</p>}
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -373,7 +380,7 @@ export default function Crm() {
             <div className="rounded-xl border border-white/10 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">Review checkpoint</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/30">Buyer outreach checkpoint</p>
                   <h2 className="mt-1 text-lg font-bold text-white">{selectedAccount.name}</h2>
                 </div>
                 <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-200">
@@ -496,7 +503,7 @@ export default function Crm() {
                   disabled={busy || sending}
                   className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/80 disabled:opacity-50"
                 >
-                  Draft with SCOUT
+                  Draft with Cal
                 </button>
                 <button
                   type="button"
@@ -512,12 +519,12 @@ export default function Crm() {
                   disabled={sending || !contactEmail || !draft || !styleApproved}
                   className="rounded-lg border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
                 >
-                  {sending ? "Sending..." : "Send with SCOUT"}
+                  {sending ? "Sending..." : "Send with Cal"}
                 </button>
               </div>
               {!styleApproved && (
                 <p className="mt-2 text-[11px] text-white/35">
-                  Approve the draft first. This confirms the message and teaches SCOUT the format/style to reuse.
+                  Approve the draft first. This confirms the message and teaches Cal the format/style to reuse.
                 </p>
               )}
             </div>

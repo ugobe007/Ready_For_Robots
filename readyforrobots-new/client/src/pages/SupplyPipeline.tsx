@@ -299,11 +299,14 @@ export default function SupplyPipeline() {
             Robot company outreach agent
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
-            SCOUT researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
+            Cal researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{approvedCount} approved</span>
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{sentCount} sent</span>
+            <a href="/sales-console" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+              Open Sales Console
+            </a>
             <button
               type="button"
               onClick={approveAll}

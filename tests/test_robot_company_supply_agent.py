@@ -48,6 +48,8 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "Buyer 3" in email["body"]
     assert "Buyer 4" not in email["body"]
     assert "Buyer 5" not in email["body"]
+    assert "I am Cal, and I am reaching out on behalf of Ready For Robots." in email["body"]
+    assert "Cal @ Robot Automation Team" in email["body"]
     assert "create a Ready For Robots account" in email["body"]
     assert "short call" in email["body"]
 

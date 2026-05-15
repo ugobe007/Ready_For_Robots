@@ -736,21 +736,26 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
         for m in matches[:3]
     ) or "- We have buyer matches ready to review once your team is onboarded."
     response_playbook = _recommended_response_playbook(matches)
-    body = f"""Hi {rc.company_name} team,
+    body = f"""Hello {rc.company_name} team,
 
-Ready For Robots is building a two-sided robotics marketplace: buyers with live automation signals on one side, and robot companies that can serve those opportunities on the other.
+I am Cal, and I am reaching out on behalf of Ready For Robots.
 
-SCOUT matched {rc.company_name} to these buyer opportunities:
+We are building a two-sided robot automation marketplace: buyers with live automation signals on one side, and robot companies that can serve those opportunities on the other.
+
+I noticed {rc.company_name} appears to match these buyer opportunities:
 
 {lead_lines}
 
-We only show three matches in this note, but the full workflow can deliver qualified leads directly to your inbox with context, timing, and why each buyer appears ready for outreach.
+I am only showing three matches in this note, but the full workflow can deliver qualified leads directly to your inbox with context, timing, and why each buyer appears ready for outreach.
 
 {response_playbook}
 
-The next step is to create a Ready For Robots account so your team can receive lead matches, review the buyer context, and decide which opportunities to pursue. Would you be open to setting up a short call with Ready For Robots this week so we can show you the lead flow and confirm the right markets for {rc.company_name}?
+The next step is to create a Ready For Robots account so your team can receive lead matches, review the buyer context, and decide which opportunities to pursue.
+
+Would you be open to a short call this week so we can show you the lead flow and confirm the right markets for {rc.company_name}?
 
 Best,
+Cal @ Robot Automation Team
 Ready For Robots"""
     return {"subject": subject, "body": body}
 
@@ -1399,6 +1404,7 @@ def send_email(
             to_email=to_emails,
             subject=subject,
             body_text=body,
+            from_display_name="Cal",
             reply_to=reply_to,
             idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
         )
@@ -1503,6 +1509,7 @@ def test_send_email(
             to_email=to_emails,
             subject=subject,
             body_text=body,
+            from_display_name="Cal",
             idempotency_key=f"supply-outreach-test/{company.id}/{'-'.join(to_emails)[:120]}",
         )
     except ResendEmailError as exc:
