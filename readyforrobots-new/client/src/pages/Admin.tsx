@@ -211,31 +211,34 @@ export default function Admin() {
         return;
       }
 
-      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, workflowRes, targetsRes] = await Promise.all([
+      const workflowRes = await adminFetch("/api/admin/workflow/actions?limit=40");
+      if (!workflowRes.ok) throw new Error(`Workflow queue failed with ${workflowRes.status}`);
+      setWorkflow(await workflowRes.json());
+      setLoading(false);
+
+      const supplemental = await Promise.allSettled([
         adminFetch("/api/admin/stats"),
         adminFetch("/api/admin/users/stats"),
         adminFetch("/api/admin/users"),
         adminFetch("/api/admin/activity?limit=40"),
         adminFetch(`/api/analytics?range=${timeRange}`),
-        adminFetch("/api/admin/workflow/actions?limit=80"),
         adminFetch("/api/admin/scrape/targets"),
       ]);
-      if (!statsRes.ok) throw new Error(`Stats failed with ${statsRes.status}`);
-      if (!userStatsRes.ok) throw new Error(`User stats failed with ${userStatsRes.status}`);
-      if (!usersRes.ok) throw new Error(`Users failed with ${usersRes.status}`);
-      if (!activityRes.ok) throw new Error(`Activity failed with ${activityRes.status}`);
-      if (!analyticsRes.ok) throw new Error(`Site metrics failed with ${analyticsRes.status}`);
-      if (!workflowRes.ok) throw new Error(`Workflow queue failed with ${workflowRes.status}`);
-      if (!targetsRes.ok) throw new Error(`Targets failed with ${targetsRes.status}`);
-      setStats(await statsRes.json());
-      setUserStats(await userStatsRes.json());
-      const usersData = await usersRes.json() as { users?: AdminUser[] };
-      setUsers(usersData.users || []);
-      const activityData = await activityRes.json() as { activity?: AdminActivity[] };
-      setActivity(activityData.activity || []);
-      setAnalytics(await analyticsRes.json());
-      setWorkflow(await workflowRes.json());
-      setTargets(await targetsRes.json());
+      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = supplemental.map((result) =>
+        result.status === "fulfilled" ? result.value : null,
+      );
+      if (statsRes?.ok) setStats(await statsRes.json());
+      if (userStatsRes?.ok) setUserStats(await userStatsRes.json());
+      if (usersRes?.ok) {
+        const usersData = await usersRes.json() as { users?: AdminUser[] };
+        setUsers(usersData.users || []);
+      }
+      if (activityRes?.ok) {
+        const activityData = await activityRes.json() as { activity?: AdminActivity[] };
+        setActivity(activityData.activity || []);
+      }
+      if (analyticsRes?.ok) setAnalytics(await analyticsRes.json());
+      if (targetsRes?.ok) setTargets(await targetsRes.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {

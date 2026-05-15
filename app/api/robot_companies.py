@@ -51,6 +51,7 @@ class SendRobotCompanyEmailRequest(BaseModel):
     template_type: str = "intro"
     subject: Optional[str] = None
     body: Optional[str] = None
+    approved_message_id: Optional[str] = None
 
 
 class ApproveSupplyOutreachRequest(BaseModel):
@@ -633,6 +634,29 @@ def _create_supply_outreach_record(
     )
     db.add(msg)
     return msg
+
+
+def _approved_supply_outreach_record(
+    db: Session,
+    *,
+    company_id: int,
+    approved_message_id: Optional[str],
+) -> Optional[SupplyOutreachMessage]:
+    if not approved_message_id:
+        return None
+    try:
+        message_uuid = uuid.UUID(str(approved_message_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid approved outreach message id") from None
+    return (
+        db.query(SupplyOutreachMessage)
+        .filter(
+            SupplyOutreachMessage.id == message_uuid,
+            SupplyOutreachMessage.robot_company_id == company_id,
+            SupplyOutreachMessage.status == "draft_approved",
+        )
+        .first()
+    )
 
 
 def _create_crm_supply_tracking_copy(
@@ -1459,39 +1483,66 @@ def send_email(
     to_emails = _request_emails(payload.to_email)
     if not to_emails:
         raise HTTPException(status_code=400, detail="At least one recipient email is required")
-    reply_token = secrets.token_urlsafe(18)
-    reply_to = _supply_reply_address(reply_token)
+    approved_msg = _approved_supply_outreach_record(
+        db,
+        company_id=company.id,
+        approved_message_id=payload.approved_message_id,
+    )
+    if payload.approved_message_id and not approved_msg:
+        raise HTTPException(status_code=404, detail="Approved outreach checkpoint not found")
+    reply_token = approved_msg.reply_token if approved_msg and approved_msg.reply_token else secrets.token_urlsafe(18)
+    reply_to = approved_msg.reply_to if approved_msg and approved_msg.reply_to else _supply_reply_address(reply_token)
 
     try:
         send_result = send_email_via_resend(
             to_email=to_emails,
             subject=subject,
             body_text=body,
-            from_display_name="Cal",
+            from_display_name="ReadyBot",
             reply_to=reply_to,
             idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
         )
     except ResendEmailError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    msg = SupplyOutreachMessage(
-        id=_uuid_for_session(db),
-        robot_company_id=company.id,
-        to_emails=to_emails,
-        from_email=send_result.get("from_email"),
-        reply_to=reply_to,
-        reply_token=reply_token,
-        subject=subject,
-        body_text=body,
-        template_type=template_type,
-        resend_id=send_result.get("resend_id"),
-        status="sent",
-        is_test=False,
-        payload={"source": "supply_pipeline"},
-        approved_at=datetime.now(timezone.utc),
-        sent_at=datetime.now(timezone.utc),
-    )
-    db.add(msg)
+    now = datetime.now(timezone.utc)
+    if approved_msg:
+        msg = approved_msg
+        msg.to_emails = to_emails
+        msg.from_email = send_result.get("from_email")
+        msg.reply_to = reply_to
+        msg.reply_token = reply_token
+        msg.subject = subject
+        msg.body_text = body
+        msg.template_type = template_type
+        msg.resend_id = send_result.get("resend_id")
+        msg.status = "sent"
+        msg.is_test = False
+        msg.sent_at = now
+        msg.payload = {
+            **(msg.payload or {}),
+            "source": "supply_pipeline",
+            "approved_checkpoint_reused": True,
+        }
+    else:
+        msg = SupplyOutreachMessage(
+            id=_uuid_for_session(db),
+            robot_company_id=company.id,
+            to_emails=to_emails,
+            from_email=send_result.get("from_email"),
+            reply_to=reply_to,
+            reply_token=reply_token,
+            subject=subject,
+            body_text=body,
+            template_type=template_type,
+            resend_id=send_result.get("resend_id"),
+            status="sent",
+            is_test=False,
+            payload={"source": "supply_pipeline"},
+            approved_at=now,
+            sent_at=now,
+        )
+        db.add(msg)
     crm_account, crm_message = _create_crm_supply_tracking_copy(
         db,
         company,
@@ -1503,8 +1554,8 @@ def send_email(
         send_result=send_result,
         supply_message=msg,
     )
-    company.last_contact_date = datetime.now(timezone.utc)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    company.last_contact_date = now
+    timestamp = now.strftime("%Y-%m-%d %H:%M")
     existing = company.workflow_notes or ""
     company.workflow_notes = (
         f"{existing}\n[{timestamp}] Sent {template_type} email to {send_result.get('to') or to_emails}: {subject}"

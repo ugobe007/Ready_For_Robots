@@ -118,7 +118,7 @@ export default function SupplyPipeline() {
       setLoading(true);
       setErr("");
       try {
-        const response = await fetch(`${getApiBase()}/api/robot-companies/agent/supply-side?limit=12`, liveFetchInit());
+        const response = await fetch(`${getApiBase()}/api/robot-companies/agent/supply-side?limit=12&research_contacts=false`, liveFetchInit());
         if (!response.ok) throw new Error(await response.text());
         const payload = await response.json();
         const companies = Array.isArray(payload.companies) ? payload.companies : [];
@@ -177,7 +177,10 @@ export default function SupplyPipeline() {
           }),
         }),
       );
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(errorPayload?.detail || "Could not send email.");
+      }
       const result = await response.json();
       patchDraft(id, {
         approved: true,
@@ -242,6 +245,7 @@ export default function SupplyPipeline() {
             template_type: "supply_pipeline",
             subject: draft.subject,
             body: draft.body,
+            approved_message_id: draft.trackingId,
           }),
         }),
       );
