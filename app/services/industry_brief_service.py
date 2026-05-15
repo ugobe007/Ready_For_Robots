@@ -274,7 +274,7 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
             "Expansion, facility opening, or renovation language paired with automation hiring.",
             "Labor shortage and wage-pressure mentions in logistics, hospitality, healthcare, and food service.",
             "Capex, funding, or budget language that suggests a 60- to 180-day procurement window.",
-            "Repeated signals from the same account, which should move the lead from market watch to active SCOUT outreach.",
+            "Repeated signals from the same account, which should move the lead from market watch to active Cal outreach.",
         ],
         "source": "heuristic",
         "model": None,

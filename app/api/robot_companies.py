@@ -29,12 +29,11 @@ from app.models.outreach import OutreachMessage
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
 from app.services.agent_messaging import (
-    ONSTAGE_PARTNER_LINE,
-    READYBOT_OFFRAMP_LINE,
-    READYBOT_STRATEGY_CALL_CTA,
+    CAL_VENDOR_OFFRAMP_LINE,
+    CAL_VENDOR_STRATEGY_CALL_CTA,
     VEGAS_DISTRIBUTION_LINE,
-    readybot_signature,
-    readybot_vendor_opening,
+    cal_signature,
+    cal_vendor_opening,
 )
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
@@ -89,6 +88,31 @@ def _robot_market_terms(rc: RobotCompany) -> set[str]:
     return terms
 
 
+def _explicit_robot_market_terms(rc: RobotCompany) -> set[str]:
+    return _split_terms(rc.robot_type, rc.target_market, rc.product_category)
+
+
+def _vendor_allows_logistics(rc: RobotCompany) -> bool:
+    logistics_terms = {
+        "agv",
+        "amr",
+        "distribution",
+        "fulfillment",
+        "handling",
+        "intralogistics",
+        "logistics",
+        "material",
+        "supply",
+        "warehouse",
+    }
+    return bool(_explicit_robot_market_terms(rc).intersection(logistics_terms))
+
+
+def _is_logistics_lead(company: Company) -> bool:
+    terms = _split_terms(company.industry, company.sub_industry, company.name)
+    return bool(terms.intersection({"logistics", "warehouse", "fulfillment", "distribution", "supply", "freight", "3pl"}))
+
+
 def _lead_terms(company: Company) -> set[str]:
     profile = company.automation_profile or {}
     requirements = []
@@ -111,6 +135,7 @@ def _lead_score(company: Company, vendor_terms: set[str]) -> float:
 
 def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[dict[str, Any]]:
     vendor_terms = _robot_market_terms(rc)
+    allow_logistics = _vendor_allows_logistics(rc)
     candidates = (
         db.query(Company)
         .options(joinedload(Company.signals), joinedload(Company.scores))
@@ -132,6 +157,7 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
                 "why_match": _why_match(rc, c, vendor_terms),
             }
             for c in candidates
+            if allow_logistics or not _is_logistics_lead(c)
         ),
         key=lambda row: row["score"],
         reverse=True,
@@ -841,7 +867,7 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
     response_playbook = _recommended_response_playbook(matches)
     body = f"""Hello {rc.company_name} team,
 
-{readybot_vendor_opening()}
+{cal_vendor_opening()}
 
 I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
 
@@ -851,15 +877,13 @@ I am not assuming each one is a fit. They stood out because there is some timing
 
 {response_playbook}
 
-If you are pushing West Coast expansion or hospitality distribution, we can map a custom sales channel strategy around {possessive} hardware and target market. {VEGAS_DISTRIBUTION_LINE}
+If you are pushing West Coast expansion or hospitality adoption, we can map a custom sales channel strategy around {possessive} hardware and target market. {VEGAS_DISTRIBUTION_LINE}
 
-{READYBOT_OFFRAMP_LINE}
+{CAL_VENDOR_OFFRAMP_LINE}
 
-{ONSTAGE_PARTNER_LINE}
+{CAL_VENDOR_STRATEGY_CALL_CTA}
 
-{READYBOT_STRATEGY_CALL_CTA}
-
-{readybot_signature()}"""
+{cal_signature()}"""
     return {"subject": subject, "body": body}
 
 
@@ -1514,7 +1538,7 @@ def send_email(
             to_email=to_emails,
             subject=subject,
             body_text=body,
-            from_display_name="ReadyBot",
+            from_display_name="Cal",
             reply_to=reply_to,
             idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
         )

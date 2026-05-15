@@ -241,7 +241,7 @@ export default function Home() {
             {/* Subheadline */}
             <p className="text-base text-white/60 leading-relaxed mb-6 max-w-lg" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               ReadyForRobots helps robot companies find buyers from live market signals.{" "}
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting, qualifying, outreach, and scheduling.<br />
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> does the prospecting and qualifying. Cal handles outreach and follow-up.<br />
               Your team just closes.
             </p>
 
@@ -859,7 +859,7 @@ export default function Home() {
           >
             Let SCOUT run your pipeline.
           </h2>
-          <p className="text-white/35 text-sm mb-8">SCOUT scans for buyers, scores each lead, drafts outreach, and runs your sales process — automatically.</p>
+          <p className="text-white/35 text-sm mb-8">SCOUT scans for buyers and scores each lead. Cal drafts outreach, follows up, and brings in Max for technical questions.</p>
 
           {/* CTA — Activate Pipeline */}
           <Link href="/results?url=">

@@ -233,9 +233,9 @@ export default function Crm() {
       setSuggestions(Array.isArray(result.suggestions) ? result.suggestions : []);
       setAccounts((prev) => prev.map((a) => (a.id === selectedAccount.id ? { ...a, outreach_stage: "draft_ready", outreach_draft: result.outreach_draft } : a)));
       setStyleApproved(false);
-      setMsg(result.checkpoint || "SCOUT drafted this for review.");
+      setMsg(result.checkpoint || "Cal drafted this for review.");
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Could not draft with SCOUT");
+      setMsg(e instanceof Error ? e.message : "Could not draft with Cal");
     } finally {
       setBusy(false);
     }
@@ -290,7 +290,7 @@ export default function Crm() {
             : a,
         ),
       );
-      setMsg(`Sent by SCOUT. Replies route to ${result?.reply_to || "the SCOUT reply address"} and will notify you.`);
+      setMsg(`Sent by Cal. Replies route to ${result?.reply_to || "the Cal reply address"} and will notify you.`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Could not send outreach");
     } finally {
@@ -508,7 +508,7 @@ export default function Crm() {
                     setStyleApproved(false);
                   }}
                   rows={4}
-                  placeholder="Tell SCOUT how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
+                  placeholder="Tell Cal how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
                   className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-white/25"
                 />
               </label>
@@ -597,9 +597,9 @@ export default function Crm() {
               <ol className="mt-3 space-y-3 text-xs text-white/55">
                 <li><span className="font-bold text-white/80">1. Lead captured:</span> user signs in and the account is saved to CRM.</li>
                 <li><span className="font-bold text-white/80">2. Draft review:</span> user checks recipient, subject, and body before approval.</li>
-                <li><span className="font-bold text-white/80">3. Send approval:</span> SCOUT sends via Resend only after this action unless Auto is enabled.</li>
-                <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies to a SCOUT token address, then CRM moves to replied.</li>
-                <li><span className="font-bold text-white/80">5. User follow-up:</span> SCOUT notifies and forwards the reply based on Profile settings.</li>
+                <li><span className="font-bold text-white/80">3. Send approval:</span> Cal sends via Resend only after this action unless Auto is enabled.</li>
+                <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies to a Cal token address, then CRM moves to replied.</li>
+                <li><span className="font-bold text-white/80">5. User follow-up:</span> SCOUT tracks the workflow and notifies you based on Profile settings.</li>
               </ol>
               {suggestions.length > 0 && (
                 <div className="mt-5 border-t border-white/10 pt-4">

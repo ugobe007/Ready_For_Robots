@@ -122,7 +122,7 @@ const MATERIAL_OPTIONS: Array<{
   {
     id: "upload",
     title: "Upload sales deck",
-    desc: "Give SCOUT your current presentation so follow-up uses your actual positioning.",
+    desc: "Give SCOUT your current presentation so Cal's follow-up uses your actual positioning.",
     icon: UploadCloud,
   },
   {
@@ -151,9 +151,9 @@ const MODE_OPTIONS: Array<{
   desc: string;
   gated: boolean;
 }> = [
-  { id: "manual", title: "Manual", desc: "SCOUT evaluates leads and drafts strategy/emails for review.", gated: false },
-  { id: "assisted", title: "Assisted", desc: "SCOUT drafts, asks before sending, then tracks replies.", gated: true },
-  { id: "autopilot", title: "Autopilot", desc: "SCOUT sends, replies, follows up, and schedules meetings.", gated: true },
+  { id: "manual", title: "Manual", desc: "SCOUT evaluates leads and Cal prepares strategy/emails for review.", gated: false },
+  { id: "assisted", title: "Assisted", desc: "Cal drafts, asks before sending, then tracks replies.", gated: true },
+  { id: "autopilot", title: "Autopilot", desc: "Cal sends approved messages, follows up, and brings in Max for technical questions.", gated: true },
 ];
 
 function normalizeUrl(raw: string): string {
@@ -598,7 +598,7 @@ export default function Results() {
                           Activate SCOUT sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/48">
-                          Choose materials, lead scope, and operating mode. SCOUT will save leads to CRM, prepare a reviewable workflow, and wait for your confirmation before outbound messages or follow-ups.
+                          Choose materials, lead scope, and operating mode. SCOUT will save leads to CRM and prepare the workflow. Cal waits for confirmation before outbound messages or follow-ups.
                         </p>
                       </div>
                     </div>
@@ -766,7 +766,7 @@ export default function Results() {
                   <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT review queue created</p>
                   <p className="text-xs text-white/45">
                     {activationId ? `Activation #${activationId}: ` : ""}
-                    Leads were saved to CRM. Review SCOUT's workflow, drafts, timing, and cadence before any outbound action begins.
+                    Leads were saved to CRM. Review SCOUT's workflow plus Cal's draft, timing, and cadence before any outbound action begins.
                   </p>
                 </div>
               )}
@@ -846,9 +846,9 @@ export default function Results() {
 
                       {isActive && (
                         <div className="mx-6 mb-4 rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(52,211,153,0.05)" }}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SCOUT follow-up plan</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">Cal follow-up plan</p>
                           <p className="text-xs text-white/45 leading-relaxed">
-                            Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate if buying intent increases.
+                            Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and bring in Max for technical questions.
                           </p>
                         </div>
                       )}
@@ -857,7 +857,7 @@ export default function Results() {
                         <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-white/2 transition-colors">
                           <div className="flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
-                            <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>View drafted outreach</span>
+                            <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>View Cal draft</span>
                           </div>
                           {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-white/25" /> : <ChevronDown className="h-3.5 w-3.5 text-white/25" />}
                         </button>

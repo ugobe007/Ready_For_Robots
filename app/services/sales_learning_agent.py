@@ -155,7 +155,7 @@ def recommend_crm_next_action(db: Session, account: CrmAccount, events: list[Sal
             rationale.append(f"{signal_count} buying signal(s) are connected to this account.")
     if sent and not replied:
         score += 8.0
-        rationale.append("SCOUT has sent outreach but no reply is recorded yet.")
+        rationale.append("Cal has sent outreach but no reply is recorded yet.")
     if replied:
         score += 18.0
         rationale.append("A reply exists, so SCOUT should keep momentum.")

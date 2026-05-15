@@ -100,7 +100,7 @@ def scrape_robot_page(url: str) -> str:
     """Scrape robot product page and extract text content"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; RobotReadyBot/1.0)'
+            'User-Agent': 'Mozilla/5.0 (compatible; ReadyForRobotsCrawler/1.0)'
         }
         resp = requests.get(url, headers=headers, timeout=(3, 5))
         resp.raise_for_status()

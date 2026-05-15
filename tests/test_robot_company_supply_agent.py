@@ -10,6 +10,7 @@ from app.api.robot_companies import (
     _reply_domain,
     _request_emails,
     _research_robot_company_contacts,
+    _vendor_allows_logistics,
     _supply_reply_address,
     _supply_outreach_history,
     _vendor_signup_email,
@@ -55,12 +56,14 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "Buyer 3" in email["body"]
     assert "Buyer 4" not in email["body"]
     assert "Buyer 5" not in email["body"]
-    assert "I am ReadyBot with Ready For Robots." in email["body"]
+    assert "I am Cal with Ready For Robots." in email["body"]
+    assert "ReadyBot" not in email["body"]
     assert "We find automation sales leads and rank them by buying signals" in email["body"]
     assert "search engine for your sales pipeline" in email["body"]
     assert "exact signal trail behind every lead" in email["body"]
     assert "If the signal logic is weak, we will say so." in email["body"]
-    assert "onstage.bot" in email["body"]
+    assert "onstage.bot" not in email["body"]
+    assert "physical staging" not in email["body"]
     assert "Sales Channel & Lead Generation Strategy Call" in email["body"]
     assert "secure warehousing, staging" not in email["body"]
     assert "two-sided robot automation marketplace" not in email["body"]
@@ -69,8 +72,21 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "https://news.google.com" not in email["body"]
     assert "Buyer 1 (Unknown)" not in email["body"]
     assert "I am not assuming each one is a fit." in email["body"]
-    assert "ReadyBot\nAI Growth & Distribution Strategist" in email["body"]
+    assert "Cal\nRobot Automation Team" in email["body"]
     assert "sales channel strategy" in email["body"]
+
+
+def test_vendor_logistics_requires_explicit_vendor_fit():
+    company = _RobotCompany()
+    company.robot_type = "humanoid"
+    company.product_category = None
+    company.target_market = "manufacturing"
+
+    assert _vendor_allows_logistics(company) is False
+
+    company.target_market = "warehouse logistics"
+
+    assert _vendor_allows_logistics(company) is True
 
 
 def test_contact_strategy_infers_role_email_from_website_not_url():

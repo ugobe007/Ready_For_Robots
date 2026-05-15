@@ -227,7 +227,7 @@ export default function SupplyPipeline() {
       return;
     }
     if (!test && !session?.access_token) {
-      toast.error("Sign in before sending live outreach so SCOUT can copy the message to your CRM.");
+      toast.error("Sign in before sending live outreach so Cal can copy the message to your CRM.");
       return;
     }
     patchDraft(id, { sending: true });

@@ -448,7 +448,7 @@ export default function Pipeline() {
         );
         if (!sendResponse.ok) throw new Error(await sendResponse.text());
         setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Outreach Sent", updatedAt: "just now" } : d)));
-        toast.success("Sent by SCOUT. Replies will return to SCOUT and notify you.");
+        toast.success("Cal sent the outreach. Replies will return to the Sales Console and notify you.");
         return;
       }
 
@@ -457,9 +457,9 @@ export default function Pipeline() {
         copyDraft();
         toast.success("Lead captured in CRM. Draft approved for manual send.");
       } else if (!deal.contact) {
-        toast.success("Lead captured in CRM. Add a recipient email before SCOUT sends.");
+        toast.success("Lead captured in CRM. Add a recipient email before Cal sends.");
       } else {
-        toast.success("Lead captured in CRM. SCOUT is ready when you approve send.");
+        toast.success("Lead captured in CRM. Cal is ready when you approve send.");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not advance lead with SCOUT");
@@ -739,7 +739,7 @@ export default function Pipeline() {
                         </div>
                         <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">Work plan</p>
                         <p className="break-words text-[11px] text-white/45 leading-relaxed">
-                          {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SCOUT will evaluate the selected leads and prepare outreach."}
+                          {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SCOUT will evaluate the selected leads and prepare Cal outreach."}
                         </p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
                           {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
@@ -794,7 +794,7 @@ export default function Pipeline() {
                         <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/80">Interrupt / adjust SCOUT</p>
                           <p className="mt-1 text-[11px] leading-relaxed text-white/40">
-                            SCOUT can work in the background, but you can pause it or change the message, timing, and cadence before any outbound step.
+                            SCOUT can work in the background, but you can pause it or change Cal's message, timing, and cadence before any outbound step.
                           </p>
                           <div className="mt-3 grid gap-2">
                             <textarea

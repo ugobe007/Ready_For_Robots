@@ -194,7 +194,7 @@ export default function Profile() {
           />
           <div className="space-y-3 p-4">
             <label className="flex items-center justify-between gap-3 text-xs text-white/55">
-              Forward SCOUT replies to me
+              Forward Cal replies to me
               <input
                 type="checkbox"
                 checked={settings.reply_forwarding_enabled}
@@ -209,15 +209,15 @@ export default function Profile() {
               className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
             />
             <p className="text-[11px] text-white/35">
-              {savingSettings ? "Saving SCOUT settings..." : "SCOUT sends from the ReadyForRobots domain first. Replies route back into SCOUT and can be forwarded here."}
+              {savingSettings ? "Saving communication settings..." : "Cal sends from the ReadyForRobots domain. Replies route back into the workflow and can be forwarded here."}
             </p>
           </div>
         </div>
         <div className="rounded-xl border border-white/10 mb-6 p-4 space-y-3" style={{ background: "rgba(255,255,255,0.03)" }}>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/30">Train SCOUT</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/30">Train Cal</p>
             <p className="mt-1 text-xs leading-relaxed text-white/45">
-              SCOUT represents you as a team member. Teach it your tone, preferred next step, and who should be copied.
+              Cal represents you in outreach. Teach him your tone, preferred next step, and who should be copied.
             </p>
           </div>
           <label className="block">

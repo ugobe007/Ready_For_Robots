@@ -385,12 +385,12 @@ def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str
         {
             "trigger": "No response after 3-5 business days",
             "action": "Send one concise follow-up with a fresh signal or relevant example.",
-            "why": "SCOUT should add new value, not just bump the same email.",
+            "why": "Cal should add new value, not just bump the same email.",
         },
         {
             "trigger": "Short or annoyed reply",
             "action": "Acknowledge directly, reduce pressure, and ask permission before sending anything else.",
-            "why": "Tone of voice matters; SCOUT should preserve the relationship.",
+            "why": "Tone of voice matters; Cal should preserve the relationship.",
         },
         {
             "trigger": "New research/news signal",
@@ -403,7 +403,7 @@ def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str
             {
                 "trigger": "Background SCOUT brief",
                 "action": "Monitor replies, no-response timing, research updates, and tone; surface next-best-action ideas to the user.",
-                "why": "SCOUT acts as the automation link and thinking team member.",
+            "why": "SCOUT monitors the workflow while Cal handles communication.",
             }
         )
     return suggestions
@@ -827,7 +827,7 @@ def draft_account_outreach(
             "collateral_policy": collateral_policy,
             "collateral_links": collateral_links,
             "suggestions": _response_suggestions(acct, settings),
-            "checkpoint": "SCOUT drafted this for review. Edit it, then approve before sending.",
+            "checkpoint": "Cal drafted this for review. Edit it, then approve before sending.",
         }
     except HTTPException:
         raise
@@ -868,7 +868,7 @@ def send_account_outreach(
         reply_to = _reply_address(reply_token)
         send_identity = (patch.get("send_identity") or "scout").strip().lower()
         if send_identity != "scout":
-            raise HTTPException(status_code=400, detail="Only SCOUT-domain sending is available right now")
+            raise HTTPException(status_code=400, detail="Only Ready For Robots domain sending is available right now")
         cc = _email_list(patch.get("cc")) or _email_list(settings.scout_default_cc if settings else None)
         bcc = _email_list(patch.get("bcc")) or _email_list(settings.scout_default_bcc if settings else None)
         approved_style = (patch.get("approved_style") or "").strip()

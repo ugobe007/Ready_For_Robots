@@ -41,10 +41,10 @@ ACTIVATION_STATUSES = [
 ACTIVATION_STATUS_META = {
     "queued": "Queued for SCOUT evaluation.",
     "evaluating": "SCOUT is evaluating lead fit and sales angles.",
-    "drafted": "Strategy and outreach drafts are ready.",
+    "drafted": "Strategy and Cal outreach drafts are ready.",
     "awaiting_approval": "Drafts are waiting for user approval.",
-    "paused": "User interrupted SCOUT to adjust message, timing, or cadence.",
-    "sent": "Outreach has been sent and SCOUT is watching for replies.",
+    "paused": "User interrupted SCOUT to adjust Cal's message, timing, or cadence.",
+    "sent": "Cal has sent outreach and SCOUT is watching for replies.",
     "replied": "A lead has replied and needs attention.",
     "meeting_booked": "A meeting has been booked.",
 }
@@ -154,24 +154,24 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
         "materials": {
             "choice": material,
             "next": {
-                "upload": "Parse deck, extract proof points, and align messaging to selected leads.",
+                "upload": "Parse deck, extract proof points, and align Cal's messaging to selected leads.",
                 "suggest": "Generate deck outline, ROI story, objection handling, and lead-specific talk track.",
-                "skip": "Start with lead research and draft outreach using available signals.",
+                "skip": "Start with lead research and prepare Cal outreach using available signals.",
             }[material],
             "filename": body.filename(),
         },
         "steps": [
             "Evaluate each selected lead and confirm sales angle.",
             "Build lead-specific strategy, ROI thesis, and activity schedule.",
-            "Draft email and introduction sequence for review.",
+            "Prepare Cal's email and introduction sequence for review.",
             "Track replies and move responding leads to active pipeline.",
             "Ping user when a lead responds or meeting scheduling is needed.",
         ],
         "mode": mode,
         "sending_policy": {
-            "manual": "Drafts only until user approves the next step.",
-            "assisted": "Ask before sending each message.",
-            "autopilot": "Prepare work in the background, but keep outbound activity visible and interruptible.",
+            "manual": "Cal drafts only until user approves the next step.",
+            "assisted": "Ask before Cal sends each message.",
+            "autopilot": "Prepare work in the background, but keep Cal's outbound activity visible and interruptible.",
         }[mode],
         "safety_requirements": [
             {"key": "sender_identity", "label": "Verified sender identity", "required": mode in {"assisted", "autopilot"}},
@@ -188,9 +188,9 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
             "email": "Email notifications stay off until sender identity and account notification settings are configured.",
         },
         "user_feedback_loop": {
-            "next_checkpoint": "Review CRM accounts, approve or edit SCOUT drafts, then explicitly approve sending.",
-            "interrupt": "Pause SCOUT any time to change message, timing, or follow-up cadence.",
-            "autopilot_guardrail": "Autopilot prepares work in the background, but outbound messages remain visible with interruption controls.",
+            "next_checkpoint": "Review CRM accounts, approve or edit Cal drafts, then explicitly approve sending.",
+            "interrupt": "Pause SCOUT any time to change Cal's message, timing, or follow-up cadence.",
+            "autopilot_guardrail": "Autopilot prepares work in the background, but Cal's outbound messages remain visible with interruption controls.",
         },
     }
     if material == "suggest":
@@ -204,7 +204,7 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
                 "Proof points, implementation path, and next meeting ask",
             ],
             "positioning": "Lead with measurable operating pressure first, then introduce robotics as the practical response.",
-            "next_output": "SCOUT should draft a deck outline and ROI assumptions before outreach approval.",
+            "next_output": "SCOUT should prepare a deck outline and ROI assumptions before Cal outreach approval.",
         }
     return plan
 
@@ -502,7 +502,7 @@ def scout_control_activation(
         log.append(
             {
                 "type": "plan_updated",
-                "message": "User adjusted SCOUT message, timing, or follow-up cadence.",
+                "message": "User adjusted Cal message, timing, or follow-up cadence.",
                 "message_note": body.message_note,
                 "timing_note": body.timing_note,
                 "cadence_note": body.cadence_note,

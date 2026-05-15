@@ -559,7 +559,7 @@ def create_rfq(
         schedule=body.schedule,
         evaluation_criteria=body.evaluation_criteria,
         scout_summary={
-            "next": "SCOUT can match this RFQ to vendor profiles, draft clarifying questions, and score submitted proposals.",
+            "next": "SCOUT can match this RFQ to vendor profiles, prepare Cal clarifying questions, and score submitted proposals.",
             "automation": ["vendor matching", "requirements scoring", "proposal comparison", "deadline tracking"],
         },
     )
@@ -603,7 +603,7 @@ def create_rfq_schedule_event(
         payload={
             **body.payload,
             "email_status": "scheduled",
-            "next": "SCOUT should email prospective robot companies before this deadline.",
+            "next": "Cal should email prospective robot companies before this deadline.",
         },
     )
     db.add(event)
@@ -642,7 +642,7 @@ def create_or_update_proposal(
     proposal.currency = body.currency
     proposal.asset_ids = body.asset_ids
     proposal.scout_response_plan = {
-        "next": "SCOUT should compare the proposal against RFQ requirements, attach approved assets, and draft buyer-facing follow-up.",
+        "next": "SCOUT should compare the proposal against RFQ requirements, attach approved assets, and prepare Cal's buyer-facing follow-up.",
         "guardrails": ["use approved materials only", "respect proposal deadline", "flag missing requirements"],
     }
     db.commit()

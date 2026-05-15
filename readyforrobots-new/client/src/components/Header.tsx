@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "How is this different from a lead list?",
-    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a drafted outreach message — so you reach the right buyer at the right moment.",
+    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a Cal outreach draft — so you reach the right buyer at the right moment.",
   },
   {
     q: "Do I need to sign up to see results?",
@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "How quickly does SCOUT act on new signals?",
-    a: "Signals are detected and scored within minutes. Outreach drafts are ready within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
+    a: "Signals are detected and scored within minutes. Cal outreach drafts are ready within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function Header() {
     { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
     { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
     { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
-    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review SCOUT replies and automated next actions" },
+    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review Cal and Max replies and automated next actions" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
     { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
@@ -72,7 +72,7 @@ export default function Header() {
     { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
     { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
     { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
-    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review SCOUT opportunity actions" },
+    { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review Cal, Max, and opportunity actions" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "Manage RFPs and vendor docs" },
   ];
 
