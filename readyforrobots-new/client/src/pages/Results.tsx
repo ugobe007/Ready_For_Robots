@@ -174,18 +174,24 @@ function timingFromScore(score: number): string {
 function draftOutreach(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">): string {
   return `Subject: Automation opportunity at ${p.company}
 
-Hi [Name],
+Hello,
 
-SCOUT flagged ${p.company} because ${p.relevance.toLowerCase()}
+I am Cal with Ready For Robots.
+
+We track automation buying signals and help teams decide where robotics might be worth a practical look.
+
+${p.company} stood out because ${p.relevance.toLowerCase()}
 
 The strongest signal we found: ${p.signal}
 
-Recommended next step: ${p.action}
+The practical next step may be: ${p.action}
 
-Would it make sense to compare where automation could reduce labor pressure, improve throughput, or support the timing behind this signal?
+Worth a quick exchange to see whether there is a useful automation angle here?
 
 Best,
-[Your name]`;
+Cal
+Robot Automation Team
+Ready For Robots`;
 }
 
 function formatEmployees(value: number | null | undefined): string {

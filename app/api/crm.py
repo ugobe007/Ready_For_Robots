@@ -329,10 +329,14 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     lines: list[str] = [
         "Hello,",
         "",
-        f"I am Cal, and I am reaching out on behalf of Ready For Robots. I noticed {acct.name} may be a fit for practical robot automation in {industry}.",
+        "I am Cal with Ready For Robots.",
+        "",
+        "We track automation buying signals and help teams decide where robotics might be worth a practical look.",
+        "",
+        f"{acct.name} stood out because there may be an automation angle in {industry}.",
     ]
     if "insightful" in selected_traits:
-        lines.append("The useful signal here is not robotics for its own sake; it is where repetitive work, staffing pressure, and service expectations are already colliding.")
+        lines.append("I am not assuming there is a project already in motion. The useful question is whether repetitive work, staffing pressure, or service expectations are creating a real business case.")
     if "industry_refs" in selected_traits:
         lines.append(f"In {industry}, teams are increasingly looking at automation where it can reduce walking time, stabilize throughput, or protect service levels without adding headcount.")
     if "robot_examples" in selected_traits:
@@ -347,14 +351,14 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
     meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
     if channel in ("phone", "meeting"):
-        lines.append(meeting or "Would a short call be easier than trading long emails?")
+        lines.append(meeting or "Open to a quick 15-minute call next week?")
     else:
         lines.append("Worth a quick exchange to see whether there is a useful automation angle here?")
     # Style instructions guide generation; they should not be exposed to buyers.
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
         lines.append(collateral)
-    lines.extend(["", "Best,", "Cal @ Robot Automation Team", "Ready For Robots"])
+    lines.extend(["", "Best,", "Cal", "Robot Automation Team", "Ready For Robots"])
     return "\n".join(lines)
 
 

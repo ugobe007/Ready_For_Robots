@@ -37,7 +37,12 @@ class _RobotCompany:
 
 def test_vendor_signup_email_only_mentions_three_matches():
     matches = [
-        {"company_name": f"Buyer {i}", "industry": "Logistics", "why_match": "Matches AMR workflow."}
+        {
+            "company_name": f"Buyer {i}",
+            "industry": "Unknown" if i == 1 else "Logistics",
+            "why_match": "Relevant market signal: AMR workflow.",
+            "signal": 'Pilot update <a href="https://news.google.com/rss/articles/abc">read more</a>',
+        }
         for i in range(1, 6)
     ]
 
@@ -48,13 +53,17 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "Buyer 3" in email["body"]
     assert "Buyer 4" not in email["body"]
     assert "Buyer 5" not in email["body"]
-    assert "I am Cal, and I am reaching out on behalf of Ready For Robots." in email["body"]
+    assert "I am Cal with Ready For Robots." in email["body"]
+    assert "We find automation sales leads and rank them by buying signals" in email["body"]
     assert "two-sided robot automation marketplace" not in email["body"]
     assert "Preformatted response sequence" not in email["body"]
-    assert "appears relevant to several buyers showing practical automation demand" in email["body"]
-    assert "Cal @ Robot Automation Team" in email["body"]
-    assert "create a Ready For Robots account" in email["body"]
-    assert "short call" in email["body"]
+    assert "<a href=" not in email["body"]
+    assert "https://news.google.com" not in email["body"]
+    assert "Buyer 1 (Unknown)" not in email["body"]
+    assert "I am not assuming each one is a fit." in email["body"]
+    assert "Cal\nRobot Automation Team" in email["body"]
+    assert "Ready For Robots account" in email["body"]
+    assert "15-minute call" in email["body"]
 
 
 def test_contact_strategy_infers_role_email_from_website_not_url():

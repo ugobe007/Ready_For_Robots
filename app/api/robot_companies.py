@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from typing import Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from html import unescape
 import os
 import re
 import secrets
@@ -132,10 +133,21 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
 def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> str:
     overlap = sorted(vendor_terms.intersection(_lead_terms(company)))
     if overlap:
-        return f"Matches {rc.company_name}'s market around {', '.join(overlap[:4])}."
+        return f"Relevant market signal: {_human_join(overlap[:3])}."
     if company.industry and rc.target_market:
-        return f"{company.industry} lead aligns with target market: {rc.target_market}."
-    return "Buyer has active automation signals that may fit this robot category."
+        return f"{company.industry} account with a possible {rc.target_market} use case."
+    return "Active automation signal worth a closer look."
+
+
+def _human_join(values: list[str]) -> str:
+    cleaned = [str(v or "").strip() for v in values if str(v or "").strip()]
+    if not cleaned:
+        return "robot automation"
+    if len(cleaned) == 1:
+        return cleaned[0]
+    if len(cleaned) == 2:
+        return f"{cleaned[0]} and {cleaned[1]}"
+    return f"{', '.join(cleaned[:-1])}, and {cleaned[-1]}"
 
 
 ROLE_INBOXES = ("partnerships", "events", "marketing", "sales")
@@ -715,15 +727,15 @@ def _uuid_for_json_uuid_column(db: Session, value: Any):
 
 def _recommended_response_playbook(matches: list[dict[str, Any]]) -> str:
     if not matches:
-        return "If this is useful, I can route the first qualified buyer match with the account context, timing signal, and suggested introduction path."
+        return "If this is close to a market you care about, I can send over the first few qualified accounts and the context behind them."
     lead_lines = "\n".join(
-        f"- {m['company_name']}: confirm the active use case, likely site count, timing, and who owns the pilot decision."
+        f"- {m['company_name']}: what changed, why it may matter, and who likely owns the project."
         for m in matches[:3]
     )
-    return f"""If any of these are priorities, I can send the underlying buyer context before your team reaches out:
+    return f"""If any of these look interesting, I can send the fuller context:
 {lead_lines}
 
-From there, the clean next step is simple: pick the accounts you want to review, confirm the right product/use-case fit, and decide whether Ready For Robots should help tee up an introduction."""
+No pressure to chase all three. The goal is to see whether any are worth a real sales conversation."""
 
 
 def _vendor_focus_phrase(rc: RobotCompany) -> str:
@@ -743,7 +755,7 @@ def _vendor_focus_phrase(rc: RobotCompany) -> str:
         cleaned.append(value)
     if not cleaned:
         return "robot automation"
-    return ", ".join(cleaned[:3])
+    return _human_join(cleaned[:3])
 
 
 def _vendor_possessive(name: str) -> str:
@@ -752,16 +764,25 @@ def _vendor_possessive(name: str) -> str:
 
 def _clamp_sentence(value: str, limit: int) -> str:
     text = " ".join(str(value or "").split())
-    return text if len(text) <= limit else f"{text[: limit - 1]}…"
+    return text if len(text) <= limit else f"{text[: limit - 3]}..."
+
+
+def _clean_signal_for_email(value: str, limit: int = 130) -> str:
+    text = BeautifulSoup(str(value or ""), "html.parser").get_text(" ")
+    text = unescape(text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\s+", " ", text).strip(" -:|")
+    return _clamp_sentence(text, limit)
 
 
 def _match_line(match: dict[str, Any]) -> str:
-    industry = match.get("industry") or "market"
+    industry = str(match.get("industry") or "").strip()
     why = str(match.get("why_match") or "There is an active automation signal worth reviewing.").strip()
-    signal = str(match.get("signal") or "").strip()
+    signal = _clean_signal_for_email(str(match.get("signal") or ""))
+    label = match["company_name"] if not industry or industry.lower() in {"unknown", "other"} else f"{match['company_name']} ({industry})"
     if signal:
-        return f"- {match['company_name']} ({industry}): {why} Signal: {_clamp_sentence(signal, 140)}"
-    return f"- {match['company_name']} ({industry}): {why}"
+        return f"- {label}: {why} Signal: {signal}"
+    return f"- {label}: {why}"
 
 
 def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
@@ -772,22 +793,25 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
     response_playbook = _recommended_response_playbook(matches)
     body = f"""Hello {rc.company_name} team,
 
-I am Cal, and I am reaching out on behalf of Ready For Robots.
+I am Cal with Ready For Robots.
 
-I noticed {rc.company_name} because your work around {focus} appears relevant to several buyers showing practical automation demand right now.
+We find automation sales leads and rank them by buying signals, so stronger signals point to warmer accounts.
+
+I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
 
 {lead_lines}
 
-I am only showing three accounts here. The useful part is the context behind each one: what changed, why the timing may be active, and which workflow looks most likely to move first.
+I am not assuming each one is a fit. They stood out because there is some timing signal behind the account, not just a company name on a list.
 
 {response_playbook}
 
-If this is relevant, the next step is to create a Ready For Robots account so {possessive} team can review matched buyers, save the ones worth pursuing, and receive new lead context as it appears.
+If this is relevant, I can set up a Ready For Robots account for {possessive} team so you can review matches as they come in.
 
-Would you be open to a short call this week so we can confirm the right markets, use cases, and routing for {rc.company_name}?
+Open to a quick 15-minute call next week?
 
 Best,
-Cal @ Robot Automation Team
+Cal
+Robot Automation Team
 Ready For Robots"""
     return {"subject": subject, "body": body}
 

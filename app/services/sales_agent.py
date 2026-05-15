@@ -136,7 +136,7 @@ def plan_sales_reply(
     elif intent == "negative":
         stage = "lost"
         recommendation = "Respect the response and stop active outreach."
-        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal @ Robot Automation Team\nReady For Robots"
+        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal\nRobot Automation Team\nReady For Robots"
     elif intent == "nurture":
         stage = "nurture"
         recommendation = "Respect timing and ask permission to follow up later."
@@ -187,7 +187,8 @@ To make the next step useful, could you share:
 {close}
 
 Best,
-Cal @ Robot Automation Team
+Cal
+Robot Automation Team
 Ready For Robots"""
 
 
@@ -323,16 +324,18 @@ def create_automated_next_action(
     subject = f"Next step: {opportunity.title}"
     body = f"""Hi,
 
-I am Cal, reaching out on behalf of Ready For Robots. I am keeping this opportunity moving.
+I am Cal with Ready For Robots.
 
-Recommended next step:
+We track automation buying signals and help teams turn the strongest ones into practical next steps.
+
+For this opportunity, the next useful step looks like:
 {recommendation}
 
-Suggested action:
-Please share the best next detail or time window so we can keep the process moving without unnecessary back-and-forth.
+Could you share the best detail or time window so we can keep this moving without unnecessary back-and-forth?
 
 Best,
-Cal @ Robot Automation Team
+Cal
+Robot Automation Team
 Ready For Robots"""
     action = SalesAgentAction(
         id=_new_uuid(db),

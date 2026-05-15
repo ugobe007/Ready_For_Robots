@@ -333,4 +333,7 @@ def test_create_automated_next_action_sends_when_recipient_available(db_session,
     assert action.status == "sent"
     assert action.resend_id == "next_email"
     assert sent["to_email"] == "buyer@example.com"
+    assert "I am Cal with Ready For Robots." in sent["body_text"]
+    assert "We track automation buying signals" in sent["body_text"]
+    assert "Cal @ Robot Automation Team" not in sent["body_text"]
     assert db_session.query(SalesMessage).filter(SalesMessage.direction == "outbound").count() == 1
