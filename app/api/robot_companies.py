@@ -74,7 +74,11 @@ def _split_terms(*values: Any) -> set[str]:
 
 
 def _robot_market_terms(rc: RobotCompany) -> set[str]:
-    terms = _split_terms(rc.robot_type, rc.target_market, rc.product_category)
+    terms = _split_terms(
+        getattr(rc, "robot_type", None),
+        getattr(rc, "target_market", None),
+        getattr(rc, "product_category", None),
+    )
     aliases = {
         "amr": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
         "cobot": {"manufacturing", "assembly", "industrial", "production"},
@@ -89,7 +93,11 @@ def _robot_market_terms(rc: RobotCompany) -> set[str]:
 
 
 def _explicit_robot_market_terms(rc: RobotCompany) -> set[str]:
-    return _split_terms(rc.robot_type, rc.target_market, rc.product_category)
+    return _split_terms(
+        getattr(rc, "robot_type", None),
+        getattr(rc, "target_market", None),
+        getattr(rc, "product_category", None),
+    )
 
 
 def _vendor_allows_logistics(rc: RobotCompany) -> bool:
@@ -133,6 +141,79 @@ def _lead_score(company: Company, vendor_terms: set[str]) -> float:
     return round(score, 1)
 
 
+def _vendor_seed(rc: RobotCompany) -> int:
+    key = "|".join(
+        str(value or "").lower()
+        for value in [
+            getattr(rc, "id", None),
+            getattr(rc, "company_name", None),
+            getattr(rc, "website", None),
+            getattr(rc, "robot_type", None),
+            getattr(rc, "target_market", None),
+        ]
+    )
+    return sum((idx + 1) * ord(char) for idx, char in enumerate(key))
+
+
+def _vendor_specific_tiebreak(rc: RobotCompany, company: Company) -> float:
+    key = f"{_vendor_seed(rc)}|{company.id}|{company.name or ''}"
+    return (sum((idx + 1) * ord(char) for idx, char in enumerate(key)) % 1000) / 1000.0
+
+
+def _lead_signal_strength(company: Company) -> float:
+    if company.scores:
+        return max(float(s.overall_intent_score or 0) for s in company.scores)
+    return 0.0
+
+
+def _curated_vendor_leads(rc: RobotCompany, rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    if not rows:
+        return []
+    explicit_terms = _explicit_robot_market_terms(rc)
+    chosen: list[dict[str, Any]] = []
+    seen_industries: set[str] = set()
+    seen_companies: set[int] = set()
+
+    def row_sort(row: dict[str, Any]) -> tuple[float, float, float]:
+        explicit_overlap = len(explicit_terms.intersection(set(row.get("lead_terms") or [])))
+        return (
+            float(explicit_overlap * 40),
+            float(row.get("fit_score") or 0),
+            float(row.get("signal_strength") or 0),
+            float(row.get("vendor_tiebreak") or 0),
+        )
+
+    strong_fit = [
+        row
+        for row in rows
+        if row.get("overlap_count", 0) > 0
+        or bool(explicit_terms.intersection(set(row.get("lead_terms") or [])))
+    ]
+    pool = sorted(strong_fit or rows, key=row_sort, reverse=True)
+    for row in pool:
+        industry_key = str(row.get("industry") or "unknown").strip().lower()
+        if row["id"] in seen_companies:
+            continue
+        if len(chosen) < max(1, limit - 1) and industry_key in seen_industries:
+            continue
+        chosen.append(row)
+        seen_companies.add(row["id"])
+        seen_industries.add(industry_key)
+        if len(chosen) >= limit:
+            break
+
+    if len(chosen) < limit:
+        for row in pool:
+            if row["id"] in seen_companies:
+                continue
+            chosen.append(row)
+            seen_companies.add(row["id"])
+            if len(chosen) >= limit:
+                break
+
+    return chosen[:limit]
+
+
 def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[dict[str, Any]]:
     vendor_terms = _robot_market_terms(rc)
     allow_logistics = _vendor_allows_logistics(rc)
@@ -144,25 +225,37 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
         .limit(300)
         .all()
     )
-    ranked = sorted(
-        (
+    ranked = []
+    for c in candidates:
+        if not allow_logistics and _is_logistics_lead(c):
+            continue
+        lead_terms = _lead_terms(c)
+        overlap = vendor_terms.intersection(lead_terms)
+        fit_score = _lead_score(c, vendor_terms)
+        if fit_score <= 0:
+            continue
+        ranked.append(
             {
                 "id": c.id,
                 "company_name": c.name,
                 "industry": c.industry,
                 "location": ", ".join(x for x in [c.location_city, c.location_state] if x) or None,
-                "score": _lead_score(c, vendor_terms),
+                "score": fit_score,
+                "fit_score": fit_score,
+                "signal_strength": _lead_signal_strength(c),
+                "overlap_count": len(overlap),
+                "vendor_tiebreak": _vendor_specific_tiebreak(rc, c),
+                "lead_terms": sorted(lead_terms),
                 "signal": (c.signals[0].signal_text if c.signals else None),
                 "signal_type": (c.signals[0].signal_type if c.signals else None),
                 "why_match": _why_match(rc, c, vendor_terms),
             }
-            for c in candidates
-            if allow_logistics or not _is_logistics_lead(c)
-        ),
-        key=lambda row: row["score"],
-        reverse=True,
-    )
-    return [row for row in ranked if row["score"] > 0][:limit]
+        )
+    selected = _curated_vendor_leads(rc, ranked, limit)
+    return [
+        {key: value for key, value in row.items() if key not in {"fit_score", "signal_strength", "overlap_count", "vendor_tiebreak", "lead_terms"}}
+        for row in selected
+    ]
 
 
 def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> str:

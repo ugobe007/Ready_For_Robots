@@ -6,7 +6,9 @@ from app.api.robot_companies import (
     _create_crm_supply_tracking_copy,
     _create_supply_outreach_record,
     _contact_strategy,
+    _curated_vendor_leads,
     _extract_contact_research,
+    _match_buyer_leads,
     _reply_domain,
     _request_emails,
     _research_robot_company_contacts,
@@ -17,6 +19,7 @@ from app.api.robot_companies import (
 )
 from app.api.webhooks import _capture_delivery_event
 from app.models.crm import CrmAccount
+from app.models.company import Company
 from app.models.outreach import OutreachMessage
 from app.models.supply_outreach import SupplyOutreachMessage
 from app.database import Base
@@ -38,6 +41,7 @@ def db_session():
 
 class _RobotCompany:
     company_name = "DexMate Robotics"
+    product_category = None
 
 
 def test_vendor_signup_email_only_mentions_three_matches():
@@ -89,6 +93,61 @@ def test_vendor_logistics_requires_explicit_vendor_fit():
     company.target_market = "warehouse logistics"
 
     assert _vendor_allows_logistics(company) is True
+
+
+def test_curated_vendor_leads_uses_vendor_specific_diversity():
+    warehouse_vendor = _RobotCompany()
+    warehouse_vendor.id = 11
+    warehouse_vendor.company_name = "WarehouseBot"
+    warehouse_vendor.robot_type = "AMR"
+    warehouse_vendor.target_market = "warehouse logistics"
+    service_vendor = _RobotCompany()
+    service_vendor.id = 22
+    service_vendor.company_name = "ServiceBot"
+    service_vendor.robot_type = "service"
+    service_vendor.target_market = "hospitality"
+    rows = [
+        {"id": 1, "company_name": "Hotel One", "industry": "Hospitality", "fit_score": 90, "signal_strength": 70, "overlap_count": 1, "vendor_tiebreak": 0.1, "lead_terms": ["hospitality"]},
+        {"id": 2, "company_name": "Hotel Two", "industry": "Hospitality", "fit_score": 89, "signal_strength": 69, "overlap_count": 1, "vendor_tiebreak": 0.2, "lead_terms": ["hospitality"]},
+        {"id": 3, "company_name": "Warehouse One", "industry": "Logistics", "fit_score": 88, "signal_strength": 68, "overlap_count": 1, "vendor_tiebreak": 0.3, "lead_terms": ["warehouse"]},
+        {"id": 4, "company_name": "Factory One", "industry": "Manufacturing", "fit_score": 87, "signal_strength": 67, "overlap_count": 1, "vendor_tiebreak": 0.4, "lead_terms": ["manufacturing"]},
+        {"id": 5, "company_name": "Retail One", "industry": "Retail", "fit_score": 86, "signal_strength": 66, "overlap_count": 1, "vendor_tiebreak": 0.5, "lead_terms": ["retail"]},
+    ]
+
+    warehouse_ids = [row["id"] for row in _curated_vendor_leads(warehouse_vendor, rows, 3)]
+    service_ids = [row["id"] for row in _curated_vendor_leads(service_vendor, rows, 3)]
+
+    assert warehouse_ids != service_ids
+    assert 3 in warehouse_ids
+    assert 1 in service_ids
+
+
+def test_match_buyer_leads_differs_by_robot_vendor_fit(db_session):
+    companies = [
+        Company(id=1001, name="Marriott", industry="Hospitality", sub_industry="hotel operations", is_internal=True, crm_metadata={"automation_requirements": ["service"]}),
+        Company(id=1002, name="DHL", industry="Logistics", sub_industry="warehouse fulfillment", is_internal=True, crm_metadata={"automation_requirements": ["warehouse"]}),
+        Company(id=1003, name="Toyota", industry="Manufacturing", sub_industry="factory production", is_internal=True, crm_metadata={"automation_requirements": ["assembly"]}),
+        Company(id=1004, name="Target", industry="Retail", sub_industry="store operations", is_internal=True, crm_metadata={"automation_requirements": ["service"]}),
+    ]
+    db_session.add_all(companies)
+    db_session.commit()
+    service_vendor = _RobotCompany()
+    service_vendor.id = 701
+    service_vendor.company_name = "ServiceBot"
+    service_vendor.robot_type = "service"
+    service_vendor.target_market = "hospitality retail"
+    warehouse_vendor = _RobotCompany()
+    warehouse_vendor.id = 702
+    warehouse_vendor.company_name = "WarehouseBot"
+    warehouse_vendor.robot_type = "AMR"
+    warehouse_vendor.target_market = "warehouse logistics"
+
+    service_matches = _match_buyer_leads(db_session, service_vendor, limit=3)
+    warehouse_matches = _match_buyer_leads(db_session, warehouse_vendor, limit=3)
+
+    assert [m["id"] for m in service_matches] != [m["id"] for m in warehouse_matches]
+    assert {m["company_name"] for m in service_matches}.intersection({"Marriott", "Target"})
+    assert {m["company_name"] for m in warehouse_matches}.intersection({"DHL"})
 
 
 def test_contact_strategy_infers_role_email_from_website_not_url():
