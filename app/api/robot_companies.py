@@ -715,44 +715,76 @@ def _uuid_for_json_uuid_column(db: Session, value: Any):
 
 def _recommended_response_playbook(matches: list[dict[str, Any]]) -> str:
     if not matches:
-        return "Recommended timing: reply within 1 business day once your team signs up.\nSuggested next step: ask Ready For Robots to route the first qualified buyer opportunity and confirm your preferred territory."
+        return "If this is useful, I can route the first qualified buyer match with the account context, timing signal, and suggested introduction path."
     lead_lines = "\n".join(
-        f"- {m['company_name']}: respond within 1 business day; propose a 20-minute qualification call; ask about timeline, site count, budget owner, and pilot requirements."
+        f"- {m['company_name']}: confirm the active use case, likely site count, timing, and who owns the pilot decision."
         for m in matches[:3]
     )
-    return f"""Suggested timing and next steps for your sales team:
+    return f"""If any of these are priorities, I can send the underlying buyer context before your team reaches out:
 {lead_lines}
 
-Preformatted response sequence:
-1. Same day: acknowledge the opportunity and ask Ready For Robots for buyer context, buying timeline, and preferred introduction path.
-2. Within 24 hours: send the buyer a short qualification note with two meeting windows and one relevant customer/use-case proof point.
-3. Within 3 business days: if there is no response, follow up with a pilot-oriented question and ask whether procurement, operations, or facilities should be included."""
+From there, the clean next step is simple: pick the accounts you want to review, confirm the right product/use-case fit, and decide whether Ready For Robots should help tee up an introduction."""
+
+
+def _vendor_focus_phrase(rc: RobotCompany) -> str:
+    parts = [
+        getattr(rc, "robot_type", None),
+        getattr(rc, "product_category", None),
+        getattr(rc, "target_market", None),
+    ]
+    cleaned = []
+    seen: set[str] = set()
+    for part in parts:
+        value = str(part or "").strip()
+        key = value.lower()
+        if not value or key in {"unknown", "none", "null"} or key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(value)
+    if not cleaned:
+        return "robot automation"
+    return ", ".join(cleaned[:3])
+
+
+def _vendor_possessive(name: str) -> str:
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
+
+
+def _clamp_sentence(value: str, limit: int) -> str:
+    text = " ".join(str(value or "").split())
+    return text if len(text) <= limit else f"{text[: limit - 1]}…"
+
+
+def _match_line(match: dict[str, Any]) -> str:
+    industry = match.get("industry") or "market"
+    why = str(match.get("why_match") or "There is an active automation signal worth reviewing.").strip()
+    signal = str(match.get("signal") or "").strip()
+    if signal:
+        return f"- {match['company_name']} ({industry}): {why} Signal: {_clamp_sentence(signal, 140)}"
+    return f"- {match['company_name']} ({industry}): {why}"
 
 
 def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
     subject = f"3 buyer leads for {rc.company_name}"
-    lead_lines = "\n".join(
-        f"- {m['company_name']} ({m.get('industry') or 'industry unknown'}): {m.get('why_match')}"
-        for m in matches[:3]
-    ) or "- We have buyer matches ready to review once your team is onboarded."
+    focus = _vendor_focus_phrase(rc)
+    possessive = _vendor_possessive(rc.company_name)
+    lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
     response_playbook = _recommended_response_playbook(matches)
     body = f"""Hello {rc.company_name} team,
 
 I am Cal, and I am reaching out on behalf of Ready For Robots.
 
-We are building a two-sided robot automation marketplace: buyers with live automation signals on one side, and robot companies that can serve those opportunities on the other.
-
-I noticed {rc.company_name} appears to match these buyer opportunities:
+I noticed {rc.company_name} because your work around {focus} appears relevant to several buyers showing practical automation demand right now.
 
 {lead_lines}
 
-I am only showing three matches in this note, but the full workflow can deliver qualified leads directly to your inbox with context, timing, and why each buyer appears ready for outreach.
+I am only showing three accounts here. The useful part is the context behind each one: what changed, why the timing may be active, and which workflow looks most likely to move first.
 
 {response_playbook}
 
-The next step is to create a Ready For Robots account so your team can receive lead matches, review the buyer context, and decide which opportunities to pursue.
+If this is relevant, the next step is to create a Ready For Robots account so {possessive} team can review matched buyers, save the ones worth pursuing, and receive new lead context as it appears.
 
-Would you be open to a short call this week so we can show you the lead flow and confirm the right markets for {rc.company_name}?
+Would you be open to a short call this week so we can confirm the right markets, use cases, and routing for {rc.company_name}?
 
 Best,
 Cal @ Robot Automation Team
