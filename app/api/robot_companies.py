@@ -929,6 +929,13 @@ def _supply_outreach_history(db: Session, robot_company_id: int, limit: int = 5)
             "approved_at": row.approved_at.isoformat() if row.approved_at else None,
             "sent_at": row.sent_at.isoformat() if row.sent_at else None,
             "created_at": row.created_at.isoformat() if row.created_at else None,
+            "delivery_status": (row.payload or {}).get("delivery_status"),
+            "delivered_at": (row.payload or {}).get("delivered_at"),
+            "opened_at": (row.payload or {}).get("opened_at"),
+            "clicked_at": (row.payload or {}).get("clicked_at"),
+            "problem_at": (row.payload or {}).get("problem_at"),
+            "problem_reason": (row.payload or {}).get("problem_reason"),
+            "cal_delivery_action": (row.payload or {}).get("cal_delivery_action"),
         }
         for row in rows
     ]
@@ -1632,6 +1639,7 @@ def test_send_email(
     company_id: int,
     payload: SendRobotCompanyEmailRequest,
     db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
 ):
     """
     Send a test outreach email via Resend without mutating workflow state.
@@ -1654,9 +1662,9 @@ def test_send_email(
     raw_subject = payload.subject or email.get("subject", "Partnership Opportunity")
     subject = f"[TEST] {raw_subject}"
     body = payload.body or email.get("body", "")
-    to_emails = _request_emails(payload.to_email)
+    to_emails = _request_emails(user.get("email") or "")
     if not to_emails:
-        raise HTTPException(status_code=400, detail="At least one recipient email is required")
+        raise HTTPException(status_code=400, detail="Your profile needs a valid email address before sending a test")
 
     try:
         send_result = send_email_via_resend(

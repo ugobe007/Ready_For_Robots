@@ -15,8 +15,10 @@ from app.api.robot_companies import (
     _supply_outreach_history,
     _vendor_signup_email,
 )
+from app.api.webhooks import _capture_delivery_event
 from app.models.crm import CrmAccount
 from app.models.outreach import OutreachMessage
+from app.models.supply_outreach import SupplyOutreachMessage
 from app.database import Base
 import app.models  # noqa: F401 - register SQLAlchemy models
 
@@ -213,6 +215,140 @@ def test_supply_outreach_record_history_tracks_approval(db_session):
     assert history[0]["status"] == "draft_approved"
     assert history[0]["to_emails"] == ["partnerships@unitree.com", "events@unitree.com"]
     assert history[0]["approved_at"] is not None
+
+
+def test_supply_outreach_history_includes_delivery_tracking(db_session):
+    company = _RobotCompany()
+    company.id = 303
+    message = _create_supply_outreach_record(
+        db_session,
+        company,
+        to_emails=["partnerships@unitree.com"],
+        subject="3 buyer leads for Unitree",
+        body="Review these buyer matches.",
+        template_type="supply_pipeline",
+        status="sent",
+        send_result={"resend_id": "re_unitree_123", "from_email": "outreach@readyforrobots.com"},
+        payload={"delivery_status": "delivered", "delivered_at": "2026-05-15T12:00:00+00:00"},
+    )
+    db_session.commit()
+
+    history = _supply_outreach_history(db_session, 303)
+
+    assert str(message.id) == history[0]["id"]
+    assert history[0]["delivery_status"] == "delivered"
+    assert history[0]["delivered_at"] == "2026-05-15T12:00:00+00:00"
+
+
+def test_resend_delivery_event_updates_supply_message(db_session):
+    company = _RobotCompany()
+    company.id = 404
+    message = _create_supply_outreach_record(
+        db_session,
+        company,
+        to_emails=["partnerships@unitree.com"],
+        subject="3 buyer leads for Unitree",
+        body="Review these buyer matches.",
+        template_type="supply_pipeline",
+        status="sent",
+        send_result={"resend_id": "re_delivery_123", "from_email": "outreach@readyforrobots.com"},
+    )
+    db_session.commit()
+
+    result = _capture_delivery_event(
+        db_session,
+        "email.delivered",
+        {"email_id": "re_delivery_123", "to": ["partnerships@unitree.com"]},
+    )
+    db_session.refresh(message)
+
+    assert result["status"] == "delivered"
+    assert message.status == "delivered"
+    assert message.payload["delivery_status"] == "delivered"
+    assert message.payload["delivered_at"]
+
+
+def test_bounce_event_resends_to_alternate_role_inbox(db_session, monkeypatch):
+    company = _RobotCompany()
+    company.id = 505
+    message = _create_supply_outreach_record(
+        db_session,
+        company,
+        to_emails=["partnerships@unitree.com"],
+        subject="3 buyer leads for Unitree",
+        body="Review these buyer matches.",
+        template_type="supply_pipeline",
+        status="sent",
+        send_result={"resend_id": "re_bounce_123", "from_email": "outreach@readyforrobots.com"},
+    )
+    db_session.commit()
+
+    def fake_send(**kwargs):
+        assert kwargs["to_email"] == "events@unitree.com"
+        return {"resend_id": "re_resend_456", "from_email": "outreach@readyforrobots.com", "to": [kwargs["to_email"]]}
+
+    monkeypatch.setattr("app.api.webhooks.send_email_via_resend", fake_send)
+
+    result = _capture_delivery_event(
+        db_session,
+        "email.bounced",
+        {"email_id": "re_bounce_123", "to": ["partnerships@unitree.com"], "reason": "mailbox not found"},
+    )
+    db_session.refresh(message)
+    resent = db_session.query(SupplyOutreachMessage).filter(SupplyOutreachMessage.resend_id == "re_resend_456").first()
+
+    assert result["status"] == "bounced"
+    assert message.status == "bounced"
+    assert message.payload["automated_resend_to"] == "events@unitree.com"
+    assert "Resent to events@unitree.com" in message.payload["cal_delivery_action"]
+    assert resent is not None
+    assert resent.status == "resent"
+
+
+def test_crm_bounce_event_resends_to_alternate_buyer_inbox(db_session, monkeypatch):
+    team_id = "b1111111-1111-4111-8111-111111111111"
+    account_id = "b2222222-2222-4222-8222-222222222222"
+    user_id = "b3333333-3333-4333-8333-333333333333"
+    message = OutreachMessage(
+        id="b4444444-4444-4444-8444-444444444444",
+        team_id=team_id,
+        crm_account_id=account_id,
+        sender_user_id=user_id,
+        to_email="buyer@example.com",
+        from_email="outreach@readyforrobots.com",
+        reply_to="reply+crm_token@readyforrobots.com",
+        reply_token="crm_token",
+        subject="Automation opportunity",
+        body_text="Worth comparing automation options?",
+        send_identity="scout",
+        resend_id="re_crm_bounce_123",
+        status="sent",
+        payload={},
+    )
+    db_session.add(message)
+    db_session.commit()
+
+    def fake_send(**kwargs):
+        assert kwargs["to_email"] == "operations@example.com"
+        assert kwargs["reply_to"] == "reply+crm_token-r1@readyforrobots.com"
+        return {"resend_id": "re_crm_resend_456", "from_email": "outreach@readyforrobots.com", "to": [kwargs["to_email"]]}
+
+    monkeypatch.setattr("app.api.webhooks.send_email_via_resend", fake_send)
+
+    result = _capture_delivery_event(
+        db_session,
+        "email.bounced",
+        {"email_id": "re_crm_bounce_123", "to": ["buyer@example.com"], "reason": "mailbox not found"},
+    )
+    db_session.refresh(message)
+    resent = db_session.query(OutreachMessage).filter(OutreachMessage.resend_id == "re_crm_resend_456").first()
+
+    assert result["status"] == "bounced"
+    assert message.status == "bounced"
+    assert message.payload["automated_resend_to"] == "operations@example.com"
+    assert "Resent to operations@example.com" in message.payload["cal_delivery_action"]
+    assert resent is not None
+    assert resent.status == "resent"
 
 
 def test_supply_send_creates_crm_tracking_copy(db_session):

@@ -59,6 +59,13 @@ type SupplyCompany = {
     approved_at?: string | null;
     sent_at?: string | null;
     created_at?: string | null;
+    delivery_status?: string | null;
+    delivered_at?: string | null;
+    opened_at?: string | null;
+    clicked_at?: string | null;
+    problem_at?: string | null;
+    problem_reason?: string | null;
+    cal_delivery_action?: string | null;
   }>;
   lead_matches: Array<{
     id: number;
@@ -86,6 +93,22 @@ type DraftState = {
   crmOutreachMessageId?: string;
   lastAction?: string;
 };
+
+type OutreachHistoryItem = NonNullable<SupplyCompany["outreach_history"]>[number];
+
+function deliveryLabel(item: OutreachHistoryItem) {
+  const status = item.delivery_status || item.status || "tracked";
+  if (item.clicked_at) return "Clicked";
+  if (item.opened_at) return "Opened";
+  if (item.delivered_at) return "Delivered";
+  if (["bounced", "complained", "suppressed"].includes(status)) return "Problem";
+  if (status === "delivery_delayed") return "Delayed";
+  if (status === "resent") return "Resent";
+  if (status === "sent") return "Sent";
+  if (status === "test_sent") return "Test sent";
+  if (status === "draft_approved") return "Approved";
+  return status.replace(/_/g, " ");
+}
 
 function initialDraft(row: SupplyCompany): DraftState {
   const recommended = row.contact_strategy.recommended_to || [];
@@ -137,6 +160,7 @@ export default function SupplyPipeline() {
   const selectedDraft = selected ? drafts[selected.robot_company.id] : null;
   const approvedCount = Object.values(drafts).filter((draft) => draft.approved && !draft.sent).length;
   const sentCount = Object.values(drafts).filter((draft) => draft.sent).length;
+  const signedInEmail = session?.user?.email || "";
 
   const patchDraft = (id: number, patch: Partial<DraftState>) => {
     setDrafts((current) => ({
@@ -218,8 +242,12 @@ export default function SupplyPipeline() {
     const draft = drafts[id];
     if (!draft) return;
     const recipients = parseRecipients(draft.to);
-    if (!recipients.length) {
+    if (!test && !recipients.length) {
       toast.error("Add a valid recipient email before sending.");
+      return;
+    }
+    if (test && !signedInEmail) {
+      toast.error("Sign in before sending a test email to yourself.");
       return;
     }
     if (!draft.approved && !test) {
@@ -241,7 +269,7 @@ export default function SupplyPipeline() {
           method: "POST",
           headers,
           body: JSON.stringify({
-            to_email: recipients,
+            to_email: test ? signedInEmail : recipients,
             template_type: "supply_pipeline",
             subject: draft.subject,
             body: draft.body,
@@ -263,7 +291,7 @@ export default function SupplyPipeline() {
       if (!test) {
         setSelectedId(null);
       }
-      toast.success(test ? "Test email sent." : `Sent outreach to ${row.robot_company.company_name} and copied it to CRM.`);
+      toast.success(test ? `Test email sent to ${signedInEmail}.` : `Sent outreach to ${row.robot_company.company_name} and copied it to CRM.`);
     } catch (e) {
       patchDraft(id, { sending: false });
       toast.error(e instanceof Error ? e.message : "Could not send email.");
@@ -316,14 +344,14 @@ export default function SupplyPipeline() {
               onClick={approveAll}
               className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
             >
-              Bulk approve all
+              Bulk approve drafts
             </button>
             <button
               type="button"
               onClick={() => void bulkSendApproved()}
               className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c]"
             >
-              Bulk send approved
+              Bulk send approved emails
             </button>
             <p className="text-[11px] text-white/35">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
           </div>
@@ -333,7 +361,7 @@ export default function SupplyPipeline() {
             <aside className="rounded-2xl border border-white/10 bg-white/[0.025]">
               <div className="border-b border-white/8 px-4 py-3">
                 <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${rows.length} robot companies`}</p>
-                <p className="mt-1 text-[11px] text-white/35">Approve/send queue for marketplace supply.</p>
+                <p className="mt-1 text-[11px] text-white/35">Review Cal drafts, approve them, then send live or in bulk.</p>
               </div>
               <div className="max-h-[680px] overflow-y-auto p-2">
                 {rows.map((row) => {
@@ -528,11 +556,21 @@ export default function SupplyPipeline() {
                         {(selected.outreach_history || []).slice(0, 3).map((item) => (
                           <div key={item.id} className="rounded-lg border border-white/8 bg-white/[0.025] p-2 text-[11px] text-white/45">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="font-bold text-white/65">{item.is_test ? "Test" : "Live"} · {item.status || "tracked"}</span>
+                              <span className="font-bold text-white/65">{item.is_test ? "Test" : "Live"} · {deliveryLabel(item)}</span>
                               <span>{item.sent_at || item.approved_at || item.created_at || ""}</span>
                             </div>
                             <p className="mt-1 truncate">{item.subject}</p>
                             <p className="mt-1 truncate">To: {(item.to_emails || []).join(", ")}</p>
+                            {(item.resend_id || item.reply_to) && (
+                              <p className="mt-1 truncate text-white/30">
+                                Resend: {item.resend_id || "pending"} · Reply: {item.reply_to || "not set"}
+                              </p>
+                            )}
+                            {(item.problem_reason || item.cal_delivery_action) && (
+                              <p className="mt-1 rounded border border-amber-400/20 bg-amber-400/5 px-2 py-1 text-amber-100/80">
+                                {item.cal_delivery_action || item.problem_reason}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -576,15 +614,15 @@ export default function SupplyPipeline() {
                       disabled={selectedDraft.sending}
                       className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
                     >
-                      Approve
+                      Approve draft
                     </button>
                     <button
                       type="button"
                       onClick={() => void sendOne(selected, true)}
-                      disabled={selectedDraft.sending || !selectedDraft.to}
+                      disabled={selectedDraft.sending || !signedInEmail}
                       className="rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/75 disabled:opacity-50"
                     >
-                      Send test
+                      Send test to me
                     </button>
                     <button
                       type="button"
@@ -592,7 +630,7 @@ export default function SupplyPipeline() {
                       disabled={selectedDraft.sending || selectedDraft.sent || !selectedDraft.approved || !selectedDraft.to}
                       className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
                     >
-                      {selectedDraft.sent ? "Sent" : selectedDraft.sending ? "Sending..." : "Send approved"}
+                      {selectedDraft.sent ? "Sent" : selectedDraft.sending ? "Sending..." : "Send live email"}
                     </button>
                     <button
                       type="button"
@@ -607,7 +645,7 @@ export default function SupplyPipeline() {
                           ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
                           : "border-white/10 bg-white/[0.025] text-white/35"
                       }`}
-                      title={selectedDraft.sent ? "Outreach sent and copied to CRM." : "Send approved outreach to complete this checkpoint."}
+                      title={selectedDraft.sent ? "Outreach sent and copied to CRM sent messages." : "Live send will record this in CRM sent messages."}
                     >
                       <span
                         className={`flex h-4 w-4 items-center justify-center rounded border ${
@@ -616,12 +654,12 @@ export default function SupplyPipeline() {
                       >
                         {selectedDraft.sent ? "✓" : ""}
                       </span>
-                      Sent checkpoint
+                      Sent to CRM
                     </div>
                   </div>
                   {selectedDraft.sent && (
                     <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/8 p-3 text-xs text-emerald-100">
-                      <p className="font-bold">Workflow checkpoint complete: email sent and activity copied to CRM.</p>
+                      <p className="font-bold">Workflow checkpoint complete: email sent and activity copied to CRM sent messages.</p>
                       <p className="mt-1 text-emerald-100/70">
                         CRM account: {selectedDraft.crmAccountId || "tracked"} · Message: {selectedDraft.crmOutreachMessageId || selectedDraft.trackingId || "tracked"}
                       </p>
