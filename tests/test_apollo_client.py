@@ -46,8 +46,8 @@ def test_recommended_titles_reflect_industry_and_stage():
 def test_search_people_sends_apollo_header_and_filters(monkeypatch):
     captured = {}
 
-    def fake_post(url, headers, json, timeout):
-        captured.update({"url": url, "headers": headers, "json": json, "timeout": timeout})
+    def fake_post(url, headers, params, timeout):
+        captured.update({"url": url, "headers": headers, "params": params, "timeout": timeout})
         return _Response(
             {
                 "people": [
@@ -74,8 +74,26 @@ def test_search_people_sends_apollo_header_and_filters(monkeypatch):
     )
 
     assert captured["headers"]["X-Api-Key"] == "test-key"
-    assert captured["json"]["q_organization_domains"] == "acme.com"
-    assert captured["json"]["organization_names"] == ["Acme"]
-    assert captured["json"]["person_titles"] == ["VP Operations"]
+    assert ("q_organization_domains_list[]", "acme.com") in captured["params"]
+    assert ("person_titles[]", "VP Operations") in captured["params"]
+    assert ("per_page", 3) in captured["params"]
     assert result["prospects"][0]["name"] == "Jane Smith"
     assert result["prospects"][0]["organization_domain"] == "acme.com"
+
+
+def test_search_people_uses_keywords_when_domain_missing(monkeypatch):
+    captured = {}
+
+    def fake_post(url, headers, params, timeout):
+        captured.update({"url": url, "headers": headers, "params": params, "timeout": timeout})
+        return _Response({"people": [], "pagination": {"page": 1}})
+
+    monkeypatch.setattr("app.services.apollo_client.requests.post", fake_post)
+
+    ApolloProspectClient(api_key="test-key").search_people(
+        organization_name="IHG Hotels & Resorts",
+        titles=["General Manager"],
+    )
+
+    assert ("q_keywords", "IHG Hotels & Resorts") in captured["params"]
+    assert not any(key == "q_organization_domains_list[]" for key, _ in captured["params"])

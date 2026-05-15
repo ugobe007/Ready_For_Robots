@@ -117,7 +117,9 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
     : "The practical next step may be to identify one contained workflow where automation can prove value without disrupting the broader operation.";
 
   return [
-    "Hi,",
+    "Hello,",
+    "",
+    "I am Cal, and I am reaching out on behalf of Ready For Robots.",
     "",
     opening,
     "",
@@ -130,7 +132,9 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
     "Would it be useful if I sent over a short view of the workflows that usually map to this kind of signal?",
     "",
     "Best,",
-    "SCOUT",
+    "Cal",
+    "Robot Automation Team",
+    "Ready For Robots",
   ].join("\n");
 }
 

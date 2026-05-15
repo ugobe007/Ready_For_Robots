@@ -80,7 +80,7 @@ def plan_sales_reply(
             sender_email,
             "Thanks. We can help map the technical requirements to the right robotics solution and supporting materials.",
             ["payload or throughput needs", "site constraints", "systems that need integration"],
-            "Once we have those constraints, SCOUT can route the right specs and proposal materials.",
+            "Once we have those constraints, I can route the right specs and proposal materials.",
         )
     elif intent == "proposal_requested":
         stage = "proposal_requested"
@@ -98,7 +98,7 @@ def plan_sales_reply(
             sender_email,
             "Thanks. A short call is the right next step.",
             ["preferred time windows", "who should join", "main topic to cover first"],
-            "Send over a couple of times that work and SCOUT will help coordinate the next step.",
+            "Send over a couple of times that work and I can help coordinate the next step.",
         )
     elif intent == "procurement_request":
         stage = "procurement_review"
@@ -107,12 +107,12 @@ def plan_sales_reply(
             sender_email,
             "Thanks. We can support the procurement path and organize the right quote, invoice, PO, or vendor setup materials.",
             ["required procurement documents", "PO or vendor onboarding process", "target approval timeline"],
-            "SCOUT will keep the workflow organized so the right team sees the right documents at the right time.",
+            "I will keep the workflow organized so the right team sees the right documents at the right time.",
         )
     elif intent == "negative":
         stage = "lost"
         recommendation = "Respect the response and stop active outreach."
-        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nSCOUT"
+        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal\nRobot Automation Team\nReady For Robots"
     elif intent == "nurture":
         stage = "nurture"
         recommendation = "Respect timing and ask permission to follow up later."
@@ -120,7 +120,7 @@ def plan_sales_reply(
             sender_email,
             "Thanks for the timing context. We can keep this light and revisit when the window is better.",
             ["preferred follow-up timeframe", "what would make this more relevant later"],
-            "SCOUT can set a reminder and avoid crowding your inbox in the meantime.",
+            "I can set a reminder and avoid crowding your inbox in the meantime.",
         )
     else:
         stage = "qualified"
@@ -157,7 +157,9 @@ To make the next step useful, could you share:
 {close}
 
 Best,
-SCOUT"""
+Cal
+Robot Automation Team
+Ready For Robots"""
 
 
 def handle_crm_reply_first_response(db: Session, msg: OutreachMessage, reply: OutreachReply, account: CrmAccount | None) -> SalesAgentAction:
@@ -231,7 +233,7 @@ def create_automated_next_action(
     subject = f"Next step: {opportunity.title}"
     body = f"""Hi,
 
-SCOUT is keeping this opportunity moving.
+I am Cal, reaching out on behalf of Ready For Robots. I am keeping this opportunity moving.
 
 Recommended next step:
 {recommendation}
@@ -240,7 +242,9 @@ Suggested action:
 Please share the best next detail or time window so we can keep the process moving without unnecessary back-and-forth.
 
 Best,
-SCOUT"""
+Cal
+Robot Automation Team
+Ready For Robots"""
     action = SalesAgentAction(
         id=_new_uuid(db),
         sales_opportunity_id=_uuid_value(db, opportunity.id),
@@ -285,8 +289,8 @@ def execute_sales_agent_action(
         send_result = send_email_via_resend(
             to_email=recipient,
             subject=action.draft_subject or f"Re: {opportunity.title}",
-            body_text=action.draft_body or action.recommendation or "SCOUT is following up on this opportunity.",
-            from_display_name="SCOUT",
+            body_text=action.draft_body or action.recommendation or "Cal is following up on this opportunity on behalf of Ready For Robots.",
+            from_display_name="Cal",
             reply_to=reply_to,
             idempotency_key=f"sales-agent-action/{action.id}",
         )

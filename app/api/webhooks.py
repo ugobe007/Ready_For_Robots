@@ -98,7 +98,7 @@ def _fetch_received_if_needed(data: dict[str, Any]) -> dict[str, Any]:
 
 def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply, account: CrmAccount | None) -> None:
     title = f"Reply received from {reply.from_email or 'sales opportunity'}"
-    body = f"{account.name if account else 'A lead'} replied to SCOUT outreach."
+    body = f"{account.name if account else 'A lead'} replied to Cal's outreach."
     if msg.sender_user_id:
         db.add(
             UserNotification(
@@ -122,14 +122,14 @@ def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply,
         try:
             send_email_via_resend(
                 to_email=str(forward_to),
-                subject=f"SCOUT reply: {reply.subject or account.name if account else 'outreach'}",
+                subject=f"Cal reply: {reply.subject or account.name if account else 'outreach'}",
                 body_text=(
-                    f"SCOUT captured a reply from {reply.from_email or 'unknown sender'}.\n\n"
+                    f"Cal captured a reply from {reply.from_email or 'unknown sender'}.\n\n"
                     f"Account: {account.name if account else msg.crm_account_id}\n"
                     f"Subject: {reply.subject or ''}\n\n"
                     f"{reply.body_text or ''}"
                 ),
-                from_display_name="SCOUT",
+                from_display_name="Cal",
                 idempotency_key=f"scout-reply-forward/{reply.id}",
             )
         except Exception:

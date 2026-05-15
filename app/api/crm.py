@@ -327,9 +327,9 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     industry = (acct.industry or "your operation").strip()
     selected_traits = set(traits)
     lines: list[str] = [
-        f"Hi {acct.name} team,",
+        "Hello,",
         "",
-        f"I’m SCOUT, working with the ReadyForRobots team. I noticed {acct.name} may be a fit for practical robotics in {industry}.",
+        f"I am Cal, and I am reaching out on behalf of Ready For Robots. I noticed {acct.name} may be a fit for practical robot automation in {industry}.",
     ]
     if "insightful" in selected_traits:
         lines.append("The useful signal here is not robotics for its own sake; it is where repetitive work, staffing pressure, and service expectations are already colliding.")
@@ -350,12 +350,11 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
         lines.append(meeting or "Would a short call be easier than trading long emails?")
     else:
         lines.append("Worth a quick exchange to see whether there is a useful automation angle here?")
-    if style_instruction:
-        lines.append(f"\nStyle note SCOUT is following: {style_instruction}")
+    # Style instructions guide generation; they should not be exposed to buyers.
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
         lines.append(collateral)
-    lines.extend(["", "Best,", "SCOUT"])
+    lines.extend(["", "Best,", "Cal", "Robot Automation Team", "Ready For Robots"])
     return "\n".join(lines)
 
 
@@ -847,7 +846,7 @@ def send_account_outreach(
             raise HTTPException(status_code=400, detail="No outreach draft on file for this account")
 
         settings = _user_settings_row(db, uid)
-        sender_name = (settings.sender_name if settings else None) or (user.get("email") or "SCOUT").split("@")[0]
+        sender_name = (settings.sender_name if settings else None) or "Cal"
         subject = (patch.get("subject") or f"Automation opportunity — {acct.name}").strip()
         reply_token = secrets.token_urlsafe(18)
         reply_to = _reply_address(reply_token)

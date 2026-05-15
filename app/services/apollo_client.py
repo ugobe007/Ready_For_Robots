@@ -69,20 +69,22 @@ class ApolloProspectClient:
         clean_titles = [x.strip() for x in (titles or []) if x and x.strip()]
         clean_locations = [x.strip() for x in (locations or []) if x and x.strip()]
         domain = _clean_domain(organization_domain)
-        body: dict[str, Any] = {
-            "page": max(1, int(page or 1)),
-            "per_page": max(1, min(int(per_page or 10), 25)),
-        }
+        page_value = max(1, int(page or 1))
+        per_page_value = max(1, min(int(per_page or 10), 25))
+        params: list[tuple[str, Any]] = [
+            ("page", page_value),
+            ("per_page", per_page_value),
+        ]
         if clean_titles:
-            body["person_titles"] = clean_titles
+            params.extend(("person_titles[]", title) for title in clean_titles)
         if clean_locations:
-            body["person_locations"] = clean_locations
-        if organization_name:
-            body["organization_names"] = [organization_name.strip()]
+            params.extend(("person_locations[]", location) for location in clean_locations)
         if domain:
-            # Apollo accepts organization-domain filters for people search; keep
-            # organization_names as a fallback when both are available.
-            body["q_organization_domains"] = domain
+            params.append(("q_organization_domains_list[]", domain))
+        elif organization_name:
+            # Apollo does not expose an exact organization-name filter on People
+            # Search. Use keywords only when a domain is unavailable.
+            params.append(("q_keywords", organization_name.strip()))
 
         if not (organization_name or domain):
             raise ApolloConfigError("organization_name or organization_domain is required")
@@ -92,10 +94,9 @@ class ApolloProspectClient:
                 f"{self.base_url}{APOLLO_PEOPLE_SEARCH_PATH}",
                 headers={
                     "X-Api-Key": self.api_key,
-                    "Content-Type": "application/json",
                     "Cache-Control": "no-cache",
                 },
-                json=body,
+                params=params,
                 timeout=20,
             )
         except requests.RequestException as exc:
@@ -114,8 +115,8 @@ class ApolloProspectClient:
                 "organization_domain": domain,
                 "titles": clean_titles,
                 "locations": clean_locations,
-                "page": body["page"],
-                "per_page": body["per_page"],
+                "page": page_value,
+                "per_page": per_page_value,
             },
         }
 
