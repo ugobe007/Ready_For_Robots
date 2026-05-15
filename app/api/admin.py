@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Any, Callable, List, Optional
 
 from app.database import get_db
 from app.models.company import Company
@@ -29,6 +29,84 @@ def _industry_display(raw):
     """Public-facing: never expose 'Unknown'; use 'New' (unclassified)."""
     s = (raw or "").strip()
     return s if s and s.lower() not in ("unknown", "other") else "New"
+
+
+def _iso(value):
+    return value.isoformat() if value else None
+
+
+def _short_text(value: Optional[str], limit: int = 220) -> Optional[str]:
+    if not value:
+        return None
+    text = " ".join(str(value).split())
+    return text if len(text) <= limit else f"{text[: limit - 1]}…"
+
+
+def _action_state(status: Optional[str], requires_approval: bool = False) -> str:
+    raw = (status or "").lower()
+    if requires_approval and raw in {"planned", "draft", "drafted", "pending", "review"}:
+        return "needs_approval"
+    if raw in {"queued", "scheduled", "pending", "draft_approved"}:
+        return "queued"
+    if raw in {"running", "processing", "in_progress", "started"}:
+        return "in_process"
+    if raw in {"planned", "draft", "drafted", "new", "in_app"}:
+        return "needs_review"
+    if raw in {"sent", "completed", "done", "success", "read"}:
+        return "completed"
+    if raw in {"failed", "error", "rejected", "cancelled"}:
+        return "failed"
+    return raw or "unknown"
+
+
+def _workflow_item(
+    *,
+    item_id: Any,
+    source: str,
+    title: str,
+    status: Optional[str],
+    created_at=None,
+    updated_at=None,
+    description: Optional[str] = None,
+    owner: Optional[str] = None,
+    entity: Optional[str] = None,
+    priority: str = "normal",
+    requires_approval: bool = False,
+    next_action_label: Optional[str] = None,
+    next_action_url: Optional[str] = None,
+    metadata: Optional[dict] = None,
+):
+    state = _action_state(status, requires_approval=requires_approval)
+    return {
+        "id": str(item_id),
+        "source": source,
+        "title": title,
+        "description": _short_text(description),
+        "status": status or state,
+        "state": state,
+        "priority": priority,
+        "requires_approval": requires_approval,
+        "owner": owner,
+        "entity": entity,
+        "next_action_label": next_action_label,
+        "next_action_url": next_action_url,
+        "created_at": _iso(created_at),
+        "updated_at": _iso(updated_at),
+        "metadata": metadata or {},
+    }
+
+
+def _safe_collect(
+    collector: Callable[[], list[dict]],
+    *,
+    source: str,
+    errors: list[dict],
+) -> list[dict]:
+    try:
+        return collector()
+    except Exception as exc:
+        errors.append({"source": source, "detail": str(exc)})
+        return []
 
 
 # ── Stats ─────────────────────────────────────────────────────────────────────
@@ -107,6 +185,235 @@ def get_stats(db: Session = Depends(get_db)):
             }
             for c in recent
         ],
+    }
+
+
+@router.get("/workflow/actions")
+def workflow_actions(limit: int = 80, db: Session = Depends(get_db)):
+    """Unified operator queue for AI agent, outreach, research, and notification work."""
+    from app.models.crm import CrmAccount
+    from app.models.lead_research import LeadResearchUpdate, UserNotification
+    from app.models.outreach import OutreachMessage
+    from app.models.robot_company import RobotCompany
+    from app.models.sales_agent import SalesAgentAction, SalesOpportunity
+    from app.models.supply_outreach import SupplyOutreachMessage
+
+    cap = max(10, min(limit, 200))
+    errors: list[dict] = []
+
+    crm_names = {
+        str(row.id): row.name
+        for row in db.query(CrmAccount.id, CrmAccount.name).limit(1000).all()
+    }
+    company_names = {
+        row.id: row.name
+        for row in db.query(Company.id, Company.name).limit(2000).all()
+    }
+    robot_names = {
+        row.id: row.company_name
+        for row in db.query(RobotCompany.id, RobotCompany.company_name).limit(1000).all()
+    }
+    opportunities = {
+        str(row.id): row
+        for row in db.query(SalesOpportunity).order_by(desc(SalesOpportunity.updated_at)).limit(1000).all()
+    }
+
+    def collect_sales_actions() -> list[dict]:
+        rows = (
+            db.query(SalesAgentAction)
+            .order_by(desc(SalesAgentAction.updated_at), desc(SalesAgentAction.created_at))
+            .limit(cap)
+            .all()
+        )
+        items: list[dict] = []
+        for action in rows:
+            opp = opportunities.get(str(action.sales_opportunity_id))
+            entity = opp.title if opp else "Sales opportunity"
+            items.append(_workflow_item(
+                item_id=action.id,
+                source="sales_agent",
+                title=action.recommendation or action.action_type.replace("_", " ").title(),
+                description=action.draft_subject or action.error,
+                status=action.status,
+                created_at=action.created_at,
+                updated_at=action.updated_at,
+                entity=entity,
+                priority="high" if action.requires_approval or action.risk_level in {"medium", "high"} else "normal",
+                requires_approval=bool(action.requires_approval),
+                next_action_label="Review in Sales Console",
+                next_action_url="/sales-console",
+                metadata={
+                    "risk_level": action.risk_level,
+                    "intent": action.detected_intent,
+                    "opportunity_id": str(action.sales_opportunity_id),
+                    "resend_id": action.resend_id,
+                },
+            ))
+        return items
+
+    def collect_buyer_outreach() -> list[dict]:
+        rows = (
+            db.query(OutreachMessage)
+            .order_by(desc(OutreachMessage.updated_at), desc(OutreachMessage.created_at))
+            .limit(cap)
+            .all()
+        )
+        return [
+            _workflow_item(
+                item_id=row.id,
+                source="buyer_outreach",
+                title=row.subject,
+                description=f"To {row.to_email}",
+                status=row.status,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+                entity=crm_names.get(str(row.crm_account_id)) or company_names.get(row.company_id) or "Buyer lead",
+                priority="high" if _action_state(row.status) in {"queued", "failed"} else "normal",
+                next_action_label="Open CRM",
+                next_action_url="/crm",
+                metadata={
+                    "to_email": row.to_email,
+                    "crm_account_id": str(row.crm_account_id),
+                    "company_id": row.company_id,
+                    "resend_id": row.resend_id,
+                },
+            )
+            for row in rows
+        ]
+
+    def collect_supply_outreach() -> list[dict]:
+        rows = (
+            db.query(SupplyOutreachMessage)
+            .order_by(desc(SupplyOutreachMessage.updated_at), desc(SupplyOutreachMessage.created_at))
+            .limit(cap)
+            .all()
+        )
+        items: list[dict] = []
+        for row in rows:
+            emails = row.to_emails if isinstance(row.to_emails, list) else []
+            items.append(_workflow_item(
+                item_id=row.id,
+                source="supply_outreach",
+                title=row.subject,
+                description=f"To {', '.join(emails[:3])}" if emails else "Robot company outreach",
+                status=row.status,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+                entity=robot_names.get(row.robot_company_id) or "Robot company",
+                priority="high" if _action_state(row.status) in {"needs_approval", "queued", "failed"} else "normal",
+                requires_approval=_action_state(row.status) == "needs_approval",
+                next_action_label="Open Supply Pipeline",
+                next_action_url="/supply-pipeline",
+                metadata={
+                    "robot_company_id": row.robot_company_id,
+                    "to_emails": emails,
+                    "is_test": bool(row.is_test),
+                    "resend_id": row.resend_id,
+                },
+            ))
+        return items
+
+    def collect_research_updates() -> list[dict]:
+        rows = (
+            db.query(LeadResearchUpdate)
+            .order_by(desc(LeadResearchUpdate.updated_at), desc(LeadResearchUpdate.detected_at))
+            .limit(cap)
+            .all()
+        )
+        return [
+            _workflow_item(
+                item_id=row.id,
+                source="lead_research",
+                title=row.title,
+                description=row.summary,
+                status=row.status,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+                entity=company_names.get(row.company_id) or "Lead research",
+                priority="high" if (row.significance_score or 0) >= 75 else "normal",
+                next_action_label="Review Pipeline",
+                next_action_url="/pipeline",
+                metadata={
+                    "company_id": row.company_id,
+                    "update_type": row.update_type,
+                    "significance_score": row.significance_score,
+                    "source_domain": row.source_domain,
+                },
+            )
+            for row in rows
+        ]
+
+    def collect_notifications() -> list[dict]:
+        rows = (
+            db.query(UserNotification)
+            .order_by(desc(UserNotification.created_at))
+            .limit(cap)
+            .all()
+        )
+        return [
+            _workflow_item(
+                item_id=row.id,
+                source="notification",
+                title=row.title,
+                description=row.body,
+                status="read" if row.read_at else row.delivery_state,
+                created_at=row.created_at,
+                updated_at=row.created_at,
+                entity=company_names.get(row.company_id) or "User notification",
+                priority="normal",
+                next_action_label="Open Profile",
+                next_action_url="/profile",
+                metadata={
+                    "company_id": row.company_id,
+                    "notification_type": row.notification_type,
+                    "research_update_id": row.research_update_id,
+                },
+            )
+            for row in rows
+        ]
+
+    items: list[dict] = []
+    items.extend(_safe_collect(collect_sales_actions, source="sales_agent", errors=errors))
+    items.extend(_safe_collect(collect_buyer_outreach, source="buyer_outreach", errors=errors))
+    items.extend(_safe_collect(collect_supply_outreach, source="supply_outreach", errors=errors))
+    items.extend(_safe_collect(collect_research_updates, source="lead_research", errors=errors))
+    items.extend(_safe_collect(collect_notifications, source="notification", errors=errors))
+
+    def sort_key(item: dict):
+        state_rank = {
+            "failed": 0,
+            "needs_approval": 1,
+            "queued": 2,
+            "in_process": 3,
+            "needs_review": 4,
+            "unknown": 5,
+            "completed": 6,
+        }.get(item.get("state"), 5)
+        timestamp = item.get("updated_at") or item.get("created_at") or ""
+        return (state_rank, timestamp)
+
+    items = sorted(items, key=sort_key, reverse=False)[:cap]
+    counts = {
+        "total": len(items),
+        "needs_approval": 0,
+        "queued": 0,
+        "in_process": 0,
+        "needs_review": 0,
+        "completed": 0,
+        "failed": 0,
+    }
+    by_source: dict[str, int] = {}
+    for item in items:
+        state = item.get("state") or "unknown"
+        if state in counts:
+            counts[state] += 1
+        by_source[item["source"]] = by_source.get(item["source"], 0) + 1
+
+    return {
+        "counts": counts,
+        "by_source": by_source,
+        "items": items,
+        "errors": errors,
     }
 
 

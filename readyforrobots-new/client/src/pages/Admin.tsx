@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, BarChart3, Database, DownloadCloud, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,6 +62,31 @@ type SiteAnalytics = {
   };
 };
 
+type WorkflowAction = {
+  id?: string;
+  source?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  state?: string;
+  priority?: string;
+  requires_approval?: boolean;
+  owner?: string;
+  entity?: string;
+  next_action_label?: string;
+  next_action_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  metadata?: Record<string, unknown>;
+};
+
+type WorkflowSummary = {
+  counts?: Record<string, number>;
+  by_source?: Record<string, number>;
+  items?: WorkflowAction[];
+  errors?: Array<{ source?: string; detail?: string }>;
+};
+
 type ScrapeTargets = {
   summary?: Record<string, number>;
   targets?: Array<{ url?: string; label?: string; scraper?: string; industries?: string[]; signal_types?: string[]; active?: boolean }>;
@@ -108,6 +133,23 @@ function activityColor(type?: string) {
   return "rgba(255,255,255,0.42)";
 }
 
+function stateLabel(state?: string) {
+  return (state || "unknown").replace(/_/g, " ");
+}
+
+function stateStyle(state?: string) {
+  if (state === "failed") return { color: "#fecaca", borderColor: "rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.08)" };
+  if (state === "needs_approval") return { color: "#fde68a", borderColor: "rgba(251,191,36,0.38)", background: "rgba(251,191,36,0.08)" };
+  if (state === "queued") return { color: "#bfdbfe", borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)" };
+  if (state === "in_process") return { color: "#99f6e4", borderColor: "rgba(45,212,191,0.35)", background: "rgba(45,212,191,0.08)" };
+  if (state === "completed") return { color: "#bbf7d0", borderColor: "rgba(74,222,128,0.35)", background: "rgba(74,222,128,0.08)" };
+  return { color: "rgba(255,255,255,0.58)", borderColor: "rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" };
+}
+
+function sourceLabel(source?: string) {
+  return (source || "workflow").replace(/_/g, " ");
+}
+
 export default function Admin() {
   const api = getApiBase();
   const { session, loading: authLoading } = useAuth();
@@ -117,6 +159,7 @@ export default function Admin() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [activity, setActivity] = useState<AdminActivity[]>([]);
   const [analytics, setAnalytics] = useState<SiteAnalytics | null>(null);
+  const [workflow, setWorkflow] = useState<WorkflowSummary | null>(null);
   const [targets, setTargets] = useState<ScrapeTargets | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -163,16 +206,18 @@ export default function Admin() {
         setUsers([]);
         setActivity([]);
         setAnalytics(null);
+        setWorkflow(null);
         setTargets(null);
         return;
       }
 
-      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = await Promise.all([
+      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, workflowRes, targetsRes] = await Promise.all([
         adminFetch("/api/admin/stats"),
         adminFetch("/api/admin/users/stats"),
         adminFetch("/api/admin/users"),
         adminFetch("/api/admin/activity?limit=40"),
         adminFetch(`/api/analytics?range=${timeRange}`),
+        adminFetch("/api/admin/workflow/actions?limit=80"),
         adminFetch("/api/admin/scrape/targets"),
       ]);
       if (!statsRes.ok) throw new Error(`Stats failed with ${statsRes.status}`);
@@ -180,6 +225,7 @@ export default function Admin() {
       if (!usersRes.ok) throw new Error(`Users failed with ${usersRes.status}`);
       if (!activityRes.ok) throw new Error(`Activity failed with ${activityRes.status}`);
       if (!analyticsRes.ok) throw new Error(`Site metrics failed with ${analyticsRes.status}`);
+      if (!workflowRes.ok) throw new Error(`Workflow queue failed with ${workflowRes.status}`);
       if (!targetsRes.ok) throw new Error(`Targets failed with ${targetsRes.status}`);
       setStats(await statsRes.json());
       setUserStats(await userStatsRes.json());
@@ -188,6 +234,7 @@ export default function Admin() {
       const activityData = await activityRes.json() as { activity?: AdminActivity[] };
       setActivity(activityData.activity || []);
       setAnalytics(await analyticsRes.json());
+      setWorkflow(await workflowRes.json());
       setTargets(await targetsRes.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
@@ -391,6 +438,83 @@ export default function Admin() {
             <AdminCard label="Saved Companies" value={formatNumber(userStats?.total_saved)} sub="Buyer accounts tracking leads" />
             <AdminCard label="Reports" value={formatNumber(userStats?.total_reports)} sub={`${formatNumber(userStats?.total_lists)} saved lists`} />
             <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SCOUT · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
+          </div>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>AI workflow command center</p>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
+              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-white/45">
+                One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/sales-console" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
+                Sales Console <ExternalLink className="h-3 w-3" />
+              </Link>
+              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}>
+                Supply Pipeline <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
+            <AdminCard label="Total" value={formatNumber(workflow?.counts?.total)} sub="tracked actions" />
+            <AdminCard label="Approve" value={formatNumber(workflow?.counts?.needs_approval)} sub="waiting on you" />
+            <AdminCard label="Queued" value={formatNumber(workflow?.counts?.queued)} sub="ready to run" />
+            <AdminCard label="Running" value={formatNumber(workflow?.counts?.in_process)} sub="in process" />
+            <AdminCard label="Review" value={formatNumber(workflow?.counts?.needs_review)} sub="new intelligence" />
+            <AdminCard label="Failed" value={formatNumber(workflow?.counts?.failed)} sub="needs attention" />
+          </div>
+
+          {workflow?.errors?.length ? (
+            <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-xs text-red-200">
+              Some workflow sources could not load: {workflow.errors.map((item) => sourceLabel(item.source)).join(", ")}
+            </div>
+          ) : null}
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {Object.entries(workflow?.by_source || {}).map(([source, count]) => (
+              <span key={source} className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] capitalize text-white/45">
+                {sourceLabel(source)}: {formatNumber(count)}
+              </span>
+            ))}
+          </div>
+
+          <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
+            {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
+              const style = stateStyle(item.state);
+              return (
+                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] capitalize" style={style}>
+                          {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
+                          {stateLabel(item.state)}
+                        </span>
+                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
+                        {item.requires_approval && <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[10px] text-amber-100">approval required</span>}
+                        {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
+                      </div>
+                      <p className="truncate text-sm font-bold text-white/82">{item.title || "Untitled workflow action"}</p>
+                      <p className="mt-1 text-xs text-white/42">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
+                      {item.description && <p className="mt-2 text-xs leading-relaxed text-white/52">{item.description}</p>}
+                    </div>
+                    {item.next_action_url && (
+                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-center text-xs font-bold text-white/65">
+                        {item.next_action_label || "Open"}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
