@@ -2,10 +2,16 @@
 Email Introduction Templates for Robot Company Outreach
 Personalized email scripts for different workflow stages
 """
-from datetime import datetime
 from typing import Dict, Optional
 
-from app.services.agent_messaging import CAL_INTRO, VENDOR_SIGNAL_EXPLANATION, cal_signature
+from app.services.agent_messaging import (
+    ONSTAGE_PARTNER_LINE,
+    READYBOT_OFFRAMP_LINE,
+    READYBOT_STRATEGY_CALL_CTA,
+    VEGAS_DISTRIBUTION_LINE,
+    readybot_signature,
+    readybot_vendor_opening,
+)
 
 
 def _focus(company_data: Dict) -> str:
@@ -45,7 +51,6 @@ def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     """
     company_name = company_data.get('company_name', 'Your Company')
     robot_type = company_data.get('robot_type', 'robotics')
-    target_market = company_data.get('target_market', 'automation')
     us_presence = company_data.get('us_presence', 'none')
     
     focus = _focus(company_data)
@@ -54,17 +59,19 @@ def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     
     body = f"""Hello,
 
-{CAL_INTRO}
-
-{VENDOR_SIGNAL_EXPLANATION}
+{readybot_vendor_opening()}
 
 I came across {company_name} because your work around {focus} looks relevant to the kind of automation demand we are seeing. {_vendor_context(company_data)}
 
-If {market_note} is a priority, I can send over a few matched accounts and the signal context behind them. No pressure to chase all of them; the goal is to see whether any are worth a real sales conversation.
+If {market_note} is a priority, I can send over matched accounts and the signal context behind them. {VEGAS_DISTRIBUTION_LINE}
 
-Open to a quick 15-minute call next week?
+{READYBOT_OFFRAMP_LINE}
 
-{cal_signature()}"""
+{ONSTAGE_PARTNER_LINE}
+
+{READYBOT_STRATEGY_CALL_CTA}
+
+{readybot_signature()}"""
     
     return {
         "subject": subject,
@@ -84,15 +91,17 @@ def generate_demo_request_email(company_data: Dict, contact_response: Optional[s
     
     body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
 {contact_response or "Thanks for the reply."}
 
-The useful next step is a quick technical fit check, not a long presentation. I want to understand where your {robot_type} works best, what constraints matter, and which buyer signals should route to your team.
+The useful next step is a quick commercial fit check, not a long presentation. I want to understand where your {robot_type} works best, what constraints matter, and which buyer signals should route to your team.
 
-Open to a 20-minute review next week?
+If the conversation moves into physical demo prep, onstage.bot can handle staging, booth setup, and showroom logistics. We stay focused on the sales channel, buyer fit, and distribution path.
 
-{cal_signature()}"""
+{READYBOT_STRATEGY_CALL_CTA}
+
+{readybot_signature()}"""
     
     return {
         "subject": subject,
@@ -107,21 +116,20 @@ def generate_partnership_proposal_email(company_data: Dict, demo_notes: Optional
     """
     company_name = company_data.get('company_name', 'Your Company')
     robot_type = company_data.get('robot_type', 'robotics')
-    target_market = company_data.get('target_market', 'automation')
     
     subject = f"Next step for {company_name}"
     
     body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
 Thanks again for walking through {company_name}. Based on what we discussed, I think the next step should stay focused: confirm the buyer categories where your {robot_type} is strongest, then map those to the hottest signal types we are seeing.
 
-I can put that into a short plan with the accounts, signal context, and suggested route for each one.
+I can put that into a short distribution strategy: which accounts look warm, what signals make them credible, and how we route your hardware into the right Las Vegas enterprise conversations.
 
-Open to a 20-minute review?
+Open to a Sales Channel & Lead Generation Strategy Call?
 
-{cal_signature()}"""
+{readybot_signature()}"""
     
     return {
         "subject": subject,
@@ -152,41 +160,39 @@ def generate_followup_email(company_data: Dict, previous_contact: str, days_sinc
     if tone == "friendly reminder":
         body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
 Following up on my note about {company_name} and the automation sales leads we are seeing around {robot_type}.
 
-{VENDOR_SIGNAL_EXPLANATION}
+If this is close to a market you care about, a quick 15-minute call would tell us whether the signal context and distribution angle are useful.
 
-If this is close to a market you care about, a quick 15-minute call would tell us whether the signal context is useful.
-
-{cal_signature()}"""
+{readybot_signature()}"""
     
     elif tone == "value-added followup":
         body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
 I wanted to send one more useful angle rather than just bump the same email.
 
 We are seeing more buyer activity around {robot_type}, and the warmer accounts usually have a specific signal behind them: hiring, expansion, budget movement, RFP language, or public operational pressure.
 
-If that would help {company_name}, I can send a few examples and the context behind each one.
+If that would help {company_name}, I can send a few examples and the context behind each one. If your team is using Vegas as a launchpad, we can also talk local commercial intros and when to bring in onstage.bot for physical demos.
 
-Open to a quick look next week?
+Open to a quick look next week? If the signal trail is not strong enough, I will tell you that too.
 
-{cal_signature()}"""
+{readybot_signature()}"""
     
     else:  # last attempt
         body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
 I will close the loop here.
 
 If automation lead flow becomes relevant for {company_name}, I am happy to reconnect and share what we are seeing around {robot_type}.
 
-{cal_signature()}"""
+{readybot_signature()}"""
     
     return {
         "subject": subject,
@@ -206,15 +212,15 @@ def generate_trade_show_invitation_email(company_data: Dict, trade_show: str, da
     
     body = f"""Hello,
 
-{CAL_INTRO}
+{readybot_vendor_opening()}
 
-Are you planning to attend {trade_show} in {date}? I am asking because we track automation sales leads by buying signal, and events are often where warmer accounts become real conversations.
+Are you planning to attend {trade_show} in {date}? I am asking because events are where warm accounts become real conversations.
 
-If {company_name} will be there, I can compare your {robot_type} focus against the accounts we are seeing and flag the ones worth meeting.
+If {company_name} will be there, I can compare your {robot_type} focus against the accounts we are seeing and flag the ones worth meeting. If physical demo execution matters, onstage.bot can handle staging, booth setup, and showroom support.
 
-Open to a quick 15-minute call before the show?
+Open to a Sales Channel & Lead Generation Strategy Call before the show?
 
-{cal_signature()}"""
+{readybot_signature()}"""
     
     return {
         "subject": subject,
@@ -238,17 +244,15 @@ def generate_hot_lead_priority_email(company_data: Dict) -> Dict[str, str]:
     
     body = f"""Hello,
 
-{CAL_INTRO}
-
-{VENDOR_SIGNAL_EXPLANATION}
+{readybot_vendor_opening()}
 
 {company_name} is showing up as a higher-priority fit in our system. The reason is not just that you make {robot_type}; it is the combination of your focus ({usp_line}) and the sales signals we are seeing from potential buyers.
 
-If useful, I can send the first few accounts and why each one looks warm.
+If useful, I can send the first few accounts and why each one looks warm. We can also map how Ready For Robots handles channel routing while onstage.bot handles any staging, demo, or showroom logistics.
 
-Open to a quick 15-minute call this week?
+Open to a Sales Channel & Lead Generation Strategy Call this week?
 
-{cal_signature()}"""
+{readybot_signature()}"""
     
     return {
         "subject": subject,

@@ -28,7 +28,14 @@ from app.models.crm import CrmAccount
 from app.models.outreach import OutreachMessage
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
-from app.services.agent_messaging import CAL_INTRO, VENDOR_SIGNAL_EXPLANATION, cal_signature
+from app.services.agent_messaging import (
+    ONSTAGE_PARTNER_LINE,
+    READYBOT_OFFRAMP_LINE,
+    READYBOT_STRATEGY_CALL_CTA,
+    VEGAS_DISTRIBUTION_LINE,
+    readybot_signature,
+    readybot_vendor_opening,
+)
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -787,16 +794,14 @@ def _match_line(match: dict[str, Any]) -> str:
 
 
 def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
-    subject = f"3 buyer leads for {rc.company_name}"
+    subject = f"Sales channel signals for {rc.company_name}"
     focus = _vendor_focus_phrase(rc)
     possessive = _vendor_possessive(rc.company_name)
     lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
     response_playbook = _recommended_response_playbook(matches)
     body = f"""Hello {rc.company_name} team,
 
-{CAL_INTRO}
-
-{VENDOR_SIGNAL_EXPLANATION}
+{readybot_vendor_opening()}
 
 I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
 
@@ -806,11 +811,15 @@ I am not assuming each one is a fit. They stood out because there is some timing
 
 {response_playbook}
 
-If this is relevant, I can set up a Ready For Robots account for {possessive} team so you can review matches as they come in.
+If you are pushing West Coast expansion or hospitality distribution, we can map a custom sales channel strategy around {possessive} hardware and target market. {VEGAS_DISTRIBUTION_LINE}
 
-Open to a quick 15-minute call next week?
+{READYBOT_OFFRAMP_LINE}
 
-{cal_signature()}"""
+{ONSTAGE_PARTNER_LINE}
+
+{READYBOT_STRATEGY_CALL_CTA}
+
+{readybot_signature()}"""
     return {"subject": subject, "body": body}
 
 

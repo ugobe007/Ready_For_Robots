@@ -60,6 +60,9 @@ const VOICE_FEEDBACK = [
   { label: "Too long", instruction: "Keep the email under 140 words unless the customer has already replied." },
   { label: "Too salesy", instruction: "Use lower-pressure language and admit uncertainty when the fit is not confirmed." },
   { label: "Better hook needed", instruction: "Lead with the clearest why-now signal before explaining Ready For Robots." },
+  { label: "More edge", instruction: "Make the language sharper and more commercially confident without adding hype." },
+  { label: "Founder-level", instruction: "Explain the pipeline logic like an operator speaking to a technical founder." },
+  { label: "Add off-ramp", instruction: "Include a graceful exit if the signal is not strong enough or the timing is wrong." },
   { label: "Good tone", instruction: "Keep this tone: concise, human, specific, and low-pressure." },
 ];
 
