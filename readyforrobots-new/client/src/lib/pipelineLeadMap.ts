@@ -132,8 +132,7 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
     "Would it be useful if I sent over a short view of the workflows that usually map to this kind of signal?",
     "",
     "Best,",
-    "Cal",
-    "Robot Automation Team",
+    "Cal @ Robot Automation Team",
     "Ready For Robots",
   ].join("\n");
 }

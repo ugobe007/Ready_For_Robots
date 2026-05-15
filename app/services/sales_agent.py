@@ -112,7 +112,7 @@ def plan_sales_reply(
     elif intent == "negative":
         stage = "lost"
         recommendation = "Respect the response and stop active outreach."
-        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal\nRobot Automation Team\nReady For Robots"
+        body = "Thanks for letting us know. We will pause outreach here.\n\nBest,\nCal @ Robot Automation Team\nReady For Robots"
     elif intent == "nurture":
         stage = "nurture"
         recommendation = "Respect timing and ask permission to follow up later."
@@ -157,8 +157,7 @@ To make the next step useful, could you share:
 {close}
 
 Best,
-Cal
-Robot Automation Team
+Cal @ Robot Automation Team
 Ready For Robots"""
 
 
@@ -242,8 +241,7 @@ Suggested action:
 Please share the best next detail or time window so we can keep the process moving without unnecessary back-and-forth.
 
 Best,
-Cal
-Robot Automation Team
+Cal @ Robot Automation Team
 Ready For Robots"""
     action = SalesAgentAction(
         id=_new_uuid(db),

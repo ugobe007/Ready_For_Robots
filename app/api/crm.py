@@ -354,7 +354,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
         lines.append(collateral)
-    lines.extend(["", "Best,", "Cal", "Robot Automation Team", "Ready For Robots"])
+    lines.extend(["", "Best,", "Cal @ Robot Automation Team", "Ready For Robots"])
     return "\n".join(lines)
 
 
