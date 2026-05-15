@@ -7,8 +7,10 @@ from app.api.robot_companies import (
     _create_supply_outreach_record,
     _contact_strategy,
     _extract_contact_research,
+    _reply_domain,
     _request_emails,
     _research_robot_company_contacts,
+    _supply_reply_address,
     _supply_outreach_history,
     _vendor_signup_email,
 )
@@ -164,6 +166,14 @@ def test_request_emails_splits_and_dedupes_policy_recipients():
     )
 
     assert emails == ["partnerships@unitree.com", "events@unitree.com"]
+
+
+def test_supply_reply_domain_normalizes_full_sender(monkeypatch):
+    monkeypatch.setenv("SCOUT_REPLY_DOMAIN", "Ready For Robots <outreach@readyforrobots.com>")
+    monkeypatch.setenv("SUPPLY_REPLY_LOCAL_PART", "supply")
+
+    assert _reply_domain() == "readyforrobots.com"
+    assert _supply_reply_address("abc123") == "supply+abc123@readyforrobots.com"
 
 
 def test_supply_outreach_record_history_tracks_approval(db_session):

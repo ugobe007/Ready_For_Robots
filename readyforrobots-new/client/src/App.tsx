@@ -41,7 +41,9 @@ function Router() {
       <Route path="/sales-console" component={SalesConsole} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
+      <Route path="/admin/prospects" component={Pipeline} />
       <Route path="/admin" component={Admin} />
+      <Route path="/readyforrobots/admin/prospects" component={Pipeline} />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />
       <Route path="/readyforrobots/sales-console" component={SalesConsole} />

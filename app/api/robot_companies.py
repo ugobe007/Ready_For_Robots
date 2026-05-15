@@ -191,11 +191,27 @@ CONTACT_RESEARCH_TITLES = (
 
 
 def _reply_domain() -> str:
-    return (os.getenv("SCOUT_REPLY_DOMAIN") or "readyforrobots.com").strip()
+    raw = (
+        os.getenv("SCOUT_REPLY_DOMAIN")
+        or os.getenv("RESEND_REPLY_DOMAIN")
+        or os.getenv("RESEND_FROM_EMAIL")
+        or "readyforrobots.com"
+    ).strip()
+    if "<" in raw and ">" in raw:
+        raw = raw.split("<", 1)[1].split(">", 1)[0]
+    raw = raw.replace("mailto:", "").strip().strip("<>")
+    if "://" in raw:
+        raw = urlparse(raw).netloc or raw
+    if "@" in raw:
+        raw = raw.rsplit("@", 1)[1]
+    raw = raw.strip().strip("/").lower()
+    if not raw or " " in raw or "@" in raw:
+        return "readyforrobots.com"
+    return raw
 
 
 def _supply_reply_address(reply_token: str) -> str:
-    local = (os.getenv("SUPPLY_REPLY_LOCAL_PART") or "supply").strip()
+    local = (os.getenv("SUPPLY_REPLY_LOCAL_PART") or "supply").strip().split("@", 1)[0] or "supply"
     return f"{local}+{reply_token}@{_reply_domain()}"
 
 
@@ -1491,7 +1507,7 @@ def send_email(
     if payload.approved_message_id and not approved_msg:
         raise HTTPException(status_code=404, detail="Approved outreach checkpoint not found")
     reply_token = approved_msg.reply_token if approved_msg and approved_msg.reply_token else secrets.token_urlsafe(18)
-    reply_to = approved_msg.reply_to if approved_msg and approved_msg.reply_to else _supply_reply_address(reply_token)
+    reply_to = _supply_reply_address(reply_token)
 
     try:
         send_result = send_email_via_resend(

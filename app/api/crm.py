@@ -17,6 +17,7 @@ import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -240,17 +241,27 @@ def _serialize_account(a: CrmAccount) -> dict[str, Any]:
 
 
 def _reply_domain() -> str:
-    raw = (os.getenv("SCOUT_REPLY_DOMAIN") or os.getenv("RESEND_REPLY_DOMAIN") or "").strip()
-    if raw:
-        return raw.lstrip("@")
-    from_email = (os.getenv("RESEND_FROM_EMAIL") or "").strip()
-    if "@" in from_email:
-        return from_email.rsplit("@", 1)[1]
-    return "readyforrobots.com"
+    raw = (
+        os.getenv("SCOUT_REPLY_DOMAIN")
+        or os.getenv("RESEND_REPLY_DOMAIN")
+        or os.getenv("RESEND_FROM_EMAIL")
+        or "readyforrobots.com"
+    ).strip()
+    if "<" in raw and ">" in raw:
+        raw = raw.split("<", 1)[1].split(">", 1)[0]
+    raw = raw.replace("mailto:", "").strip().strip("<>")
+    if "://" in raw:
+        raw = urlparse(raw).netloc or raw
+    if "@" in raw:
+        raw = raw.rsplit("@", 1)[1]
+    raw = raw.strip().strip("/").lower()
+    if not raw or " " in raw or "@" in raw:
+        return "readyforrobots.com"
+    return raw
 
 
 def _reply_address(reply_token: str) -> str:
-    local = (os.getenv("SCOUT_REPLY_LOCAL_PART") or "reply").strip() or "reply"
+    local = (os.getenv("SCOUT_REPLY_LOCAL_PART") or "reply").strip().split("@", 1)[0] or "reply"
     return f"{local}+{reply_token}@{_reply_domain()}"
 
 

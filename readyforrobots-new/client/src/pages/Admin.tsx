@@ -396,14 +396,19 @@ export default function Admin() {
   return (
     <div className="min-h-screen" style={{ background: "#0d0520" }}>
       <Header />
-      <main className="mx-auto max-w-6xl px-6 pb-20 pt-28">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
+        <div className="mb-4 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>Admin console</p>
-            <h1 className="text-4xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>ReadyForRobots Ops</h1>
-            <p className="mt-3 text-sm text-white/42">Review users, site activity, metrics, scrapers, and operational health for the live service.</p>
+            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Operations</p>
+            <h1 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>ReadyForRobots Command Center</h1>
+            <p className="mt-0.5 max-w-md text-[11px] text-white/35">
+              Same operating surface as the live prospects pipeline: compact, signal-first, and action-oriented.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href="/admin/prospects" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
+              Prospects <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
             <div className="mr-1 flex rounded-xl border border-white/10 p-1">
               {TIME_RANGES.map((range) => (
                 <button
@@ -636,6 +641,9 @@ export default function Admin() {
             <div className="flex flex-wrap gap-2">
               <Link href="/crm" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
                 Buyer CRM
+              </Link>
+              <Link href="/admin/prospects" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+                Prospects
               </Link>
               <Link href="/sales-console" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
                 Sales Console
