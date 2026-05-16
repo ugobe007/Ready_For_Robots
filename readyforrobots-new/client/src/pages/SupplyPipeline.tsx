@@ -97,6 +97,8 @@ type DraftState = {
 
 type OutreachHistoryItem = NonNullable<SupplyCompany["outreach_history"]>[number];
 
+const LIVE_SENT_STATUSES = new Set(["sent", "delivered", "opened", "clicked", "delivery_delayed", "bounced", "complained", "suppressed", "resent", "replied"]);
+
 function deliveryLabel(item: OutreachHistoryItem) {
   const status = item.delivery_status || item.status || "tracked";
   if (item.clicked_at) return "Clicked";
@@ -111,21 +113,37 @@ function deliveryLabel(item: OutreachHistoryItem) {
   return status.replace(/_/g, " ");
 }
 
+function latestLiveHistory(row: SupplyCompany) {
+  return (row.outreach_history || []).find((item) => !item.is_test);
+}
+
+function isLiveSent(item?: OutreachHistoryItem) {
+  const status = item?.delivery_status || item?.status || "";
+  return LIVE_SENT_STATUSES.has(status);
+}
+
+function isDraftApproved(item?: OutreachHistoryItem) {
+  return (item?.status || "") === "draft_approved";
+}
+
 function initialDraft(row: SupplyCompany): DraftState {
   const recommended = row.contact_strategy.recommended_to || [];
   const contact = recommended.length ? recommended.join(", ") : row.contact_strategy.primary?.contact || row.robot_company.contact_email || "";
   const to = contact.includes("@") ? contact : "";
+  const liveHistory = latestLiveHistory(row);
+  const sent = isLiveSent(liveHistory);
+  const approved = !sent && isDraftApproved(liveHistory);
   return {
     to,
     subject: row.email.subject,
     body: row.email.body,
-    approved: false,
+    approved,
     sending: false,
-    sent: false,
+    sent,
     expanded: false,
-    trackingId: row.outreach_history?.[0]?.id,
-    replyTo: row.outreach_history?.[0]?.reply_to || undefined,
-    lastAction: row.outreach_history?.[0]?.status,
+    trackingId: liveHistory?.id,
+    replyTo: liveHistory?.reply_to || undefined,
+    lastAction: liveHistory?.delivery_status || liveHistory?.status,
   };
 }
 
@@ -136,6 +154,7 @@ export default function SupplyPipeline() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [sidebarView, setSidebarView] = useState<"needs_action" | "sent" | "all">("needs_action");
 
   useEffect(() => {
     (async () => {
@@ -161,6 +180,13 @@ export default function SupplyPipeline() {
   const selectedDraft = selected ? drafts[selected.robot_company.id] : null;
   const approvedCount = Object.values(drafts).filter((draft) => draft.approved && !draft.sent).length;
   const sentCount = Object.values(drafts).filter((draft) => draft.sent).length;
+  const needsActionCount = Object.values(drafts).filter((draft) => !draft.sent).length;
+  const visibleRows = rows.filter((row) => {
+    const draft = drafts[row.robot_company.id];
+    if (sidebarView === "sent") return Boolean(draft?.sent);
+    if (sidebarView === "needs_action") return !draft?.sent;
+    return true;
+  });
   const signedInEmail = session?.user?.email || "";
 
   const patchDraft = (id: number, patch: Partial<DraftState>) => {
@@ -338,6 +364,12 @@ export default function SupplyPipeline() {
           <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{approvedCount} approved</span>
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{sentCount} sent</span>
+            <a href="/admin" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+              Open Admin
+            </a>
+            <a href="/crm" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+              Open Buyer CRM
+            </a>
             <a href="/sales-console" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
               Open Sales Console
             </a>
@@ -362,21 +394,53 @@ export default function SupplyPipeline() {
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-2xl border border-white/10 bg-white/[0.025]">
               <div className="border-b border-white/8 px-4 py-3">
-                <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${rows.length} robot companies`}</p>
-                <p className="mt-1 text-[11px] text-white/35">Review Cal drafts, approve them, then send live or in bulk.</p>
+                <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${visibleRows.length} shown · ${rows.length} total`}</p>
+                <p className="mt-1 text-[11px] text-white/35">Unsent prospects are separated from companies Cal already contacted.</p>
+                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-white/8 bg-black/10 p-1">
+                  {[
+                    { key: "needs_action", label: "Unsent", count: needsActionCount },
+                    { key: "sent", label: "Sent", count: sentCount },
+                    { key: "all", label: "All", count: rows.length },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setSidebarView(item.key as "needs_action" | "sent" | "all")}
+                      className={`rounded-lg px-2 py-1.5 text-[10px] font-bold transition ${
+                        sidebarView === item.key ? "bg-amber-400 text-[#160b2c]" : "text-white/45 hover:text-white"
+                      }`}
+                    >
+                      {item.label} {item.count}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="max-h-[680px] overflow-y-auto p-2">
-                {rows.map((row) => {
+                {visibleRows.length === 0 && (
+                  <div className="m-2 rounded-xl border border-dashed border-white/10 p-4 text-center">
+                    <p className="text-xs font-bold text-white/45">No companies in this view</p>
+                    <p className="mt-1 text-[11px] text-white/30">Switch tabs above to see sent or all companies.</p>
+                  </div>
+                )}
+                {visibleRows.map((row) => {
                   const company = row.robot_company;
                   const active = company.id === selected?.robot_company.id;
                   const draft = drafts[company.id];
+                  const liveHistory = latestLiveHistory(row);
+                  const sentLabel = liveHistory ? deliveryLabel(liveHistory) : "Sent";
                   return (
                     <button
                       key={company.id}
                       type="button"
                       onClick={() => setSelectedId(company.id)}
                       className="mb-2 w-full rounded-xl border px-3 py-2.5 text-left"
-                      style={active ? { borderColor: "rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.08)" } : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
+                      style={
+                        active
+                          ? { borderColor: "rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.08)" }
+                          : draft?.sent
+                          ? { borderColor: "rgba(52,211,153,0.22)", background: "rgba(52,211,153,0.045)" }
+                          : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }
+                      }
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-bold text-white/85">{company.company_name}</p>
@@ -392,7 +456,7 @@ export default function SupplyPipeline() {
                           <span className="rounded-full bg-violet-400/12 px-2 py-0.5 text-[9px] font-bold text-violet-100">Approved</span>
                         )}
                         {draft?.sent && (
-                          <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Sent</span>
+                          <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Contacted · {sentLabel}</span>
                         )}
                         {draft?.lastAction && !draft.sent && (
                           <span className="rounded-full bg-white/8 px-2 py-0.5 text-[9px] font-bold text-white/45">{draft.lastAction}</span>
