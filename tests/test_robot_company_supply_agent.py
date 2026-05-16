@@ -13,6 +13,7 @@ from app.api.robot_companies import (
     _request_emails,
     _research_robot_company_contacts,
     _select_supply_batch_matches,
+    _prepare_supply_pipeline_copy,
     _vendor_allows_logistics,
     _supply_reply_address,
     _supply_outreach_history,
@@ -58,6 +59,7 @@ def test_vendor_signup_email_only_mentions_three_matches():
 
     email = _vendor_signup_email(_RobotCompany(), matches)
 
+    assert email["subject"] == "Sales channel signals for DexMate Robotics"
     assert "Buyer 1" in email["body"]
     assert "Buyer 2" in email["body"]
     assert "Buyer 3" in email["body"]
@@ -168,6 +170,34 @@ def test_supply_batch_matches_falls_back_when_unused_pool_is_short():
     selected = _select_supply_batch_matches(matches, {1, 2, 3}, limit=3)
 
     assert [match["id"] for match in selected] == [4, 1, 2]
+
+
+def test_supply_pipeline_copy_forces_company_specific_subject():
+    company = _RobotCompany()
+    company.company_name = "Agility Robotics"
+
+    subject, body = _prepare_supply_pipeline_copy(
+        company,
+        "Sales channel signals for Unitree Robotics",
+        "Hello Agility Robotics team,\n\nI came across buyer signals.",
+    )
+
+    assert subject == "Sales channel signals for Agility Robotics"
+    assert "Agility Robotics" in body
+
+
+def test_supply_pipeline_copy_rejects_stale_body_company():
+    company = _RobotCompany()
+    company.company_name = "Agility Robotics"
+
+    with pytest.raises(Exception) as exc:
+        _prepare_supply_pipeline_copy(
+            company,
+            "Sales channel signals for Unitree Robotics",
+            "Hello Unitree Robotics team,\n\nI came across buyer signals.",
+        )
+
+    assert "Body/company mismatch" in str(exc.value)
 
 
 def test_contact_strategy_infers_role_email_from_website_not_url():

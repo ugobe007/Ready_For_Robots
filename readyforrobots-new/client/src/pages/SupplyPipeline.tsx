@@ -126,6 +126,10 @@ function isDraftApproved(item?: OutreachHistoryItem) {
   return (item?.status || "") === "draft_approved";
 }
 
+function expectedSupplySubject(row: SupplyCompany) {
+  return `Sales channel signals for ${row.robot_company.company_name}`;
+}
+
 function initialDraft(row: SupplyCompany): DraftState {
   const recommended = row.contact_strategy.recommended_to || [];
   const contact = recommended.length ? recommended.join(", ") : row.contact_strategy.primary?.contact || row.robot_company.contact_email || "";
@@ -135,7 +139,7 @@ function initialDraft(row: SupplyCompany): DraftState {
   const approved = !sent && isDraftApproved(liveHistory);
   return {
     to,
-    subject: row.email.subject,
+    subject: expectedSupplySubject(row),
     body: row.email.body,
     approved,
     sending: false,
@@ -200,6 +204,7 @@ export default function SupplyPipeline() {
     const id = row.robot_company.id;
     const draft = drafts[id];
     if (!draft) return;
+    if (!validateDraftCompanyCopy(row, draft)) return;
     const recipients = parseRecipients(draft.to);
     if (!recipients.length) {
       toast.error("Add a valid recipient email before approving.");
@@ -264,10 +269,24 @@ export default function SupplyPipeline() {
       .map((email) => email.trim())
       .filter((email) => email.includes("@"));
 
+  const validateDraftCompanyCopy = (row: SupplyCompany, draft: DraftState) => {
+    const expectedSubject = expectedSupplySubject(row);
+    if (draft.subject.trim() !== expectedSubject) {
+      toast.error(`Subject mismatch. Expected: ${expectedSubject}`);
+      return false;
+    }
+    if (!draft.body.includes(row.robot_company.company_name)) {
+      toast.error(`Draft body mismatch. It must mention ${row.robot_company.company_name}.`);
+      return false;
+    }
+    return true;
+  };
+
   const sendOne = async (row: SupplyCompany, test = false) => {
     const id = row.robot_company.id;
     const draft = drafts[id];
     if (!draft) return;
+    if (!validateDraftCompanyCopy(row, draft)) return;
     const recipients = parseRecipients(draft.to);
     if (!test && !recipients.length) {
       toast.error("Add a valid recipient email before sending.");

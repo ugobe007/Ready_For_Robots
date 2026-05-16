@@ -765,6 +765,32 @@ def _require_supply_outreach_payload(payload: ApproveSupplyOutreachRequest) -> t
     return to_emails, subject, body
 
 
+def _supply_pipeline_subject(company: RobotCompany) -> str:
+    return f"Sales channel signals for {company.company_name}"
+
+
+def _validate_supply_pipeline_copy(company: RobotCompany, subject: str, body: str) -> None:
+    expected_subject = _supply_pipeline_subject(company)
+    company_name = str(company.company_name or "").strip()
+    if subject.strip() != expected_subject:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Subject/company mismatch. Expected subject: {expected_subject}",
+        )
+    if company_name and company_name not in body:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Body/company mismatch. Draft body must mention {company_name}.",
+        )
+
+
+def _prepare_supply_pipeline_copy(company: RobotCompany, subject: str, body: str) -> tuple[str, str]:
+    prepared_subject = _supply_pipeline_subject(company)
+    prepared_body = body.strip()
+    _validate_supply_pipeline_copy(company, prepared_subject, prepared_body)
+    return prepared_subject, prepared_body
+
+
 def _create_supply_outreach_record(
     db: Session,
     company: RobotCompany,
@@ -1529,6 +1555,8 @@ def approve_supply_outreach(
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     to_emails, subject, body = _require_supply_outreach_payload(payload)
+    if (payload.template_type or "supply_pipeline") == "supply_pipeline":
+        subject, body = _prepare_supply_pipeline_copy(company, subject, body)
     msg = _create_supply_outreach_record(
         db,
         company,
@@ -1677,6 +1705,11 @@ def send_email(
     )
     if payload.approved_message_id and not approved_msg:
         raise HTTPException(status_code=404, detail="Approved outreach checkpoint not found")
+    if template_type == "supply_pipeline":
+        if approved_msg:
+            subject = approved_msg.subject
+            body = approved_msg.body_text
+        subject, body = _prepare_supply_pipeline_copy(company, subject, body)
     reply_token = approved_msg.reply_token if approved_msg and approved_msg.reply_token else secrets.token_urlsafe(18)
     reply_to = _supply_reply_address(reply_token)
 
@@ -1800,8 +1833,10 @@ def test_send_email(
     template_type = (payload.template_type or "intro").strip() or "intro"
     email = get_email_template(template_type, company_data)
     raw_subject = payload.subject or email.get("subject", "Partnership Opportunity")
-    subject = f"[TEST] {raw_subject}"
     body = payload.body or email.get("body", "")
+    if template_type == "supply_pipeline":
+        raw_subject, body = _prepare_supply_pipeline_copy(company, raw_subject, body)
+    subject = f"[TEST] {raw_subject}"
     to_emails = _request_emails(user.get("email") or "")
     if not to_emails:
         raise HTTPException(status_code=400, detail="Your profile needs a valid email address before sending a test")
