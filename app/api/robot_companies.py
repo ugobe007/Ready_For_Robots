@@ -258,6 +258,36 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
     ]
 
 
+def _select_supply_batch_matches(
+    candidate_matches: list[dict[str, Any]],
+    used_lead_ids: set[int],
+    *,
+    limit: int = 3,
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    seen: set[int] = set()
+
+    for match in candidate_matches:
+        match_id = int(match.get("id") or 0)
+        if not match_id or match_id in used_lead_ids or match_id in seen:
+            continue
+        selected.append(match)
+        seen.add(match_id)
+        if len(selected) >= limit:
+            return selected
+
+    for match in candidate_matches:
+        match_id = int(match.get("id") or 0)
+        if not match_id or match_id in seen:
+            continue
+        selected.append(match)
+        seen.add(match_id)
+        if len(selected) >= limit:
+            break
+
+    return selected
+
+
 def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> str:
     overlap = sorted(vendor_terms.intersection(_lead_terms(company)))
     if overlap:
@@ -980,8 +1010,14 @@ If you are pushing West Coast expansion or hospitality adoption, we can map a cu
     return {"subject": subject, "body": body}
 
 
-def _supply_agent_row(db: Session, rc: RobotCompany, *, research_contacts: bool = True) -> dict[str, Any]:
-    matches = _match_buyer_leads(db, rc, limit=3)
+def _supply_agent_row(
+    db: Session,
+    rc: RobotCompany,
+    *,
+    research_contacts: bool = True,
+    lead_matches: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    matches = lead_matches if lead_matches is not None else _match_buyer_leads(db, rc, limit=3)
     research = _research_robot_company_contacts(rc, enabled=research_contacts)
     contact = _contact_strategy(rc, research)
     draft = _vendor_signup_email(rc, matches)
@@ -1456,10 +1492,21 @@ def supply_side_agent(
     if search:
         query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
     companies = query.order_by(RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()).limit(limit).all()
-    rows = [
-        _supply_agent_row(db, rc, research_contacts=research_contacts and index < research_limit)
-        for index, rc in enumerate(companies)
-    ]
+    candidate_limit = min(150, max(18, limit * 3))
+    used_lead_ids: set[int] = set()
+    rows = []
+    for index, rc in enumerate(companies):
+        candidate_matches = _match_buyer_leads(db, rc, limit=candidate_limit)
+        matches = _select_supply_batch_matches(candidate_matches, used_lead_ids, limit=3)
+        used_lead_ids.update(int(match["id"]) for match in matches if match.get("id"))
+        rows.append(
+            _supply_agent_row(
+                db,
+                rc,
+                research_contacts=research_contacts and index < research_limit,
+                lead_matches=matches,
+            )
+        )
     return {
         "agent": "robot_company_supply_pipeline",
         "review_required": True,

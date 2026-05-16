@@ -12,6 +12,7 @@ from app.api.robot_companies import (
     _reply_domain,
     _request_emails,
     _research_robot_company_contacts,
+    _select_supply_batch_matches,
     _vendor_allows_logistics,
     _supply_reply_address,
     _supply_outreach_history,
@@ -148,6 +149,25 @@ def test_match_buyer_leads_differs_by_robot_vendor_fit(db_session):
     assert [m["id"] for m in service_matches] != [m["id"] for m in warehouse_matches]
     assert {m["company_name"] for m in service_matches}.intersection({"Marriott", "Target"})
     assert {m["company_name"] for m in warehouse_matches}.intersection({"DHL"})
+
+
+def test_supply_batch_matches_prefer_unused_buyer_leads():
+    matches = [{"id": i, "company_name": f"Buyer {i}"} for i in range(1, 8)]
+
+    first = _select_supply_batch_matches(matches, set(), limit=3)
+    used = {match["id"] for match in first}
+    second = _select_supply_batch_matches(matches, used, limit=3)
+
+    assert [match["id"] for match in first] == [1, 2, 3]
+    assert [match["id"] for match in second] == [4, 5, 6]
+
+
+def test_supply_batch_matches_falls_back_when_unused_pool_is_short():
+    matches = [{"id": i, "company_name": f"Buyer {i}"} for i in range(1, 5)]
+
+    selected = _select_supply_batch_matches(matches, {1, 2, 3}, limit=3)
+
+    assert [match["id"] for match in selected] == [4, 1, 2]
 
 
 def test_contact_strategy_infers_role_email_from_website_not_url():
