@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
+import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -397,6 +398,7 @@ export default function Admin() {
     <div className="min-h-screen" style={{ background: "#0d0520" }}>
       <Header />
       <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
+        <AdminNav />
         <div className="mb-4 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Operations</p>
@@ -449,7 +451,7 @@ export default function Admin() {
           </div>
         </section>
 
-        <section className="mb-8 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
+        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">

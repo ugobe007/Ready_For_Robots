@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -332,6 +333,7 @@ export default function Crm() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
       <main className="flex-1 pt-24 pb-12 px-4 max-w-4xl mx-auto w-full">
+        <AdminNav />
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>

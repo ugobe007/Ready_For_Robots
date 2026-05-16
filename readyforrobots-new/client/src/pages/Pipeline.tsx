@@ -11,6 +11,7 @@ import {
   Users, Clock, Target, Newspaper
 } from "lucide-react";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -512,6 +513,7 @@ export default function Pipeline() {
 
       <main className="flex-1 pt-20 pb-6 px-4 lg:px-6">
         <div className="max-w-[1500px] mx-auto flex flex-col gap-4">
+          <AdminNav />
 
           {/* ── Top bar ── */}
           {loadErr && (

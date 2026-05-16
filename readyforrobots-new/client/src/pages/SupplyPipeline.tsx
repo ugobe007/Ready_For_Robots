@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
@@ -324,6 +325,7 @@ export default function SupplyPipeline() {
       <Header />
       <main className="flex-1 px-4 pb-12 pt-24">
         <div className="mx-auto max-w-6xl">
+          <AdminNav />
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
             Marketplace supply pipeline
           </p>

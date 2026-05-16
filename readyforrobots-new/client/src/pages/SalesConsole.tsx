@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
@@ -274,6 +275,7 @@ export default function SalesConsole() {
     <div className="min-h-screen bg-[#0d0520] text-white">
       <Header />
       <main className="max-w-7xl mx-auto px-6 pt-28 pb-16">
+        <AdminNav />
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
             <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>Cal and Max operator layer</p>

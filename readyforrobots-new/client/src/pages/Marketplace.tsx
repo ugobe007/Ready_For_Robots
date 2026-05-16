@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "wouter";
+import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -356,6 +357,7 @@ export default function Marketplace() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-24">
+        <AdminNav />
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Marketplace workspace
         </p>
