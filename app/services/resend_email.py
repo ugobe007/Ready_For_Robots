@@ -29,6 +29,7 @@ def send_email_via_resend(
     reply_to: str | None = None,
     cc: list[str] | None = None,
     bcc: list[str] | None = None,
+    attachments: list[dict[str, Any]] | None = None,
     idempotency_key: str | None = None,
 ) -> dict[str, Any]:
     """
@@ -65,6 +66,8 @@ def send_email_via_resend(
         payload["cc"] = clean_cc
     if clean_bcc:
         payload["bcc"] = clean_bcc
+    if attachments:
+        payload["attachments"] = attachments
     effective_reply_to = (reply_to or default_reply_to).strip()
     if effective_reply_to:
         payload["reply_to"] = effective_reply_to

@@ -9,11 +9,13 @@ import app.models  # noqa: F401 - register SQLAlchemy models
 from app.models.crm import CrmAccount, Team
 from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
+from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services import sales_agent
 from app.services.sales_agent import (
     classify_sales_intent,
     create_automated_next_action,
     handle_crm_reply_first_response,
+    handle_supply_reply_first_response,
     plan_sales_reply,
 )
 
@@ -139,6 +141,61 @@ def test_handle_crm_reply_sends_and_tracks_first_reply(db_session, monkeypatch):
     assert opportunity.current_stage == "quote_requested"
     assert db_session.query(SalesMessage).count() == 2
     assert db_session.query(SalesAgentAction).count() == 1
+
+
+def test_handle_supply_reply_attaches_visible_team_opportunity(db_session, monkeypatch):
+    sent = {}
+
+    def fake_send_email(**kwargs):
+        sent.update(kwargs)
+        return {
+            "resend_id": "email_supply",
+            "from_email": "outreach@readyforrobots.com",
+            "to": [kwargs["to_email"]],
+            "reply_to": kwargs.get("reply_to"),
+        }
+
+    monkeypatch.setattr(sales_agent, "send_email_via_resend", fake_send_email)
+    team_uuid = uuid.uuid4()
+    owner_uuid = uuid.uuid4()
+    db_session.add(Team(id=team_uuid, name="Ready For Robots"))
+    msg = SupplyOutreachMessage(
+        id=str(uuid.uuid4()),
+        robot_company_id=202,
+        to_emails=["partnerships@robotco.com"],
+        reply_token="supply-token",
+        reply_to="supply+supply-token@readyforrobots.com",
+        subject="Sales channel signals for RobotCo",
+        body_text="Hello RobotCo team",
+        status="replied",
+    )
+    reply = SupplyOutreachReply(
+        id=str(uuid.uuid4()),
+        supply_outreach_message_id=msg.id,
+        robot_company_id=202,
+        from_email="partnerships@robotco.com",
+        to_email=msg.reply_to,
+        subject="Re: Sales channel signals for RobotCo",
+        body_text="Can we schedule a call?",
+    )
+    db_session.add_all([msg, reply])
+    db_session.commit()
+
+    action = handle_supply_reply_first_response(
+        db_session,
+        msg,
+        reply,
+        team_id=team_uuid,
+        owner_user_id=owner_uuid,
+    )
+    db_session.commit()
+
+    opportunity = db_session.query(SalesOpportunity).one()
+    assert opportunity.team_id == str(team_uuid)
+    assert opportunity.owner_user_id == str(owner_uuid)
+    assert opportunity.current_stage == "meeting_requested"
+    assert action.status == "sent"
+    assert sent["to_email"] == "partnerships@robotco.com"
 
 
 def test_handle_crm_technical_reply_sends_from_max_and_copies_support(db_session, monkeypatch):

@@ -187,6 +187,35 @@ def _serialize_opportunity(db: Session, row: SalesOpportunity, include_details: 
     return payload
 
 
+def _serialize_inbox_item(db: Session, message: SalesMessage, opportunity: SalesOpportunity) -> dict[str, Any]:
+    action = (
+        db.query(SalesAgentAction)
+        .filter(SalesAgentAction.sales_opportunity_id == opportunity.id)
+        .order_by(desc(SalesAgentAction.created_at))
+        .first()
+    )
+    return {
+        "id": str(message.id),
+        "thread_id": str(opportunity.id),
+        "opportunity_type": opportunity.opportunity_type,
+        "title": opportunity.title,
+        "current_stage": opportunity.current_stage,
+        "status": opportunity.status,
+        "from_email": message.from_email,
+        "to_email": message.to_email,
+        "subject": message.subject,
+        "body_text": message.body_text,
+        "detected_intent": message.detected_intent,
+        "received_at": message.created_at.isoformat() if message.created_at else None,
+        "source_type": message.source_type,
+        "source_id": message.source_id,
+        "crm_account_id": str(opportunity.crm_account_id) if opportunity.crm_account_id else None,
+        "robot_company_id": opportunity.robot_company_id,
+        "next_best_action": opportunity.next_best_action or {},
+        "latest_action": _serialize_action(action) if action else None,
+    }
+
+
 @router.get("/opportunities")
 def list_sales_opportunities(
     team_id: Optional[str] = Query(None),
@@ -205,6 +234,29 @@ def list_sales_opportunities(
         query = query.filter(SalesOpportunity.team_id == requested)
     rows = query.order_by(desc(SalesOpportunity.updated_at)).limit(100).all()
     return [_serialize_opportunity(db, row) for row in rows]
+
+
+@router.get("/inbox")
+def list_sales_inbox(
+    team_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        return []
+    query = (
+        db.query(SalesMessage, SalesOpportunity)
+        .join(SalesOpportunity, SalesMessage.sales_opportunity_id == SalesOpportunity.id)
+        .filter(SalesMessage.direction == "inbound", SalesOpportunity.team_id.in_(team_ids))
+    )
+    if team_id:
+        requested = _db_uuid(db, team_id)
+        if requested not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+        query = query.filter(SalesOpportunity.team_id == requested)
+    rows = query.order_by(desc(SalesMessage.created_at)).limit(100).all()
+    return [_serialize_inbox_item(db, message, opportunity) for message, opportunity in rows]
 
 
 @router.get("/learning")

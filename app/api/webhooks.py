@@ -455,6 +455,56 @@ def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply,
             pass
 
 
+def _notify_supply_and_forward(
+    db: Session,
+    supply_msg: SupplyOutreachMessage,
+    reply: SupplyOutreachReply,
+    robot_company: RobotCompany | None,
+    crm_msg: OutreachMessage | None,
+) -> None:
+    if not crm_msg:
+        return
+    title = f"Robot-company reply from {reply.from_email or 'prospect'}"
+    account_name = robot_company.company_name if robot_company else supply_msg.subject
+    body = f"{account_name} replied to Cal. Review the thread and decide the next step."
+    if crm_msg.sender_user_id:
+        db.add(
+            UserNotification(
+                user_id=crm_msg.sender_user_id,
+                notification_type="supply_outreach_reply",
+                title=title,
+                body=body,
+                payload={
+                    "robot_company_id": supply_msg.robot_company_id,
+                    "supply_outreach_message_id": str(supply_msg.id),
+                    "supply_outreach_reply_id": str(reply.id),
+                    "from_email": reply.from_email,
+                    "subject": reply.subject,
+                },
+            )
+        )
+    payload = crm_msg.payload or {}
+    forward_to = payload.get("reply_forward_email")
+    if payload.get("reply_forwarding_enabled", True) and forward_to:
+        try:
+            send_email_via_resend(
+                to_email=str(forward_to),
+                subject=f"Cal supply reply: {reply.subject or account_name}",
+                body_text=(
+                    f"Cal captured a robot-company reply from {reply.from_email or 'unknown sender'}.\n\n"
+                    f"Robot company: {account_name}\n"
+                    f"Subject: {reply.subject or ''}\n\n"
+                    "Use the ReadyForRobots Inbox or Sales Console to decide the next step.\n\n"
+                    f"{reply.body_text or ''}"
+                ),
+                from_display_name="Cal",
+                idempotency_key=f"supply-reply-forward/{reply.id}",
+            )
+        except Exception:
+            # Preserve inbound capture even if forwarding fails.
+            pass
+
+
 def _capture_supply_reply(
     db: Session,
     msg: SupplyOutreachMessage,
@@ -473,7 +523,7 @@ def _capture_supply_reply(
     )
     db.add(reply)
     msg.status = "replied"
-    db.commit()
+    db.flush()
     return reply
 
 
@@ -513,13 +563,22 @@ async def resend_inbound_webhook(
                 .first()
             )
             if supply_msg:
+                crm_msg = _find_supply_crm_message(db, supply_msg)
                 supply_reply = _capture_supply_reply(db, supply_msg, data, to_addresses)
                 robot_company = (
                     db.query(RobotCompany)
                     .filter(RobotCompany.id == supply_msg.robot_company_id)
                     .first()
                 )
-                agent_action = handle_supply_reply_first_response(db, supply_msg, supply_reply, robot_company)
+                _notify_supply_and_forward(db, supply_msg, supply_reply, robot_company, crm_msg)
+                agent_action = handle_supply_reply_first_response(
+                    db,
+                    supply_msg,
+                    supply_reply,
+                    robot_company,
+                    team_id=crm_msg.team_id if crm_msg else None,
+                    owner_user_id=crm_msg.sender_user_id if crm_msg else None,
+                )
                 db.commit()
                 return {
                     "ok": True,

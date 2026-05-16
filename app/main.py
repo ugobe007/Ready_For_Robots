@@ -33,6 +33,7 @@ from app.api.crm import router as crm_router
 from app.api.webhooks import router as webhooks_router
 from app.api.marketplace import router as marketplace_router
 from app.api.sales import router as sales_router
+from app.api.calendar import router as calendar_router
 from app.api.proposals import router as proposals_router
 from app.api.scout import router as scout_router
 from app.api.waitlist import router as waitlist_router
@@ -189,6 +190,7 @@ app.include_router(crm_router, prefix="/api/crm", tags=["crm"])
 app.include_router(webhooks_router, prefix="/api/webhooks", tags=["webhooks"])
 app.include_router(marketplace_router, prefix="/api/marketplace", tags=["marketplace"])
 app.include_router(sales_router, prefix="/api/sales", tags=["sales"])
+app.include_router(calendar_router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])

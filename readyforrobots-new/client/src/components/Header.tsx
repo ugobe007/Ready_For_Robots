@@ -64,6 +64,8 @@ export default function Header() {
     { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
     { label: "Sales Console", href: "/sales-console", icon: BriefcaseBusiness, desc: "Review Cal and Max replies and automated next actions" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
+    { label: "Inbox", href: "/inbox", icon: Newspaper, desc: "Review inbound replies and next actions" },
+    { label: "Calendar", href: "/calendar", icon: BriefcaseBusiness, desc: "Schedule meetings and send invites" },
     { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
   ];
@@ -72,6 +74,8 @@ export default function Header() {
     { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
     { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
     { label: "Admin", href: "/admin", icon: LayoutDashboard, desc: "Operator dashboard and workflow controls" },
+    { label: "Inbox", href: "/inbox", icon: Newspaper, desc: "Review inbound replies" },
+    { label: "Calendar", href: "/calendar", icon: BriefcaseBusiness, desc: "Schedule meetings and send invites" },
     { label: "Buyer CRM", href: "/crm", icon: BriefcaseBusiness, desc: "Buyer account and outreach history" },
     { label: "Supply Pipeline", href: "/supply-pipeline", icon: BriefcaseBusiness, desc: "Review and send robot-company outreach" },
     { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },

@@ -4,6 +4,8 @@ const ADMIN_LINKS = [
   { label: "Admin", href: "/admin" },
   { label: "Prospects", href: "/admin/prospects" },
   { label: "Workflow", href: "/admin#workflow" },
+  { label: "Inbox", href: "/inbox" },
+  { label: "Calendar", href: "/calendar" },
   { label: "Buyer CRM", href: "/crm" },
   { label: "Supply Pipeline", href: "/supply-pipeline" },
   { label: "Sales Console", href: "/sales-console" },

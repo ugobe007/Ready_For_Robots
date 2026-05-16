@@ -28,5 +28,6 @@ from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.models.sales_learning import SalesExperienceEvent
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
+from app.models.calendar import CalendarEvent
 from app.models.scout_chat import ScoutActivation, ScoutMessage, ScoutProfile, ScoutSession
 from app.models.waitlist import WaitlistSignup

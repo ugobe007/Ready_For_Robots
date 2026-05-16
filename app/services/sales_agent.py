@@ -9,7 +9,7 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from app.models.crm import CrmAccount
+from app.models.crm import CrmAccount, TeamMember
 from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.robot_company import RobotCompany
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
@@ -280,13 +280,18 @@ def handle_supply_reply_first_response(
     msg: SupplyOutreachMessage,
     reply: SupplyOutreachReply,
     robot_company: Optional[RobotCompany] = None,
+    team_id=None,
+    owner_user_id=None,
 ) -> SalesAgentAction:
+    owner_user_id = owner_user_id or _fallback_owner_user_id(db, team_id)
     title = robot_company.company_name if robot_company else f"Robot company {msg.robot_company_id}"
     opportunity = _get_or_create_opportunity(
         db,
         opportunity_type="supply",
         title=title,
+        team_id=team_id,
         robot_company_id=msg.robot_company_id,
+        owner_user_id=owner_user_id,
     )
     return _handle_first_response(
         db,
@@ -459,6 +464,15 @@ def _get_or_create_opportunity(
         query = query.filter(SalesOpportunity.robot_company_id == robot_company_id)
     row = query.first()
     if row:
+        changed = False
+        if team_id is not None and row.team_id is None:
+            row.team_id = team_id
+            changed = True
+        if owner_user_id is not None and row.owner_user_id is None:
+            row.owner_user_id = owner_user_id
+            changed = True
+        if changed:
+            db.flush()
         return row
     row = SalesOpportunity(
         id=_new_uuid(db),
@@ -476,6 +490,14 @@ def _get_or_create_opportunity(
     db.add(row)
     db.flush()
     return row
+
+
+def _fallback_owner_user_id(db: Session, team_id):
+    if team_id is None:
+        return None
+    team_id = _uuid_value(db, team_id)
+    row = db.query(TeamMember.user_id).filter(TeamMember.team_id == team_id).first()
+    return row[0] if row else None
 
 
 def _uuid_value(db: Session, value):

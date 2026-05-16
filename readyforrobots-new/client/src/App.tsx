@@ -16,6 +16,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
+import Inbox from "./pages/Inbox";
+import CalendarPage from "./pages/Calendar";
 import SalesConsole from "./pages/SalesConsole";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
@@ -38,6 +40,8 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
       <Route path="/crm" component={Crm} />
+      <Route path="/inbox" component={Inbox} />
+      <Route path="/calendar" component={CalendarPage} />
       <Route path="/sales-console" component={SalesConsole} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
@@ -46,6 +50,8 @@ function Router() {
       <Route path="/readyforrobots/admin/prospects" component={Pipeline} />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />
+      <Route path="/readyforrobots/inbox" component={Inbox} />
+      <Route path="/readyforrobots/calendar" component={CalendarPage} />
       <Route path="/readyforrobots/sales-console" component={SalesConsole} />
       <Route path="/readyforrobots/supply-pipeline" component={SupplyPipeline} />
       <Route path="/404" component={NotFound} />
