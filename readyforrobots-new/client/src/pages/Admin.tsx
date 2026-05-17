@@ -212,12 +212,10 @@ export default function Admin() {
         return;
       }
 
-      const workflowRes = await adminFetch("/api/admin/workflow/actions?limit=40");
-      if (!workflowRes.ok) throw new Error(`Workflow queue failed with ${workflowRes.status}`);
-      setWorkflow(await workflowRes.json());
+      // Fire workflow + all supplemental fetches in parallel — removes one sequential round-trip.
       setLoading(false);
-
-      const supplemental = await Promise.allSettled([
+      const all = await Promise.allSettled([
+        adminFetch("/api/admin/workflow/actions?limit=40"),
         adminFetch("/api/admin/stats"),
         adminFetch("/api/admin/users/stats"),
         adminFetch("/api/admin/users"),
@@ -225,9 +223,10 @@ export default function Admin() {
         adminFetch(`/api/analytics?range=${timeRange}`),
         adminFetch("/api/admin/scrape/targets"),
       ]);
-      const [statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = supplemental.map((result) =>
-        result.status === "fulfilled" ? result.value : null,
+      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = all.map(
+        (result) => (result.status === "fulfilled" ? result.value : null),
       );
+      if (workflowRes?.ok) setWorkflow(await workflowRes.json());
       if (statsRes?.ok) setStats(await statsRes.json());
       if (userStatsRes?.ok) setUserStats(await userStatsRes.json());
       if (usersRes?.ok) {

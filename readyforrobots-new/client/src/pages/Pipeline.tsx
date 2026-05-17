@@ -257,56 +257,97 @@ export default function Pipeline() {
   const [loadErr, setLoadErr] = useState("");
   const [activationErr, setActivationErr] = useState("");
 
+  // Single parallel mount fetch: leads + summary + activations + settings all fire simultaneously.
+  // This eliminates the previous 4-useEffect waterfall that added 2-4s of sequential latency.
   useEffect(() => {
     const base = getApiBase();
     let cancelled = false;
 
-    (async () => {
-      setLoadingLeads(true);
-      setLoadErr("");
+    setLoadingLeads(true);
+    setLoadingSummary(true);
+    setLoadingActivations(true);
+    setLoadErr("");
+    setActivationErr("");
+
+    const token = session?.access_token;
+    const authHdr = authHeader(token);
+    const fingerprint = encodeURIComponent(scoutFingerprint());
+
+    Promise.allSettled([
+      fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit()),
+      fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
+      fetch(`${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`, liveFetchInit({ headers: authHdr })),
+      token
+        ? fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHdr }))
+        : Promise.resolve(null),
+    ]).then(async ([leadsResult, summaryResult, activationsResult, settingsResult]) => {
+      if (cancelled) return;
+
+      // Leads
       try {
-        const leadsResponse = await fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit());
-        if (!leadsResponse.ok) throw new Error(await leadsResponse.text());
-        const rows = (await leadsResponse.json()) as ApiLead[];
-        const mapped = Array.isArray(rows) ? rows.map(mapApiLeadToDeal) : [];
-        if (cancelled) return;
-        setDeals(mapped);
-        setSelectedId(mapped[0]?.id ?? null);
-        setMarketSnippet(marketSnippetFromDeals(mapped));
+        if (leadsResult.status === "fulfilled" && leadsResult.value?.ok) {
+          const rows = (await leadsResult.value.json()) as ApiLead[];
+          const mapped = Array.isArray(rows) ? rows.map(mapApiLeadToDeal) : [];
+          setDeals(mapped);
+          setSelectedId(mapped[0]?.id ?? null);
+          setMarketSnippet(marketSnippetFromDeals(mapped));
+        } else {
+          throw new Error("Could not load pipeline");
+        }
       } catch (e) {
-        if (cancelled) return;
         setLoadErr(e instanceof Error ? e.message : "Could not load pipeline");
         setDeals([]);
         setSelectedId(null);
       } finally {
-        if (!cancelled) setLoadingLeads(false);
+        setLoadingLeads(false);
       }
-    })();
 
-    (async () => {
-      setLoadingSummary(true);
+      // Summary
       try {
-        const summaryResponse = await fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit());
-        if (!summaryResponse.ok) throw new Error(await summaryResponse.text());
-        const payload = (await summaryResponse.json()) as LeadSummary;
-        if (!cancelled) setSummary(payload);
-      } catch {
-        if (!cancelled) setSummary(null);
-      } finally {
-        if (!cancelled) setLoadingSummary(false);
+        if (summaryResult.status === "fulfilled" && summaryResult.value?.ok) {
+          setSummary((await summaryResult.value.json()) as LeadSummary);
+        }
+      } catch { /* advisory */ } finally {
+        setLoadingSummary(false);
       }
-    })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      // Activations
+      try {
+        if (activationsResult.status === "fulfilled" && activationsResult.value?.ok) {
+          const payload = (await activationsResult.value.json()) as { activations?: ScoutActivation[] };
+          const rows = Array.isArray(payload.activations) ? payload.activations : [];
+          setActivations(rows);
+          setSelectedActivationId(rows[0]?.id ?? null);
+        } else {
+          setActivations([]);
+        }
+      } catch (e) {
+        setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
+        setActivations([]);
+      } finally {
+        setLoadingActivations(false);
+      }
 
+      // Settings (advisory — never blocks UI)
+      try {
+        if (settingsResult.status === "fulfilled" && settingsResult.value?.ok) {
+          const settings = (await settingsResult.value.json()) as UserSettings;
+          if (settings.scout_automation_level) setAutomationLevel(settings.scout_automation_level);
+        }
+      } catch { /* non-critical */ }
+    });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.access_token]);
+
+  // Lazy detail enrichment: fires only when a deal is selected and detail is not yet loaded.
   useEffect(() => {
     if (!selectedId) return;
     const existing = deals.find((deal) => deal.id === selectedId);
     if (existing?.researchUpdates) return;
     const base = getApiBase();
+    let cancelled = false;
     (async () => {
       setLoadingResearch(true);
       try {
@@ -314,58 +355,17 @@ export default function Pipeline() {
         if (!response.ok) throw new Error(await response.text());
         const lead = (await response.json()) as ApiLead;
         const mapped = mapApiLeadToDeal(lead);
-        setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+        if (!cancelled) setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
       } catch {
         // Research is additive; keep the core pipeline usable if detail enrichment misses.
       } finally {
-        setLoadingResearch(false);
+        if (!cancelled) setLoadingResearch(false);
       }
     })();
-  }, [selectedId, deals]);
-
-  useEffect(() => {
-    const base = getApiBase();
-    (async () => {
-      setLoadingActivations(true);
-      setActivationErr("");
-      try {
-        const headers = authHeader(session?.access_token);
-        const response = await fetch(
-          `${base}/api/scout/activations?fingerprint=${encodeURIComponent(scoutFingerprint())}&limit=6`,
-          liveFetchInit({ headers }),
-        );
-        if (!response.ok) throw new Error(await response.text());
-        const payload = (await response.json()) as { activations?: ScoutActivation[] };
-        const rows = Array.isArray(payload.activations) ? payload.activations : [];
-        setActivations(rows);
-        setSelectedActivationId(rows[0]?.id ?? null);
-      } catch (e) {
-        setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
-        setActivations([]);
-        setSelectedActivationId(null);
-      } finally {
-        setLoadingActivations(false);
-      }
-    })();
-  }, [session]);
-
-  useEffect(() => {
-    if (!session?.access_token) {
-      setAutomationLevel("assisted");
-      return;
-    }
-    const base = getApiBase();
-    (async () => {
-      try {
-        const response = await fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHeader(session.access_token) }));
-        if (!response.ok) return;
-        const settings = (await response.json()) as UserSettings;
-        if (settings.scout_automation_level) setAutomationLevel(settings.scout_automation_level);
-      } catch {
-        // Settings are advisory for the Pipeline UI; default assisted keeps the flow usable.
-      }
-    })();
-  }, [session]);
+    return () => { cancelled = true; };
+  // Depend only on selectedId, not deals, to prevent re-firing on every deals update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const resolvedIndustryFilter = industryQuery.trim() || filter;

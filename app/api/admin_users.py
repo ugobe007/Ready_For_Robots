@@ -80,36 +80,39 @@ def list_users(db: Session = Depends(get_db)):
     if not _table_exists(db, "user_profiles"):
         return {"users": [], "total": 0}
 
-    query = text("""
-        SELECT 
+    # Build LEFT JOINs only for sub-tables that actually exist in this environment.
+    # On a fresh install or in tests, user_saved_companies / ai_reports / user_lists
+    # may not be present yet (Supabase migration not yet run).
+    has_saved   = _table_exists(db, "user_saved_companies")
+    has_reports = _table_exists(db, "ai_reports")
+    has_lists   = _table_exists(db, "user_lists")
+
+    saved_join   = "LEFT JOIN (SELECT user_id, COUNT(*) as count FROM user_saved_companies GROUP BY user_id) saved ON up.id = saved.user_id" if has_saved else ""
+    reports_join = "LEFT JOIN (SELECT user_id, COUNT(*) as count FROM ai_reports GROUP BY user_id) reports ON up.id = reports.user_id" if has_reports else ""
+    lists_join   = "LEFT JOIN (SELECT user_id, COUNT(*) as count FROM user_lists GROUP BY user_id) lists ON up.id = lists.user_id" if has_lists else ""
+
+    saved_col   = "COALESCE(saved.count, 0)"   if has_saved   else "0"
+    reports_col = "COALESCE(reports.count, 0)" if has_reports else "0"
+    lists_col   = "COALESCE(lists.count, 0)"   if has_lists   else "0"
+
+    query = text(f"""
+        SELECT
             up.id,
             up.email,
             up.created_at,
             up.updated_at as last_active,
-            COALESCE(saved.count, 0) as saved_count,
-            COALESCE(reports.count, 0) as reports_count,
-            COALESCE(lists.count, 0) as lists_count
+            {saved_col}   as saved_count,
+            {reports_col} as reports_count,
+            {lists_col}   as lists_count
         FROM user_profiles up
-        LEFT JOIN (
-            SELECT user_id, COUNT(*) as count 
-            FROM user_saved_companies 
-            GROUP BY user_id
-        ) saved ON up.id = saved.user_id
-        LEFT JOIN (
-            SELECT user_id, COUNT(*) as count 
-            FROM ai_reports 
-            GROUP BY user_id
-        ) reports ON up.id = reports.user_id
-        LEFT JOIN (
-            SELECT user_id, COUNT(*) as count 
-            FROM user_lists 
-            GROUP BY user_id
-        ) lists ON up.id = lists.user_id
+        {saved_join}
+        {reports_join}
+        {lists_join}
         ORDER BY up.created_at DESC
     """)
-    
+
     rows = db.execute(query).fetchall()
-    
+
     users = []
     for row in rows:
         users.append({
@@ -121,7 +124,7 @@ def list_users(db: Session = Depends(get_db)):
             "reports_count": row.reports_count,
             "lists_count": row.lists_count,
         })
-    
+
     return {"users": users, "total": len(users)}
 
 

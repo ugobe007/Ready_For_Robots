@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, case
+from sqlalchemy import func, case, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
@@ -318,6 +318,11 @@ _PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "100000"))
 LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
 LEADS_ROTATION_SEC = 300
+
+# Short-TTL in-process cache for the public leads list — avoids re-running the GROUP BY
+# on every page visit (the pool rotation already provides freshness on a 5-min window).
+_LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
+_LEADS_LIST_TTL = 30.0  # seconds
 
 
 def _lead_rows_query_limited(db: Session, limit: int):
@@ -779,6 +784,16 @@ def get_leads(
 ):
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
+
+    # Short-TTL cache: avoid re-running the GROUP BY + Python filtering on rapid repeat loads.
+    # Cache key includes all query params that affect output; rotation_slot=None uses server clock.
+    _cache_key = f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
+    _cached = _LEADS_LIST_CACHE.get(_cache_key)
+    if _cached is not None:
+        _ts, _data = _cached
+        if time.monotonic() - _ts < _LEADS_LIST_TTL:
+            return _data
+
     candidates = _lead_rows_query(db)
 
     if min_score is not None:
@@ -871,11 +886,20 @@ def get_leads(
     else:
         staged = staged[:limit]
 
-    llm_hints = resolve_homepage_urls_for_companies([t[0] for t in staged])
-    return [
+    # LLM URL resolution is opt-in and skipped when companies already have websites
+    # (avoids blocking the list response on an OpenAI round-trip every request).
+    companies_needing_url = [t[0] for t in staged if not (t[0].website or "").strip()]
+    llm_hints = (
+        resolve_homepage_urls_for_companies(companies_needing_url)
+        if companies_needing_url
+        else {}
+    )
+    _result = [
         _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
         for c, junk, junk_reason, pri in staged
     ]
+    _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _result)
+    return _result
 
 
 @router.get("/by-id/{company_id}")
@@ -890,7 +914,7 @@ def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
     if not c:
         raise HTTPException(status_code=404, detail="Lead not found")
     junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-    llm_hints = resolve_homepage_urls_for_companies([c])
+    llm_hints = resolve_homepage_urls_for_companies([c]) if not (c.website or "").strip() else {}
     payload = _fmt_company(
         c,
         junk,
@@ -968,23 +992,51 @@ def _set_homepage_cache(data: dict) -> None:
 
 
 def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
-    """Tier counts from a capped, score-ordered slice — not a full-table scan."""
-    rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
-    total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
+    """
+    Pipeline tier counts for dashboard cards.
+
+    Strategy: two queries instead of loading up to 100k rows into Python.
+      1. SQL-level aggregation on Score for HOT/WARM/COLD counts and totals — O(1) scans
+         with indexed columns.
+      2. A small Python-side pass (~2k rows max) only for junk filtering and by_industry,
+         which require Python regex and priority logic that can't move to SQL.
+    The score-based counts (query 1) are the same numbers shown in pipeline cards; the
+    Python pass (query 2) refines them for the junk-excluded view.
+    """
+    # ── Query 1: DB-level aggregation (replaces 2 extra COUNT queries + the 100k Python loop) ──
+    sc = db.query(
+        func.count(Score.id).label("total_scored"),
+        func.sum(case((Score.overall_intent_score >= 70, 1), else_=0)).label("hot"),
+        func.sum(case(
+            (and_(Score.overall_intent_score >= 40, Score.overall_intent_score < 70), 1),
+            else_=0,
+        )).label("warm"),
+        func.sum(case((Score.overall_intent_score < 40, 1), else_=0)).label("cold"),
+    ).one()
+
+    db_counts = db.query(
+        func.count(Company.id).label("companies"),
+        func.count(Signal.id).label("signals"),
+    ).select_from(Company).outerjoin(Signal, Signal.company_id == Company.id).one()
+
+    # ── Query 2: Capped slice for junk filter + by_industry (Python-side logic) ─────────────
+    # Cap at 2k rows — sufficient for industry breakdown and junk ratio estimate.
+    _SUMMARY_SLICE = 2000
+    rows = _lead_rows_query_limited(db, _SUMMARY_SLICE).all()
+    _, _, _, _, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=exclude_junk
     )
-    companies_in_database = db.query(func.count(Company.id)).scalar() or 0
-    signals_in_database = db.query(func.count(Signal.id)).scalar() or 0
+
     return {
-        "total": total,
-        "hot": hot,
-        "warm": warm,
-        "cold": cold,
+        "total": int(sc.total_scored or 0),
+        "hot": int(sc.hot or 0),
+        "warm": int(sc.warm or 0),
+        "cold": int(sc.cold or 0),
         "junk_filtered": junk_count,
         "total_signals": total_signals,
         "by_industry": by_industry,
-        "companies_in_database": int(companies_in_database),
-        "signals_in_database": int(signals_in_database),
+        "companies_in_database": int(db_counts.companies or 0),
+        "signals_in_database": int(db_counts.signals or 0),
         "summary_tier_slice_size": len(rows),
         "leads_list_max_per_request": LEADS_PUBLIC_MAX,
     }
@@ -1107,7 +1159,8 @@ def _build_homepage_payload(db: Session) -> dict:
 
     chosen = sorted(chosen[:feed_limit], key=_pool_sort_key)
 
-    llm_hints = resolve_homepage_urls_for_companies(chosen)
+    companies_needing_url = [c for c in chosen if not (c.website or "").strip()]
+    llm_hints = resolve_homepage_urls_for_companies(companies_needing_url) if companies_needing_url else {}
     hot_leads = []
     for c in chosen:
         junk, junk_reason, pri = _classify(c)

@@ -1,6 +1,7 @@
+import time
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import PlainTextResponse
-from sqlalchemy import func, and_, or_, desc, text
+from sqlalchemy import func, and_, or_, desc, text, case
 from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
@@ -11,6 +12,10 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
+
+# In-process TTL cache for analytics (2 min TTL — DB query is expensive)
+_ANALYTICS_CACHE: dict[str, tuple[float, dict]] = {}
+_ANALYTICS_TTL = 120.0
 
 # Track calculator usage
 calculator_usage = []
@@ -53,7 +58,14 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
     In-memory tracking (calculator_usage, robot_searches, site_visits) supplements with
     user-interaction events for the current server process; database rows are the primary
     persistent data source.
+    Cached in-process for 2 minutes to avoid repeated full-table scans on every admin load.
     """
+    cached = _ANALYTICS_CACHE.get(range)
+    if cached is not None:
+        ts, data = cached
+        if time.monotonic() - ts < _ANALYTICS_TTL:
+            return data
+
     now = datetime.now(timezone.utc)
     if range == '7d':
         cutoff = now - timedelta(days=7)
@@ -70,38 +82,93 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
 
     db = SessionLocal()
     try:
-        # ── Core pipeline stats from DB ─────────────────────────────────────────
-        total_companies = db.query(func.count(Company.id)).scalar() or 0
-        total_signals = db.query(func.count(Signal.id)).scalar() or 0
-        total_scored = db.query(func.count(Score.id)).scalar() or 0
+        # ── Query 1: All company stats in a single pass ────────────────────────
+        # Replaces 4 separate COUNT queries on the companies table.
+        co_row = db.query(
+            func.count(Company.id).label("total"),
+            func.sum(case((Company.created_at >= cutoff, 1), else_=0)).label("new_count"),
+            func.sum(case(
+                (and_(Company.created_at >= prev_cutoff, Company.created_at < cutoff), 1),
+                else_=0,
+            )).label("prev_count"),
+        ).one()
+        total_companies = int(co_row.total or 0)
+        new_companies   = int(co_row.new_count or 0)
+        prev_companies  = int(co_row.prev_count or 0)
+        company_growth  = (
+            round(((new_companies - prev_companies) / prev_companies) * 100) if prev_companies
+            else (100 if new_companies else 0)
+        )
 
-        hot_count = db.query(func.count(Score.id)).filter(Score.overall_intent_score >= 70).scalar() or 0
-        warm_count = db.query(func.count(Score.id)).filter(Score.overall_intent_score.between(40, 69.9)).scalar() or 0
-        cold_count = db.query(func.count(Score.id)).filter(Score.overall_intent_score < 40).scalar() or 0
+        # ── Query 2: All signal stats + type breakdown in a single pass ────────
+        # Replaces 5 separate queries on the signals table.
+        # Conditional aggregation counts total / new / prev in one scan.
+        sig_scalar = db.query(
+            func.count(Signal.id).label("total"),
+            func.sum(case((Signal.created_at >= cutoff, 1), else_=0)).label("new_count"),
+            func.sum(case(
+                (and_(Signal.created_at >= prev_cutoff, Signal.created_at < cutoff), 1),
+                else_=0,
+            )).label("prev_count"),
+        ).one()
+        total_signals = int(sig_scalar.total or 0)
+        new_signals   = int(sig_scalar.new_count or 0)
+        prev_signals  = int(sig_scalar.prev_count or 0)
+        signal_growth = (
+            round(((new_signals - prev_signals) / prev_signals) * 100) if prev_signals
+            else (100 if new_signals else 0)
+        )
 
-        # New signals in range
-        new_signals = db.query(func.count(Signal.id)).filter(Signal.created_at >= cutoff).scalar() or 0
-        prev_signals = db.query(func.count(Signal.id)).filter(
-            Signal.created_at >= prev_cutoff, Signal.created_at < cutoff
-        ).scalar() or 0
-        signal_growth = 0
-        if prev_signals > 0:
-            signal_growth = round(((new_signals - prev_signals) / prev_signals) * 100)
-        elif new_signals > 0:
-            signal_growth = 100
+        # Signal type breakdown — one GROUP BY covers both "all-time" and "recent" cuts.
+        sig_type_rows = (
+            db.query(
+                Signal.signal_type,
+                func.count(Signal.id).label("cnt"),
+                func.sum(case((Signal.created_at >= cutoff, 1), else_=0)).label("recent_cnt"),
+            )
+            .group_by(Signal.signal_type)
+            .order_by(func.count(Signal.id).desc())
+            .limit(8)
+            .all()
+        )
+        signal_type_breakdown = []
+        recent_hot_type = None
+        if sig_type_rows:
+            max_cnt = sig_type_rows[0].cnt or 1
+            # Pick the signal type with the most recent hits for the "hottest trend" insight.
+            recent_sorted = sorted(sig_type_rows, key=lambda r: int(r.recent_cnt or 0), reverse=True)
+            if recent_sorted and recent_sorted[0].recent_cnt:
+                recent_hot_type = (recent_sorted[0].signal_type or "unknown").replace("_", " ").title()
+            for row in sig_type_rows:
+                signal_type_breakdown.append({
+                    "type": (row.signal_type or "unknown").replace("_", " ").title(),
+                    "count": row.cnt,
+                    "percentage": round((row.cnt / max_cnt) * 100),
+                })
 
-        # New companies in range
-        new_companies = db.query(func.count(Company.id)).filter(Company.created_at >= cutoff).scalar() or 0
-        prev_companies = db.query(func.count(Company.id)).filter(
-            Company.created_at >= prev_cutoff, Company.created_at < cutoff
-        ).scalar() or 0
-        company_growth = 0
-        if prev_companies > 0:
-            company_growth = round(((new_companies - prev_companies) / prev_companies) * 100)
-        elif new_companies > 0:
-            company_growth = 100
+        # ── Query 3: All score stats in a single pass ──────────────────────────
+        # Replaces 4 separate COUNT queries on the scores table.
+        sc_row = db.query(
+            func.count(Score.id).label("total"),
+            func.sum(case((Score.overall_intent_score >= 70, 1), else_=0)).label("hot"),
+            func.sum(case(
+                (and_(Score.overall_intent_score >= 40, Score.overall_intent_score < 70), 1),
+                else_=0,
+            )).label("warm"),
+            func.sum(case((Score.overall_intent_score < 40, 1), else_=0)).label("cold"),
+        ).one()
+        total_scored = int(sc_row.total or 0)
+        hot_count    = int(sc_row.hot  or 0)
+        warm_count   = int(sc_row.warm or 0)
+        cold_count   = int(sc_row.cold or 0)
 
-        # ── Industry breakdown ────────────────────────────────────────────────
+        score_dist = [
+            {"range": "HOT (70–100)", "count": hot_count,  "color": "red"},
+            {"range": "WARM (40–69)", "count": warm_count, "color": "amber"},
+            {"range": "COLD (0–39)",  "count": cold_count, "color": "cyan"},
+        ]
+
+        # ── Query 4: Industry breakdown (companies table, single GROUP BY) ──────
         industry_rows = (
             db.query(Company.industry, func.count(Company.id).label("cnt"))
             .filter(
@@ -124,44 +191,7 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
                     "percentage": round((row.cnt / max_cnt) * 100),
                 })
 
-        # ── Signal type breakdown ─────────────────────────────────────────────
-        sig_type_rows = (
-            db.query(Signal.signal_type, func.count(Signal.id).label("cnt"))
-            .group_by(Signal.signal_type)
-            .order_by(func.count(Signal.id).desc())
-            .limit(8)
-            .all()
-        )
-        signal_type_breakdown = []
-        if sig_type_rows:
-            max_cnt = sig_type_rows[0].cnt or 1
-            for row in sig_type_rows:
-                signal_type_breakdown.append({
-                    "type": (row.signal_type or "unknown").replace("_", " ").title(),
-                    "count": row.cnt,
-                    "percentage": round((row.cnt / max_cnt) * 100),
-                })
-
-        # ── Score distribution ─────────────────────────────────────────────────
-        score_dist = [
-            {"range": "HOT (70–100)", "count": hot_count, "color": "red"},
-            {"range": "WARM (40–69)", "count": warm_count, "color": "amber"},
-            {"range": "COLD (0–39)", "count": cold_count, "color": "cyan"},
-        ]
-
-        # ── Hottest signal type recently ────────────────────────────────────────
-        recent_hot_type = None
-        recent_hot_row = (
-            db.query(Signal.signal_type, func.count(Signal.id).label("cnt"))
-            .filter(Signal.created_at >= cutoff)
-            .group_by(Signal.signal_type)
-            .order_by(func.count(Signal.id).desc())
-            .first()
-        )
-        if recent_hot_row:
-            recent_hot_type = recent_hot_row.signal_type.replace("_", " ").title()
-
-        # ── Top HOT companies ─────────────────────────────────────────────────
+        # ── Query 5: Top HOT leads (indexed join on score column) ──────────────
         top_hot = (
             db.query(Company.name, Company.industry, Score.overall_intent_score)
             .join(Score, Company.id == Score.company_id)
@@ -217,7 +247,7 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
     finally:
         db.close()
 
-    return {
+    result = {
         # DB-backed pipeline metrics
         "total_companies": total_companies,
         "total_signals": total_signals,
@@ -244,6 +274,8 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         "conversion_rate": conversion_rate,
         "insights": insights,
     }
+    _ANALYTICS_CACHE[range] = (time.monotonic(), result)
+    return result
 
 
 @router.get("/daily-report")
