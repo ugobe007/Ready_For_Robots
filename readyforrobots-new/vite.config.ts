@@ -215,14 +215,14 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const plugins = [
   injectRfrApiMeta(),
   react(),
   tailwindcss(),
   jsxLocPlugin(),
-  vitePluginManusRuntime(),
-  vitePluginManusDebugCollector(),
-  vitePluginStorageProxy(),
+  ...(isDev ? [vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()] : []),
 ];
 
 export default defineConfig({
