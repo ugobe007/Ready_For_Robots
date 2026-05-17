@@ -214,6 +214,88 @@ _JUNK_SUBSTRINGS = [
     "equipment market",
     "systems market",
     "system market",
+    # ── Drone / UAV false positives from AUVSI, CES, drone shows ─────────────
+    "drone market",
+    "uav market",
+    "uas market",
+    "evtol market",
+    "drone industry",
+    "drone sector",
+    "drone delivery market",
+    "autonomous drone",  # generic descriptor, not a company
+    "commercial drone market",
+    "military drone",
+    "counter-drone",
+    "counter drone",
+    "anti-drone",
+    "drone detection market",
+    "urban air mobility market",
+    "uam market",
+    "air taxi market",
+    "advanced air mobility market",
+    "drone insurance",
+    "drone regulation",
+    "drone legislation",
+    "faa drone",
+    "drone safety",
+    "drone pilot",
+    "drone operator",
+    "recreational drone",
+    "consumer drone market",
+    # ── 3D printing / additive false positives ───────────────────────────────
+    "3d printing market",
+    "additive manufacturing market",
+    "additive market",
+    "3d print industry",
+    "3d printed",  # generic phrase scraped as name
+    "metal 3d printing",  # market category, not company
+    "resin 3d print",
+    "fdm market",
+    "rapid prototyping market",
+    "bioprinting market",
+    "3d bioprint",
+    "3d food print",
+    "3d printing service",  # generic service descriptor
+    # ── Medical / surgical robot false positives ─────────────────────────────
+    "surgical robotics market",
+    "medical robot market",
+    "robotic surgery market",
+    "orthopedic robot market",
+    "hospital robot market",
+    "medical device market",
+    "minimally invasive market",
+    "surgical automation",   # descriptor not company
+    "laparoscopic market",
+    "clinical robot",  # generic, not a company
+    "telehealth robot",
+    "patient care robot",
+    # ── Exoskeleton / wearable false positives ───────────────────────────────
+    "exoskeleton market",
+    "wearable robot market",
+    "powered exoskeleton",  # category descriptor
+    "exosuit market",
+    # ── Humanoid robot market report fragments ───────────────────────────────
+    "humanoid robot market",
+    "humanoid market",
+    "android robot market",
+    "biped robot market",
+    # ── Material handling / intralogistics market fragments ──────────────────
+    "material handling market",
+    "intralogistics market",
+    "warehouse automation market",
+    "amr market",
+    "agv market",
+    "automated forklift market",
+    "autonomous forklift market",
+    "conveyor market",
+    "sortation market",
+    # ── Autonomous vehicle / AV market fragments ─────────────────────────────
+    "autonomous vehicle market",
+    "self-driving market",
+    "driverless market",
+    "av market",  # ambiguous: audio/visual + autonomous vehicle
+    "robo-taxi market",
+    "robotaxi market",
 ]
 
 # Regex patterns on the raw (original-case) name
