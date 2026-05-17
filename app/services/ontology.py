@@ -106,6 +106,109 @@ CONCEPTS: Dict[str, Concept] = {
         synonyms=["cobot", "collaborative automation"],
     ),
 
+    # ── Humanoid robots ──────────────────────
+    "humanoid_robot": Concept(
+        name="humanoid_robot", domain="automation", base_weight=0.95,
+        patterns=[
+            "humanoid", "humanoids", "bipedal robot", "biped robot", "android robot",
+            "boston dynamics atlas", "agility robotics", "figure ai", "figure robot",
+            "optimus robot", "tesla bot", "apptronik", "sanctuary ai",
+            "1x technologies", "fourier intelligence", "ubtech", "engineered arts",
+            "digit robot", "ameca robot", "nao robot", "pepper robot",
+        ],
+        synonyms=["humanoid bot", "bipedal machine", "android automaton"],
+    ),
+
+    # ── Drone / UAV / UAS ─────────────────────
+    "drone_uav": Concept(
+        name="drone_uav", domain="automation", base_weight=0.90,
+        patterns=[
+            r"\bdrone\b", r"\bdrones\b", r"\buav\b", r"\buas\b",
+            "unmanned aerial", "unmanned aircraft", "quadcopter", "multirotor",
+            "fixed wing drone", r"\bevtol\b", "urban air mobility", r"\buam\b",
+            "autonomous flight", "aerial robot", "delivery drone",
+            "skydio", "dji enterprise", "parrot drone", "zipline", "wing aviation",
+            "percepto", "autel robotics", "joby aviation", "archer aviation",
+            "wisk aero", "lilium", "vertical aerospace",
+        ],
+        synonyms=["UAV", "UAS", "unmanned aerial vehicle", "autonomous aircraft"],
+    ),
+
+    # ── 3D printing / additive manufacturing ──
+    "additive_manufacturing": Concept(
+        name="additive_manufacturing", domain="automation", base_weight=0.80,
+        patterns=[
+            r"3d\s+print", "additive manufactur", "additive mfg",
+            "rapid prototyp", "fused deposit", "selective laser sintering",
+            "stereolithography", r"\bsla\b", r"\bfdm\b", r"\bsls\b",
+            "stratasys", "3d systems", "markforged", "carbon3d",
+            "desktop metal", "eos gmbh", "formlabs", "bambu lab",
+            "metal printing", "metal additive", "binder jetting",
+        ],
+        synonyms=["3D printing", "additive mfg", "rapid manufacturing"],
+    ),
+
+    # ── Surgical / medical robots ──────────────
+    "surgical_robot": Concept(
+        name="surgical_robot", domain="automation", base_weight=0.92,
+        patterns=[
+            "surgical robot", "surgical robotics", "robotic surgery",
+            "minimally invasive robot", "laparoscopic robot",
+            "orthopedic robot", "da vinci", "intuitive surgical",
+            "stryker mako", "medtronic hugo", "cmr surgical",
+            "robotic-assisted surgery", "avatera", "moon surgical",
+        ],
+        synonyms=["surgical system", "robotic OR", "minimally invasive robotics"],
+    ),
+    "medical_robot": Concept(
+        name="medical_robot", domain="automation", base_weight=0.88,
+        patterns=[
+            "medical robot", "hospital robot", "healthcare robot",
+            "pharmacy robot", "uvc disinfection", "uv-c robot",
+            "autonomous hospital", "clinical robot", "rehabilitation robot",
+            "exoskeleton rehabilitation", "medtech robot", "smart hospital",
+        ],
+        synonyms=["healthcare automation", "clinical robotics", "medtech bot"],
+    ),
+
+    # ── Material handling / warehouse logistics ──
+    "material_handling": Concept(
+        name="material_handling", domain="automation", base_weight=0.85,
+        patterns=[
+            "material handling", "goods handling", "pallet handling",
+            "autonomous forklift", "automated forklift", "forklift robot",
+            "conveyor automat", "sortation system", "automated sortation",
+            "goods-to-person", "person-to-goods", "shuttle system",
+            "autostore", "vertical carousel", "automated storage",
+            r"\basr\b", "automated storage retrieval",
+        ],
+        synonyms=["material flow", "intralogistics", "goods movement"],
+    ),
+
+    # ── Autonomous vehicles / self-driving ───────
+    "autonomous_vehicle": Concept(
+        name="autonomous_vehicle", domain="automation", base_weight=0.82,
+        patterns=[
+            "autonomous vehicle", "autonomous car", "self-driving", "self driving",
+            r"\bav\b.*vehicle", "driverless", "lidar.*vehicle", "lidar.*autonom",
+            r"\bslam\b", "waymo", "cruise automation", "nuro", "serve robotics",
+            "starship technologies", "amazon scout", "autonomous delivery",
+            "autonomous last mile",
+        ],
+        synonyms=["AV", "self-driving vehicle", "driverless car"],
+    ),
+
+    # ── Exoskeleton / wearable robot ─────────────
+    "exoskeleton": Concept(
+        name="exoskeleton", domain="automation", base_weight=0.80,
+        patterns=[
+            "exoskeleton", "exosuit", "powered exoskeleton", "wearable robot",
+            "powered suit", "ekso bionics", "sarcos", "suitx",
+            "cyberdyne hal", "rewalk", "indego", "hyundai exoskeleton",
+        ],
+        synonyms=["powered suit", "wearable exo", "augmentation suit"],
+    ),
+
     # ── Labor pain signals ──────────────────
     "labor_shortage": Concept(
         name="labor_shortage", domain="labor_pain", base_weight=0.85,
@@ -650,6 +753,23 @@ RELATIONSHIPS: List[Relationship] = [
     Relationship("supply_chain_disruption",   "automation_intent",       "associated_with", 0.60),
     Relationship("rfq_rfp",                   "vendor_selection",        "implies",         0.95),
     Relationship("rfq_rfp",                   "automation_intent",       "implies",         0.90),
+    # ── New robot categories → industry verticals ────────────────────────────
+    Relationship("humanoid_robot",            "automation_intent",       "implies",         0.95),
+    Relationship("humanoid_robot",            "robotics_engineer",       "associated_with", 0.85),
+    Relationship("drone_uav",                 "automation_intent",       "implies",         0.90),
+    Relationship("drone_uav",                 "logistics_vertical",      "associated_with", 0.70),
+    Relationship("additive_manufacturing",    "automation_intent",       "implies",         0.80),
+    Relationship("additive_manufacturing",    "robotics_engineer",       "associated_with", 0.65),
+    Relationship("surgical_robot",            "healthcare_vertical",     "implies",         0.95),
+    Relationship("surgical_robot",            "automation_intent",       "implies",         0.90),
+    Relationship("medical_robot",             "healthcare_vertical",     "implies",         0.90),
+    Relationship("medical_robot",             "automation_intent",       "implies",         0.80),
+    Relationship("material_handling",         "warehouse_automation",    "implies",         0.90),
+    Relationship("material_handling",         "logistics_vertical",      "associated_with", 0.85),
+    Relationship("autonomous_vehicle",        "automation_intent",       "implies",         0.85),
+    Relationship("autonomous_vehicle",        "logistics_vertical",      "associated_with", 0.75),
+    Relationship("exoskeleton",               "automation_intent",       "implies",         0.80),
+    Relationship("exoskeleton",               "ergonomic_risk",          "associated_with", 0.75),
 ]
 
 
@@ -972,6 +1092,56 @@ INFERENCE_RULES: List[InferenceRule] = [
         boost=0.28,
         description="CV + AI operations → technology-forward operator ready for robot integration"
     ),
+    # ── New robot category rules ─────────────────────────────────────────────
+    InferenceRule(
+        name="humanoid_oem",
+        conditions=["humanoid_robot", "robotics_engineer"],
+        conclusion_domain="automation",
+        boost=0.45,
+        description="Humanoid robot maker with engineering talent → high-priority OEM prospect"
+    ),
+    InferenceRule(
+        name="drone_logistics",
+        conditions=["drone_uav", "logistics_vertical"],
+        conclusion_domain="automation",
+        boost=0.38,
+        description="Drone company in logistics → delivery automation convergence signal"
+    ),
+    InferenceRule(
+        name="additive_automation",
+        conditions=["additive_manufacturing", "automation_intent"],
+        conclusion_domain="automation",
+        boost=0.32,
+        description="3D printing + automation intent → advanced manufacturing prospect"
+    ),
+    InferenceRule(
+        name="surgical_robot_health",
+        conditions=["surgical_robot", "healthcare_vertical"],
+        conclusion_domain="automation",
+        boost=0.48,
+        description="Surgical robot maker in healthcare → premium high-complexity OEM"
+    ),
+    InferenceRule(
+        name="material_handling_warehouse",
+        conditions=["material_handling", "warehouse_automation"],
+        conclusion_domain="automation",
+        boost=0.42,
+        description="Material handling + warehouse automation → intralogistics systems buyer"
+    ),
+    InferenceRule(
+        name="autonomous_vehicle_logistics",
+        conditions=["autonomous_vehicle", "logistics_vertical"],
+        conclusion_domain="automation",
+        boost=0.35,
+        description="Autonomous vehicle in logistics → last-mile delivery robot prospect"
+    ),
+    InferenceRule(
+        name="exoskeleton_ergonomics",
+        conditions=["exoskeleton", "ergonomic_risk"],
+        conclusion_domain="automation",
+        boost=0.36,
+        description="Exoskeleton maker targeting ergonomic risk → industrial wearable robot OEM"
+    ),
 ]
 
 
@@ -984,6 +1154,18 @@ INDUSTRY_PRIORS: Dict[str, float] = {
     "hotel":                  0.85,
     "healthcare":             0.80,
     "medical tech":           0.82,
+    # New show verticals
+    "humanoid":               0.98,   # Humanoid robot OEM — highest fit
+    "surgical robot":         0.97,
+    "medical robot":          0.95,
+    "drone":                  0.92,
+    "uav":                    0.92,
+    "additive manufactur":    0.88,
+    "3d print":               0.88,
+    "material handling":      0.90,
+    "autonomous vehicle":     0.87,
+    "exoskeleton":            0.85,
+    # Existing verticals
     "food service":           0.75,
     "restaurant":             0.72,
     "food process":           0.88,   # EOL buyer — high fit

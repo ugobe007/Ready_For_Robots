@@ -22,9 +22,10 @@ from app.models.company import Company
 from app.models.signal import Signal
 from app.models.score import Score
 from app.services.scoring_engine import compute_scores
-from app.scrapers.news_scraper import NewsScraper
-from app.scrapers.job_board_scraper import JobBoardScraper
-from app.scrapers.serp_scraper import SerpScraper, EXPANSION_QUERIES
+from app.scrapers.news_scraper_enhanced import EnhancedNewsScraper as NewsScraper
+from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper as JobBoardScraper
+from app.scrapers.serp_scraper_enhanced import EnhancedSerpScraper as SerpScraper
+from app.scrapers.serp_scraper import EXPANSION_QUERIES
 from app.scrapers.scrape_targets import get_urls, get_news_queries
 
 logger = logging.getLogger(__name__)

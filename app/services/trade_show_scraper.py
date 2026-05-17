@@ -33,30 +33,86 @@ from app.models.robot_company import RobotCompany
 logger = logging.getLogger(__name__)
 
 _DEFAULT_SEED_URLS: Tuple[str, ...] = (
+    # ── Industrial automation / material handling ──────────────────────────────
     "https://www.automate.org/",
     "https://www.automate.org/exhibits",
     "https://www.promatsupplychain.com/",
     "https://www.modexshow.com/",
+    # ── Consumer electronics / humanoids / drones ─────────────────────────────
+    "https://www.ces.tech/",
+    "https://www.ces.tech/exhibitors",
+    # ── Drone / UAV / autonomous air ──────────────────────────────────────────
+    "https://www.xponential.org/",                  # AUVSI XPONENTIAL
+    "https://www.xponential.org/xponential2025/Public/Exhibitors.aspx",
+    # ── 3D printing / additive manufacturing ──────────────────────────────────
+    "https://www.rapid3d.com/",                     # RAPID + TCT
+    "https://www.rapid3d.com/2025-exhibitors",
+    # ── Medical / surgical robots ─────────────────────────────────────────────
+    "https://www.himssconference.org/",              # HIMSS Annual
+    "https://www.devicetalks.com/",                 # MedTech / MD&M
+    "https://www.mdmwest.com/",                     # MD&M West
+    # ── Manufacturing / metalworking ──────────────────────────────────────────
+    "https://www.imts.com/",                        # IMTS — International Manufacturing Technology Show
+    "https://www.fabtechexpo.com/",                 # FABTECH
+    # ── Packaging / end-of-line automation ────────────────────────────────────
+    "https://www.packexpolasvegas.com/",
+    "https://www.packexpo.com/",
+    # ── Logistics / supply chain ──────────────────────────────────────────────
+    "https://www.logimat-messe.de/en/",             # LogiMAT
+    # ── Las Vegas robot-heavy shows (primary market) ──────────────────────────
+    "https://www.ces.tech/conference/sessions",
 )
 
 _ROBOT_FOCUS = re.compile(
-    r"(robot|robotics|cobot|cobots|amr\b|agv|humanoid|machine\s+tending|"
-    r"machine\s+vision|industrial\s+automation|motion\s+control|plc\b|"
-    r"industry\s*4\.0|warehouse\s+automation|fulfillment\s+automation|"
-    r"autonomous\s+mobile|pick\s+and\s+place|welding\s+automation)",
+    r"(robot|robotics|cobot|cobots|amr\b|agv|humanoid|humanoids|"
+    r"bipedal|biped|android\s+robot|"
+    r"machine\s+tending|machine\s+vision|industrial\s+automation|"
+    r"motion\s+control|plc\b|industry\s*4\.0|"
+    r"warehouse\s+automation|fulfillment\s+automation|"
+    r"autonomous\s+mobile|pick\s+and\s+place|welding\s+automation|"
+    # Drones / UAV
+    r"drone|drones|uav\b|uas\b|unmanned\s+aerial|quadcopter|"
+    r"evtol|urban\s+air\s+mobility|autonomous\s+flight|"
+    # 3D printing / additive
+    r"3d\s+print|additive\s+manufactur|additive\s+mfg|"
+    r"rapid\s+prototyp|fused\s+deposit|selective\s+laser|"
+    # Medical / surgical robots
+    r"surgical\s+robot|medical\s+robot|robotic\s+surgery|"
+    r"da\s+vinci|minimally\s+invasive\s+robot|orthopedic\s+robot|"
+    r"exoskeleton|exosuit|wearable\s+robot|"
+    # Material handling
+    r"material\s+handling|pallet|conveyor\s+automat|"
+    r"autonomous\s+forklift|autonomous\s+vehicle|"
+    # Autonomous vehicles
+    r"autonomous\s+car|self.driving|lidar|slam\b)",
     re.I,
 )
 
 _STATIC_OEM_HINTS: Tuple[str, ...] = (
+    # Industrial / cobot arms
     "ABB",
     "FANUC",
     "KUKA",
     "Yaskawa",
     "Omron",
     "Universal Robots",
+    "Techman Robot",
+    "Dobot",
+    "Franka Emika",
+    "Staubli",
+    "Kawasaki Robotics",
+    # Humanoid robots
     "Boston Dynamics",
     "Agility Robotics",
     "Figure AI",
+    "Apptronik",
+    "Sanctuary AI",
+    "1X Technologies",
+    "Fourier Intelligence",
+    "UBTECH Robotics",
+    "Engineered Arts",
+    "Unitree Robotics",
+    # Wheeled AMR / logistics robots
     "MiR",
     "Mobile Industrial Robots",
     "Locus Robotics",
@@ -64,13 +120,62 @@ _STATIC_OEM_HINTS: Tuple[str, ...] = (
     "Symbotic",
     "Exotec",
     "Geek+",
+    "6 River Systems",
+    "Fetch Robotics",
+    "Vecna Robotics",
+    "Seegrid",
+    "Hai Robotics",
+    "Quicktron",
+    "Aethon",
+    "Savioke",
+    "Bear Robotics",
+    "Pudu Robotics",
+    "Keenon Robotics",
+    "Richtech Robotics",
+    # Drones / UAV
+    "DJI",
+    "Skydio",
+    "Parrot",
+    "Zipline",
+    "Wing Aviation",
+    "Joby Aviation",
+    "Archer Aviation",
+    "Wisk Aero",
+    "Percepto",
+    "Autel Robotics",
+    # Surgical / medical robots
+    "Intuitive Surgical",
+    "Stryker Mako",
+    "Medtronic Hugo",
+    "Smith+Nephew Cori",
+    "CMR Surgical",
+    "Avatera Medical",
+    "Moon Surgical",
+    # 3D printing / additive
+    "Stratasys",
+    "3D Systems",
+    "Markforged",
+    "Carbon",
+    "Desktop Metal",
+    "EOS",
+    "Formlabs",
+    "Bambu Lab",
+    # Automation / industrial infrastructure
     "Schneider Electric",
     "Siemens",
     "Rockwell Automation",
+    "Honeywell Robotics",
     "ifm",
     "Keyence",
     "Cognex",
     "Telexistence",
+    "Vention",
+    # Exoskeleton
+    "Ekso Bionics",
+    "Sarcos Technology",
+    "SuitX",
+    "Cyberdyne",
+    "ReWalk Robotics",
 )
 
 
