@@ -1168,6 +1168,121 @@ RSS_FEED_TARGETS: List[ScrapeTarget] = [
     ),
 ]
 
+# ── OEM / Robot Company Intelligence RSS Feeds (XBOT pipeline) ───────────────
+# These feeds are for XBOT — discovering robot OEM companies attending shows.
+# mode="oem_prospect" should be used when filtering leads from these sources.
+
+OEM_INTELLIGENCE_TARGETS: List[ScrapeTarget] = [
+    # ── Robotics Trade Media ──────────────────────────────────────────────────
+    ScrapeTarget(
+        url="https://www.therobotreport.com/feed/",
+        label="The Robot Report",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Industrial", "Logistics", "Healthcare"],
+        signal_types=["trade_show_attendance", "product_launch", "oem_company"],
+        notes="Primary robotics trade press — covers exhibitors, show previews, product launches",
+    ),
+    ScrapeTarget(
+        url="https://www.robotics247.com/feed",
+        label="Robotics 24/7",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Industrial", "Logistics"],
+        signal_types=["trade_show_attendance", "product_launch", "oem_company"],
+        notes="Covers AMRs, humanoids, industrial robots — includes show exhibitor coverage",
+    ),
+    ScrapeTarget(
+        url="https://spectrum.ieee.org/feeds/topic/robotics.rss",
+        label="IEEE Spectrum Robotics",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Defense", "Healthcare"],
+        signal_types=["product_launch", "oem_company", "research_signal"],
+        notes="IEEE Spectrum robotics coverage — technically deep, catches new entrants",
+    ),
+    ScrapeTarget(
+        url="https://www.automationworld.com/rss.xml",
+        label="Automation World",
+        scraper="rss_feed", cadence="daily",
+        industries=["Industrial", "Robotics", "Logistics"],
+        signal_types=["trade_show_attendance", "product_launch", "oem_company"],
+        notes="Industrial automation and robotics — strong show coverage for Automate, MODEX",
+    ),
+    ScrapeTarget(
+        url="https://www.a3automate.org/news/rss/",
+        label="A3 Automate News",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Industrial"],
+        signal_types=["trade_show_attendance", "exhibitor_list", "oem_company"],
+        notes="A3 is the organizer of Automate — official exhibitor and show announcements",
+    ),
+    ScrapeTarget(
+        url="https://www.massrobotics.org/news/feed/",
+        label="MassRobotics",
+        scraper="rss_feed", cadence="weekly",
+        industries=["Robotics"],
+        signal_types=["oem_company", "startup_signal", "trade_show_attendance"],
+        notes="Boston robotics cluster — humanoid, AMR startups. Strong Robotics Summit coverage",
+    ),
+    # ── PR / Press Release Feeds ──────────────────────────────────────────────
+    ScrapeTarget(
+        url="https://www.prnewswire.com/rss/news-releases-list.rss?tagAbbr=ROB",
+        label="PR Newswire — Robotics",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Industrial"],
+        signal_types=["product_launch", "trade_show_attendance", "oem_company"],
+        notes="Official press releases from robot OEMs — catches show attendance before exhibitor lists",
+    ),
+    ScrapeTarget(
+        url="https://www.businesswire.com/rss/home/?rss=G17&rpcid=business_robotics",
+        label="Business Wire — Robotics",
+        scraper="rss_feed", cadence="daily",
+        industries=["Robotics", "Industrial"],
+        signal_types=["product_launch", "trade_show_attendance", "funding_round"],
+        notes="BusinessWire robotics press releases — funding, show attendance announcements",
+    ),
+    # ── Defense / Drone Media ─────────────────────────────────────────────────
+    ScrapeTarget(
+        url="https://www.suasnews.com/feed/",
+        label="sUAS News (Drone Industry)",
+        scraper="rss_feed", cadence="daily",
+        industries=["Defense", "Robotics"],
+        signal_types=["trade_show_attendance", "oem_company", "product_launch"],
+        notes="Commercial and defense drone OEM coverage — AUVSI attendee intelligence",
+    ),
+    ScrapeTarget(
+        url="https://dronelife.com/feed/",
+        label="Drone Life",
+        scraper="rss_feed", cadence="daily",
+        industries=["Defense", "Robotics", "Logistics"],
+        signal_types=["trade_show_attendance", "oem_company"],
+        notes="Drone industry news — covers CES, AUVSI exhibitors and announcements",
+    ),
+    # ── Show-Specific Intelligence ────────────────────────────────────────────
+    ScrapeTarget(
+        url="https://news.google.com/rss/search?q=CES+2027+robot+exhibitor&hl=en-US&gl=US&ceid=US:en",
+        label="Google News — CES robot exhibitors",
+        scraper="rss_feed", cadence="weekly",
+        industries=["Robotics"],
+        signal_types=["trade_show_attendance", "exhibitor_list"],
+        notes="Live news monitoring for CES robot exhibitor announcements",
+    ),
+    ScrapeTarget(
+        url="https://news.google.com/rss/search?q=Automate+2026+2027+robot+booth&hl=en-US&gl=US&ceid=US:en",
+        label="Google News — Automate robot booths",
+        scraper="rss_feed", cadence="weekly",
+        industries=["Robotics", "Industrial"],
+        signal_types=["trade_show_attendance", "exhibitor_list"],
+        notes="Automate show robot exhibitor monitoring",
+    ),
+    ScrapeTarget(
+        url="https://news.google.com/rss/search?q=humanoid+robot+%22Las+Vegas%22+2026+2027&hl=en-US&gl=US&ceid=US:en",
+        label="Google News — humanoids Las Vegas",
+        scraper="rss_feed", cadence="weekly",
+        industries=["Robotics"],
+        signal_types=["trade_show_attendance", "oem_company", "intl_company"],
+        notes="Humanoid robot companies heading to Las Vegas shows — prime StageGate targets",
+    ),
+]
+
 
 # -- Google News Queries: buyer-intent only ----------------------------------
 # Hunting for: pain, budget, expansion, new decision-makers.
@@ -1460,6 +1575,142 @@ LINKEDIN_SEARCH_QUERIES: List[dict] = [
     {"query": "AMR implementation",                "signal_types": ["automation_intent", "mobile_robots"]},
     {"query": "robotic process automation budget", "signal_types": ["budget_allocated", "automation_intent"]},
 ]
+
+# ── OEM Discovery Queries (XBOT / StageGate pipeline) ────────────────────────
+# Purpose: find robot COMPANIES (OEMs) attending or exhibiting at trade shows.
+# These are the prospects StageGate pitches logistics and staging services to.
+# Used by XBOT in StageGate — NOT filtered by the buyer-mode junk filter.
+
+OEM_DISCOVERY_QUERIES = [
+    # Humanoids
+    {"query": "humanoid robot company exhibiting trade show 2026", "robot_type": "humanoid"},
+    {"query": "humanoid robot CES NAB Automate show floor demo 2026", "robot_type": "humanoid"},
+    {"query": "bipedal robot startup attending conference Las Vegas", "robot_type": "humanoid"},
+    # AMR / Wheeled
+    {"query": "autonomous mobile robot AMR company trade show exhibit 2026", "robot_type": "wheeled_amr"},
+    {"query": "warehouse robot AMR exhibiting MODEX Automate ProMat 2026", "robot_type": "wheeled_amr"},
+    {"query": "last mile delivery robot company show floor 2026", "robot_type": "wheeled_amr"},
+    # Drones / UAV
+    {"query": "drone company exhibiting trade show 2026 NAB CES AUVSI", "robot_type": "drone"},
+    {"query": "UAV UAS company conference demo display 2026", "robot_type": "drone"},
+    {"query": "commercial drone startup trade show attendee 2026", "robot_type": "drone"},
+    # Industrial Arms / Cobots
+    {"query": "cobot collaborative robot company exhibiting Automate 2026", "robot_type": "cobot"},
+    {"query": "industrial robot arm trade show exhibit 2026 IMTS Automate", "robot_type": "industrial_arm"},
+    {"query": "Fanuc KUKA ABB Universal Robots trade show 2026", "robot_type": "industrial_arm"},
+    # Medical / Surgical
+    {"query": "surgical robot company medical robotics trade show HIMSS 2026", "robot_type": "surgical_robot"},
+    {"query": "medical robot exhibiting conference 2026 RSNA SAGES", "robot_type": "surgical_robot"},
+    # Service Robots
+    {"query": "service robot hospitality hotel robot company trade show 2026", "robot_type": "service_robot"},
+    {"query": "cleaning disinfection robot company conference exhibit 2026", "robot_type": "service_robot"},
+    # 3D Printing / Additive
+    {"query": "3D printing company additive manufacturing trade show 2026", "robot_type": "3d_printer"},
+    {"query": "large format 3D printer company conference exhibit IMTS 2026", "robot_type": "3d_printer"},
+    # General OEM discovery
+    {"query": "robotics company Las Vegas trade show logistics support 2026", "robot_type": "general"},
+    {"query": "robot company shipping robots to Las Vegas conference 2026", "robot_type": "general"},
+    {"query": "robot OEM attending CES Automate Manifest 2026 2027", "robot_type": "general"},
+    {"query": "robotics startup trade show booth exhibitor 2026", "robot_type": "general"},
+
+    # ── PR / Pre-Show Announcement Monitoring ─────────────────────────────────
+    # These catch companies BEFORE the exhibitor list is published
+    {"query": '"will unveil at CES" robot 2026', "robot_type": "pr_signal"},
+    {"query": '"debuting at CES" robot 2026', "robot_type": "pr_signal"},
+    {"query": '"showcasing at CES" robot 2026', "robot_type": "pr_signal"},
+    {"query": '"Las Vegas demo" robot company 2026', "robot_type": "pr_signal"},
+    {"query": '"Automate 2026" robot company exhibiting', "robot_type": "pr_signal"},
+    {"query": '"MODEX 2026" robot company booth', "robot_type": "pr_signal"},
+    {"query": '"Manifest 2026" robot logistics demo', "robot_type": "pr_signal"},
+    {"query": 'site:prnewswire.com robot CES 2026 exhibit', "robot_type": "pr_signal"},
+    {"query": 'site:businesswire.com robot CES 2026 showcase', "robot_type": "pr_signal"},
+    {"query": 'site:globenewswire.com humanoid robot CES 2026', "robot_type": "pr_signal"},
+
+    # ── Country Pavilion Discovery ─────────────────────────────────────────────
+    # International first-timers: highest StageGate need (no local support)
+    {"query": "Japan Pavilion CES 2026 robotics company", "robot_type": "intl_pavilion"},
+    {"query": "Korea Pavilion CES 2026 humanoid robot startup", "robot_type": "intl_pavilion"},
+    {"query": "France Pavilion CES 2026 robot company", "robot_type": "intl_pavilion"},
+    {"query": "Hong Kong Pavilion CES 2026 robotics exhibitor", "robot_type": "intl_pavilion"},
+    {"query": "China Pavilion CES 2026 robot company exhibitor", "robot_type": "intl_pavilion"},
+    {"query": "German Pavilion Hannover Messe robot company Las Vegas", "robot_type": "intl_pavilion"},
+    {"query": "Israeli Pavilion CES 2026 robotics startup", "robot_type": "intl_pavilion"},
+    {"query": "Taiwan Pavilion Computex robot company CES", "robot_type": "intl_pavilion"},
+    {"query": "first time US trade show robot company international exhibitor", "robot_type": "intl_pavilion"},
+
+    # ── Freight / Logistics Risk Signals ──────────────────────────────────────
+    # Companies shipping robots internationally = strong StageGate fit
+    {"query": "robot company ATA carnet trade show Las Vegas", "robot_type": "shipping_signal"},
+    {"query": "robot lithium battery shipping trade show 2026", "robot_type": "shipping_signal"},
+    {"query": "robot temporary import bond trade show US", "robot_type": "shipping_signal"},
+    {"query": "robot company bonded warehouse Las Vegas trade show", "robot_type": "shipping_signal"},
+    {"query": "shipping humanoid robot international trade show customs", "robot_type": "shipping_signal"},
+
+    # ── Exhibit Builder / Show Service Intel ──────────────────────────────────
+    # Freeman/GES partnerships — companies with complex booths need robot ops support
+    {"query": "Freeman GES robot exhibitor CES MODEX Automate 2026", "robot_type": "exhibit_signal"},
+    {"query": "large booth robot company CES Automate 2026 rigging", "robot_type": "exhibit_signal"},
+    {"query": "robot demo booth installation CES Las Vegas 2026", "robot_type": "exhibit_signal"},
+
+    # ── LinkedIn / Social Monitoring Patterns ─────────────────────────────────
+    {"query": '"See us at CES" robot company 2026', "robot_type": "social_signal"},
+    {"query": '"demoing our robot" CES Las Vegas 2026', "robot_type": "social_signal"},
+    {"query": '"Eureka Park" robot startup CES 2026', "robot_type": "social_signal"},
+    {"query": '"coming to CES" humanoid robot company 2026', "robot_type": "social_signal"},
+    {"query": "robot company attending Automate 2026 Chicago booth", "robot_type": "social_signal"},
+
+    # ── Robotics Media RSS Monitoring ─────────────────────────────────────────
+    {"query": 'site:therobotreport.com CES 2026 exhibitor', "robot_type": "media_signal"},
+    {"query": 'site:robotics24x7.com trade show robot 2026 exhibitor', "robot_type": "media_signal"},
+    {"query": 'site:ieee.org spectrum robotics CES 2026', "robot_type": "media_signal"},
+    {"query": "automate.org robot exhibitor 2026 announcement", "robot_type": "media_signal"},
+
+    # ── ICP 1: CES Eureka Park startups ───────────────────────────────────────
+    {"query": "Eureka Park CES 2026 2027 robot startup", "robot_type": "eureka_park"},
+    {"query": "CES 2026 innovation award robotics startup exhibitor", "robot_type": "eureka_park"},
+    {"query": "CES 2026 startup pavilion robot company first time", "robot_type": "eureka_park"},
+    {"query": "robotics seed startup CES exhibitor Las Vegas 2026 2027", "robot_type": "eureka_park"},
+
+    # ── ICP 2: Foreign humanoid robot companies ────────────────────────────────
+    {"query": "Chinese humanoid robot company CES Las Vegas US market entry 2026", "robot_type": "foreign_humanoid"},
+    {"query": "Korean humanoid robot startup CES 2026 exhibitor US debut", "robot_type": "foreign_humanoid"},
+    {"query": "Japanese robot company first US trade show CES 2026 humanoid", "robot_type": "foreign_humanoid"},
+    {"query": "European humanoid robot company CES Automate US entry 2026", "robot_type": "foreign_humanoid"},
+    {"query": "China humanoid robot export US trade show market entry 2026 2027", "robot_type": "foreign_humanoid"},
+
+    # ── ICP 3: Medical robot companies ────────────────────────────────────────
+    {"query": "surgical robot company trade show HIMSS CES Automate 2026 exhibit", "robot_type": "medical_robot"},
+    {"query": "medical robot exhibiting Las Vegas HIMSS 2026 convention center", "robot_type": "medical_robot"},
+    {"query": "rehabilitation robot exoskeleton medical CES trade show 2026", "robot_type": "medical_robot"},
+
+    # ── ICP 4: Hospitality / service robots ───────────────────────────────────
+    {"query": "hotel service robot company CES 2026 exhibitor delivery", "robot_type": "hospitality_robot"},
+    {"query": "restaurant robot food delivery robot CES Las Vegas trade show 2026", "robot_type": "hospitality_robot"},
+    {"query": "hospitality robot company HIMSS CES trade show booth 2026", "robot_type": "hospitality_robot"},
+
+    # ── ICP 5: Security robots ────────────────────────────────────────────────
+    {"query": "security patrol robot company CES trade show 2026 exhibitor", "robot_type": "security_robot"},
+    {"query": "autonomous security robot knightscope cobalt CES ISC West 2026", "robot_type": "security_robot"},
+
+    # ── ICP 6: Warehouse AMR companies ────────────────────────────────────────
+    {"query": "warehouse AMR company MODEX Automate 2026 exhibitor autonomous mobile robot", "robot_type": "warehouse_amr"},
+    {"query": "fulfillment robot AMR company trade show Las Vegas CES Manifest 2026", "robot_type": "warehouse_amr"},
+    {"query": "Geekplus Hikrobot Hai Robotics Quicktron trade show US 2026", "robot_type": "warehouse_amr"},
+
+    # ── ICP 7: Chinese robot firms entering US ────────────────────────────────
+    {"query": "Chinese robot company US market entry CES trade show 2026 2027", "robot_type": "china_us_entry"},
+    {"query": "China robotics startup first US exhibitor CES Las Vegas 2026", "robot_type": "china_us_entry"},
+    {"query": "Chinese humanoid manufacturer entering American market trade show", "robot_type": "china_us_entry"},
+    {"query": "China robot OEM US distribution partner trade show 2026", "robot_type": "china_us_entry"},
+]
+
+
+def get_oem_discovery_queries(robot_type: Optional[str] = None) -> List[str]:
+    """Return OEM discovery queries for XBOT/StageGate pipeline (oem_prospect mode)."""
+    queries = OEM_DISCOVERY_QUERIES
+    if robot_type:
+        queries = [q for q in queries if q.get("robot_type") in (robot_type, "general")]
+    return [q["query"] for q in queries]
 
 
 # -- Master helpers ----------------------------------------------------------

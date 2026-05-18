@@ -260,7 +260,13 @@ def _event_blob(ev: dict) -> str:
     return " ".join(parts)
 
 
-def is_robot_focused_event(ev: dict) -> bool:
+def is_robot_focused_event(ev) -> bool:
+    """
+    Returns True if the event is robot/automation-focused.
+    Accepts either an event dict {name, description, location} or a plain string.
+    """
+    if isinstance(ev, str):
+        return bool(_ROBOT_FOCUS.search(ev))
     return bool(_ROBOT_FOCUS.search(_event_blob(ev)))
 
 

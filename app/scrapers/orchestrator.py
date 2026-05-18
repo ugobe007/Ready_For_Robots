@@ -26,7 +26,9 @@ from app.scrapers.news_scraper_enhanced import EnhancedNewsScraper as NewsScrape
 from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper as JobBoardScraper
 from app.scrapers.serp_scraper_enhanced import EnhancedSerpScraper as SerpScraper
 from app.scrapers.serp_scraper import EXPANSION_QUERIES
-from app.scrapers.scrape_targets import get_urls, get_news_queries
+from app.scrapers.scrape_targets import get_urls, get_news_queries, get_oem_discovery_queries, OEM_INTELLIGENCE_TARGETS
+from app.services.oem_need_scorer import score as oem_need_score, OEMNeedScore
+from app.services.lead_filter import is_junk
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,11 @@ class ScraperOrchestrator:
             'signals_detected': 0,
             'hot_leads_found': 0,
             'sources_scraped': 0,
-            'errors': []
+            'errors': [],
+            # OEM / XBOT pipeline stats
+            'oem_prospects_found': 0,
+            'oem_hot': 0,
+            'oem_warm': 0,
         }
         
     def run_full_pipeline(self, max_sources: int = 100):
@@ -85,7 +91,10 @@ class ScraperOrchestrator:
             
             # Step 6: Quality check
             self._quality_check()
-            
+
+            # Step 7: OEM / XBOT pipeline (robot company discovery for StageGate)
+            self._run_oem_pipeline()
+
         except Exception as e:
             logger.error(f"Pipeline failed: {e}")
             self.stats['errors'].append(str(e))
@@ -276,6 +285,100 @@ class ScraperOrchestrator:
         except Exception as e:
             logger.error(f"  ✗ Quality check failed: {e}")
     
+    def _run_oem_pipeline(self):
+        """
+        XBOT: Robot OEM company discovery for StageGate outreach.
+
+        Runs OEM-specific news queries and RSS feeds, applies the oem_prospect
+        junk filter (allows robot OEMs through), scores each article/company
+        with the OEM need scorer, and logs HOT prospects for Cal to email.
+        """
+        logger.info("→ Step 7: XBOT OEM Pipeline (StageGate prospect discovery)")
+
+        try:
+            import ssl, urllib.parse, urllib.request, xml.etree.ElementTree as ET, time
+
+            # Bypass macOS SSL cert issue in dev
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+
+            GOOGLE_NEWS_RSS = (
+                "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+            )
+            HEADERS = {
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+                )
+            }
+
+            queries = get_oem_discovery_queries()
+            seen_urls: set = set()
+            hot_prospects = []
+            warm_prospects = []
+
+            for query in queries[:30]:  # cap at 30 queries per run
+                url = GOOGLE_NEWS_RSS.format(query=urllib.parse.quote(query))
+                req = urllib.request.Request(url, headers=HEADERS)
+                try:
+                    with urllib.request.urlopen(req, timeout=12, context=ssl_ctx) as r:
+                        content = r.read()
+                    root = ET.fromstring(content)
+                    items = root.findall(".//item")
+
+                    for item in items:
+                        title = item.findtext("title", "").strip()
+                        link  = item.findtext("link", "").strip()
+                        desc  = item.findtext("description", "").strip()
+
+                        if not title or link in seen_urls:
+                            continue
+                        seen_urls.add(link)
+
+                        blob = f"{title} {desc}"
+
+                        # OEM junk filter — allows robot companies through
+                        junk, _ = is_junk(title, mode="oem_prospect")
+                        if junk:
+                            continue
+
+                        # Need probability scoring
+                        need = oem_need_score(text=blob)
+                        self.stats["oem_prospects_found"] += 1
+
+                        if need.tier == "HOT":
+                            self.stats["oem_hot"] += 1
+                            hot_prospects.append((need.total, title, link, need.reasons))
+                        elif need.tier == "WARM":
+                            self.stats["oem_warm"] += 1
+                            warm_prospects.append((need.total, title, link, need.reasons))
+
+                    time.sleep(0.8)
+
+                except Exception as e:
+                    logger.debug(f"OEM query failed ({query[:40]}): {e}")
+                    continue
+
+            # Log top HOT prospects
+            hot_prospects.sort(key=lambda x: -x[0])
+            if hot_prospects:
+                logger.info(f"  🔥 HOT OEM prospects ({len(hot_prospects)}):")
+                for score_val, title, link, reasons in hot_prospects[:10]:
+                    logger.info(f"    [{score_val:.0f}] {title[:65]}")
+                    for r in reasons[:2]:
+                        logger.info(f"        • {r}")
+
+            warm_prospects.sort(key=lambda x: -x[0])
+            logger.info(
+                f"  ✓ OEM pipeline: {self.stats['oem_prospects_found']} prospects | "
+                f"{self.stats['oem_hot']} HOT | {self.stats['oem_warm']} WARM"
+            )
+
+        except Exception as e:
+            logger.error(f"  ✗ OEM pipeline failed: {e}")
+            self.stats["errors"].append(f"OEM: {e}")
+
     def _log_stats(self, duration: float):
         """Log final pipeline statistics"""
         logger.info("=" * 60)
@@ -286,7 +389,9 @@ class ScraperOrchestrator:
         logger.info(f"Companies Discovered: {self.stats['companies_discovered']}")
         logger.info(f"Signals Detected: {self.stats['signals_detected']}")
         logger.info(f"HOT Leads Found: {self.stats['hot_leads_found']}")
-        
+        logger.info(f"OEM Prospects (XBOT): {self.stats['oem_prospects_found']} total | "
+                    f"{self.stats['oem_hot']} HOT | {self.stats['oem_warm']} WARM")
+
         if self.stats['errors']:
             logger.warning(f"Errors: {len(self.stats['errors'])}")
             for error in self.stats['errors'][:5]:  # Show first 5 errors

@@ -1039,10 +1039,14 @@ _JUNK_EXACT = frozenset({
 })
 
 
-def is_junk(name: Optional[str]) -> tuple[bool, str]:
+def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     """
     Returns (True, reason) if the company name looks like scraper garbage.
     Returns (False, '') for clean names.
+
+    mode="buyer"        — default; filters out robot OEMs (they are not buyers)
+    mode="oem_prospect" — XBOT/StageGate pipeline; allows robot OEMs through
+                          because they ARE the prospect (StageGate sells TO them)
     """
     if not name:
         return True, "empty name"
@@ -1063,9 +1067,16 @@ def is_junk(name: Optional[str]) -> tuple[bool, str]:
 
     bad_nc, reason_nc = reject_as_non_company_name(stripped)
     if bad_nc:
-        return True, reason_nc
+        # In oem_prospect mode, pattern-based vendor/robotics rejections are false positives:
+        # those names ARE the prospects StageGate sells to.
+        _oem_keywords = ("robotics", "automation", "vendor", "robot", "cobot", "amr")
+        if mode == "oem_prospect" and any(kw in reason_nc.lower() for kw in _oem_keywords):
+            pass  # let through — it is a robot company name, which is exactly what we want
+        else:
+            return True, reason_nc
 
-    if is_known_robotics_vendor_name(stripped):
+    # In oem_prospect mode, robot OEMs are the TARGET audience — do not filter them out.
+    if mode != "oem_prospect" and is_known_robotics_vendor_name(stripped):
         return True, "robotics vendor / OEM (not a buyer opportunity)"
 
     # Exact match against known-bad generic words
