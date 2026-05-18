@@ -16,8 +16,6 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 # check `fly logs -a ready-2-robot` (release machine), confirm `DATABASE_URL` is set (`fly secrets list`), and that
 # the DB user can run DDL. You can also run `alembic upgrade head` from CI or Supabase SQL instead, then remove
 # release_command here (not recommended unless you own migrations elsewhere).
-[deploy]
-  release_command = "alembic upgrade head"
 
 [env]
   PORT = "8080"
