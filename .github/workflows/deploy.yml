@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     concurrency:
       group: fly-deploy
       cancel-in-progress: true
@@ -21,6 +22,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@1.5
 
       - name: Deploy
-        run: flyctl deploy --remote-only --wait-timeout 20m --release-command-timeout 20m
+        run: flyctl deploy --remote-only --wait-timeout 18m --release-command-timeout 10m
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
