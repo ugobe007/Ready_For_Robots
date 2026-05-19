@@ -23,7 +23,10 @@ if [ -n "$REDIS_URL" ] || [ -n "$CELERY_BROKER_URL" ]; then
   echo "Starting Celery beat..."
   celery -A worker.celery_worker beat --loglevel=info &
   echo "Starting Celery worker..."
-  celery -A worker.celery_worker worker --loglevel=info --concurrency=2 &
+  # -Q scrapers,celery: must include 'scrapers' because celery_worker.py routes all
+  # worker.tasks.* to the 'scrapers' queue via task_routes. Without -Q scrapers the
+  # worker only consumes the default 'celery' queue and Beat tasks pile up unprocessed.
+  celery -A worker.celery_worker worker --loglevel=info --concurrency=2 -Q scrapers,celery &
 else
   echo "No Redis/Celery broker configured — skipping Celery (scrapers run on schedule inside FastAPI)."
 fi

@@ -66,17 +66,41 @@ def _svix_secret_bytes(secret: str) -> bytes:
         return raw.encode("utf-8")
 
 
-def _verify_resend_signature(payload: bytes, svix_id: str | None, svix_timestamp: str | None, svix_signature: str | None) -> None:
-    secret = (os.getenv("RESEND_WEBHOOK_SECRET") or "").strip()
+def _verify_resend_signature(
+    payload: bytes,
+    svix_id: str | None,
+    svix_timestamp: str | None,
+    svix_signature: str | None,
+    secret_env: str = "RESEND_WEBHOOK_SECRET",
+) -> None:
+    """Verify a Svix-signed Resend webhook.
+
+    Each Resend webhook endpoint has its own signing secret. Pass `secret_env`
+    to select the right env var:
+    - Delivery events  → RESEND_WEBHOOK_SECRET  (default)
+    - Inbound emails   → RESEND_INBOUND_WEBHOOK_SECRET (falls back to RESEND_WEBHOOK_SECRET)
+    """
+    # Prefer the specific secret; fall back to the shared one.
+    secret = (os.getenv(secret_env) or os.getenv("RESEND_WEBHOOK_SECRET") or "").strip()
     if not secret:
-        raise HTTPException(status_code=503, detail="Missing RESEND_WEBHOOK_SECRET")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Missing {secret_env} (or RESEND_WEBHOOK_SECRET) — set it in Fly.io secrets",
+        )
     if not svix_id or not svix_timestamp or not svix_signature:
         raise HTTPException(status_code=400, detail="Missing webhook signature headers")
     signed = f"{svix_id}.{svix_timestamp}.".encode("utf-8") + payload
     expected = base64.b64encode(hmac.new(_svix_secret_bytes(secret), signed, hashlib.sha256).digest()).decode("utf-8")
     signatures = [part.split(",", 1)[1] if "," in part else part for part in svix_signature.split(" ")]
     if not any(hmac.compare_digest(expected, sig.strip()) for sig in signatures if sig.strip()):
-        raise HTTPException(status_code=400, detail="Invalid webhook signature")
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Invalid webhook signature. If this is the inbound webhook, set "
+                "RESEND_INBOUND_WEBHOOK_SECRET in Fly.io secrets to the signing secret "
+                "shown on your Resend inbound webhook endpoint (different from delivery webhooks)."
+            ),
+        )
 
 
 def _extract_addresses(value: Any) -> list[str]:
@@ -535,7 +559,7 @@ async def resend_inbound_webhook(
     svix_signature: str | None = Header(None, alias="svix-signature"),
 ):
     payload = await request.body()
-    _verify_resend_signature(payload, svix_id, svix_timestamp, svix_signature)
+    _verify_resend_signature(payload, svix_id, svix_timestamp, svix_signature, secret_env="RESEND_INBOUND_WEBHOOK_SECRET")
     event = await request.json()
     event_type = event.get("type")
     data = _event_data(event)
@@ -555,6 +579,24 @@ async def resend_inbound_webhook(
 
     db = SessionLocal()
     try:
+        # Idempotency: use svix_id (unique per Resend delivery attempt) stored in
+        # raw_payload to reject duplicate webhook deliveries on Resend retries.
+        if svix_id:
+            existing_crm = (
+                db.query(OutreachReply)
+                .filter(OutreachReply.raw_payload["_svix_id"].astext == svix_id)
+                .first()
+            )
+            if existing_crm:
+                return {"ok": True, "deduplicated": True, "outreach_reply_id": str(existing_crm.id)}
+            existing_supply = (
+                db.query(SupplyOutreachReply)
+                .filter(SupplyOutreachReply.raw_payload["_svix_id"].astext == svix_id)
+                .first()
+            )
+            if existing_supply:
+                return {"ok": True, "deduplicated": True, "supply_outreach_reply_id": str(existing_supply.id)}
+
         msg = db.query(OutreachMessage).filter(OutreachMessage.reply_token == token).first()
         if not msg:
             supply_msg = (
@@ -564,7 +606,7 @@ async def resend_inbound_webhook(
             )
             if supply_msg:
                 crm_msg = _find_supply_crm_message(db, supply_msg)
-                supply_reply = _capture_supply_reply(db, supply_msg, data, to_addresses)
+                supply_reply = _capture_supply_reply(db, supply_msg, {**data, "_svix_id": svix_id or ""}, to_addresses)
                 robot_company = (
                     db.query(RobotCompany)
                     .filter(RobotCompany.id == supply_msg.robot_company_id)
@@ -597,7 +639,7 @@ async def resend_inbound_webhook(
             to_email=", ".join(to_addresses) if to_addresses else None,
             subject=data.get("subject"),
             body_text=data.get("text") or data.get("body") or data.get("html"),
-            raw_payload=data,
+            raw_payload={**data, "_svix_id": svix_id or ""},
             received_at=datetime.now(timezone.utc),
         )
         db.add(reply)

@@ -49,9 +49,9 @@ def scout_chat_completion(
     """
     `messages`: OpenAI-shaped roles user/assistant only (no system in list).
     """
-    key = (os.getenv("OPENAI_API_KEY") or "").strip()
+    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
     if not key:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
+        raise RuntimeError("OPENAI_API_KEY (or OPEN_API_KEY) is not configured")
 
     try:
         from openai import OpenAI

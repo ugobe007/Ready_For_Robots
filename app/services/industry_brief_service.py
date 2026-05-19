@@ -282,7 +282,7 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
 
 
 def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    key = os.getenv("OPENAI_API_KEY", "").strip()
+    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
     if not key:
         return None
     try:

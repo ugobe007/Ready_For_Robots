@@ -81,7 +81,7 @@ def _batch_openai_urls(names: list[str]) -> dict[str, Optional[str]]:
     One API call. ``names`` must be non-empty deduped list.
     Returns lowercased stripped name -> https URL or None.
     """
-    key = os.getenv("OPENAI_API_KEY", "").strip()
+    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
     if not key or not names:
         return {}
     try:

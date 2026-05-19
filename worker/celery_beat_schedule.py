@@ -123,12 +123,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=5, minute=0),
     },
     
-    # ── LINKEDIN SCRAPER ── LinkedIn job postings + company updates (requires auth)
-    'linkedin-company-scraper': {
-        'task': 'worker.tasks.run_linkedin_scraper_task',
-        'schedule': crontab(hour='9,17', minute=0),  # 9am, 5pm UTC
-        'kwargs': {'max_companies': 50},
-    },
+    # ── LINKEDIN SCRAPER ── disabled: task body is a stub (TODO: LinkedIn API creds)
+    # 'linkedin-company-scraper': {
+    #     'task': 'worker.tasks.run_linkedin_scraper_task',
+    #     'schedule': crontab(hour='9,17', minute=0),
+    #     'kwargs': {'max_companies': 50},
+    # },
     
     # ── SCORING ENGINE ── Re-score all companies daily at 6am UTC
     'rescore-all-companies': {
