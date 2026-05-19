@@ -201,7 +201,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cleanup" | "">("");
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
@@ -357,16 +357,24 @@ export default function Admin() {
     }
   }
 
-  async function runSystemAction(kind: "cache" | "reindex") {
+  async function runSystemAction(kind: "cache" | "reindex" | "cleanup") {
     setMessage("");
     setError("");
     setActionBusy(kind);
     try {
-      const path = kind === "cache" ? "/api/admin/system/cache/clear" : "/api/admin/system/reindex";
+      const path = kind === "cache"
+        ? "/api/admin/system/cache/clear"
+        : kind === "cleanup"
+        ? "/api/admin/system/cleanup-junk-leads"
+        : "/api/admin/system/reindex";
       const res = await adminFetch(path, { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.detail || data?.message || `${kind} action failed.`);
-      setMessage(data?.message || (kind === "cache" ? "Cache cleared." : "Database reindex queued."));
+      if (!res.ok) throw new Error((data as { detail?: string; message?: string })?.detail || (data as { detail?: string; message?: string })?.message || `${kind} action failed.`);
+      setMessage(
+        kind === "cache" ? "Cache cleared." :
+        kind === "cleanup" ? `Junk-lead cleanup queued (task ${((data as { task_id?: string }).task_id ?? "").slice(0, 8)}...).` :
+        "Database reindex queued."
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : `${kind} action failed.`);
     } finally {
@@ -845,6 +853,14 @@ export default function Admin() {
                 className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
               >
                 {actionBusy === "reindex" ? "Reindexing..." : "Reindex database"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void runSystemAction("cleanup")}
+                disabled={!!actionBusy}
+                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+              >
+                {actionBusy === "cleanup" ? "Queueing..." : "Cleanup junk leads"}
               </button>
               <button
                 type="button"

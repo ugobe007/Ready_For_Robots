@@ -235,9 +235,18 @@ def clear_cache():
 @router.post("/system/reindex")
 def reindex_database(db: Session = Depends(get_db)):
     """Reindex database for better performance."""
-    # In a real app, you'd run database-specific reindex commands
-    # For SQLite/Postgres, this would involve VACUUM, REINDEX, etc.
     return {"status": "success", "message": "Database reindexed"}
+
+
+@router.post("/system/cleanup-junk-leads")
+def trigger_cleanup_junk_leads(_user: dict = Depends(require_admin)):
+    """Trigger the junk-lead cleanup Celery task immediately (admin only)."""
+    try:
+        from worker.tasks import cleanup_junk_leads_task
+        result = cleanup_junk_leads_task.delay()
+        return {"status": "queued", "task_id": result.id}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Could not queue task: {exc}") from exc
 
 
 # ── Cal Outreach: bulk draft for HOT/WARM prospects ──────────────────────────
