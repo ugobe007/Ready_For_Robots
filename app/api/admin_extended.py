@@ -4,17 +4,22 @@ Extended Admin API Endpoints
 Additional endpoints for company management and system controls.
 """
 
+import uuid
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_
-from typing import Optional
+from typing import Any, Optional
 
 from app.database import get_db
 from app.models.company import Company
+from app.models.crm import CrmAccount, Team, TeamMember
 from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
+from app.services.company_domain import normalize_website_domain
 from app.services.lead_filter import pick_primary_score
 from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
@@ -233,6 +238,221 @@ def reindex_database(db: Session = Depends(get_db)):
     # In a real app, you'd run database-specific reindex commands
     # For SQLite/Postgres, this would involve VACUUM, REINDEX, etc.
     return {"status": "success", "message": "Database reindexed"}
+
+
+# ── Cal Outreach: bulk draft for HOT/WARM prospects ──────────────────────────
+
+_HOT_THRESHOLD = 75.0
+_WARM_THRESHOLD = 45.0
+
+
+def _tier_from_score(score: float) -> str:
+    if score >= _HOT_THRESHOLD:
+        return "HOT"
+    if score >= _WARM_THRESHOLD:
+        return "WARM"
+    return "COLD"
+
+
+def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
+    """Get or create a dedicated admin outreach team for the admin user."""
+    existing = (
+        db.query(Team)
+        .join(TeamMember, TeamMember.team_id == Team.id)
+        .filter(TeamMember.user_id == uid, Team.slug == "admin-cal-outreach")
+        .first()
+    )
+    if existing:
+        return existing
+    team = Team(name="Cal Outreach (Admin)", slug="admin-cal-outreach")
+    db.add(team)
+    db.flush()
+    member = TeamMember(team_id=team.id, user_id=uid, role="owner")
+    db.add(member)
+    db.flush()
+    return team
+
+
+def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
+    """Return (company, score, tier) for HOT and WARM leads, highest score first."""
+    rows = (
+        db.query(Company, Score)
+        .join(Score, Score.company_id == Company.id)
+        .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
+        .order_by(Score.overall_intent_score.desc())
+        .limit(limit)
+        .all()
+    )
+    seen: set[int] = set()
+    out: list[tuple[Company, float, str]] = []
+    for company, score in rows:
+        if company.id in seen:
+            continue
+        seen.add(company.id)
+        sc = float(score.overall_intent_score or 0)
+        out.append((company, sc, _tier_from_score(sc)))
+    return out
+
+
+def _cal_draft_for_company(company: Company) -> tuple[str, str]:
+    """Generate Cal subject + body using the template voice (no LLM)."""
+    from app.api.crm import _draft_subject, _draft_body
+    from app.models.crm import CrmAccount as _Acct
+
+    dummy = _Acct(
+        name=company.name or "Unknown",
+        website=company.website,
+        industry=company.industry,
+    )
+    subject = _draft_subject(dummy)
+    body = _draft_body(dummy, None, [], "", "selective", None)
+    return subject, body
+
+
+def _serialize_cal_row(
+    company: Company,
+    score: float,
+    tier: str,
+    acct: Optional[CrmAccount],
+) -> dict[str, Any]:
+    domain = normalize_website_domain(company.website)
+    inferred_to = f"sales@{domain}" if domain else None
+    inferred_cc = f"marketing@{domain}" if domain else None
+    contact_email = (acct.contact_email if acct else None) or inferred_to
+    has_draft = bool(acct and acct.outreach_draft)
+    return {
+        "company_id": company.id,
+        "company_name": company.name,
+        "website": company.website,
+        "industry": company.industry or "Unknown",
+        "score": round(score, 1),
+        "tier": tier,
+        "crm_account_id": str(acct.id) if acct else None,
+        "contact_email": contact_email,
+        "default_cc": inferred_cc,
+        "outreach_stage": acct.outreach_stage if acct else None,
+        "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
+        "has_draft": has_draft,
+        "draft_preview": (acct.outreach_draft or "")[:140].strip() if has_draft else None,
+        "draft_full": acct.outreach_draft if has_draft else None,
+    }
+
+
+@router.get("/cal/draft-status")
+def cal_draft_status(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Return HOT+WARM prospects with their Cal draft state against the live DB."""
+    companies = _hot_warm_companies(db)
+    company_ids = [c.id for c, _, _ in companies]
+    accounts_by_company: dict[int, CrmAccount] = {}
+    if company_ids:
+        accts = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.company_id.in_(company_ids))
+            .all()
+        )
+        for a in accts:
+            if a.company_id and a.company_id not in accounts_by_company:
+                accounts_by_company[a.company_id] = a
+
+    rows = [
+        _serialize_cal_row(company, score, tier, accounts_by_company.get(company.id))
+        for company, score, tier in companies
+    ]
+
+    total = len(rows)
+    hot = sum(1 for r in rows if r["tier"] == "HOT")
+    warm = sum(1 for r in rows if r["tier"] == "WARM")
+    drafted = sum(1 for r in rows if r["has_draft"])
+    sent = sum(1 for r in rows if r["outreach_sent_at"])
+
+    return {
+        "summary": {
+            "total": total,
+            "hot": hot,
+            "warm": warm,
+            "drafted": drafted,
+            "pending_draft": total - drafted,
+            "sent": sent,
+        },
+        "prospects": rows,
+    }
+
+
+class BulkDraftBody(BaseModel):
+    regenerate: bool = False
+
+
+@router.post("/cal/bulk-draft")
+def cal_bulk_draft(
+    body: BulkDraftBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """
+    Draft Cal outreach emails for all HOT+WARM prospects using Cal's template voice.
+    No LLM calls — uses _draft_body directly. Creates CRM accounts under the admin
+    team if they don't already exist. Sets sales@domain as default contact_email.
+    """
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    companies = _hot_warm_companies(db)
+    company_ids = [c.id for c, _, _ in companies]
+
+    existing: dict[int, CrmAccount] = {}
+    if company_ids:
+        for a in db.query(CrmAccount).filter(
+            CrmAccount.company_id.in_(company_ids),
+            CrmAccount.team_id == team.id,
+        ).all():
+            if a.company_id:
+                existing[a.company_id] = a
+
+    drafted = 0
+    skipped = 0
+    errors: list[dict[str, Any]] = []
+    now = datetime.now(timezone.utc)
+
+    for company, score, tier in companies:
+        try:
+            acct = existing.get(company.id)
+            if acct and acct.outreach_draft and not body.regenerate:
+                skipped += 1
+                continue
+
+            subject, draft_body = _cal_draft_for_company(company)
+            domain = normalize_website_domain(company.website)
+
+            if acct is None:
+                acct = CrmAccount(
+                    team_id=team.id,
+                    company_id=company.id,
+                    name=company.name or "Unknown",
+                    website=company.website,
+                    industry=company.industry,
+                )
+                db.add(acct)
+                db.flush()
+
+            if not acct.contact_email and domain:
+                acct.contact_email = f"sales@{domain}"
+
+            acct.outreach_draft = draft_body
+            acct.outreach_stage = "draft_ready"
+            drafted += 1
+
+        except Exception as exc:
+            errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+
+    db.commit()
+    return {
+        "drafted": drafted,
+        "skipped": skipped,
+        "errors": errors,
+        "team_id": str(team.id),
+    }
 
 
 @router.get("/export/all")

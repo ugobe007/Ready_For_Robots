@@ -291,7 +291,10 @@ export default function Crm() {
             : a,
         ),
       );
-      setMsg(`Sent by Cal. Replies route to ${result?.reply_to || "the Cal reply address"} and will notify you.`);
+      const sentMsg = result?.warning
+        ? `Sent by Cal. ${result.warning}`
+        : `Sent by Cal. Replies route to ${result?.reply_to || "the Cal reply address"} and will notify you.`;
+      setMsg(sentMsg);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Could not send outreach");
     } finally {

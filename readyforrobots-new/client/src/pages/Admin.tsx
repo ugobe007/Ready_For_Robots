@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
@@ -95,6 +95,35 @@ type ScrapeTargets = {
 
 type AdminMe = { email?: string; is_admin?: boolean };
 
+type CalProspect = {
+  company_id?: number;
+  company_name?: string;
+  website?: string;
+  industry?: string;
+  score?: number;
+  tier?: string;
+  crm_account_id?: string;
+  contact_email?: string;
+  default_cc?: string;
+  outreach_stage?: string;
+  outreach_sent_at?: string;
+  has_draft?: boolean;
+  draft_preview?: string;
+  draft_full?: string;
+};
+
+type CalDraftStatus = {
+  summary?: {
+    total?: number;
+    hot?: number;
+    warm?: number;
+    drafted?: number;
+    pending_draft?: number;
+    sent?: number;
+  };
+  prospects?: CalProspect[];
+};
+
 const INDUSTRIES = ["", "Logistics", "Hospitality", "Healthcare", "Food Service", "Automotive & Manufacturing"];
 const SCRAPERS = ["all", "job_board", "hotel_dir", "rss_feed", "news", "serp", "logistics", "score_recalc"];
 const TIME_RANGES = [
@@ -172,7 +201,10 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "">("");
+  const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
+  const [calExpanded, setCalExpanded] = useState<number | null>(null);
+  const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -246,9 +278,21 @@ export default function Admin() {
     }
   }, [adminFetch, session?.access_token, timeRange]);
 
+  const loadCalStatus = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/cal/draft-status");
+      if (res.ok) setCalStatus(await res.json() as CalDraftStatus);
+    } catch { /* silent — status loads separately */ }
+  }, [adminFetch, session?.access_token]);
+
   useEffect(() => {
     if (!authLoading) void loadAdmin();
   }, [authLoading, loadAdmin]);
+
+  useEffect(() => {
+    if (!authLoading && session?.access_token) void loadCalStatus();
+  }, [authLoading, loadCalStatus, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -325,6 +369,26 @@ export default function Admin() {
       setMessage(data?.message || (kind === "cache" ? "Cache cleared." : "Database reindex queued."));
     } catch (err) {
       setError(err instanceof Error ? err.message : `${kind} action failed.`);
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runCalBulkDraft(regenerate = false) {
+    setMessage("");
+    setError("");
+    setActionBusy("cal-draft");
+    try {
+      const res = await adminFetch("/api/admin/cal/bulk-draft", {
+        method: "POST",
+        body: JSON.stringify({ regenerate }),
+      });
+      const data = await res.json().catch(() => ({})) as { drafted?: number; skipped?: number; errors?: unknown[] };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Bulk draft failed.");
+      setMessage(`Cal drafted ${data.drafted ?? 0} emails · ${data.skipped ?? 0} already had drafts · ${data.errors?.length ?? 0} errors.`);
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bulk draft failed.");
     } finally {
       setActionBusy("");
     }
@@ -524,6 +588,166 @@ export default function Admin() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
+        <section id="cal-outreach" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.07), rgba(255,176,0,0.035))" }}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Mail className="h-4 w-4" style={{ color: "#a78bfa" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Cal outreach</p>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                HOT + WARM prospect drafts
+              </h2>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
+                Cal's template voice — no LLM. Defaults to <span className="font-mono text-white/65">sales@domain</span> (TO) and <span className="font-mono text-white/65">marketing@domain</span> (CC) when no contact is on file.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-xl border border-white/10 p-1">
+                {(["all", "pending", "drafted", "sent"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setCalFilter(f)}
+                    className="rounded-lg px-3 py-1.5 text-[11px] font-bold capitalize transition"
+                    style={{
+                      color: calFilter === f ? "#0d0520" : "rgba(255,255,255,0.45)",
+                      background: calFilter === f ? "#a78bfa" : "transparent",
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => void loadCalStatus()}
+                disabled={!!actionBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/55 disabled:opacity-40"
+              >
+                <RefreshCw className="h-3 w-3" /> Refresh
+              </button>
+              <button
+                onClick={() => void runCalBulkDraft(false)}
+                disabled={!!actionBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#a78bfa", borderColor: "rgba(167,139,250,0.5)" }}
+              >
+                {actionBusy === "cal-draft" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Drafting…</> : <><Mail className="h-3.5 w-3.5" /> Draft pending</>}
+              </button>
+              <button
+                onClick={() => void runCalBulkDraft(true)}
+                disabled={!!actionBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
+                title="Regenerate all drafts including existing ones"
+              >
+                Regenerate all
+              </button>
+            </div>
+          </div>
+
+          {/* Summary pills */}
+          <div className="mb-5 grid grid-cols-3 gap-3 md:grid-cols-6">
+            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub="HOT + WARM prospects" />
+            <AdminCard label="HOT" value={formatNumber(calStatus?.summary?.hot)} sub="highest priority" />
+            <AdminCard label="WARM" value={formatNumber(calStatus?.summary?.warm)} sub="strong signals" />
+            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub="ready to review" />
+            <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need drafts" />
+            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="emails delivered" />
+          </div>
+
+          {/* Prospect table */}
+          <div className="max-h-[600px] overflow-y-auto pr-1">
+            {!calStatus ? (
+              <p className="py-6 text-center text-xs text-white/35">Loading prospect draft status…</p>
+            ) : (calStatus.prospects ?? []).filter((p) => {
+              if (calFilter === "pending") return !p.has_draft;
+              if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
+              if (calFilter === "sent") return !!p.outreach_sent_at;
+              return true;
+            }).length === 0 ? (
+              <p className="py-6 text-center text-xs text-white/35">No prospects match this filter.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {/* Column headers */}
+                <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
+                  <span>Company</span>
+                  <span>Tier / Score</span>
+                  <span>Contact</span>
+                  <span>Stage</span>
+                  <span>Draft</span>
+                </div>
+                {(calStatus.prospects ?? [])
+                  .filter((p) => {
+                    if (calFilter === "pending") return !p.has_draft;
+                    if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
+                    if (calFilter === "sent") return !!p.outreach_sent_at;
+                    return true;
+                  })
+                  .map((prospect, idx) => {
+                    const isOpen = calExpanded === idx;
+                    const tierColor = prospect.tier === "HOT" ? "#FFB000" : prospect.tier === "WARM" ? "#03DAC5" : "rgba(255,255,255,0.35)";
+                    return (
+                      <div key={`${prospect.company_id}-${idx}`} className="rounded-xl border border-white/7" style={{ background: "rgba(13,5,32,0.55)" }}>
+                        <button
+                          className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr] gap-3 px-4 py-3 text-left"
+                          onClick={() => setCalExpanded(isOpen ? null : idx)}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-white/85">{prospect.company_name || "—"}</p>
+                            <p className="mt-0.5 truncate text-[10px] text-white/35">{prospect.industry}</p>
+                          </div>
+                          <div>
+                            <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
+                              {prospect.tier}
+                            </span>
+                            <p className="mt-1 font-mono text-[10px] text-white/35">{prospect.score?.toFixed(0)}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate font-mono text-[11px] text-white/55">{prospect.contact_email || <span className="text-white/25 not-italic">no contact</span>}</p>
+                            {prospect.default_cc && <p className="truncate font-mono text-[10px] text-white/28">cc: {prospect.default_cc}</p>}
+                          </div>
+                          <div>
+                            <span className="text-[11px] text-white/45">
+                              {prospect.outreach_sent_at ? "sent" : prospect.outreach_stage?.replace(/_/g, " ") || "—"}
+                            </span>
+                            {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-white/28">{formatDate(prospect.outreach_sent_at)}</p>}
+                          </div>
+                          <div className="flex items-center">
+                            {prospect.has_draft ? (
+                              <CheckCircle2 className="h-4 w-4" style={{ color: "#34d399" }} />
+                            ) : (
+                              <Clock3 className="h-4 w-4 text-white/20" />
+                            )}
+                          </div>
+                        </button>
+                        {isOpen && (
+                          <div className="border-t border-white/7 px-4 pb-4 pt-3">
+                            {prospect.has_draft ? (
+                              <>
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/28">Cal draft</p>
+                                <pre className="whitespace-pre-wrap rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3 font-mono text-[11px] leading-relaxed text-white/65">
+                                  {prospect.draft_full}
+                                </pre>
+                                {prospect.contact_email && (
+                                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-white/38">
+                                    <span>TO: <span className="font-mono text-white/55">{prospect.contact_email}</span></span>
+                                    {prospect.default_cc && <span>CC: <span className="font-mono text-white/55">{prospect.default_cc}</span></span>}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-xs text-white/38">No draft yet. Click <strong className="text-white/55">Draft pending</strong> to generate.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         </section>
 

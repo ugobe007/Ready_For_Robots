@@ -384,7 +384,10 @@ def _contact_strategy(rc: RobotCompany, research: Optional[dict[str, Any]] = Non
     targets = _dedupe_contact_targets(targets)
     if not targets:
         targets.append({"role": "Research needed", "contact": None, "priority": 9, "source": "missing"})
+    default_inboxes = [f"sales@{domain}", f"marketing@{domain}"] if domain else []
     policy_recipients = _dedupe_emails(
+        default_inboxes + [target["contact"] for target in decision_maker_candidates]
+    ) or _dedupe_emails(
         [target["contact"] for target in role_inboxes]
         + [target["contact"] for target in decision_maker_candidates]
     )
@@ -1713,6 +1716,7 @@ def send_email(
     reply_token = approved_msg.reply_token if approved_msg and approved_msg.reply_token else secrets.token_urlsafe(18)
     reply_to = _supply_reply_address(reply_token)
 
+    _supply_inbound_missing = False
     try:
         send_result = send_email_via_resend(
             to_email=to_emails,
@@ -1723,14 +1727,30 @@ def send_email(
             idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
         )
     except ResendEmailError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        err_text = str(exc).lower()
+        if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
+            _supply_inbound_missing = True
+            try:
+                send_result = send_email_via_resend(
+                    to_email=to_emails,
+                    subject=subject,
+                    body_text=body,
+                    from_display_name="Cal",
+                    reply_to=None,
+                    idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
+                )
+            except ResendEmailError as exc2:
+                raise HTTPException(status_code=400, detail=str(exc2)) from exc2
+        else:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     now = datetime.now(timezone.utc)
+    effective_reply_to = None if _supply_inbound_missing else reply_to
     if approved_msg:
         msg = approved_msg
         msg.to_emails = to_emails
         msg.from_email = send_result.get("from_email")
-        msg.reply_to = reply_to
+        msg.reply_to = effective_reply_to
         msg.reply_token = reply_token
         msg.subject = subject
         msg.body_text = body
@@ -1743,6 +1763,7 @@ def send_email(
             **(msg.payload or {}),
             "source": "supply_pipeline",
             "approved_checkpoint_reused": True,
+            **({"inbound_not_configured": True} if _supply_inbound_missing else {}),
         }
     else:
         msg = SupplyOutreachMessage(
@@ -1750,7 +1771,7 @@ def send_email(
             robot_company_id=company.id,
             to_emails=to_emails,
             from_email=send_result.get("from_email"),
-            reply_to=reply_to,
+            reply_to=effective_reply_to,
             reply_token=reply_token,
             subject=subject,
             body_text=body,
@@ -1758,7 +1779,7 @@ def send_email(
             resend_id=send_result.get("resend_id"),
             status="sent",
             is_test=False,
-            payload={"source": "supply_pipeline"},
+            payload={"source": "supply_pipeline", **({"inbound_not_configured": True} if _supply_inbound_missing else {})},
             approved_at=now,
             sent_at=now,
         )
@@ -1770,7 +1791,7 @@ def send_email(
         to_emails=to_emails,
         subject=subject,
         body=body,
-        reply_to=reply_to,
+        reply_to=effective_reply_to,
         send_result=send_result,
         supply_message=msg,
     )
@@ -1789,7 +1810,7 @@ def send_email(
     db.refresh(crm_account)
     db.refresh(crm_message)
 
-    return {
+    resp: dict[str, Any] = {
         "message": "Email sent via Resend",
         "company": company.company_name,
         "to_email": send_result.get("to") or to_emails,
@@ -1799,12 +1820,20 @@ def send_email(
         "status": msg.status,
         "resend_id": send_result.get("resend_id"),
         "from_email": send_result.get("from_email"),
-        "reply_to": reply_to,
+        "reply_to": effective_reply_to,
         "crm_account_id": str(crm_account.id),
         "crm_outreach_message_id": str(crm_message.id),
         "workflow_checkpoint": "Sent checkpoint recorded and copied to CRM.",
         "last_contact_date": str(company.last_contact_date),
     }
+    if _supply_inbound_missing:
+        resp["warning"] = (
+            "Email sent without reply tracking. "
+            "Configure the Resend inbound webhook in your Resend dashboard: "
+            "Domains → your domain → Inbound → Notification URL → "
+            "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound"
+        )
+    return resp
 
 
 @router.post("/{company_id}/email/test-send")

@@ -294,6 +294,16 @@ def _email_list(raw: Any) -> list[str]:
     return [str(x).strip() for x in values if str(x).strip() and "@" in str(x)]
 
 
+def _infer_default_outreach_emails(acct: CrmAccount) -> tuple[str | None, list[str]]:
+    """Return (sales@domain, [marketing@domain]) inferred from acct.website when no contact is set."""
+    from app.services.company_domain import normalize_website_domain
+
+    domain = normalize_website_domain(getattr(acct, "website", None))
+    if not domain:
+        return None, []
+    return f"sales@{domain}", [f"marketing@{domain}"]
+
+
 def _style_note(settings: Any) -> str:
     if not settings:
         return ""
@@ -790,7 +800,9 @@ def draft_account_outreach(
 
         subject = _draft_subject(acct)
         draft = _draft_body(acct, settings, traits, style_instruction, collateral_policy, collateral_links)
-        acct.contact_email = patch.get("contact_email") or acct.contact_email
+        explicit_contact = patch.get("contact_email") or acct.contact_email
+        inferred_primary, inferred_cc = (None, []) if explicit_contact else _infer_default_outreach_emails(acct)
+        acct.contact_email = explicit_contact or inferred_primary
         acct.outreach_draft = draft
         acct.outreach_stage = "draft_ready"
 
@@ -819,10 +831,14 @@ def draft_account_outreach(
             },
         )
         db.commit()
+        default_to = acct.contact_email
+        default_cc = inferred_cc if not explicit_contact else []
         return {
             "subject": subject,
             "outreach_draft": draft,
             "outreach_stage": "draft_ready",
+            "contact_email": default_to,
+            "default_cc": default_cc,
             "persona_traits": traits,
             "collateral_policy": collateral_policy,
             "collateral_links": collateral_links,
@@ -853,11 +869,13 @@ def send_account_outreach(
             raise HTTPException(status_code=404, detail="Account not found or access denied")
 
         patch = body.model_dump(exclude_unset=True)
-        contact_email = (patch.get("contact_email") or acct.contact_email or "").strip()
+        explicit_contact = (patch.get("contact_email") or acct.contact_email or "").strip()
         outreach_draft = (patch.get("outreach_draft") or acct.outreach_draft or "").strip()
 
+        inferred_primary, inferred_cc = (None, []) if explicit_contact else _infer_default_outreach_emails(acct)
+        contact_email = explicit_contact or inferred_primary or ""
         if not contact_email or "@" not in contact_email:
-            raise HTTPException(status_code=400, detail="No contact email on file for this account")
+            raise HTTPException(status_code=400, detail="No contact email on file for this account. Add one or ensure the account has a website domain.")
         if not outreach_draft:
             raise HTTPException(status_code=400, detail="No outreach draft on file for this account")
 
@@ -869,7 +887,8 @@ def send_account_outreach(
         send_identity = (patch.get("send_identity") or "scout").strip().lower()
         if send_identity != "scout":
             raise HTTPException(status_code=400, detail="Only Ready For Robots domain sending is available right now")
-        cc = _email_list(patch.get("cc")) or _email_list(settings.scout_default_cc if settings else None)
+        explicit_cc = _email_list(patch.get("cc")) or _email_list(settings.scout_default_cc if settings else None)
+        cc = explicit_cc or inferred_cc
         bcc = _email_list(patch.get("bcc")) or _email_list(settings.scout_default_bcc if settings else None)
         approved_style = (patch.get("approved_style") or "").strip()
         if approved_style:
@@ -886,6 +905,7 @@ def send_account_outreach(
                 {"uid": str(uid), "style": approved_style},
             )
 
+        _inbound_missing = False
         try:
             send_result = send_email_via_resend(
                 to_email=contact_email,
@@ -898,7 +918,26 @@ def send_account_outreach(
                 idempotency_key=f"scout-outreach/{acct.id}/{contact_email}",
             )
         except ResendEmailError as e:
-            raise HTTPException(status_code=502, detail=str(e)) from e
+            # Resend rejects sends when inbound reply routing is not yet configured
+            # in the dashboard. Retry without the reply_to so Cal emails still go out.
+            err_text = str(e).lower()
+            if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
+                _inbound_missing = True
+                try:
+                    send_result = send_email_via_resend(
+                        to_email=contact_email,
+                        subject=subject,
+                        body_text=outreach_draft,
+                        from_display_name=sender_name.strip() if sender_name else None,
+                        reply_to=None,
+                        cc=cc,
+                        bcc=bcc,
+                        idempotency_key=f"scout-outreach/{acct.id}/{contact_email}/no-inbound",
+                    )
+                except ResendEmailError as e2:
+                    raise HTTPException(status_code=502, detail=str(e2)) from e2
+            else:
+                raise HTTPException(status_code=502, detail=str(e)) from e
 
         now = datetime.now(timezone.utc)
         msg = OutreachMessage(
@@ -956,14 +995,23 @@ def send_account_outreach(
         )
         db.commit()
 
-        return {
+        effective_reply_to = None if _inbound_missing else reply_to
+        result: dict = {
             "sent": True,
             "to": contact_email,
             "sent_at": now.isoformat(),
             "outreach_message_id": str(msg.id),
-            "reply_to": reply_to,
-            "reply_routing": "Replies return to SCOUT and notify/forward to the user.",
+            "reply_to": effective_reply_to,
+            "reply_routing": "Replies return to SCOUT and notify/forward to the user." if not _inbound_missing else None,
         }
+        if _inbound_missing:
+            result["warning"] = (
+                "Email sent without reply tracking. "
+                "To enable reply routing, configure the Resend inbound webhook URL in your Resend dashboard: "
+                "Domains → your domain → Inbound → set Notification URL to "
+                "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound"
+            )
+        return result
     except HTTPException:
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
