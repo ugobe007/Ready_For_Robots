@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, Mail, Radio, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Mail, Radio, Zap, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -16,6 +16,7 @@ type NewsletterStory = {
   impact?: string;
   signalStrength?: number;
   fullText?: string;
+  company_id?: number;
 };
 
 type ResearchFinding = {
@@ -44,6 +45,7 @@ type IndustryBrief = {
   executive_take?: string;
   macro_trends?: BriefTextItem[];
   strategic_implications?: BriefTextItem[];
+  risks_and_unknowns?: BriefTextItem[];
   watch_next?: BriefTextItem[];
 };
 
@@ -64,30 +66,70 @@ type NewsletterEdition = {
   };
 };
 
-function shortDate(value?: string) {
-  if (!value) return "Updated daily";
-  return value;
-}
-
-function briefText(item: BriefTextItem | undefined): string {
+function briefTextTitle(item: BriefTextItem | undefined): string {
   if (!item) return "";
   if (typeof item === "string") return cleanScrapedText(item);
-  const title = cleanScrapedText(item.title || item.audience || "");
-  const detail = cleanScrapedText(item.detail || item.insight || "");
-  return [title, detail].filter(Boolean).join(title && detail ? " — " : "");
+  return cleanScrapedText(item.title || item.audience || "");
 }
+
+function briefTextDetail(item: BriefTextItem | undefined): string {
+  if (!item) return "";
+  if (typeof item === "string") return "";
+  return cleanScrapedText(item.detail || item.insight || "");
+}
+
+function signalBullets(fullText: string | undefined): string[] {
+  if (!fullText) return [];
+  const lines = fullText.split("\n");
+  const bullets: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("•") || trimmed.startsWith("-")) {
+      const clean = trimmed.replace(/^[•\-]\s*/, "").replace(/\*\*/g, "").trim();
+      if (clean && !clean.includes("<img") && !clean.includes("<a href") && clean.length > 20) {
+        const withoutHtml = clean.replace(/<[^>]*>/g, "").trim();
+        if (withoutHtml.length > 20) bullets.push(withoutHtml.slice(0, 160));
+      }
+    }
+    if (bullets.length >= 3) break;
+  }
+  return bullets;
+}
+
+function tierColor(tier: string | undefined): string {
+  if (!tier) return "#03DAC5";
+  const t = tier.toLowerCase();
+  if (t.includes("labor") || t.includes("shortage")) return "#f87171";
+  if (t.includes("fund") || t.includes("round")) return "#a78bfa";
+  if (t.includes("expansion") || t.includes("hire")) return "#FFB000";
+  if (t.includes("capex") || t.includes("budget")) return "#34d399";
+  return "#03DAC5";
+}
+
+const TEAL = "#03DAC5";
+const AMBER = "#FFB000";
+const PURPLE = "#a78bfa";
 
 export default function Newsletter() {
   const [edition, setEdition] = useState<NewsletterEdition | null>(null);
   const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [loadSec, setLoadSec] = useState(0);
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [subStatus, setSubStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  // Tick the loading counter so the user sees progress, not a frozen spinner
+  useEffect(() => {
+    if (loadStatus !== "loading") return;
+    const id = setInterval(() => setLoadSec((s) => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [loadStatus]);
 
   useEffect(() => {
     let cancelled = false;
+    // Allow up to 90s — the AI brief generation can take ~60-90s on cold cache
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8000);
-    fetch(`${getApiBase()}/api/newsletter/edition?limit=8&cb=${Date.now()}`, liveFetchInit({
+    const timeout = window.setTimeout(() => controller.abort(), 90_000);
+    fetch(`${getApiBase()}/api/newsletter/edition?limit=15&cb=${Date.now()}`, liveFetchInit({
       signal: controller.signal,
     }))
       .then((res) => (res.ok ? res.json() : null))
@@ -114,7 +156,7 @@ export default function Newsletter() {
   async function subscribe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!email.trim()) return;
-    setStatus("submitting");
+    setSubStatus("submitting");
     try {
       const res = await fetch(`${getApiBase()}/api/newsletter/subscribe`, liveFetchInit({
         method: "POST",
@@ -122,218 +164,325 @@ export default function Newsletter() {
         body: JSON.stringify({ email, source: "newsletter_page" }),
       }));
       if (!res.ok) throw new Error("Subscribe failed");
-      setStatus("success");
+      setSubStatus("success");
       setEmail("");
     } catch {
-      setStatus("error");
+      setSubStatus("error");
     }
   }
 
-  const stories = (edition?.topStories || []).slice(0, 8);
-  const researchFindings = (edition?.researchFindings || []).slice(0, 5);
+  const stories = (edition?.topStories || []).slice(0, 14);
+  const researchFindings = (edition?.researchFindings || []).slice(0, 6);
   const brief = edition?.industryBrief;
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
-  const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "A daily digest of buying signals, deployment stories, vendor movement, and sales timing for robotics teams.";
-  const strategicItems = (brief?.strategic_implications || brief?.watch_next || brief?.macro_trends || []).map(briefText).filter(Boolean).slice(0, 4);
+  const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "Buying signals, deployment moves, funding events, and strategic hires — curated daily for robotics sales teams.";
+  const macroItems = (brief?.macro_trends || []).slice(0, 4);
+  const stratItems = (brief?.strategic_implications || []).slice(0, 4);
+  const riskItems = (brief?.risks_and_unknowns || []).map((r) => (typeof r === "string" ? r : "")).filter(Boolean).slice(0, 3);
+  const watchItems = (brief?.watch_next || []).map((w) => (typeof w === "string" ? w : "")).filter(Boolean).slice(0, 3);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
-      <main className="flex-1 px-6 pb-20 pt-28">
+      <main className="flex-1 px-4 pb-24 pt-28 lg:px-6">
         <div className="mx-auto max-w-6xl">
-          <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/10 p-6 lg:p-9" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.08), rgba(124,58,237,0.08), rgba(255,176,0,0.05))" }}>
-            <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full blur-3xl" style={{ background: "rgba(3,218,197,0.12)" }} />
-            <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px] lg:items-end">
+
+          {/* ── Hero ─────────────────────────────────────────────────── */}
+          <section
+            className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 p-6 lg:p-10"
+            style={{ background: "linear-gradient(135deg,rgba(3,218,197,0.07),rgba(124,58,237,0.07),rgba(255,176,0,0.04))" }}
+          >
+            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full blur-3xl" style={{ background: "rgba(3,218,197,0.10)" }} />
+            <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px] lg:items-end">
               <div>
-                <p className="mb-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>
-                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-                  Robot Intelligence Brief
+                <p className="mb-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
+                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: TEAL }} />
+                  Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"} · {edition?.latestEdition?.date || "Updated daily"}
                 </p>
-                <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-white lg:text-6xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h1 className="max-w-3xl text-3xl font-extrabold leading-tight text-white lg:text-5xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {headline}
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/48">
+                <p className="mt-4 max-w-2xl text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
                   {subheadline}
                 </p>
               </div>
-              <form onSubmit={subscribe} className="rounded-2xl border border-white/10 p-5" style={{ background: "rgba(13,5,32,0.62)" }}>
-                <Mail className="mb-4 h-5 w-5" style={{ color: "#03DAC5" }} />
+              <form onSubmit={subscribe} className="rounded-2xl border border-white/10 p-5" style={{ background: "rgba(13,5,32,0.65)" }}>
+                <Mail className="mb-3 h-4 w-4" style={{ color: TEAL }} />
                 <p className="text-sm font-bold text-white">Subscribe free</p>
-                <p className="mt-2 text-xs leading-relaxed text-white/35">Get the signal brief when the daily edition updates.</p>
+                <p className="mt-1 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>Signal brief in your inbox when the edition updates.</p>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   type="email"
                   placeholder="work email"
-                  className="mt-4 w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
+                  className="mt-4 w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
                   style={{ background: "rgba(255,255,255,0.04)" }}
                 />
-                <button type="submit" disabled={status === "submitting"} className="mt-3 w-full rounded-xl px-4 py-3 text-sm font-bold transition-all hover:bg-amber-400/6 disabled:opacity-50" style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}>
-                  {status === "submitting" ? "Subscribing..." : "Subscribe Free"}
+                <button
+                  type="submit"
+                  disabled={subStatus === "submitting"}
+                  className="mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50"
+                  style={{ color: AMBER, border: `1.5px solid ${AMBER}`, background: "transparent" }}
+                >
+                  {subStatus === "submitting" ? "Subscribing…" : "Subscribe Free"}
                 </button>
-                {status === "success" && <p className="mt-3 text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
-                {status === "error" && <p className="mt-3 text-xs text-red-300">Could not subscribe. Try again.</p>}
+                {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>You're subscribed.</p>}
+                {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
               </form>
             </div>
           </section>
 
-          <section className="mb-10 grid grid-cols-1 gap-3 md:grid-cols-4">
+          {/* ── Stats bar ────────────────────────────────────────────── */}
+          <section className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
-              ["Edition", edition?.latestEdition?.edition || "Daily"],
-              ["Updated", shortDate(edition?.latestEdition?.date)],
-              ["Leads", String(edition?.summary?.total_leads ?? stories.length)],
-              ["Research", `${edition?.summary?.research_findings ?? researchFindings.length} findings`],
-            ].map(([label, value], index) => (
+              { label: "Edition", value: edition?.latestEdition?.edition || "—" },
+              { label: "Updated", value: edition?.latestEdition?.date || "Daily" },
+              { label: "Hot leads", value: String(edition?.summary?.total_leads ?? stories.length), accent: AMBER },
+              { label: "Stories", value: String(stories.length || (loadStatus === "loading" ? "…" : "—")), accent: TEAL },
+            ].map(({ label, value, accent }) => (
               <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">{label}</p>
-                <p className="mt-2 font-mono text-lg font-black" style={{ color: index === 2 ? "#FFB000" : "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
+                <p className="mt-2 font-mono text-xl font-black" style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
               </div>
             ))}
           </section>
 
+          {/* ── Loading state ─────────────────────────────────────────── */}
           {loadStatus === "loading" && (
-            <section className="mb-10 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,255,255,0.035)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Loading live brief</p>
-              <p className="mt-3 text-sm leading-relaxed text-white/45">Pulling the latest ReadyForRobots signal edition.</p>
+            <section className="mb-8 rounded-3xl border border-white/10 p-8 text-center" style={{ background: "rgba(255,255,255,0.025)" }}>
+              <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${TEAL} transparent transparent transparent` }} />
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: TEAL }}>Building your intelligence brief</p>
+              <p className="text-sm text-white/40">Pulling signals from 4,000+ companies… {loadSec > 5 ? `${loadSec}s` : ""}</p>
+              {loadSec > 20 && <p className="mt-2 text-xs text-white/25">AI analysis is generating — this takes about 60 seconds on first load.</p>}
             </section>
           )}
 
           {loadStatus === "error" && (
-            <section className="mb-10 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.05)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>Brief is refreshing</p>
-              <p className="mt-3 text-sm leading-relaxed text-white/50">The live signal feed is rebuilding. The daily brief will repopulate as soon as the API cache responds.</p>
+            <section className="mb-8 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.04)" }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: AMBER }}>Brief is regenerating</p>
+              <p className="text-sm text-white/40">The daily brief is rebuilding. Refresh in a moment to see the full edition.</p>
             </section>
           )}
 
+          {/* ── AI Executive Brief ───────────────────────────────────── */}
           {brief?.executive_take && (
-            <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,255,255,0.035)" }}>
-              <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_360px]">
-                <div>
-                  <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#a78bfa" }}>Strategic take</p>
-                  <p className="break-words text-lg leading-relaxed text-white/70">{cleanScrapedText(brief.executive_take)}</p>
-                </div>
-                <div className="space-y-3">
-                  {strategicItems.map((item, index) => (
-                    <div key={`${item}-${index}`} className="flex items-start gap-3 rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.5)" }}>
-                      <Radio className="mt-0.5 h-4 w-4 shrink-0" style={{ color: index === 0 ? "#FFB000" : "#03DAC5" }} />
-                      <p className="break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>{item}</p>
+            <section className="mb-8 rounded-3xl border border-white/10 p-6 lg:p-8" style={{ background: "rgba(124,58,237,0.06)" }}>
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: PURPLE }}>AI market analysis</p>
+              <p className="text-base leading-relaxed text-white/75 lg:text-lg">{cleanScrapedText(brief.executive_take)}</p>
+
+              {/* Macro trends + Strategic implications side by side */}
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {macroItems.length > 0 && (
+                  <div>
+                    <div className="mb-3 flex items-center gap-2">
+                      <TrendingUp className="h-3.5 w-3.5" style={{ color: TEAL }} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: TEAL }}>Macro trends</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="space-y-2">
+                      {macroItems.map((item, i) => {
+                        const title = briefTextTitle(item);
+                        const detail = briefTextDetail(item);
+                        return (
+                          <div key={i} className="rounded-xl border border-white/8 p-3" style={{ background: "rgba(3,218,197,0.04)" }}>
+                            {title && <p className="text-sm font-semibold text-white">{title}</p>}
+                            {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {stratItems.length > 0 && (
+                  <div>
+                    <div className="mb-3 flex items-center gap-2">
+                      <Radio className="h-3.5 w-3.5" style={{ color: AMBER }} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: AMBER }}>Strategic implications</p>
+                    </div>
+                    <div className="space-y-2">
+                      {stratItems.map((item, i) => {
+                        const title = briefTextTitle(item);
+                        const detail = briefTextDetail(item);
+                        return (
+                          <div key={i} className="rounded-xl border border-white/8 p-3" style={{ background: "rgba(255,176,0,0.04)" }}>
+                            {title && <p className="text-xs font-bold uppercase tracking-wider" style={{ color: AMBER }}>{title}</p>}
+                            {detail && <p className="mt-1 text-xs leading-relaxed text-white/55">{detail}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Risks + Watch next */}
+              {(riskItems.length > 0 || watchItems.length > 0) && (
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {riskItems.length > 0 && (
+                    <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(248,113,113,0.04)" }}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-red-400/70" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-red-400/70">Risks to watch</p>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {riskItems.map((r, i) => (
+                          <li key={i} className="text-xs leading-relaxed text-white/45 before:mr-1.5 before:content-['·']">{r}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {watchItems.length > 0 && (
+                    <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(3,218,197,0.03)" }}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <Eye className="h-3.5 w-3.5" style={{ color: TEAL }} />
+                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: TEAL }}>Watch next</p>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {watchItems.map((w, i) => (
+                          <li key={i} className="text-xs leading-relaxed text-white/45 before:mr-1.5 before:content-['·']">{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
           )}
 
+          {/* ── SCOUT research findings ───────────────────────────────── */}
           {researchFindings.length > 0 && (
-            <section className="mb-10 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,176,0,0.045)" }}>
+            <section className="mb-8 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,176,0,0.04)" }}>
               <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>SCOUT research findings</p>
-                  <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                    Key updates the research agent found today
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
-                    Material account changes that can update CRM context, scoring, and the next sales action.
-                  </p>
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: AMBER }}>SCOUT research findings</p>
+                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Account changes worth actioning today</h2>
                 </div>
-                <Link href="/pipeline" className="inline-flex items-center gap-2 text-sm font-bold" style={{ color: "#FFB000" }}>
-                  Open SCOUT pipeline <ArrowRight className="h-4 w-4" />
-                </Link>
+                <Link href="/pipeline" className="inline-flex items-center gap-2 text-xs font-bold" style={{ color: AMBER }}>Open pipeline <ArrowRight className="h-3.5 w-3.5" /></Link>
               </div>
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {researchFindings.map((finding, index) => (
-                  <article key={`${finding.company_id || finding.company}-${index}`} className="rounded-2xl border border-amber-300/15 p-4" style={{ background: "rgba(13,5,32,0.58)" }}>
+                  <article key={`${finding.company_id || finding.company}-${index}`} className="rounded-2xl border border-amber-300/12 p-4" style={{ background: "rgba(13,5,32,0.55)" }}>
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="rounded-full border border-amber-300/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: "#FFB000", background: "rgba(255,176,0,0.07)" }}>
+                      <span className="rounded-full border border-amber-300/22 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: AMBER, background: "rgba(255,176,0,0.06)" }}>
                         {cleanScrapedText(finding.category) || "Research"}
                       </span>
                       {typeof finding.significance_score === "number" && (
-                        <span className="font-mono text-[11px] font-bold" style={{ color: "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>
-                          {Math.round(finding.significance_score * 100)} signal
-                        </span>
+                        <span className="font-mono text-[11px] font-bold" style={{ color: AMBER }}>{Math.round(finding.significance_score * 100)} signal</span>
                       )}
                     </div>
-                    <h3 className="break-words text-base font-bold text-white">
-                      {cleanScrapedText(finding.company) || "Sales lead"}
-                    </h3>
-                    <p className="mt-2 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
-                      {cleanScrapedText(finding.summary || finding.title) || "SCOUT found a material account update worth review."}
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-white/28">
-                      {finding.industry && <span>{cleanScrapedText(finding.industry)}</span>}
-                      {finding.source_domain && (
-                        <>
-                          <span>·</span>
-                          <span className="break-all">{finding.source_domain}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <Link href={finding.pipeline_url || "/pipeline"} className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: "#FFB000" }}>
-                        {finding.action_label || "Act with SCOUT"} <Zap className="h-3.5 w-3.5" />
-                      </Link>
-                      <Link href={finding.scout_url || "/results?url="} className="inline-flex items-center gap-1.5 text-xs font-bold text-white/45 hover:text-white/75">
-                        Activate workflow <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
+                    <h3 className="text-sm font-bold text-white">{cleanScrapedText(finding.company) || "Lead"}</h3>
+                    <p className="mt-1.5 text-xs leading-relaxed" style={{ color: AMBER }}>{cleanScrapedText(finding.summary || finding.title)}</p>
+                    {finding.industry && <p className="mt-2 text-[11px] text-white/25">{cleanScrapedText(finding.industry)}</p>}
+                    <Link href={finding.pipeline_url || "/pipeline"} className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: AMBER }}>
+                      {finding.action_label || "Act now"} <Zap className="h-3 w-3" />
+                    </Link>
                   </article>
                 ))}
               </div>
             </section>
           )}
 
+          {/* ── Top stories ───────────────────────────────────────────── */}
           {stories.length > 0 && (
             <>
-              <div className="mb-5 flex items-center justify-between gap-4">
+              <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Sales lead cards</p>
-                  <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Accounts moving from signal to opportunity</h2>
+                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>Signal intelligence · {stories.length} accounts</p>
+                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Companies moving toward automation now</h2>
                 </div>
+                <Link href="/pipeline" className="hidden md:inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white/70">
+                  Full pipeline <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
 
               <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {stories.map((story, index) => (
-                  <article key={`${story.company || story.headline || index}`} className="rounded-3xl border border-white/8 p-5 transition-colors hover:border-teal-300/25" style={{ background: "rgba(255,255,255,0.03)" }}>
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: index % 2 ? "#FFB000" : "#03DAC5", borderColor: index % 2 ? "rgba(255,176,0,0.28)" : "rgba(3,218,197,0.28)", background: index % 2 ? "rgba(255,176,0,0.06)" : "rgba(3,218,197,0.06)" }}>
-                        {cleanScrapedText(story.category) || "Signal"}
-                      </span>
-                      {story.signalStrength && (
-                        <span className="font-mono text-xs font-bold text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                          {story.signalStrength}/10 strength
+                {stories.map((story, index) => {
+                  const bullets = signalBullets(story.fullText);
+                  const color = tierColor(story.category);
+                  return (
+                    <article
+                      key={`${story.company || story.headline || index}`}
+                      className="flex flex-col rounded-3xl border border-white/8 p-5 transition-colors hover:border-white/16"
+                      style={{ background: "rgba(255,255,255,0.025)" }}
+                    >
+                      {/* Header row */}
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <span
+                          className="inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest"
+                          style={{ color, borderColor: `${color}44`, background: `${color}0d` }}
+                        >
+                          {cleanScrapedText(story.category) || "Signal"}
                         </span>
+                        {story.signalStrength && (
+                          <span className="font-mono text-xs font-bold text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                            {story.signalStrength}/10
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Company + headline */}
+                      <h2 className="text-lg font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        {cleanScrapedText(story.company || story.headline)}
+                      </h2>
+                      <p className="mt-2 text-sm leading-relaxed text-white/50">
+                        {cleanScrapedText(story.snippet || story.summary || "").slice(0, 200)}
+                      </p>
+
+                      {/* Signal evidence bullets */}
+                      {bullets.length > 0 && (
+                        <ul className="mt-3 space-y-1.5">
+                          {bullets.map((b, bi) => (
+                            <li key={bi} className="flex items-start gap-2 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+                              <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: color }} />
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                    </div>
-                    <h2 className="text-xl font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                      {cleanScrapedText(story.headline || story.company) || "Signal story"}
-                    </h2>
-                    <p className="mt-3 break-words text-sm font-normal leading-relaxed" style={{ color: "#FFB000" }}>
-                      {cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots."}
-                    </p>
-                    <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      {[story.roi, story.economics, story.impact].map((item) => cleanScrapedText(item)).filter(Boolean).map((item) => (
-                        <div key={item} className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
-                          <p className="text-[11px] font-normal" style={{ color: "#FFB000" }}>{item}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </article>
-                ))}
+
+                      {/* Meta chips */}
+                      <div className="mt-auto pt-4 flex flex-wrap items-center gap-2">
+                        {[story.economics, story.impact].map((chip) => cleanScrapedText(chip)).filter(Boolean).map((chip) => (
+                          <span key={chip} className="rounded-lg border border-white/8 px-2.5 py-1 text-[11px] font-medium text-white/35" style={{ background: "rgba(13,5,32,0.5)" }}>
+                            {chip}
+                          </span>
+                        ))}
+                        {story.roi && (
+                          <span className="rounded-lg border px-2.5 py-1 text-[11px] font-bold" style={{ color, borderColor: `${color}33`, background: `${color}0a` }}>
+                            {cleanScrapedText(story.roi)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* CTA */}
+                      <div className="mt-3 border-t border-white/6 pt-3">
+                        <Link
+                          href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold transition-colors hover:opacity-80"
+                          style={{ color }}
+                        >
+                          Open in pipeline <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
               </section>
             </>
           )}
 
+          {/* ── Footer CTA ───────────────────────────────────────────── */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5 text-sm">
-            <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: "#FFB000" }}>
+            <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
               Activate SCOUT from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
-            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/50 hover:text-white/80">
-              Watch live signals <BarChart3 className="h-4 w-4" />
+            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/40 hover:text-white/70">
+              Live signals <BarChart3 className="h-4 w-4" />
             </Link>
-            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-white/50 hover:text-white/80">
-              Read the report <ArrowRight className="h-4 w-4" />
+            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-white/40 hover:text-white/70">
+              Intelligence report <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+
         </div>
       </main>
     </div>

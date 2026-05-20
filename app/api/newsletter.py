@@ -13,13 +13,17 @@ Cached edition is served when fresh (<25h); otherwise generated on-the-fly.
 Force-regeneration (refresh=true, POST /generate): when NEWSLETTER_REGEN_SECRET is set in
 the environment, callers must send X-Newsletter-Regen-Key or an admin Bearer JWT.
 """
+import logging
 import os
+import threading
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
+_log = logging.getLogger(__name__)
 
 from app.api.auth_deps import assert_newsletter_regen_allowed
 from app.database import get_db
@@ -110,7 +114,7 @@ def _strategic_brief_days() -> int:
 @router.get("/edition")
 def get_newsletter_edition(
     response: Response,
-    limit: int = Query(8, description="Max top stories"),
+    limit: int = Query(15, description="Max top stories"),
     refresh: bool = Query(False, description="Force regeneration (bypass cache)"),
     authorization: Optional[str] = Header(None),
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
@@ -153,6 +157,34 @@ def get_newsletter_edition(
     except OSError:
         pass
     return data
+
+
+def _warm_newsletter_cache_at_startup() -> None:
+    """
+    Fire-and-forget: generate the newsletter edition at startup so the
+    first real user request gets a cached response instead of waiting 90s.
+    Skipped if a fresh cached edition already exists.
+    """
+    max_age = _cache_max_age_hours()
+
+    def _warm() -> None:
+        cached = read_cached_edition(max_age_hours=max_age)
+        if cached and cached.get("topStories") and len(cached["topStories"]) >= 10:
+            _log.info("Newsletter cache already warm (%d stories) — skipping startup regen.", len(cached["topStories"]))
+            return
+        _log.info("Newsletter cache cold or thin — regenerating at startup (limit=15)…")
+        from app.database import SessionLocal
+        db = SessionLocal()
+        try:
+            data = generate_edition(db, limit=15)
+            write_cached_edition(data)
+            _log.info("Newsletter cache warmed at startup: %d stories.", len(data.get("topStories") or []))
+        except Exception as exc:
+            _log.warning("Newsletter startup warm-up failed (non-fatal): %s", exc)
+        finally:
+            db.close()
+
+    threading.Thread(target=_warm, daemon=True, name="newsletter-cache-warmer").start()
 
 
 @router.post("/subscribe")
