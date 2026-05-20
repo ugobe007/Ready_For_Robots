@@ -294,16 +294,19 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
 
 
 def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """
+    Generate the strategic brief via whichever LLM provider is configured.
+    Returns None when no provider is available — caller falls back to heuristics.
+    """
+    from app.services.llm_client import llm_json_completion, active_provider
+    provider = active_provider()
+    if provider is None:
+        return None  # no API key — use local heuristics
     try:
         timeout = float(os.getenv("INDUSTRY_BRIEF_OPENAI_TIMEOUT", "20"))
     except ValueError:
         timeout = 20.0
-    try:
-        from app.services.llm_client import get_llm_client, get_llm_model
-        client = get_llm_client(timeout=timeout)
-    except RuntimeError:
-        return None
-    model = get_llm_model(default=os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini"))
+    model = provider  # used for the "source" label below
     totals = analytics.get("totals") or {}
     ind_rolled = dict(_rollup_industry_counts(analytics.get("industries"), limit=12))
 
@@ -384,17 +387,15 @@ Do not invent company names not in sample_headlines. If data is thin, say so and
 DATA:
 """
     try:
-        resp = client.chat.completions.create(
-            model=model,
-            response_format={"type": "json_object"},
-            messages=[
-                {"role": "system", "content": "You output only valid JSON."},
-                {"role": "user", "content": prompt + json.dumps(digest, default=str)[:120000]},
-            ],
-            temperature=0.35,
+        raw = llm_json_completion(
+            system_prompt="You output only valid JSON.",
+            user_prompt=prompt + json.dumps(digest, default=str)[:120000],
             max_tokens=2400,
+            temperature=0.35,
+            timeout=timeout,
         )
-        raw = (resp.choices[0].message.content or "").strip()
+        if not raw:
+            return None
         data = json.loads(raw)
         trends = []
         for t in data.get("macro_trends") or []:
@@ -428,7 +429,7 @@ DATA:
             "strategic_implications": impl,
             "risks_and_unknowns": data.get("risks_and_unknowns") or [],
             "watch_next": data.get("watch_next") or [],
-            "source": "openai",
+            "source": model,  # "anthropic" or "openai"
             "model": model,
         }
     except Exception:

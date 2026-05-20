@@ -1,65 +1,153 @@
 """
 Shared LLM client factory.
 
-Priority order for configuration:
-  1. INFERENCE_ENGINE_URL  — base URL of any OpenAI-compatible endpoint
-                              (Ollama, vLLM, Together AI, LM Studio, Fireworks, etc.)
-     INFERENCE_ENGINE_API_KEY — auth token for that endpoint (use "ollama" for local)
-     INFERENCE_ENGINE_MODEL   — model name override (e.g. "llama3.2", "mistral")
+Supports two providers — picked automatically from environment variables:
 
-  2. OPENAI_API_KEY / OPEN_API_KEY — falls back to the official OpenAI API
+  ANTHROPIC_API_KEY   → uses Anthropic (Claude) via the anthropic package.
+                         Set LLM_MODEL to override model (default: claude-3-5-haiku-20241022).
 
-All callers should use `get_llm_client()` and `get_llm_model()` rather than
-constructing their own OpenAI clients directly.
+  OPENAI_API_KEY      → uses OpenAI.
+  OPEN_API_KEY          Set LLM_MODEL to override model (default: gpt-4o-mini).
+
+Anthropic is preferred when both keys are present (it's cheaper per token for
+analytical tasks). Set LLM_PREFER_OPENAI=1 to reverse that preference.
+
+If neither key is set, callers fall back to the local heuristic engine
+(no API call — see industry_brief_service._heuristic_brief).
 """
 from __future__ import annotations
 
 import os
-from typing import Optional
 
+
+# ── Provider selection ─────────────────────────────────────────────────────────
+
+def _anthropic_key() -> str:
+    return (os.getenv("ANTHROPIC_API_KEY") or "").strip()
+
+def _openai_key() -> str:
+    return (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
+
+def _prefer_openai() -> bool:
+    return os.getenv("LLM_PREFER_OPENAI", "").strip().lower() in ("1", "true", "yes")
+
+
+def active_provider() -> str | None:
+    """Returns 'anthropic', 'openai', or None (use local heuristics)."""
+    if _anthropic_key() and not _prefer_openai():
+        return "anthropic"
+    if _openai_key():
+        return "openai"
+    if _anthropic_key():
+        return "anthropic"
+    return None
+
+
+# ── OpenAI-style client (for services that use the openai SDK directly) ───────
 
 def get_llm_client(timeout: float = 20.0):
     """
-    Return a configured OpenAI client pointing at either:
-    - INFERENCE_ENGINE_URL  (any OpenAI-compatible endpoint), or
-    - OpenAI API (default).
+    Returns an OpenAI-SDK client.
+    Raises RuntimeError if neither OpenAI nor Anthropic key is set.
 
-    Raises RuntimeError if no key / URL is configured.
+    Note: Anthropic has an OpenAI-compatible proxy endpoint, so we can use
+    the openai package for both providers when response_format=json is not needed.
+    For structured JSON output (industry brief) we use get_anthropic_client() instead.
     """
     try:
         from openai import OpenAI
     except ImportError as exc:
         raise RuntimeError("openai package not installed") from exc
 
-    engine_url = (os.getenv("INFERENCE_ENGINE_URL") or "").strip()
-    engine_key = (os.getenv("INFERENCE_ENGINE_API_KEY") or "").strip()
-
-    if engine_url:
-        # Self-hosted / alternative inference endpoint
-        api_key = engine_key or "inference-engine"  # vLLM/Ollama ignore the key
-        return OpenAI(api_key=api_key, base_url=engine_url, timeout=timeout)
-
-    # Fall back to OpenAI
-    openai_key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
-    if not openai_key:
+    key = _openai_key()
+    if not key:
         raise RuntimeError(
-            "No LLM configured: set INFERENCE_ENGINE_URL + INFERENCE_ENGINE_API_KEY "
-            "for a self-hosted model, or OPENAI_API_KEY for OpenAI."
+            "No LLM API key found. Set OPENAI_API_KEY (or OPEN_API_KEY) "
+            "or ANTHROPIC_API_KEY."
         )
-    return OpenAI(api_key=openai_key, timeout=timeout)
+    return OpenAI(api_key=key, timeout=timeout)
 
 
 def get_llm_model(default: str = "gpt-4o-mini") -> str:
+    """Return the model name, respecting an optional LLM_MODEL override."""
+    return (os.getenv("LLM_MODEL") or default).strip()
+
+
+# ── Anthropic client ──────────────────────────────────────────────────────────
+
+def get_anthropic_client(timeout: float = 20.0):
     """
-    Return the model name to use.
-
-    Checks (in order):
-      1. INFERENCE_ENGINE_MODEL — explicit model override
-      2. The caller-supplied default (e.g. "gpt-4o-mini", "gpt-4o")
+    Returns an Anthropic client.
+    Raises RuntimeError if ANTHROPIC_API_KEY is not set.
     """
-    return (os.getenv("INFERENCE_ENGINE_MODEL") or default).strip()
+    try:
+        import anthropic
+    except ImportError as exc:
+        raise RuntimeError(
+            "anthropic package not installed. Run: pip install anthropic"
+        ) from exc
+
+    key = _anthropic_key()
+    if not key:
+        raise RuntimeError("ANTHROPIC_API_KEY is not set.")
+    return anthropic.Anthropic(api_key=key, timeout=timeout)
 
 
-def is_inference_engine_configured() -> bool:
-    """True when a self-hosted inference engine is active (not OpenAI)."""
-    return bool((os.getenv("INFERENCE_ENGINE_URL") or "").strip())
+def get_anthropic_model(default: str = "claude-3-5-haiku-20241022") -> str:
+    return (os.getenv("LLM_MODEL") or default).strip()
+
+
+# ── Convenience: call any provider with a prompt, return text ─────────────────
+
+def llm_json_completion(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    max_tokens: int = 2400,
+    temperature: float = 0.35,
+    timeout: float = 20.0,
+) -> str | None:
+    """
+    Send a prompt to whichever provider is configured and return the raw text.
+    Returns None if no provider is configured (caller should use heuristics).
+
+    Tries Anthropic first (when key present), falls back to OpenAI.
+    """
+    provider = active_provider()
+
+    if provider == "anthropic":
+        try:
+            client = get_anthropic_client(timeout=timeout)
+            model = get_anthropic_model()
+            resp = client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            return (resp.content[0].text or "").strip()
+        except Exception:
+            # Fall through to OpenAI
+            pass
+
+    if provider == "openai" or _openai_key():
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=_openai_key(), timeout=timeout)
+            model = get_llm_model()
+            resp = client.chat.completions.create(
+                model=model,
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            return (resp.choices[0].message.content or "").strip()
+        except Exception:
+            pass
+
+    return None  # No provider available — use local heuristics

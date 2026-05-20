@@ -1,6 +1,7 @@
 """
 SCOUT conversational LLM — mirrors rfr_cursor_package/server/routers.ts scout.chat.
-Uses OPENAI_API_KEY (same pattern as industry_brief_service).
+Uses whichever provider is configured: Anthropic (ANTHROPIC_API_KEY) or
+OpenAI (OPENAI_API_KEY / OPEN_API_KEY). Anthropic is preferred when both are set.
 """
 from __future__ import annotations
 
@@ -49,19 +50,37 @@ def scout_chat_completion(
     """
     `messages`: OpenAI-shaped roles user/assistant only (no system in list).
     """
-    from app.services.llm_client import get_llm_client, get_llm_model
-    client = get_llm_client()
-    model = get_llm_model(default=(os.getenv("SCOUT_CHAT_MODEL") or "gpt-4o-mini"))
+    from app.services.llm_client import active_provider, get_anthropic_client, get_anthropic_model, get_llm_client, get_llm_model
 
-    sys = SCOUT_SYSTEM_PROMPT + _context_note(session_context)
-    oa_messages: List[Dict[str, str]] = [{"role": "system", "content": sys}]
+    sys_prompt = SCOUT_SYSTEM_PROMPT + _context_note(session_context)
+
+    # Build message list (user/assistant turns only — system goes separately for Anthropic)
+    turns: List[Dict[str, str]] = []
     for m in messages:
         role = m.get("role") or "user"
         content = (m.get("content") or "").strip()
         if role not in ("user", "assistant") or not content:
             continue
-        oa_messages.append({"role": role, "content": content})
+        turns.append({"role": role, "content": content})
 
+    provider = active_provider()
+
+    if provider == "anthropic":
+        client = get_anthropic_client()
+        model = get_anthropic_model(default=(os.getenv("SCOUT_CHAT_MODEL") or "claude-3-5-haiku-20241022"))
+        resp = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=0.5,
+            system=sys_prompt,
+            messages=turns,
+        )
+        return (resp.content[0].text or "").strip()
+
+    # OpenAI path
+    client = get_llm_client()
+    model = get_llm_model(default=(os.getenv("SCOUT_CHAT_MODEL") or "gpt-4o-mini"))
+    oa_messages: List[Dict[str, str]] = [{"role": "system", "content": sys_prompt}] + turns
     resp = client.chat.completions.create(
         model=model,
         messages=oa_messages,
