@@ -319,14 +319,73 @@ LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
 LEADS_ROTATION_SEC = 300
 
-# In-process cache for the public leads list — avoids re-running the GROUP BY on every
-# page visit. TTL must be >= worst-case query time (which can reach 60s on cold Supabase
-# connections) so the cached result is always served before the next refresh completes.
+# In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
-_LEADS_LIST_TTL = 300.0  # 5 minutes — long enough that cache always beats query time
+_LEADS_LIST_TTL = 300.0  # 5 minutes
 
 # Keys currently being refreshed in the background (avoid double-refresh storms).
 _LEADS_LIST_REFRESHING: set[str] = set()
+
+# ── L2 cache: Supabase pipeline_cache_store ──────────────────────────────────
+# Survives machine restarts and is shared across all Fly.io instances.
+# TTL is intentionally longer than L1 so deploys can serve stale-but-fast data
+# while the background thread rebuilds.
+_DB_CACHE_TTL_MINUTES = 10
+
+
+def _db_cache_read(cache_key: str) -> Optional[list]:
+    """Read pipeline results from Supabase cache. Returns None if missing/stale."""
+    import json as _json
+    from sqlalchemy import text as _text
+    from datetime import timezone as _tz
+    try:
+        from app.database import SessionLocal as _SL
+        _db = _SL()
+        try:
+            row = _db.execute(
+                _text(
+                    "SELECT data, expires_at FROM pipeline_cache_store "
+                    "WHERE cache_key = :k LIMIT 1"
+                ),
+                {"k": cache_key},
+            ).fetchone()
+            if not row:
+                return None
+            expires = row[1]
+            if expires and expires < datetime.now(_tz.utc):
+                return None
+            return _json.loads(row[0]) if isinstance(row[0], str) else row[0]
+        finally:
+            _db.close()
+    except Exception as exc:
+        logger.debug("DB cache read failed: %s", exc)
+        return None
+
+
+def _db_cache_write(cache_key: str, data: list) -> None:
+    """Persist pipeline results to Supabase cache table."""
+    import json as _json
+    from sqlalchemy import text as _text
+    from datetime import timezone as _tz, timedelta as _td
+    expires = (datetime.now(_tz.utc) + _td(minutes=_DB_CACHE_TTL_MINUTES)).isoformat()
+    try:
+        from app.database import SessionLocal as _SL
+        _db = _SL()
+        try:
+            _db.execute(
+                _text(
+                    "INSERT INTO pipeline_cache_store (cache_key, data, built_at, expires_at) "
+                    "VALUES (:k, :d::jsonb, now(), :e) "
+                    "ON CONFLICT (cache_key) DO UPDATE "
+                    "SET data = EXCLUDED.data, built_at = now(), expires_at = EXCLUDED.expires_at"
+                ),
+                {"k": cache_key, "d": _json.dumps(data), "e": expires},
+            )
+            _db.commit()
+        finally:
+            _db.close()
+    except Exception as exc:
+        logger.debug("DB cache write failed: %s", exc)
 
 
 def _lead_rows_query_limited(db: Session, limit: int):
@@ -857,6 +916,7 @@ def _schedule_leads_background_refresh(
             llm_hints = resolve_homepage_urls_for_companies(companies_needing_url) if companies_needing_url else {}
             final = [_fmt_company(c, j, jr, p, llm_homepage_url=llm_hints.get(c.id)) for c, j, jr, p in staged]
             _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), final)
+            _db_cache_write(cache_key, final)
             _log.info("leads cache bg-refresh done: key=%.30s leads=%d", cache_key, len(final))
         except Exception as exc:
             _log.warning("leads cache bg-refresh failed: %s", exc)
@@ -893,19 +953,28 @@ def get_leads(
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
 
-    # In-process cache: serves the list instantly for 5 minutes after first build.
-    # When the cache is stale (> 80% of TTL elapsed), schedule a background refresh
-    # so the NEXT request still hits a warm cache rather than waiting for a cold query.
+    # L1 (in-process): fast, per-machine, lost on restart.
+    # L2 (Supabase):   persistent, shared across all machines — survives deploys.
     _cache_key = f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
+
     _cached = _LEADS_LIST_CACHE.get(_cache_key)
     if _cached is not None:
         _ts, _data = _cached
         age = time.monotonic() - _ts
         if age < _LEADS_LIST_TTL:
-            # Background-refresh once the entry is 80% through its TTL so the cache never goes cold.
             if age > _LEADS_LIST_TTL * 0.8 and _cache_key not in _LEADS_LIST_REFRESHING:
                 _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
             return _data
+
+    # L1 miss — check Supabase before running the slow query
+    _db_data = _db_cache_read(_cache_key)
+    if _db_data is not None:
+        # Seed the L1 cache so subsequent requests on this machine are instant
+        _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _db_data)
+        # Background-refresh if the DB cache is also getting old
+        if _cache_key not in _LEADS_LIST_REFRESHING:
+            _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
+        return _db_data
 
     candidates = _lead_rows_query(db)
 
@@ -1012,6 +1081,13 @@ def get_leads(
         for c, junk, junk_reason, pri in staged
     ]
     _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _result)
+    # Persist to Supabase so restarts/deploys don't cold-start users
+    threading.Thread(
+        target=_db_cache_write,
+        args=(_cache_key, _result),
+        daemon=True,
+        name="pipeline-db-cache-write",
+    ).start()
     return _result
 
 
