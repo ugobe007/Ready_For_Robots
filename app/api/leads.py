@@ -319,10 +319,14 @@ LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
 LEADS_ROTATION_SEC = 300
 
-# Short-TTL in-process cache for the public leads list — avoids re-running the GROUP BY
-# on every page visit (the pool rotation already provides freshness on a 5-min window).
+# In-process cache for the public leads list — avoids re-running the GROUP BY on every
+# page visit. TTL must be >= worst-case query time (which can reach 60s on cold Supabase
+# connections) so the cached result is always served before the next refresh completes.
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
-_LEADS_LIST_TTL = 30.0  # seconds
+_LEADS_LIST_TTL = 300.0  # 5 minutes — long enough that cache always beats query time
+
+# Keys currently being refreshed in the background (avoid double-refresh storms).
+_LEADS_LIST_REFRESHING: set[str] = set()
 
 
 def _lead_rows_query_limited(db: Session, limit: int):
@@ -760,6 +764,106 @@ def _last_researched_at(c: Company, research_updates: list[dict]) -> Optional[st
     return max(dates) if dates else None
 
 
+def _schedule_leads_background_refresh(
+    cache_key: str,
+    min_score: float,
+    max_score: float,
+    tier,
+    industry,
+    signal_type,
+    exclude_junk: bool,
+    limit: int,
+    sort: str,
+    rotation_slot,
+) -> None:
+    """Fire-and-forget thread to rebuild the leads list cache before it expires.
+
+    Keeps the pipeline instant for users by pre-warming the cache before the
+    TTL expires, so nobody ever hits the slow cold-query path after the first load.
+    """
+    if cache_key in _LEADS_LIST_REFRESHING:
+        return
+    _LEADS_LIST_REFRESHING.add(cache_key)
+
+    def _refresh() -> None:
+        import logging
+        _log = logging.getLogger(__name__)
+        from app.database import SessionLocal as _SL
+        db = _SL()
+        try:
+            cands = _lead_rows_query(db)
+            if min_score:
+                cands = cands.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
+            if max_score < 100.0:
+                cands = cands.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
+            if industry:
+                cands = cands.filter(Company.industry.ilike(f"%{industry}%"))
+            if signal_type:
+                cands = cands.having(func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0)
+            cap = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
+            if sort == "name":
+                cands = cands.order_by(Company.name.asc())
+            elif sort == "signals":
+                cands = cands.order_by(func.count(Signal.id).desc())
+            else:
+                cands = cands.order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+            rows = cands.limit(cap).all()
+            results = []
+            for row in rows:
+                junk, junk_reason = _row_is_junk(row.name)
+                if junk and exclude_junk:
+                    continue
+                pri = _row_priority(row)
+                if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
+                    continue
+                results.append({"id": row.id, "company_name": row.name, "priority_tier": pri.tier,
+                                 "priority_score": round(pri.score, 1), "priority_reasons": pri.reasons,
+                                 "is_junk": junk, "junk_reason": junk_reason,
+                                 "signal_count": int(row.signal_count or 0)})
+            if sort == "name":
+                results.sort(key=lambda x: (x["company_name"] or "").lower())
+            elif sort == "signals":
+                results.sort(key=lambda x: x["signal_count"], reverse=True)
+            else:
+                results.sort(key=lambda x: x["priority_score"], reverse=True)
+            results = results[:min(250, max(limit * 5, 80))]
+            if not results:
+                return
+            ids = [r["id"] for r in results]
+            companies = (
+                db.query(Company)
+                .options(joinedload(Company.scores), joinedload(Company.signals))
+                .filter(Company.id.in_(ids))
+                .all()
+            )
+            company_map = {c.id: c for c in companies}
+            staged = []
+            for r in results:
+                c = company_map.get(r["id"])
+                if not c:
+                    continue
+                junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+                if junk and exclude_junk:
+                    continue
+                staged.append((c, junk, junk_reason, pri))
+                if len(staged) >= limit:
+                    break
+            staged = dedupe_staged_lead_tuples(staged)
+            companies_needing_url = [t[0] for t in staged if not (t[0].website or "").strip()]
+            llm_hints = resolve_homepage_urls_for_companies(companies_needing_url) if companies_needing_url else {}
+            final = [_fmt_company(c, j, jr, p, llm_homepage_url=llm_hints.get(c.id)) for c, j, jr, p in staged]
+            _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), final)
+            _log.info("leads cache bg-refresh done: key=%.30s leads=%d", cache_key, len(final))
+        except Exception as exc:
+            _log.warning("leads cache bg-refresh failed: %s", exc)
+        finally:
+            db.close()
+            _LEADS_LIST_REFRESHING.discard(cache_key)
+
+    import threading
+    threading.Thread(target=_refresh, daemon=True, name=f"leads-refresh-{cache_key[:20]}").start()
+
+
 @router.get("")
 @router.get("/")
 @router.get("/leads")
@@ -785,13 +889,18 @@ def get_leads(
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
 
-    # Short-TTL cache: avoid re-running the GROUP BY + Python filtering on rapid repeat loads.
-    # Cache key includes all query params that affect output; rotation_slot=None uses server clock.
+    # In-process cache: serves the list instantly for 5 minutes after first build.
+    # When the cache is stale (> 80% of TTL elapsed), schedule a background refresh
+    # so the NEXT request still hits a warm cache rather than waiting for a cold query.
     _cache_key = f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
     _cached = _LEADS_LIST_CACHE.get(_cache_key)
     if _cached is not None:
         _ts, _data = _cached
-        if time.monotonic() - _ts < _LEADS_LIST_TTL:
+        age = time.monotonic() - _ts
+        if age < _LEADS_LIST_TTL:
+            # Background-refresh once the entry is 80% through its TTL so the cache never goes cold.
+            if age > _LEADS_LIST_TTL * 0.8 and _cache_key not in _LEADS_LIST_REFRESHING:
+                _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
             return _data
 
     candidates = _lead_rows_query(db)
