@@ -81,17 +81,15 @@ def _batch_openai_urls(names: list[str]) -> dict[str, Optional[str]]:
     One API call. ``names`` must be non-empty deduped list.
     Returns lowercased stripped name -> https URL or None.
     """
-    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
-    if not key or not names:
+    if not names:
         return {}
     try:
-        from openai import OpenAI
-    except ImportError:
-        logger.warning("openai package not installed; skipping URL resolve")
+        from app.services.llm_client import get_llm_client, get_llm_model
+        client = get_llm_client()
+    except RuntimeError:
+        logger.warning("No LLM configured; skipping URL resolve")
         return {}
-
-    client = OpenAI(api_key=key)
-    model = os.getenv("COMPANY_URL_OPENAI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
+    model = get_llm_model(default=os.getenv("COMPANY_URL_OPENAI_MODEL", "gpt-4o-mini") or "gpt-4o-mini")
     payload = [
         {"name": (n or "")[:160]}
         for n in names

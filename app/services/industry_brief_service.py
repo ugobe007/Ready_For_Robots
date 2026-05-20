@@ -294,20 +294,16 @@ def _heuristic_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) 
 
 
 def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
-    if not key:
-        return None
-    try:
-        from openai import OpenAI
-    except ImportError:
-        return None
-
     try:
         timeout = float(os.getenv("INDUSTRY_BRIEF_OPENAI_TIMEOUT", "20"))
     except ValueError:
         timeout = 20.0
-    client = OpenAI(api_key=key, timeout=timeout)
-    model = os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini")
+    try:
+        from app.services.llm_client import get_llm_client, get_llm_model
+        client = get_llm_client(timeout=timeout)
+    except RuntimeError:
+        return None
+    model = get_llm_model(default=os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini"))
     totals = analytics.get("totals") or {}
     ind_rolled = dict(_rollup_industry_counts(analytics.get("industries"), limit=12))
 

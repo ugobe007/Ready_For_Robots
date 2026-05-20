@@ -347,8 +347,8 @@ def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
     if (name or "").strip().lower() == "target":
         return True, "target false positive (common-word in funding headlines)"
     # Exclude robot vendors — they are sellers, not end-user buyers
-    from app.services.newsletter_service import _is_robot_vendor
-    if _is_robot_vendor(name):
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
+    if is_known_robotics_vendor_name(name):
         return True, "robot vendor/manufacturer — not an end-user buyer"
     return False, ""
 

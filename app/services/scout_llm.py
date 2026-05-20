@@ -49,17 +49,9 @@ def scout_chat_completion(
     """
     `messages`: OpenAI-shaped roles user/assistant only (no system in list).
     """
-    key = (os.getenv("OPENAI_API_KEY") or os.getenv("OPEN_API_KEY") or "").strip()
-    if not key:
-        raise RuntimeError("OPENAI_API_KEY (or OPEN_API_KEY) is not configured")
-
-    try:
-        from openai import OpenAI
-    except ImportError as e:
-        raise RuntimeError("openai package not installed") from e
-
-    client = OpenAI(api_key=key)
-    model = (os.getenv("SCOUT_CHAT_MODEL") or "gpt-4o-mini").strip()
+    from app.services.llm_client import get_llm_client, get_llm_model
+    client = get_llm_client()
+    model = get_llm_model(default=(os.getenv("SCOUT_CHAT_MODEL") or "gpt-4o-mini"))
 
     sys = SCOUT_SYSTEM_PROMPT + _context_note(session_context)
     oa_messages: List[Dict[str, str]] = [{"role": "system", "content": sys}]

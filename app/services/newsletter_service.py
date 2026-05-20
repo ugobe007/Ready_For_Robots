@@ -20,25 +20,8 @@ from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
 # ── Fix 1: Robot vendor exclusion ─────────────────────────────────────────────
-# These are robot/automation VENDORS, not end-user buyers. They should never
-# appear in a buyer-facing newsletter.
-_ROBOT_VENDOR_PATTERNS = re.compile(
-    r"\b(locus robotics|nexera robotics|boston dynamics|fetch robotics|"
-    r"6 river systems|geek\+|greyorange|hai robotics|bionichive|"
-    r"6rs|covariant|rapidrobotics|plus one robotics|kindred systems|"
-    r"clearpath robotics|vecna robotics|iam robotics|seegrid|"
-    r"6d\.ai|formant|osaro|berkshire grey|"
-    r"universal robots|fanuc|kuka|yaskawa|kawasaki robotics|"
-    r"omron robotics|epson robots|mitsubishi robot|denso robots|"
-    r"abb robotics|staubli)\b",
-    re.IGNORECASE,
-)
-
-def _is_robot_vendor(name: Optional[str]) -> bool:
-    """Returns True if the company name matches a known robot vendor/manufacturer."""
-    if not name:
-        return False
-    return bool(_ROBOT_VENDOR_PATTERNS.search(name))
+# Delegates to the canonical vendor list maintained in robot_vendor_names.py.
+from app.services.robot_vendor_names import is_known_robotics_vendor_name as _is_robot_vendor
 
 def _strategic_brief_days() -> int:
     try:
