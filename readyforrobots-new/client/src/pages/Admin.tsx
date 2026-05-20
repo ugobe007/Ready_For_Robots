@@ -201,7 +201,8 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cleanup" | "">("");
+  const [sendConfirm, setSendConfirm] = useState<false | "bulk" | string>(false); // false | 'bulk' | crm_account_id
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
@@ -397,6 +398,48 @@ export default function Admin() {
       await loadCalStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bulk draft failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runCalBulkSend(tierFilter: "all" | "HOT" | "WARM" = "all", limit = 50) {
+    setMessage("");
+    setError("");
+    setSendConfirm(false);
+    setActionBusy("cal-send");
+    try {
+      const res = await adminFetch("/api/admin/cal/bulk-send", {
+        method: "POST",
+        body: JSON.stringify({ limit, tier_filter: tierFilter, dry_run: false }),
+      });
+      const data = await res.json().catch(() => ({})) as { sent?: number; skipped_no_draft?: number; skipped_already_sent?: number; errors?: unknown[] };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+      setMessage(`Cal sent ${data.sent ?? 0} emails · ${data.skipped_already_sent ?? 0} already sent · ${data.skipped_no_draft ?? 0} no draft · ${data.errors?.length ?? 0} errors.`);
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Send failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runCalSendOne(crmAccountId: string, toEmail: string) {
+    setMessage("");
+    setError("");
+    setSendConfirm(false);
+    setActionBusy("cal-send-one");
+    try {
+      const res = await adminFetch("/api/admin/cal/send-one", {
+        method: "POST",
+        body: JSON.stringify({ crm_account_id: crmAccountId }),
+      });
+      const data = await res.json().catch(() => ({})) as { sent?: boolean; to?: string };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+      setMessage(`Sent to ${data.to ?? toEmail}.`);
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Send failed.");
     } finally {
       setActionBusy("");
     }
@@ -653,8 +696,38 @@ export default function Admin() {
               >
                 Regenerate all
               </button>
+              <button
+                onClick={() => setSendConfirm("bulk")}
+                disabled={!!actionBusy || !calStatus?.summary?.drafted}
+                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
+                title={`Send all ${calStatus?.summary?.drafted ?? 0} drafted emails`}
+              >
+                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send drafted ({calStatus?.summary?.drafted ?? 0})</>}
+              </button>
             </div>
           </div>
+
+          {/* ── Bulk-send confirm modal ── */}
+          {sendConfirm === "bulk" && (
+            <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
+              <p className="mb-1 text-sm font-bold text-amber-200">Confirm bulk send</p>
+              <p className="mb-3 text-xs text-amber-100/60">
+                This will send up to <strong>{calStatus?.summary?.drafted ?? 0}</strong> emails via Resend — one per drafted prospect that hasn't been contacted yet. This action cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void runCalBulkSend("all", 50)}
+                  className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200"
+                >
+                  Yes — send up to 50 now
+                </button>
+                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/45">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Summary pills */}
           <div className="mb-5 grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -739,12 +812,42 @@ export default function Admin() {
                                 <pre className="whitespace-pre-wrap rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3 font-mono text-[11px] leading-relaxed text-white/65">
                                   {prospect.draft_full}
                                 </pre>
-                                {prospect.contact_email && (
-                                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-white/38">
-                                    <span>TO: <span className="font-mono text-white/55">{prospect.contact_email}</span></span>
-                                    {prospect.default_cc && <span>CC: <span className="font-mono text-white/55">{prospect.default_cc}</span></span>}
+                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                  {prospect.contact_email && (
+                                    <div className="flex flex-wrap gap-2 text-[10px] text-white/38">
+                                      <span>TO: <span className="font-mono text-white/55">{prospect.contact_email}</span></span>
+                                      {prospect.default_cc && <span>CC: <span className="font-mono text-white/55">{prospect.default_cc}</span></span>}
+                                    </div>
+                                  )}
+                                  <div className="ml-auto flex gap-2">
+                                    {prospect.outreach_sent_at ? (
+                                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 px-2.5 py-1 text-[10px] text-emerald-300">
+                                        <CheckCircle2 className="h-3 w-3" /> Sent {formatDate(prospect.outreach_sent_at)}
+                                      </span>
+                                    ) : sendConfirm === prospect.crm_account_id ? (
+                                      <>
+                                        <span className="text-[10px] text-amber-200/70">Send to {prospect.contact_email}?</span>
+                                        <button
+                                          onClick={() => prospect.crm_account_id && prospect.contact_email && void runCalSendOne(prospect.crm_account_id, prospect.contact_email)}
+                                          disabled={!!actionBusy}
+                                          className="rounded-xl border border-amber-400/40 px-3 py-1.5 text-[10px] font-bold text-amber-200 disabled:opacity-40"
+                                        >
+                                          {actionBusy === "cal-send-one" ? "Sending…" : "Yes, send"}
+                                        </button>
+                                        <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-3 py-1.5 text-[10px] text-white/40">Cancel</button>
+                                      </>
+                                    ) : (
+                                      <button
+                                        onClick={() => setSendConfirm(prospect.crm_account_id ?? false)}
+                                        disabled={!!actionBusy || !prospect.contact_email}
+                                        className="inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
+                                        style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.40)" }}
+                                      >
+                                        <Mail className="h-3 w-3" /> Send this email
+                                      </button>
+                                    )}
                                   </div>
-                                )}
+                                </div>
                               </>
                             ) : (
                               <p className="text-xs text-white/38">No draft yet. Click <strong className="text-white/55">Draft pending</strong> to generate.</p>

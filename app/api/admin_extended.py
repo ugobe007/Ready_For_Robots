@@ -464,6 +464,173 @@ def cal_bulk_draft(
     }
 
 
+class BulkSendBody(BaseModel):
+    limit: int = 50          # max emails to send in one call (safety cap)
+    tier_filter: str = "all" # "all" | "HOT" | "WARM"
+    dry_run: bool = False    # if True, validate but don't send
+
+
+@router.post("/cal/bulk-send")
+def cal_bulk_send(
+    body: BulkSendBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """
+    Send Cal outreach emails for all HOT+WARM prospects that have a draft but
+    have NOT been sent yet.  Uses Resend under the hood.  Hard-caps at
+    `body.limit` to prevent accidental mass-sends.
+    """
+    from app.services.resend_email import send_email_via_resend, ResendEmailError
+
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    companies = _hot_warm_companies(db, limit=500)
+    company_ids = [c.id for c, _, _ in companies]
+
+    accounts: dict[int, CrmAccount] = {}
+    if company_ids:
+        for a in db.query(CrmAccount).filter(
+            CrmAccount.company_id.in_(company_ids),
+            CrmAccount.team_id == team.id,
+        ).all():
+            if a.company_id:
+                accounts[a.company_id] = a
+
+    sent_count = 0
+    skipped_no_draft = 0
+    skipped_already_sent = 0
+    errors: list[dict[str, Any]] = []
+    now = datetime.now(timezone.utc)
+
+    for company, score, tier in companies:
+        if sent_count >= body.limit:
+            break
+        if body.tier_filter != "all" and tier != body.tier_filter:
+            continue
+
+        acct = accounts.get(company.id)
+        if not acct or not acct.outreach_draft:
+            skipped_no_draft += 1
+            continue
+        if acct.outreach_sent_at:
+            skipped_already_sent += 1
+            continue
+
+        domain = normalize_website_domain(company.website)
+        to_email = acct.contact_email or (f"sales@{domain}" if domain else None)
+        if not to_email:
+            errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            continue
+
+        cc_email = f"marketing@{domain}" if domain else None
+
+        # Build subject from draft first line or fallback
+        draft_lines = (acct.outreach_draft or "").strip().splitlines()
+        subject_line = next((l for l in draft_lines if l.strip()), None)
+        if subject_line and subject_line.lower().startswith("subject:"):
+            subject = subject_line[8:].strip()
+            body_text = "\n".join(draft_lines[1:]).strip()
+        else:
+            subject = f"Robot automation partnership — {company.name}"
+            body_text = acct.outreach_draft
+
+        if body.dry_run:
+            sent_count += 1
+            continue
+
+        try:
+            send_email_via_resend(
+                to_email=to_email,
+                subject=subject,
+                body_text=body_text,
+                from_display_name="Cal · Ready For Robots",
+                cc=[cc_email] if cc_email else None,
+                idempotency_key=f"cal-bulk-{acct.id}",
+            )
+            acct.outreach_sent_at = now
+            acct.outreach_stage = "contacted"
+            sent_count += 1
+        except ResendEmailError as exc:
+            errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+        except Exception as exc:
+            errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+
+    if not body.dry_run:
+        db.commit()
+
+    return {
+        "sent": sent_count,
+        "skipped_no_draft": skipped_no_draft,
+        "skipped_already_sent": skipped_already_sent,
+        "errors": errors,
+        "dry_run": body.dry_run,
+    }
+
+
+class SingleSendBody(BaseModel):
+    crm_account_id: str
+
+
+@router.post("/cal/send-one")
+def cal_send_one(
+    body: SingleSendBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Send a single drafted Cal email by CRM account ID."""
+    from app.services.resend_email import send_email_via_resend, ResendEmailError
+    import uuid as _uuid
+
+    acct = db.query(CrmAccount).filter(
+        CrmAccount.id == _uuid.UUID(body.crm_account_id)
+    ).first()
+    if not acct:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="CRM account not found")
+    if not acct.outreach_draft:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="No draft to send")
+    if acct.outreach_sent_at:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Already sent")
+
+    domain = normalize_website_domain(acct.website or "")
+    to_email = acct.contact_email or (f"sales@{domain}" if domain else None)
+    if not to_email:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="No recipient email")
+
+    cc_email = f"marketing@{domain}" if domain else None
+    draft_lines = (acct.outreach_draft or "").strip().splitlines()
+    subject_line = next((l for l in draft_lines if l.strip()), None)
+    if subject_line and subject_line.lower().startswith("subject:"):
+        subject = subject_line[8:].strip()
+        body_text = "\n".join(draft_lines[1:]).strip()
+    else:
+        subject = f"Robot automation partnership — {acct.name}"
+        body_text = acct.outreach_draft
+
+    try:
+        send_email_via_resend(
+            to_email=to_email,
+            subject=subject,
+            body_text=body_text,
+            from_display_name="Cal · Ready For Robots",
+            cc=[cc_email] if cc_email else None,
+            idempotency_key=f"cal-single-{acct.id}",
+        )
+    except ResendEmailError as exc:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    now = datetime.now(timezone.utc)
+    acct.outreach_sent_at = now
+    acct.outreach_stage = "contacted"
+    db.commit()
+    return {"sent": True, "to": to_email, "sent_at": now.isoformat()}
+
+
 @router.get("/export/all")
 def export_all_data(db: Session = Depends(get_db)):
     """Export all data as JSON."""
