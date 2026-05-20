@@ -122,10 +122,21 @@ def _harmonize_executive_take(text: str) -> str:
     return t
 
 
+_SNIPPET_HTML_RE = re.compile(r"<[^>]+>", re.DOTALL)
+_SNIPPET_URL_RE = re.compile(r"https?://\S+|CBMi[A-Za-z0-9+/=]{10,}")
+
+def _clean_snippet_text(raw: str) -> str:
+    """Strip HTML tags, Google News tokens, and URLs from snippet text."""
+    txt = _SNIPPET_HTML_RE.sub("", raw)
+    txt = _SNIPPET_URL_RE.sub("", txt)
+    txt = re.sub(r"\s{2,}", " ", txt).strip()
+    return txt
+
+
 def _gather_snippets(db: Session, days: int, limit: int = 100) -> List[Dict[str, Any]]:
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     rows = (
-        db.query(Signal, Company.name)
+        db.query(Signal, Company.name, Company.industry)
         .join(Company, Company.id == Signal.company_id)
         .filter(Signal.created_at >= cutoff)
         .order_by(desc(Signal.created_at))
@@ -133,15 +144,16 @@ def _gather_snippets(db: Session, days: int, limit: int = 100) -> List[Dict[str,
         .all()
     )
     out = []
-    for sig, company_name in rows:
-        txt = (sig.signal_text or "").strip()
+    for sig, company_name, company_industry in rows:
+        txt = _clean_snippet_text(sig.signal_text or "")
         if len(txt) < 20:
             continue
         out.append(
             {
                 "company": company_name or "",
+                "industry": company_industry or "Unknown",
                 "type": sig.signal_type or "news",
-                "text": txt[:500],
+                "text": txt[:400],
             }
         )
     return out
@@ -298,6 +310,32 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
     model = os.getenv("INDUSTRY_BRIEF_MODEL", "gpt-4o-mini")
     totals = analytics.get("totals") or {}
     ind_rolled = dict(_rollup_industry_counts(analytics.get("industries"), limit=12))
+
+    # Build co-occurrence clusters: group companies by signal type so the AI can
+    # detect "3 logistics companies all fired labor_shortage in the same window"
+    from collections import defaultdict
+    sig_type_companies: dict = defaultdict(list)
+    industry_sig_types: dict = defaultdict(set)
+    for s in snippets:
+        st = s.get("type", "unknown")
+        co = s.get("company", "")
+        ind = s.get("industry", "")
+        if co:
+            sig_type_companies[st].append(co)
+        if ind and co:
+            industry_sig_types[ind].add(st)
+    # Keep only meaningful clusters (2+ companies per signal type)
+    clusters = {
+        k: list(dict.fromkeys(v))[:8]
+        for k, v in sig_type_companies.items()
+        if len(v) >= 2
+    }
+    ind_signal_map = {
+        k: sorted(v)
+        for k, v in industry_sig_types.items()
+        if k and k.lower() not in ("unknown", "other")
+    }
+
     digest = {
         "period_days": analytics.get("period_days"),
         "signal_count": totals.get("signals"),
@@ -305,6 +343,8 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
         "top_robot_types": dict(list((analytics.get("robot_types_needed") or {}).items())[:8]),
         "top_industries": ind_rolled,
         "top_signal_types": dict(list((analytics.get("signal_types") or {}).items())[:10]),
+        "signal_type_clusters": clusters,
+        "industry_signal_map": ind_signal_map,
         "sample_headlines": snippets[:24],
         "language_rules": {
             "opening": (
@@ -323,17 +363,25 @@ def _openai_brief(analytics: Dict[str, Any], snippets: List[Dict[str, Any]]) -> 
             "industry_line": "Use 'Industries most active in this window:' for the industry sentence.",
         },
     }
-    prompt = """You are a senior industry analyst (McKinsey/CB Insights style). Using ONLY the JSON data below — aggregated opportunity signals for robotics / physical automation buyers — write a concise strategic brief for B2B robotics vendors and enterprise automation buyers.
+    prompt = """You are a senior industry analyst (McKinsey/CB Insights level). Using ONLY the JSON data below — aggregated opportunity signals from real enterprise buyers in robotics / physical automation — write an intelligence brief for B2B robotics vendors.
+
+CRITICAL REQUIREMENT — PATTERN SYNTHESIS:
+Your job is NOT to describe the data. Your job is to find the PATTERN ACROSS companies and explain what it MEANS.
+
+Bad: "Three companies show labor shortage signals."
+Good: "Three major 3PLs posted automation officer roles within the same 10-day window — that's a coordinated response to Q2 labor data, not coincidence. Vendors who call on these accounts now will shape the short list before RFPs are issued."
+
+Ask yourself before writing each sentence: "So what? What should a B2B sales team DO with this?" If you can't answer that, rewrite it.
 
 Follow language_rules in the JSON exactly for tone and vocabulary.
 
 Return valid JSON with this exact shape:
 {
-  "executive_take": "3-4 sentences, plain English, no hype",
-  "macro_trends": [ {"title": "short", "detail": "1-2 sentences with numbers from data where possible" } ],
-  "strategic_implications": [ {"audience": "who", "insight": "actionable" } ],
-  "risks_and_unknowns": [ "bullet strings" ],
-  "watch_next": [ "specific things to monitor next 2-4 weeks" ]
+  "executive_take": "3-4 sentences. Lead with the most surprising or actionable pattern you found across the signals. Name industries or signal clusters — not individual companies. Plain English, no hype.",
+  "macro_trends": [ {"title": "short title", "detail": "1-2 sentences with numbers from data. Focus on what changed, not just what exists." } ],
+  "strategic_implications": [ {"audience": "specific role (e.g. AMR vendor CRO, warehouse integrator)", "insight": "what they should do THIS WEEK based on the pattern" } ],
+  "risks_and_unknowns": [ "specific open question or risk — not generic. E.g. 'Q3 CapEx freeze could delay 40% of active evaluations'" ],
+  "watch_next": [ "specific leading indicator to watch in the next 2-4 weeks — e.g. 'Walmart Q2 earnings call for distribution capex commentary'" ]
 }
 Do not invent company names not in sample_headlines. If data is thin, say so and still give framework-level guidance.
 
@@ -348,7 +396,7 @@ DATA:
                 {"role": "user", "content": prompt + json.dumps(digest, default=str)[:120000]},
             ],
             temperature=0.35,
-            max_tokens=1800,
+            max_tokens=2400,
         )
         raw = (resp.choices[0].message.content or "").strip()
         data = json.loads(raw)

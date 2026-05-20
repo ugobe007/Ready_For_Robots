@@ -4,6 +4,7 @@ Generates top stories from hot/warm leads for daily brief and social sharing.
 """
 import os
 import json
+import re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -17,6 +18,27 @@ from app.models.score import Score
 from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
+
+# ── Fix 1: Robot vendor exclusion ─────────────────────────────────────────────
+# These are robot/automation VENDORS, not end-user buyers. They should never
+# appear in a buyer-facing newsletter.
+_ROBOT_VENDOR_PATTERNS = re.compile(
+    r"\b(locus robotics|nexera robotics|boston dynamics|fetch robotics|"
+    r"6 river systems|geek\+|greyorange|hai robotics|bionichive|"
+    r"6rs|covariant|rapidrobotics|plus one robotics|kindred systems|"
+    r"clearpath robotics|vecna robotics|iam robotics|seegrid|"
+    r"6d\.ai|formant|osaro|berkshire grey|"
+    r"universal robots|fanuc|kuka|yaskawa|kawasaki robotics|"
+    r"omron robotics|epson robots|mitsubishi robot|denso robots|"
+    r"abb robotics|staubli)\b",
+    re.IGNORECASE,
+)
+
+def _is_robot_vendor(name: Optional[str]) -> bool:
+    """Returns True if the company name matches a known robot vendor/manufacturer."""
+    if not name:
+        return False
+    return bool(_ROBOT_VENDOR_PATTERNS.search(name))
 
 def _strategic_brief_days() -> int:
     try:
@@ -164,16 +186,14 @@ def _intelligence_summary(
     loc_str = f" {loc.strip(',').strip()}" if loc else ""
     s2 = f"{name} is a {size_str}{ind} company{loc} with {len(sigs)} active buying indicators in our database."
 
-    # Sentence 3 — strongest evidence (clean, no raw HTML)
+    # Sentence 3 — strongest evidence (clean, no raw HTML or noise)
     top = deduped_sigs[0] if deduped_sigs else None
     s3 = ""
     if top:
-        import re as _re
-        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ").strip()
-        raw = _re.sub(r"<[^>]+>", "", raw).strip()
         label = _sig_label(getattr(top, "signal_type", ""))
-        if raw and len(raw) > 20:
-            excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
+        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ")
+        excerpt = _clean_signal_text(raw, max_len=180)
+        if excerpt:
             s3 = f'Key evidence — {label}: "{excerpt}"'
         else:
             s3 = f"The leading indicator is a {label}, consistent with companies actively evaluating {automation_type}."
@@ -207,16 +227,23 @@ def _intelligence_fulltext(
 
     lines = [f"**{name}** ({ind})\n", summary, ""]
 
-    # Signal breakdown
+    # Signal breakdown — Fix 2: clean HTML, URLs, noise before display
     if deduped_sigs:
         lines.append("**Buying signals detected:**")
-        for s in deduped_sigs[:5]:
+        shown = 0
+        for s in deduped_sigs[:8]:
             label = _sig_label(getattr(s, "signal_type", "signal"))
-            raw = (getattr(s, "signal_text", None) or "").replace("\n", " ").strip()
-            excerpt = (raw[:200] + "…" if len(raw) > 200 else raw) if raw else "(no text)"
+            raw = (getattr(s, "signal_text", None) or "").replace("\n", " ")
+            excerpt = _clean_signal_text(raw, max_len=200)
+            if not excerpt:
+                # Skip entirely — noisy or empty after cleaning
+                continue
             strength = getattr(s, "signal_strength", None)
-            strength_str = f" [{int((strength or 0) * 100)}% strength]" if strength else ""
+            strength_str = f" [{int((strength or 0) * 100)}% confidence]" if strength else ""
             lines.append(f"• **{label}**{strength_str}: {excerpt}")
+            shown += 1
+            if shown >= 5:
+                break
         lines.append("")
 
     # Automation fit note
@@ -228,6 +255,114 @@ def _intelligence_fulltext(
         lines.append(f"\n🔗 {website}")
 
     return "\n".join(lines)
+
+
+# ── Fix 2: Signal text cleaning ───────────────────────────────────────────────
+_HTML_TAG_RE = re.compile(r"<[^>]+>", re.DOTALL)
+_GOOGLE_NEWS_RE = re.compile(r"CBMi[A-Za-z0-9+/=]{10,}", re.IGNORECASE)
+_URL_RE = re.compile(r"https?://\S+|www\.\S+")
+_NOISE_PREFIXES = (
+    "how to train your trucker",
+    "i barely saw the aggressive driver",
+    "parcel express services evolve",
+    "dc labor gets an ai boost",
+    "warehouse managers in 2026 face",
+    "gartner: companies who choose",
+)
+
+def _clean_signal_text(raw: Optional[str], max_len: int = 200) -> str:
+    """Strip HTML, URLs, Google News tokens, and known noise fragments from signal text."""
+    if not raw:
+        return ""
+    text = _HTML_TAG_RE.sub("", raw)
+    text = _GOOGLE_NEWS_RE.sub("", text)
+    text = _URL_RE.sub("", text)
+    text = re.sub(r"\s{2,}", " ", text).strip()
+    # Drop if it starts with a known noise phrase
+    low = text.lower()
+    for prefix in _NOISE_PREFIXES:
+        if low.startswith(prefix):
+            return ""
+    # Require at least 25 meaningful chars after cleaning
+    if len(text) < 25:
+        return ""
+    return text[:max_len] + ("…" if len(text) > max_len else "")
+
+
+def _is_clean_signal(raw: Optional[str]) -> bool:
+    """Returns True only if the signal text is clean and informative."""
+    return bool(_clean_signal_text(raw, max_len=300))
+
+
+# ── Fix 3: Editorial headline generation ──────────────────────────────────────
+_DOLLAR_RE = re.compile(r"\$[\d.,]+\s*(?:billion|million|B|M)\b", re.IGNORECASE)
+_PCT_RE = re.compile(r"\d+\s*%|\d+ percent", re.IGNORECASE)
+
+def _editorial_headline(
+    name: str,
+    sig_type: str,
+    top_signal_text: Optional[str],
+    industry: str,
+) -> str:
+    """
+    Generate a real headline instead of '[Company]: [Signal Type] Signal Detected'.
+    Template: "[Company] [specific action] — [why now / context]"
+    Extracts dollar figures and percentages from signal text when available.
+    """
+    clean = _clean_signal_text(top_signal_text or "", max_len=160)
+    automation_type, pain_point = _industry_automation_context(industry)
+
+    # Dollar amount extraction for context suffix
+    dollar_match = _DOLLAR_RE.search(clean) if clean else None
+    pct_match = _PCT_RE.search(clean) if clean else None
+    dollar_str = dollar_match.group(0) if dollar_match else ""
+    pct_str = pct_match.group(0) if pct_match else ""
+
+    if sig_type in ("strategic_hire", "job_posting"):
+        if clean and len(clean) > 30:
+            # Truncate to first sentence
+            first = clean.split(".")[0].strip()
+            if len(first) > 20:
+                return f"{name} — {first[:120]}"
+        return f"{name} signals automation leadership push — {_sig_label(sig_type).lower()} detected"
+
+    if sig_type == "capex":
+        if dollar_str:
+            return f"{name} commits {dollar_str} to {automation_type}"
+        if clean and len(clean) > 30:
+            return f"{name} — {clean[:100]}"
+        return f"{name} allocates capital for {automation_type} — CapEx signal active"
+
+    if sig_type == "labor_shortage":
+        if pct_str:
+            return f"{name}: {pct_str} vacancy rate — {automation_type} evaluation underway"
+        if clean and len(clean) > 30:
+            return f"{name} — {clean[:100]}"
+        return f"{name} facing staffing pressure — automation window open"
+
+    if sig_type == "funding_round":
+        if dollar_str:
+            return f"{name} raises {dollar_str} — {automation_type} deployment follows"
+        return f"{name} closes funding — automation investment signals active"
+
+    if sig_type in ("expansion", "scale_expansion"):
+        if clean and len(clean) > 30:
+            return f"{name} — {clean[:100]}"
+        return f"{name} expanding operations — {automation_type} in scope"
+
+    if sig_type == "ma_activity":
+        return f"{name} M&A activity — automation integration opportunity"
+
+    if sig_type in ("robot_installation", "pilot_success", "roi_documented"):
+        return f"{name} deploying {automation_type} — follow-on opportunity active"
+
+    # Fallback: use first sentence of clean signal text
+    if clean and len(clean) > 30:
+        first = clean.split(".")[0].strip()
+        if len(first) > 20:
+            return f"{name} — {first[:120]}"
+
+    return f"{name}: {_sig_label(sig_type)} signal active in {_industry_display(industry)}"
 
 
 def _truncate(text: str, max_len: int) -> str:
@@ -336,6 +471,9 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
 
     stories: List[Dict] = []
     for c in companies:
+        # Fix 1: Skip robot vendors — they are sellers, not buyers
+        if _is_robot_vendor(c.name):
+            continue
         junk, _, pri = classify_lead(c, c.scores, c.signals)
         if junk or not c.signals:
             continue
@@ -390,9 +528,10 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
             summary=summary,
         )
 
-        # Headline: company name + leading signal type — not raw scraped text
+        # Fix 3: Editorial headline from signal data
         automation_type, pain_point = _industry_automation_context(c.industry or "")
-        headline = f"{name}: {_sig_label(sig_type)} Signal Detected"
+        top_sig_text = getattr(top_sig, "signal_text", None) or ""
+        headline = _editorial_headline(name, sig_type, top_sig_text, c.industry or "")
 
         # Snippet: first 2 sentences of summary (shows under headline in collapsed view)
         sentences = summary.split(". ")
