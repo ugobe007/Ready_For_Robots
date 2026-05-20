@@ -1325,6 +1325,33 @@ def _schedule_homepage_background_refresh() -> None:
     threading.Thread(target=_run, daemon=True, name="homepage-cache-refresh").start()
 
 
+def warm_pipeline_leads_cache() -> None:
+    """
+    Pre-populate the Pipeline page leads cache at startup so the first user
+    request to /pipeline is never slow. Warms the two most common query keys:
+    the default pipeline view (limit=18, sort=score) and the broader list (limit=50).
+    """
+
+    def _warm() -> None:
+        from app.database import SessionLocal
+        for lim in (18, 50):
+            key = f"0.0|100.0|None|None|None|True|{lim}|score|None"
+            if key in _LEADS_LIST_CACHE:
+                ts, _ = _LEADS_LIST_CACHE[key]
+                if time.monotonic() - ts < _LEADS_LIST_TTL:
+                    continue
+            try:
+                db = SessionLocal()
+                try:
+                    _schedule_leads_background_refresh(key, 0.0, 100.0, None, None, None, True, lim, "score", None)
+                finally:
+                    db.close()
+            except Exception as exc:
+                logger.warning("Pipeline leads cache warm-up (limit=%d) failed: %s", lim, exc)
+
+    threading.Thread(target=_warm, daemon=True, name="pipeline-leads-cache-warmer").start()
+
+
 def warm_homepage_cache() -> None:
     """
     Pre-populate the homepage cache in a background thread at startup so the

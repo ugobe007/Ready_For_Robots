@@ -199,12 +199,13 @@ app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 @app.on_event("startup")
 def startup():
     _start_scheduled_scraper()
-    # Pre-warm the homepage cache so the first user request is never slow
+    # Pre-warm the homepage and pipeline caches so the first user request is never slow
     try:
-        from app.api.leads import warm_homepage_cache
+        from app.api.leads import warm_homepage_cache, warm_pipeline_leads_cache
         warm_homepage_cache()
+        warm_pipeline_leads_cache()
     except Exception as exc:
-        logger.warning("Homepage cache warm-up could not be scheduled: %s", exc)
+        logger.warning("Homepage/pipeline cache warm-up could not be scheduled: %s", exc)
     try:
         from app.api.robot_ready import warm_robot_ready_candidate_cache
         warm_robot_ready_candidate_cache()
