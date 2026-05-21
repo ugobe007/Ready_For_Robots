@@ -496,7 +496,7 @@ def cal_bulk_draft(
 
 
 class BulkSendBody(BaseModel):
-    limit: int = 50          # max emails to send in one call (safety cap)
+    limit: int = 100         # max emails to send in one call
     tier_filter: str = "all" # "all" | "HOT" | "WARM"
     dry_run: bool = False    # if True, validate but don't send
 
@@ -852,7 +852,7 @@ def scout_bulk_activate(
 
 
 class ScoutBulkSendBody(BaseModel):
-    limit: int = 50
+    limit: int = 100
     dry_run: bool = False
 
 

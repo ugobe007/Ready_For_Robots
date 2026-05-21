@@ -443,19 +443,31 @@ export default function Admin() {
     }
   }
 
-  async function runCalBulkSend(tierFilter: "all" | "HOT" | "WARM" = "all", limit = 50) {
+  async function runCalBulkSend(tierFilter: "all" | "HOT" | "WARM" = "all", limit = 1000) {
     setMessage("");
     setError("");
     setSendConfirm(false);
     setActionBusy("cal-send");
+    let totalSent = 0;
+    let totalErrors = 0;
+    // Loop in batches of 100 until nothing left to send
     try {
-      const res = await adminFetch("/api/admin/cal/bulk-send", {
-        method: "POST",
-        body: JSON.stringify({ limit, tier_filter: tierFilter, dry_run: false }),
-      });
-      const data = await res.json().catch(() => ({})) as { sent?: number; skipped_no_draft?: number; skipped_already_sent?: number; errors?: unknown[] };
-      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
-      setMessage(`Cal sent ${data.sent ?? 0} emails · ${data.skipped_already_sent ?? 0} already sent · ${data.skipped_no_draft ?? 0} no draft · ${data.errors?.length ?? 0} errors.`);
+      while (true) {
+        const res = await adminFetch("/api/admin/cal/bulk-send", {
+          method: "POST",
+          body: JSON.stringify({ limit: 100, tier_filter: tierFilter, dry_run: false }),
+        });
+        const data = await res.json().catch(() => ({})) as { sent?: number; skipped_no_draft?: number; skipped_already_sent?: number; errors?: unknown[] };
+        if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+        const batchSent = data.sent ?? 0;
+        totalSent += batchSent;
+        totalErrors += data.errors?.length ?? 0;
+        // Stop when no more emails went out in this batch
+        if (batchSent === 0) break;
+        // Stop if we've hit the overall limit
+        if (totalSent >= limit) break;
+      }
+      setMessage(`Cal sent ${totalSent} emails · ${totalErrors} errors.`);
       await loadCalStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Send failed.");
@@ -508,11 +520,19 @@ export default function Admin() {
 
   async function runScoutBulkSend() {
     setMessage(""); setError(""); setSendConfirm(false); setActionBusy("scout-send");
+    let totalSent = 0;
+    let totalErrors = 0;
     try {
-      const res = await adminFetch("/api/admin/scout/bulk-send", { method: "POST", body: JSON.stringify({ limit: 50, dry_run: false }) });
-      const data = await res.json().catch(() => ({})) as { sent?: number; skipped?: number; errors?: number };
-      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
-      setMessage(`SCOUT sent ${data.sent ?? 0} emails · ${data.skipped ?? 0} skipped · ${data.errors ?? 0} errors.`);
+      while (true) {
+        const res = await adminFetch("/api/admin/scout/bulk-send", { method: "POST", body: JSON.stringify({ limit: 100, dry_run: false }) });
+        const data = await res.json().catch(() => ({})) as { sent?: number; skipped?: number; errors?: number };
+        if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+        const batchSent = data.sent ?? 0;
+        totalSent += batchSent;
+        totalErrors += data.errors ?? 0;
+        if (batchSent === 0) break;
+      }
+      setMessage(`SCOUT sent ${totalSent} emails · ${totalErrors} errors.`);
       await loadScoutStatus();
     } catch (err) { setError(err instanceof Error ? err.message : "Send failed."); }
     finally { setActionBusy(""); }
