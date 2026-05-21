@@ -341,6 +341,7 @@ def _serialize_cal_row(
         "crm_account_id": str(acct.id) if acct else None,
         "contact_email": contact_email,
         "default_cc": inferred_cc,
+        "account_type": (acct.account_type if acct else None) or "buyer",
         "outreach_stage": acct.outreach_stage if acct else None,
         "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
         "has_draft": has_draft,

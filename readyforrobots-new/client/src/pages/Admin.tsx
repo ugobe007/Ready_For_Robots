@@ -106,11 +106,13 @@ type CalProspect = {
   crm_account_id?: string;
   contact_email?: string;
   default_cc?: string;
+  account_type?: "buyer" | "vendor";
   outreach_stage?: string;
   outreach_sent_at?: string;
   has_draft?: boolean;
   draft_preview?: string;
   draft_full?: string;
+  email_delivery_status?: string;
 };
 
 type CalDraftStatus = {
@@ -965,7 +967,30 @@ export default function Admin() {
                         >
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white/85">{prospect.company_name || "—"}</p>
-                            <p className="mt-0.5 truncate text-[10px] text-white/35">{prospect.industry}</p>
+                            <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] text-white/35">{prospect.industry}</span>
+                              <button
+                                type="button"
+                                title="Toggle buyer / vendor"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!prospect.crm_account_id) return;
+                                  const next = prospect.account_type === "vendor" ? "buyer" : "vendor";
+                                  void adminFetch(`/api/crm/accounts/${prospect.crm_account_id}`, {
+                                    method: "PATCH",
+                                    body: JSON.stringify({ account_type: next }),
+                                  }).then(() => void loadCalStatus());
+                                }}
+                                className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors"
+                                style={
+                                  prospect.account_type === "vendor"
+                                    ? { background: "rgba(167,139,250,0.12)", borderColor: "rgba(167,139,250,0.3)", color: "#a78bfa" }
+                                    : { background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.2)", color: "#6ee7b7" }
+                                }
+                              >
+                                {prospect.account_type === "vendor" ? "vendor" : "buyer"}
+                              </button>
+                            </div>
                           </div>
                           <div>
                             <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>

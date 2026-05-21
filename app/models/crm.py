@@ -41,6 +41,8 @@ class CrmAccount(Base):
     industry = Column(String, nullable=True)
     owner_user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     contact_email = Column(String(320), nullable=True)
+    # 'buyer' = company seeking automation | 'vendor' = robot company selling automation
+    account_type = Column(String(16), nullable=False, server_default="buyer")
     outreach_draft = Column(Text, nullable=True)
     outreach_sent_at = Column(DateTime(timezone=True), nullable=True)
     outreach_stage = Column(String(64), nullable=True)

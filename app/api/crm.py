@@ -157,6 +157,7 @@ class PatchCrmAccountIn(BaseModel):
     contact_email: Optional[str] = Field(None, max_length=320)
     outreach_draft: Optional[str] = None
     outreach_stage: Optional[str] = Field(None, max_length=64)
+    account_type: Optional[str] = Field(None, pattern="^(buyer|vendor)$")
 
 
 class SendOutreachIn(BaseModel):
@@ -341,60 +342,71 @@ def _collateral_note(policy: str, links: str | None) -> str:
 
 
 def _draft_subject(acct: CrmAccount) -> str:
-    """Short, curiosity-driving subject. No buzzwords, no exclamation marks."""
+    """Short, curiosity-driving subject. Buyer vs vendor aware."""
     name = (acct.name or "your team").strip()
     industry = (acct.industry or "").strip().lower()
+    account_type = getattr(acct, "account_type", "buyer") or "buyer"
+
+    if account_type == "vendor":
+        # Vendor = robot company — subject is about the buyer lead we found them
+        if industry in ("hospitality", "hotels", "casinos & gaming"):
+            return f"hospitality buyer looking for automation"
+        if industry in ("logistics", "warehousing"):
+            return f"logistics lead — active buyer signal"
+        if industry in ("healthcare", "medical technology"):
+            return f"healthcare operator — automation interest"
+        return f"buyer lead for {name}"
+
+    # Buyer = company seeking automation — subject hooks curiosity, not a sales pitch
     if industry in ("hospitality", "hotels", "casinos & gaming"):
-        return f"automation angle at {name}?"
+        return f"robot companies for {name}?"
     if industry in ("logistics", "warehousing"):
         return f"quick question about {name}'s ops"
     if industry in ("healthcare", "medical technology"):
-        return f"robotics for {name} — worth 10 minutes?"
+        return f"robotics vendors for {name} — worth 10 minutes?"
     if industry in ("food service", "food processing & manufacturing"):
         return f"labor question for {name}"
-    return f"automation signal we picked up on {name}"
+    return f"automation vendors we matched to {name}"
 
 
-def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None) -> str:
-    """Cal voice: cool, confident, casual, brief, meaningful. One observation. One ask."""
+def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
+    """Email to a BUYER company — offer robot company introductions, not a lecture on why they need robots."""
     industry = (acct.industry or "your industry").strip()
     name = (acct.name or "your team").strip()
     selected_traits = set(traits)
 
     lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
 
-    if "insightful" in selected_traits or "industry_refs" in selected_traits:
+    if "robot_examples" in selected_traits or "insightful" in selected_traits:
         lines.append(
-            f"We picked up some signals on {name} — looks like {industry} teams "
-            f"are dealing with the usual mix of labor pressure and throughput gaps. "
-            f"Automation tends to show up as a real option around that point."
-        )
-    elif "robot_examples" in selected_traits:
-        lines.append(
-            f"We're seeing {industry} operations move on AMRs, delivery robots, and task automation "
-            f"where headcount is the constraint. {name} fits the profile."
+            f"We've been mapping the robot vendor landscape for {industry} operations — "
+            f"AMRs, delivery robots, task automation — and {name} fits the profile of teams "
+            f"that see real ROI on this stuff. We know which vendors are actually deploying in your space."
         )
     elif "humor" in selected_traits:
         lines.append(
-            f"Caught some signals on {name}. Not here to sell robot science projects — "
-            f"just wondering if there's a real labor or throughput problem worth solving."
+            f"Not here to tell you robots exist. You already know that. "
+            f"We track which robot companies are actually solving {industry} problems right now — "
+            f"and I think a couple of them are a match for {name}."
         )
     else:
         lines.append(
-            f"{name} came up in our signal tracking. There may be an automation angle worth a quick look."
+            f"We track robot companies by deployment type and industry fit. "
+            f"Based on {name}'s profile, I have a short list of vendors worth a look — "
+            f"ones that are active in {industry} and have real deployments, not just demos."
         )
 
     lines.append("")
 
     if "inquisitive" in selected_traits:
-        lines.append("What's the biggest operational drag right now — labor coverage, throughput, or something else?")
+        lines.append("What's the main bottleneck right now — labor coverage, throughput, or something else? I can narrow the list.")
     else:
         channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
         meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
         if channel in ("phone", "meeting"):
-            lines.append(meeting or "Open to a 15-minute call to see if it's worth exploring?")
+            lines.append(meeting or "Worth a 15-minute call? I can walk through the vendor shortlist.")
         else:
-            lines.append("Worth a quick reply if there's any interest?")
+            lines.append("Want me to send over the shortlist? Quick reply is all it takes.")
 
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
@@ -402,6 +414,61 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
 
     lines.extend(["", cal_signature()])
     return "\n".join(lines)
+
+
+def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
+    """Email to a VENDOR (robot company) — send them a buyer lead, not a pitch."""
+    industry = (acct.industry or "your space").strip()
+    name = (acct.name or "your team").strip()
+    selected_traits = set(traits)
+
+    lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
+
+    if "insightful" in selected_traits or "industry_refs" in selected_traits:
+        lines.append(
+            f"We've been tracking buyer signals in {industry} — labor pressure, expansion moves, CapEx shifts — "
+            f"and a few accounts are showing real purchase intent right now. "
+            f"The kind of signals that usually show up 6–8 weeks before a vendor conversation."
+        )
+    elif "robot_examples" in selected_traits:
+        lines.append(
+            f"There are active {industry} buyers in our signal feed right now. "
+            f"Not window-shoppers — accounts showing labor strain and operational throughput gaps. "
+            f"The type that are already evaluating options."
+        )
+    else:
+        lines.append(
+            f"We're seeing active buyer signals in {industry} right now — "
+            f"accounts that fit {name}'s deployment profile. "
+            f"We route these signals to vendors before they hit the open market."
+        )
+
+    lines.append("")
+
+    if "inquisitive" in selected_traits:
+        lines.append("What does your ideal buyer look like right now — industry, size, use case? I'll match against what we're tracking.")
+    else:
+        channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
+        meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
+        if channel in ("phone", "meeting"):
+            lines.append(meeting or "Worth a quick call to see if the signals match your pipeline?")
+        else:
+            lines.append("Want me to send over the buyer profile? Takes 30 seconds to see if it's a fit.")
+
+    collateral = _collateral_note(collateral_policy, collateral_links)
+    if collateral:
+        lines.extend(["", collateral])
+
+    lines.extend(["", cal_signature()])
+    return "\n".join(lines)
+
+
+def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None) -> str:
+    """Route to buyer or vendor draft based on account_type."""
+    account_type = getattr(acct, "account_type", "buyer") or "buyer"
+    if account_type == "vendor":
+        return _draft_vendor_body(acct, settings, traits, collateral_policy, collateral_links)
+    return _draft_buyer_body(acct, settings, traits, collateral_policy, collateral_links)
 
 
 def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str]]:
@@ -765,6 +832,8 @@ def patch_account(
             acct.outreach_draft = patch["outreach_draft"]
         if "outreach_stage" in patch:
             acct.outreach_stage = patch["outreach_stage"]
+        if "account_type" in patch:
+            acct.account_type = patch["account_type"]
         db.commit()
         db.refresh(acct)
         pl = None
