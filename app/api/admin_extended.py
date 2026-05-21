@@ -401,6 +401,8 @@ def cal_draft_status(
     warm = sum(1 for r in rows if r["tier"] == "WARM")
     drafted = sum(1 for r in rows if r["has_draft"])
     sent = sum(1 for r in rows if r["outreach_sent_at"])
+    # unsent_drafted = have a draft but have NOT been sent yet — this is what Send All will actually fire
+    unsent_drafted = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"])
     opened = sum(1 for r in rows if r["email_delivery_status"] in ("opened", "clicked"))
     clicked = sum(1 for r in rows if r["email_delivery_status"] == "clicked")
     replied = sum(1 for r in rows if r["outreach_stage"] == "replied")
@@ -411,6 +413,7 @@ def cal_draft_status(
             "hot": hot,
             "warm": warm,
             "drafted": drafted,
+            "unsent_drafted": unsent_drafted,
             "pending_draft": total - drafted,
             "sent": sent,
             "opened": opened,

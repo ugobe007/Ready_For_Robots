@@ -121,6 +121,7 @@ type CalDraftStatus = {
     hot?: number;
     warm?: number;
     drafted?: number;
+    unsent_drafted?: number;
     pending_draft?: number;
     sent?: number;
   };
@@ -613,7 +614,7 @@ export default function Admin() {
             accessToken={session?.access_token}
             stats={calStatus?.summary ? {
               total: calStatus.summary.total ?? 0,
-              drafted: calStatus.summary.drafted ?? 0,
+              drafted: calStatus.summary.unsent_drafted ?? calStatus.summary.drafted ?? 0,
               sent: calStatus.summary.sent ?? 0,
               opened: (calStatus.summary as Record<string, number>).opened ?? 0,
               clicked: (calStatus.summary as Record<string, number>).clicked ?? 0,
@@ -874,7 +875,7 @@ export default function Admin() {
                 style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
                 title={`Send all ${calStatus?.summary?.drafted ?? 0} drafted emails`}
               >
-                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send drafted ({calStatus?.summary?.drafted ?? 0})</>}
+                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send unsent ({calStatus?.summary?.unsent_drafted ?? 0})</>}
               </button>
             </div>
           </div>
@@ -884,11 +885,13 @@ export default function Admin() {
             <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
               <p className="mb-1 text-sm font-bold text-amber-200">Confirm bulk send</p>
               <p className="mb-3 text-xs text-amber-100/60">
-                This will send up to <strong>{calStatus?.summary?.drafted ?? 0}</strong> emails via Resend — one per drafted prospect that hasn't been contacted yet. This action cannot be undone.
+                This will send <strong>{calStatus?.summary?.unsent_drafted ?? 0} new emails</strong> via Resend.
+                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-100/40"> ({calStatus?.summary?.sent} already sent contacts will be skipped — no duplicates.)</span>}
+                {" "}Cannot be undone.
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => void runCalBulkSend("all", 50)}
+                  onClick={() => void runCalBulkSend()}
                   className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200"
                 >
                   Yes — send all now
