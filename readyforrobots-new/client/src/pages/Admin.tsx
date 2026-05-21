@@ -798,44 +798,10 @@ export default function Admin() {
               </div>
               <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Fully automated prospect outreach</h2>
               <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
-                SCOUT activates on every HOT + WARM prospect, drafts emails in Cal's voice, and sends — no per-prospect clicks required.
-                Step 1: <span className="font-semibold text-white/65">Run SCOUT on all</span> → Step 2: <span className="font-semibold text-white/65">Bulk send drafted</span>.
+                Use the buttons at the top of this page to run the full workflow.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => void loadScoutStatus()} disabled={!!actionBusy} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/55 disabled:opacity-40">
-                <RefreshCw className="h-3 w-3" /> Refresh
-              </button>
-              <button
-                onClick={() => void runScoutBulkActivate()}
-                disabled={!!actionBusy}
-                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
-                style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.08)" }}
-              >
-                {actionBusy === "scout-activate" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Running…</> : <><Bot className="h-3.5 w-3.5" /> Run SCOUT on all prospects</>}
-              </button>
-              <button
-                onClick={() => setSendConfirm("scout-send")}
-                disabled={!!actionBusy || !scoutStatus?.drafted}
-                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
-                style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
-              >
-                {actionBusy === "scout-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Bulk send drafted ({scoutStatus?.drafted ?? 0})</>}
-              </button>
-            </div>
           </div>
-
-          {/* Confirm bulk send */}
-          {sendConfirm === "scout-send" && (
-            <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
-              <p className="mb-1 text-sm font-bold text-amber-200">Confirm SCOUT bulk send</p>
-              <p className="mb-3 text-xs text-amber-100/60">This will send up to <strong>{scoutStatus?.drafted ?? 0}</strong> drafted emails via Resend. Cannot be undone.</p>
-              <div className="flex gap-2">
-                <button onClick={() => void runScoutBulkSend()} className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200">Yes — send up to 50 now</button>
-                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/45">Cancel</button>
-              </div>
-            </div>
-          )}
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -925,7 +891,7 @@ export default function Admin() {
                   onClick={() => void runCalBulkSend("all", 50)}
                   className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200"
                 >
-                  Yes — send up to 50 now
+                  Yes — send all now
                 </button>
                 <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/45">
                   Cancel

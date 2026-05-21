@@ -144,44 +144,48 @@ export default function ScoutActionBar({
         className="flex items-center gap-2 flex-wrap px-4 py-3 border-b border-white/8"
         style={{ background: "rgba(124,58,237,0.06)" }}
       >
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mr-1" style={{ color: "#a78bfa" }}>SCOUT</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mr-2" style={{ color: "#a78bfa" }}>SCOUT</span>
 
-        {/* Run SCOUT */}
+        {/* Step 1 — Draft */}
         <button
           type="button"
           disabled={!!busy}
           onClick={onRunScout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50 hover:-translate-y-px"
           style={{ borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)", color: "#93c5fd" }}
-          title="Draft Cal outreach emails for all HOT + WARM prospects"
+          title="Step 1 — Write Cal outreach emails for all prospects (buyer & vendor templates)"
         >
           {busy === "draft" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
-          Run SCOUT
+          1 · Draft emails
         </button>
 
-        {/* Activate SCOUT */}
+        <span className="text-white/20 text-xs">→</span>
+
+        {/* Step 2 — Send */}
         <button
           type="button"
           disabled={!!busy}
           onClick={onActivateScout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50 hover:-translate-y-px"
           style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "#6ee7b7" }}
-          title="Send all drafted Cal emails via Resend"
+          title="Step 2 — Send all drafted emails via Resend (all at once)"
         >
           {busy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-          Activate SCOUT {stats?.drafted ? `(${stats.drafted})` : ""}
+          2 · Send all{stats?.drafted ? ` (${stats.drafted})` : ""}
         </button>
 
-        {/* Track SCOUT */}
+        <span className="text-white/20 text-xs">→</span>
+
+        {/* Step 3 — Track */}
         <button
           type="button"
           onClick={onTrackScout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all hover:-translate-y-px"
           style={{ borderColor: "rgba(255,176,0,0.35)", background: "rgba(255,176,0,0.07)", color: "#fbbf24" }}
-          title="View send / open / click / reply stats"
+          title="Step 3 — Refresh open / click / reply stats"
         >
           <BarChart2 className="h-3 w-3" />
-          Track SCOUT
+          3 · Track stats
         </button>
 
         {/* TEST */}
