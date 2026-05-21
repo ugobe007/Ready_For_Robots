@@ -1182,6 +1182,15 @@ export default function Admin() {
           </div>
         </section>
 
+        {/* ── Robot Benchmark Index ─────────────────────────────────────────── */}
+        <section id="robot-benchmark" className="mb-8 scroll-mt-28">
+          <div className="mb-3 flex items-center gap-2">
+            <span style={{ color: "#a78bfa", fontSize: 16 }}>🤖</span>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Robot Benchmark Index</p>
+          </div>
+          <RobotBenchmarkPanel api={api} headers={headers as Record<string, string | undefined>} />
+        </section>
+
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
             <BarChart3 className="h-4 w-4" style={{ color: "#03DAC5" }} />
@@ -1297,8 +1306,6 @@ export default function Admin() {
             </div>
           </div>
 
-          {/* ── Robot benchmark + LinkedIn ── */}
-          <RobotBenchmarkPanel api={api} headers={headers as Record<string, string | undefined>} />
 
           <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Operational shortcuts</p>
