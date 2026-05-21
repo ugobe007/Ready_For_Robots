@@ -122,8 +122,13 @@ type CalDraftStatus = {
     warm?: number;
     drafted?: number;
     unsent_drafted?: number;
+    sendable?: number;
+    no_email?: number;
     pending_draft?: number;
     sent?: number;
+    opened?: number;
+    clicked?: number;
+    replied?: number;
   };
   prospects?: CalProspect[];
 };
@@ -981,8 +986,26 @@ export default function Admin() {
                 style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
                 title={`Send all ${calStatus?.summary?.drafted ?? 0} drafted emails`}
               >
-                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send unsent ({calStatus?.summary?.unsent_drafted ?? 0})</>}
+                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send unsent ({calStatus?.summary?.sendable ?? calStatus?.summary?.unsent_drafted ?? 0} sendable)</>}
               </button>
+              {(calStatus?.summary?.no_email ?? 0) > 0 && (
+                <button
+                  onClick={() => void (async () => {
+                    setActionBusy("cleanup");
+                    try {
+                      const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=40&dry_run=false", { method: "POST" });
+                      const d = await res.json().catch(() => ({})) as { resolved?: number; processed?: number };
+                      setMessage(`Resolved ${d.resolved ?? 0} of ${d.processed ?? 0} missing emails — refresh to see updated count.`);
+                      void loadCalStatus();
+                    } finally { setActionBusy(""); }
+                  })()}
+                  disabled={!!actionBusy}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
+                  title={`Look up websites for ${calStatus?.summary?.no_email} contacts with no email`}
+                >
+                  Fix {calStatus?.summary?.no_email} missing emails
+                </button>
+              )}
             </div>
           </div>
 
@@ -991,9 +1014,12 @@ export default function Admin() {
             <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
               <p className="mb-1 text-sm font-bold text-amber-200">Confirm bulk send</p>
               <p className="mb-3 text-xs text-amber-100/60">
-                This will send <strong>{calStatus?.summary?.unsent_drafted ?? 0} new emails</strong> via Resend.
-                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-100/40"> ({calStatus?.summary?.sent} already sent contacts will be skipped — no duplicates.)</span>}
-                {" "}Cannot be undone.
+                <strong>{calStatus?.summary?.sendable ?? 0} emails will go out</strong> via Resend
+                {(calStatus?.summary?.no_email ?? 0) > 0 && (
+                  <span className="text-amber-300/70"> · {calStatus?.summary?.no_email} contacts skipped (no email address on file)</span>
+                )}
+                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-100/40"> · {calStatus?.summary?.sent} already sent (no duplicates)</span>}
+                {". "}Cannot be undone.
               </p>
               <div className="flex gap-2">
                 <button

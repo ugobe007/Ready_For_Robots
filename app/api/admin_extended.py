@@ -401,8 +401,12 @@ def cal_draft_status(
     warm = sum(1 for r in rows if r["tier"] == "WARM")
     drafted = sum(1 for r in rows if r["has_draft"])
     sent = sum(1 for r in rows if r["outreach_sent_at"])
-    # unsent_drafted = have a draft but have NOT been sent yet — this is what Send All will actually fire
+    # unsent_drafted = have a draft but have NOT been sent yet
     unsent_drafted = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"])
+    # sendable = have draft + valid email + not yet sent — this is the real number that will go out
+    sendable = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"])
+    # no_email = drafted but no email address at all — bulk send will skip these
+    no_email = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"] and not r["contact_email"])
     opened = sum(1 for r in rows if r["email_delivery_status"] in ("opened", "clicked"))
     clicked = sum(1 for r in rows if r["email_delivery_status"] == "clicked")
     replied = sum(1 for r in rows if r["outreach_stage"] == "replied")
@@ -414,6 +418,8 @@ def cal_draft_status(
             "warm": warm,
             "drafted": drafted,
             "unsent_drafted": unsent_drafted,
+            "sendable": sendable,
+            "no_email": no_email,
             "pending_draft": total - drafted,
             "sent": sent,
             "opened": opened,
@@ -599,6 +605,67 @@ def cal_bulk_send(
         "skipped_already_sent": skipped_already_sent,
         "errors": errors,
         "dry_run": body.dry_run,
+    }
+
+
+@router.post("/cal/enrich-missing-emails")
+def cal_enrich_missing_emails(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+    limit: int = 40,
+    dry_run: bool = False,
+):
+    """
+    For CRM accounts that have a draft but no email address, look up the company
+    website via DuckDuckGo and update companies.website so the next bulk send can
+    resolve sales@<domain>.  Processes up to `limit` companies per call.
+    """
+    # Find HOT+WARM companies without a website that have an unsent draft
+    companies = _hot_warm_companies(db, limit=500)
+    company_ids = [c.id for c, _, _ in companies]
+
+    accounts_without_email: list[tuple[Company, float]] = []
+    if company_ids:
+        for company, score, _ in companies:
+            if company.website:
+                continue  # already has a domain
+            # Check if they have a drafted CRM account that's not yet sent
+            acct = db.query(CrmAccount).filter(
+                CrmAccount.company_id == company.id,
+                CrmAccount.outreach_draft.isnot(None),
+                CrmAccount.outreach_sent_at.is_(None),
+            ).first()
+            if acct and not acct.contact_email:
+                accounts_without_email.append((company, score))
+
+    accounts_without_email = accounts_without_email[:limit]
+    resolved = 0
+    results: list[dict] = []
+    for company, score in accounts_without_email:
+        found = try_duckduckgo_company_website(company.name)
+        sleep_between_lookups(0.8)
+        applied = False
+        if found and not dry_run:
+            company.website = found
+            db.add(company)
+            resolved += 1
+            applied = True
+        results.append({
+            "company_id": company.id,
+            "name": company.name,
+            "score": round(score, 1),
+            "found_website": found,
+            "applied": applied,
+        })
+
+    if not dry_run:
+        db.commit()
+
+    return {
+        "processed": len(results),
+        "resolved": resolved,
+        "dry_run": dry_run,
+        "results": results,
     }
 
 
