@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
@@ -148,10 +148,10 @@ function RobotBenchmarkPanel({ api, headers }: {
   headers: Record<string, string | undefined>;
   adminFetch?: (path: string, init?: RequestInit) => Promise<Response>;
 }) {
-  const [scraping, setScraping] = React.useState(false);
-  const [scrapeMsg, setScrapeMsg] = React.useState("");
-  const [linkedInPost, setLinkedInPost] = React.useState<{ post_text: string; linkedin_share_url: string; char_count: number } | null>(null);
-  const [postOpen, setPostOpen] = React.useState(false);
+  const [scraping, setScraping] = useState(false);
+  const [scrapeMsg, setScrapeMsg] = useState("");
+  const [linkedInPost, setLinkedInPost] = useState<{ post_text: string; linkedin_share_url: string; char_count: number } | null>(null);
+  const [postOpen, setPostOpen] = useState(false);
 
   const safeHeaders = Object.fromEntries(
     Object.entries(headers).filter(([, v]) => v !== undefined)
@@ -163,7 +163,7 @@ function RobotBenchmarkPanel({ api, headers }: {
       const res = await fetch(`${api}/api/humanoid/scrape-all`, { method: "POST", headers: safeHeaders });
       const d = await res.json().catch(() => ({})) as { scraped?: number };
       setScrapeMsg(`Scraped ${d.scraped ?? 0} robots — scores updated.`);
-    } catch { setScrapeMsg("Scrape failed."); }
+    } catch (_e) { setScrapeMsg("Scrape failed."); }
     finally { setScraping(false); }
   };
 
@@ -171,7 +171,7 @@ function RobotBenchmarkPanel({ api, headers }: {
     try {
       const res = await fetch(`${api}/api/humanoid/linkedin-post`, { headers: safeHeaders });
       if (res.ok) { setLinkedInPost(await res.json() as { post_text: string; linkedin_share_url: string; char_count: number }); setPostOpen(true); }
-    } catch { /* silent */ }
+    } catch (_e) { /* silent */ }
   };
 
   return (
