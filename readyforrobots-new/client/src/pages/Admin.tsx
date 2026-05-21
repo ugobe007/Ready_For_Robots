@@ -201,8 +201,9 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cleanup" | "">("");
-  const [sendConfirm, setSendConfirm] = useState<false | "bulk" | string>(false); // false | 'bulk' | crm_account_id
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
+  const [scoutStatus, setScoutStatus] = useState<{ total_prospects?: number; activated?: number; drafted?: number; sent?: number; pending_approval?: number } | null>(null);
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
@@ -445,6 +446,39 @@ export default function Admin() {
     }
   }
 
+  const loadScoutStatus = useCallback(async () => {
+    const res = await adminFetch("/api/admin/scout/status");
+    if (res.ok) setScoutStatus(await res.json() as typeof scoutStatus);
+  }, [adminFetch]);
+
+  useEffect(() => {
+    if (!authLoading && session?.access_token) void loadScoutStatus();
+  }, [authLoading, loadScoutStatus, session?.access_token]);
+
+  async function runScoutBulkActivate() {
+    setMessage(""); setError(""); setActionBusy("scout-activate");
+    try {
+      const res = await adminFetch("/api/admin/scout/bulk-activate", { method: "POST", body: JSON.stringify({ limit: 200, tier_filter: "all", dry_run: false }) });
+      const data = await res.json().catch(() => ({})) as { activated?: number; skipped?: number; errors?: number };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Activation failed.");
+      setMessage(`SCOUT activated ${data.activated ?? 0} prospects · ${data.skipped ?? 0} already active · ${data.errors ?? 0} errors.`);
+      await loadScoutStatus();
+    } catch (err) { setError(err instanceof Error ? err.message : "Activation failed."); }
+    finally { setActionBusy(""); }
+  }
+
+  async function runScoutBulkSend() {
+    setMessage(""); setError(""); setSendConfirm(false); setActionBusy("scout-send");
+    try {
+      const res = await adminFetch("/api/admin/scout/bulk-send", { method: "POST", body: JSON.stringify({ limit: 50, dry_run: false }) });
+      const data = await res.json().catch(() => ({})) as { sent?: number; skipped?: number; errors?: number };
+      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+      setMessage(`SCOUT sent ${data.sent ?? 0} emails · ${data.skipped ?? 0} skipped · ${data.errors ?? 0} errors.`);
+      await loadScoutStatus();
+    } catch (err) { setError(err instanceof Error ? err.message : "Send failed."); }
+    finally { setActionBusy(""); }
+  }
+
   async function exportAllData() {
     setMessage("");
     setError("");
@@ -639,6 +673,65 @@ export default function Admin() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* ── SCOUT Automation ─────────────────────────────────────────────── */}
+        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>SCOUT Automation</p>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Fully automated prospect outreach</h2>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
+                SCOUT activates on every HOT + WARM prospect, drafts emails in Cal's voice, and sends — no per-prospect clicks required.
+                Step 1: <span className="font-semibold text-white/65">Run SCOUT on all</span> → Step 2: <span className="font-semibold text-white/65">Bulk send drafted</span>.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => void loadScoutStatus()} disabled={!!actionBusy} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/55 disabled:opacity-40">
+                <RefreshCw className="h-3 w-3" /> Refresh
+              </button>
+              <button
+                onClick={() => void runScoutBulkActivate()}
+                disabled={!!actionBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.08)" }}
+              >
+                {actionBusy === "scout-activate" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Running…</> : <><Bot className="h-3.5 w-3.5" /> Run SCOUT on all prospects</>}
+              </button>
+              <button
+                onClick={() => setSendConfirm("scout-send")}
+                disabled={!!actionBusy || !scoutStatus?.drafted}
+                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
+              >
+                {actionBusy === "scout-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Bulk send drafted ({scoutStatus?.drafted ?? 0})</>}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm bulk send */}
+          {sendConfirm === "scout-send" && (
+            <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
+              <p className="mb-1 text-sm font-bold text-amber-200">Confirm SCOUT bulk send</p>
+              <p className="mb-3 text-xs text-amber-100/60">This will send up to <strong>{scoutStatus?.drafted ?? 0}</strong> drafted emails via Resend. Cannot be undone.</p>
+              <div className="flex gap-2">
+                <button onClick={() => void runScoutBulkSend()} className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200">Yes — send up to 50 now</button>
+                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/45">Cancel</button>
+              </div>
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            <AdminCard label="Total Prospects" value={formatNumber(scoutStatus?.total_prospects)} sub="HOT + WARM" />
+            <AdminCard label="Activated" value={formatNumber(scoutStatus?.activated)} sub="SCOUT running" />
+            <AdminCard label="Drafted" value={formatNumber(scoutStatus?.drafted)} sub="ready to send" />
+            <AdminCard label="Pending Approval" value={formatNumber(scoutStatus?.pending_approval)} sub="awaiting review" />
+            <AdminCard label="Sent" value={formatNumber(scoutStatus?.sent)} sub="emails delivered" />
           </div>
         </section>
 

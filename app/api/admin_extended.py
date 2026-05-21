@@ -673,3 +673,233 @@ def export_all_data(db: Session = Depends(get_db)):
             for sc in scores
         ],
     }
+
+
+# ── SCOUT bulk automation ─────────────────────────────────────────────────────
+
+@router.get("/scout/status")
+def scout_bulk_status(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Return counts for the admin SCOUT automation panel."""
+    from app.models.scout_chat import ScoutActivation
+    total_prospects = db.query(func.count(Company.id)).join(Score, Score.company_id == Company.id).filter(Score.overall_intent_score >= _WARM_THRESHOLD).scalar() or 0
+    activated = db.query(func.count(ScoutActivation.id)).scalar() or 0
+    drafted   = db.query(func.count(ScoutActivation.id)).filter(ScoutActivation.status == "drafted").scalar() or 0
+    sent      = db.query(func.count(ScoutActivation.id)).filter(ScoutActivation.status == "sent").scalar() or 0
+    pending   = db.query(func.count(ScoutActivation.id)).filter(ScoutActivation.status == "awaiting_approval").scalar() or 0
+    return {"total_prospects": total_prospects, "activated": activated, "drafted": drafted, "sent": sent, "pending_approval": pending}
+
+
+class ScoutBulkActivateBody(BaseModel):
+    limit: int = 100
+    tier_filter: str = "all"   # "all" | "HOT" | "WARM"
+    dry_run: bool = False
+
+
+@router.post("/scout/bulk-activate")
+def scout_bulk_activate(
+    body: ScoutBulkActivateBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """
+    Activate SCOUT for all HOT/WARM prospects that don't yet have an activation.
+    Auto-drafts Cal outreach in agent voice immediately — no per-prospect click needed.
+    """
+    from app.models.scout_chat import ScoutActivation, ScoutSession
+    from app.models.crm import CrmAccount, Team, TeamMember
+    import app.services.scout_chat_service as scsvc
+
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+
+    companies = _hot_warm_companies(db, limit=body.limit)
+    if body.tier_filter != "all":
+        companies = [(c, sc, t) for c, sc, t in companies if t == body.tier_filter.upper()]
+
+    # Existing activations keyed by company_id
+    existing_company_ids: set[int] = set()
+    existing_accts: dict[int, CrmAccount] = {}
+    if companies:
+        cids = [c.id for c, _, _ in companies]
+        for acct in db.query(CrmAccount).filter(CrmAccount.company_id.in_(cids), CrmAccount.team_id == team.id).all():
+            if acct.company_id:
+                existing_accts[acct.company_id] = acct
+        # Check if activation already exists for any of these accounts
+        existing_acct_ids = [str(a.id) for a in existing_accts.values()]
+        if existing_acct_ids:
+            for act in db.query(ScoutActivation).filter(ScoutActivation.status != "sent").all():
+                snap = act.leads_snapshot or []
+                for lead in snap:
+                    if isinstance(lead, dict):
+                        existing_company_ids.add(int(lead.get("id") or 0))
+
+    activated = skipped = errors_count = 0
+    errors: list[dict] = []
+
+    # Ensure a shared admin session exists
+    admin_fp = f"admin-bulk-{str(uid)[:8]}"
+    sess, _ = scsvc.upsert_session(db, admin_fp)
+    sess.user_id = uid
+    db.flush()
+
+    for company, score, tier in companies:
+        if activated >= body.limit:
+            break
+        if company.id in existing_company_ids:
+            skipped += 1
+            continue
+
+        try:
+            # Get or create CRM account
+            acct = existing_accts.get(company.id)
+            if not acct:
+                domain = normalize_website_domain(company.website)
+                acct = CrmAccount(
+                    team_id=team.id,
+                    company_id=company.id,
+                    name=company.name or "Unknown",
+                    website=company.website,
+                    industry=company.industry,
+                    contact_email=f"sales@{domain}" if domain else None,
+                    owner_user_id=uid,
+                    outreach_stage="review_required",
+                )
+                db.add(acct)
+                db.flush()
+
+            # Auto-draft in Cal's voice
+            subject, draft_body = _cal_draft_for_company(company)
+            if not acct.outreach_draft:
+                acct.outreach_draft = draft_body
+                acct.outreach_stage = "draft_ready"
+
+            lead_snapshot = {
+                "id": str(company.id),
+                "company": company.name or "Unknown",
+                "industry": company.industry or "",
+                "score": round(score, 1),
+                "tier": tier,
+            }
+
+            if not body.dry_run:
+                domain = normalize_website_domain(company.website)
+                activation = ScoutActivation(
+                    session_id=sess.id,
+                    user_id=uid,
+                    source_url=company.website,
+                    material_choice="cal_outreach",
+                    scope_choice="outreach",
+                    mode_choice="selective",
+                    status="drafted",
+                    lead_ids=[str(company.id)],
+                    leads_snapshot=[lead_snapshot],
+                    work_plan={
+                        "mode": "selective",
+                        "scope": "outreach",
+                        "draft_subject": subject,
+                        "draft_body": draft_body,
+                        "to_email": acct.contact_email,
+                        "cc_email": f"marketing@{domain}" if domain else None,
+                    },
+                    activity_log=[{"type": "bulk_activated", "message": f"Auto-activated by admin bulk run. Tier: {tier}, Score: {round(score,1)}"}],
+                )
+                db.add(activation)
+
+            activated += 1
+
+        except Exception as exc:
+            errors_count += 1
+            errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+
+    if not body.dry_run:
+        db.commit()
+
+    return {"activated": activated, "skipped": skipped, "errors": errors_count, "error_detail": errors[:10], "dry_run": body.dry_run}
+
+
+class ScoutBulkSendBody(BaseModel):
+    limit: int = 50
+    dry_run: bool = False
+
+
+@router.post("/scout/bulk-send")
+def scout_bulk_send_all(
+    body: ScoutBulkSendBody,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """
+    Send all drafted SCOUT activations that have a draft and haven't been sent.
+    Uses Resend. Marks activation status = 'sent' and CRM account outreach_sent_at.
+    """
+    from app.models.scout_chat import ScoutActivation
+    from app.services.resend_email import send_email_via_resend, ResendEmailError
+
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    now = datetime.now(timezone.utc)
+
+    drafted = db.query(ScoutActivation).filter(
+        ScoutActivation.user_id == uid,
+        ScoutActivation.status == "drafted",
+    ).limit(body.limit).all()
+
+    sent_count = skipped = errors_count = 0
+    errors: list[dict] = []
+
+    for activation in drafted:
+        plan = activation.work_plan or {}
+        to_email = plan.get("to_email")
+        subject = plan.get("draft_subject") or "Robot automation partnership"
+        draft_body_text = plan.get("draft_body") or ""
+        cc_email = plan.get("cc_email")
+
+        if not to_email or not draft_body_text:
+            skipped += 1
+            continue
+
+        if body.dry_run:
+            sent_count += 1
+            continue
+
+        try:
+            send_email_via_resend(
+                to_email=to_email,
+                subject=subject,
+                body_text=draft_body_text,
+                from_display_name="Cal · Ready For Robots",
+                cc=[cc_email] if cc_email else None,
+                idempotency_key=f"scout-send-{activation.id}",
+            )
+            activation.status = "sent"
+            log = list(activation.activity_log or [])
+            log.append({"type": "sent", "message": f"Email sent to {to_email}", "sent_at": now.isoformat()})
+            activation.activity_log = log
+
+            # Mark CRM account as contacted
+            snap = activation.leads_snapshot or []
+            for lead in snap:
+                try:
+                    cid = int(lead.get("id") or 0)
+                    acct = db.query(CrmAccount).filter(CrmAccount.company_id == cid, CrmAccount.team_id == team.id).first()
+                    if acct:
+                        acct.outreach_sent_at = now
+                        acct.outreach_stage = "contacted"
+                except Exception:
+                    pass
+
+            sent_count += 1
+        except ResendEmailError as exc:
+            errors_count += 1
+            errors.append({"activation_id": activation.id, "to": to_email, "error": str(exc)})
+        except Exception as exc:
+            errors_count += 1
+            errors.append({"activation_id": activation.id, "to": to_email, "error": str(exc)})
+
+    if not body.dry_run:
+        db.commit()
+
+    return {"sent": sent_count, "skipped": skipped, "errors": errors_count, "error_detail": errors[:10], "dry_run": body.dry_run}
