@@ -810,121 +810,6 @@ export default function Admin() {
         {message && <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-200">{message}</div>}
         {error && <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm text-red-200">{error}</div>}
 
-        <section className="mb-8">
-          <div className="mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4" style={{ color: "#FFB000" }} />
-            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Users and accounts</p>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <AdminCard label="Users" value={formatNumber(userStats?.total_users)} sub={`${formatNumber(userStats?.active_users)} active in 7 days`} />
-            <AdminCard label="Saved Companies" value={formatNumber(userStats?.total_saved)} sub="Buyer accounts tracking leads" />
-            <AdminCard label="Reports" value={formatNumber(userStats?.total_reports)} sub={`${formatNumber(userStats?.total_lists)} saved lists`} />
-            <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SCOUT · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
-          </div>
-        </section>
-
-        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>AI workflow command center</p>
-              </div>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
-              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-white/45">
-                One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/sales-console" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
-                Sales Console <ExternalLink className="h-3 w-3" />
-              </Link>
-              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}>
-                Supply Pipeline <ExternalLink className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
-            <AdminCard label="Total" value={formatNumber(workflow?.counts?.total)} sub="tracked actions" />
-            <AdminCard label="Approve" value={formatNumber(workflow?.counts?.needs_approval)} sub="waiting on you" />
-            <AdminCard label="Queued" value={formatNumber(workflow?.counts?.queued)} sub="ready to run" />
-            <AdminCard label="Running" value={formatNumber(workflow?.counts?.in_process)} sub="in process" />
-            <AdminCard label="Review" value={formatNumber(workflow?.counts?.needs_review)} sub="new intelligence" />
-            <AdminCard label="Failed" value={formatNumber(workflow?.counts?.failed)} sub="needs attention" />
-          </div>
-
-          {workflow?.errors?.length ? (
-            <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-xs text-red-200">
-              Some workflow sources could not load: {workflow.errors.map((item) => sourceLabel(item.source)).join(", ")}
-            </div>
-          ) : null}
-
-          <div className="mb-4 flex flex-wrap gap-2">
-            {Object.entries(workflow?.by_source || {}).map(([source, count]) => (
-              <span key={source} className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] capitalize text-white/45">
-                {sourceLabel(source)}: {formatNumber(count)}
-              </span>
-            ))}
-          </div>
-
-          <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
-            {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
-              const style = stateStyle(item.state);
-              return (
-                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] capitalize" style={style}>
-                          {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
-                          {stateLabel(item.state)}
-                        </span>
-                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
-                        {item.requires_approval && <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[10px] text-amber-100">approval required</span>}
-                        {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
-                      </div>
-                      <p className="truncate text-sm font-bold text-white/82">{item.title || "Untitled workflow action"}</p>
-                      <p className="mt-1 text-xs text-white/42">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
-                      {item.description && <p className="mt-2 text-xs leading-relaxed text-white/52">{item.description}</p>}
-                    </div>
-                    {item.next_action_url && (
-                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-center text-xs font-bold text-white/65">
-                        {item.next_action_label || "Open"}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── SCOUT Automation ─────────────────────────────────────────────── */}
-        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>SCOUT Automation</p>
-              </div>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Fully automated prospect outreach</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
-                Use the buttons at the top of this page to run the full workflow.
-              </p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <AdminCard label="Total Prospects" value={formatNumber(scoutStatus?.total_prospects)} sub="HOT + WARM" />
-            <AdminCard label="Activated" value={formatNumber(scoutStatus?.activated)} sub="SCOUT running" />
-            <AdminCard label="Drafted" value={formatNumber(scoutStatus?.drafted)} sub="ready to send" />
-            <AdminCard label="Pending Approval" value={formatNumber(scoutStatus?.pending_approval)} sub="awaiting review" />
-            <AdminCard label="Sent" value={formatNumber(scoutStatus?.sent)} sub="emails delivered" />
-          </div>
-        </section>
-
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
         <section id="cal-outreach" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.07), rgba(255,176,0,0.035))" }}>
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -1208,7 +1093,46 @@ export default function Admin() {
           </div>
         </section>
 
-        {/* ── Robot Benchmark Index ─────────────────────────────────────────── */}
+        {/* ── SCOUT Automation ─────────────────────────────────────────────── */}
+        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>SCOUT Automation</p>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Fully automated prospect outreach</h2>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
+                Use the buttons at the top of this page to run the full workflow.
+              </p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            <AdminCard label="Total Prospects" value={formatNumber(scoutStatus?.total_prospects)} sub="HOT + WARM" />
+            <AdminCard label="Activated" value={formatNumber(scoutStatus?.activated)} sub="SCOUT running" />
+            <AdminCard label="Drafted" value={formatNumber(scoutStatus?.drafted)} sub="ready to send" />
+            <AdminCard label="Pending Approval" value={formatNumber(scoutStatus?.pending_approval)} sub="awaiting review" />
+            <AdminCard label="Sent" value={formatNumber(scoutStatus?.sent)} sub="emails delivered" />
+          </div>
+        </section>
+
+
+        <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2">
+            <Users className="h-4 w-4" style={{ color: "#FFB000" }} />
+            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Users and accounts</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <AdminCard label="Users" value={formatNumber(userStats?.total_users)} sub={`${formatNumber(userStats?.active_users)} active in 7 days`} />
+            <AdminCard label="Saved Companies" value={formatNumber(userStats?.total_saved)} sub="Buyer accounts tracking leads" />
+            <AdminCard label="Reports" value={formatNumber(userStats?.total_reports)} sub={`${formatNumber(userStats?.total_lists)} saved lists`} />
+            <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SCOUT · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
+          </div>
+        </section>
+
+
         <section id="robot-benchmark" className="mb-8 scroll-mt-28">
           <div className="mb-3 flex items-center gap-2">
             <span style={{ color: "#a78bfa", fontSize: 16 }}>🤖</span>
@@ -1430,6 +1354,84 @@ export default function Admin() {
             </button>
           </form>
         </section>
+
+        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
+          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>AI workflow command center</p>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
+              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-white/45">
+                One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/sales-console" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
+                Sales Console <ExternalLink className="h-3 w-3" />
+              </Link>
+              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}>
+                Supply Pipeline <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
+            <AdminCard label="Total" value={formatNumber(workflow?.counts?.total)} sub="tracked actions" />
+            <AdminCard label="Approve" value={formatNumber(workflow?.counts?.needs_approval)} sub="waiting on you" />
+            <AdminCard label="Queued" value={formatNumber(workflow?.counts?.queued)} sub="ready to run" />
+            <AdminCard label="Running" value={formatNumber(workflow?.counts?.in_process)} sub="in process" />
+            <AdminCard label="Review" value={formatNumber(workflow?.counts?.needs_review)} sub="new intelligence" />
+            <AdminCard label="Failed" value={formatNumber(workflow?.counts?.failed)} sub="needs attention" />
+          </div>
+
+          {workflow?.errors?.length ? (
+            <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-xs text-red-200">
+              Some workflow sources could not load: {workflow.errors.map((item) => sourceLabel(item.source)).join(", ")}
+            </div>
+          ) : null}
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {Object.entries(workflow?.by_source || {}).map(([source, count]) => (
+              <span key={source} className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] capitalize text-white/45">
+                {sourceLabel(source)}: {formatNumber(count)}
+              </span>
+            ))}
+          </div>
+
+          <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
+            {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
+              const style = stateStyle(item.state);
+              return (
+                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] capitalize" style={style}>
+                          {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
+                          {stateLabel(item.state)}
+                        </span>
+                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
+                        {item.requires_approval && <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[10px] text-amber-100">approval required</span>}
+                        {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
+                      </div>
+                      <p className="truncate text-sm font-bold text-white/82">{item.title || "Untitled workflow action"}</p>
+                      <p className="mt-1 text-xs text-white/42">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
+                      {item.description && <p className="mt-2 text-xs leading-relaxed text-white/52">{item.description}</p>}
+                    </div>
+                    {item.next_action_url && (
+                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-center text-xs font-bold text-white/65">
+                        {item.next_action_label || "Open"}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
