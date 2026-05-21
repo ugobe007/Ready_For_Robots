@@ -22,6 +22,7 @@ import SalesConsole from "./pages/SalesConsole";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
 import Benchmark from "./pages/Benchmark";
+import Robots from "./pages/Robots";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScoutChat } from "./components/ScoutChat";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/benchmark" component={Benchmark} />
+      <Route path="/robots" component={Robots} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />

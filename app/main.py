@@ -24,6 +24,7 @@ from app.api.trending import router as trending_router
 from app.api.user import router as user_router
 from app.api.robots import router as robots_router
 from app.api.robot_ready import router as robot_ready_router
+from app.api.humanoid_benchmark import router as humanoid_router
 from app.api.analytics import router as analytics_router
 from app.api.share import router as share_router
 from app.api.playbook import router as playbook_router
@@ -181,6 +182,7 @@ app.include_router(trending_router, prefix="/api/trending", tags=["trending"])
 app.include_router(user_router,    prefix="/api/user",     tags=["user"])
 app.include_router(robots_router,  prefix="/api",          tags=["robots"])
 app.include_router(robot_ready_router, prefix="/api/robot-ready", tags=["robot-ready"])
+app.include_router(humanoid_router)
 app.include_router(analytics_router, prefix="/api", tags=["analytics"])
 app.include_router(share_router, prefix="/api", tags=["share"])
 app.include_router(playbook_router, prefix="/api", tags=["playbook"])
