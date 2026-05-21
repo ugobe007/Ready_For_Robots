@@ -208,6 +208,10 @@ export default function Admin() {
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
+  // Reply notification settings
+  const [replyForwardEmail, setReplyForwardEmail] = useState("");
+  const [replySettingBusy, setReplySettingBusy] = useState(false);
+  const [replySettingSaved, setReplySettingSaved] = useState(false);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -289,13 +293,45 @@ export default function Admin() {
     } catch { /* silent — status loads separately */ }
   }, [adminFetch, session?.access_token]);
 
+  const loadReplySettings = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/user/settings");
+      if (res.ok) {
+        const d = await res.json() as { reply_forward_email?: string | null };
+        setReplyForwardEmail(d.reply_forward_email || "");
+      }
+    } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
+  const saveReplySettings = async () => {
+    if (!session?.access_token) return;
+    setReplySettingBusy(true);
+    try {
+      const res = await adminFetch("/api/user/settings", {
+        method: "PUT",
+        body: JSON.stringify({ reply_forward_email: replyForwardEmail || null, reply_forwarding_enabled: true }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setReplySettingSaved(true);
+      setTimeout(() => setReplySettingSaved(false), 3000);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setReplySettingBusy(false);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading) void loadAdmin();
   }, [authLoading, loadAdmin]);
 
   useEffect(() => {
-    if (!authLoading && session?.access_token) void loadCalStatus();
-  }, [authLoading, loadCalStatus, session?.access_token]);
+    if (!authLoading && session?.access_token) {
+      void loadCalStatus();
+      void loadReplySettings();
+    }
+  }, [authLoading, loadCalStatus, loadReplySettings, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -566,6 +602,39 @@ export default function Admin() {
             onActivateScout={() => setSendConfirm("bulk")}
             onTrackScout={() => void loadCalStatus()}
           />
+        </div>
+
+        {/* ── Reply notification settings ── */}
+        <div className="mb-4 rounded-2xl border border-white/8 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4" style={{ background: "rgba(255,255,255,0.025)" }}>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: "#a78bfa" }}>Reply notifications</p>
+            <p className="text-[11px] text-white/40">
+              When a prospect replies to Cal, forward a copy to this email immediately.
+              {" "}<span className="text-white/25">Replies are also stored in the Sales Console.</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <input
+              type="email"
+              value={replyForwardEmail}
+              onChange={(e) => setReplyForwardEmail(e.target.value)}
+              placeholder="ugobe07@gmail.com"
+              className="flex-1 sm:w-64 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+            />
+            <button
+              type="button"
+              disabled={replySettingBusy}
+              onClick={() => void saveReplySettings()}
+              className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold border transition-all disabled:opacity-50"
+              style={
+                replySettingSaved
+                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }
+                  : { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)", color: "#c4b5fd" }
+              }
+            >
+              {replySettingBusy ? "Saving…" : replySettingSaved ? "✓ Saved" : "Save"}
+            </button>
+          </div>
         </div>
 
         <div className="mb-4 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
