@@ -829,8 +829,8 @@ def _last_researched_at(c: Company, research_updates: list[dict]) -> Optional[st
 
 def _schedule_leads_background_refresh(
     cache_key: str,
-    min_score: float,
-    max_score: float,
+    min_score: Optional[float],
+    max_score: Optional[float],
     tier,
     industry,
     signal_type,
@@ -855,9 +855,9 @@ def _schedule_leads_background_refresh(
         db = _SL()
         try:
             cands = _lead_rows_query(db)
-            if min_score:
+            if min_score is not None:
                 cands = cands.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
-            if max_score < 100.0:
+            if max_score is not None and max_score < 100.0:
                 cands = cands.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
             if industry:
                 cands = cands.filter(Company.industry.ilike(f"%{industry}%"))
@@ -1408,24 +1408,31 @@ def _schedule_homepage_background_refresh() -> None:
 def warm_pipeline_leads_cache() -> None:
     """
     Pre-populate the Pipeline page leads cache at startup so the first user
-    request to /pipeline is never slow. Warms the two most common query keys:
-    the default pipeline view (limit=18, sort=score) and the broader list (limit=50).
+    request to /pipeline is never slow.
+
+    Cache key format matches exactly what the /api/leads endpoint builds:
+      f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
+    The Pipeline page sends: /api/leads?limit=18&exclude_junk=true&sort=score
+    with no min_score, max_score, tier, industry, signal_type, or rotation_slot,
+    so all of those are None — the key must use None (not 0.0/100.0).
     """
 
     def _warm() -> None:
-        from app.database import SessionLocal
         for lim in (18, 50):
-            key = f"0.0|100.0|None|None|None|True|{lim}|score|None"
+            # Exact key the /api/leads endpoint will build for these requests
+            key = f"None|None|None|None|None|True|{lim}|score|None"
             if key in _LEADS_LIST_CACHE:
                 ts, _ = _LEADS_LIST_CACHE[key]
                 if time.monotonic() - ts < _LEADS_LIST_TTL:
                     continue
             try:
-                db = SessionLocal()
-                try:
-                    _schedule_leads_background_refresh(key, 0.0, 100.0, None, None, None, True, lim, "score", None)
-                finally:
-                    db.close()
+                _schedule_leads_background_refresh(
+                    key,
+                    min_score=None, max_score=None,
+                    tier=None, industry=None, signal_type=None,
+                    exclude_junk=True, limit=lim, sort="score", rotation_slot=None,
+                )
+                logger.info("Pipeline leads cache warm-up scheduled: limit=%d key=%s", lim, key)
             except Exception as exc:
                 logger.warning("Pipeline leads cache warm-up (limit=%d) failed: %s", lim, exc)
 
