@@ -401,8 +401,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
         lines.extend(["", collateral])
 
     lines.extend(["", cal_signature()])
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 
 def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str]]:
