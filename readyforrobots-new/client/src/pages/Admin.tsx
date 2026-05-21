@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
@@ -140,6 +140,112 @@ const TIME_RANGES = [
 function formatNumber(value?: number) {
   if (value == null) return "—";
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+// ── Robot Benchmark + LinkedIn Panel ──────────────────────────────────────
+function RobotBenchmarkPanel({ api, headers }: {
+  api: string;
+  headers: Record<string, string | undefined>;
+  adminFetch?: (path: string, init?: RequestInit) => Promise<Response>;
+}) {
+  const [scraping, setScraping] = React.useState(false);
+  const [scrapeMsg, setScrapeMsg] = React.useState("");
+  const [linkedInPost, setLinkedInPost] = React.useState<{ post_text: string; linkedin_share_url: string; char_count: number } | null>(null);
+  const [postOpen, setPostOpen] = React.useState(false);
+
+  const safeHeaders = Object.fromEntries(
+    Object.entries(headers).filter(([, v]) => v !== undefined)
+  ) as Record<string, string>;
+
+  const runScrape = async () => {
+    setScraping(true); setScrapeMsg("");
+    try {
+      const res = await fetch(`${api}/api/humanoid/scrape-all`, { method: "POST", headers: safeHeaders });
+      const d = await res.json().catch(() => ({})) as { scraped?: number };
+      setScrapeMsg(`Scraped ${d.scraped ?? 0} robots — scores updated.`);
+    } catch { setScrapeMsg("Scrape failed."); }
+    finally { setScraping(false); }
+  };
+
+  const generatePost = async () => {
+    try {
+      const res = await fetch(`${api}/api/humanoid/linkedin-post`, { headers: safeHeaders });
+      if (res.ok) { setLinkedInPost(await res.json() as { post_text: string; linkedin_share_url: string; char_count: number }); setPostOpen(true); }
+    } catch { /* silent */ }
+  };
+
+  return (
+    <div className="rounded-2xl border border-white/8 p-5 mb-3" style={{ background: "rgba(124,58,237,0.05)" }}>
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#a78bfa" }}>Robot Benchmark Index</p>
+          <p className="text-[12px] text-white/40">Scrape fresh specs, update scores, generate report &amp; LinkedIn post.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={scraping}
+            onClick={() => void runScrape()}
+            className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold disabled:opacity-50"
+            style={{ borderColor: "rgba(167,139,250,0.35)", color: "#c4b5fd" }}
+          >
+            {scraping ? "Scraping…" : "Scrape all robots"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void generatePost()}
+            className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold"
+            style={{ borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }}
+          >
+            Generate LinkedIn post
+          </button>
+          <a
+            href="/robots"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-[11px] font-bold text-white/45"
+          >
+            View index →
+          </a>
+        </div>
+      </div>
+      {scrapeMsg && <p className="text-[11px] text-white/50 mt-1">{scrapeMsg}</p>}
+
+      {/* LinkedIn post modal */}
+      {postOpen && linkedInPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPostOpen(false)}>
+          <div
+            className="w-full max-w-xl rounded-2xl border border-white/10 p-6 max-h-[80vh] overflow-y-auto"
+            style={{ background: "#0d0520" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-bold text-white">LinkedIn Post</p>
+              <span className="text-[10px] text-white/30">{linkedInPost.char_count} chars</span>
+            </div>
+            <pre className="whitespace-pre-wrap text-[12px] text-white/70 leading-relaxed mb-5 font-sans">{linkedInPost.post_text}</pre>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => void navigator.clipboard.writeText(linkedInPost.post_text)}
+                className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/60"
+              >
+                Copy text
+              </button>
+              <a
+                href={linkedInPost.linkedin_share_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl px-4 py-2 text-xs font-bold"
+                style={{ background: "rgba(10,102,194,0.2)", border: "1px solid rgba(10,102,194,0.4)", color: "#60a5fa" }}
+              >
+                Open LinkedIn Share →
+              </a>
+              <button type="button" onClick={() => setPostOpen(false)} className="rounded-xl border border-white/8 px-4 py-2 text-xs font-bold text-white/30">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AdminCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -1190,6 +1296,9 @@ export default function Admin() {
               </button>
             </div>
           </div>
+
+          {/* ── Robot benchmark + LinkedIn ── */}
+          <RobotBenchmarkPanel api={api} headers={headers as Record<string, string | undefined>} />
 
           <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Operational shortcuts</p>

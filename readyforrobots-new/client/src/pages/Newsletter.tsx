@@ -174,6 +174,15 @@ export default function Newsletter() {
   const stories = (edition?.topStories || []).slice(0, 14);
   const researchFindings = (edition?.researchFindings || []).slice(0, 6);
   const brief = edition?.industryBrief;
+
+  // ── Benchmark report state ──────────────────────────────────────────────
+  const [benchReport, setBenchReport] = useState<Record<string, unknown> | null>(null);
+  useEffect(() => {
+    fetch(`${getApiBase()}/api/humanoid/report`, liveFetchInit())
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d?.report ? setBenchReport(d.report) : null)
+      .catch(() => null);
+  }, []);
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
   const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "Buying signals, deployment moves, funding events, and strategic hires — curated daily for robotics sales teams.";
   const macroItems = (brief?.macro_trends || []).slice(0, 4);
@@ -377,6 +386,54 @@ export default function Newsletter() {
                     </Link>
                   </article>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* ── Humanoid benchmark report ─────────────────────────────── */}
+          {benchReport && (
+            <section className="mb-12">
+              <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#a78bfa" }}>Robot Intelligence · Benchmark</p>
+                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    {String(benchReport.title ?? "Humanoid Robot Benchmark")}
+                  </h2>
+                </div>
+                <Link href="/robots" className="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white/70">
+                  Full index <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              {/* Top 3 */}
+              <div className="grid gap-3 sm:grid-cols-3 mb-5">
+                {((benchReport.top_3 as Array<{name: string; vendor: string; score: number; status: string}>) ?? []).map((r, i) => (
+                  <div key={r.name} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(124,58,237,0.06)" }}>
+                    <p className="text-[10px] text-white/30 mb-1">{["🥇 Leader", "🥈 2nd", "🥉 3rd"][i]}</p>
+                    <p className="font-bold text-white text-sm">{r.name}</p>
+                    <p className="text-[11px] text-white/40">{r.vendor}</p>
+                    <p className="text-2xl font-black mt-2" style={{ color: i === 0 ? "#34d399" : i === 1 ? "#a78bfa" : "#fbbf24" }}>{r.score}</p>
+                    <p className="text-[9px] text-white/25 uppercase tracking-wider">/ 100</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Key findings */}
+              <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">Key findings</p>
+                <ul className="space-y-2">
+                  {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-white/55">
+                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 bg-violet-400" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 pt-4 border-t border-white/7 flex flex-wrap gap-4 text-[11px] text-white/35">
+                  <span>{String(benchReport.total_robots ?? 0)} robots scored</span>
+                  <span>{String(benchReport.available_count ?? 0)} commercially available</span>
+                  <span>{String(benchReport.pilot_count ?? 0)} in pilot</span>
+                </div>
               </div>
             </section>
           )}
