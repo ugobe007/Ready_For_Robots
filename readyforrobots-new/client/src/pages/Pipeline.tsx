@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import ScoutActionBar from "@/components/ScoutActionBar";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -1006,54 +1007,25 @@ export default function Pipeline() {
             </div>
           </div>
 
-          {/* ── SCOUT Outreach Command Bar ── */}
-          {session?.access_token && (
-            <div
-              className="rounded-2xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
-              style={{ background: "rgba(124,58,237,0.06)", borderColor: "rgba(124,58,237,0.2)" }}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Zap className="h-4 w-4 shrink-0" style={{ color: "#a78bfa" }} />
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Cal Outreach</p>
-                  <p className="text-[11px] text-white/40">
-                    {scoutStats
-                      ? `${scoutStats.drafted} drafted · ${scoutStats.sent} sent · ${scoutStats.opened} opened · ${scoutStats.replied} replied`
-                      : "Load stats to see outreach status"
-                    }
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => void loadScoutStats()}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border border-white/10 text-white/40 hover:text-white/70 transition-all"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  disabled={!!scoutBusy}
-                  onClick={() => setScoutConfirm("draft")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50"
-                  style={{ borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)", color: "#93c5fd" }}
-                >
-                  {scoutBusy === "draft" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
-                  Draft All with Cal
-                </button>
-                <button
-                  type="button"
-                  disabled={!!scoutBusy}
-                  onClick={() => setScoutConfirm("send")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50"
-                  style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "#6ee7b7" }}
-                >
-                  {scoutBusy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                  Send Drafted {scoutStats?.drafted ? `(${scoutStats.drafted})` : ""}
-                </button>
-              </div>
+          {/* ── SCOUT stats strip (above two-panel layout) ── */}
+          {session?.access_token && scoutStats && (
+            <div className="flex items-center gap-3 flex-wrap text-[11px] text-white/40 px-1">
+              <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#a78bfa" }}>Cal</span>
+              <span>{scoutStats.drafted} drafted</span>
+              <span className="text-white/15">·</span>
+              <span>{scoutStats.sent} sent</span>
+              <span className="text-white/15">·</span>
+              <span style={{ color: scoutStats.opened > 0 ? "#34d399" : undefined }}>{scoutStats.opened} opened</span>
+              <span className="text-white/15">·</span>
+              <span style={{ color: scoutStats.replied > 0 ? "#a78bfa" : undefined }}>{scoutStats.replied} replied</span>
+              <button
+                type="button"
+                onClick={() => void loadScoutStats()}
+                className="ml-auto flex items-center gap-1 text-[10px] text-white/25 hover:text-white/60 transition-all"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Refresh
+              </button>
             </div>
           )}
 
@@ -1172,6 +1144,16 @@ export default function Pipeline() {
               className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col"
               style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px", maxHeight: "calc(100vh - 100px)" }}
             >
+              {/* SCOUT action bar — always visible at top of panel */}
+              <ScoutActionBar
+                accessToken={session?.access_token}
+                stats={scoutStats}
+                busy={scoutBusy}
+                onRunScout={() => setScoutConfirm("draft")}
+                onActivateScout={() => setScoutConfirm("send")}
+                onTrackScout={() => void loadScoutStats()}
+              />
+
               {selected ? (
                 <>
                   {/* Detail header */}

@@ -933,3 +933,113 @@ def scout_bulk_send_all(
         db.commit()
 
     return {"sent": sent_count, "skipped": skipped, "errors": errors_count, "error_detail": errors[:10], "dry_run": body.dry_run}
+
+
+@router.get("/scout/diagnostic")
+def scout_diagnostic(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """
+    Workflow health check for Cal / SCOUT outreach.
+    Returns:
+    - Sending configuration (from_email, reply_to, webhook status)
+    - Delivery stats for the last 30 days (sent, delivered, opened, clicked, bounced, replied)
+    - Last 10 outreach messages with status
+    """
+    import os
+    from datetime import timedelta
+    from sqlalchemy import text as sa_text
+
+    from_email = (os.getenv("RESEND_FROM_EMAIL") or "").strip()
+    reply_to = (os.getenv("RESEND_REPLY_TO") or "").strip()
+    webhook_secret_set = bool((os.getenv("RESEND_WEBHOOK_SECRET") or "").strip())
+    inbound_secret_set = bool((os.getenv("RESEND_INBOUND_WEBHOOK_SECRET") or "").strip())
+    api_key_set = bool((os.getenv("RESEND_API_KEY") or "").strip())
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+
+    # Delivery stats
+    status_counts: dict[str, int] = {}
+    rows_raw = (
+        db.query(OutreachMessage.status, func.count(OutreachMessage.id))
+        .filter(OutreachMessage.created_at >= cutoff)
+        .group_by(OutreachMessage.status)
+        .all()
+    )
+    for status, cnt in rows_raw:
+        status_counts[status or "unknown"] = cnt
+
+    # Count replied via OutreachReply
+    from app.models.outreach import OutreachReply
+    reply_count = db.query(func.count(OutreachReply.id)).filter(OutreachReply.received_at >= cutoff).scalar() or 0
+
+    # Last 10 messages
+    recent_msgs = (
+        db.query(
+            OutreachMessage.id,
+            OutreachMessage.to_email,
+            OutreachMessage.subject,
+            OutreachMessage.status,
+            OutreachMessage.sent_at,
+            OutreachMessage.crm_account_id,
+        )
+        .order_by(OutreachMessage.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    # Resolve company names from CRM accounts
+    account_ids = [str(m.crm_account_id) for m in recent_msgs if m.crm_account_id]
+    from app.models.crm import CrmAccount
+    accounts_by_id: dict[str, str] = {}
+    if account_ids:
+        accts = db.query(CrmAccount.id, CrmAccount.name).filter(
+            CrmAccount.id.in_([uuid.UUID(aid) for aid in account_ids])
+        ).all()
+        accounts_by_id = {str(a.id): a.name or "—" for a in accts}
+
+    recent_list = [
+        {
+            "id": str(m.id),
+            "to": m.to_email,
+            "subject": m.subject,
+            "status": m.status,
+            "sent_at": m.sent_at.isoformat() if m.sent_at else None,
+            "company": accounts_by_id.get(str(m.crm_account_id), "—") if m.crm_account_id else "—",
+        }
+        for m in recent_msgs
+    ]
+
+    issues: list[str] = []
+    if not api_key_set:
+        issues.append("RESEND_API_KEY is not set — emails cannot be sent")
+    if not from_email:
+        issues.append("RESEND_FROM_EMAIL is not set — Cal has no sender address")
+    if not reply_to:
+        issues.append("RESEND_REPLY_TO is not set — replies will go to RESEND_FROM_EMAIL, not a monitored inbox")
+    if not webhook_secret_set:
+        issues.append("RESEND_WEBHOOK_SECRET is not set — delivery events (open/click/bounce) won't be tracked")
+    if not inbound_secret_set:
+        issues.append("RESEND_INBOUND_WEBHOOK_SECRET is not set — inbound email replies won't be captured")
+
+    return {
+        "config": {
+            "from_email": from_email or None,
+            "reply_to": reply_to or None,
+            "api_key_set": api_key_set,
+            "delivery_webhook_configured": webhook_secret_set,
+            "inbound_webhook_configured": inbound_secret_set,
+        },
+        "stats_30d": {
+            "sent": status_counts.get("sent", 0) + status_counts.get("delivered", 0),
+            "delivered": status_counts.get("delivered", 0),
+            "opened": status_counts.get("opened", 0),
+            "clicked": status_counts.get("clicked", 0),
+            "bounced": status_counts.get("bounced", 0) + status_counts.get("complained", 0) + status_counts.get("suppressed", 0),
+            "replied": reply_count,
+            "total": sum(status_counts.values()),
+        },
+        "recent_emails": recent_list,
+        "issues": issues,
+        "health": "ok" if not issues else ("warn" if len(issues) <= 2 else "error"),
+    }

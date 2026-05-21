@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
+import ScoutActionBar from "@/components/ScoutActionBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
@@ -677,7 +678,25 @@ export default function Admin() {
         </section>
 
         {/* ── SCOUT Automation ─────────────────────────────────────────────── */}
-        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
+        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
+          {/* SCOUT action bar */}
+          <ScoutActionBar
+            accessToken={session?.access_token}
+            stats={scoutStatus ? {
+              total: scoutStatus.total_prospects ?? 0,
+              drafted: scoutStatus.drafted ?? 0,
+              sent: scoutStatus.sent ?? 0,
+              opened: 0,
+              clicked: 0,
+              replied: 0,
+            } : null}
+            busy={actionBusy === "scout-activate" ? "draft" : actionBusy === "scout-send" ? "send" : null}
+            onRunScout={() => void runScoutBulkActivate()}
+            onActivateScout={() => setSendConfirm("scout-send")}
+            onTrackScout={() => void loadScoutStatus()}
+          />
+
+          <div className="p-5">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -733,10 +752,29 @@ export default function Admin() {
             <AdminCard label="Pending Approval" value={formatNumber(scoutStatus?.pending_approval)} sub="awaiting review" />
             <AdminCard label="Sent" value={formatNumber(scoutStatus?.sent)} sub="emails delivered" />
           </div>
+          </div>{/* end p-5 wrapper */}
         </section>
 
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
-        <section id="cal-outreach" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.07), rgba(255,176,0,0.035))" }}>
+        <section id="cal-outreach" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.07), rgba(255,176,0,0.035))" }}>
+          {/* SCOUT action bar at top of section */}
+          <ScoutActionBar
+            accessToken={session?.access_token}
+            stats={calStatus?.summary ? {
+              total: calStatus.summary.total ?? 0,
+              drafted: calStatus.summary.drafted ?? 0,
+              sent: calStatus.summary.sent ?? 0,
+              opened: (calStatus.summary as Record<string, number>).opened ?? 0,
+              clicked: (calStatus.summary as Record<string, number>).clicked ?? 0,
+              replied: (calStatus.summary as Record<string, number>).replied ?? 0,
+            } : null}
+            busy={actionBusy === "cal-draft" ? "draft" : actionBusy === "cal-send" ? "send" : null}
+            onRunScout={() => void runCalBulkDraft(false)}
+            onActivateScout={() => setSendConfirm("bulk")}
+            onTrackScout={() => void loadCalStatus()}
+          />
+
+          <div className="p-5">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -970,6 +1008,7 @@ export default function Admin() {
               </div>
             )}
           </div>
+          </div>{/* end p-5 wrapper */}
         </section>
 
         <section className="mb-8">
