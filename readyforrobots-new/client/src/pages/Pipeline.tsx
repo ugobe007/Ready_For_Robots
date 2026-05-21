@@ -1116,10 +1116,10 @@ export default function Pipeline() {
                               {/* Email status + time + arrow */}
                               <div className="flex items-center gap-2 shrink-0">
                                 {deal.stage === "Outreach Sent" && (
-                                  <Send className="h-3 w-3" style={{ color: "#34d399" }} title="Email sent" />
+                                  <span title="Email sent"><Send className="h-3 w-3" style={{ color: "#34d399" }} /></span>
                                 )}
                                 {deal.stage === "Draft Ready" && (
-                                  <Mail className="h-3 w-3" style={{ color: "#60a5fa" }} title="Draft ready" />
+                                  <span title="Draft ready"><Mail className="h-3 w-3" style={{ color: "#60a5fa" }} /></span>
                                 )}
                                 <span className="text-[10px] text-white/20 font-mono hidden sm:block" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                                   {deal.updatedAt}
