@@ -341,47 +341,68 @@ def _collateral_note(policy: str, links: str | None) -> str:
 
 
 def _draft_subject(acct: CrmAccount) -> str:
-    industry = (acct.industry or "operations").strip()
-    return f"Robot automation ideas for {acct.name}'s {industry} team"
+    """Short, curiosity-driving subject. No buzzwords, no exclamation marks."""
+    name = (acct.name or "your team").strip()
+    industry = (acct.industry or "").strip().lower()
+    if industry in ("hospitality", "hotels", "casinos & gaming"):
+        return f"automation angle at {name}?"
+    if industry in ("logistics", "warehousing"):
+        return f"quick question about {name}'s ops"
+    if industry in ("healthcare", "medical technology"):
+        return f"robotics for {name} — worth 10 minutes?"
+    if industry in ("food service", "food processing & manufacturing"):
+        return f"labor question for {name}"
+    return f"automation signal we picked up on {name}"
 
 
 def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None) -> str:
-    industry = (acct.industry or "your operation").strip()
+    """Cal voice: cool, confident, casual, brief, meaningful. One observation. One ask."""
+    industry = (acct.industry or "your industry").strip()
+    name = (acct.name or "your team").strip()
     selected_traits = set(traits)
-    lines: list[str] = [
-        "Hello,",
-        "",
-        CAL_INTRO,
-        "",
-        BUYER_SIGNAL_EXPLANATION,
-        "",
-        f"{acct.name} stood out because there may be an automation angle in {industry}.",
-    ]
-    if "insightful" in selected_traits:
-        lines.append("I am not assuming there is a project already in motion. The useful question is whether repetitive work, staffing pressure, or service expectations are creating a real business case.")
-    if "industry_refs" in selected_traits:
-        lines.append(f"In {industry}, teams are increasingly looking at automation where it can reduce walking time, stabilize throughput, or protect service levels without adding headcount.")
-    if "robot_examples" in selected_traits:
-        lines.append(f"Relevant examples include cleaning robots, AMRs, delivery robots, inspection systems, and task-specific automation depending on the workflow.")
-    if "humor" in selected_traits:
-        lines.append("No one needs a robot science project wandering around the building; the goal is boringly useful automation that pays for itself.")
-    if "inquisitive" in selected_traits:
-        lines.append("I’m curious where your team is seeing the most pressure right now: labor coverage, turnaround time, consistency, safety, or something else?")
-    if "whitepapers" in selected_traits:
-        lines.append("If helpful, I can share third-party research or case studies that map the business case before any vendor conversation.")
 
-    channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
-    meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
-    if channel in ("phone", "meeting"):
-        lines.append(meeting or "Open to a quick 15-minute call next week?")
+    lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
+
+    if "insightful" in selected_traits or "industry_refs" in selected_traits:
+        lines.append(
+            f"We picked up some signals on {name} — looks like {industry} teams "
+            f"are dealing with the usual mix of labor pressure and throughput gaps. "
+            f"Automation tends to show up as a real option around that point."
+        )
+    elif "robot_examples" in selected_traits:
+        lines.append(
+            f"We're seeing {industry} operations move on AMRs, delivery robots, and task automation "
+            f"where headcount is the constraint. {name} fits the profile."
+        )
+    elif "humor" in selected_traits:
+        lines.append(
+            f"Caught some signals on {name}. Not here to sell robot science projects — "
+            f"just wondering if there's a real labor or throughput problem worth solving."
+        )
     else:
-        lines.append("Worth a quick exchange to see whether there is a useful automation angle here?")
-    # Style instructions guide generation; they should not be exposed to buyers.
+        lines.append(
+            f"{name} came up in our signal tracking. There may be an automation angle worth a quick look."
+        )
+
+    lines.append("")
+
+    if "inquisitive" in selected_traits:
+        lines.append("What's the biggest operational drag right now — labor coverage, throughput, or something else?")
+    else:
+        channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
+        meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
+        if channel in ("phone", "meeting"):
+            lines.append(meeting or "Open to a 15-minute call to see if it's worth exploring?")
+        else:
+            lines.append("Worth a quick reply if there's any interest?")
+
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
-        lines.append(collateral)
+        lines.extend(["", collateral])
+
     lines.extend(["", cal_signature()])
-    return "\n".join(lines)
+    return "
+".join(lines)
 
 
 def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str]]:

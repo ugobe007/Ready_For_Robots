@@ -103,36 +103,36 @@ function signalOpening(signalType: string, signalText: string): string {
 
 function outreachSubject(companyName?: string, signalType?: string): string {
   const company = companyName || "your team";
-  const signal = signalType && signalType !== "News" ? signalType.toLowerCase() : "operations signal";
-  return `${company}: practical automation angle from a ${signal}`;
+  const typ = (signalType || "").toLowerCase();
+  if (typ.includes("labor") || typ.includes("job")) return `labor question for ${company}`;
+  if (typ.includes("expansion") || typ.includes("capex") || typ.includes("funding")) return `automation signal we picked up on ${company}`;
+  if (typ.includes("hospitality") || typ.includes("hotel")) return `automation angle at ${company}?`;
+  return `quick question about ${company}`;
 }
 
 function outreachBody(lead: ApiLead, signalType: string, signalText: string): string {
   const company = lead.company_name || "your team";
-  const insight = industryInsight(lead.industry);
-  const opening = signalOpening(signalType, signalText);
-  const suggestedMotion = cleanAndClampText(lead.gtm?.suggested_motion, 180);
+  const lowerType = signalType.toLowerCase();
+  const industry = (lead.industry || "your industry").toLowerCase();
 
-  const motionLine = suggestedMotion
-    ? `The practical next step may be to pressure-test this against ${suggestedMotion.toLowerCase()}.`
-    : "The practical next step may be to identify one contained workflow where automation can prove value without disrupting the broader operation.";
+  // Signal hook — one grounded observation
+  let hook: string;
+  if (lowerType.includes("labor") || lowerType.includes("job")) {
+    hook = `We picked up a labor signal on ${company} — looks like staffing pressure in ${industry}. That's usually when automation starts making sense.`;
+  } else if (lowerType.includes("expansion") || lowerType.includes("capex") || lowerType.includes("funding")) {
+    hook = `We saw some expansion and CapEx signals on ${company}. ${industry.charAt(0).toUpperCase() + industry.slice(1)} teams in that position usually have at least one workflow where automation pays for itself.`;
+  } else {
+    hook = `${company} came up in our signal tracking. There may be an automation angle in ${industry} worth a quick look.`;
+  }
 
   return [
-    "Hello,",
+    "Hey,",
     "",
     CAL_INTRO,
     "",
-    BUYER_SIGNAL_EXPLANATION,
+    hook,
     "",
-    opening,
-    "",
-    insight,
-    "",
-    `That is why ${company} stood out. I am not assuming there is a project already in motion; I am trying to understand whether the timing signal maps to a real workflow problem.`,
-    "",
-    motionLine,
-    "",
-    "Worth a quick exchange to see whether there is a useful automation angle here?",
+    "Worth a quick reply if there's any interest?",
     "",
     CAL_SIGNATURE,
   ].join("\n");

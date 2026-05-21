@@ -1,35 +1,42 @@
 """Shared wording for agent-authored Ready For Robots communication."""
 from __future__ import annotations
 
+# ── Cal voice: cool, confident, casual, brief, meaningful ─────────────────────
+# One paragraph max. No corporate boilerplate. Show the signal. Make one ask.
 
-CAL_INTRO = "I am Cal with Ready For Robots."
+CAL_INTRO = "Cal here — I run the automation research desk at Ready For Robots."
+
 BUYER_SIGNAL_EXPLANATION = (
-    "We track automation buying signals and help teams decide where robotics might be worth a practical look."
+    "We track live buying signals across labor, expansion, and CapEx activity "
+    "to spot where automation is actually worth a look."
 )
 VENDOR_SIGNAL_EXPLANATION = (
-    "We find automation sales leads and rank them by buying signals, so stronger signals point to warmer accounts."
+    "We map automation demand signals across enterprise buyers — labor pressure, "
+    "expansion moves, CapEx shifts — and rank them so the warm accounts rise to the top."
 )
 CAL_VENDOR_PIPELINE_EXPLANATION = (
-    "Think of us as a search engine for your sales pipeline: signal capture, hardware matchmaking, and direct channel routing."
+    "Think of it as a search engine for your sales pipeline: signal capture, "
+    "buyer matching, and a clean route to the accounts already moving."
 )
 CAL_VENDOR_PIPELINE_LOGIC_LINE = (
-    "You built the tech; we build the pipeline and show the exact signal trail behind every lead."
+    "You built the hardware. We find the buyers who are already signaling they need it."
 )
 VEGAS_DISTRIBUTION_LINE = (
-    "In Las Vegas, we use that data to route the right robotics companies toward hotels, casinos, commercial hubs, and enterprise buyers."
+    "We use that signal data to connect the right robot companies with hotels, casinos, "
+    "logistics hubs, and enterprise buyers across Las Vegas."
 )
 CAL_VENDOR_OFFRAMP_LINE = (
-    "If the signal logic is weak, we will say so. The point is not more noise; it is a cleaner route to buyers who are already moving."
+    "If the signal is weak, we'll say so — the point is a cleaner route to buyers already moving, not more noise."
 )
-CAL_VENDOR_STRATEGY_CALL_CTA = "Open to a Sales Channel & Lead Generation Strategy Call next week?"
+CAL_VENDOR_STRATEGY_CALL_CTA = "Worth a quick strategy call this week?"
 
 
 def cal_signature() -> str:
-    return "Best,\nCal\nRobot Automation Team\nReady For Robots"
+    return "— Cal\nReady For Robots"
 
 
 def max_signature() -> str:
-    return "Best,\nMax\nTechnical Support Lead\nReady For Robots"
+    return "— Max\nReady For Robots"
 
 
 def cal_opening(*, audience: str = "buyer") -> str:

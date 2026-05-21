@@ -823,13 +823,16 @@ export default function Admin() {
           )}
 
           {/* Summary pills */}
-          <div className="mb-5 grid grid-cols-3 gap-3 md:grid-cols-6">
-            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub="HOT + WARM prospects" />
+          <div className="mb-5 grid grid-cols-3 gap-3 md:grid-cols-6 lg:grid-cols-9">
+            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub="HOT + WARM" />
             <AdminCard label="HOT" value={formatNumber(calStatus?.summary?.hot)} sub="highest priority" />
             <AdminCard label="WARM" value={formatNumber(calStatus?.summary?.warm)} sub="strong signals" />
-            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub="ready to review" />
+            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub="ready to send" />
             <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need drafts" />
-            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="emails delivered" />
+            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="emails out" />
+            <AdminCard label="Opened" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.opened)} sub="email opened" />
+            <AdminCard label="Clicked" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.clicked)} sub="link clicked" />
+            <AdminCard label="Replied" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.replied)} sub="replied to Cal" />
           </div>
 
           {/* Prospect table */}
@@ -846,12 +849,13 @@ export default function Admin() {
             ) : (
               <div className="space-y-1.5">
                 {/* Column headers */}
-                <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
+                <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
                   <span>Company</span>
                   <span>Tier / Score</span>
                   <span>Contact</span>
                   <span>Stage</span>
                   <span>Draft</span>
+                  <span>Delivery</span>
                 </div>
                 {(calStatus.prospects ?? [])
                   .filter((p) => {
@@ -866,7 +870,7 @@ export default function Admin() {
                     return (
                       <div key={`${prospect.company_id}-${idx}`} className="rounded-xl border border-white/7" style={{ background: "rgba(13,5,32,0.55)" }}>
                         <button
-                          className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr] gap-3 px-4 py-3 text-left"
+                          className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 px-4 py-3 text-left"
                           onClick={() => setCalExpanded(isOpen ? null : idx)}
                         >
                           <div className="min-w-0">
@@ -894,6 +898,19 @@ export default function Admin() {
                               <CheckCircle2 className="h-4 w-4" style={{ color: "#34d399" }} />
                             ) : (
                               <Clock3 className="h-4 w-4 text-white/20" />
+                            )}
+                          </div>
+                          <div className="flex items-center">
+                            {(prospect as Record<string, unknown>).email_delivery_status === "opened" || (prospect as Record<string, unknown>).email_delivery_status === "clicked" ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>
+                                {String((prospect as Record<string, unknown>).email_delivery_status)}
+                              </span>
+                            ) : (prospect as Record<string, unknown>).email_delivery_status === "bounced" ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(248,113,113,0.12)", color: "#f87171" }}>bounced</span>
+                            ) : (prospect as Record<string, unknown>).email_delivery_status === "sent" || (prospect as Record<string, unknown>).email_delivery_status === "delivered" ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(96,165,250,0.1)", color: "#93c5fd" }}>sent</span>
+                            ) : (
+                              <span className="text-[9px] text-white/20">—</span>
                             )}
                           </div>
                         </button>

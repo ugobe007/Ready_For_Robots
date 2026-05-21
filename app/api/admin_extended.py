@@ -16,6 +16,7 @@ from typing import Any, Optional
 from app.database import get_db
 from app.models.company import Company
 from app.models.crm import CrmAccount, Team, TeamMember
+from app.models.outreach import OutreachMessage
 from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
@@ -323,6 +324,7 @@ def _serialize_cal_row(
     score: float,
     tier: str,
     acct: Optional[CrmAccount],
+    delivery_status: Optional[str] = None,
 ) -> dict[str, Any]:
     domain = normalize_website_domain(company.website)
     inferred_to = f"sales@{domain}" if domain else None
@@ -344,6 +346,7 @@ def _serialize_cal_row(
         "has_draft": has_draft,
         "draft_preview": (acct.outreach_draft or "")[:140].strip() if has_draft else None,
         "draft_full": acct.outreach_draft if has_draft else None,
+        "email_delivery_status": delivery_status,
     }
 
 
@@ -352,7 +355,7 @@ def cal_draft_status(
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    """Return HOT+WARM prospects with their Cal draft state against the live DB."""
+    """Return HOT+WARM prospects with their Cal draft state and email delivery tracking."""
     companies = _hot_warm_companies(db)
     company_ids = [c.id for c, _, _ in companies]
     accounts_by_company: dict[int, CrmAccount] = {}
@@ -366,8 +369,29 @@ def cal_draft_status(
             if a.company_id and a.company_id not in accounts_by_company:
                 accounts_by_company[a.company_id] = a
 
+    # Fetch latest delivery status per CRM account from outreach_messages
+    account_ids = [a.id for a in accounts_by_company.values()]
+    delivery_by_account: dict[str, str] = {}
+    if account_ids:
+        latest_msgs = (
+            db.query(OutreachMessage.crm_account_id, OutreachMessage.status)
+            .filter(OutreachMessage.crm_account_id.in_(account_ids))
+            .order_by(OutreachMessage.crm_account_id, OutreachMessage.sent_at.desc().nullslast())
+            .all()
+        )
+        seen: set = set()
+        for acct_id, status in latest_msgs:
+            key = str(acct_id)
+            if key not in seen:
+                delivery_by_account[key] = status
+                seen.add(key)
+
     rows = [
-        _serialize_cal_row(company, score, tier, accounts_by_company.get(company.id))
+        _serialize_cal_row(
+            company, score, tier,
+            accounts_by_company.get(company.id),
+            delivery_by_account.get(str(accounts_by_company[company.id].id)) if company.id in accounts_by_company else None,
+        )
         for company, score, tier in companies
     ]
 
@@ -376,6 +400,9 @@ def cal_draft_status(
     warm = sum(1 for r in rows if r["tier"] == "WARM")
     drafted = sum(1 for r in rows if r["has_draft"])
     sent = sum(1 for r in rows if r["outreach_sent_at"])
+    opened = sum(1 for r in rows if r["email_delivery_status"] in ("opened", "clicked"))
+    clicked = sum(1 for r in rows if r["email_delivery_status"] == "clicked")
+    replied = sum(1 for r in rows if r["outreach_stage"] == "replied")
 
     return {
         "summary": {
@@ -385,6 +412,9 @@ def cal_draft_status(
             "drafted": drafted,
             "pending_draft": total - drafted,
             "sent": sent,
+            "opened": opened,
+            "clicked": clicked,
+            "replied": replied,
         },
         "prospects": rows,
     }

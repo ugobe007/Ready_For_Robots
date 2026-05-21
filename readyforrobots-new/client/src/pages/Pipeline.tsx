@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle, MapPin, Filter, ChevronRight,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
-  Users, Clock, Target, Newspaper
+  Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
+  Zap, RefreshCw
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
@@ -256,6 +257,15 @@ export default function Pipeline() {
   const [cadenceNote, setCadenceNote] = useState("");
   const [loadErr, setLoadErr] = useState("");
   const [activationErr, setActivationErr] = useState("");
+  // SCOUT bulk outreach state
+  const [scoutStats, setScoutStats] = useState<{
+    total: number; drafted: number; sent: number; opened: number; clicked: number; replied: number;
+  } | null>(null);
+  const [scoutBusy, setScoutBusy] = useState<"draft" | "send" | null>(null);
+  const [scoutConfirm, setScoutConfirm] = useState<"draft" | "send" | null>(null);
+  const [sendingLeadId, setSendingLeadId] = useState<number | null>(null);
+  // Draft preview email modal
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Single parallel mount fetch: leads + summary + activations + settings all fire simultaneously.
   // This eliminates the previous 4-useEffect waterfall that added 2-4s of sequential latency.
@@ -366,6 +376,12 @@ export default function Pipeline() {
   // Depend only on selectedId, not deals, to prevent re-firing on every deals update.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
+
+  // Load SCOUT stats once when authenticated
+  useEffect(() => {
+    if (session?.access_token) void loadScoutStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.access_token]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const resolvedIndustryFilter = industryQuery.trim() || filter;
@@ -498,6 +514,102 @@ export default function Pipeline() {
       toast.error(e instanceof Error ? e.message : "Could not update SCOUT activity");
     } finally {
       setActivationControlBusy(false);
+    }
+  };
+
+  // Load SCOUT outreach stats
+  const loadScoutStats = async () => {
+    if (!session?.access_token) return;
+    const base = getApiBase();
+    try {
+      const r = await fetch(`${base}/api/admin/cal/draft-status`, liveFetchInit({ headers: authHeader(session.access_token) }));
+      if (r.ok) {
+        const d = (await r.json()) as { summary: typeof scoutStats };
+        setScoutStats(d.summary);
+      }
+    } catch { /* advisory */ }
+  };
+
+  const runScoutDraftAll = async () => {
+    if (!session?.access_token) return;
+    setScoutBusy("draft");
+    setScoutConfirm(null);
+    const base = getApiBase();
+    try {
+      const r = await fetch(`${base}/api/admin/scout/bulk-activate`, liveFetchInit({
+        method: "POST",
+        headers: { ...authHeader(session.access_token), "Content-Type": "application/json" },
+      }));
+      if (!r.ok) throw new Error(await r.text());
+      const d = await r.json() as { activated: number };
+      toast.success(`Cal drafted ${d.activated} emails.`);
+      await loadScoutStats();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Draft failed");
+    } finally {
+      setScoutBusy(null);
+    }
+  };
+
+  const runScoutSendAll = async () => {
+    if (!session?.access_token) return;
+    setScoutBusy("send");
+    setScoutConfirm(null);
+    const base = getApiBase();
+    try {
+      const r = await fetch(`${base}/api/admin/scout/bulk-send`, liveFetchInit({
+        method: "POST",
+        headers: { ...authHeader(session.access_token), "Content-Type": "application/json" },
+      }));
+      if (!r.ok) throw new Error(await r.text());
+      const d = await r.json() as { sent: number };
+      toast.success(`Cal sent ${d.sent} emails.`);
+      await loadScoutStats();
+      setDeals((prev) => prev.map((d2) => d2.stage === "Draft Ready" ? { ...d2, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d2));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Send failed");
+    } finally {
+      setScoutBusy(null);
+    }
+  };
+
+  const sendOneLead = async (deal: Deal) => {
+    if (!session?.access_token) {
+      toast.info("Sign in to send outreach.");
+      return;
+    }
+    if (!deal.contact) {
+      toast.error("No contact email for this lead.");
+      return;
+    }
+    setSendingLeadId(deal.id);
+    const base = getApiBase();
+    const headers = { ...authHeader(session.access_token), "Content-Type": "application/json" };
+    try {
+      // First create/ensure CRM account
+      const createRes = await fetch(`${base}/api/crm/accounts`, liveFetchInit({
+        method: "POST", headers,
+        body: JSON.stringify({ company_id: deal.id, name: deal.company, industry: deal.industry }),
+      }));
+      if (!createRes.ok) throw new Error(await createRes.text());
+      const acct = (await createRes.json()) as { id: string };
+      // Save draft
+      await fetch(`${base}/api/crm/accounts/${acct.id}`, liveFetchInit({
+        method: "PATCH", headers,
+        body: JSON.stringify({ outreach_draft: deal.outreachBody, outreach_stage: "draft_approved" }),
+      }));
+      // Send
+      const sendRes = await fetch(`${base}/api/crm/accounts/${acct.id}/send-outreach`, liveFetchInit({
+        method: "POST", headers,
+        body: JSON.stringify({ contact_email: deal.contact, subject: deal.outreachSubject, outreach_draft: deal.outreachBody, send_identity: "scout" }),
+      }));
+      if (!sendRes.ok) throw new Error(await sendRes.text());
+      setDeals((prev) => prev.map((d) => d.id === deal.id ? { ...d, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d));
+      toast.success(`Cal sent the email to ${deal.contact}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Send failed");
+    } finally {
+      setSendingLeadId(null);
     }
   };
 
@@ -894,6 +1006,73 @@ export default function Pipeline() {
             </div>
           </div>
 
+          {/* ── SCOUT Outreach Command Bar ── */}
+          {session?.access_token && (
+            <div
+              className="rounded-2xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
+              style={{ background: "rgba(124,58,237,0.06)", borderColor: "rgba(124,58,237,0.2)" }}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Zap className="h-4 w-4 shrink-0" style={{ color: "#a78bfa" }} />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Cal Outreach</p>
+                  <p className="text-[11px] text-white/40">
+                    {scoutStats
+                      ? `${scoutStats.drafted} drafted · ${scoutStats.sent} sent · ${scoutStats.opened} opened · ${scoutStats.replied} replied`
+                      : "Load stats to see outreach status"
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => void loadScoutStats()}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border border-white/10 text-white/40 hover:text-white/70 transition-all"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  disabled={!!scoutBusy}
+                  onClick={() => setScoutConfirm("draft")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50"
+                  style={{ borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)", color: "#93c5fd" }}
+                >
+                  {scoutBusy === "draft" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Mail className="h-3 w-3" />}
+                  Draft All with Cal
+                </button>
+                <button
+                  type="button"
+                  disabled={!!scoutBusy}
+                  onClick={() => setScoutConfirm("send")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50"
+                  style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "#6ee7b7" }}
+                >
+                  {scoutBusy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                  Send Drafted {scoutStats?.drafted ? `(${scoutStats.drafted})` : ""}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confirm modals for bulk actions */}
+          {scoutConfirm === "draft" && (
+            <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
+              <p className="text-[11px] text-blue-100/80 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
+              <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-500/20 border border-blue-400/40 text-blue-100">Run</button>
+              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white/40">Cancel</button>
+            </div>
+          )}
+          {scoutConfirm === "send" && (
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
+              <p className="text-[11px] text-emerald-100/80 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
+              <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/40 text-emerald-100">Send</button>
+              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white/40">Cancel</button>
+            </div>
+          )}
+
           {/* ── Two-panel layout ── */}
           <div className="flex gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
 
@@ -962,8 +1141,14 @@ export default function Pipeline() {
                                 <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
                               </div>
 
-                              {/* Time + arrow */}
+                              {/* Email status + time + arrow */}
                               <div className="flex items-center gap-2 shrink-0">
+                                {deal.stage === "Outreach Sent" && (
+                                  <Send className="h-3 w-3" style={{ color: "#34d399" }} title="Email sent" />
+                                )}
+                                {deal.stage === "Draft Ready" && (
+                                  <Mail className="h-3 w-3" style={{ color: "#60a5fa" }} title="Draft ready" />
+                                )}
                                 <span className="text-[10px] text-white/20 font-mono hidden sm:block" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                                   {deal.updatedAt}
                                 </span>
@@ -1102,21 +1287,43 @@ export default function Pipeline() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Outreach Draft</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Cal's Draft</p>
                       </div>
-                      <button
-                        onClick={copyDraft}
-                        className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all"
-                        style={
-                          copied
-                            ? { background: "rgba(52,211,153,0.12)", color: "#34d399" }
-                            : { background: "rgba(124,58,237,0.12)", color: "#a78bfa" }
-                        }
-                      >
-                        {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                        {copied ? "Copied!" : "Copy draft"}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPreviewOpen(true)}
+                          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all"
+                          style={{ background: "rgba(255,176,0,0.08)", color: "#FFB000" }}
+                        >
+                          <Eye className="h-3 w-3" />
+                          Preview
+                        </button>
+                        <button
+                          onClick={copyDraft}
+                          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all"
+                          style={
+                            copied
+                              ? { background: "rgba(52,211,153,0.12)", color: "#34d399" }
+                              : { background: "rgba(124,58,237,0.12)", color: "#a78bfa" }
+                          }
+                        >
+                          {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Email status badges */}
+                    {selected.stage === "Outreach Sent" && (
+                      <div className="mb-2 flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
+                          <Send className="h-2.5 w-2.5" /> Sent
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-white/30" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                          <Eye className="h-2.5 w-2.5" /> Tracking active
+                        </span>
+                      </div>
+                    )}
 
                     {selected.outreachSubject && (
                       <div className="mb-2 p-2.5 rounded-lg" style={{ background: "rgba(255,176,0,0.06)", border: "1px solid rgba(255,176,0,0.18)" }}>
@@ -1131,6 +1338,23 @@ export default function Pipeline() {
                           {selected.outreachBody}
                         </pre>
                       </div>
+                    )}
+
+                    {/* Send this email button (only if contact available and not yet sent) */}
+                    {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && (
+                      <button
+                        type="button"
+                        disabled={sendingLeadId === selected.id}
+                        onClick={() => void sendOneLead(selected)}
+                        className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
+                        style={{ background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.28)", color: "#6ee7b7" }}
+                      >
+                        {sendingLeadId === selected.id
+                          ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          : <Send className="h-3.5 w-3.5" />
+                        }
+                        {sendingLeadId === selected.id ? "Sending..." : `Send to ${selected.contact}`}
+                      </button>
                     )}
                   </div>
 
@@ -1184,6 +1408,78 @@ export default function Pipeline() {
           </div>
         </div>
       </main>
+
+      {/* Email Preview Modal */}
+      {previewOpen && selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-2xl border p-6 flex flex-col gap-4"
+            style={{ background: "#0d0520", borderColor: "rgba(124,58,237,0.3)", maxHeight: "85vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>Email Preview</p>
+                <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{selected.company}</p>
+              </div>
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="text-white/30 hover:text-white/70 text-xs font-semibold px-2 py-1 rounded"
+              >
+                Close
+              </button>
+            </div>
+            <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">From</p>
+              <p className="text-xs text-white/60">Cal &lt;cal@readyforrobots.com&gt;</p>
+            </div>
+            {selected.contact && (
+              <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">To</p>
+                <p className="text-xs text-white/60">{selected.contact}</p>
+              </div>
+            )}
+            <div className="rounded-xl border border-amber-400/20 p-4" style={{ background: "rgba(255,176,0,0.05)" }}>
+              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">Subject</p>
+              <p className="text-xs font-semibold" style={{ color: "#FFB000" }}>{selected.outreachSubject}</p>
+            </div>
+            <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2">Message</p>
+              <pre className="whitespace-pre-wrap break-words font-sans text-[12px] leading-loose text-white/65">
+                {selected.outreachBody}
+              </pre>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={copyDraft}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold border transition-all"
+                style={copied
+                  ? { background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#6ee7b7" }
+                  : { background: "rgba(124,58,237,0.1)", borderColor: "rgba(124,58,237,0.3)", color: "#c4b5fd" }
+                }
+              >
+                {copied ? <CheckCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "Copied!" : "Copy draft"}
+              </button>
+              {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && (
+                <button
+                  disabled={sendingLeadId === selected.id}
+                  onClick={async () => { await sendOneLead(selected); setPreviewOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
+                  style={{ background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#6ee7b7" }}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {sendingLeadId === selected.id ? "Sending..." : "Send now"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
