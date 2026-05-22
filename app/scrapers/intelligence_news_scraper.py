@@ -695,10 +695,13 @@ class IntelligenceNewsScraper:
             "companies_enriched": 0,
             "signals_created": 0,
             "queries_run": 0,
+            "websites_enriched": 0,
+            "contacts_enriched": 0,
             # Per-phase failure counts (pythh-style: one phase blows, others still run)
             "phase_failures": {},
             "last_phase_errors": [],  # capped trail for debugging
         }
+        self._website_lookup_attempted: set[int] = set()
     
     # ══════════════════════════════════════════════════════════════════════════
     # PUBLIC API
@@ -743,7 +746,8 @@ class IntelligenceNewsScraper:
                     logger.exception("Article pipeline fatal (skipped article): %s", ref)
             
             time.sleep(self.DELAY)
-        
+
+        self._enrich_missing_websites_batch(limit=25)
         self._print_stats()
         return self.stats
     
@@ -916,7 +920,24 @@ class IntelligenceNewsScraper:
             signal_types = ["news"]
 
         # ── Phase 4–5: persist company + write signals (per candidate / type) ─
+        from app.services.lead_inference_engine import evaluate_lead_candidate, persist_lead_inference
+
         for company_name, _confidence in companies:
+            dossier = evaluate_lead_candidate(
+                company_name=company_name,
+                context_text=body_text,
+                article_url=article.get("url"),
+                signal_types=signal_types,
+                industry=self._infer_industry(body_text),
+            )
+            if not dossier.is_lead:
+                logger.debug(
+                    "Inference rejected %r: %s",
+                    company_name,
+                    dossier.junk_reason,
+                )
+                continue
+
             company = None
             try:
                 company = self._get_or_create_company(company_name, body_text)
@@ -936,6 +957,8 @@ class IntelligenceNewsScraper:
 
             if not company:
                 continue
+
+            persist_lead_inference(company, dossier, self.db)
 
             for signal_type in signal_types:
                 try:
@@ -1475,6 +1498,7 @@ class IntelligenceNewsScraper:
                 if industry != "Unknown":
                     existing.industry = industry
                     self.db.commit()
+            self._maybe_enrich_website(existing)
             return existing
 
         # Logic engine — same as _accept_company: classifier hint + junk + distinctive +
@@ -1501,8 +1525,45 @@ class IntelligenceNewsScraper:
         
         self.stats["companies_discovered"] += 1
         logger.info(f"  ✨ NEW LEAD: {name} ({industry})")
-        
+        self._maybe_enrich_website(company)
         return company
+
+    def _maybe_enrich_website(self, company: Company) -> None:
+        """DuckDuckGo website lookup — once per company per scraper run."""
+        if not company or company.website or company.id in self._website_lookup_attempted:
+            return
+        self._website_lookup_attempted.add(company.id)
+        try:
+            from app.services.lead_enrichment import enrich_company_website
+            if enrich_company_website(company, sleep_s=0.6):
+                self.stats["websites_enriched"] += 1
+                self.db.add(company)
+                self.db.commit()
+        except Exception as exc:
+            self._record_phase_failure("website_enrichment", exc, company.name)
+
+    def _enrich_missing_websites_batch(self, limit: int = 25) -> None:
+        """Post-discovery pass: fill websites for recent companies still missing one."""
+        from app.services.lead_enrichment import enrich_company_website
+
+        rows = (
+            self.db.query(Company)
+            .filter((Company.website.is_(None)) | (Company.website == ""))
+            .order_by(Company.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        for company in rows:
+            if company.id in self._website_lookup_attempted:
+                continue
+            self._website_lookup_attempted.add(company.id)
+            try:
+                if enrich_company_website(company, sleep_s=0.6):
+                    self.stats["websites_enriched"] += 1
+                    self.db.add(company)
+                    self.db.commit()
+            except Exception as exc:
+                self._record_phase_failure("website_enrichment_batch", exc, company.name)
     
     def _create_signal(
         self,

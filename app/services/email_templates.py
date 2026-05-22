@@ -11,6 +11,7 @@ from app.services.agent_messaging import (
     cal_signature,
     cal_vendor_opening,
 )
+from app.services.cal_insights import pick_cal_insight
 
 
 def _focus(company_data: Dict) -> str:
@@ -38,6 +39,19 @@ def _vendor_context(company_data: Dict) -> str:
     return "Your company looked relevant to a few automation demand patterns we are tracking."
 
 
+def _insight_paragraph(company_data: Dict) -> str:
+    trade_show = company_data.get("next_trade_show") or company_data.get("trade_show")
+    shows = company_data.get("trade_shows")
+    if not trade_show and isinstance(shows, list) and shows:
+        trade_show = shows[0]
+    return pick_cal_insight(
+        company_name=str(company_data.get("company_name") or ""),
+        trade_show=str(trade_show) if trade_show else None,
+        robot_type=str(company_data.get("robot_type") or "") or None,
+        allow_humor=True,
+    )
+
+
 def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     """
     Generate personalized introduction email for initial outreach
@@ -59,6 +73,8 @@ def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     body = f"""Hello,
 
 {cal_vendor_opening()}
+
+{_insight_paragraph(company_data)}
 
 I came across {company_name} because your work around {focus} looks relevant to the kind of automation demand we are seeing. {_vendor_context(company_data)}
 
@@ -208,6 +224,8 @@ def generate_trade_show_invitation_email(company_data: Dict, trade_show: str, da
     body = f"""Hello,
 
 {cal_vendor_opening()}
+
+{_insight_paragraph({**company_data, "trade_show": trade_show})}
 
 Are you planning to attend {trade_show} in {date}? I am asking because events are where warm accounts become real conversations.
 

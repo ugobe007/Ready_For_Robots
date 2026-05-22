@@ -35,6 +35,7 @@ from app.services.agent_messaging import (
     cal_signature,
     cal_vendor_opening,
 )
+from app.services.cal_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -1017,9 +1018,21 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
     possessive = _vendor_possessive(rc.company_name)
     lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
     response_playbook = _recommended_response_playbook(matches)
+    trade_show = getattr(rc, "next_trade_show", None)
+    trade_shows = getattr(rc, "trade_shows", None)
+    if not trade_show and isinstance(trade_shows, list) and trade_shows:
+        trade_show = trade_shows[0]
+    insight = pick_cal_insight(
+        company_name=rc.company_name,
+        trade_show=trade_show,
+        robot_type=getattr(rc, "robot_type", None),
+        allow_humor=True,
+    )
     body = f"""Hello {rc.company_name} team,
 
 {cal_vendor_opening()}
+
+{insight}
 
 I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
 

@@ -540,8 +540,11 @@ def cal_bulk_send(
     sent_count = 0
     skipped_no_draft = 0
     skipped_already_sent = 0
+    skipped_unverified = 0
     errors: list[dict[str, Any]] = []
     now = datetime.now(timezone.utc)
+
+    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
 
     for company, score, tier in companies:
         if sent_count >= body.limit:
@@ -557,12 +560,23 @@ def cal_bulk_send(
             skipped_already_sent += 1
             continue
 
-        domain = normalize_website_domain(company.website)
-        to_email = acct.contact_email or (f"sales@{domain}" if domain else None)
+        to_email, email_source = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
             continue
 
+        ok, verify_reason = verify_email_deliverable(to_email)
+        if not ok:
+            skipped_unverified += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Email failed verification ({verify_reason}): {to_email}",
+                "email_source": email_source,
+            })
+            continue
+
+        domain = normalize_website_domain(company.website or acct.website)
         cc_email = f"marketing@{domain}" if domain else None
 
         # Build subject from draft first line or fallback
@@ -603,6 +617,7 @@ def cal_bulk_send(
         "sent": sent_count,
         "skipped_no_draft": skipped_no_draft,
         "skipped_already_sent": skipped_already_sent,
+        "skipped_unverified": skipped_unverified,
         "errors": errors,
         "dry_run": body.dry_run,
     }
@@ -616,54 +631,54 @@ def cal_enrich_missing_emails(
     dry_run: bool = False,
 ):
     """
-    For CRM accounts that have a draft but no email address, look up the company
-    website via DuckDuckGo and update companies.website so the next bulk send can
-    resolve sales@<domain>.  Processes up to `limit` companies per call.
+    For CRM accounts with drafts but no email: DuckDuckGo website → Apollo contact → sales@domain.
+    Processes up to `limit` HOT+WARM companies per call.
     """
-    # Find HOT+WARM companies without a website that have an unsent draft
+    from app.services.lead_enrichment import enrich_company_and_contact
+
     companies = _hot_warm_companies(db, limit=500)
-    company_ids = [c.id for c, _, _ in companies]
+    targets: list[tuple[Company, CrmAccount, float]] = []
 
-    accounts_without_email: list[tuple[Company, float]] = []
-    if company_ids:
-        for company, score, _ in companies:
-            if company.website:
-                continue  # already has a domain
-            # Check if they have a drafted CRM account that's not yet sent
-            acct = db.query(CrmAccount).filter(
-                CrmAccount.company_id == company.id,
-                CrmAccount.outreach_draft.isnot(None),
-                CrmAccount.outreach_sent_at.is_(None),
-            ).first()
-            if acct and not acct.contact_email:
-                accounts_without_email.append((company, score))
+    for company, score, _ in companies:
+        acct = db.query(CrmAccount).filter(
+            CrmAccount.company_id == company.id,
+            CrmAccount.outreach_draft.isnot(None),
+            CrmAccount.outreach_sent_at.is_(None),
+        ).first()
+        if not acct:
+            continue
+        if acct.contact_email and company.website:
+            continue
+        targets.append((company, acct, score))
 
-    accounts_without_email = accounts_without_email[:limit]
-    resolved = 0
+    targets = targets[:limit]
+    resolved_website = 0
+    resolved_email = 0
     results: list[dict] = []
-    for company, score in accounts_without_email:
-        found = try_duckduckgo_company_website(company.name)
-        sleep_between_lookups(0.8)
-        applied = False
-        if found and not dry_run:
-            company.website = found
-            db.add(company)
-            resolved += 1
-            applied = True
-        results.append({
-            "company_id": company.id,
-            "name": company.name,
-            "score": round(score, 1),
-            "found_website": found,
-            "applied": applied,
-        })
+
+    for company, acct, score in targets:
+        if dry_run:
+            results.append({
+                "company_id": company.id,
+                "name": company.name,
+                "score": round(score, 1),
+                "dry_run": True,
+            })
+            continue
+        row = enrich_company_and_contact(company, acct, sleep_s=0.7, use_apollo=True)
+        if row.get("website_after") and not row.get("website_before"):
+            resolved_website += 1
+        if row.get("email"):
+            resolved_email += 1
+        results.append({**row, "score": round(score, 1), "applied": True})
 
     if not dry_run:
         db.commit()
 
     return {
         "processed": len(results),
-        "resolved": resolved,
+        "resolved_websites": resolved_website,
+        "resolved_emails": resolved_email,
         "dry_run": dry_run,
         "results": results,
     }
@@ -696,12 +711,20 @@ def cal_send_one(
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Already sent")
 
-    domain = normalize_website_domain(acct.website or "")
-    to_email = acct.contact_email or (f"sales@{domain}" if domain else None)
+    company = db.query(Company).filter(Company.id == acct.company_id).first() if acct.company_id else None
+    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
+
+    to_email, _src = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
     if not to_email:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="No recipient email")
 
+    ok, reason = verify_email_deliverable(to_email)
+    if not ok:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
+
+    domain = normalize_website_domain((company.website if company else None) or acct.website)
     cc_email = f"marketing@{domain}" if domain else None
     draft_lines = (acct.outreach_draft or "").strip().splitlines()
     subject_line = next((l for l in draft_lines if l.strip()), None)

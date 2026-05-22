@@ -782,6 +782,7 @@ def _fmt_company(
         "share_summary": share_summary,
         "automation_profile": automation_profile,
         "gtm": gtm,
+        "lead_inference": (c.crm_metadata or {}).get("lead_inference"),
         **link_extras,
     }
     if include_research and db is not None:

@@ -57,6 +57,7 @@ from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount
 from app.models.outreach import OutreachMessage
 from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature
+from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
@@ -383,9 +384,10 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
             f"AMRs, delivery robots, task automation — and {name} fits the profile of teams "
             f"that see real ROI on this stuff. We know which vendors are actually deploying in your space."
         )
+        lines.extend(["", pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits)])
     elif "humor" in selected_traits:
+        lines.append(pick_cal_insight(company_name=name, allow_humor=True))
         lines.append(
-            f"Not here to tell you robots exist. You already know that. "
             f"We track which robot companies are actually solving {industry} problems right now — "
             f"and I think a couple of them are a match for {name}."
         )
@@ -425,18 +427,28 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
     lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
 
     if "insightful" in selected_traits or "industry_refs" in selected_traits:
+        lines.append(pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits))
         lines.append(
             f"We've been tracking buyer signals in {industry} — labor pressure, expansion moves, CapEx shifts — "
             f"and a few accounts are showing real purchase intent right now. "
             f"The kind of signals that usually show up 6–8 weeks before a vendor conversation."
         )
     elif "robot_examples" in selected_traits:
+        lines.append(pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits))
         lines.append(
             f"There are active {industry} buyers in our signal feed right now. "
             f"Not window-shoppers — accounts showing labor strain and operational throughput gaps. "
             f"The type that are already evaluating options."
         )
+    elif "humor" in selected_traits:
+        lines.append(pick_cal_insight(company_name=name, allow_humor=True))
+        lines.append(
+            f"We're seeing active buyer signals in {industry} right now — "
+            f"accounts that fit {name}'s deployment profile. "
+            f"We route these signals to vendors before they hit the open market."
+        )
     else:
+        lines.append(pick_cal_insight(company_name=name, allow_humor=False))
         lines.append(
             f"We're seeing active buyer signals in {industry} right now — "
             f"accounts that fit {name}'s deployment profile. "

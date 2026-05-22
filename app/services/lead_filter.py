@@ -324,6 +324,8 @@ _JUNK_PATTERNS = [
     # "Best X" — product reviews, stock/ETF listicles, consumer guides (never a company name)
     # Catches: "Best Spatulas", "Best AI Stocks", "Best Robot Vacuums We've Tested", etc.
     r"(?i)^best\s+.{2,}",
+    # Numbered listicles: "7 Best …", "10 Top …"
+    r"(?i)^\d+\s+(best|top|worst)\s+",
 
     # "Top X" / "Worst X" superlative listicles
     r"^(top|worst|biggest|largest|smallest|leading|growing|rising|"
