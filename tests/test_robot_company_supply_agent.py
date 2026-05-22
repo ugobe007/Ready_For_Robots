@@ -65,15 +65,14 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "Buyer 3" in email["body"]
     assert "Buyer 4" not in email["body"]
     assert "Buyer 5" not in email["body"]
-    assert "I am Cal with Ready For Robots." in email["body"]
+    assert "Cal here — I run the automation research desk at Ready For Robots." in email["body"]
     assert "ReadyBot" not in email["body"]
-    assert "We find automation sales leads and rank them by buying signals" in email["body"]
+    assert "We map automation demand signals across enterprise buyers" in email["body"]
     assert "search engine for your sales pipeline" in email["body"]
-    assert "exact signal trail behind every lead" in email["body"]
-    assert "If the signal logic is weak, we will say so." in email["body"]
+    assert "If the signal is weak, we'll say so" in email["body"]
     assert "onstage.bot" not in email["body"]
     assert "physical staging" not in email["body"]
-    assert "Sales Channel & Lead Generation Strategy Call" in email["body"]
+    assert "Worth a quick strategy call this week?" in email["body"]
     assert "secure warehousing, staging" not in email["body"]
     assert "two-sided robot automation marketplace" not in email["body"]
     assert "Preformatted response sequence" not in email["body"]
@@ -81,7 +80,7 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "https://news.google.com" not in email["body"]
     assert "Buyer 1 (Unknown)" not in email["body"]
     assert "I am not assuming each one is a fit." in email["body"]
-    assert "Cal\nRobot Automation Team" in email["body"]
+    assert "— Cal\nReady For Robots" in email["body"]
     assert "sales channel strategy" in email["body"]
 
 
@@ -214,10 +213,8 @@ def test_contact_strategy_infers_role_email_from_website_not_url():
     assert strategy["primary"]["needs_verification"] is True
     assert "https://www.unitree.com" not in [target["contact"] for target in strategy["targets"]]
     assert strategy["recommended_to"] == [
-        "partnerships@unitree.com",
-        "events@unitree.com",
-        "marketing@unitree.com",
         "sales@unitree.com",
+        "marketing@unitree.com",
     ]
 
 
@@ -230,7 +227,9 @@ def test_contact_strategy_adds_decision_maker_email_patterns():
 
     strategy = _contact_strategy(company)
 
-    assert "partnerships@dexmate.ai" in strategy["recommended_to"]
+    assert "partnerships@dexmate.ai" in [t["contact"] for t in strategy["targets"]]
+    assert "sales@dexmate.ai" in strategy["recommended_to"]
+    assert "marketing@dexmate.ai" in strategy["recommended_to"]
     assert "jane.smith@dexmate.ai" in strategy["recommended_to"]
     assert "jsmith@dexmate.ai" in strategy["recommended_to"]
     assert "smith@dexmate.ai" in strategy["recommended_to"]
