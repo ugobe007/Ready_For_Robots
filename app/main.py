@@ -220,6 +220,11 @@ def startup():
         warm_robot_ready_candidate_cache()
     except Exception as exc:
         logger.warning("Robot-ready candidate cache warm-up could not be scheduled: %s", exc)
+    try:
+        from app.services.admin_snapshot import warm_admin_snapshot_cache
+        warm_admin_snapshot_cache()
+    except Exception as exc:
+        logger.warning("Admin snapshot cache warm-up could not be scheduled: %s", exc)
 
 
 @app.get("/health")

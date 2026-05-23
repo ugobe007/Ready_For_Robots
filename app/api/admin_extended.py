@@ -291,29 +291,18 @@ def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
 
 def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
     """Return (company, score, tier) for HOT and WARM leads, highest score first."""
-    from app.services.lead_filter import is_junk
-
     rows = (
         db.query(Company, Score)
         .join(Score, Score.company_id == Company.id)
         .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
         .order_by(Score.overall_intent_score.desc())
-        .limit(limit + 60)
+        .limit(limit)
         .all()
     )
-    seen: set[int] = set()
-    out: list[tuple[Company, float, str]] = []
-    for company, score in rows:
-        if company.id in seen:
-            continue
-        if is_junk(company.name or "")[0]:
-            continue
-        seen.add(company.id)
-        sc = float(score.overall_intent_score or 0)
-        out.append((company, sc, _tier_from_score(sc)))
-        if len(out) >= limit:
-            break
-    return out
+    return [
+        (company, float(score.overall_intent_score or 0), _tier_from_score(float(score.overall_intent_score or 0)))
+        for company, score in rows
+    ]
 
 
 def _cal_draft_for_company(company: Company) -> tuple[str, str]:

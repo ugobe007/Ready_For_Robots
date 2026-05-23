@@ -132,7 +132,7 @@ def _build_section(name: str, db: Session, *, analytics_range: str = "30d") -> A
             user=admin_user,
             include_draft_bodies=False,
             include_prospects=True,
-            prospect_limit=300,
+            prospect_limit=120,
         )
 
     if name == "scout":
@@ -182,7 +182,8 @@ def get_section_payload(
 ) -> tuple[int, dict[str, Any]]:
     """
     Return (status_code, body).
-    304 when client `since` is current. Otherwise return cached or rebuilt section.
+    Serves cached section data immediately (even if TTL-expired).
+    Rebuilds synchronously only when refresh=True.
     """
     if name not in SECTION_NAMES:
         return 404, {"detail": f"Unknown section: {name}"}
@@ -191,36 +192,45 @@ def get_section_payload(
     sections = snapshot.get("sections") or {}
     entry = sections.get(name)
     updated_at = entry.get("updated_at") if entry else None
+    is_fresh = section_is_fresh(name, updated_at)
 
-    needs_rebuild = (
-        refresh
-        or entry is None
-        or not section_is_fresh(name, updated_at)
-    )
-
-    if not needs_rebuild and since and updated_at:
+    if entry and since and updated_at and not refresh:
         client_dt = _parse_iso(since)
         server_dt = _parse_iso(updated_at)
         if client_dt and server_dt and server_dt <= client_dt:
             return 304, {}
 
-    if needs_rebuild:
+    if refresh:
         try:
             data = _build_section(name, db, analytics_range=analytics_range)
             snapshot = _merge_section(snapshot, name, data)
             write_admin_snapshot(snapshot)
             entry = snapshot["sections"][name]
+            is_fresh = True
         except Exception as exc:
             logger.exception("admin snapshot section rebuild failed (%s): %s", name, exc)
             if entry:
-                return 200, {"section": name, "updated_at": entry["updated_at"], "data": entry["data"], "stale": True}
+                return 200, {
+                    "section": name,
+                    "updated_at": entry["updated_at"],
+                    "data": entry["data"],
+                    "stale": True,
+                }
+            schedule_background_rebuild([name])
             return 503, {"detail": f"Section rebuild failed: {name}"}
+    elif entry is None:
+        schedule_background_rebuild([name])
+        return 503, {"detail": f"Section not ready: {name}"}
 
-    return 200, {
+    body: dict[str, Any] = {
         "section": name,
         "updated_at": entry["updated_at"],
         "data": entry["data"],
     }
+    if not is_fresh:
+        body["stale"] = True
+        schedule_background_rebuild([name])
+    return 200, body
 
 
 def schedule_background_rebuild(section_names: Optional[list[str]] = None) -> None:
@@ -251,3 +261,8 @@ def schedule_background_rebuild(section_names: Optional[list[str]] = None) -> No
 
 def touch_invalidate() -> None:
     invalidate_admin_snapshot()
+
+
+def warm_admin_snapshot_cache() -> None:
+    """Pre-build admin snapshot sections after deploy so first admin visit is fast."""
+    schedule_background_rebuild(["daily_brief", "stats", "scout", "cal", "user_stats"])

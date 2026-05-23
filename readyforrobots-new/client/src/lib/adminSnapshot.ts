@@ -42,6 +42,25 @@ export const ADMIN_SECTION_ORDER: AdminSectionName[] = [
   "analytics",
 ];
 
+const HASH_FOREGROUND: Record<string, AdminSectionName[]> = {
+  "cal-outreach": ["cal", "daily_brief"],
+  "scout-automation": ["scout", "daily_brief"],
+  workflow: ["workflow", "daily_brief"],
+};
+
+const DEFAULT_FOREGROUND: AdminSectionName[] = ["daily_brief", "cal"];
+
+/** Sections to check for deltas after first paint — rest load in idle time. */
+export function foregroundSectionsForHash(hash: string): AdminSectionName[] {
+  const key = hash.replace(/^#/, "");
+  return HASH_FOREGROUND[key] ?? DEFAULT_FOREGROUND;
+}
+
+export function deferredSectionsForHash(hash: string): AdminSectionName[] {
+  const fg = new Set(foregroundSectionsForHash(hash));
+  return ADMIN_SECTION_ORDER.filter((name) => !fg.has(name));
+}
+
 const HASH_SECTION_PRIORITY: Record<string, AdminSectionName[]> = {
   "cal-outreach": ["cal", "daily_brief", "stats", "scout", "user_stats", "workflow", "activity", "users", "targets", "analytics"],
   "scout-automation": ["scout", "cal", "daily_brief", "stats", "user_stats", "workflow", "activity", "users", "targets", "analytics"],

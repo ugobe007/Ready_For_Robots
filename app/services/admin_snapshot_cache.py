@@ -12,7 +12,8 @@ from sqlalchemy import text
 logger = logging.getLogger(__name__)
 
 ADMIN_SNAPSHOT_KEY = "admin_snapshot_v1"
-_FRESH_TTL_MINUTES = 15
+# Keep serving cached snapshot up to 24h; background rebuild refreshes before this matters.
+_FRESH_TTL_MINUTES = 24 * 60
 
 
 def read_admin_snapshot(*, stale_ok: bool = True) -> Optional[dict[str, Any]]:

@@ -1,12 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   type AdminSectionName,
   type AdminSnapshot,
+  deferredSectionsForHash,
+  foregroundSectionsForHash,
   mergeSectionIntoSnapshot,
   mergeServerSnapshot,
   pause,
   readLocalAdminSnapshot,
-  sectionOrderForHash,
   sectionUpdatedAt,
   writeLocalAdminSnapshot,
 } from "@/lib/adminSnapshot";
@@ -25,27 +26,23 @@ export function useAdminSnapshotSync(
 ) {
   const { sessionToken, timeRange, onSection, onSnapshotMerged, onSyncComplete } = opts;
   const [syncingSection, setSyncingSection] = useState<string | null>(null);
+  const deferStarted = useRef(false);
 
   const refreshSection = useCallback(async (section: AdminSectionName, force = false) => {
     const current = readLocalAdminSnapshot() ?? { sections: {} };
     const since = sectionUpdatedAt(current, section) ?? "";
     const params = new URLSearchParams();
-    if (force || !since) {
+    if (force) {
       params.set("refresh", "1");
-    } else {
+    } else if (since) {
       params.set("since", since);
     }
     if (section === "analytics") {
       params.set("analytics_range", timeRange);
     }
 
-    let res = await adminFetch(`/api/admin/snapshot/section/${section}?${params.toString()}`);
+    const res = await adminFetch(`/api/admin/snapshot/section/${section}?${params.toString()}`);
     if (res.status === 304) return;
-    if (res.status === 503 && since) {
-      res = await adminFetch(
-        `/api/admin/snapshot/section/${section}?refresh=1&analytics_range=${encodeURIComponent(timeRange)}`,
-      );
-    }
     if (!res.ok) return;
 
     const patch = await res.json() as { updated_at?: string; data?: unknown };
@@ -56,6 +53,25 @@ export function useAdminSnapshotSync(
     onSnapshotMerged(next);
     onSection(section, patch.data);
   }, [adminFetch, onSection, onSnapshotMerged, timeRange]);
+
+  const syncSections = useCallback(async (sections: AdminSectionName[]) => {
+    for (const section of sections) {
+      setSyncingSection(section);
+      await refreshSection(section, false);
+      await pause(40);
+    }
+    setSyncingSection(null);
+  }, [refreshSection]);
+
+  const syncDeferred = useCallback(async () => {
+    const deferred = deferredSectionsForHash(window.location.hash.slice(1));
+    for (const section of deferred) {
+      setSyncingSection(section);
+      await refreshSection(section, false);
+      await pause(60);
+    }
+    setSyncingSection(null);
+  }, [refreshSection]);
 
   const sync = useCallback(async () => {
     if (!sessionToken) return;
@@ -70,16 +86,20 @@ export function useAdminSnapshotSync(
       }
     } catch { /* cached UI remains */ }
 
-    const order = sectionOrderForHash(window.location.hash.slice(1));
-    for (const section of order) {
-      setSyncingSection(section);
-      const since = sectionUpdatedAt(readLocalAdminSnapshot(), section);
-      await refreshSection(section, !since);
-      await pause(80);
-    }
-    setSyncingSection(null);
     onSyncComplete?.();
-  }, [adminFetch, onSnapshotMerged, onSyncComplete, refreshSection, sessionToken]);
+
+    const foreground = foregroundSectionsForHash(window.location.hash.slice(1));
+    await syncSections(foreground);
+
+    if (deferStarted.current) return;
+    deferStarted.current = true;
+    const runDeferred = () => { void syncDeferred(); };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(runDeferred, { timeout: 5000 });
+    } else {
+      window.setTimeout(runDeferred, 500);
+    }
+  }, [adminFetch, onSnapshotMerged, onSyncComplete, sessionToken, syncDeferred, syncSections]);
 
   return { syncingSection, sync, refreshSection };
 }
