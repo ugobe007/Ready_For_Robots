@@ -7,7 +7,7 @@ Additional endpoints for company management and system controls.
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_
@@ -325,6 +325,8 @@ def _serialize_cal_row(
     tier: str,
     acct: Optional[CrmAccount],
     delivery_status: Optional[str] = None,
+    *,
+    include_draft_body: bool = False,
 ) -> dict[str, Any]:
     domain = normalize_website_domain(company.website)
     inferred_to = f"sales@{domain}" if domain else None
@@ -351,10 +353,55 @@ def _serialize_cal_row(
     }
 
 
+def _latest_delivery_by_account(db: Session, account_ids: list) -> dict[str, str]:
+    """One row per CRM account — avoids loading every outreach message."""
+    if not account_ids:
+        return {}
+    from sqlalchemy import text
+
+    rows = db.execute(
+        text("""
+            SELECT DISTINCT ON (crm_account_id)
+                   crm_account_id::text AS account_id,
+                   status
+            FROM outreach_messages
+            WHERE crm_account_id = ANY(:ids)
+            ORDER BY crm_account_id, sent_at DESC NULLS LAST
+        """),
+        {"ids": account_ids},
+    ).fetchall()
+    return {row.account_id: row.status for row in rows}
+
+
+@router.get("/cal/draft/{account_id}")
+def cal_draft_body(
+    account_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Return full Cal draft text for one CRM account (lazy-loaded from admin table expand)."""
+    acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
+    if not acct:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+    return {
+        "crm_account_id": str(acct.id),
+        "draft_full": acct.outreach_draft,
+        "contact_email": acct.contact_email,
+    }
+
+
 @router.get("/cal/draft-status")
 def cal_draft_status(
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin),
+    include_draft_bodies: bool = Query(
+        False,
+        description="Include full draft text per prospect (large payload; prefer lazy /cal/draft/{id})",
+    ),
+    include_prospects: bool = Query(
+        True,
+        description="Include prospect rows; set false for summary-only (faster initial load)",
+    ),
 ):
     """Return HOT+WARM prospects with their Cal draft state and email delivery tracking."""
     companies = _hot_warm_companies(db)
@@ -370,31 +417,40 @@ def cal_draft_status(
             if a.company_id and a.company_id not in accounts_by_company:
                 accounts_by_company[a.company_id] = a
 
-    # Fetch latest delivery status per CRM account from outreach_messages
     account_ids = [a.id for a in accounts_by_company.values()]
-    delivery_by_account: dict[str, str] = {}
-    if account_ids:
-        latest_msgs = (
-            db.query(OutreachMessage.crm_account_id, OutreachMessage.status)
-            .filter(OutreachMessage.crm_account_id.in_(account_ids))
-            .order_by(OutreachMessage.crm_account_id, OutreachMessage.sent_at.desc().nullslast())
-            .all()
-        )
-        seen: set = set()
-        for acct_id, status in latest_msgs:
-            key = str(acct_id)
-            if key not in seen:
-                delivery_by_account[key] = status
-                seen.add(key)
+    delivery_by_account = _latest_delivery_by_account(db, account_ids)
 
-    rows = [
-        _serialize_cal_row(
-            company, score, tier,
-            accounts_by_company.get(company.id),
-            delivery_by_account.get(str(accounts_by_company[company.id].id)) if company.id in accounts_by_company else None,
-        )
-        for company, score, tier in companies
-    ]
+    rows: list[dict[str, Any]] = []
+    if include_prospects:
+        rows = [
+            _serialize_cal_row(
+                company,
+                score,
+                tier,
+                accounts_by_company.get(company.id),
+                delivery_by_account.get(str(accounts_by_company[company.id].id))
+                if company.id in accounts_by_company
+                else None,
+                include_draft_body=include_draft_bodies,
+            )
+            for company, score, tier in companies
+        ]
+    else:
+        for company, score, tier in companies:
+            acct = accounts_by_company.get(company.id)
+            has_draft = bool(acct and acct.outreach_draft)
+            sent = bool(acct and acct.outreach_sent_at)
+            contact_email = (acct.contact_email if acct else None) or (
+                f"sales@{normalize_website_domain(company.website)}" if normalize_website_domain(company.website) else None
+            )
+            rows.append({
+                "tier": tier,
+                "has_draft": has_draft,
+                "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
+                "contact_email": contact_email,
+                "email_delivery_status": delivery_by_account.get(str(acct.id)) if acct else None,
+                "outreach_stage": acct.outreach_stage if acct else None,
+            })
 
     total = len(rows)
     hot = sum(1 for r in rows if r["tier"] == "HOT")
@@ -426,7 +482,7 @@ def cal_draft_status(
             "clicked": clicked,
             "replied": replied,
         },
-        "prospects": rows,
+        "prospects": rows if include_prospects else [],
     }
 
 

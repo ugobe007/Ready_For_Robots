@@ -307,7 +307,7 @@ export default function Admin() {
   const [analytics, setAnalytics] = useState<SiteAnalytics | null>(null);
   const [workflow, setWorkflow] = useState<WorkflowSummary | null>(null);
   const [targets, setTargets] = useState<ScrapeTargets | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [meLoading, setMeLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [timeRange, setTimeRange] = useState<(typeof TIME_RANGES)[number]["value"]>("30d");
@@ -329,6 +329,8 @@ export default function Admin() {
   const [replySettingSaved, setReplySettingSaved] = useState(false);
   const [dailyBrief, setDailyBrief] = useState<DailyBriefData | null>(null);
   const [dailyBriefLoading, setDailyBriefLoading] = useState(true);
+  const [draftBodies, setDraftBodies] = useState<Record<string, string>>({});
+  const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -345,32 +347,26 @@ export default function Admin() {
     }))
   ), [api, headers]);
 
-  const loadAdmin = useCallback(async () => {
-    if (!session?.access_token) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError("");
+  const loadCritical = useCallback(async () => {
+    setDailyBriefLoading(true);
     try {
-      const meRes = await adminFetch("/api/user/me");
-      if (!meRes.ok) throw new Error(meRes.status === 401 ? "Please sign in again." : "Could not verify admin access.");
-      const meData = await meRes.json() as AdminMe;
-      setMe(meData);
-      if (!meData.is_admin) {
-        setStats(null);
-        setUserStats(null);
-        setUsers([]);
-        setActivity([]);
-        setAnalytics(null);
-        setWorkflow(null);
-        setTargets(null);
-        return;
+      const [briefRes, calSummaryRes] = await Promise.allSettled([
+        adminFetch("/api/admin/daily-brief"),
+        adminFetch("/api/admin/cal/draft-status?include_prospects=false"),
+      ]);
+      if (briefRes.status === "fulfilled" && briefRes.value.ok) {
+        setDailyBrief(await briefRes.value.json() as DailyBriefData);
       }
+      if (calSummaryRes.status === "fulfilled" && calSummaryRes.value.ok) {
+        setCalStatus(await calSummaryRes.value.json() as CalDraftStatus);
+      }
+    } finally {
+      setDailyBriefLoading(false);
+    }
+  }, [adminFetch]);
 
-      // Fire workflow + all supplemental fetches in parallel — removes one sequential round-trip.
-      setLoading(false);
-      setDailyBriefLoading(true);
+  const loadSecondary = useCallback(async () => {
+    try {
       const all = await Promise.allSettled([
         adminFetch("/api/admin/workflow/actions?limit=40"),
         adminFetch("/api/admin/stats"),
@@ -379,9 +375,9 @@ export default function Admin() {
         adminFetch("/api/admin/activity?limit=40"),
         adminFetch(`/api/analytics?range=${timeRange}`),
         adminFetch("/api/admin/scrape/targets"),
-        adminFetch("/api/admin/daily-brief"),
+        adminFetch("/api/admin/cal/draft-status"),
       ]);
-      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes, briefRes] = all.map(
+      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes, calFullRes] = all.map(
         (result) => (result.status === "fulfilled" ? result.value : null),
       );
       if (workflowRes?.ok) setWorkflow(await workflowRes.json());
@@ -397,14 +393,41 @@ export default function Admin() {
       }
       if (analyticsRes?.ok) setAnalytics(await analyticsRes.json());
       if (targetsRes?.ok) setTargets(await targetsRes.json());
-      if (briefRes?.ok) setDailyBrief(await briefRes.json() as DailyBriefData);
+      if (calFullRes?.ok) setCalStatus(await calFullRes.json() as CalDraftStatus);
+    } catch { /* sections fill in as responses arrive */ }
+  }, [adminFetch, timeRange]);
+
+  const loadAdmin = useCallback(async () => {
+    if (!session?.access_token) {
+      setMeLoading(false);
+      return;
+    }
+    setMeLoading(true);
+    setError("");
+    try {
+      const meRes = await adminFetch("/api/user/me");
+      if (!meRes.ok) throw new Error(meRes.status === 401 ? "Please sign in again." : "Could not verify admin access.");
+      const meData = await meRes.json() as AdminMe;
+      setMe(meData);
+      if (!meData.is_admin) {
+        setStats(null);
+        setUserStats(null);
+        setUsers([]);
+        setActivity([]);
+        setAnalytics(null);
+        setWorkflow(null);
+        setTargets(null);
+        setDailyBrief(null);
+        return;
+      }
+      void loadCritical();
+      void loadSecondary();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {
-      setLoading(false);
-      setDailyBriefLoading(false);
+      setMeLoading(false);
     }
-  }, [adminFetch, session?.access_token, timeRange]);
+  }, [adminFetch, loadCritical, loadSecondary, session?.access_token]);
 
   const loadCalStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -413,6 +436,25 @@ export default function Admin() {
       if (res.ok) setCalStatus(await res.json() as CalDraftStatus);
     } catch { /* silent — status loads separately */ }
   }, [adminFetch, session?.access_token]);
+
+  const loadDraftBody = useCallback(async (crmAccountId: string) => {
+    if (!crmAccountId) return;
+    setDraftBodyLoading(crmAccountId);
+    try {
+      const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`);
+      if (res.ok) {
+        const data = await res.json() as { draft_full?: string };
+        if (data.draft_full) {
+          setDraftBodies((prev) => (
+            prev[crmAccountId] ? prev : { ...prev, [crmAccountId]: data.draft_full! }
+          ));
+        }
+      }
+    } catch { /* advisory */ }
+    finally {
+      setDraftBodyLoading(null);
+    }
+  }, [adminFetch]);
 
   const loadReplySettings = useCallback(async () => {
     if (!session?.access_token) return;
@@ -449,10 +491,9 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authLoading && session?.access_token) {
-      void loadCalStatus();
       void loadReplySettings();
     }
-  }, [authLoading, loadCalStatus, loadReplySettings, session?.access_token]);
+  }, [authLoading, loadReplySettings, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -682,7 +723,7 @@ export default function Admin() {
     }
   }
 
-  if (authLoading || loading) {
+  if (authLoading || meLoading) {
     return (
       <div className="min-h-screen" style={{ background: "#0d0520" }}>
         <Header />
@@ -978,7 +1019,13 @@ export default function Admin() {
                       <div key={`${prospect.company_id}-${idx}`} className="rounded-xl border border-white/7" style={{ background: "rgba(13,5,32,0.55)" }}>
                         <button
                           className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 px-4 py-3 text-left"
-                          onClick={() => setCalExpanded(isOpen ? null : idx)}
+                          onClick={() => {
+                            const next = isOpen ? null : idx;
+                            setCalExpanded(next);
+                            if (!isOpen && prospect.crm_account_id && prospect.has_draft) {
+                              void loadDraftBody(prospect.crm_account_id);
+                            }
+                          }}
                         >
                           <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-white/85">{prospect.company_name || "—"}</p>
@@ -1050,7 +1097,11 @@ export default function Admin() {
                               <>
                                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/28">Cal draft</p>
                                 <pre className="whitespace-pre-wrap rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3 font-mono text-[11px] leading-relaxed text-white/65">
-                                  {prospect.draft_full}
+                                  {prospect.crm_account_id && draftBodies[prospect.crm_account_id]
+                                    ? draftBodies[prospect.crm_account_id]
+                                    : draftBodyLoading === prospect.crm_account_id
+                                      ? "Loading draft…"
+                                      : (prospect.draft_preview || prospect.draft_full || "—")}
                                 </pre>
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
                                   {prospect.contact_email && (

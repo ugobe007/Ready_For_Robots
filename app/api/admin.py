@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from pydantic import BaseModel
 from typing import Any, Callable, List, Optional
+import time
 
 from app.database import get_db
 from app.models.company import Company
@@ -23,6 +24,24 @@ from app.models.score import Score
 from app.api.auth_deps import require_admin
 
 router = APIRouter(dependencies=[Depends(require_admin)])
+
+# Short TTL cache — admin dashboard fires many count queries on every load.
+_ADMIN_STATS_CACHE: tuple[float, dict] | None = None
+_DAILY_BRIEF_CACHE: tuple[float, dict] | None = None
+_ADMIN_CACHE_TTL = 60.0
+
+
+def _admin_cache_get(cache: tuple[float, dict] | None) -> dict | None:
+    if cache is None:
+        return None
+    ts, data = cache
+    if time.monotonic() - ts < _ADMIN_CACHE_TTL:
+        return data
+    return None
+
+
+def _admin_cache_set(data: dict) -> tuple[float, dict]:
+    return (time.monotonic(), data)
 
 
 def _industry_display(raw):
@@ -114,6 +133,10 @@ def _safe_collect(
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db)):
     """System-wide counts and recent activity with business metrics."""
+    global _ADMIN_STATS_CACHE
+    cached = _admin_cache_get(_ADMIN_STATS_CACHE)
+    if cached is not None:
+        return cached
     companies = db.query(func.count(Company.id)).scalar() or 0
     signals   = db.query(func.count(Signal.id)).scalar()  or 0
     scored    = db.query(func.count(Score.id)).scalar()    or 0
@@ -147,7 +170,7 @@ def get_stats(db: Session = Depends(get_db)):
         .all()
     )
 
-    return {
+    result = {
         "totals": {
             "companies": companies,
             "signals":   signals,
@@ -186,6 +209,8 @@ def get_stats(db: Session = Depends(get_db)):
             for c in recent
         ],
     }
+    _ADMIN_STATS_CACHE = _admin_cache_set(result)
+    return result
 
 
 # ── Daily brief ───────────────────────────────────────────────────────────────
@@ -193,6 +218,10 @@ def get_stats(db: Session = Depends(get_db)):
 @router.get("/daily-brief")
 def daily_brief(db: Session = Depends(get_db)):
     """Operator daily brief: today's intake, outreach activity, and next steps."""
+    global _DAILY_BRIEF_CACHE
+    cached = _admin_cache_get(_DAILY_BRIEF_CACHE)
+    if cached is not None:
+        return cached
     from datetime import datetime, timezone
 
     from app.models.crm import CrmAccount
@@ -301,7 +330,7 @@ def daily_brief(db: Session = Depends(get_db)):
     priority_rank = {"high": 0, "medium": 1, "low": 2}
     next_steps.sort(key=lambda s: priority_rank.get(s["priority"], 2))
 
-    return {
+    brief = {
         "date": day_start.date().isoformat(),
         "metrics": {
             "new_companies_today": new_companies,
@@ -318,6 +347,8 @@ def daily_brief(db: Session = Depends(get_db)):
         },
         "next_steps": next_steps,
     }
+    _DAILY_BRIEF_CACHE = _admin_cache_set(brief)
+    return brief
 
 
 @router.get("/workflow/actions")
