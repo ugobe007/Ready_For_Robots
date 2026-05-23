@@ -404,6 +404,23 @@ def is_valid_lead(
         if junk:
             return False, f"junk filter: {reason}"
 
+    # Headline fragments can slip past substring lists — belt-and-suspenders
+    from app.services.lead_filter import is_headline_fragment
+
+    frag, frag_reason = is_headline_fragment(name)
+    if frag:
+        return False, frag_reason
+
+    # Single-word names must be allowlisted or look like real brands (not "port", "home")
+    tokens = re.findall(r"[a-zA-Z&]+", name)
+    if len(tokens) == 1:
+        tok = tokens[0]
+        low_tok = tok.lower()
+        if low_tok in _GENERIC_WORDS:
+            return False, f"single-word generic term ({name!r})"
+        if len(tok) <= 4 and not is_allowlisted_company_name(name):
+            return False, f"single-word name too short or ambiguous ({name!r})"
+
     # Stage 2: legal suffix fast-pass
     if _has_legal_suffix(name):
         return True, ""

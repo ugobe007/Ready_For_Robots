@@ -403,6 +403,11 @@ def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
     junk, reason = is_junk(name)
     if junk:
         return junk, reason
+    from app.services.company_validator import is_valid_lead
+
+    ok, logic_reason = is_valid_lead(name or "", skip_junk_check=True)
+    if not ok:
+        return True, logic_reason
     if (name or "").strip().lower() == "target":
         return True, "target false positive (common-word in funding headlines)"
     # Exclude robot vendors — they are sellers, not end-user buyers

@@ -274,6 +274,45 @@ def test_headline_fragments_user_reported_feb_2026(name):
 @pytest.mark.parametrize(
     "name",
     [
+        "s for",
+        "port",
+        "costs",
+        "America",
+        "Move}",
+        "Fast Food",
+        "Newsweek",
+        "Use Cases",
+        "Pee",
+        "cloud-based",
+        "Investor Day",
+        "AI Adoption",
+        "Hyperscale Data?",
+        "USD 1",
+        "Labor and Skilled Worker Shortage",
+        "home",
+        "Lego",
+        "Top 10",
+        "1 million & counting I Amazon",
+        "Experiences",
+        "The ROI",
+        "Exosuit Study Demonstrates 62% Reduction",
+        "to Incheon International Airport, with expansion",
+        "Nexer Robotics to",
+        "Research",
+    ],
+)
+def test_headline_fragments_user_reported_may_2026(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+    from app.services.company_validator import is_valid_lead
+
+    ok, logic_reason = is_valid_lead(name, skip_junk_check=True)
+    assert ok is False, logic_reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
         "Exclusive EQT Bets",
         "Google Cloud Team Up",
         "Distribution Center Jobs While Increasing",

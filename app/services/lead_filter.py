@@ -1041,6 +1041,53 @@ _JUNK_EXACT = frozenset({
 })
 
 
+# ── Headline / RSS title fragments stored as company.name (not legal entities) ─
+_HEADLINE_FRAGMENT_EXACT = frozenset({
+    "port", "costs", "home", "research", "experiences", "america", "pee",
+    "fast food", "use cases", "investor day", "ai adoption", "the roi",
+    "top 10", "cloud-based", "newsweek", "lego", "move}", "s for", "usd 1",
+    "hyperscale data?", "labor and skilled worker shortage",
+    "nexer robotics to",
+})
+
+_HEADLINE_FRAGMENT_PATTERNS = [
+    r"[{}\[\]]",                                      # Move}, broken scrape
+    r"(?i)^top\s+\d+\s*$",                           # Top 10
+    r"(?i)^\d+\s+million\b",                         # 1 million & counting…
+    r"(?i)&\s+counting\b",
+    r"(?i)^to\s+[a-z]",                              # to Incheon International Airport…
+    r"(?i)\s+to\s*$",                                # Nexer Robotics to
+    r"(?i)^the\s+(roi|impact|future|state|cost|benefit|answer|problem)\s*$",
+    r"(?i)^usd\s+\d",
+    r"(?i)^[a-z]{1,2}\s+for\s*$",                    # s for
+    r"(?i)\bstudy\s+demonstrates\b",
+    r"(?i)^labor\s+and\s+",
+    r"(?i)\?\s*$",                                   # Hyperscale Data?
+    r"(?i)^hyperscale\s+data",
+    r"(?i)^cloud-",                                  # cloud-based
+    r"(?i)^(use\s+cases|investor\s+day|ai\s+adoption|fast\s+food)\s*$",
+    r"(?i)^exosuit\s+study\b",
+    r"(?i)\b\d+\s*%\s+reduction\b",
+    r"(?i)^with\s+expansion\s*$",
+    r"(?i),\s+with\s+expansion\b",
+]
+_HEADLINE_FRAGMENT_RE = [re.compile(p) for p in _HEADLINE_FRAGMENT_PATTERNS]
+
+
+def is_headline_fragment(name: Optional[str]) -> tuple[bool, str]:
+    """True when the string is a news headline stub, not a company legal name."""
+    if not name or not name.strip():
+        return True, "empty name"
+    stripped = name.strip()
+    low = stripped.lower()
+    if low in _HEADLINE_FRAGMENT_EXACT:
+        return True, f"headline fragment: {stripped!r}"
+    for rx in _HEADLINE_FRAGMENT_RE:
+        if rx.search(stripped):
+            return True, "headline fragment (pattern)"
+    return False, ""
+
+
 def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     """
     Returns (True, reason) if the company name looks like scraper garbage.
@@ -1066,6 +1113,10 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     stripped_punct = stripped.rstrip(".,;:!?")
     if stripped_punct != stripped and is_known_publication_name(stripped_punct):
         return True, "news or trade publication (not a buyer company)"
+
+    frag, frag_reason = is_headline_fragment(stripped)
+    if frag:
+        return True, frag_reason
 
     bad_nc, reason_nc = reject_as_non_company_name(stripped)
     if bad_nc:

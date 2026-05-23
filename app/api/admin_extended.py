@@ -285,12 +285,14 @@ def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
 
 def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
     """Return (company, score, tier) for HOT and WARM leads, highest score first."""
+    from app.services.company_validator import is_valid_lead
+
     rows = (
         db.query(Company, Score)
         .join(Score, Score.company_id == Company.id)
         .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
         .order_by(Score.overall_intent_score.desc())
-        .limit(limit)
+        .limit(limit * 3)
         .all()
     )
     seen: set[int] = set()
@@ -298,9 +300,13 @@ def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, fl
     for company, score in rows:
         if company.id in seen:
             continue
+        if not is_valid_lead(company.name or "")[0]:
+            continue
         seen.add(company.id)
         sc = float(score.overall_intent_score or 0)
         out.append((company, sc, _tier_from_score(sc)))
+        if len(out) >= limit:
+            break
     return out
 
 
