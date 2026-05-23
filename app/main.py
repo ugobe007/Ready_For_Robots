@@ -16,6 +16,7 @@ from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
 from app.api.scraper_control import router as scraper_control_router
 from app.api.admin import router as admin_router
+from app.api.admin_snapshot import router as admin_snapshot_router
 from app.api.admin_extended import router as admin_extended_router
 from app.api.admin_users import router as admin_users_router
 from app.api.agent import router as agent_router
@@ -171,6 +172,7 @@ app.include_router(analyze_router, prefix="/api", tags=["analyze"])
 app.include_router(scraper_health_router, prefix="/api", tags=["scraper-health"])
 app.include_router(scraper_control_router, tags=["scraper-control"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_snapshot_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])

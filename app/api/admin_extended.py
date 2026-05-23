@@ -4,8 +4,10 @@ Extended Admin API Endpoints
 Additional endpoints for company management and system controls.
 """
 
+
 import uuid
 from datetime import datetime, timezone
+from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -26,6 +28,11 @@ from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
 
 router = APIRouter(dependencies=[Depends(require_admin)])
+
+
+def _invalidate_admin_caches() -> None:
+    from app.services.admin_snapshot import touch_invalidate
+    touch_invalidate()
 
 
 # ── Company Management ────────────────────────────────────────────────────────
@@ -227,9 +234,8 @@ def rep_feedback_summary(db: Session = Depends(get_db)):
 
 @router.post("/system/cache/clear")
 def clear_cache():
-    """Clear all application caches."""
-    # In a real app, you'd clear Redis or in-memory caches
-    # For now, just return success
+    """Clear persisted admin snapshot and in-process caches."""
+    _invalidate_admin_caches()
     return {"status": "success", "message": "Cache cleared"}
 
 
@@ -285,14 +291,14 @@ def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
 
 def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
     """Return (company, score, tier) for HOT and WARM leads, highest score first."""
-    from app.services.company_validator import is_valid_lead
+    from app.services.lead_filter import is_junk
 
     rows = (
         db.query(Company, Score)
         .join(Score, Score.company_id == Company.id)
         .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
         .order_by(Score.overall_intent_score.desc())
-        .limit(limit * 3)
+        .limit(limit + 60)
         .all()
     )
     seen: set[int] = set()
@@ -300,7 +306,7 @@ def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, fl
     for company, score in rows:
         if company.id in seen:
             continue
-        if not is_valid_lead(company.name or "")[0]:
+        if is_junk(company.name or "")[0]:
             continue
         seen.add(company.id)
         sc = float(score.overall_intent_score or 0)
@@ -338,8 +344,16 @@ def _serialize_cal_row(
     inferred_to = f"sales@{domain}" if domain else None
     inferred_cc = f"marketing@{domain}" if domain else None
     contact_email = (acct.contact_email if acct else None) or inferred_to
-    has_draft = bool(acct and acct.outreach_draft)
-    return {
+    has_draft = bool(
+        acct
+        and (
+            getattr(acct, "has_draft", None)
+            if getattr(acct, "has_draft", None) is not None
+            else acct.outreach_draft
+        )
+    )
+    preview = (acct.outreach_draft or "").strip()[:140] if has_draft else None
+    row: dict[str, Any] = {
         "company_id": company.id,
         "company_name": company.name,
         "website": company.website,
@@ -353,10 +367,49 @@ def _serialize_cal_row(
         "outreach_stage": acct.outreach_stage if acct else None,
         "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
         "has_draft": has_draft,
-        "draft_preview": (acct.outreach_draft or "")[:140].strip() if has_draft else None,
-        "draft_full": acct.outreach_draft if has_draft else None,
+        "draft_preview": preview or None,
         "email_delivery_status": delivery_status,
     }
+    if include_draft_body and has_draft and acct:
+        row["draft_full"] = acct.outreach_draft
+    return row
+
+
+def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int, SimpleNamespace]:
+    """Load CRM fields needed for Cal outreach without full draft bodies."""
+    if not company_ids:
+        return {}
+    rows = (
+        db.query(
+            CrmAccount.id,
+            CrmAccount.company_id,
+            CrmAccount.contact_email,
+            CrmAccount.outreach_stage,
+            CrmAccount.outreach_sent_at,
+            CrmAccount.account_type,
+            func.substring(CrmAccount.outreach_draft, 1, 140).label("draft_preview"),
+            CrmAccount.outreach_draft.isnot(None).label("has_draft_col"),
+        )
+        .filter(CrmAccount.company_id.in_(company_ids))
+        .all()
+    )
+    out: dict[int, SimpleNamespace] = {}
+    for r in rows:
+        if r.company_id in out:
+            continue
+        preview = (r.draft_preview or "").strip()
+        has_draft = bool(r.has_draft_col)
+        out[r.company_id] = SimpleNamespace(
+            id=r.id,
+            company_id=r.company_id,
+            contact_email=r.contact_email,
+            outreach_stage=r.outreach_stage,
+            outreach_sent_at=r.outreach_sent_at,
+            account_type=r.account_type,
+            has_draft=has_draft,
+            outreach_draft=preview if has_draft else None,
+        )
+    return out
 
 
 def _latest_delivery_by_account(db: Session, account_ids: list) -> dict[str, str]:
@@ -408,27 +461,52 @@ def cal_draft_status(
         True,
         description="Include prospect rows; set false for summary-only (faster initial load)",
     ),
+    prospect_limit: int = Query(
+        300,
+        ge=1,
+        le=500,
+        description="Max prospect rows returned when include_prospects=true",
+    ),
 ):
     """Return HOT+WARM prospects with their Cal draft state and email delivery tracking."""
     companies = _hot_warm_companies(db)
     company_ids = [c.id for c, _, _ in companies]
-    accounts_by_company: dict[int, CrmAccount] = {}
-    if company_ids:
-        accts = (
-            db.query(CrmAccount)
-            .filter(CrmAccount.company_id.in_(company_ids))
-            .all()
-        )
-        for a in accts:
-            if a.company_id and a.company_id not in accounts_by_company:
-                accounts_by_company[a.company_id] = a
+    accounts_by_company = _crm_accounts_for_companies(db, company_ids)
 
     account_ids = [a.id for a in accounts_by_company.values()]
     delivery_by_account = _latest_delivery_by_account(db, account_ids)
 
-    rows: list[dict[str, Any]] = []
+    summary_rows: list[dict[str, Any]] = []
+    for company, score, tier in companies:
+        acct = accounts_by_company.get(company.id)
+        has_draft = bool(acct and acct.has_draft)
+        contact_email = (acct.contact_email if acct else None) or (
+            f"sales@{normalize_website_domain(company.website)}" if normalize_website_domain(company.website) else None
+        )
+        summary_rows.append({
+            "tier": tier,
+            "has_draft": has_draft,
+            "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
+            "contact_email": contact_email,
+            "email_delivery_status": delivery_by_account.get(str(acct.id)) if acct else None,
+            "outreach_stage": acct.outreach_stage if acct else None,
+        })
+
+    total = len(summary_rows)
+    hot = sum(1 for r in summary_rows if r["tier"] == "HOT")
+    warm = sum(1 for r in summary_rows if r["tier"] == "WARM")
+    drafted = sum(1 for r in summary_rows if r["has_draft"])
+    sent = sum(1 for r in summary_rows if r["outreach_sent_at"])
+    unsent_drafted = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"])
+    sendable = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"])
+    no_email = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"] and not r["contact_email"])
+    opened = sum(1 for r in summary_rows if r["email_delivery_status"] in ("opened", "clicked"))
+    clicked = sum(1 for r in summary_rows if r["email_delivery_status"] == "clicked")
+    replied = sum(1 for r in summary_rows if r["outreach_stage"] == "replied")
+
+    prospect_rows: list[dict[str, Any]] = []
     if include_prospects:
-        rows = [
+        prospect_rows = [
             _serialize_cal_row(
                 company,
                 score,
@@ -439,41 +517,10 @@ def cal_draft_status(
                 else None,
                 include_draft_body=include_draft_bodies,
             )
-            for company, score, tier in companies
+            for company, score, tier in companies[:prospect_limit]
         ]
-    else:
-        for company, score, tier in companies:
-            acct = accounts_by_company.get(company.id)
-            has_draft = bool(acct and acct.outreach_draft)
-            sent = bool(acct and acct.outreach_sent_at)
-            contact_email = (acct.contact_email if acct else None) or (
-                f"sales@{normalize_website_domain(company.website)}" if normalize_website_domain(company.website) else None
-            )
-            rows.append({
-                "tier": tier,
-                "has_draft": has_draft,
-                "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
-                "contact_email": contact_email,
-                "email_delivery_status": delivery_by_account.get(str(acct.id)) if acct else None,
-                "outreach_stage": acct.outreach_stage if acct else None,
-            })
 
-    total = len(rows)
-    hot = sum(1 for r in rows if r["tier"] == "HOT")
-    warm = sum(1 for r in rows if r["tier"] == "WARM")
-    drafted = sum(1 for r in rows if r["has_draft"])
-    sent = sum(1 for r in rows if r["outreach_sent_at"])
-    # unsent_drafted = have a draft but have NOT been sent yet
-    unsent_drafted = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"])
-    # sendable = have draft + valid email + not yet sent — this is the real number that will go out
-    sendable = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"])
-    # no_email = drafted but no email address at all — bulk send will skip these
-    no_email = sum(1 for r in rows if r["has_draft"] and not r["outreach_sent_at"] and not r["contact_email"])
-    opened = sum(1 for r in rows if r["email_delivery_status"] in ("opened", "clicked"))
-    clicked = sum(1 for r in rows if r["email_delivery_status"] == "clicked")
-    replied = sum(1 for r in rows if r["outreach_stage"] == "replied")
-
-    return {
+    payload = {
         "summary": {
             "total": total,
             "hot": hot,
@@ -488,8 +535,9 @@ def cal_draft_status(
             "clicked": clicked,
             "replied": replied,
         },
-        "prospects": rows if include_prospects else [],
+        "prospects": prospect_rows,
     }
+    return payload
 
 
 class BulkDraftBody(BaseModel):
@@ -558,6 +606,7 @@ def cal_bulk_draft(
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
 
     db.commit()
+    _invalidate_admin_caches()
     return {
         "drafted": drafted,
         "skipped": skipped,
@@ -674,6 +723,7 @@ def cal_bulk_send(
 
     if not body.dry_run:
         db.commit()
+        _invalidate_admin_caches()
 
     return {
         "sent": sent_count,
@@ -736,6 +786,7 @@ def cal_enrich_missing_emails(
 
     if not dry_run:
         db.commit()
+        _invalidate_admin_caches()
 
     return {
         "processed": len(results),
@@ -814,6 +865,7 @@ def cal_send_one(
     acct.outreach_sent_at = now
     acct.outreach_stage = "contacted"
     db.commit()
+    _invalidate_admin_caches()
     return {"sent": True, "to": to_email, "sent_at": now.isoformat()}
 
 

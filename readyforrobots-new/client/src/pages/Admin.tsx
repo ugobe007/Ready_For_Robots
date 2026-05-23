@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
@@ -7,6 +7,12 @@ import Header from "@/components/Header";
 import ScoutActionBar from "@/components/ScoutActionBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
+import {
+  readLocalAdminSnapshot,
+  snapshotToApplied,
+  type AdminSectionName,
+} from "@/lib/adminSnapshot";
 import { authHeader } from "@/lib/supabase";
 
 type AdminStats = {
@@ -132,6 +138,14 @@ type CalDraftStatus = {
     replied?: number;
   };
   prospects?: CalProspect[];
+};
+
+type ScoutStatus = {
+  total_prospects?: number;
+  activated?: number;
+  drafted?: number;
+  sent?: number;
+  pending_approval?: number;
 };
 
 const INDUSTRIES = ["", "Logistics", "Hospitality", "Healthcare", "Food Service", "Automotive & Manufacturing"];
@@ -299,14 +313,16 @@ function sourceLabel(source?: string) {
 export default function Admin() {
   const api = getApiBase();
   const { session, loading: authLoading } = useAuth();
+  const [localSnapshot] = useState(() => readLocalAdminSnapshot());
+  const initialApplied = useMemo(() => snapshotToApplied(localSnapshot), [localSnapshot]);
   const [me, setMe] = useState<AdminMe | null>(null);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [userStats, setUserStats] = useState<AdminUserStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [activity, setActivity] = useState<AdminActivity[]>([]);
-  const [analytics, setAnalytics] = useState<SiteAnalytics | null>(null);
-  const [workflow, setWorkflow] = useState<WorkflowSummary | null>(null);
-  const [targets, setTargets] = useState<ScrapeTargets | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(initialApplied.stats as AdminStats | null);
+  const [userStats, setUserStats] = useState<AdminUserStats | null>(initialApplied.userStats as AdminUserStats | null);
+  const [users, setUsers] = useState<AdminUser[]>(initialApplied.users as AdminUser[]);
+  const [activity, setActivity] = useState<AdminActivity[]>(initialApplied.activity as AdminActivity[]);
+  const [analytics, setAnalytics] = useState<SiteAnalytics | null>(initialApplied.analytics as SiteAnalytics | null);
+  const [workflow, setWorkflow] = useState<WorkflowSummary | null>(initialApplied.workflow as WorkflowSummary | null);
+  const [targets, setTargets] = useState<ScrapeTargets | null>(initialApplied.targets as ScrapeTargets | null);
   const [meLoading, setMeLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -319,16 +335,18 @@ export default function Admin() {
   const [triggerIndustry, setTriggerIndustry] = useState("");
   const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
-  const [scoutStatus, setScoutStatus] = useState<{ total_prospects?: number; activated?: number; drafted?: number; sent?: number; pending_approval?: number } | null>(null);
-  const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(null);
+  const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
+    initialApplied.scoutStatus as ScoutStatus | null,
+  );
+  const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(initialApplied.calStatus as CalDraftStatus | null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
   const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
   // Reply notification settings
   const [replyForwardEmail, setReplyForwardEmail] = useState("");
   const [replySettingBusy, setReplySettingBusy] = useState(false);
   const [replySettingSaved, setReplySettingSaved] = useState(false);
-  const [dailyBrief, setDailyBrief] = useState<DailyBriefData | null>(null);
-  const [dailyBriefLoading, setDailyBriefLoading] = useState(true);
+  const [dailyBrief, setDailyBrief] = useState<DailyBriefData | null>(initialApplied.dailyBrief);
+  const [dailyBriefLoading, setDailyBriefLoading] = useState(!initialApplied.dailyBrief);
   const [draftBodies, setDraftBodies] = useState<Record<string, string>>({});
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
 
@@ -347,55 +365,75 @@ export default function Admin() {
     }))
   ), [api, headers]);
 
-  const loadCritical = useCallback(async () => {
-    setDailyBriefLoading(true);
-    try {
-      const [briefRes, calSummaryRes] = await Promise.allSettled([
-        adminFetch("/api/admin/daily-brief"),
-        adminFetch("/api/admin/cal/draft-status?include_prospects=false"),
-      ]);
-      if (briefRes.status === "fulfilled" && briefRes.value.ok) {
-        setDailyBrief(await briefRes.value.json() as DailyBriefData);
+  const applySectionData = useCallback((section: AdminSectionName, data: unknown) => {
+    switch (section) {
+      case "daily_brief":
+        setDailyBrief(data as DailyBriefData);
+        setDailyBriefLoading(false);
+        break;
+      case "cal":
+        setCalStatus(data as CalDraftStatus);
+        break;
+      case "stats":
+        setStats(data as AdminStats);
+        break;
+      case "scout":
+        setScoutStatus(data as ScoutStatus);
+        break;
+      case "user_stats":
+        setUserStats(data as AdminUserStats);
+        break;
+      case "users": {
+        const usersData = data as { users?: AdminUser[] };
+        setUsers(usersData.users || []);
+        break;
       }
-      if (calSummaryRes.status === "fulfilled" && calSummaryRes.value.ok) {
-        setCalStatus(await calSummaryRes.value.json() as CalDraftStatus);
+      case "activity": {
+        const activityData = data as { activity?: AdminActivity[] };
+        setActivity(activityData.activity || []);
+        break;
       }
-    } finally {
+      case "workflow":
+        setWorkflow(data as WorkflowSummary);
+        break;
+      case "targets":
+        setTargets(data as ScrapeTargets);
+        break;
+      case "analytics":
+        setAnalytics(data as SiteAnalytics);
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+  const applySnapshotToState = useCallback((snap: ReturnType<typeof readLocalAdminSnapshot>) => {
+    const applied = snapshotToApplied(snap);
+    if (applied.dailyBrief) {
+      setDailyBrief(applied.dailyBrief);
       setDailyBriefLoading(false);
     }
-  }, [adminFetch]);
+    if (applied.calStatus) setCalStatus(applied.calStatus as CalDraftStatus);
+    if (applied.stats) setStats(applied.stats as AdminStats);
+    if (applied.scoutStatus) setScoutStatus(applied.scoutStatus as ScoutStatus);
+    if (applied.userStats) setUserStats(applied.userStats as AdminUserStats);
+    if (applied.workflow) setWorkflow(applied.workflow as WorkflowSummary);
+    if (applied.targets) setTargets(applied.targets as ScrapeTargets);
+    if (applied.analytics) setAnalytics(applied.analytics as SiteAnalytics);
+    if (applied.activity.length) setActivity(applied.activity as AdminActivity[]);
+    if (applied.users.length) setUsers(applied.users as AdminUser[]);
+  }, []);
 
-  const loadSecondary = useCallback(async () => {
-    try {
-      const all = await Promise.allSettled([
-        adminFetch("/api/admin/workflow/actions?limit=40"),
-        adminFetch("/api/admin/stats"),
-        adminFetch("/api/admin/users/stats"),
-        adminFetch("/api/admin/users"),
-        adminFetch("/api/admin/activity?limit=40"),
-        adminFetch(`/api/analytics?range=${timeRange}`),
-        adminFetch("/api/admin/scrape/targets"),
-        adminFetch("/api/admin/cal/draft-status"),
-      ]);
-      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes, calFullRes] = all.map(
-        (result) => (result.status === "fulfilled" ? result.value : null),
-      );
-      if (workflowRes?.ok) setWorkflow(await workflowRes.json());
-      if (statsRes?.ok) setStats(await statsRes.json());
-      if (userStatsRes?.ok) setUserStats(await userStatsRes.json());
-      if (usersRes?.ok) {
-        const usersData = await usersRes.json() as { users?: AdminUser[] };
-        setUsers(usersData.users || []);
-      }
-      if (activityRes?.ok) {
-        const activityData = await activityRes.json() as { activity?: AdminActivity[] };
-        setActivity(activityData.activity || []);
-      }
-      if (analyticsRes?.ok) setAnalytics(await analyticsRes.json());
-      if (targetsRes?.ok) setTargets(await targetsRes.json());
-      if (calFullRes?.ok) setCalStatus(await calFullRes.json() as CalDraftStatus);
-    } catch { /* sections fill in as responses arrive */ }
-  }, [adminFetch, timeRange]);
+  const { syncingSection, sync: syncAdminSnapshot, refreshSection } = useAdminSnapshotSync(
+    adminFetch,
+    {
+      sessionToken: session?.access_token,
+      timeRange,
+      onSection: applySectionData,
+      onSnapshotMerged: applySnapshotToState,
+      onSyncComplete: () => setDailyBriefLoading(false),
+    },
+  );
 
   const loadAdmin = useCallback(async () => {
     if (!session?.access_token) {
@@ -420,22 +458,18 @@ export default function Admin() {
         setDailyBrief(null);
         return;
       }
-      void loadCritical();
-      void loadSecondary();
+      void syncAdminSnapshot();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {
       setMeLoading(false);
     }
-  }, [adminFetch, loadCritical, loadSecondary, session?.access_token]);
+  }, [adminFetch, syncAdminSnapshot, session?.access_token]);
 
   const loadCalStatus = useCallback(async () => {
     if (!session?.access_token) return;
-    try {
-      const res = await adminFetch("/api/admin/cal/draft-status");
-      if (res.ok) setCalStatus(await res.json() as CalDraftStatus);
-    } catch { /* silent — status loads separately */ }
-  }, [adminFetch, session?.access_token]);
+    await refreshSection("cal", true);
+  }, [refreshSection, session?.access_token]);
 
   const loadDraftBody = useCallback(async (crmAccountId: string) => {
     if (!crmAccountId) return;
@@ -495,7 +529,7 @@ export default function Admin() {
     if (!hash) return;
     const timer = window.setTimeout(() => scrollToHash(hash), 150);
     return () => window.clearTimeout(timer);
-  }, [meLoading]);
+  }, [meLoading, calStatus?.summary]);
 
   function scrollToHash(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -670,13 +704,19 @@ export default function Admin() {
   }
 
   const loadScoutStatus = useCallback(async () => {
-    const res = await adminFetch("/api/admin/scout/status");
-    if (res.ok) setScoutStatus(await res.json() as typeof scoutStatus);
-  }, [adminFetch]);
+    await refreshSection("scout", true);
+  }, [refreshSection]);
+
+  const timeRangeInitial = useRef(true);
 
   useEffect(() => {
-    if (!authLoading && session?.access_token) void loadScoutStatus();
-  }, [authLoading, loadScoutStatus, session?.access_token]);
+    if (!me?.is_admin || !session?.access_token) return;
+    if (timeRangeInitial.current) {
+      timeRangeInitial.current = false;
+      return;
+    }
+    void refreshSection("analytics", true);
+  }, [me?.is_admin, refreshSection, session?.access_token, timeRange]);
 
   async function runScoutBulkActivate() {
     setMessage(""); setError(""); setActionBusy("scout-activate");
@@ -735,7 +775,9 @@ export default function Admin() {
     }
   }
 
-  if (authLoading || meLoading) {
+  const hasCachedUi = !!(localSnapshot?.sections && Object.keys(localSnapshot.sections).length > 0);
+
+  if ((authLoading || meLoading) && !hasCachedUi) {
     return (
       <div className="min-h-screen" style={{ background: "#0d0520" }}>
         <Header />
@@ -778,6 +820,12 @@ export default function Admin() {
       <Header />
       <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
         <AdminNav />
+
+        {syncingSection ? (
+          <p className="mb-4 rounded-xl border border-white/8 px-4 py-2 text-xs text-white/40" style={{ background: "rgba(255,255,255,0.03)" }}>
+            Updating {syncingSection.replace(/_/g, " ")}…
+          </p>
+        ) : null}
 
         <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
 
@@ -997,7 +1045,9 @@ export default function Admin() {
 
           {/* Prospect table */}
           <div className="max-h-[600px] overflow-y-auto pr-1">
-            {!calStatus ? (
+            {syncingSection === "cal" && !(calStatus?.prospects?.length) ? (
+              <p className="py-6 text-center text-xs text-white/35">Loading prospect draft status…</p>
+            ) : !calStatus ? (
               <p className="py-6 text-center text-xs text-white/35">Loading prospect draft status…</p>
             ) : (calStatus.prospects ?? []).filter((p) => {
               if (calFilter === "pending") return !p.has_draft;
