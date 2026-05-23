@@ -172,18 +172,15 @@ def _session_pooler_warning_suppressed() -> bool:
 def _postgres_engine_kwargs(url: str) -> dict:
     """
     Supabase pooler: use NullPool so we never hoard scarce session/transaction slots.
-    Transaction mode (:6543) and session mode (:5432 pooler) both need short-lived conns.
+    Transaction mode (:6543) does NOT support the libpq ``options`` startup parameter.
     """
-    base_connect = {
-        "connect_timeout": 15,
-        "options": "-c statement_timeout=60000",
-    }
     if not url or "postgresql" not in url or "sqlite" in url:
-        return {**{"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300}}
+        return {"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300}
 
     pr = urlparse(url)
     host = (pr.hostname or "").lower()
     port = pr.port or 5432
+    connect_args: dict = {"connect_timeout": 15}
 
     if "supabase.co" in host or "supabase.com" in host or "pooler.supabase.com" in host:
         if "pooler.supabase.com" in host and port == 5432 and not _session_pooler_warning_suppressed():
@@ -193,11 +190,16 @@ def _postgres_engine_kwargs(url: str) -> dict:
                 "Set SUPABASE_SESSION_POOLER=1 to silence.",
                 file=sys.stderr,
             )
-        return {"poolclass": NullPool, "pool_pre_ping": True, "connect_args": base_connect}
+        return {"poolclass": NullPool, "pool_pre_ping": True, "connect_args": connect_args}
 
+    connect_args["options"] = "-c statement_timeout=60000"
     return {
-        **{"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300},
-        "connect_args": base_connect,
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "connect_args": connect_args,
     }
 
 
