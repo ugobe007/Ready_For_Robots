@@ -1,5 +1,14 @@
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { ArrowRight, FileEdit, Mail, Send, Sun, Users } from "lucide-react";
+
+function scrollToHash(hash: string) {
+  if (!hash) return;
+  document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function normalizePath(path: string) {
+  return (path.replace(/^\/readyforrobots/, "") || "/").replace(/\/$/, "") || "/";
+}
 
 export type DailyBriefData = {
   date?: string;
@@ -30,8 +39,31 @@ type Props = {
 };
 
 export default function DailyBriefPanel({ data, loading }: Props) {
+  const [, setLocation] = useLocation();
   const m = data?.metrics;
   const today = data?.date ?? new Date().toISOString().slice(0, 10);
+
+  const goToStep = (href: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const hashIndex = href.indexOf("#");
+    const path = hashIndex === -1 ? href : href.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? "" : href.slice(hashIndex + 1);
+    const current = normalizePath(window.location.pathname);
+    const target = normalizePath(path || current);
+
+    if (target === current) {
+      if (hash) {
+        window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
+        scrollToHash(hash);
+      }
+      return;
+    }
+
+    setLocation(href);
+    if (hash) {
+      window.setTimeout(() => scrollToHash(hash), 400);
+    }
+  };
 
   const statCards = m
     ? [
@@ -105,21 +137,22 @@ export default function DailyBriefPanel({ data, loading }: Props) {
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Next steps</p>
               <div className="flex flex-col gap-2">
                 {data!.next_steps!.map((step) => (
-                  <Link key={step.label} href={step.href}>
-                    <a
-                      className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm text-white/85 hover:bg-white/[0.04] transition-colors"
-                      style={{
-                        borderColor: step.priority === "high" ? "rgba(255,176,0,0.35)" : "rgba(255,255,255,0.08)",
-                        background: step.priority === "high" ? "rgba(255,176,0,0.06)" : "rgba(255,255,255,0.02)",
-                      }}
-                    >
-                      <span>
-                        <strong className="font-mono" style={{ color: "#FFB000" }}>{step.count}</strong>
-                        {" "}{step.label}
-                      </span>
-                      <ArrowRight size={14} className="text-white/30 shrink-0" />
-                    </a>
-                  </Link>
+                  <a
+                    key={step.label}
+                    href={step.href}
+                    onClick={goToStep(step.href)}
+                    className="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm text-white/85 hover:bg-white/[0.04] transition-colors cursor-pointer no-underline"
+                    style={{
+                      borderColor: step.priority === "high" ? "rgba(255,176,0,0.35)" : "rgba(255,255,255,0.08)",
+                      background: step.priority === "high" ? "rgba(255,176,0,0.06)" : "rgba(255,255,255,0.02)",
+                    }}
+                  >
+                    <span>
+                      <strong className="font-mono" style={{ color: "#FFB000" }}>{step.count}</strong>
+                      {" "}{step.label}
+                    </span>
+                    <ArrowRight size={14} className="text-white/30 shrink-0" />
+                  </a>
                 ))}
               </div>
             </div>

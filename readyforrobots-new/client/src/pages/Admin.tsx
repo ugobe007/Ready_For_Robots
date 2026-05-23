@@ -490,6 +490,18 @@ export default function Admin() {
   }, [authLoading, loadAdmin]);
 
   useEffect(() => {
+    if (meLoading) return;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const timer = window.setTimeout(() => scrollToHash(hash), 150);
+    return () => window.clearTimeout(timer);
+  }, [meLoading]);
+
+  function scrollToHash(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  useEffect(() => {
     if (!authLoading && session?.access_token) {
       void loadReplySettings();
     }
