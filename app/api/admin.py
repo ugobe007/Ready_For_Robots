@@ -188,6 +188,138 @@ def get_stats(db: Session = Depends(get_db)):
     }
 
 
+# ── Daily brief ───────────────────────────────────────────────────────────────
+
+@router.get("/daily-brief")
+def daily_brief(db: Session = Depends(get_db)):
+    """Operator daily brief: today's intake, outreach activity, and next steps."""
+    from datetime import datetime, timezone
+
+    from app.models.crm import CrmAccount
+    from app.models.lead_research import LeadResearchUpdate
+    from app.models.outreach import OutreachMessage
+    from app.models.sales_agent import SalesAgentAction
+    from app.models.scout_chat import ScoutActivation
+
+    day_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    warm_threshold = 45.0
+    sent_statuses = ["sent", "delivered", "opened", "clicked", "replied"]
+
+    new_companies = (
+        db.query(func.count(Company.id))
+        .filter(Company.created_at >= day_start)
+        .scalar() or 0
+    )
+    new_signals = (
+        db.query(func.count(Signal.id))
+        .filter(Signal.created_at >= day_start)
+        .scalar() or 0
+    )
+    new_hot_warm = (
+        db.query(func.count(Company.id))
+        .join(Score, Score.company_id == Company.id)
+        .filter(Company.created_at >= day_start, Score.overall_intent_score >= warm_threshold)
+        .scalar() or 0
+    )
+
+    emails_sent_today = (
+        db.query(func.count(OutreachMessage.id))
+        .filter(OutreachMessage.sent_at >= day_start, OutreachMessage.status.in_(sent_statuses))
+        .scalar() or 0
+    )
+    emails_sent_total = (
+        db.query(func.count(OutreachMessage.id))
+        .filter(OutreachMessage.status.in_(sent_statuses))
+        .scalar() or 0
+    )
+
+    unsent_drafted = (
+        db.query(func.count(CrmAccount.id))
+        .filter(CrmAccount.outreach_draft.isnot(None), CrmAccount.outreach_sent_at.is_(None))
+        .scalar() or 0
+    )
+    sendable = (
+        db.query(func.count(CrmAccount.id))
+        .filter(
+            CrmAccount.outreach_draft.isnot(None),
+            CrmAccount.outreach_sent_at.is_(None),
+            CrmAccount.contact_email.isnot(None),
+            CrmAccount.contact_email != "",
+        )
+        .scalar() or 0
+    )
+    drafts_created_today = (
+        db.query(func.count(CrmAccount.id))
+        .filter(CrmAccount.outreach_draft.isnot(None), CrmAccount.updated_at >= day_start)
+        .scalar() or 0
+    )
+
+    scout_drafted = (
+        db.query(func.count(ScoutActivation.id))
+        .filter(ScoutActivation.status == "drafted")
+        .scalar() or 0
+    )
+    research_pending = (
+        db.query(func.count(LeadResearchUpdate.id))
+        .filter(LeadResearchUpdate.status.in_(["new", "pending", "review"]))
+        .scalar() or 0
+    )
+    needs_approval = (
+        db.query(func.count(SalesAgentAction.id))
+        .filter(
+            SalesAgentAction.requires_approval.is_(True),
+            SalesAgentAction.status.in_(["planned", "draft", "pending", "review", "drafted"]),
+        )
+        .scalar() or 0
+    )
+    hot_unsent = (
+        db.query(func.count(CrmAccount.id))
+        .join(Company, Company.id == CrmAccount.company_id)
+        .join(Score, Score.company_id == Company.id)
+        .filter(
+            Score.overall_intent_score >= 75,
+            CrmAccount.outreach_sent_at.is_(None),
+        )
+        .scalar() or 0
+    )
+
+    next_steps: list[dict] = []
+
+    def add_step(label: str, count: int, href: str, priority: str = "medium") -> None:
+        if count > 0:
+            next_steps.append({"label": label, "count": count, "href": href, "priority": priority})
+
+    add_step("Send Cal drafts ready to go", sendable, "/admin#cal-outreach", "high")
+    add_step("Review unsent Cal drafts", unsent_drafted, "/admin#cal-outreach", "high")
+    add_step("HOT leads not yet emailed", hot_unsent, "/admin#cal-outreach", "high")
+    add_step("Sales actions need approval", needs_approval, "/sales-console", "high")
+    add_step("SCOUT drafts awaiting send", scout_drafted, "/admin#workflow", "medium")
+    add_step("Research updates to review", research_pending, "/pipeline", "medium")
+    if new_hot_warm > 0:
+        add_step("New HOT/WARM companies today", new_hot_warm, "/pipeline", "medium")
+
+    priority_rank = {"high": 0, "medium": 1, "low": 2}
+    next_steps.sort(key=lambda s: priority_rank.get(s["priority"], 2))
+
+    return {
+        "date": day_start.date().isoformat(),
+        "metrics": {
+            "new_companies_today": new_companies,
+            "new_signals_today": new_signals,
+            "new_hot_warm_today": new_hot_warm,
+            "drafts_created_today": drafts_created_today,
+            "unsent_drafted": unsent_drafted,
+            "sendable": sendable,
+            "emails_sent_today": emails_sent_today,
+            "emails_sent_total": emails_sent_total,
+            "scout_drafted": scout_drafted,
+            "needs_approval": needs_approval,
+            "research_pending": research_pending,
+        },
+        "next_steps": next_steps,
+    }
+
+
 @router.get("/workflow/actions")
 def workflow_actions(limit: int = 80, db: Session = Depends(get_db)):
     """Unified operator queue for AI agent, outreach, research, and notification work."""

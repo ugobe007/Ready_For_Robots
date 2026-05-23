@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
+import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPanel";
 import Header from "@/components/Header";
 import ScoutActionBar from "@/components/ScoutActionBar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -326,6 +327,8 @@ export default function Admin() {
   const [replyForwardEmail, setReplyForwardEmail] = useState("");
   const [replySettingBusy, setReplySettingBusy] = useState(false);
   const [replySettingSaved, setReplySettingSaved] = useState(false);
+  const [dailyBrief, setDailyBrief] = useState<DailyBriefData | null>(null);
+  const [dailyBriefLoading, setDailyBriefLoading] = useState(true);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -367,6 +370,7 @@ export default function Admin() {
 
       // Fire workflow + all supplemental fetches in parallel — removes one sequential round-trip.
       setLoading(false);
+      setDailyBriefLoading(true);
       const all = await Promise.allSettled([
         adminFetch("/api/admin/workflow/actions?limit=40"),
         adminFetch("/api/admin/stats"),
@@ -375,8 +379,9 @@ export default function Admin() {
         adminFetch("/api/admin/activity?limit=40"),
         adminFetch(`/api/analytics?range=${timeRange}`),
         adminFetch("/api/admin/scrape/targets"),
+        adminFetch("/api/admin/daily-brief"),
       ]);
-      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes] = all.map(
+      const [workflowRes, statsRes, userStatsRes, usersRes, activityRes, analyticsRes, targetsRes, briefRes] = all.map(
         (result) => (result.status === "fulfilled" ? result.value : null),
       );
       if (workflowRes?.ok) setWorkflow(await workflowRes.json());
@@ -392,10 +397,12 @@ export default function Admin() {
       }
       if (analyticsRes?.ok) setAnalytics(await analyticsRes.json());
       if (targetsRes?.ok) setTargets(await targetsRes.json());
+      if (briefRes?.ok) setDailyBrief(await briefRes.json() as DailyBriefData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Admin load failed.");
     } finally {
       setLoading(false);
+      setDailyBriefLoading(false);
     }
   }, [adminFetch, session?.access_token, timeRange]);
 
@@ -718,6 +725,8 @@ export default function Admin() {
       <Header />
       <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
         <AdminNav />
+
+        <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
 
         {/* ── SCOUT action bar — top of page, always visible ── */}
         <div className="mb-4 rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(13,5,32,0.6)" }}>
