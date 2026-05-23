@@ -171,35 +171,34 @@ def _session_pooler_warning_suppressed() -> bool:
 
 def _postgres_engine_kwargs(url: str) -> dict:
     """
-    Supabase session pooler (pooler.*.supabase.com:5432) caps concurrent clients per project
-    (FATAL: MaxClientsInSessionMode). We use NullPool so connections are not hoarded idle.
-
-    Transaction mode (:6543) allows more concurrent clients; use it if you outgrow session slots.
-    Set SUPABASE_SESSION_POOLER=1 to silence the startup note when session mode is deliberate.
+    Supabase pooler: use NullPool so we never hoard scarce session/transaction slots.
+    Transaction mode (:6543) and session mode (:5432 pooler) both need short-lived conns.
     """
-    base = {
-        "pool_timeout": 30,
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
+    base_connect = {
+        "connect_timeout": 15,
+        "options": "-c statement_timeout=60000",
     }
     if not url or "postgresql" not in url or "sqlite" in url:
-        return {**base, "pool_size": 5, "max_overflow": 10}
+        return {**{"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300}}
+
     pr = urlparse(url)
     host = (pr.hostname or "").lower()
     port = pr.port or 5432
-    if "pooler.supabase.com" in host and port == 5432:
-        if not _session_pooler_warning_suppressed():
+
+    if "supabase.co" in host or "supabase.com" in host or "pooler.supabase.com" in host:
+        if "pooler.supabase.com" in host and port == 5432 and not _session_pooler_warning_suppressed():
             print(
-                "NOTE: DATABASE_URL uses Supabase Session pooler (:5432 on *.pooler.supabase.com). "
-                "Slots are limited project-wide; if you see MaxClientsInSessionMode / 500s under load, "
-                "switch to Transaction mode from the dashboard (URI shape is in **Connect**) or set "
-                "SUPABASE_SESSION_POOLER=1 to silence this.",
+                "NOTE: DATABASE_URL uses Supabase Session pooler (:5432). "
+                "If you see MaxClientsInSessionMode, switch to Transaction mode (:6543 on db.*). "
+                "Set SUPABASE_SESSION_POOLER=1 to silence.",
                 file=sys.stderr,
             )
-        # Session pooler caps *all* clients project-wide; a QueuePool holds idle conns and exhausts it.
-        # NullPool opens a connection per request and closes when the session ends (no idle hoarding).
-        return {"poolclass": NullPool, "pool_pre_ping": True}
-    return {**base, "pool_size": 5, "max_overflow": 10}
+        return {"poolclass": NullPool, "pool_pre_ping": True, "connect_args": base_connect}
+
+    return {
+        **{"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300},
+        "connect_args": base_connect,
+    }
 
 
 try:

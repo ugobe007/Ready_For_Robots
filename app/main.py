@@ -203,28 +203,41 @@ app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 @app.on_event("startup")
 def startup():
     _start_scheduled_scraper()
-    # Pre-warm the homepage, pipeline, and newsletter caches so first user requests are never slow
-    try:
-        from app.api.leads import warm_homepage_cache, warm_pipeline_leads_cache
-        warm_homepage_cache()
-        warm_pipeline_leads_cache()
-    except Exception as exc:
-        logger.warning("Homepage/pipeline cache warm-up could not be scheduled: %s", exc)
-    try:
-        from app.api.newsletter import _warm_newsletter_cache_at_startup
-        _warm_newsletter_cache_at_startup()
-    except Exception as exc:
-        logger.warning("Newsletter cache warm-up could not be scheduled: %s", exc)
-    try:
-        from app.api.robot_ready import warm_robot_ready_candidate_cache
-        warm_robot_ready_candidate_cache()
-    except Exception as exc:
-        logger.warning("Robot-ready candidate cache warm-up could not be scheduled: %s", exc)
-    try:
-        from app.services.admin_snapshot import warm_admin_snapshot_cache
-        warm_admin_snapshot_cache()
-    except Exception as exc:
-        logger.warning("Admin snapshot cache warm-up could not be scheduled: %s", exc)
+
+    def _ensure_cache_table() -> None:
+        import time
+        time.sleep(3)
+        try:
+            from app.database import SessionLocal
+            from app.services.pipeline_cache_store import ensure_pipeline_cache_table
+
+            db = SessionLocal()
+            try:
+                ensure_pipeline_cache_table(db)
+                logger.info("pipeline_cache_store table ready")
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("pipeline_cache_store ensure failed: %s", exc)
+
+    threading.Thread(target=_ensure_cache_table, daemon=True, name="cache-table-ensure").start()
+
+    # Stagger cache warm-ups — never open multiple heavy DB queries at once on boot.
+    def _staggered_warm(label: str, fn, delay_sec: float) -> None:
+        def _run() -> None:
+            import time
+            time.sleep(delay_sec)
+            try:
+                fn()
+            except Exception as exc:
+                logger.warning("%s warm-up failed: %s", label, exc)
+        threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
+
+    _staggered_warm("homepage", lambda: __import__("app.api.leads", fromlist=["warm_homepage_cache"]).warm_homepage_cache(), 8)
+    _staggered_warm("pipeline", lambda: __import__("app.api.leads", fromlist=["warm_pipeline_leads_cache"]).warm_pipeline_leads_cache(), 45)
+    _staggered_warm("newsletter", lambda: __import__("app.api.newsletter", fromlist=["_warm_newsletter_cache_at_startup"])._warm_newsletter_cache_at_startup(), 90)
+    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 120)
+    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 150)
 
 
 @app.get("/health")

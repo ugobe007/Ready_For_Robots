@@ -518,15 +518,24 @@ export default function Pipeline() {
     }
   };
 
-  // Load SCOUT outreach stats
+  // Load Cal outreach summary (cached snapshot first — never block on full prospect rebuild)
   const loadScoutStats = async () => {
     if (!session?.access_token) return;
     const base = getApiBase();
+    const hdrs = liveFetchInit({ headers: authHeader(session.access_token) });
     try {
-      const r = await fetch(`${base}/api/admin/cal/draft-status`, liveFetchInit({ headers: authHeader(session.access_token) }));
+      const snap = await fetch(`${base}/api/admin/snapshot/section/cal`, hdrs);
+      if (snap.ok) {
+        const patch = await snap.json() as { data?: { summary?: typeof scoutStats } };
+        if (patch.data?.summary) {
+          setScoutStats(patch.data.summary);
+          return;
+        }
+      }
+      const r = await fetch(`${base}/api/admin/cal/draft-status?include_prospects=false`, hdrs);
       if (r.ok) {
-        const d = (await r.json()) as { summary: typeof scoutStats };
-        setScoutStats(d.summary);
+        const d = await r.json() as { summary?: typeof scoutStats };
+        setScoutStats(d.summary ?? null);
       }
     } catch { /* advisory */ }
   };

@@ -264,5 +264,11 @@ def touch_invalidate() -> None:
 
 
 def warm_admin_snapshot_cache() -> None:
-    """Pre-build admin snapshot sections after deploy so first admin visit is fast."""
-    schedule_background_rebuild(["daily_brief", "stats", "scout", "cal", "user_stats"])
+    """Defer admin snapshot rebuild until the app is serving (avoid startup DB storm)."""
+    import time
+
+    def _delayed() -> None:
+        time.sleep(120)
+        schedule_background_rebuild(["daily_brief", "stats"])
+
+    threading.Thread(target=_delayed, daemon=True, name="admin-snapshot-warm-delayed").start()

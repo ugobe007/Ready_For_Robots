@@ -335,26 +335,13 @@ _DB_CACHE_TTL_MINUTES = 10
 
 def _db_cache_read(cache_key: str) -> Optional[list]:
     """Read pipeline results from Supabase cache. Returns None if missing/stale."""
-    import json as _json
-    from sqlalchemy import text as _text
-    from datetime import timezone as _tz
     try:
         from app.database import SessionLocal as _SL
+        from app.services.pipeline_cache_store import cache_read
+
         _db = _SL()
         try:
-            row = _db.execute(
-                _text(
-                    "SELECT data, expires_at FROM pipeline_cache_store "
-                    "WHERE cache_key = :k LIMIT 1"
-                ),
-                {"k": cache_key},
-            ).fetchone()
-            if not row:
-                return None
-            expires = row[1]
-            if expires and expires < datetime.now(_tz.utc):
-                return None
-            return _json.loads(row[0]) if isinstance(row[0], str) else row[0]
+            return cache_read(_db, cache_key, stale_ok=False)
         finally:
             _db.close()
     except Exception as exc:
@@ -364,24 +351,13 @@ def _db_cache_read(cache_key: str) -> Optional[list]:
 
 def _db_cache_write(cache_key: str, data: list) -> None:
     """Persist pipeline results to Supabase cache table."""
-    import json as _json
-    from sqlalchemy import text as _text
-    from datetime import timezone as _tz, timedelta as _td
-    expires = (datetime.now(_tz.utc) + _td(minutes=_DB_CACHE_TTL_MINUTES)).isoformat()
     try:
         from app.database import SessionLocal as _SL
+        from app.services.pipeline_cache_store import cache_write
+
         _db = _SL()
         try:
-            _db.execute(
-                _text(
-                    "INSERT INTO pipeline_cache_store (cache_key, data, built_at, expires_at) "
-                    "VALUES (:k, :d::jsonb, now(), :e) "
-                    "ON CONFLICT (cache_key) DO UPDATE "
-                    "SET data = EXCLUDED.data, built_at = now(), expires_at = EXCLUDED.expires_at"
-                ),
-                {"k": cache_key, "d": _json.dumps(data), "e": expires},
-            )
-            _db.commit()
+            cache_write(_db, cache_key, data, ttl_minutes=_DB_CACHE_TTL_MINUTES)
         finally:
             _db.close()
     except Exception as exc:
