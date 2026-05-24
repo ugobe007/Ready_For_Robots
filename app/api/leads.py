@@ -711,7 +711,9 @@ def _fmt_company(
         llm_resolved_url=llm_homepage_url,
     )
 
-    domain = normalize_website_domain(c.website)
+    from app.services.company_domain import resolve_outreach_domain
+
+    domain = resolve_outreach_domain(c)
     outreach_guess = infer_outreach_emails(domain, industry_display if industry_display != "New" else c.industry) if domain else None
 
     payload = {

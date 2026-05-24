@@ -28,6 +28,52 @@ def normalize_website_domain(website: Optional[str]) -> Optional[str]:
     return netloc or None
 
 
+def resolve_outreach_domain(
+    company: Any | None = None,
+    acct: Any | None = None,
+    *,
+    company_name: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Best domain for outreach email inference.
+
+    Order: company/acct website URL → company.website_domain → brand slug from name
+    (e.g. "Marriott International" → marriott.com).
+    """
+    dom = normalize_website_domain(
+        (getattr(company, "website", None) if company else None)
+        or (getattr(acct, "website", None) if acct else None)
+    )
+    if dom:
+        return dom
+
+    wd = getattr(company, "website_domain", None) if company else None
+    if wd and str(wd).strip():
+        return str(wd).strip().lower()
+
+    name = company_name or (getattr(company, "name", None) if company else None) or ""
+    from app.services.company_name_presence import infer_brand_domain_hosts
+
+    hosts = infer_brand_domain_hosts(str(name))
+    if not hosts:
+        return None
+    host = hosts[0]
+    if host.startswith("www."):
+        host = host[4:]
+    return host or None
+
+
+def persist_company_domain(company: Any, domain: str) -> None:
+    """Write a resolved domain onto company when website is empty."""
+    if not domain or not company:
+        return
+    if getattr(company, "website", None):
+        return
+    company.website = f"https://{domain}"
+    if hasattr(company, "website_domain"):
+        company.website_domain = domain
+
+
 def company_rank_for_canonical(c: Any) -> tuple:
     """Higher tuple = stronger canonical candidate (intent, evidence, stable id)."""
     s = pick_primary_score(c.scores)

@@ -114,6 +114,7 @@ type CalProspect = {
   contact_email?: string;
   contact_email_source?: "crm" | "inferred" | null;
   inferred_contact_email?: string;
+  outreach_domain?: string;
   default_cc?: string;
   default_cc?: string;
   account_type?: "buyer" | "vendor";
@@ -1202,6 +1203,9 @@ export default function Admin() {
                                 <span className="ml-1.5 text-[9px] font-normal text-violet-300/65">inferred</span>
                               )}
                             </p>
+                            {prospect.outreach_domain && !prospect.website && (
+                              <p className="truncate font-mono text-[10px] text-white/22">@{prospect.outreach_domain}</p>
+                            )}
                             {prospect.default_cc && <p className="truncate font-mono text-[10px] text-white/28">cc: {prospect.default_cc}</p>}
                           </div>
                           <div>

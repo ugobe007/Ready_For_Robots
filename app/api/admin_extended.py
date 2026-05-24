@@ -24,7 +24,7 @@ from app.models.outreach import OutreachMessage
 from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
-from app.services.company_domain import normalize_website_domain
+from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain
 from app.services.outreach_email_inference import infer_cc_outreach_emails, infer_outreach_emails
 
 logger = logging.getLogger(__name__)
@@ -311,9 +311,7 @@ def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, fl
 
 
 def _cal_outreach_domain(company: Company, acct: Optional[Any]) -> Optional[str]:
-    return normalize_website_domain(
-        company.website or (getattr(acct, "website", None) if acct else None)
-    )
+    return resolve_outreach_domain(company, acct)
 
 
 def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -366,6 +364,7 @@ def _serialize_cal_row(
         "company_id": company.id,
         "company_name": company.name,
         "website": company.website,
+        "outreach_domain": _cal_outreach_domain(company, acct),
         "industry": company.industry or "Unknown",
         "score": round(score, 1),
         "tier": tier,
@@ -851,6 +850,9 @@ def cal_enrich_missing_emails(
             })
             continue
         row = enrich_company_and_contact(company, acct, sleep_s=0.7, use_apollo=True)
+        domain = _cal_outreach_domain(company, acct)
+        if domain:
+            persist_company_domain(company, domain)
         if company.website and not acct.website:
             acct.website = company.website
         if row.get("website_after") and not row.get("website_before"):
@@ -954,6 +956,10 @@ def cal_reinfer_contacts(
         if not domain:
             skipped_no_domain += 1
             continue
+
+        persist_company_domain(company, domain)
+        if not acct.website:
+            acct.website = f"https://{domain}"
 
         current = (acct.contact_email or "").strip()
         if current and not should_reinfer_stored_contact(current, domain):

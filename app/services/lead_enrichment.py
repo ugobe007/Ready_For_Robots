@@ -19,7 +19,7 @@ from app.services.apollo_client import (
     ApolloProspectClient,
     recommended_prospect_titles,
 )
-from app.services.company_domain import normalize_website_domain
+from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain
 from app.services.outreach_email_inference import (
     infer_cc_outreach_emails,
     infer_primary_outreach_email,
@@ -130,10 +130,7 @@ def resolve_outreach_email(
 
 def outreach_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
     """Best domain for role-inbox inference — company website, then CRM account website."""
-    return normalize_website_domain(
-        (company.website if company else None)
-        or (acct.website if acct else None)
-    )
+    return resolve_outreach_domain(company, acct)
 
 
 def verify_email_deliverable(email: str) -> tuple[bool, str]:
