@@ -1248,6 +1248,49 @@ def _set_homepage_cache(data: dict) -> None:
     _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
 
 
+def _score_tier_counts(db: Session):
+    """Single indexed scan on scores — used by fast and full summary paths."""
+    return db.query(
+        func.count(Score.id).label("total_scored"),
+        func.sum(case((Score.overall_intent_score >= 70, 1), else_=0)).label("hot"),
+        func.sum(case(
+            (and_(Score.overall_intent_score >= 40, Score.overall_intent_score < 70), 1),
+            else_=0,
+        )).label("warm"),
+        func.sum(case((Score.overall_intent_score < 40, 1), else_=0)).label("cold"),
+    ).one()
+
+
+def _db_table_counts(db: Session) -> tuple[int, int]:
+    """Separate COUNT queries — avoid Company×Signal join that stalls on large tables."""
+    companies = int(db.query(func.count(Company.id)).scalar() or 0)
+    signals = int(db.query(func.count(Signal.id)).scalar() or 0)
+    return companies, signals
+
+
+def _compute_pipeline_summary_fast(db: Session) -> dict:
+    """
+    SQL-only pipeline totals for dashboard cards — no Python junk pass, no row slice.
+    Always completes in a few seconds; used on cold cache / timeout fallback.
+    """
+    sc = _score_tier_counts(db)
+    companies, signals = _db_table_counts(db)
+    return {
+        "total": int(sc.total_scored or 0),
+        "hot": int(sc.hot or 0),
+        "warm": int(sc.warm or 0),
+        "cold": int(sc.cold or 0),
+        "junk_filtered": 0,
+        "total_signals": signals,
+        "by_industry": {},
+        "companies_in_database": companies,
+        "signals_in_database": signals,
+        "summary_tier_slice_size": 0,
+        "leads_list_max_per_request": LEADS_PUBLIC_MAX,
+        "approximate": True,
+    }
+
+
 def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
     """
     Pipeline tier counts for dashboard cards.
@@ -1261,20 +1304,8 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
     Python pass (query 2) refines them for the junk-excluded view.
     """
     # ── Query 1: DB-level aggregation (replaces 2 extra COUNT queries + the 100k Python loop) ──
-    sc = db.query(
-        func.count(Score.id).label("total_scored"),
-        func.sum(case((Score.overall_intent_score >= 70, 1), else_=0)).label("hot"),
-        func.sum(case(
-            (and_(Score.overall_intent_score >= 40, Score.overall_intent_score < 70), 1),
-            else_=0,
-        )).label("warm"),
-        func.sum(case((Score.overall_intent_score < 40, 1), else_=0)).label("cold"),
-    ).one()
-
-    db_counts = db.query(
-        func.count(Company.id).label("companies"),
-        func.count(Signal.id).label("signals"),
-    ).select_from(Company).outerjoin(Signal, Signal.company_id == Company.id).one()
+    sc = _score_tier_counts(db)
+    companies, signals = _db_table_counts(db)
 
     # ── Query 2: Capped slice for junk filter + by_industry (Python-side logic) ─────────────
     # Cap at 2k rows — sufficient for industry breakdown and junk ratio estimate.
@@ -1292,8 +1323,8 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
         "junk_filtered": junk_count,
         "total_signals": total_signals,
         "by_industry": by_industry,
-        "companies_in_database": int(db_counts.companies or 0),
-        "signals_in_database": int(db_counts.signals or 0),
+        "companies_in_database": companies,
+        "signals_in_database": signals,
         "summary_tier_slice_size": len(rows),
         "leads_list_max_per_request": LEADS_PUBLIC_MAX,
     }
@@ -1480,6 +1511,23 @@ def _schedule_homepage_background_refresh() -> None:
                 _homepage_bg_refresh_in_progress = False
 
     threading.Thread(target=_run, daemon=True, name="homepage-cache-refresh").start()
+
+
+def warm_summary_cache() -> None:
+    """Pre-populate fast SQL summary at startup so Pipeline cards never cold-block."""
+    def _warm() -> None:
+        try:
+            from app.database import SessionLocal
+
+            with SessionLocal() as db:
+                for exclude_junk in (True, False):
+                    _set_summary_cache(exclude_junk, _compute_pipeline_summary_fast(db))
+                logger.info("Summary cache warmed (fast SQL totals)")
+            _schedule_summary_background_refresh(True)
+        except Exception as exc:
+            logger.warning("Summary cache warm-up failed: %s", exc)
+
+    threading.Thread(target=_warm, daemon=True, name="summary-cache-warmer").start()
 
 
 def warm_pipeline_leads_cache() -> None:
@@ -1682,26 +1730,21 @@ def leads_summary(
     def _cold_summary() -> dict:
         db = SessionLocal()
         try:
-            return _compute_pipeline_summary(db, exclude_junk)
+            return _compute_pipeline_summary_fast(db)
         finally:
             db.close()
 
     try:
-        result = run_db(_cold_summary, timeout_sec=20, label="summary/cold")
+        result = run_db(_cold_summary, timeout_sec=8, label="summary/cold-fast")
     except TimeoutError:
-        logger.error("summary cold build timed out")
+        logger.error("summary fast cold build timed out")
         return JSONResponse(
             status_code=503,
-            content={
-                "detail": "Database timeout loading summary — retry shortly",
-                "total": 0,
-                "hot": 0,
-                "warm": 0,
-                "cold": 0,
-            },
+            content={"detail": "Database timeout loading summary — retry shortly"},
         )
 
     _set_summary_cache(exclude_junk, result)
+    _schedule_summary_background_refresh(exclude_junk)
     return result
 
 

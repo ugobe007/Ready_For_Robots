@@ -285,9 +285,9 @@ export default function Pipeline() {
     const fingerprint = encodeURIComponent(scoutFingerprint());
 
     Promise.allSettled([
-      fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit()),
-      fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
-      fetch(`${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`, liveFetchInit({ headers: authHdr })),
+      fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit({ signal: AbortSignal.timeout(25000) })),
+      fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit({ signal: AbortSignal.timeout(25000) })),
+      fetch(`${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`, liveFetchInit({ headers: authHdr, signal: AbortSignal.timeout(25000) })),
       token
         ? fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHdr }))
         : Promise.resolve(null),
@@ -313,10 +313,16 @@ export default function Pipeline() {
         setLoadingLeads(false);
       }
 
-      // Summary
+      // Summary — fallback to homepage totals if /summary fails or times out
       try {
         if (summaryResult.status === "fulfilled" && summaryResult.value?.ok) {
           setSummary((await summaryResult.value.json()) as LeadSummary);
+        } else {
+          const hp = await fetch(`${base}/api/leads/homepage`, liveFetchInit({ signal: AbortSignal.timeout(25000) }));
+          if (hp.ok) {
+            const data = await hp.json() as { summary?: LeadSummary };
+            if (data.summary) setSummary(data.summary);
+          }
         }
       } catch { /* advisory */ } finally {
         setLoadingSummary(false);
@@ -623,7 +629,7 @@ export default function Pipeline() {
     }
   };
 
-  const totalDeals = summary?.total ?? filtered.length;
+  const dbTotal = summary?.companies_in_database ?? summary?.total ?? filtered.length;
   const hotDeals = summary?.hot ?? filtered.filter((d) => d.score >= 85).length;
   const warmDeals = summary?.warm ?? filtered.filter((d) => d.score >= 65 && d.score < 85).length;
   const visibleDeals = filtered.length;
@@ -689,8 +695,8 @@ export default function Pipeline() {
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <PipelineMetric
               label="Database total"
-              value={formatMetric(totalDeals)}
-              sub={loadingSummary ? "Refreshing market totals..." : `${formatMetric(summary?.total_signals)} scored buying signals`}
+              value={formatMetric(dbTotal)}
+              sub={loadingSummary ? "Refreshing market totals..." : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
               color="#ffffff"
             />
             <PipelineMetric

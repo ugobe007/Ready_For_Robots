@@ -237,6 +237,7 @@ def startup():
                 logger.warning("%s warm-up failed: %s", label, exc)
         threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
 
+    _staggered_warm("summary", lambda: __import__("app.api.leads", fromlist=["warm_summary_cache"]).warm_summary_cache(), 3)
     _staggered_warm("homepage", lambda: __import__("app.api.leads", fromlist=["warm_homepage_cache"]).warm_homepage_cache(), 8)
     _staggered_warm("pipeline", lambda: __import__("app.api.leads", fromlist=["warm_pipeline_leads_cache"]).warm_pipeline_leads_cache(), 45)
     _staggered_warm("newsletter", lambda: __import__("app.api.newsletter", fromlist=["_warm_newsletter_cache_at_startup"])._warm_newsletter_cache_at_startup(), 90)
