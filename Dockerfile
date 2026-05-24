@@ -42,7 +42,7 @@ COPY worker/     ./worker/
 COPY migrations  ./migrations/
 COPY scripts/    ./scripts/
 COPY alembic.ini .
-COPY "Robot Automation Signal Ontology.md" ./
+COPY ["Robot Automation Signal Ontology.md", "./"]
 
 # Copy built SPA static files
 COPY --from=frontend /rfr/dist/public ./static/
