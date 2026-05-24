@@ -57,6 +57,13 @@ CELERYBEAT_SCHEDULE = {
             'enrich_limit': 20,
         },
     },
+
+    # ── OEM / XBOT (StageGate) ── Robot OEM prospect discovery for show ops pipeline
+    'oem-discovery-daily': {
+        'task': 'worker.tasks.run_oem_discovery_task',
+        'schedule': crontab(hour=11, minute=0),  # 11am UTC daily
+        'kwargs': {'max_queries': 30},
+    },
     
     # ── NEWS SCRAPERS ── Industry news + local business news (daily / intraday)
     'news-scraper-morning': {

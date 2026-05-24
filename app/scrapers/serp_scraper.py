@@ -207,29 +207,50 @@ class SerpScraper:
         self.db.add(company)
         self.db.commit()
         self.db.refresh(company)
+        from app.services.scraper_intelligence import enrich_new_company_website
+        enrich_new_company_website(company)
+        self.db.commit()
         return company
 
     def _save_signal(self, article: dict, company_name: str, industry: str) -> bool:
+        from app.services.scraper_intelligence import (
+            gate_lead_candidate,
+            persist_dossier,
+            primary_signal_type,
+            score_intent_strength,
+        )
+
+        article_url = article.get("url") or ""
+        context = article.get("text") or ""
+        accepted, dossier = gate_lead_candidate(
+            company_name, context, article_url=article_url, industry=industry
+        )
+        if not accepted:
+            return False
+
         company = self._get_or_create_company(company_name, industry)
         if not company:
             return False
-        signal_text = article["text"][:600]
+        persist_dossier(company, dossier, self.db)
+
+        signal_text = context[:600]
         existing = self.db.query(Signal).filter(
             Signal.company_id == company.id,
             Signal.signal_text == signal_text,
         ).first()
         if existing:
             return False
-        result = analyze(f"{company_name} {industry} {article['text']}", industry=industry)
-        strength = round(min(result.overall_intent, 1.0), 4)
+        strength = score_intent_strength(
+            context, company_name=company_name, industry=industry
+        )
         if strength < 0.05:
             return False
         signal = Signal(
             company_id=company.id,
-            signal_type=_classify_signal(article["text"]),
+            signal_type=primary_signal_type(context, article_url=article_url),
             signal_text=signal_text,
             signal_strength=strength,
-            source_url=article.get("url", ""),
+            source_url=article_url,
         )
         self.db.add(signal)
         self.db.commit()

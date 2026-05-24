@@ -50,7 +50,13 @@ class OntologyMatches:
 
 
 def _ontology_path() -> Path:
-    return Path(__file__).resolve().parents[2] / "Robot Automation Signal Ontology.md"
+    repo_root = Path(__file__).resolve().parents[2] / "Robot Automation Signal Ontology.md"
+    bundled = Path(__file__).resolve().parent / "data" / "Robot Automation Signal Ontology.md"
+    if repo_root.is_file():
+        return repo_root
+    if bundled.is_file():
+        return bundled
+    return repo_root
 
 
 def _norm(value: str) -> str:

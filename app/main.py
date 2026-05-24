@@ -305,6 +305,19 @@ def _scheduled_scraper_loop():
             logger.info("Scheduled intelligence scraper finished")
             try:
                 from app.database import SessionLocal
+                from app.services.oem_discovery import run_oem_discovery
+
+                odb = SessionLocal()
+                try:
+                    logger.info("Scheduled OEM/XBOT discovery starting")
+                    run_oem_discovery(odb, max_queries=20)
+                    logger.info("Scheduled OEM/XBOT discovery finished")
+                finally:
+                    odb.close()
+            except Exception as oe:
+                logger.warning("Scheduled OEM discovery skipped: %s", oe)
+            try:
+                from app.database import SessionLocal
                 from app.services.newsletter_service import generate_edition, write_cached_edition
                 from app.services.industry_brief_service import build_industry_brief_payload
 
@@ -331,20 +344,34 @@ def _scheduled_scraper_loop():
 
 
 def _start_scheduled_scraper():
-    """Start the in-app scraper loop only when running on Fly (or when explicitly enabled)."""
-    # When Redis/Celery is configured, `worker/celery_beat_schedule.py` already runs intelligence
-    # (and other scrapers). A second in-app loop duplicates work, lengthens runs, and competes for
-    # the same DB — it can look like scrapers are "stuck" or starved. Keep in-app only as fallback
-    # when there is no broker (see `scripts/start_all.sh`).
-    if os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"):
+    """Start the in-app scraper loop when Celery Beat is not running (Fly API-only mode)."""
+    # Beat + worker own the schedule when Celery actually starts (`scripts/start_all.sh` without
+    # SKIP_CELERY). On Fly the web machine sets SKIP_CELERY=1 while REDIS_URL may still be set for
+    # optional task queueing — skipping the in-app loop in that case leaves *no* scheduled scraper.
+    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
+    if has_broker and not skip_celery:
         logger.info(
-            "In-app scheduled scraper skipped: Redis/Celery broker set (Beat owns intelligence schedule)"
+            "In-app scheduled scraper skipped: Celery Beat + worker expected (broker configured)"
         )
         return
-    if os.getenv("FLY_APP_NAME") or os.getenv("ENABLE_SCHEDULED_SCRAPER", "").lower() in ("1", "true", "yes"):
-        t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
-        t.start()
-        logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
+    if skip_celery and has_broker:
+        logger.info(
+            "In-app scheduled scraper enabled: SKIP_CELERY=1 (web machine has no Beat/worker)"
+        )
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_SCRAPER", "").lower() in ("1", "true", "yes")
+        or skip_celery
+    )
+    if not enabled:
+        return
+    if os.getenv("ENABLE_SCHEDULED_SCRAPER", "").strip().lower() in ("0", "false", "no"):
+        logger.info("In-app scheduled scraper disabled (ENABLE_SCHEDULED_SCRAPER=0)")
+        return
+    t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
+    t.start()
+    logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
 
 # ── Static frontend (Vite SPA build → static/) ────────────────────────────
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")

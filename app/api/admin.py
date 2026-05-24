@@ -800,10 +800,35 @@ def trigger_scrape(payload: TriggerScrapePayload, background_tasks: BackgroundTa
         return {"status": "queued", "scraper": payload.scraper, "industry": payload.industry}
 
     except ImportError:
+        pass
+    except Exception as exc:
+        # Celery broker up but worker down — fall back to in-process intelligence for "all"/news.
+        if payload.scraper not in ("all", "news", "intelligence"):
+            return {
+                "status": "skipped",
+                "reason": f"Celery unavailable ({exc}) — only intelligence can run in-process.",
+            }
+
+    if payload.scraper in ("all", "news", "intelligence"):
+        from app.api.scraper_control import _run_intelligence_scraper_sync
+
+        background_tasks.add_task(
+            _run_intelligence_scraper_sync,
+            articles_per_query=15,
+            max_queries=20,
+            enrich=True,
+        )
         return {
-            "status": "skipped",
-            "reason": "Celery worker not running — start with: celery -A worker.celery_worker worker -B",
+            "status": "started",
+            "scraper": payload.scraper,
+            "mode": "in_process",
+            "message": "Intelligence scraper running in-process (Celery worker not available).",
         }
+
+    return {
+        "status": "skipped",
+        "reason": "Celery worker not running — start with: celery -A worker.celery_worker worker -B",
+    }
 
 
 # purge_router is registered separately in main.py (no require_admin global dep)

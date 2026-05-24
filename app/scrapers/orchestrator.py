@@ -288,93 +288,21 @@ class ScraperOrchestrator:
     def _run_oem_pipeline(self):
         """
         XBOT: Robot OEM company discovery for StageGate outreach.
-
-        Runs OEM-specific news queries and RSS feeds, applies the oem_prospect
-        junk filter (allows robot OEMs through), scores each article/company
-        with the OEM need scorer, and logs HOT prospects for Cal to email.
+        Delegates to oem_discovery service (persisted HOT/WARM prospects).
         """
         logger.info("→ Step 7: XBOT OEM Pipeline (StageGate prospect discovery)")
-
         try:
-            import ssl, urllib.parse, urllib.request, xml.etree.ElementTree as ET, time
+            from app.services.oem_discovery import run_oem_discovery
 
-            # Bypass macOS SSL cert issue in dev
-            ssl_ctx = ssl.create_default_context()
-            ssl_ctx.check_hostname = False
-            ssl_ctx.verify_mode = ssl.CERT_NONE
-
-            GOOGLE_NEWS_RSS = (
-                "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
-            )
-            HEADERS = {
-                "User-Agent": (
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
-                )
-            }
-
-            queries = get_oem_discovery_queries()
-            seen_urls: set = set()
-            hot_prospects = []
-            warm_prospects = []
-
-            for query in queries[:30]:  # cap at 30 queries per run
-                url = GOOGLE_NEWS_RSS.format(query=urllib.parse.quote(query))
-                req = urllib.request.Request(url, headers=HEADERS)
-                try:
-                    with urllib.request.urlopen(req, timeout=12, context=ssl_ctx) as r:
-                        content = r.read()
-                    root = ET.fromstring(content)
-                    items = root.findall(".//item")
-
-                    for item in items:
-                        title = item.findtext("title", "").strip()
-                        link  = item.findtext("link", "").strip()
-                        desc  = item.findtext("description", "").strip()
-
-                        if not title or link in seen_urls:
-                            continue
-                        seen_urls.add(link)
-
-                        blob = f"{title} {desc}"
-
-                        # OEM junk filter — allows robot companies through
-                        junk, _ = is_junk(title, mode="oem_prospect")
-                        if junk:
-                            continue
-
-                        # Need probability scoring
-                        need = oem_need_score(text=blob)
-                        self.stats["oem_prospects_found"] += 1
-
-                        if need.tier == "HOT":
-                            self.stats["oem_hot"] += 1
-                            hot_prospects.append((need.total, title, link, need.reasons))
-                        elif need.tier == "WARM":
-                            self.stats["oem_warm"] += 1
-                            warm_prospects.append((need.total, title, link, need.reasons))
-
-                    time.sleep(0.8)
-
-                except Exception as e:
-                    logger.debug(f"OEM query failed ({query[:40]}): {e}")
-                    continue
-
-            # Log top HOT prospects
-            hot_prospects.sort(key=lambda x: -x[0])
-            if hot_prospects:
-                logger.info(f"  🔥 HOT OEM prospects ({len(hot_prospects)}):")
-                for score_val, title, link, reasons in hot_prospects[:10]:
-                    logger.info(f"    [{score_val:.0f}] {title[:65]}")
-                    for r in reasons[:2]:
-                        logger.info(f"        • {r}")
-
-            warm_prospects.sort(key=lambda x: -x[0])
+            stats = run_oem_discovery(self.db, max_queries=30)
+            self.stats["oem_prospects_found"] = stats.get("oem_prospects_found", 0)
+            self.stats["oem_hot"] = stats.get("oem_hot", 0)
+            self.stats["oem_warm"] = stats.get("oem_warm", 0)
             logger.info(
                 f"  ✓ OEM pipeline: {self.stats['oem_prospects_found']} prospects | "
-                f"{self.stats['oem_hot']} HOT | {self.stats['oem_warm']} WARM"
+                f"{self.stats['oem_hot']} HOT | {self.stats['oem_warm']} WARM | "
+                f"{stats.get('companies_created', 0)} new companies"
             )
-
         except Exception as e:
             logger.error(f"  ✗ OEM pipeline failed: {e}")
             self.stats["errors"].append(f"OEM: {e}")

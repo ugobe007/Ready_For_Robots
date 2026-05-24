@@ -154,6 +154,28 @@ def run_intelligence_scraper_task(
         _release_intelligence_scraper_lock(r, INTELLIGENCE_SCRAPER_LOCK_KEY, token)
 
 
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def run_oem_discovery_task(self, max_queries: int = 30):
+    """XBOT / StageGate OEM prospect discovery — robot companies needing show ops infrastructure."""
+    from app.services.oem_discovery import run_oem_discovery
+
+    db = get_db()
+    try:
+        stats = run_oem_discovery(db, max_queries=max_queries)
+        logger.info(
+            "OEM discovery: %d HOT, %d WARM, %d new companies",
+            stats.get("oem_hot", 0),
+            stats.get("oem_warm", 0),
+            stats.get("companies_created", 0),
+        )
+        return stats
+    except Exception as exc:
+        logger.error("OEM discovery failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_company_news_task(self, limit=80):
     """

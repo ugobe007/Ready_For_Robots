@@ -84,12 +84,13 @@ def _batch_openai_urls(names: list[str]) -> dict[str, Optional[str]]:
     if not names:
         return {}
     try:
-        from app.services.llm_client import get_llm_client, get_llm_model
+        from app.services.llm_client import get_llm_client
         client = get_llm_client()
     except RuntimeError:
         logger.warning("No LLM configured; skipping URL resolve")
         return {}
-    model = get_llm_model(default=os.getenv("COMPANY_URL_OPENAI_MODEL", "gpt-4o-mini") or "gpt-4o-mini")
+    # OpenAI-only: do not use global LLM_MODEL (may be an Anthropic model ID).
+    model = (os.getenv("COMPANY_URL_OPENAI_MODEL") or "gpt-4o-mini").strip()
     payload = [
         {"name": (n or "")[:160]}
         for n in names

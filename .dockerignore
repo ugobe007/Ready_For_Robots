@@ -52,6 +52,7 @@ celerybeat-schedule
 # Docs & extras (not needed at runtime)
 *.md
 !README.md
+!Robot Automation Signal Ontology.md
 reports/
 docs/
 frontend/

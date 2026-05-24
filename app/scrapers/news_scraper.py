@@ -473,22 +473,10 @@ class NewsScraper:
         # Normalize: overall_intent is 0.0–1.0 inside the engine (×100 in to_score_dict)
         return round(result.overall_intent, 4)
 
-    def _classify_signal_type(self, text: str) -> str:
-        """Heuristic: pick the most prominent signal type for the article."""
-        lower = text.lower()
-        if any(w in lower for w in ["series ", "funding", "raised", "invest", "vc ", "private equity", "ipo"]):
-            return "funding_round"
-        if any(w in lower for w in ["acqui", "merger", "merges with", "buyout", "joint venture"]):
-            return "ma_activity"
-        if any(w in lower for w in ["vp ", "svp ", "director of", "head of", "chief ", "appoint", "hire", "hired", "joins as"]):
-            return "strategic_hire"
-        if any(w in lower for w in ["capex", "capital expenditure", "capital investment", "committing $", "allocated $"]):
-            return "capex"
-        if any(w in lower for w in ["expand", "opening", "new facilit", "new propert", "new warehouse", "new hotel", "breaking ground"]):
-            return "expansion"
-        if any(w in lower for w in ["labor shortage", "staffing", "worker shortage", "cant find", "turnover"]):
-            return "labor_signal"
-        return "news"
+    def _classify_signal_type(self, text: str, article_url: str = "") -> str:
+        """Ontology-based signal typing (Markdown vocab + Python CONCEPTS + rules engine)."""
+        from app.services.scraper_intelligence import primary_signal_type
+        return primary_signal_type(text, article_url=article_url)
 
     # ── Entity extraction ─────────────────────────────────────────────────────
 
@@ -570,18 +558,54 @@ class NewsScraper:
         self.db.add(company)
         self.db.commit()
         self.db.refresh(company)
+        from app.services.scraper_intelligence import enrich_new_company_website
+        enrich_new_company_website(company)
+        self.db.commit()
         return company
 
     def _save_article_as_signal(self, article: dict, company_name: Optional[str],
                                   query: str, inferred_industry: Optional[str] = None):
         """Save one RSS article as a Signal row."""
+        from app.services.scraper_intelligence import (
+            classify_article_signals,
+            gate_lead_candidate,
+            persist_dossier,
+            score_intent_strength,
+        )
+
         industry = inferred_industry or "Unknown"
-        company = self._get_or_create_company(company_name, industry) if company_name else None
+        if not company_name:
+            return
+
+        article_url = article.get("url") or article.get("link") or ""
+        context = article.get("text") or ""
+        signal_types = classify_article_signals(
+            context, article_url=article_url, rss_source_name=query
+        )
+
+        accepted, dossier = gate_lead_candidate(
+            company_name,
+            context,
+            article_url=article_url,
+            industry=industry,
+            signal_types=signal_types,
+        )
+        if not accepted:
+            logger.debug(
+                "News scraper rejected %r: %s",
+                company_name,
+                getattr(dossier, "junk_reason", "inference_gate"),
+            )
+            return
+
+        company = self._get_or_create_company(company_name, industry)
         if company is None:
-            return  # skip articles with no identifiable company
+            return
+
+        persist_dossier(company, dossier, self.db)
 
         # De-duplicate by signal_text (truncated title)
-        signal_text = article["text"][:600]
+        signal_text = context[:600]
         existing = self.db.query(Signal).filter(
             Signal.company_id == company.id,
             Signal.signal_text == signal_text,
@@ -589,15 +613,15 @@ class NewsScraper:
         if existing:
             return
 
-        strength = self._score_article(
-            article["text"],
+        strength = score_intent_strength(
+            context,
             company_name=company_name or "",
-            industry=company.industry or "",
+            industry=company.industry or industry,
         )
         if strength < 0.05:
             return  # discard noise
 
-        sig_type = self._classify_signal_type(article["text"])
+        sig_type = self._classify_signal_type(context, article_url=article_url)
 
         signal = Signal(
             company_id=company.id,

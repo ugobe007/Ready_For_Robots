@@ -92,6 +92,29 @@ async def run_intelligence_scraper(
     }
 
 
+@router.post("/run-oem")
+async def run_oem_discovery(
+    background_tasks: BackgroundTasks,
+    max_queries: int = 30,
+) -> Dict[str, Any]:
+    """Run XBOT/StageGate OEM prospect discovery in-process."""
+    def _task():
+        from app.database import SessionLocal
+        from app.services.oem_discovery import run_oem_discovery
+        db = SessionLocal()
+        try:
+            run_oem_discovery(db, max_queries=max_queries)
+        finally:
+            db.close()
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "oem_discovery_started",
+        "message": "OEM/XBOT pipeline running (StageGate robot OEM prospects).",
+        "max_queries": max_queries,
+    }
+
+
 @router.post("/run-all")
 async def run_all_scrapers(
     background_tasks: BackgroundTasks,
@@ -109,6 +132,17 @@ async def run_all_scrapers(
         max_queries=20,
         enrich=True,
     )
+
+    def _run_oem_sync():
+        from app.database import SessionLocal
+        from app.services.oem_discovery import run_oem_discovery
+        db = SessionLocal()
+        try:
+            run_oem_discovery(db, max_queries=20)
+        finally:
+            db.close()
+
+    background_tasks.add_task(_run_oem_sync)
 
     # 2. Queue Celery tasks (job boards, news, RSS, company→news, enrich, etc.)
     tasks = {}
