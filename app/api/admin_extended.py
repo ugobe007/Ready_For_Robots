@@ -24,6 +24,7 @@ from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
 from app.services.company_domain import normalize_website_domain
+from app.services.outreach_email_inference import infer_cc_outreach_emails, infer_outreach_emails
 
 logger = logging.getLogger(__name__)
 from app.services.lead_filter import pick_primary_score
@@ -333,8 +334,9 @@ def _serialize_cal_row(
     include_draft_body: bool = False,
 ) -> dict[str, Any]:
     domain = normalize_website_domain(company.website)
-    inferred_to = f"sales@{domain}" if domain else None
-    inferred_cc = f"marketing@{domain}" if domain else None
+    guessed = infer_outreach_emails(domain, company.industry) if domain else None
+    inferred_to = guessed.primary if guessed else None
+    inferred_cc = guessed.cc[0] if guessed and guessed.cc else None
     contact_email = (acct.contact_email if acct else None) or inferred_to
     has_draft = bool(
         acct
@@ -473,7 +475,10 @@ def _build_cal_draft_status_payload(
         acct = accounts_by_company.get(company.id)
         has_draft = bool(acct and acct.has_draft)
         contact_email = (acct.contact_email if acct else None) or (
-            f"sales@{normalize_website_domain(company.website)}" if normalize_website_domain(company.website) else None
+            (infer_outreach_emails(
+                normalize_website_domain(company.website),
+                company.industry,
+            ).primary if normalize_website_domain(company.website) else None)
         )
         summary_rows.append({
             "tier": tier,
@@ -582,7 +587,7 @@ def cal_bulk_draft(
     """
     Draft Cal outreach emails for all HOT+WARM prospects using Cal's template voice.
     No LLM calls — uses _draft_body directly. Creates CRM accounts under the admin
-    team if they don't already exist. Sets sales@domain as default contact_email.
+    team if they don't already exist. Sets a role inbox (e.g. operations@domain) as default contact_email.
     """
     uid = uuid.UUID(user["uid"])
     team = _admin_team(db, uid, user.get("email") or "")
@@ -625,7 +630,9 @@ def cal_bulk_draft(
                 db.flush()
 
             if not acct.contact_email and domain:
-                acct.contact_email = f"sales@{domain}"
+                guessed = infer_outreach_emails(domain, company.industry)
+                if guessed:
+                    acct.contact_email = guessed.primary
 
             acct.outreach_draft = draft_body
             acct.outreach_stage = "draft_ready"
@@ -717,7 +724,8 @@ def cal_bulk_send(
             continue
 
         domain = normalize_website_domain(company.website or acct.website)
-        cc_email = f"marketing@{domain}" if domain else None
+        cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
+        cc_email = cc_list[0] if cc_list else None
 
         # Build subject from draft first line or fallback
         draft_lines = (acct.outreach_draft or "").strip().splitlines()
@@ -772,7 +780,7 @@ def cal_enrich_missing_emails(
     dry_run: bool = False,
 ):
     """
-    For CRM accounts with drafts but no email: DuckDuckGo website → Apollo contact → sales@domain.
+    For CRM accounts with drafts but no email: DuckDuckGo website → Apollo contact → role inbox@domain.
     Processes up to `limit` HOT+WARM companies per call.
     """
     from app.services.lead_enrichment import enrich_company_and_contact
@@ -867,7 +875,9 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
 
     domain = normalize_website_domain((company.website if company else None) or acct.website)
-    cc_email = f"marketing@{domain}" if domain else None
+    industry = (company.industry if company else None) or acct.industry
+    cc_list = infer_cc_outreach_emails(domain, industry, primary=to_email)
+    cc_email = cc_list[0] if cc_list else None
     draft_lines = (acct.outreach_draft or "").strip().splitlines()
     subject_line = next((l for l in draft_lines if l.strip()), None)
     if subject_line and subject_line.lower().startswith("subject:"):
@@ -1024,13 +1034,14 @@ def scout_bulk_activate(
             acct = existing_accts.get(company.id)
             if not acct:
                 domain = normalize_website_domain(company.website)
+                guessed = infer_outreach_emails(domain, company.industry) if domain else None
                 acct = CrmAccount(
                     team_id=team.id,
                     company_id=company.id,
                     name=company.name or "Unknown",
                     website=company.website,
                     industry=company.industry,
-                    contact_email=f"sales@{domain}" if domain else None,
+                    contact_email=guessed.primary if guessed else None,
                     owner_user_id=uid,
                     outreach_stage="review_required",
                 )
@@ -1069,7 +1080,11 @@ def scout_bulk_activate(
                         "draft_subject": subject,
                         "draft_body": draft_body,
                         "to_email": acct.contact_email,
-                        "cc_email": f"marketing@{domain}" if domain else None,
+                        "cc_email": (
+                            infer_cc_outreach_emails(domain, company.industry, primary=acct.contact_email)[0]
+                            if domain and acct.contact_email
+                            else None
+                        ),
                     },
                     activity_log=[{"type": "bulk_activated", "message": f"Auto-activated by admin bulk run. Tier: {tier}, Score: {round(score,1)}"}],
                 )

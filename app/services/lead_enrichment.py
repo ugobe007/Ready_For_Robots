@@ -20,18 +20,20 @@ from app.services.apollo_client import (
     recommended_prospect_titles,
 )
 from app.services.company_domain import normalize_website_domain
+from app.services.outreach_email_inference import (
+    infer_cc_outreach_emails,
+    infer_primary_outreach_email,
+)
 from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
 
 logger = logging.getLogger(__name__)
 
 _EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")
-_ROLE_LOCALS = ("sales", "marketing", "info", "hello", "contact")
 
 
-def infer_sales_email(domain: str | None) -> str | None:
-    if not domain:
-        return None
-    return f"sales@{domain}"
+def infer_sales_email(domain: str | None, industry: str | None = None) -> str | None:
+    """Industry-aware default TO address when no verified contact exists."""
+    return infer_primary_outreach_email(domain, industry)
 
 
 def enrich_company_website(company: Company, *, sleep_s: float = 0.75) -> str | None:
@@ -114,7 +116,10 @@ def resolve_outreach_email(
                 acct.contact_email = email
             return email, "apollo"
 
-    inferred = infer_sales_email(domain)
+    inferred = infer_primary_outreach_email(
+        domain,
+        company.industry or (acct.industry if acct else None),
+    )
     if inferred:
         return inferred, "domain_inferred"
 

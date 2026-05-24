@@ -9,7 +9,8 @@ from app.services.lead_enrichment import (
 
 
 def test_infer_sales_email():
-    assert infer_sales_email("acme.com") == "sales@acme.com"
+    assert infer_sales_email("acme.com") == "operations@acme.com"
+    assert infer_sales_email("acme.com", "Logistics") == "plantmanager@acme.com"
     assert infer_sales_email(None) is None
 
 
@@ -40,7 +41,7 @@ def test_resolve_outreach_email_falls_back_to_domain():
 
     with patch.dict("os.environ", {}, clear=True):
         email, source = resolve_outreach_email(company, acct, use_apollo=False)
-    assert email == "sales@acme.com"
+    assert email == "plantmanager@acme.com"
     assert source == "domain_inferred"
 
 

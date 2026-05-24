@@ -297,13 +297,17 @@ def _email_list(raw: Any) -> list[str]:
 
 
 def _infer_default_outreach_emails(acct: CrmAccount) -> tuple[str | None, list[str]]:
-    """Return (sales@domain, [marketing@domain]) inferred from acct.website when no contact is set."""
+    """Return (primary@domain, cc list) inferred from website + industry when no contact is set."""
     from app.services.company_domain import normalize_website_domain
+    from app.services.outreach_email_inference import infer_cc_outreach_emails, infer_primary_outreach_email
 
     domain = normalize_website_domain(getattr(acct, "website", None))
     if not domain:
         return None, []
-    return f"sales@{domain}", [f"marketing@{domain}"]
+    industry = getattr(acct, "industry", None)
+    primary = infer_primary_outreach_email(domain, industry)
+    cc = infer_cc_outreach_emails(domain, industry, primary=primary)
+    return primary, cc
 
 
 def _style_note(settings: Any) -> str:

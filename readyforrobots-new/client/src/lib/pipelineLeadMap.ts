@@ -10,6 +10,9 @@ export interface ApiLead {
   id: number;
   company_name?: string;
   industry?: string | null;
+  inferred_contact_email?: string | null;
+  inferred_contact_cc?: string[];
+  inferred_contact_role?: string | null;
   location_city?: string | null;
   location_state?: string | null;
   score?: number | { overall_score?: number; overall_intent_score?: number };
@@ -153,8 +156,10 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     signalColor: color,
     stage: stageForLead(lead) as PipelineStage,
     updatedAt: "live",
-    contact: undefined as string | undefined,
-    contactTitle: undefined as string | undefined,
+    contact: lead.inferred_contact_email || undefined,
+    contactTitle: lead.inferred_contact_role
+      ? `${lead.inferred_contact_role.replace(/_/g, " ")} (inferred)`
+      : undefined,
     outreachSubject: outreachSubject(lead.company_name, type),
     outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.share_summary) || undefined,

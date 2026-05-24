@@ -932,7 +932,7 @@ export default function Admin() {
                 HOT + WARM prospect drafts
               </h2>
               <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
-                Cal's template voice — no LLM. Defaults to <span className="font-mono text-white/65">sales@domain</span> (TO) and <span className="font-mono text-white/65">marketing@domain</span> (CC) when no contact is on file.
+                Cal's template voice — no LLM. When no contact is on file, defaults to industry role inboxes (e.g. <span className="font-mono text-white/65">operations@domain</span>, <span className="font-mono text-white/65">plantmanager@domain</span>) with <span className="font-mono text-white/65">info@domain</span> CC.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

@@ -62,6 +62,7 @@ from app.services.company_domain import (
     normalize_website_domain,
     pick_canonical_company,
 )
+from app.services.outreach_email_inference import infer_outreach_emails
 
 router = APIRouter()
 
@@ -710,6 +711,9 @@ def _fmt_company(
         llm_resolved_url=llm_homepage_url,
     )
 
+    domain = normalize_website_domain(c.website)
+    outreach_guess = infer_outreach_emails(domain, industry_display if industry_display != "New" else c.industry) if domain else None
+
     payload = {
         "id":             c.id,
         "company_name":   c.name,
@@ -761,6 +765,10 @@ def _fmt_company(
         "lead_inference": (c.crm_metadata or {}).get("lead_inference"),
         **link_extras,
     }
+    if outreach_guess:
+        payload["inferred_contact_email"] = outreach_guess.primary
+        payload["inferred_contact_cc"] = outreach_guess.cc
+        payload["inferred_contact_role"] = outreach_guess.primary_local
     if include_research and db is not None:
         research_updates = _lead_research_payload(db, c.id)
         payload["research_updates"] = research_updates
