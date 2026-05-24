@@ -47,6 +47,20 @@ function _metaTagApiBase(): string {
 }
 
 export function getApiBase(): string {
+  // Marketing site (Vercel): same-origin /api/* is proxied to Fly — avoids cross-origin failures.
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (_isMarketingHostname(h)) {
+      return window.location.origin.replace(/\/$/, "");
+    }
+    if (h === "localhost" || h === "127.0.0.1") {
+      return "http://127.0.0.1:8000";
+    }
+    if (h.endsWith(".fly.dev")) {
+      return window.location.origin.replace(/\/$/, "");
+    }
+  }
+
   const metaFirst = _metaTagApiBase();
   if (metaFirst) return metaFirst;
 
@@ -54,14 +68,6 @@ export function getApiBase(): string {
   if (envUrl) return envUrl;
 
   if (import.meta.env.DEV) return "http://127.0.0.1:8000";
-
-  if (typeof window !== "undefined") {
-    const h = window.location.hostname;
-    if (h === "localhost" || h === "127.0.0.1") return "http://localhost:8000";
-    if (_isMarketingHostname(h)) return DEFAULT_PRODUCTION_API;
-    if (h.endsWith(".fly.dev")) return window.location.origin.replace(/\/$/, "");
-    return DEFAULT_PRODUCTION_API;
-  }
 
   return DEFAULT_PRODUCTION_API;
 }

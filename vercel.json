@@ -1,10 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new",
-  "buildCommand": "cd readyforrobots-new && VITE_PUBLIC_API_URL=https://ready-2-robot.fly.dev npx --yes pnpm@10.4.1 exec vite build",
+  "buildCommand": "cd readyforrobots-new && VITE_PUBLIC_API_URL= npx --yes pnpm@10.4.1 exec vite build",
   "outputDirectory": "readyforrobots-new/dist/public",
   "framework": null,
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ready-2-robot.fly.dev/api/:path*"
+    },
+    {
+      "source": "/health/:path*",
+      "destination": "https://ready-2-robot.fly.dev/health/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://ready-2-robot.fly.dev/health"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"

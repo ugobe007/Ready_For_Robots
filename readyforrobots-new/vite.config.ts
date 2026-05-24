@@ -24,7 +24,8 @@ function injectRfrApiMeta(): Plugin {
     name: "inject-rfr-api-meta",
     transformIndexHtml(html) {
       if (html.includes('name="rfr-api-base"')) return html;
-      const raw = (process.env.VITE_PUBLIC_API_URL || "https://ready-2-robot.fly.dev").trim().replace(/\/$/, "");
+      const raw = (process.env.VITE_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
+      if (!raw) return html;
       return html.replace("<head>", `<head>\n    <meta name="rfr-api-base" content="${raw}" />`);
     },
   };
