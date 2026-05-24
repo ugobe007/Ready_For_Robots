@@ -43,6 +43,23 @@ def test_resolve_outreach_email_falls_back_to_domain():
         email, source = resolve_outreach_email(company, acct, use_apollo=False)
     assert email == "plantmanager@acme.com"
     assert source == "domain_inferred"
+    assert acct.contact_email == "plantmanager@acme.com"
+
+
+def test_resolve_outreach_email_uses_acct_website():
+    company = MagicMock()
+    company.name = "Acme"
+    company.website = None
+    company.industry = "Logistics"
+    acct = MagicMock()
+    acct.contact_email = None
+    acct.website = "https://acme.com"
+    acct.industry = None
+
+    with patch.dict("os.environ", {}, clear=True):
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)
+    assert email == "plantmanager@acme.com"
+    assert source == "domain_inferred"
 
 
 @patch("app.services.lead_enrichment.apollo_contact_email")

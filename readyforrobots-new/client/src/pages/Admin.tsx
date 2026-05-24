@@ -112,6 +112,9 @@ type CalProspect = {
   tier?: string;
   crm_account_id?: string;
   contact_email?: string;
+  contact_email_source?: "crm" | "inferred" | null;
+  inferred_contact_email?: string;
+  default_cc?: string;
   default_cc?: string;
   account_type?: "buyer" | "vendor";
   outreach_stage?: string;
@@ -1047,7 +1050,7 @@ export default function Admin() {
                   onClick={() => void (async () => {
                     setActionBusy("cleanup");
                     try {
-                      const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=40&dry_run=false", { method: "POST" });
+                      const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=80&dry_run=false", { method: "POST" });
                       const d = await res.json().catch(() => ({})) as {
                         resolved_emails?: number;
                         resolved_websites?: number;
@@ -1193,7 +1196,12 @@ export default function Admin() {
                             <p className="mt-1 font-mono text-[10px] text-white/35">{prospect.score?.toFixed(0)}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-mono text-[11px] text-white/55">{prospect.contact_email || <span className="text-white/25 not-italic">no contact</span>}</p>
+                            <p className="truncate font-mono text-[11px] text-white/55">
+                              {prospect.contact_email || <span className="text-white/25 not-italic">no contact</span>}
+                              {prospect.contact_email_source === "inferred" && (
+                                <span className="ml-1.5 text-[9px] font-normal text-violet-300/65">inferred</span>
+                              )}
+                            </p>
                             {prospect.default_cc && <p className="truncate font-mono text-[10px] text-white/28">cc: {prospect.default_cc}</p>}
                           </div>
                           <div>

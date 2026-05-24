@@ -99,10 +99,10 @@ def resolve_outreach_email(
     Waterfall: CRM contact_email → Apollo → sales@domain.
     Returns (email, source_label).
     """
-    if acct and acct.contact_email:
+    if acct and (acct.contact_email or "").strip():
         return acct.contact_email.strip(), "crm_contact"
 
-    domain = normalize_website_domain(company.website or (acct.website if acct else None))
+    domain = outreach_domain(company, acct)
 
     if use_apollo and os.getenv("APOLLO_API_KEY"):
         prospect = apollo_contact_email(
@@ -121,9 +121,19 @@ def resolve_outreach_email(
         company.industry or (acct.industry if acct else None),
     )
     if inferred:
+        if acct:
+            acct.contact_email = inferred
         return inferred, "domain_inferred"
 
     return None, "missing"
+
+
+def outreach_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
+    """Best domain for role-inbox inference — company website, then CRM account website."""
+    return normalize_website_domain(
+        (company.website if company else None)
+        or (acct.website if acct else None)
+    )
 
 
 def verify_email_deliverable(email: str) -> tuple[bool, str]:
@@ -203,6 +213,8 @@ def enrich_company_and_contact(
     if not company.website:
         found = enrich_company_website(company, sleep_s=sleep_s)
         out["website_after"] = found or company.website
+    if company.website and acct and not acct.website:
+        acct.website = company.website
 
     email, source = resolve_outreach_email(company, acct, use_apollo=use_apollo)
     out["email"] = email

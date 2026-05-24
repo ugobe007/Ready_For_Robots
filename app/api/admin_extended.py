@@ -310,6 +310,24 @@ def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, fl
     ]
 
 
+def _cal_outreach_domain(company: Company, acct: Optional[Any]) -> Optional[str]:
+    return normalize_website_domain(
+        company.website or (getattr(acct, "website", None) if acct else None)
+    )
+
+
+def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+    """Return (effective_email, stored_email, inferred_primary, inferred_cc)."""
+    domain = _cal_outreach_domain(company, acct)
+    industry = company.industry or (getattr(acct, "industry", None) if acct else None)
+    guessed = infer_outreach_emails(domain, industry) if domain else None
+    inferred_to = guessed.primary if guessed else None
+    inferred_cc = guessed.cc[0] if guessed and guessed.cc else None
+    stored = (getattr(acct, "contact_email", None) or "").strip() or None
+    effective = stored or inferred_to
+    return effective, stored, inferred_to, inferred_cc
+
+
 def _cal_draft_for_company(company: Company) -> tuple[str, str]:
     """Generate Cal subject + body using the template voice (no LLM)."""
     from app.api.crm import _draft_subject, _draft_body
@@ -334,11 +352,7 @@ def _serialize_cal_row(
     *,
     include_draft_body: bool = False,
 ) -> dict[str, Any]:
-    domain = normalize_website_domain(company.website)
-    guessed = infer_outreach_emails(domain, company.industry) if domain else None
-    inferred_to = guessed.primary if guessed else None
-    inferred_cc = guessed.cc[0] if guessed and guessed.cc else None
-    contact_email = (acct.contact_email if acct else None) or inferred_to
+    effective, stored, inferred_to, inferred_cc = _cal_contact_fields(company, acct)
     has_draft = bool(
         acct
         and (
@@ -356,7 +370,9 @@ def _serialize_cal_row(
         "score": round(score, 1),
         "tier": tier,
         "crm_account_id": str(acct.id) if acct else None,
-        "contact_email": contact_email,
+        "contact_email": effective,
+        "contact_email_source": "crm" if stored else ("inferred" if inferred_to else None),
+        "inferred_contact_email": inferred_to,
         "default_cc": inferred_cc,
         "account_type": (acct.account_type if acct else None) or "buyer",
         "outreach_stage": acct.outreach_stage if acct else None,
@@ -379,6 +395,8 @@ def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int
             CrmAccount.id,
             CrmAccount.company_id,
             CrmAccount.contact_email,
+            CrmAccount.website,
+            CrmAccount.industry,
             CrmAccount.outreach_stage,
             CrmAccount.outreach_sent_at,
             CrmAccount.account_type,
@@ -386,6 +404,7 @@ def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int
             CrmAccount.outreach_draft.isnot(None).label("has_draft_col"),
         )
         .filter(CrmAccount.company_id.in_(company_ids))
+        .order_by(CrmAccount.outreach_draft.isnot(None).desc(), desc(CrmAccount.updated_at))
         .all()
     )
     out: dict[int, SimpleNamespace] = {}
@@ -398,6 +417,8 @@ def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int
             id=r.id,
             company_id=r.company_id,
             contact_email=r.contact_email,
+            website=r.website,
+            industry=r.industry,
             outreach_stage=r.outreach_stage,
             outreach_sent_at=r.outreach_sent_at,
             account_type=r.account_type,
@@ -475,17 +496,12 @@ def _build_cal_draft_status_payload(
     for company, score, tier in companies:
         acct = accounts_by_company.get(company.id)
         has_draft = bool(acct and acct.has_draft)
-        contact_email = (acct.contact_email if acct else None) or (
-            (infer_outreach_emails(
-                normalize_website_domain(company.website),
-                company.industry,
-            ).primary if normalize_website_domain(company.website) else None)
-        )
+        effective, _, _, _ = _cal_contact_fields(company, acct)
         summary_rows.append({
             "tier": tier,
             "has_draft": has_draft,
             "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
-            "contact_email": contact_email,
+            "contact_email": effective,
             "email_delivery_status": delivery_by_account.get(str(acct.id)) if acct else None,
             "outreach_stage": acct.outreach_stage if acct else None,
         })
@@ -617,7 +633,7 @@ def cal_bulk_draft(
                 continue
 
             subject, draft_body = _cal_draft_for_company(company)
-            domain = normalize_website_domain(company.website)
+            domain = _cal_outreach_domain(company, acct)
 
             if acct is None:
                 acct = CrmAccount(
@@ -785,7 +801,10 @@ def cal_enrich_missing_emails(
     Processes up to `limit` HOT+WARM companies per call.
     """
     from app.services.lead_enrichment import enrich_company_and_contact
+    from app.services.outreach_email_inference import should_reinfer_stored_contact
 
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
     t0 = time.perf_counter()
     companies = _hot_warm_companies(db, limit=500)
     targets: list[tuple[Company, CrmAccount, float]] = []
@@ -795,13 +814,21 @@ def cal_enrich_missing_emails(
     for company, score, _ in companies:
         acct = db.query(CrmAccount).filter(
             CrmAccount.company_id == company.id,
+            CrmAccount.team_id == team.id,
             CrmAccount.outreach_draft.isnot(None),
             CrmAccount.outreach_sent_at.is_(None),
         ).first()
         if not acct:
             skipped_no_draft += 1
             continue
-        if acct.contact_email and company.website:
+
+        domain = _cal_outreach_domain(company, acct)
+        stored = (acct.contact_email or "").strip()
+        needs_website = not domain
+        needs_email = not stored
+        needs_reinfer = bool(stored and domain and should_reinfer_stored_contact(stored, domain))
+
+        if not needs_website and not needs_email and not needs_reinfer:
             skipped_complete += 1
             continue
         targets.append((company, acct, score))
@@ -824,6 +851,8 @@ def cal_enrich_missing_emails(
             })
             continue
         row = enrich_company_and_contact(company, acct, sleep_s=0.7, use_apollo=True)
+        if company.website and not acct.website:
+            acct.website = company.website
         if row.get("website_after") and not row.get("website_before"):
             resolved_website += 1
         if row.get("email"):
@@ -914,7 +943,14 @@ def cal_reinfer_contacts(
             skipped_sent += 1
             continue
 
-        domain = normalize_website_domain(company.website or acct.website)
+        domain = _cal_outreach_domain(company, acct)
+        if not domain:
+            from app.services.lead_enrichment import enrich_company_website
+
+            enrich_company_website(company, sleep_s=0.3)
+            if company.website and not acct.website:
+                acct.website = company.website
+            domain = _cal_outreach_domain(company, acct)
         if not domain:
             skipped_no_domain += 1
             continue
