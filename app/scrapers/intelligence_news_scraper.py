@@ -747,7 +747,7 @@ class IntelligenceNewsScraper:
             
             time.sleep(self.DELAY)
 
-        self._enrich_missing_websites_batch(limit=25)
+        self._enrich_missing_websites_batch(limit=100)
         self._print_stats()
         return self.stats
     

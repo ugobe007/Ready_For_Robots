@@ -334,12 +334,21 @@ class EnhancedSerpScraper:
             return None
         existing = self.db.query(Company).filter(Company.name == name).first()
         if existing:
+            if not existing.website:
+                from app.services.lead_enrichment import enrich_company_website
+                if enrich_company_website(existing, sleep_s=0.5):
+                    self.db.add(existing)
+                    self.db.commit()
             return existing
 
         company = Company(name=name, industry=industry, source="serp_scraper_enhanced")
         self.db.add(company)
         self.db.commit()
         self.db.refresh(company)
+        from app.services.lead_enrichment import enrich_company_website
+        if enrich_company_website(company, sleep_s=0.5):
+            self.db.add(company)
+            self.db.commit()
         return company
 
     def _save_signal(self, article: dict, company_name: str, industry: str) -> bool:

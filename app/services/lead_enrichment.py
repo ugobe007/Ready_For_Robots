@@ -37,15 +37,54 @@ def infer_sales_email(domain: str | None, industry: str | None = None) -> str | 
 
 
 def enrich_company_website(company: Company, *, sleep_s: float = 0.75) -> str | None:
-    """Look up official website via DuckDuckGo; persist on company if found."""
-    if company.website:
+    """
+    Resolve and persist official website when missing.
+
+    Waterfall (pythh-style): OpenAI homepage batch → DuckDuckGo → brand slug domain.
+    """
+    if company.website and str(company.website).strip():
         return company.website
-    found = try_duckduckgo_company_website(company.name)
-    if sleep_s:
-        sleep_between_lookups(sleep_s)
-    if found:
+
+    name = (company.name or "").strip()
+    if not name:
+        return None
+
+    found: str | None = None
+    source = "unknown"
+
+    try:
+        from app.services.company_url_openai import (
+            batch_resolve_company_homepage_urls,
+            openai_url_resolve_enabled,
+        )
+
+        if openai_url_resolve_enabled():
+            hit = batch_resolve_company_homepage_urls([name]).get(name.lower())
+            if hit:
+                found = hit
+                source = "openai"
+    except Exception as exc:
+        logger.debug("OpenAI website resolve skipped for %r: %s", name, exc)
+
+    if not found:
+        found = try_duckduckgo_company_website(name)
+        if found:
+            source = "duckduckgo"
+        if sleep_s:
+            sleep_between_lookups(sleep_s)
+
+    if not found:
+        domain = resolve_outreach_domain(company)
+        if domain:
+            persist_company_domain(company, domain)
+            found = company.website
+            source = "brand_slug"
+
+    if found and source != "brand_slug":
         company.website = found
-        logger.info("Website enriched: %s → %s", company.name, found)
+
+    if found:
+        logger.info("Website enriched (%s): %s → %s", source, name, found)
     return found
 
 

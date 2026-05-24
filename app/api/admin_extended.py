@@ -30,7 +30,6 @@ from app.services.outreach_email_inference import infer_cc_outreach_emails, infe
 logger = logging.getLogger(__name__)
 from app.services.lead_filter import pick_primary_score
 from app.services.lead_primary_link import enrich_lead_link_fields
-from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
 
 router = APIRouter(dependencies=[Depends(require_admin)])
 
@@ -172,8 +171,10 @@ def infer_company_websites(body: InferWebsitesBody, db: Session = Depends(get_db
     candidates.sort(key=lambda x: -x[1])
     out: list = []
     for c, sc, action in candidates[:cap]:
-        found = try_duckduckgo_company_website(c.name)
-        sleep_between_lookups(0.8)
+        from app.services.lead_enrichment import enrich_company_website
+
+        before = c.website
+        found = enrich_company_website(c, sleep_s=0.8)
         item = {
             "company_id": c.id,
             "name": c.name,

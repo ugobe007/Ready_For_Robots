@@ -415,6 +415,14 @@ class EnhancedNewsScraper:
             )
             self.db.add(company)
             self.db.flush()  # Get company ID
+            from app.services.lead_enrichment import enrich_company_website
+            if enrich_company_website(company, sleep_s=0.5):
+                self.db.add(company)
+        elif not company.website:
+            from app.services.lead_enrichment import enrich_company_website
+            enrich_company_website(company, sleep_s=0.5)
+            if company.website:
+                self.db.add(company)
         
         # Determine signal type from content
         combined_text = f"{title} {description}".lower()
