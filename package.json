@@ -15,7 +15,8 @@
     "legacy:next:dev": "npm run dev --prefix frontend/nextjs",
     "legacy:next:build": "cd frontend/nextjs && npm run build",
     "legacy:next:lint": "npm run lint --prefix frontend/nextjs",
-    "deploy:fly": "flyctl deploy"
+    "deploy:fly": "flyctl deploy --strategy immediate -a ready-2-robot",
+    "ship": "./scripts/ship.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
