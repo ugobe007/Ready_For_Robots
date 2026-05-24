@@ -5,6 +5,7 @@ Additional endpoints for company management and system controls.
 """
 
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -23,6 +24,8 @@ from app.models.signal import Signal
 from app.models.score import Score
 from app.api.auth_deps import require_admin
 from app.services.company_domain import normalize_website_domain
+
+logger = logging.getLogger(__name__)
 from app.services.lead_filter import pick_primary_score
 from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
@@ -438,25 +441,25 @@ def cal_draft_body(
     }
 
 
-@router.get("/cal/draft-status")
-def cal_draft_status(
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_admin),
-    include_draft_bodies: bool = Query(
-        False,
-        description="Include full draft text per prospect (large payload; prefer lazy /cal/draft/{id})",
-    ),
-    include_prospects: bool = Query(
-        True,
-        description="Include prospect rows; set false for summary-only (faster initial load)",
-    ),
-    prospect_limit: int = Query(
-        300,
-        ge=1,
-        le=500,
-        description="Max prospect rows returned when include_prospects=true",
-    ),
-):
+def _empty_cal_draft_payload(*, include_prospects: bool) -> dict[str, Any]:
+    return {
+        "summary": {
+            "total": 0, "hot": 0, "warm": 0, "drafted": 0, "unsent_drafted": 0,
+            "sendable": 0, "no_email": 0, "pending_draft": 0, "sent": 0,
+            "opened": 0, "clicked": 0, "replied": 0,
+        },
+        "prospects": [] if include_prospects else [],
+        "stale": True,
+    }
+
+
+def _build_cal_draft_status_payload(
+    db: Session,
+    *,
+    include_draft_bodies: bool,
+    include_prospects: bool,
+    prospect_limit: int,
+) -> dict[str, Any]:
     """Return HOT+WARM prospects with their Cal draft state and email delivery tracking."""
     companies = _hot_warm_companies(db)
     company_ids = [c.id for c, _, _ in companies]
@@ -527,6 +530,43 @@ def cal_draft_status(
         "prospects": prospect_rows,
     }
     return payload
+
+
+@router.get("/cal/draft-status")
+def cal_draft_status(
+    user: dict = Depends(require_admin),
+    include_draft_bodies: bool = Query(
+        False,
+        description="Include full draft text per prospect (large payload; prefer lazy /cal/draft/{id})",
+    ),
+    include_prospects: bool = Query(
+        True,
+        description="Include prospect rows; set false for summary-only (faster initial load)",
+    ),
+    prospect_limit: int = Query(
+        300,
+        ge=1,
+        le=500,
+        description="Max prospect rows returned when include_prospects=true",
+    ),
+):
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+
+    def _run() -> dict[str, Any]:
+        with SessionLocal() as db:
+            return _build_cal_draft_status_payload(
+                db,
+                include_draft_bodies=include_draft_bodies,
+                include_prospects=include_prospects,
+                prospect_limit=prospect_limit,
+            )
+
+    try:
+        return run_db(_run, timeout_sec=25, label="cal/draft-status")
+    except TimeoutError:
+        logger.warning("cal/draft-status timed out — returning empty summary")
+        return _empty_cal_draft_payload(include_prospects=include_prospects)
 
 
 class BulkDraftBody(BaseModel):

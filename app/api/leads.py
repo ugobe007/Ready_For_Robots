@@ -336,14 +336,9 @@ _DB_CACHE_TTL_MINUTES = 10
 def _db_cache_read(cache_key: str) -> Optional[list]:
     """Read pipeline results from Supabase cache. Returns None if missing/stale."""
     try:
-        from app.database import SessionLocal as _SL
-        from app.services.pipeline_cache_store import cache_read
+        from app.services.pipeline_cache_store import cache_read_safe
 
-        _db = _SL()
-        try:
-            return cache_read(_db, cache_key, stale_ok=False)
-        finally:
-            _db.close()
+        return cache_read_safe(cache_key, stale_ok=False, timeout_sec=8.0)
     except Exception as exc:
         logger.debug("DB cache read failed: %s", exc)
         return None
@@ -930,7 +925,6 @@ def get_leads(
         None,
         description="Optional 5-minute slot index for testing; default uses server clock",
     ),
-    db: Session           = Depends(get_db),
 ):
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
@@ -958,119 +952,123 @@ def get_leads(
             _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
         return _db_data
 
-    candidates = _lead_rows_query(db)
+    from app.db_timeout import run_db
 
-    if min_score is not None:
-        candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
-    if max_score is not None:
-        candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
-    if industry:
-        candidates = candidates.filter(Company.industry.ilike(f"%{industry}%"))
-    if signal_type:
-        candidates = candidates.having(
-            func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
-        )
+    def _live_query() -> list:
+        from app.database import SessionLocal
 
-    # Keep the SQL candidate set bounded — never scan the full grouped table.
-    candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
-    if sort == "name":
-        candidates = candidates.order_by(Company.name.asc())
-    elif sort == "signals":
-        candidates = candidates.order_by(func.count(Signal.id).desc())
-    else:
-        candidates = candidates.order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+        with SessionLocal() as live_db:
+            candidates = _lead_rows_query(live_db)
 
-    rows = candidates.limit(candidate_limit).all()
+            if min_score is not None:
+                candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
+            if max_score is not None:
+                candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
+            if industry:
+                candidates = candidates.filter(Company.industry.ilike(f"%{industry}%"))
+            if signal_type:
+                candidates = candidates.having(
+                    func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
+                )
 
-    results = []
-    junk_count = 0
-    for row in rows:
-        junk, junk_reason = _row_is_junk(row.name)
-        if junk:
-            junk_count += 1
-            if exclude_junk:
-                continue
+            candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
+            if sort == "name":
+                candidates = candidates.order_by(Company.name.asc())
+            elif sort == "signals":
+                candidates = candidates.order_by(func.count(Signal.id).desc())
+            else:
+                candidates = candidates.order_by(func.coalesce(Score.overall_intent_score, 0).desc())
 
-        pri = _row_priority(row)
-        if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
-            continue
+            rows = candidates.limit(candidate_limit).all()
 
-        results.append(
-            {
-                "id": row.id,
-                "company_name": row.name,
-                "priority_tier": pri.tier,
-                "priority_score": round(pri.score, 1),
-                "priority_reasons": pri.reasons,
-                "is_junk": junk,
-                "junk_reason": junk_reason,
-                "signal_count": int(row.signal_count or 0),
-            }
-        )
+            results = []
+            for row in rows:
+                junk, junk_reason = _row_is_junk(row.name)
+                if junk and exclude_junk:
+                    continue
 
-    if sort == "name":
-        results.sort(key=lambda x: (x["company_name"] or "").lower())
-    elif sort == "signals":
-        results.sort(key=lambda x: x["signal_count"], reverse=True)
-    else:
-        results.sort(key=lambda x: x["priority_score"], reverse=True)
+                pri = _row_priority(row)
+                if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
+                    continue
 
-    # Extra headroom so domain/name dedupe can still yield `limit` distinct entities after rotation.
-    pre_limit = min(250, max(limit * 5, 80))
-    results = results[:pre_limit]
+                results.append(
+                    {
+                        "id": row.id,
+                        "company_name": row.name,
+                        "priority_tier": pri.tier,
+                        "priority_score": round(pri.score, 1),
+                        "priority_reasons": pri.reasons,
+                        "is_junk": junk,
+                        "junk_reason": junk_reason,
+                        "signal_count": int(row.signal_count or 0),
+                    }
+                )
 
-    if not results:
+            if sort == "name":
+                results.sort(key=lambda x: (x["company_name"] or "").lower())
+            elif sort == "signals":
+                results.sort(key=lambda x: x["signal_count"], reverse=True)
+            else:
+                results.sort(key=lambda x: x["priority_score"], reverse=True)
+
+            pre_limit = min(250, max(limit * 5, 80))
+            results = results[:pre_limit]
+
+            if not results:
+                return []
+
+            ids = [r["id"] for r in results]
+            companies = (
+                live_db.query(Company)
+                .options(joinedload(Company.scores), joinedload(Company.signals))
+                .filter(Company.id.in_(ids))
+                .all()
+            )
+            company_map = {c.id: c for c in companies}
+
+            staged = []
+            for r in results:
+                c = company_map.get(r["id"])
+                if not c:
+                    continue
+                junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+                if junk and exclude_junk:
+                    continue
+                staged.append((c, junk, junk_reason, pri))
+
+            staged = dedupe_staged_lead_tuples(staged)
+            slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
+            if len(staged) > limit:
+                span = len(staged) - limit
+                start = (slot * 1103515245) % (span + 1)
+                staged = staged[start : start + limit]
+            else:
+                staged = staged[:limit]
+
+            companies_needing_url = [t[0] for t in staged if not (t[0].website or "").strip()]
+            llm_hints = (
+                resolve_homepage_urls_for_companies(companies_needing_url)
+                if companies_needing_url
+                else {}
+            )
+            result = [
+                _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+                for c, junk, junk_reason, pri in staged
+            ]
+            _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), result)
+            threading.Thread(
+                target=_db_cache_write,
+                args=(_cache_key, result),
+                daemon=True,
+                name="pipeline-db-cache-write",
+            ).start()
+            return result
+
+    try:
+        return run_db(_live_query, timeout_sec=22, label="leads/list")
+    except TimeoutError:
+        logger.error("leads/list DB timed out — returning empty list")
         return []
-
-    ids = [r["id"] for r in results]
-    companies = (
-        db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .filter(Company.id.in_(ids))
-        .all()
-    )
-    company_map = {c.id: c for c in companies}
-
-    staged = []
-    for r in results:
-        c = company_map.get(r["id"])
-        if not c:
-            continue
-        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-        if junk and exclude_junk:
-            continue
-        staged.append((c, junk, junk_reason, pri))
-
-    staged = dedupe_staged_lead_tuples(staged)
-    slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
-    if len(staged) > limit:
-        span = len(staged) - limit
-        start = (slot * 1103515245) % (span + 1)
-        staged = staged[start : start + limit]
-    else:
-        staged = staged[:limit]
-
-    # LLM URL resolution is opt-in and skipped when companies already have websites
-    # (avoids blocking the list response on an OpenAI round-trip every request).
-    companies_needing_url = [t[0] for t in staged if not (t[0].website or "").strip()]
-    llm_hints = (
-        resolve_homepage_urls_for_companies(companies_needing_url)
-        if companies_needing_url
-        else {}
-    )
-    _result = [
-        _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
-        for c, junk, junk_reason, pri in staged
-    ]
-    _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _result)
-    # Persist to Supabase so restarts/deploys don't cold-start users
-    threading.Thread(
-        target=_db_cache_write,
-        args=(_cache_key, _result),
-        daemon=True,
-        name="pipeline-db-cache-write",
-    ).start()
-    return _result
 
 
 @router.get("/by-id/{company_id}")

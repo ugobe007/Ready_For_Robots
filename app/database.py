@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 from app.env_loader import database_url_is_template_or_sqlite
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import NullPool
 
@@ -169,10 +169,17 @@ def _session_pooler_warning_suppressed() -> bool:
     return os.getenv("SUPABASE_SESSION_POOLER", "").strip().lower() in ("1", "true", "yes")
 
 
+def _is_supabase_url(url: str) -> bool:
+    if not url or "postgresql" not in url:
+        return False
+    host = (urlparse(url).hostname or "").lower()
+    return "supabase.co" in host or "supabase.com" in host or "pooler.supabase.com" in host
+
+
 def _postgres_engine_kwargs(url: str) -> dict:
     """
-    Supabase pooler: use NullPool so we never hoard scarce session/transaction slots.
-    Transaction mode (:6543) does NOT support the libpq ``options`` startup parameter.
+    Supabase pooler: NullPool + no prepared statements (PgBouncer transaction mode).
+    Never pass libpq ``options`` to Supabase — transaction pooler rejects it at connect.
     """
     if not url or "postgresql" not in url or "sqlite" in url:
         return {"pool_size": 5, "max_overflow": 10, "pool_timeout": 30, "pool_pre_ping": True, "pool_recycle": 300}
@@ -180,9 +187,9 @@ def _postgres_engine_kwargs(url: str) -> dict:
     pr = urlparse(url)
     host = (pr.hostname or "").lower()
     port = pr.port or 5432
-    connect_args: dict = {"connect_timeout": 15}
+    connect_args: dict = {"connect_timeout": 10}
 
-    if "supabase.co" in host or "supabase.com" in host or "pooler.supabase.com" in host:
+    if _is_supabase_url(url):
         if "pooler.supabase.com" in host and port == 5432 and not _session_pooler_warning_suppressed():
             print(
                 "NOTE: DATABASE_URL uses Supabase Session pooler (:5432). "
@@ -190,7 +197,12 @@ def _postgres_engine_kwargs(url: str) -> dict:
                 "Set SUPABASE_SESSION_POOLER=1 to silence.",
                 file=sys.stderr,
             )
-        return {"poolclass": NullPool, "pool_pre_ping": True, "connect_args": connect_args}
+        return {
+            "poolclass": NullPool,
+            "pool_pre_ping": True,
+            "connect_args": connect_args,
+            "execution_options": {"compiled_cache": {}},
+        }
 
     connect_args["options"] = "-c statement_timeout=60000"
     return {
@@ -203,9 +215,31 @@ def _postgres_engine_kwargs(url: str) -> dict:
     }
 
 
+def _register_pg_timeouts(db_engine) -> None:
+    """Per-connection statement timeout (safe on Supabase; no libpq options param)."""
+    if not DATABASE_URL or "postgresql" not in DATABASE_URL:
+        return
+
+    @event.listens_for(db_engine, "connect")
+    def _set_timeouts(dbapi_conn, _connection_record) -> None:
+        try:
+            # PgBouncer transaction mode: disable prepared statements on this connection.
+            if hasattr(dbapi_conn, "prepare_threshold"):
+                dbapi_conn.prepare_threshold = 0
+            prev = dbapi_conn.autocommit
+            dbapi_conn.autocommit = True
+            with dbapi_conn.cursor() as cur:
+                cur.execute("SET statement_timeout = '30000'")
+                cur.execute("SET lock_timeout = '10000'")
+            dbapi_conn.autocommit = prev
+        except Exception:
+            pass
+
+
 try:
     if DATABASE_URL and "postgresql" in DATABASE_URL:
         engine = create_engine(DATABASE_URL, **_postgres_engine_kwargs(DATABASE_URL))
+        _register_pg_timeouts(engine)
     else:
         # Respect DATABASE_URL for SQLite (e.g. sqlite:///./ready_for_robots.db or absolute path)
         engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from app.services.pipeline_cache_store import cache_delete, cache_read, cache_write
+from app.services.pipeline_cache_store import cache_delete, cache_read_safe, cache_write
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +15,8 @@ _FRESH_TTL_MINUTES = 24 * 60
 
 def read_admin_snapshot(*, stale_ok: bool = True) -> Optional[dict[str, Any]]:
     try:
-        from app.database import SessionLocal
-
-        db = SessionLocal()
-        try:
-            payload = cache_read(db, ADMIN_SNAPSHOT_KEY, stale_ok=stale_ok)
-            return payload if isinstance(payload, dict) else None
-        finally:
-            db.close()
+        payload = cache_read_safe(ADMIN_SNAPSHOT_KEY, stale_ok=stale_ok, timeout_sec=8.0)
+        return payload if isinstance(payload, dict) else None
     except Exception as exc:
         logger.debug("admin snapshot read failed: %s", exc)
         return None

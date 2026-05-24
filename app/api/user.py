@@ -821,7 +821,7 @@ def save_report(
     row = db.execute(
         text("""
             INSERT INTO ai_reports (user_id, company_id, company_name, title, report_data, summary_card)
-            VALUES (:uid, :cid, :cname, :title, :rdata::jsonb, :scard::jsonb)
+            VALUES (:uid, :cid, :cname, :title, CAST(:rdata AS jsonb), CAST(:scard AS jsonb))
             RETURNING id, created_at
         """),
         {

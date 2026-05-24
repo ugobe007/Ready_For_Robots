@@ -18,8 +18,9 @@ elif [ -n "$FLY_MACHINE_ID" ]; then
   echo "Fly.io machine: migrations run at deploy (release_command); skipping boot migration."
 fi
 
-# Start Celery only if Redis is available (skip gracefully on Fly.io without Redis)
-if [ -n "$REDIS_URL" ] || [ -n "$CELERY_BROKER_URL" ]; then
+# Start Celery only if Redis is available AND web process is not API-only.
+# On Fly.io the web machine should set SKIP_CELERY=1 — run workers on a separate machine.
+if [ -z "${SKIP_CELERY:-}" ] && { [ -n "$REDIS_URL" ] || [ -n "$CELERY_BROKER_URL" ]; }; then
   echo "Starting Celery beat..."
   celery -A worker.celery_worker beat --loglevel=info &
   echo "Starting Celery worker..."
@@ -28,7 +29,7 @@ if [ -n "$REDIS_URL" ] || [ -n "$CELERY_BROKER_URL" ]; then
   # worker only consumes the default 'celery' queue and Beat tasks pile up unprocessed.
   celery -A worker.celery_worker worker --loglevel=info --concurrency=2 -Q scrapers,celery &
 else
-  echo "No Redis/Celery broker configured — skipping Celery (scrapers run on schedule inside FastAPI)."
+  echo "Celery skipped (SKIP_CELERY set or no Redis broker)."
 fi
 
 # Start uvicorn — always starts regardless of DB/Celery state

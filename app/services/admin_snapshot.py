@@ -15,6 +15,7 @@ from app.services.admin_snapshot_cache import (
     read_admin_snapshot,
     write_admin_snapshot,
 )
+from app.db_timeout import run_db
 
 logger = logging.getLogger(__name__)
 
@@ -124,12 +125,10 @@ def _build_section(name: str, db: Session, *, analytics_range: str = "30d") -> A
         return list_recent_activity(limit=40, db=db)
 
     if name == "cal":
-        from app.api.admin_extended import cal_draft_status
+        from app.api.admin_extended import _build_cal_draft_status_payload
 
-        admin_user = {"uid": "00000000-0000-0000-0000-000000000000", "email": "snapshot@system"}
-        return cal_draft_status(
-            db=db,
-            user=admin_user,
+        return _build_cal_draft_status_payload(
+            db,
             include_draft_bodies=False,
             include_prospects=True,
             prospect_limit=120,
@@ -202,11 +201,28 @@ def get_section_payload(
 
     if refresh:
         try:
-            data = _build_section(name, db, analytics_range=analytics_range)
+            def _do_build() -> Any:
+                from app.database import SessionLocal
+
+                with SessionLocal() as build_db:
+                    return _build_section(name, build_db, analytics_range=analytics_range)
+
+            data = run_db(_do_build, timeout_sec=30, label=f"snapshot/{name}")
             snapshot = _merge_section(snapshot, name, data)
             write_admin_snapshot(snapshot)
             entry = snapshot["sections"][name]
             is_fresh = True
+        except TimeoutError as exc:
+            logger.error("admin snapshot section rebuild timed out (%s)", name)
+            if entry:
+                return 200, {
+                    "section": name,
+                    "updated_at": entry["updated_at"],
+                    "data": entry["data"],
+                    "stale": True,
+                }
+            schedule_background_rebuild([name])
+            return 503, {"detail": f"Section rebuild timed out: {name}"}
         except Exception as exc:
             logger.exception("admin snapshot section rebuild failed (%s): %s", name, exc)
             if entry:
@@ -244,13 +260,13 @@ def schedule_background_rebuild(section_names: Optional[list[str]] = None) -> No
                     continue
                 _rebuilding.add(name)
                 try:
-                    from app.database import SessionLocal
+                    def _bg_build() -> None:
+                        from app.database import SessionLocal
 
-                    db = SessionLocal()
-                    try:
-                        get_section_payload(name, refresh=True, db=db)
-                    finally:
-                        db.close()
+                        with SessionLocal() as bg_db:
+                            get_section_payload(name, refresh=True, db=bg_db)
+
+                    run_db(_bg_build, timeout_sec=45, label=f"snapshot-bg/{name}")
                 except Exception as exc:
                     logger.warning("background admin snapshot rebuild failed (%s): %s", name, exc)
                 finally:

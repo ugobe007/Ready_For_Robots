@@ -11,17 +11,67 @@ GET  /api/humanoid/cron/scrape-all      — cron trigger for weekly auto-scrape
 """
 from __future__ import annotations
 
+import logging
 import os
+import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from app.database import get_db
-from app.services.humanoid_scraper import seed_robots, scrape_and_score_robot
+from app.database import SessionLocal, get_db
+from app.db_timeout import run_db
+from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
+
+_ROBOTS_LIST_CACHE: dict = {"ts": 0.0, "payload": None}
+_ROBOTS_LIST_TTL_SEC = 300
+
+
+def _seed_robots_payload() -> list[dict]:
+    """Static fallback when Postgres is unreachable (matches SEED_ROBOTS shape)."""
+    rows = []
+    for i, robot in enumerate(SEED_ROBOTS, start=1):
+        specs = robot["specs"]
+        scores = compute_scores(specs, status=robot["status"])
+        rows.append({
+            "id": i,
+            "name": robot["name"],
+            "vendor": robot["vendor"],
+            "model_slug": robot["model_slug"],
+            "product_url": robot.get("product_url"),
+            "image_url": robot.get("image_url"),
+            "status": robot["status"],
+            "specs": specs,
+            "score_mobility": scores["score_mobility"],
+            "score_manipulation": scores["score_manipulation"],
+            "score_autonomy": scores["score_autonomy"],
+            "score_safety": scores["score_safety"],
+            "score_endurance": scores["score_endurance"],
+            "score_market_readiness": scores["score_market_readiness"],
+            "score_total": scores["score_total"],
+            "last_scraped_at": None,
+        })
+    rows.sort(key=lambda r: (-(r["score_total"] or 0), r["name"]))
+    return rows
+
+
+def _fetch_robots_from_db() -> list[dict]:
+    with SessionLocal() as db:
+        rows = db.execute(
+            text("""
+                SELECT id, name, vendor, model_slug, product_url, image_url, status,
+                       specs, score_mobility, score_manipulation, score_autonomy,
+                       score_safety, score_endurance, score_market_readiness,
+                       score_total, last_scraped_at
+                FROM humanoid_benchmarks
+                ORDER BY score_total DESC NULLS LAST, name ASC
+            """)
+        ).mappings().all()
+        return [dict(r) for r in rows]
 
 
 def _require_admin(db: Session = Depends(get_db)):
@@ -33,19 +83,27 @@ def _require_admin(db: Session = Depends(get_db)):
 # ── Public endpoints ──────────────────────────────────────────────────────────
 
 @router.get("/robots")
-def list_robots(db: Session = Depends(get_db)):
+def list_robots():
     """Return all humanoid robots ordered by total benchmark score."""
-    rows = db.execute(
-        text("""
-            SELECT id, name, vendor, model_slug, product_url, image_url, status,
-                   specs, score_mobility, score_manipulation, score_autonomy,
-                   score_safety, score_endurance, score_market_readiness,
-                   score_total, last_scraped_at
-            FROM humanoid_benchmarks
-            ORDER BY score_total DESC NULLS LAST, name ASC
-        """)
-    ).mappings().all()
-    return {"robots": [dict(r) for r in rows]}
+    now = time.monotonic()
+    cached = _ROBOTS_LIST_CACHE.get("payload")
+    if cached is not None and now - _ROBOTS_LIST_CACHE["ts"] < _ROBOTS_LIST_TTL_SEC:
+        return {"robots": cached}
+
+    try:
+        robots = run_db(_fetch_robots_from_db, timeout_sec=12, label="humanoid/robots")
+        if robots:
+            _ROBOTS_LIST_CACHE["ts"] = now
+            _ROBOTS_LIST_CACHE["payload"] = robots
+            return {"robots": robots}
+    except TimeoutError:
+        logger.warning("humanoid/robots DB timed out — serving cache or seed fallback")
+    except Exception as exc:
+        logger.warning("humanoid/robots DB failed: %s", exc)
+
+    if cached:
+        return {"robots": cached, "stale": True}
+    return {"robots": _seed_robots_payload(), "stale": True, "source": "seed"}
 
 
 @router.get("/robots/{slug}")

@@ -204,6 +204,10 @@ app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 def startup():
     _start_scheduled_scraper()
 
+    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
+        logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
+        return
+
     def _ensure_cache_table() -> None:
         import time
         time.sleep(3)
@@ -243,6 +247,36 @@ def startup():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/db")
+def health_db():
+    """Quick Postgres probe — fails fast instead of hanging the request."""
+    from sqlalchemy import text
+
+    from app.database import DATABASE_URL, SessionLocal
+    from app.db_timeout import run_db
+
+    if not DATABASE_URL or "postgresql" not in DATABASE_URL:
+        return {"status": "skipped", "reason": "sqlite or no DATABASE_URL"}
+
+    def _probe() -> int:
+        with SessionLocal() as db:
+            return db.execute(text("SELECT 1")).scalar()
+
+    try:
+        run_db(_probe, timeout_sec=8, label="health/db")
+        return {"status": "ok", "database": "connected"}
+    except TimeoutError:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "timeout", "database": "connection timed out"},
+        )
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "error", "database": str(exc)[:200]},
+        )
 
 
 # ── In-app scheduled scraper (fallback when no Redis/Celery) ───────────────

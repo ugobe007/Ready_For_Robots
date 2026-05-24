@@ -67,6 +67,28 @@ def cache_read(db: Session, cache_key: str, *, stale_ok: bool = True) -> Optiona
         return None
 
 
+def cache_read_safe(cache_key: str, *, stale_ok: bool = True, timeout_sec: float = 8.0) -> Optional[Any]:
+    """Read cache in a timeout-bound thread — never block the request on a hung pooler."""
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+
+    def _read() -> Optional[Any]:
+        db = SessionLocal()
+        try:
+            return cache_read(db, cache_key, stale_ok=stale_ok)
+        finally:
+            db.close()
+
+    try:
+        return run_db(_read, timeout_sec=timeout_sec, label=f"cache-read/{cache_key[:24]}")
+    except TimeoutError:
+        logger.warning("pipeline_cache_store read timed out (%s)", cache_key)
+        return None
+    except Exception as exc:
+        logger.warning("pipeline_cache_store read failed (%s): %s", cache_key, exc)
+        return None
+
+
 def cache_write(db: Session, cache_key: str, data: Any, *, ttl_minutes: int = 15) -> None:
     try:
         ensure_pipeline_cache_table(db)
