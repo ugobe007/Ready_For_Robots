@@ -31,8 +31,6 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   SUPABASE_URL = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
   # Web machine: API only — Celery workers compete for Supabase pool slots on 1024MB.
   SKIP_CELERY = "1"
-  # Do not open heavy DB queries on boot; warm caches on first request instead.
-  DISABLE_STARTUP_CACHE_WARM = "1"
 
 [http_service]
   internal_port = 8080

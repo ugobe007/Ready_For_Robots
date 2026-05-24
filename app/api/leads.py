@@ -1221,7 +1221,7 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
     }
 
 
-def _build_homepage_payload(db: Session) -> dict:
+def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> dict:
     """Homepage: capped SQL slice (50 scored rows) + spotlight (≤50 leads), 5-minute rotation."""
     rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
@@ -1339,7 +1339,9 @@ def _build_homepage_payload(db: Session) -> dict:
     chosen = sorted(chosen[:feed_limit], key=_pool_sort_key)
 
     companies_needing_url = [c for c in chosen if not (c.website or "").strip()]
-    llm_hints = resolve_homepage_urls_for_companies(companies_needing_url) if companies_needing_url else {}
+    llm_hints: dict = {}
+    if resolve_llm_urls and companies_needing_url:
+        llm_hints = resolve_homepage_urls_for_companies(companies_needing_url)
     hot_leads = []
     for c in chosen:
         junk, junk_reason, pri = _classify(c)
@@ -1484,16 +1486,39 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         _schedule_homepage_background_refresh()
         return entry["data"]
 
-    # Cold miss: build **outside** the lock so other requests are not blocked for minutes on
-    # slow Postgres (lock only protects cache dict writes).
-    payload = _build_homepage_payload(db)
+    # Cold miss: build in a worker thread with a fresh session + hard timeout.
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+    from fastapi.responses import JSONResponse
+
+    def _cold_build() -> dict:
+        db = SessionLocal()
+        try:
+            return _build_homepage_payload(db, resolve_llm_urls=False)
+        finally:
+            db.close()
+
+    try:
+        payload = run_db(_cold_build, timeout_sec=25, label="homepage/cold")
+    except TimeoutError:
+        logger.error("homepage cold build timed out")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Database timeout loading homepage — retry shortly",
+                "summary": {"total": 0, "hot": 0, "warm": 0, "cold": 0},
+                "hotLeads": [],
+            },
+        )
+
     with _homepage_build_lock:
         entry = _homepage_cache.get("v1")
         if entry is not None:
             return entry["data"]
         _set_homepage_cache(payload)
         _set_summary_cache(True, payload["summary"])
-        return payload
+    _schedule_homepage_background_refresh()
+    return payload
 
 
 @router.get("/scoring-system")
@@ -1565,7 +1590,32 @@ def leads_summary(
         _schedule_summary_background_refresh(exclude_junk)
         return entry["data"]
 
-    result = _compute_pipeline_summary(db, exclude_junk)
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+    from fastapi.responses import JSONResponse
+
+    def _cold_summary() -> dict:
+        db = SessionLocal()
+        try:
+            return _compute_pipeline_summary(db, exclude_junk)
+        finally:
+            db.close()
+
+    try:
+        result = run_db(_cold_summary, timeout_sec=20, label="summary/cold")
+    except TimeoutError:
+        logger.error("summary cold build timed out")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Database timeout loading summary — retry shortly",
+                "total": 0,
+                "hot": 0,
+                "warm": 0,
+                "cold": 0,
+            },
+        )
+
     _set_summary_cache(exclude_junk, result)
     return result
 
