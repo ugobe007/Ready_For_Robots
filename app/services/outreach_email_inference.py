@@ -125,6 +125,52 @@ def role_locals_for_industry(industry: Optional[str]) -> tuple[str, ...]:
     return DEFAULT_ROLE_LOCALS
 
 
+def all_known_role_locals() -> frozenset[str]:
+    """Union of role inbox local-parts (includes legacy sales/marketing defaults)."""
+    parts: set[str] = set()
+    for tup in (
+        DEFAULT_ROLE_LOCALS,
+        LOGISTICS_MANUFACTURING_LOCALS,
+        HOSPITALITY_LOCALS,
+        HEALTHCARE_LOCALS,
+        RETAIL_LOCALS,
+        CC_ROLE_LOCALS,
+    ):
+        parts.update(tup)
+    parts.update(("sales", "marketing"))
+    return frozenset(parts)
+
+
+def looks_like_person_email(email: str) -> bool:
+    """Heuristic: first.last@domain style addresses are not overwritten."""
+    normalized = (email or "").strip().lower()
+    if "@" not in normalized:
+        return False
+    local = normalized.split("@", 1)[0]
+    if "." not in local:
+        return False
+    left, _, right = local.partition(".")
+    return len(left) >= 1 and len(right) >= 2 and left.isalpha() and right.replace("-", "").isalpha()
+
+
+def should_reinfer_stored_contact(email: Optional[str], domain: str) -> bool:
+    """
+    True when a CRM contact_email may be replaced with industry-aware inference.
+    Skips person-style emails and addresses on a different domain.
+    """
+    if not domain:
+        return False
+    if not email or not email.strip():
+        return True
+    normalized = email.strip().lower()
+    if looks_like_person_email(normalized):
+        return False
+    if not normalized.endswith(f"@{domain.lower()}"):
+        return False
+    local = normalized.split("@", 1)[0]
+    return local in all_known_role_locals()
+
+
 def _email(local: str, domain: str) -> str:
     return f"{local.strip().lower()}@{domain.strip().lower()}"
 

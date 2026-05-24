@@ -834,6 +834,117 @@ def cal_enrich_missing_emails(
     }
 
 
+@router.post("/cal/reinfer-contacts")
+def cal_reinfer_contacts(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+    limit: int = Query(500, ge=1, le=500),
+    dry_run: bool = Query(False),
+):
+    """
+    Re-apply industry-aware role inbox inference for HOT+WARM CRM contacts.
+
+    Updates empty contacts and legacy role inboxes (e.g. sales@domain) on the
+    company domain. Skips person-style emails (john.smith@…) and already-sent outreach.
+    """
+    from app.services.outreach_email_inference import (
+        infer_outreach_emails,
+        looks_like_person_email,
+        should_reinfer_stored_contact,
+    )
+
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    companies = _hot_warm_companies(db, limit=500)
+
+    updated = 0
+    unchanged = 0
+    skipped_sent = 0
+    skipped_person = 0
+    skipped_kept = 0
+    skipped_no_domain = 0
+    skipped_external = 0
+    results: list[dict[str, Any]] = []
+
+    for company, score, tier in companies:
+        if updated + unchanged + skipped_sent + skipped_person + skipped_kept + skipped_no_domain + skipped_external >= limit:
+            break
+
+        acct = (
+            db.query(CrmAccount)
+            .filter(
+                CrmAccount.company_id == company.id,
+                CrmAccount.team_id == team.id,
+            )
+            .first()
+        )
+        if not acct:
+            continue
+
+        if acct.outreach_sent_at:
+            skipped_sent += 1
+            continue
+
+        domain = normalize_website_domain(company.website or acct.website)
+        if not domain:
+            skipped_no_domain += 1
+            continue
+
+        current = (acct.contact_email or "").strip()
+        if current and not should_reinfer_stored_contact(current, domain):
+            if looks_like_person_email(current):
+                skipped_person += 1
+            elif not current.lower().endswith(f"@{domain.lower()}"):
+                skipped_external += 1
+            else:
+                skipped_kept += 1
+            continue
+
+        guessed = infer_outreach_emails(domain, company.industry or acct.industry)
+        if not guessed:
+            skipped_no_domain += 1
+            continue
+
+        new_email = guessed.primary
+        if current.lower() == new_email.lower():
+            unchanged += 1
+            continue
+
+        row = {
+            "company_id": company.id,
+            "company_name": company.name,
+            "tier": tier,
+            "score": round(score, 1),
+            "crm_account_id": str(acct.id),
+            "before": current or None,
+            "after": new_email,
+            "industry": company.industry,
+        }
+        results.append(row)
+
+        if not dry_run:
+            acct.contact_email = new_email
+            updated += 1
+        else:
+            updated += 1
+
+    if not dry_run and updated:
+        db.commit()
+        _invalidate_admin_caches()
+
+    return {
+        "updated": updated,
+        "unchanged": unchanged,
+        "skipped_sent": skipped_sent,
+        "skipped_person": skipped_person,
+        "skipped_kept": skipped_kept,
+        "skipped_no_domain": skipped_no_domain,
+        "skipped_external": skipped_external,
+        "dry_run": dry_run,
+        "results": results[:50],
+    }
+
+
 class SingleSendBody(BaseModel):
     crm_account_id: str
 

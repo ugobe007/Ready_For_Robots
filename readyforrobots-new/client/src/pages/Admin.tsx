@@ -333,7 +333,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
@@ -644,6 +644,34 @@ export default function Admin() {
       await loadCalStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bulk draft failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runCalReinferContacts() {
+    setMessage("");
+    setError("");
+    setActionBusy("cal-reinfer");
+    try {
+      const res = await adminFetch("/api/admin/cal/reinfer-contacts?limit=500&dry_run=false", { method: "POST" });
+      const data = await res.json().catch(() => ({})) as {
+        updated?: number;
+        unchanged?: number;
+        skipped_sent?: number;
+        skipped_person?: number;
+        skipped_kept?: number;
+        skipped_no_domain?: number;
+        detail?: string;
+      };
+      if (!res.ok) throw new Error(data.detail || "Re-infer contacts failed.");
+      setMessage(
+        `Re-inferred ${data.updated ?? 0} contacts · ${data.unchanged ?? 0} already correct · `
+        + `${data.skipped_sent ?? 0} skipped (sent) · ${(data.skipped_person ?? 0) + (data.skipped_kept ?? 0)} kept existing.`,
+      );
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Re-infer contacts failed.");
     } finally {
       setActionBusy("");
     }
@@ -982,6 +1010,14 @@ export default function Admin() {
                 title={`Send all ${calStatus?.summary?.drafted ?? 0} drafted emails`}
               >
                 {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send unsent ({calStatus?.summary?.sendable ?? calStatus?.summary?.unsent_drafted ?? 0} sendable)</>}
+              </button>
+              <button
+                onClick={() => void runCalReinferContacts()}
+                disabled={!!actionBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
+                title="Apply industry role inboxes (operations@, plantmanager@, …) — replaces empty or legacy sales@ contacts"
+              >
+                {actionBusy === "cal-reinfer" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Re-inferring…</> : <>Re-infer all contacts</>}
               </button>
               {(calStatus?.summary?.no_email ?? 0) > 0 && (
                 <button

@@ -37,3 +37,22 @@ def test_person_email_patterns():
 def test_infer_without_domain_returns_none():
     assert infer_outreach_emails(None) is None
     assert infer_cc_outreach_emails(None) == []
+
+
+def test_should_reinfer_stored_contact():
+    from app.services.outreach_email_inference import should_reinfer_stored_contact
+
+    assert should_reinfer_stored_contact(None, "acme.com") is True
+    assert should_reinfer_stored_contact("", "acme.com") is True
+    assert should_reinfer_stored_contact("sales@acme.com", "acme.com") is True
+    assert should_reinfer_stored_contact("john.smith@acme.com", "acme.com") is False
+    assert should_reinfer_stored_contact("buyer@other.com", "acme.com") is False
+    assert should_reinfer_stored_contact("operations@acme.com", "acme.com") is True
+
+
+def test_looks_like_person_email():
+    from app.services.outreach_email_inference import looks_like_person_email
+
+    assert looks_like_person_email("john.smith@tesla.com") is True
+    assert looks_like_person_email("sales@tesla.com") is False
+    assert looks_like_person_email("operations@tesla.com") is False
