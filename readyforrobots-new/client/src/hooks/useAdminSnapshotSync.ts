@@ -27,6 +27,12 @@ export function useAdminSnapshotSync(
   const { sessionToken, timeRange, onSection, onSnapshotMerged, onSyncComplete } = opts;
   const [syncingSection, setSyncingSection] = useState<string | null>(null);
   const deferStarted = useRef(false);
+  const onSectionRef = useRef(onSection);
+  const onSnapshotMergedRef = useRef(onSnapshotMerged);
+  const onSyncCompleteRef = useRef(onSyncComplete);
+  onSectionRef.current = onSection;
+  onSnapshotMergedRef.current = onSnapshotMerged;
+  onSyncCompleteRef.current = onSyncComplete;
 
   const refreshSection = useCallback(async (section: AdminSectionName, force = false) => {
     const current = readLocalAdminSnapshot() ?? { sections: {} };
@@ -50,9 +56,9 @@ export function useAdminSnapshotSync(
 
     const next = mergeSectionIntoSnapshot(current, section, patch.updated_at, patch.data);
     writeLocalAdminSnapshot(next);
-    onSnapshotMerged(next);
-    onSection(section, patch.data);
-  }, [adminFetch, onSection, onSnapshotMerged, timeRange]);
+    onSnapshotMergedRef.current(next);
+    onSectionRef.current(section, patch.data);
+  }, [adminFetch, timeRange]);
 
   const syncSections = useCallback(async (sections: AdminSectionName[]) => {
     for (const section of sections) {
@@ -82,11 +88,11 @@ export function useAdminSnapshotSync(
         const server = await snapRes.json() as AdminSnapshot;
         const merged = mergeServerSnapshot(readLocalAdminSnapshot(), server);
         writeLocalAdminSnapshot(merged);
-        onSnapshotMerged(merged);
+        onSnapshotMergedRef.current(merged);
       }
     } catch { /* cached UI remains */ }
 
-    onSyncComplete?.();
+    onSyncCompleteRef.current?.();
 
     const foreground = foregroundSectionsForHash(window.location.hash.slice(1));
     await syncSections(foreground);
@@ -99,7 +105,7 @@ export function useAdminSnapshotSync(
     } else {
       window.setTimeout(runDeferred, 500);
     }
-  }, [adminFetch, onSnapshotMerged, onSyncComplete, sessionToken, syncDeferred, syncSections]);
+  }, [adminFetch, sessionToken, syncDeferred, syncSections]);
 
   return { syncingSection, sync, refreshSection };
 }

@@ -424,6 +424,10 @@ export default function Admin() {
     if (applied.users.length) setUsers(applied.users as AdminUser[]);
   }, []);
 
+  const handleSyncComplete = useCallback(() => {
+    setDailyBriefLoading(false);
+  }, []);
+
   const { syncingSection, sync: syncAdminSnapshot, refreshSection } = useAdminSnapshotSync(
     adminFetch,
     {
@@ -431,9 +435,11 @@ export default function Admin() {
       timeRange,
       onSection: applySectionData,
       onSnapshotMerged: applySnapshotToState,
-      onSyncComplete: () => setDailyBriefLoading(false),
+      onSyncComplete: handleSyncComplete,
     },
   );
+
+  const adminLoadedForToken = useRef<string | null>(null);
 
   const loadAdmin = useCallback(async () => {
     if (!session?.access_token) {
@@ -520,8 +526,16 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    if (!authLoading) void loadAdmin();
-  }, [authLoading, loadAdmin]);
+    if (authLoading) return;
+    const token = session?.access_token ?? null;
+    if (!token) {
+      adminLoadedForToken.current = null;
+      return;
+    }
+    if (adminLoadedForToken.current === token) return;
+    adminLoadedForToken.current = token;
+    void loadAdmin();
+  }, [authLoading, loadAdmin, session?.access_token]);
 
   useEffect(() => {
     if (meLoading) return;
@@ -529,7 +543,16 @@ export default function Admin() {
     if (!hash) return;
     const timer = window.setTimeout(() => scrollToHash(hash), 150);
     return () => window.clearTimeout(timer);
-  }, [meLoading, calStatus?.summary]);
+  }, [meLoading]);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash) scrollToHash(hash);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   function scrollToHash(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -849,7 +872,7 @@ export default function Admin() {
       <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
         <AdminNav />
 
-        {syncingSection ? (
+        {syncingSection && !(syncingSection === "cal" && calStatus) ? (
           <p className="mb-4 rounded-xl border border-white/8 px-4 py-2 text-xs text-white/40" style={{ background: "rgba(255,255,255,0.03)" }}>
             Updating {syncingSection.replace(/_/g, " ")}…
           </p>
@@ -1081,10 +1104,10 @@ export default function Admin() {
 
           {/* Prospect table */}
           <div className="max-h-[600px] overflow-y-auto pr-1">
-            {syncingSection === "cal" && !(calStatus?.prospects?.length) ? (
-              <p className="py-6 text-center text-xs text-white/35">Loading prospect draft status…</p>
-            ) : !calStatus ? (
-              <p className="py-6 text-center text-xs text-white/35">Loading prospect draft status…</p>
+            {!calStatus ? (
+              <p className="py-6 text-center text-xs text-white/35">
+                {syncingSection === "cal" ? "Loading prospect draft status…" : "No Cal outreach data yet."}
+              </p>
             ) : (calStatus.prospects ?? []).filter((p) => {
               if (calFilter === "pending") return !p.has_draft;
               if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
