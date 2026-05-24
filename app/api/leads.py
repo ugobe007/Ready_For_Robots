@@ -312,8 +312,7 @@ def _lead_rows_query(db: Session):
 
 
 # Cap how many grouped company rows we load for summaries / homepage (not full-table scans).
-# Default 50 — override with PIPELINE_SUMMARY_ROW_CAP only for internal ops.
-_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "100000"))
+_PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "2000"))
 
 # Public list endpoint: never return more than this; pool rotates on a 5-minute clock.
 LEADS_PUBLIC_MAX = 50
@@ -362,13 +361,60 @@ def _db_cache_write(cache_key: str, data: list) -> None:
 
 def _lead_rows_query_limited(db: Session, limit: int):
     """
-    Same rollups as _lead_rows_query, but only the top `limit` rows by intent score.
-    Tier counts match the full pipeline for the scored head; very low-score cold leads
-    beyond this cap are omitted from summary totals (acceptable for UI cards).
+    Top `limit` companies by intent score with signal rollups — without scanning
+    the full companies table first (the old subquery pattern grouped every row).
     """
-    lim = max(1, min(int(limit), 100_000))
-    sq = _lead_rows_query(db).subquery()
-    return db.query(sq).order_by(sq.c.overall_score.desc()).limit(lim)
+    lim = max(1, min(int(limit), 5000))
+    ps = _primary_score_subquery(db)
+
+    top_ids_sq = (
+        db.query(Company.id.label("company_id"))
+        .outerjoin(ps, ps.c.company_id == Company.id)
+        .outerjoin(Score, Score.id == ps.c.score_id)
+        .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+        .limit(lim)
+        .subquery()
+    )
+
+    hot_hits = func.sum(
+        case((Signal.signal_type.in_(_SQL_HOT_TYPES), 1), else_=0)
+    ).label("hot_hits")
+    warm_hits = func.sum(
+        case((Signal.signal_type.in_(_SQL_WARM_TYPES), 1), else_=0)
+    ).label("warm_hits")
+
+    return (
+        db.query(
+            Company.id.label("id"),
+            Company.name.label("name"),
+            Company.website.label("website"),
+            Company.industry.label("industry"),
+            Company.employee_estimate.label("employee_estimate"),
+            Company.location_city.label("location_city"),
+            Company.location_state.label("location_state"),
+            Company.source.label("source"),
+            func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
+            func.count(Signal.id).label("signal_count"),
+            hot_hits,
+            warm_hits,
+        )
+        .join(top_ids_sq, Company.id == top_ids_sq.c.company_id)
+        .outerjoin(ps, ps.c.company_id == Company.id)
+        .outerjoin(Score, Score.id == ps.c.score_id)
+        .outerjoin(Signal, Signal.company_id == Company.id)
+        .group_by(
+            Company.id,
+            Company.name,
+            Company.website,
+            Company.industry,
+            Company.employee_estimate,
+            Company.location_city,
+            Company.location_state,
+            Company.source,
+            Score.overall_intent_score,
+        )
+        .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+    )
 
 
 def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
@@ -377,7 +423,11 @@ def _row_is_junk(name: Optional[str]) -> tuple[bool, str]:
         return junk, reason
     from app.services.company_validator import is_valid_lead
 
-    ok, logic_reason = is_valid_lead(name or "", skip_junk_check=True)
+    ok, logic_reason = is_valid_lead(
+        name or "",
+        skip_junk_check=True,
+        skip_external_checks=True,
+    )
     if not ok:
         return True, logic_reason
     if (name or "").strip().lower() == "target":
@@ -674,11 +724,41 @@ def _fmt_company(
     llm_homepage_url: Optional[str] = None,
     include_research: bool = False,
     db: Optional[Session] = None,
+    *,
+    fast_signals: bool = False,
 ) -> dict:
     s = pick_primary_score(c.scores)
     sigs = c.signals or []
     signal_count_total = len(sigs)
     sigs_for_response = _dedup_top_signals(sigs, LEAD_RESPONSE_MAX_SIGNALS)
+
+    # Weighted scoring runs ontology + sentence parsing per signal — cache and cap
+    # work to response rows + a small strength-ranked head (aggregate uses top 5).
+    ws_cache: dict[int, float] = {}
+
+    def weighted_score(sig) -> float:
+        key = id(sig)
+        if key not in ws_cache:
+            if fast_signals:
+                base = float(getattr(sig, "signal_strength", 0) or 0)
+                ws_cache[key] = round(min(base * 100, 100.0), 1)
+            else:
+                ws_cache[key] = compute_weighted_score(sig)
+        return ws_cache[key]
+
+    if fast_signals:
+        for sig in sigs_for_response:
+            weighted_score(sig)
+    else:
+        strength_head = sorted(
+            sigs,
+            key=lambda x: float(getattr(x, "signal_strength", 0) or 0),
+            reverse=True,
+        )[:8]
+        for sig in {id(s): s for s in [*sigs_for_response, *strength_head]}.values():
+            weighted_score(sig)
+    top_weighted = sorted(ws_cache.values(), reverse=True)[:5]
+    signal_score = round(sum(top_weighted) / len(top_weighted), 1) if top_weighted else 0.0
     # Public-facing: never expose "Unknown" — use "New" (unclassified)
     industry_display = effective_industry_for_lead(c.name, c.industry, c.signals)
     if not industry_display or industry_display.lower() in ("unknown", "other"):
@@ -699,8 +779,6 @@ def _fmt_company(
         automation_profile,
         sigs,
     )
-    signal_score = compute_lead_aggregate_signal_score(sigs)
-
     gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
 
     link_extras = enrich_lead_link_fields(
@@ -753,7 +831,7 @@ def _fmt_company(
                 "signal_type":     sig.signal_type,
                 "signal_label":    _signal_label(sig.signal_type),
                 "strength":        sig.signal_strength,
-                "weighted_score":  compute_weighted_score(sig),
+                "weighted_score":  weighted_score(sig),
                 "display_text":     format_signal_for_sales(sig.signal_text),
                 "raw_text":        strip_extraction_artifacts(sig.signal_text),
                 "source_url":      sig.source_url,
@@ -1223,7 +1301,7 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
 
 def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> dict:
     """Homepage: capped SQL slice (50 scored rows) + spotlight (≤50 leads), 5-minute rotation."""
-    rows = _lead_rows_query_limited(db, _PIPELINE_SUMMARY_ROW_CAP).all()
+    rows = _lead_rows_query_limited(db, min(_PIPELINE_SUMMARY_ROW_CAP, 500)).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
     )
@@ -1346,7 +1424,14 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
     for c in chosen:
         junk, junk_reason, pri = _classify(c)
         hot_leads.append(
-            _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+            _fmt_company(
+                c,
+                junk,
+                junk_reason,
+                pri,
+                llm_homepage_url=llm_hints.get(c.id),
+                fast_signals=not resolve_llm_urls,
+            )
         )
 
     return {

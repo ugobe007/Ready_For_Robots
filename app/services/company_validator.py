@@ -321,6 +321,7 @@ def is_valid_lead(
     entity_hint: "Optional[object]" = None,
     *,
     skip_junk_check: bool = False,
+    skip_external_checks: bool = False,
     mode: str = "buyer",
 ) -> Tuple[bool, str]:
     """
@@ -348,6 +349,7 @@ def is_valid_lead(
                   without re-running the classifier
     skip_junk_check : if True, skip stage 1 ``is_junk`` (caller already ran it;
                   used by ``classify_lead`` to avoid duplicate work).
+    skip_external_checks : if True, skip optional Wikidata/DNS probes (bulk list paths).
     mode        : ``buyer`` (default) for end-user outreach leads;
                   ``oem_prospect`` for StageGate / robot_companies pipeline
                   (robot OEMs are the target audience, not filtered out).
@@ -505,7 +507,7 @@ def is_valid_lead(
         return False, "structural headline artifact"
 
     # Stage 4b: optional Wikidata footprint (long headline-like names only)
-    if wikidata_verify_enabled():
+    if not skip_external_checks and wikidata_verify_enabled():
         if needs_wikidata_verification(name):
             lk = wikidata_entity_likelihood(name)
             if lk == "likely_not_org":
@@ -515,7 +517,7 @@ def is_valid_lead(
                 )
 
     # Stage 4c: optional DNS / HTTPS probe (same long-name trigger as 4b)
-    if dns_https_verify_enabled():
+    if not skip_external_checks and dns_https_verify_enabled():
         if needs_wikidata_verification(name):
             probe = dns_https_probe(name)
             if probe == "unreachable" and dns_https_strict_enabled():

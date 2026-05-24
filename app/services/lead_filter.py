@@ -1597,7 +1597,11 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     # Listing APIs use classify_lead; this aligns HOT/WARM spotlight with is_valid_lead.
     from app.services.company_validator import is_valid_lead
 
-    ok_logic, logic_reason = is_valid_lead(name or "", skip_junk_check=True)
+    ok_logic, logic_reason = is_valid_lead(
+        name or "",
+        skip_junk_check=True,
+        skip_external_checks=True,
+    )
     if not ok_logic:
         return True, f"logic engine: {logic_reason}", PriorityResult("COLD", 0.0, [logic_reason])
 
