@@ -163,10 +163,10 @@ def run_oem_discovery_task(self, max_queries: int = 30):
     try:
         stats = run_oem_discovery(db, max_queries=max_queries)
         logger.info(
-            "OEM discovery: %d HOT, %d WARM, %d new companies",
+            "OEM discovery: %d HOT, %d WARM, %d new robot_companies",
             stats.get("oem_hot", 0),
             stats.get("oem_warm", 0),
-            stats.get("companies_created", 0),
+            stats.get("robot_companies_created", 0),
         )
         return stats
     except Exception as exc:

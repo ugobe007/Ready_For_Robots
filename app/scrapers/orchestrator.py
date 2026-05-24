@@ -295,13 +295,13 @@ class ScraperOrchestrator:
             from app.services.oem_discovery import run_oem_discovery
 
             stats = run_oem_discovery(self.db, max_queries=30)
-            self.stats["oem_prospects_found"] = stats.get("oem_prospects_found", 0)
+            self.stats["oem_prospects_found"] = stats.get("articles_scored_hot_warm", 0)
             self.stats["oem_hot"] = stats.get("oem_hot", 0)
             self.stats["oem_warm"] = stats.get("oem_warm", 0)
             logger.info(
-                f"  ✓ OEM pipeline: {self.stats['oem_prospects_found']} prospects | "
+                f"  ✓ OEM pipeline: {self.stats['oem_prospects_found']} HOT/WARM articles | "
                 f"{self.stats['oem_hot']} HOT | {self.stats['oem_warm']} WARM | "
-                f"{stats.get('companies_created', 0)} new companies"
+                f"{stats.get('robot_companies_created', 0)} new robot_companies"
             )
         except Exception as e:
             logger.error(f"  ✗ OEM pipeline failed: {e}")
