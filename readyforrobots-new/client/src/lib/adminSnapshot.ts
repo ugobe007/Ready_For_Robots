@@ -108,6 +108,12 @@ export function mergeSectionIntoSnapshot(
   };
 }
 
+export function snapshotLooksEmpty(snapshot: AdminSnapshot | null): boolean {
+  const stats = snapshot?.sections?.stats?.data as { totals?: { companies?: number } } | undefined;
+  const companies = stats?.totals?.companies;
+  return companies == null || companies === 0;
+}
+
 export function mergeServerSnapshot(local: AdminSnapshot | null, server: AdminSnapshot): AdminSnapshot {
   const merged: AdminSnapshot = {
     version: server.version ?? local?.version ?? 1,

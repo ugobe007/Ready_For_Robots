@@ -34,6 +34,9 @@ SECTION_NAMES = (
 )
 
 # Per-section staleness before a ?refresh=1 rebuild is worthwhile.
+# Lightweight sections — build synchronously on first miss instead of 503 + empty UI.
+_FAST_SYNC_SECTIONS = frozenset({"stats", "targets", "user_stats"})
+
 _SECTION_TTL_SEC: dict[str, int] = {
     "cal": 120,
     "daily_brief": 300,
@@ -235,8 +238,24 @@ def get_section_payload(
             schedule_background_rebuild([name])
             return 503, {"detail": f"Section rebuild failed: {name}"}
     elif entry is None:
-        schedule_background_rebuild([name])
-        return 503, {"detail": f"Section not ready: {name}"}
+        if name in _FAST_SYNC_SECTIONS:
+            try:
+                def _do_fast_build() -> Any:
+                    from app.database import SessionLocal
+
+                    with SessionLocal() as build_db:
+                        return _build_section(name, build_db, analytics_range=analytics_range)
+
+                data = run_db(_do_fast_build, timeout_sec=20, label=f"snapshot/{name}/fast")
+                snapshot = _merge_section(snapshot, name, data)
+                write_admin_snapshot(snapshot)
+                entry = snapshot["sections"][name]
+                is_fresh = True
+            except Exception as exc:
+                logger.warning("admin snapshot fast build failed (%s): %s", name, exc)
+        if entry is None:
+            schedule_background_rebuild([name])
+            return 503, {"detail": f"Section not ready: {name}"}
 
     body: dict[str, Any] = {
         "section": name,
@@ -280,11 +299,17 @@ def touch_invalidate() -> None:
 
 
 def warm_admin_snapshot_cache() -> None:
-    """Defer admin snapshot rebuild until the app is serving (avoid startup DB storm)."""
+    """Rebuild core admin sections after boot — stats first so the dashboard is never empty."""
     import time
 
     def _delayed() -> None:
-        time.sleep(120)
-        schedule_background_rebuild(["daily_brief", "stats"])
+        time.sleep(8)
+        snap = get_snapshot(stale_ok=True)
+        stats_entry = (snap.get("sections") or {}).get("stats")
+        stats_data = (stats_entry or {}).get("data") or {}
+        totals = stats_data.get("totals") or {}
+        if not stats_entry or int(totals.get("companies") or 0) == 0:
+            invalidate_admin_snapshot()
+        schedule_background_rebuild(["stats", "daily_brief", "cal"])
 
     threading.Thread(target=_delayed, daemon=True, name="admin-snapshot-warm-delayed").start()

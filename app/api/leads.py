@@ -1470,7 +1470,7 @@ def _schedule_homepage_background_refresh() -> None:
                 payload = _build_homepage_payload(db)
                 with _homepage_build_lock:
                     _set_homepage_cache(payload)
-                    _set_summary_cache(True, payload["summary"])
+                    _schedule_summary_background_refresh(True)
             finally:
                 db.close()
         except Exception as exc:
@@ -1533,7 +1533,7 @@ def warm_homepage_cache() -> None:
                     if _homepage_cache.get("v1"):
                         return
                     _set_homepage_cache(payload)
-                    _set_summary_cache(True, payload["summary"])
+                    _schedule_summary_background_refresh(True)
                     logger.info(
                         "Homepage cache warmed at startup: %d total, %d hot",
                         payload["summary"].get("total", 0),
@@ -1601,7 +1601,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         if entry is not None:
             return entry["data"]
         _set_homepage_cache(payload)
-        _set_summary_cache(True, payload["summary"])
+        _schedule_summary_background_refresh(True)
     _schedule_homepage_background_refresh()
     return payload
 

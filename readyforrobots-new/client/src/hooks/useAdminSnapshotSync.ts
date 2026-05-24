@@ -9,6 +9,7 @@ import {
   pause,
   readLocalAdminSnapshot,
   sectionUpdatedAt,
+  snapshotLooksEmpty,
   writeLocalAdminSnapshot,
 } from "@/lib/adminSnapshot";
 
@@ -82,11 +83,15 @@ export function useAdminSnapshotSync(
   const sync = useCallback(async () => {
     if (!sessionToken) return;
 
+    let forceRefresh = false;
     try {
       const snapRes = await adminFetch("/api/admin/snapshot");
       if (snapRes.ok) {
         const server = await snapRes.json() as AdminSnapshot;
         const merged = mergeServerSnapshot(readLocalAdminSnapshot(), server);
+        if (snapshotLooksEmpty(merged)) {
+          forceRefresh = true;
+        }
         writeLocalAdminSnapshot(merged);
         onSnapshotMergedRef.current(merged);
       }
@@ -95,7 +100,16 @@ export function useAdminSnapshotSync(
     onSyncCompleteRef.current?.();
 
     const foreground = foregroundSectionsForHash(window.location.hash.slice(1));
-    await syncSections(foreground);
+    if (forceRefresh) {
+      for (const section of foreground) {
+        setSyncingSection(section);
+        await refreshSection(section, true);
+        await pause(40);
+      }
+      setSyncingSection(null);
+    } else {
+      await syncSections(foreground);
+    }
 
     if (deferStarted.current) return;
     deferStarted.current = true;
