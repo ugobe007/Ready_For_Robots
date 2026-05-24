@@ -1046,31 +1046,27 @@ def get_leads(
         from app.database import SessionLocal
 
         with SessionLocal() as live_db:
-            candidates = _lead_rows_query(live_db)
-
-            if min_score is not None:
-                candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) >= min_score)
-            if max_score is not None:
-                candidates = candidates.filter(func.coalesce(Score.overall_intent_score, 0) <= max_score)
-            if industry:
-                candidates = candidates.filter(Company.industry.ilike(f"%{industry}%"))
-            if signal_type:
-                candidates = candidates.having(
-                    func.sum(case((Signal.signal_type == signal_type, 1), else_=0)) > 0
-                )
-
             candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
-            if sort == "name":
-                candidates = candidates.order_by(Company.name.asc())
-            elif sort == "signals":
-                candidates = candidates.order_by(func.count(Signal.id).desc())
-            else:
-                candidates = candidates.order_by(func.coalesce(Score.overall_intent_score, 0).desc())
-
-            rows = candidates.limit(candidate_limit).all()
+            rows = _lead_rows_query_limited(live_db, candidate_limit).all()
 
             results = []
             for row in rows:
+                if min_score is not None and float(row.overall_score or 0) < min_score:
+                    continue
+                if max_score is not None and float(row.overall_score or 0) > max_score:
+                    continue
+                if industry:
+                    ind = (row.industry or "")
+                    if industry.lower() not in ind.lower():
+                        continue
+                if signal_type:
+                    hot = int(getattr(row, "hot_hits", 0) or 0)
+                    warm = int(getattr(row, "warm_hits", 0) or 0)
+                    if signal_type.lower() in {t.lower() for t in _SQL_HOT_TYPES} and hot < 1:
+                        continue
+                    if signal_type.lower() in {t.lower() for t in _SQL_WARM_TYPES} and warm < 1:
+                        continue
+
                 junk, junk_reason = _row_is_junk(row.name)
                 if junk and exclude_junk:
                     continue
@@ -1133,14 +1129,8 @@ def get_leads(
             else:
                 staged = staged[:limit]
 
-            companies_needing_url = [t[0] for t in staged if not (t[0].website or "").strip()]
-            llm_hints = (
-                resolve_homepage_urls_for_companies(companies_needing_url)
-                if companies_needing_url
-                else {}
-            )
             result = [
-                _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=llm_hints.get(c.id))
+                _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
                 for c, junk, junk_reason, pri in staged
             ]
             _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), result)
