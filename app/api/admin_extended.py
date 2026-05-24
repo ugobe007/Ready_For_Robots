@@ -6,6 +6,7 @@ Additional endpoints for company management and system controls.
 
 
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -785,8 +786,11 @@ def cal_enrich_missing_emails(
     """
     from app.services.lead_enrichment import enrich_company_and_contact
 
+    t0 = time.perf_counter()
     companies = _hot_warm_companies(db, limit=500)
     targets: list[tuple[Company, CrmAccount, float]] = []
+    skipped_complete = 0
+    skipped_no_draft = 0
 
     for company, score, _ in companies:
         acct = db.query(CrmAccount).filter(
@@ -795,14 +799,19 @@ def cal_enrich_missing_emails(
             CrmAccount.outreach_sent_at.is_(None),
         ).first()
         if not acct:
+            skipped_no_draft += 1
             continue
         if acct.contact_email and company.website:
+            skipped_complete += 1
             continue
         targets.append((company, acct, score))
 
     targets = targets[:limit]
     resolved_website = 0
     resolved_email = 0
+    apollo_hits = 0
+    inferred_hits = 0
+    unresolved = 0
     results: list[dict] = []
 
     for company, acct, score in targets:
@@ -819,17 +828,37 @@ def cal_enrich_missing_emails(
             resolved_website += 1
         if row.get("email"):
             resolved_email += 1
+            source = row.get("email_source")
+            if source == "apollo":
+                apollo_hits += 1
+            elif source == "domain_inferred":
+                inferred_hits += 1
+        else:
+            unresolved += 1
         results.append({**row, "score": round(score, 1), "applied": True})
 
     if not dry_run:
         db.commit()
         _invalidate_admin_caches()
 
-    return {
+    duration_ms = round((time.perf_counter() - t0) * 1000)
+    enrich_stats = {
+        "eligible": len(targets),
         "processed": len(results),
+        "skipped_complete": skipped_complete,
+        "skipped_no_draft": skipped_no_draft,
         "resolved_websites": resolved_website,
         "resolved_emails": resolved_email,
+        "apollo_hits": apollo_hits,
+        "inferred_hits": inferred_hits,
+        "unresolved": unresolved,
+        "duration_ms": duration_ms,
         "dry_run": dry_run,
+    }
+    logger.info("cal.enrich_missing_emails %s", enrich_stats)
+
+    return {
+        **enrich_stats,
         "results": results,
     }
 

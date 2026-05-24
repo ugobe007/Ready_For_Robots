@@ -17,6 +17,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 # the DB user can run DDL. You can also run `alembic upgrade head` from CI or Supabase SQL instead, then remove
 # release_command here (not recommended unless you own migrations elsewhere).
 
+[deploy]
+  # Single-machine app — rolling deploy fails if Fly still references a destroyed VM ID.
+  strategy = "immediate"
+
 [env]
   PORT = "8080"
   # Browsers require explicit origins when cookies/credentials are used — not "*"

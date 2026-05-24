@@ -1048,8 +1048,19 @@ export default function Admin() {
                     setActionBusy("cleanup");
                     try {
                       const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=40&dry_run=false", { method: "POST" });
-                      const d = await res.json().catch(() => ({})) as { resolved_emails?: number; resolved_websites?: number; processed?: number };
-                      setMessage(`Enriched ${d.resolved_websites ?? 0} websites, ${d.resolved_emails ?? 0} emails (${d.processed ?? 0} processed). Refresh to see updated sendable count.`);
+                      const d = await res.json().catch(() => ({})) as {
+                        resolved_emails?: number;
+                        resolved_websites?: number;
+                        processed?: number;
+                        apollo_hits?: number;
+                        inferred_hits?: number;
+                        unresolved?: number;
+                        duration_ms?: number;
+                      };
+                      setMessage(
+                        `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}) · `
+                        + `${d.resolved_websites ?? 0} websites · ${d.processed ?? 0} processed · ${d.duration_ms ?? "?"}ms.`,
+                      );
                       void loadCalStatus();
                     } finally { setActionBusy(""); }
                   })()}
