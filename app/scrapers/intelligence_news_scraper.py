@@ -860,9 +860,10 @@ class IntelligenceNewsScraper:
            like proper names before verbs. False positives (outlets, headline junk) are
            expected without the filters below.
 
-        3. **Filter candidates** — Inside `_extract_companies` / `_accept_company`: publication
-           denylist + RSS source match (`news_publications`), `lead_filter.is_junk`, shape
-           rules in `_is_valid_company_name`, ambiguous-word disambiguation.
+        3. **Filter candidates** — ``lead_name_gate`` boolean AND-chain (headline shape,
+           junk filter, text_classifier, logic engine) runs **before** ontological signal
+           classification. Publication denylist + RSS source match inside ``_accept_company``;
+           ambiguous-word disambiguation for single-token names.
 
         4. **Persist company** — `_get_or_create_company` last-chance rejects known
            publications, then INSERT or match by name.
@@ -896,6 +897,19 @@ class IntelligenceNewsScraper:
         if not body_text:
             return
 
+        # Co-mention pass: capture robot OEMs/partners named in article body
+        try:
+            from app.services.oem_discovery import enrich_vendors_mentioned_in_article
+
+            enrich_vendors_mentioned_in_article(
+                self.db,
+                body_text,
+                article.get("url") or "",
+            )
+        except Exception as e:
+            self._record_phase_failure("oem_co_mention", e, article_ref)
+            logger.debug("OEM co-mention pass failed (%s): %s", article_ref, e)
+
         # ── Phase 2: extract company candidates ────────────────────────────────
         companies: List[Tuple[str, float]] = []
         try:
@@ -905,10 +919,14 @@ class IntelligenceNewsScraper:
             logger.warning("Phase extract failed (%s): %s", article_ref, e)
             companies = []
 
+        # ── Phase 2b: boolean name gate (before ontology — yes/no only) ───────
+        from app.services.lead_name_gate import filter_name_candidates
+
+        companies = filter_name_candidates(companies)
         if not companies:
             return
 
-        # ── Phase 3: classify signal types (once per article) ─────────────────
+        # ── Phase 3: classify signal types (once per article, valid names only) ─
         signal_types: List[str] = ["news"]
         try:
             signal_types = self._detect_signal_types(body_text, article)
@@ -1041,14 +1059,9 @@ class IntelligenceNewsScraper:
         def _accept_company(name: str) -> bool:
             if name in seen:
                 return False
-            # Same pipeline as insert: classifier hint (stage 0) + junk + legal + distinctive +
-            # structure + optional external checks + vendor/pub.
-            from app.services.text_classifier import classify
-            from app.services.company_validator import is_valid_lead
+            from app.services.lead_name_gate import is_acceptable_lead_name
 
-            tc = classify(name)
-            valid, _ = is_valid_lead(name, entity_hint=tc)
-            if not valid:
+            if not is_acceptable_lead_name(name):
                 return False
             if publication_matches_rss_source(name, rss_source):
                 return False
@@ -1164,229 +1177,10 @@ class IntelligenceNewsScraper:
     
     def _is_valid_company_name(self, name: str) -> bool:
         """Filter out noise from extracted company names (headline fragments, etc.)."""
-        name_lower = name.lower().strip()
-        words = name_lower.split()
+        from app.services.headline_name_shape import passes_headline_name_shape
 
-        # Too short or too long (min 3 allows NCR, IBM, P&G; max 55 catches long headlines)
-        if len(name) < 3 or len(name) > 55:
-            return False
-
-        # Editorial decks, rhetorical questions, truncated RSS ("Swedish sports retailer…?")
-        if "?" in name:
-            return False
-        if re.search(r"\.{3,}", name) or "..." in name:
-            return False
-        if re.match(r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]", name.strip()):
-            return False
-
-        # Must contain at least one uppercase letter (proper noun)
-        if not any(c.isupper() for c in name):
-            return False
-
-        # Starts with noise word
-        if any(name_lower.startswith(word.strip()) for word in NOISE_WORDS):
-            return False
-
-        # Starts with adverb / modifier that indicates this is a sentence, not a name
-        _LEADING_ADVERBS = re.compile(
-            r"^(significantly|rapidly|recently|officially|increasingly|reportedly|"
-            r"nearly|currently|already|now|just|still|yet|also|only|even|further|"
-            r"us-based|uk-based|china-based|japan-based|europe-based|"
-            r"approximately|roughly|almost|over|more than|less than)\b",
-            re.IGNORECASE,
-        )
-        if _LEADING_ADVERBS.match(name_lower):
-            return False
-
-        # Possessive form followed by a generic noun → headline fragment, not company
-        # "Delta's Power Cooling", "Walmart's Automation Drive"
-        if re.search(r"'s?\s+\w+", name) and not re.search(
-            r"(?i)'s?\s+(group|corp|inc|ltd|co\.?|holdings?|ventures?|partners?|labs?|"
-            r"technologies|solutions|services|systems)$", name_lower
-        ):
-            return False
-
-        # Contains specific noise phrases (news orgs, headline fragments)
-        noise_phrases = {
-            "& world", "& report", "u.s. news", "world report",
-            "criticize", "discusses", " in funding", "in funding",
-            "receives approval", "in stages", "leaves door",
-            "chicken restaurant chain", "fast food industry",
-            "logistics park", "national park",
-            "market research", "market outlook", "market size",
-            "labor shortage", "predicts a profit", "can you", "now it",
-            "replacement route", "route 95", "route 9517",
-            "launches ai and robotic", "launches ai and robot",
-            "wildfires", "neuropsychology",
-            # Added from log analysis
-            "isin ", " isin", "stock isin",       # stock/bond identifier codes
-            "earnings new", "earnings ",           # financial headline fragments
-            "distribution and",                    # truncated headline
-            "leveraging ai",                       # article title phrase
-            "automation lag",                      # headline fragment
-            "pharmacy automation",                 # product category descriptor
-            "fill pharmacy",                       # category fragment
-            "healthcare access",                   # policy topic, not company
-        }
-        if any(phrase in name_lower for phrase in noise_phrases):
-            return False
-
-        # Headline debris: "… in funding - The Robot", "… - U.S. News"
-        if re.search(r"\bin funding\b.*\bthe robot\b$", name_lower):
-            return False
-        if "state leaders" in name_lower and "criticize" in name_lower:
-            return False
-
-        # News source attribution: "... - Mankato Free Press", "... - FOX 13"
-        if re.search(
-            r"\s-\s+\w+[\w\s]*?(press|times|news|post|herald|tribune|journal|gazette|"
-            r"review|report|daily|weekly|media|wire)\s*$",
-            name_lower,
-        ):
-            return False
-
-        # ISIN / ticker code embedded: "Rockwell Automation Stock ISIN US77463M1053"
-        if re.search(r'\b[A-Z]{2}[A-Z0-9]{10}\b', name):
-            return False
-
-        # Is just a noise word
-        if name_lower in NOISE_WORDS:
-            return False
-
-        # Truncated / sentence fragments: ends with " to", " -", " in", " for", " and"
-        if re.search(r'\s(to|-\s*$|in|for|and|the|a|an|of|by)$', name_lower):
-            return False
-
-        # News org pattern: "X & World", "X Report", "X - U.S."
-        if re.search(r'& (world|report)$|\s-\s*(u\.?s\.?|the)\b', name_lower):
-            return False
-
-        # Contains sentence verbs / prepositions (whole-word match)
-        # Expanded from logs: delivers, releases, continues, anticipates, leveraging, lag
-        sentence_words = {
-            "to", "for", "in", "on", "at", "with", "from", "but",
-            "receives", "approval", "stages", "funding", "staffing",
-            "cuts", "leaves", "pleas", "trends", "know", "about",
-            "criticize", "discusses", "what", "how", "through",
-            "will", "nixes", "cancels", "kicks", "amid", "alumni",
-            "reportedly", "predicts", "some", "it",
-            # New from log analysis:
-            "delivers", "delivery", "releases", "continues", "anticipates",
-            "anticipate", "increase", "increases", "reveal", "reveals",
-            "access", "policy", "act", "could", "brace", "braces",
-            "lag", "lags", "industry",
-            # Headline list/question openers:
-            "here", "there", "five", "six", "seven", "eight", "nine", "ten",
-        }
-        if any(re.search(r'\b' + re.escape(w) + r'\b', " " + name_lower + " ") for w in sentence_words):
-            return False
-
-        # Headline structure: trailing action verb
-        if re.search(
-            r'\s(will|nixes|cancels|kicks\s|kicks off|predicts|releases?|delivers?|'
-            r'continues?|brace|braces?|surge|surges?|lag|lags?|boosts?|gains?|adds?|'
-            r'names?|serves?|cuts?|slashes?|opens?|closes?|shuts?|files?|wins?|'
-            r'loses?|drops?|spikes?|surges?|plunges?|soars?|slips?|sheds?|'
-            r'unveils?|launches?|announces?|reveals?|acquires?|hires?|expands?|'
-            r'celebrates?|highlights?|appoints?|introduces?)\s*$',
-            name_lower
-        ):
-            return False
-
-        # Trailing phrasal verb: "Revs Up", "Heats Up", "Ramps Up", "Gears Up"
-        if re.search(
-            r'\s(revs?|heats?|ramps?|gears?|picks?|winds?|steps?|scales?|powers?)\s+(up|in|off|out|down)\s*$',
-            name_lower
-        ):
-            return False
-
-        # "Here Are / There Are" list headlines
-        if re.match(r'^(here\s+(are|is)|there\s+(are|is))\s+', name_lower):
-            return False
-
-        # "The Future of X" / "State of X" / "Rise of X"
-        if re.match(r'^(the\s+)?(future|state|rise|fall|history|evolution|dawn|end|era|age)\s+of\s+', name_lower):
-            return False
-
-        # Generic "[Topic] Technology/Solutions/Management" (no proper noun)
-        if re.match(
-            r'^(supply chain|value chain|cold chain|warehouse|logistics|fulfillment|'
-            r'distribution|manufacturing|packaging|retail|hospitality|healthcare|'
-            r'food safety|food service|restaurant|automation|robotics)\s+'
-            r'(technology|technologies|solutions?|management|services?|systems?|'
-            r'analytics|platform|software|trends?)\s*$',
-            name_lower
-        ):
-            return False
-
-        # All-caps + action verb at end: "JAMES BEARD FOUNDATION RELEASES"
-        if re.search(r'\b(RELEASES|DELIVERS|ANNOUNCES|LAUNCHES|UNVEILS|OPENS|CLOSES|'
-                     r'REPORTS|NAMES|HIRES|ACQUIRES|SIGNS|WINS|LOSES)\s*$', name):
-            return False
-
-        # "New [number]" or "New [product descriptor]" (New 82, New surgical robot)
-        if name_lower.startswith("new "):
-            if len(words) >= 2 and (words[1].isdigit() or words[1] in {
-                    "surgical", "robot", "82", "mir", "software", "eastern", "western",
-                    "northern", "southern", "hub", "facility", "center"}):
-                return False
-
-        # Ends with " CEO", " robot", " Market" (report title), " Act", " Policy"
-        if re.search(r'\s(ceo|robot|market|market research|market outlook|act|policy|'
-                     r"hub|center|facility|complex|campus|park|'s)\s*$", name_lower):
-            return False
-
-        # Generic plural roles/categories as whole name
-        if name_lower in {"retailers", "nurses", "women", "robots", "experts",
-                          "workers", "operators", "managers", "systems"}:
-            return False
-
-        # Single generic/abstract word (not a company)
-        _GENERIC_SINGLES = {
-            "flexible", "scalable", "automated", "autonomous", "intelligent",
-            "digital", "smart", "advanced", "integrated", "connected",
-            "global", "local", "national", "regional", "international",
-        }
-        if len(words) == 1 and name_lower in _GENERIC_SINGLES:
-            return False
-
-        # Starts with "Some " (Some cloud experts), "Can " (Can AI)
-        if name_lower.startswith("some ") or name_lower.startswith("can "):
-            return False
-
-        # Contains comma (sentence fragment: "Clover predicts a profit,")
-        if "," in name:
-            return False
-
-        # "X and CTA" / "City and CTA" style headline fragments
-        if " and " in name_lower and any(w in name_lower for w in ("cta", " and robot", " and robotic")):
-            return False
-
-        # Contains only common words
-        if all(word in NOISE_WORDS for word in words):
-            return False
-
-        # Tightened from 8 → 7 words; genuine company names rarely exceed 7 words
-        # (e.g., "Marriott International Hotels & Resorts" = 5 words)
-        if len(words) > 7:
-            return False
-
-        # Starts with lowercase (likely mid-sentence)
-        if name[0].islower():
-            return False
-
-        # Location patterns: "Thunder Bay Ont.", "N.J. X", "State X", city + state abbrev
-        if re.match(r'^[a-z]{2}\.\s', name_lower) or name_lower.startswith("state "):
-            return False
-        # Canadian city + province: "Thunder Bay Ont."
-        if re.search(r'\b(ont|que|b\.?c|alta?|sask|man|n\.?s|n\.?b|p\.?e\.?i|n\.?l)\b\.?\s*$',
-                     name_lower):
-            return False
-        # U.S. / country abbreviations alone or as last token
-        if re.search(r'\b(u\.s|u\.k|u\.s\.a)\s*\.?\s*$', name_lower):
-            return False
-
-        return True
+        ok, _ = passes_headline_name_shape(name)
+        return ok
     
     # ══════════════════════════════════════════════════════════════════════════
     # SIGNAL DETECTION
@@ -1440,38 +1234,17 @@ class IntelligenceNewsScraper:
         # Normalize name
         name = name.strip()
 
-        # ── Gate 0: Semantic entity type classifier (runs FIRST, before any DB I/O) ──
-        # Ask "what is this?" before spending resources on blocklist lookups or writes.
-        # Hard-reject if the classifier is confident the candidate is not a company name.
-        from app.services.text_classifier import classify, EntityType
+        # ── Gate 0: Boolean name gate (before DB I/O or ontology) ─────────────
+        from app.services.lead_name_gate import check_lead_name
+
+        ok, gate_reason = check_lead_name(name)
+        if not ok:
+            logger.debug("lead_name_gate rejected %r: %s", name, gate_reason)
+            return None
+
+        from app.services.text_classifier import classify
 
         tc = classify(name)
-        _HARD_REJECT_TYPES = {
-            EntityType.PERSON_NAME,
-            EntityType.CITY_OR_TOWN,
-            EntityType.COUNTRY,
-            EntityType.SECTOR_DESCRIPTOR,
-            EntityType.FACILITY_DESCRIPTOR,
-            EntityType.POPULATION_GROUP,
-            EntityType.DESCRIPTOR_ONLY,
-            EntityType.MALFORMED_ENTITY,
-            EntityType.SAYING,
-            EntityType.EQUIPMENT_CAT,
-            EntityType.MARKET_FRAGMENT,
-        }
-        if tc.entity_type in _HARD_REJECT_TYPES and tc.confidence >= 0.65:
-            logger.debug(
-                "text_classifier rejected %r as %s (conf=%.2f): %s",
-                name, tc.entity_type.value, tc.confidence,
-                "; ".join(tc.evidence[:2]),
-            )
-            return None
-        if tc.entity_type == EntityType.ARTICLE_HEADLINE and tc.confidence >= 0.75:
-            logger.debug(
-                "text_classifier rejected %r as article headline (conf=%.2f)",
-                name, tc.confidence,
-            )
-            return None
 
         if is_known_publication_name(name):
             logger.debug("Skip publication masquerading as company: %s", name)

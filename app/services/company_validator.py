@@ -321,6 +321,7 @@ def is_valid_lead(
     entity_hint: "Optional[object]" = None,
     *,
     skip_junk_check: bool = False,
+    mode: str = "buyer",
 ) -> Tuple[bool, str]:
     """
     Main gate.  Returns (True, "") if name should be ingested as a lead,
@@ -336,7 +337,7 @@ def is_valid_lead(
       4. Structure     — reject structural headline artifacts
       4b. Wikidata     — optional; long names only if ``COMPANY_NAME_WIKIDATA_VERIFY`` is on
       4c. DNS/HTTPS    — optional; same long-name trigger; strict mode off by default
-      5. Vendor check  — reject known robotics vendors (not buyers)
+      5. Vendor check  — reject known robotics vendors (buyer mode only)
       6. Publication   — reject known news orgs
 
     Parameters
@@ -347,11 +348,15 @@ def is_valid_lead(
                   without re-running the classifier
     skip_junk_check : if True, skip stage 1 ``is_junk`` (caller already ran it;
                   used by ``classify_lead`` to avoid duplicate work).
+    mode        : ``buyer`` (default) for end-user outreach leads;
+                  ``oem_prospect`` for StageGate / robot_companies pipeline
+                  (robot OEMs are the target audience, not filtered out).
     """
     if not name or not name.strip():
         return False, "empty name"
 
     name = name.strip()
+    oem_mode = mode == "oem_prospect"
 
     # Stage 0: entity type hint from text_classifier (avoids re-classification)
     if entity_hint is not None:
@@ -394,13 +399,17 @@ def is_valid_lead(
     if is_allowlisted_company_name(name):
         return True, ""
 
+    # OEM pipeline: known robotics vendors are first-class prospects.
+    if oem_mode and is_known_robotics_vendor_name(name):
+        return True, ""
+
     # Stage 0b: template / placeholder tokens scraped into name fields
     if name.strip().lower() in _PLACEHOLDER_COMPANY_NAMES:
         return False, "placeholder token, not a company name"
 
     # Stage 1: junk filter (existing regex-based)
     if not skip_junk_check:
-        junk, reason = is_junk(name)
+        junk, reason = is_junk(name, mode=mode)
         if junk:
             return False, f"junk filter: {reason}"
 
@@ -418,7 +427,11 @@ def is_valid_lead(
         low_tok = tok.lower()
         if low_tok in _GENERIC_WORDS:
             return False, f"single-word generic term ({name!r})"
-        if len(tok) <= 4 and not is_allowlisted_company_name(name):
+        if (
+            len(tok) <= 4
+            and not is_allowlisted_company_name(name)
+            and not (oem_mode and is_known_robotics_vendor_name(name))
+        ):
             return False, f"single-word name too short or ambiguous ({name!r})"
 
     # Stage 2: legal suffix fast-pass
@@ -511,8 +524,8 @@ def is_valid_lead(
                     "external check: inferred brand domain has no DNS footprint",
                 )
 
-    # Stage 5: robotics vendor (seller, not buyer)
-    if is_known_robotics_vendor_name(name):
+    # Stage 5: robotics vendor (seller, not buyer) — buyer pipeline only
+    if not oem_mode and is_known_robotics_vendor_name(name):
         return False, "known robotics vendor (not a buyer opportunity)"
 
     # Stage 6: news publication

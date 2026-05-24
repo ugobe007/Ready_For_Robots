@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.models.robot_company import RobotCompany
 from app.scrapers.scrape_targets import get_oem_discovery_queries
-from app.services.lead_filter import is_junk
+from app.services.lead_name_gate import check_oem_prospect_name
 from app.services.oem_need_scorer import score as oem_need_score
 from app.services.website_inference import sleep_between_lookups, try_duckduckgo_company_website
 
@@ -337,20 +337,10 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
                 logger.debug("OEM: no company extracted from %r", title[:70])
                 continue
 
-            junk, junk_reason = is_junk(company_name, mode="oem_prospect")
-            if junk:
+            ok, reject_reason = check_oem_prospect_name(company_name)
+            if not ok:
                 stats["skipped_junk_name"] += 1
-                logger.debug("OEM name rejected %r: %s", company_name, junk_reason)
-                continue
-
-            from app.services.company_validator import is_valid_lead
-            from app.services.text_classifier import classify
-
-            tc = classify(company_name)
-            valid, vreason = is_valid_lead(company_name, entity_hint=tc)
-            if not valid:
-                stats["skipped_junk_name"] += 1
-                logger.debug("OEM logic engine rejected %r: %s", company_name, vreason)
+                logger.debug("OEM gate rejected %r: %s", company_name, reject_reason)
                 continue
 
             rc, created = _upsert_robot_company(
@@ -383,3 +373,88 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
         stats["robot_companies_updated"],
     )
     return stats
+
+
+_DEPLOYMENT_MENTION_RE = re.compile(
+    r"(?i)\b(deploy(?:ed|s|ing|ment)?|partner(?:ed|s|ing|ship)?|selected|"
+    r"install(?:ed|s|ing)?|fleet|pilot(?:ing|ed)?|integrat(?:ed|es|ing)|"
+    r"roll(?:ed|ing)?\s+out|chose|chosen|contract(?:ed|s|ing)?)\b",
+)
+
+
+def _vendor_display_name(vendor_key: str) -> str:
+    if vendor_key == vendor_key.lower():
+        return vendor_key.title()
+    return vendor_key
+
+
+def _mention_need_score(article_blob: str):
+    """Score OEM need for a co-mention; bump WARM when text looks like a deployment story."""
+    from app.services.oem_need_scorer import OEMNeedScore
+
+    need = oem_need_score(text=article_blob)
+    if need.tier in ("HOT", "WARM"):
+        return need
+    if _DEPLOYMENT_MENTION_RE.search(article_blob or ""):
+        return OEMNeedScore(
+            total=max(need.total, 48.0),
+            tier="WARM",
+            icp=need.icp or "General Robotics",
+            reasons=(need.reasons or []) + ["mentioned in buyer deployment article"],
+        )
+    return OEMNeedScore(
+        total=max(need.total, 35.0),
+        tier="COLD",
+        icp=need.icp or "General Robotics",
+        reasons=(need.reasons or []) + ["mentioned in industry news article"],
+    )
+
+
+def enrich_vendors_mentioned_in_article(
+    db: Session,
+    text: str,
+    article_url: str = "",
+) -> int:
+    """
+    Scan article text for known robotics OEMs and upsert ``robot_companies`` rows.
+
+    Called from the buyer news scraper so vendor names co-mentioned in deployment
+    stories (e.g. "Sysco deploys Fetch AMRs") land in the supply pipeline even
+    when the vendor is not the headline subject.
+    """
+    blob = (text or "").strip()
+    if len(blob) < 20:
+        return 0
+
+    from app.services.robot_vendor_names import KNOWN_ROBOTICS_VENDOR_NAMES
+
+    lower = blob.lower()
+    touched = 0
+    seen: set[str] = set()
+
+    for vendor_key in sorted(KNOWN_ROBOTICS_VENDOR_NAMES, key=len, reverse=True):
+        if vendor_key not in lower:
+            continue
+        display = _vendor_display_name(vendor_key)
+        norm = display.lower()
+        if norm in seen:
+            continue
+        seen.add(norm)
+
+        if not check_oem_prospect_name(display)[0]:
+            continue
+
+        need = _mention_need_score(blob)
+        _upsert_robot_company(
+            db,
+            display,
+            need=need,
+            article_url=article_url,
+            article_blob=blob[:600],
+            semantic_frame=None,
+        )
+        touched += 1
+
+    if touched:
+        db.commit()
+    return touched

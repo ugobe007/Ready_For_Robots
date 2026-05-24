@@ -20,23 +20,12 @@ from typing import Any, Dict, List, Optional, Sequence
 from types import SimpleNamespace
 
 from app.services.automation_profile import infer_automation_profile
-from app.services.company_validator import is_valid_lead
 from app.services.crm_extractor import _extract_budget, _extract_timing
 from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.inference_engine import analyze
-from app.services.lead_filter import is_junk, priority_tier
+from app.services.lead_filter import priority_tier
+from app.services.lead_name_gate import check_lead_name
 from app.services.lead_value import compute_lead_value
-from app.services.text_classifier import classify, EntityType
-
-
-# ── Headline junk that escapes is_junk (numbered listicles, job SEO stubs) ───
-_LISTICLE_RE = re.compile(
-    r"(?i)^(\d+\s+)?(best|top|worst|review|reviews|guide to|ways to|things to|tips for)\b",
-)
-_JOB_SEO_RE = re.compile(r"(?i)^(your job|how to|what is|why you|can you)\b")
-_INCOMPLETE_RE = re.compile(
-    r"(?i)\s+(to|for|and|the|a|an|of|by|is|are|was|were)\s*$",
-)
 
 # Problem language → human label
 _PROBLEM_PATTERNS: List[tuple[re.Pattern[str], str]] = [
@@ -102,47 +91,11 @@ def _reject(name: str, reason: str, evidence: List[str], confidence: float = 0.8
 
 
 def _gate_lead_vs_junk(name: str, context_text: str) -> Optional[LeadInferenceDossier]:
-    """Return rejection dossier if candidate fails identity gates."""
+    """Return rejection dossier if candidate fails boolean name gates (before ontology)."""
     name = (name or "").strip()
-    if not name:
-        return _reject(name, "empty_name", ["name is blank"])
-
-    if _LISTICLE_RE.search(name) or _JOB_SEO_RE.search(name):
-        return _reject(name, "listicle_or_seo_headline", [f"pattern match on {name!r}"])
-
-    if _INCOMPLETE_RE.search(name):
-        return _reject(name, "incomplete_headline_fragment", [f"trailing fragment: {name!r}"])
-
-    junk, junk_reason = is_junk(name)
-    if junk:
-        return _reject(name, junk_reason or "junk_filter", [f"is_junk: {junk_reason}"])
-
-    tc = classify(name)
-    hard_reject = {
-        EntityType.PERSON_NAME,
-        EntityType.CITY_OR_TOWN,
-        EntityType.COUNTRY,
-        EntityType.SECTOR_DESCRIPTOR,
-        EntityType.FACILITY_DESCRIPTOR,
-        EntityType.POPULATION_GROUP,
-        EntityType.DESCRIPTOR_ONLY,
-        EntityType.MALFORMED_ENTITY,
-        EntityType.SAYING,
-        EntityType.EQUIPMENT_CAT,
-        EntityType.MARKET_FRAGMENT,
-        EntityType.ARTICLE_HEADLINE,
-    }
-    if tc.entity_type in hard_reject and tc.confidence >= 0.65:
-        return _reject(
-            name,
-            f"entity_type:{tc.entity_type.value}",
-            tc.evidence[:4],
-            confidence=tc.confidence,
-        )
-
-    valid, vreason = is_valid_lead(name, entity_hint=tc)
-    if not valid:
-        return _reject(name, vreason or "validator_rejected", [vreason or "is_valid_lead failed"])
+    ok, reason = check_lead_name(name)
+    if not ok:
+        return _reject(name, reason, [reason])
 
     # Article-level: is there buyer intent in the surrounding text?
     if context_text:
