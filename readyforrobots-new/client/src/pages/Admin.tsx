@@ -116,8 +116,10 @@ type CalProspect = {
   inferred_contact_email?: string;
   outreach_domain?: string;
   default_cc?: string;
-  default_cc?: string;
   account_type?: "buyer" | "vendor";
+  outreach_pipeline?: string;
+  robot_company_id?: number;
+  semantic_summary?: string;
   outreach_stage?: string;
   outreach_sent_at?: string;
   has_draft?: boolean;
@@ -1188,7 +1190,21 @@ export default function Admin() {
                               >
                                 {prospect.account_type === "vendor" ? "vendor" : "buyer"}
                               </button>
+                              {prospect.outreach_pipeline === "stagegate" && (
+                                <span
+                                  className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border"
+                                  style={{ background: "rgba(3,218,197,0.1)", borderColor: "rgba(3,218,197,0.35)", color: "#03DAC5" }}
+                                  title={prospect.semantic_summary || "StageGate show-ops prospect"}
+                                >
+                                  stagegate
+                                </span>
+                              )}
                             </div>
+                            {prospect.semantic_summary && (
+                              <p className="mt-1 truncate text-[10px] text-white/40" title={prospect.semantic_summary}>
+                                {prospect.semantic_summary}
+                              </p>
+                            )}
                           </div>
                           <div>
                             <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>

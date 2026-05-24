@@ -868,17 +868,31 @@ def _create_crm_supply_tracking_copy(
 ) -> tuple[CrmAccount, OutreachMessage]:
     uid = _uid_uuid(user)
     team = _ensure_default_team(db, uid, user.get("email") or "")
+
+    linked_company_id = None
+    mi = company.market_intelligence if isinstance(company.market_intelligence, dict) else {}
+    if mi.get("crm_company_id"):
+        linked_company_id = int(mi["crm_company_id"])
+
     account = (
         db.query(CrmAccount)
         .filter(CrmAccount.team_id == team.id, CrmAccount.name == company.company_name)
         .first()
     )
+    if not account and linked_company_id:
+        account = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.team_id == team.id, CrmAccount.company_id == linked_company_id)
+            .first()
+        )
     if not account:
         account = CrmAccount(
             team_id=team.id,
+            company_id=linked_company_id,
             name=company.company_name,
             website=company.website,
             industry=company.target_market,
+            account_type="vendor",
             owner_user_id=uid,
         )
         db.add(account)
@@ -888,6 +902,9 @@ def _create_crm_supply_tracking_copy(
     account.website = account.website or company.website
     account.industry = account.industry or company.target_market
     account.owner_user_id = account.owner_user_id or uid
+    account.account_type = "vendor"
+    if linked_company_id and not account.company_id:
+        account.company_id = linked_company_id
     account.contact_email = primary_to
     account.outreach_draft = body
     account.outreach_sent_at = now
@@ -1013,15 +1030,22 @@ def _match_line(match: dict[str, Any]) -> str:
 
 
 def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
+    trade_show = getattr(rc, "next_trade_show", None)
+    trade_shows = getattr(rc, "trade_shows", None)
+    if not trade_show and isinstance(trade_shows, list) and trade_shows:
+        trade_show = trade_shows[0]
+
+    data_source = (getattr(rc, "data_source", None) or "").lower()
+    if data_source.startswith("stagegate") or "stagegate_oem" in str(getattr(rc, "market_intelligence", {}) or {}):
+        from app.services.stagegate_crm_bridge import build_stagegate_draft
+
+        return build_stagegate_draft(rc)
+
     subject = f"Sales channel signals for {rc.company_name}"
     focus = _vendor_focus_phrase(rc)
     possessive = _vendor_possessive(rc.company_name)
     lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
     response_playbook = _recommended_response_playbook(matches)
-    trade_show = getattr(rc, "next_trade_show", None)
-    trade_shows = getattr(rc, "trade_shows", None)
-    if not trade_show and isinstance(trade_shows, list) and trade_shows:
-        trade_show = trade_shows[0]
     insight = pick_cal_insight(
         company_name=rc.company_name,
         trade_show=trade_show,
@@ -1065,6 +1089,8 @@ def _supply_agent_row(
     draft = _vendor_signup_email(rc, matches)
     enriched = _enrich_robot_company(rc)
     history = _supply_outreach_history(db, rc.id)
+    from app.services.stagegate_crm_bridge import bridge_status
+
     return {
         "robot_company": enriched,
         "contact_strategy": contact,
@@ -1072,6 +1098,7 @@ def _supply_agent_row(
         "outreach_history": history,
         "lead_matches": matches,
         "email": draft,
+        "cal_bridge": bridge_status(rc),
         "cta": {
             "signup": "Create a Ready For Robots account to receive matched leads in your inbox.",
             "meeting": "Set up a short call with Ready For Robots to tune target markets and lead delivery.",

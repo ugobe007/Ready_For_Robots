@@ -39,6 +39,14 @@ HEADERS = {
 _PUBLISHER_SUFFIX = re.compile(r"\s+[-–—|]\s+[^-–—|]{2,80}$")
 _SHOW_RE = re.compile(r"\b(CES|MODEX|Automate|ProMat|NAB|AUVSI|XPONENTIAL|Hannover)\b", re.I)
 
+# Large buyers / operators — semantic actor may be a deployment site, not an OEM prospect
+_BUYER_ACTORS = frozenset({
+    "amazon", "walmart", "target", "costco", "fedex", "ups", "dhl", "usps",
+    "home depot", "lowe's", "lowes", "kroger", "albertsons", "sysco",
+    "mcdonald's", "mcdonalds", "starbucks", "delta", "united airlines",
+    "boeing", "lockheed martin", "general motors", "ford", "tesla",
+})
+
 _ICP_TO_ROBOT_TYPE = {
     "Foreign Humanoid / Exoskeleton": "humanoid",
     "Medical Robot": "service",
@@ -63,8 +71,13 @@ def _strip_rss_title(title: str) -> str:
     return _PUBLISHER_SUFFIX.sub("", (title or "").strip()).strip()
 
 
-def _extract_oem_company_name(title: str, description: str = "") -> Optional[str]:
-    """Best-effort OEM company name from headline + description."""
+def _extract_oem_company_name(
+    title: str,
+    description: str = "",
+    *,
+    semantic_frame=None,
+) -> Optional[str]:
+    """Best-effort OEM company name — semantic frame actor first, then known vendors."""
     clean_title = _strip_rss_title(title)
     blob = f"{clean_title} {description}".strip()
     if not blob:
@@ -75,24 +88,51 @@ def _extract_oem_company_name(title: str, description: str = "") -> Optional[str
     lower = blob.lower()
     for vendor in sorted(KNOWN_ROBOTICS_VENDOR_NAMES, key=len, reverse=True):
         if vendor in lower:
-            # Preserve canonical casing where possible
             if vendor == vendor.lower():
                 return vendor.title()
             return vendor
 
+    if semantic_frame and semantic_frame.actor:
+        actor = semantic_frame.actor
+        if actor.lower() not in _BUYER_ACTORS:
+            return actor
+
     from app.services.company_name_inference import extract_company_name_from_headline
 
     name = extract_company_name_from_headline(clean_title)
-    if name and len(name) >= 3:
+    if name and len(name) >= 3 and name.lower() not in _BUYER_ACTORS:
         return name
+
+    if semantic_frame and semantic_frame.actor:
+        return semantic_frame.actor
 
     from app.services.headline_parser import extract_actor
 
     actor = extract_actor(clean_title)
-    if actor and len(actor) >= 3:
+    if actor and len(actor) >= 3 and actor.lower() not in _BUYER_ACTORS:
         return actor
 
     return None
+
+
+def _buyer_deployment_not_oem(semantic_frame, blob: str) -> bool:
+    """True when verb-anchor actor is a large operator deploying automation, not making robots."""
+    if not semantic_frame or not semantic_frame.actor:
+        return False
+    actor = semantic_frame.actor.lower()
+    if actor not in _BUYER_ACTORS:
+        return False
+    blob_lower = blob.lower()
+    oem_markers = (
+        "humanoid", "robotics", "robot company", "startup", "oem", " unveils ",
+        " launches ", " announces new robot", " biped", " cobot", " amr ",
+    )
+    if any(m in blob_lower for m in oem_markers):
+        return False
+    concepts = set(semantic_frame.ontology_concepts or [])
+    if concepts & {"humanoid_robotics", "robot_oem", "mobile_robot", "collaborative_robot"}:
+        return False
+    return True
 
 
 def _fetch_rss(query: str, *, max_items: int = 8) -> List[dict]:
@@ -139,6 +179,7 @@ def _upsert_robot_company(
     need,
     article_url: str,
     article_blob: str,
+    semantic_frame=None,
 ) -> Tuple[RobotCompany, bool]:
     existing = (
         db.query(RobotCompany)
@@ -158,6 +199,9 @@ def _upsert_robot_company(
         "source_article": article_url,
         "source_headline": article_blob[:240],
     }
+    if semantic_frame:
+        intel["semantic_frame"] = semantic_frame.to_dict()
+        intel["semantic_summary"] = semantic_frame.summary_line()
 
     if existing:
         existing.lead_score = max(existing.lead_score or 0, int(round(need.total)))
@@ -172,12 +216,16 @@ def _upsert_robot_company(
                 existing.trade_shows = shows
         meta = dict(existing.market_intelligence or {})
         meta["stagegate_oem"] = intel
+        if semantic_frame:
+            meta["semantic_frame"] = semantic_frame.to_dict()
+            meta["semantic_summary"] = semantic_frame.summary_line()
         existing.market_intelligence = meta
         existing.data_source = existing.data_source or "stagegate_oem_xbot"
         existing.notes = (existing.notes or "")[:2000]
         if article_url and article_url not in (existing.notes or ""):
             existing.notes = f"{existing.notes}\nDiscovered: {article_url}".strip()[:4000]
         db.add(existing)
+        _sync_stagegate_crm(db, existing)
         return existing, False
 
     website = _resolve_website(name)
@@ -195,12 +243,32 @@ def _upsert_robot_company(
         next_trade_show=next_show,
         trade_shows=[next_show] if next_show else None,
         partnership_opportunity="; ".join(need.reasons[:3]),
-        market_intelligence={"stagegate_oem": intel},
+        market_intelligence={
+            "stagegate_oem": intel,
+            **(
+                {
+                    "semantic_frame": semantic_frame.to_dict(),
+                    "semantic_summary": semantic_frame.summary_line(),
+                }
+                if semantic_frame
+                else {}
+            ),
+        },
         notes=f"Auto-discovered via OEM/XBOT news scrape.\n{article_url}"[:4000],
     )
     db.add(rc)
     db.flush()
+    _sync_stagegate_crm(db, rc)
     return rc, True
+
+
+def _sync_stagegate_crm(db: Session, rc: RobotCompany) -> None:
+    try:
+        from app.services.stagegate_crm_bridge import sync_robot_company_to_crm
+
+        sync_robot_company_to_crm(db, rc, refresh_draft=False)
+    except Exception as exc:
+        logger.warning("StageGate CRM bridge failed for %r: %s", rc.company_name, exc)
 
 
 def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
@@ -221,6 +289,7 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
         "robot_companies_updated": 0,
         "skipped_no_company_name": 0,
         "skipped_junk_name": 0,
+        "skipped_buyer_deployment": 0,
     }
     seen_urls: set[str] = set()
 
@@ -238,6 +307,20 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
                 seen_urls.add(link)
 
             blob = f"{_strip_rss_title(title)}. {desc}"
+
+            from app.services.semantic_frame import parse_news_semantic_frame
+
+            frame = parse_news_semantic_frame(blob)
+
+            if _buyer_deployment_not_oem(frame, blob):
+                stats["skipped_buyer_deployment"] += 1
+                logger.debug(
+                    "OEM: buyer deployment (not OEM) actor=%r — %s",
+                    frame.actor,
+                    title[:70],
+                )
+                continue
+
             need = oem_need_score(text=blob)
             if need.tier not in ("HOT", "WARM"):
                 continue
@@ -248,7 +331,7 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
             else:
                 stats["oem_warm"] += 1
 
-            company_name = _extract_oem_company_name(title, desc)
+            company_name = _extract_oem_company_name(title, desc, semantic_frame=frame)
             if not company_name:
                 stats["skipped_no_company_name"] += 1
                 logger.debug("OEM: no company extracted from %r", title[:70])
@@ -276,6 +359,7 @@ def run_oem_discovery(db: Session, *, max_queries: int = 30) -> Dict[str, Any]:
                 need=need,
                 article_url=link,
                 article_blob=blob,
+                semantic_frame=frame,
             )
             if created:
                 stats["robot_companies_created"] += 1

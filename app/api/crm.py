@@ -479,12 +479,27 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
     return "\n".join(lines)
 
 
-def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None) -> str:
-    """Route to buyer or vendor draft based on account_type."""
+def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None, company: Optional[Any] = None) -> str:
+    """Route to buyer, vendor, or StageGate draft based on account_type and pipeline."""
+    if company is not None:
+        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+
+        if is_stagegate_company(company):
+            return cal_draft_for_stagegate_company(company)["body"]
+
     account_type = getattr(acct, "account_type", "buyer") or "buyer"
     if account_type == "vendor":
         return _draft_vendor_body(acct, settings, traits, collateral_policy, collateral_links)
     return _draft_buyer_body(acct, settings, traits, collateral_policy, collateral_links)
+
+
+def _draft_subject_for_account(acct: CrmAccount, company: Optional[Any] = None) -> str:
+    if company is not None:
+        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+
+        if is_stagegate_company(company):
+            return cal_draft_for_stagegate_company(company)["subject"]
+    return _draft_subject(acct)
 
 
 def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str]]:
@@ -903,8 +918,12 @@ def draft_account_outreach(
             collateral_links = settings.scout_collateral_links
         style_instruction = (patch.get("style_instruction") or (settings.scout_message_style if settings else "") or "").strip()
 
-        subject = _draft_subject(acct)
-        draft = _draft_body(acct, settings, traits, style_instruction, collateral_policy, collateral_links)
+        company = None
+        if acct.company_id:
+            company = db.query(Company).filter(Company.id == acct.company_id).first()
+
+        subject = _draft_subject_for_account(acct, company)
+        draft = _draft_body(acct, settings, traits, style_instruction, collateral_policy, collateral_links, company)
         explicit_contact = patch.get("contact_email") or acct.contact_email
         inferred_primary, inferred_cc = (None, []) if explicit_contact else _infer_default_outreach_emails(acct)
         acct.contact_email = explicit_contact or inferred_primary

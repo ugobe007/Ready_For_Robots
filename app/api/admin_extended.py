@@ -329,6 +329,12 @@ def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional
 
 def _cal_draft_for_company(company: Company) -> tuple[str, str]:
     """Generate Cal subject + body using the template voice (no LLM)."""
+    from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+
+    if is_stagegate_company(company):
+        draft = cal_draft_for_stagegate_company(company)
+        return draft["subject"], draft["body"]
+
     from app.api.crm import _draft_subject, _draft_body
     from app.models.crm import CrmAccount as _Acct
 
@@ -361,6 +367,7 @@ def _serialize_cal_row(
         )
     )
     preview = (acct.outreach_draft or "").strip()[:140] if has_draft else None
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
     row: dict[str, Any] = {
         "company_id": company.id,
         "company_name": company.name,
@@ -375,6 +382,9 @@ def _serialize_cal_row(
         "inferred_contact_email": inferred_to,
         "default_cc": inferred_cc,
         "account_type": (acct.account_type if acct else None) or "buyer",
+        "outreach_pipeline": meta.get("outreach_pipeline"),
+        "robot_company_id": meta.get("robot_company_id"),
+        "semantic_summary": meta.get("semantic_summary"),
         "outreach_stage": acct.outreach_stage if acct else None,
         "outreach_sent_at": acct.outreach_sent_at.isoformat() if acct and acct.outreach_sent_at else None,
         "has_draft": has_draft,
@@ -642,9 +652,14 @@ def cal_bulk_draft(
                     name=company.name or "Unknown",
                     website=company.website,
                     industry=company.industry,
+                    account_type="vendor"
+                    if (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate"
+                    else "buyer",
                 )
                 db.add(acct)
                 db.flush()
+            elif (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate":
+                acct.account_type = "vendor"
 
             if not acct.contact_email and domain:
                 guessed = infer_outreach_emails(domain, company.industry)

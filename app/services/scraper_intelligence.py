@@ -104,9 +104,36 @@ def enrich_new_company_website(company, *, sleep_s: float = 0.5) -> None:
         logger.debug("Website enrich failed for %r: %s", getattr(company, "name", ""), exc)
 
 
-def persist_dossier(company, dossier, db) -> None:
-    """Store lead inference dossier on company.crm_metadata."""
+def persist_dossier(company, dossier, db, *, context_text: str = "") -> None:
+    """Store lead inference dossier and optional semantic frame on company.crm_metadata."""
     from app.services.lead_inference_engine import persist_lead_inference
 
     if dossier and getattr(dossier, "is_lead", False):
         persist_lead_inference(company, dossier, db)
+        if context_text:
+            company.crm_metadata = attach_semantic_frame_to_metadata(
+                dict(company.crm_metadata or {}),
+                context_text,
+            )
+            db.add(company)
+
+
+def parse_semantic_frame(text: str):
+    """Verb-anchor semantic decomposition for scraper blobs (actor, action, topic, goals)."""
+    from app.services.semantic_frame import parse_news_semantic_frame
+
+    return parse_news_semantic_frame(text)
+
+
+def attach_semantic_frame_to_metadata(
+    metadata: dict[str, Any],
+    text: str,
+    *,
+    merge_key: str = "semantic_frame",
+) -> dict[str, Any]:
+    """Parse and attach semantic frame dict to a metadata blob."""
+    frame = parse_semantic_frame(text)
+    out = dict(metadata or {})
+    out[merge_key] = frame.to_dict()
+    out["semantic_summary"] = frame.summary_line()
+    return out

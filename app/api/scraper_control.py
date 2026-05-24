@@ -115,6 +115,33 @@ async def run_oem_discovery(
     }
 
 
+@router.post("/sync-stagegate-crm")
+async def sync_stagegate_crm_bridge(
+    background_tasks: BackgroundTasks,
+    refresh_draft: bool = False,
+    min_score: int = 45,
+) -> Dict[str, Any]:
+    """Backfill StageGate robot_companies into Cal Admin (companies + Score + CrmAccount)."""
+
+    def _task():
+        from app.database import SessionLocal
+        from app.services.stagegate_crm_bridge import sync_all_stagegate_prospects
+
+        db = SessionLocal()
+        try:
+            return sync_all_stagegate_prospects(db, refresh_draft=refresh_draft, min_score=min_score)
+        finally:
+            db.close()
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "stagegate_crm_sync_started",
+        "message": "Bridging StageGate prospects to Cal Admin CRM.",
+        "min_score": min_score,
+        "refresh_draft": refresh_draft,
+    }
+
+
 @router.post("/run-all")
 async def run_all_scrapers(
     background_tasks: BackgroundTasks,

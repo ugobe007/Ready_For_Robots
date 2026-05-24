@@ -209,7 +209,7 @@ class LogisticsDirectoryScraper:
         company = self._get_or_create_company(company_name, industry)
         if not company:
             return False
-        persist_dossier(company, dossier, self.db)
+        persist_dossier(company, dossier, self.db, context_text=context)
 
         signal_text = context[:600]
         dup = self.db.query(Signal).filter(
