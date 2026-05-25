@@ -137,7 +137,7 @@ export default function Newsletter() {
         if (cancelled) return;
         if (data?.latestEdition) {
           setEdition(data);
-          setLoadStatus("ready");
+          setLoadStatus(data?.summary?.fallback && !(data.topStories || []).length ? "error" : "ready");
         } else {
           setLoadStatus("error");
         }
@@ -268,8 +268,16 @@ export default function Newsletter() {
 
           {loadStatus === "error" && (
             <section className="mb-8 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.04)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: AMBER }}>Brief is regenerating</p>
-              <p className="text-sm text-white/40">The daily brief is rebuilding. Refresh in a moment to see the full edition.</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: AMBER }}>Brief is refreshing</p>
+              <p className="text-sm text-white/40">SCOUT is rebuilding today&apos;s edition. Subscribe above, or reload in a moment for the full brief.</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold"
+                style={{ color: TEAL, borderColor: "rgba(3,218,197,0.35)" }}
+              >
+                Reload page
+              </button>
             </section>
           )}
 

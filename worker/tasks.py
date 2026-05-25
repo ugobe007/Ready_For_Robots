@@ -469,7 +469,7 @@ def generate_newsletter_edition_task(self, limit=8):
     db = get_db()
     try:
         data = generate_edition(db, limit=limit)
-        write_cached_edition(data)
+        write_cached_edition(data, db)
         count = data.get("summary", {}).get("total_leads", 0)
         logger.info("Newsletter edition generated: %d stories cached", count)
         return {"stories": count, "edition": data.get("latestEdition", {}).get("edition")}

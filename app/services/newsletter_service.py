@@ -19,6 +19,8 @@ from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
+NEWSLETTER_PIPELINE_CACHE_KEY = "newsletter:edition:v1"
+
 # ── Fix 1: Robot vendor exclusion ─────────────────────────────────────────────
 # Delegates to the canonical vendor list maintained in robot_vendor_names.py.
 from app.services.robot_vendor_names import is_known_robotics_vendor_name as _is_robot_vendor
@@ -420,7 +422,61 @@ def _recency_sort_key(created_at) -> tuple:
     return (days_ago, 0)
 
 
-def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
+def _read_industry_brief_stale() -> Optional[Dict[str, Any]]:
+    """Load last industry brief JSON even if TTL expired — avoids blocking on OpenAI."""
+    from app.services.industry_brief_service import _cache_path
+
+    path = _cache_path()
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text())
+        return data if data.get("executive_take") or data.get("macro_trends") else None
+    except Exception:
+        return None
+
+
+def _heuristic_industry_brief(db: Session, days: int) -> Dict[str, Any]:
+    from app.services.daily_analytics_service import get_daily_analytics
+    from app.services.industry_brief_service import _gather_snippets, _heuristic_brief
+
+    analytics = get_daily_analytics(db, days=days)
+    snippets = _gather_snippets(db, days=days, limit=80)
+    brief = _heuristic_brief(analytics, snippets)
+    now = datetime.now(timezone.utc)
+    return {
+        **brief,
+        "period_days": days,
+        "generated_at": now.isoformat(),
+        "snippets_used": len(snippets),
+    }
+
+
+def read_cached_edition_stale() -> Optional[Dict[str, Any]]:
+    """Return the last cached edition even when TTL/date guards would reject it."""
+    path = get_cache_path()
+    if not path.exists():
+        return None
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        if data.get("latestEdition") and data.get("topStories"):
+            return data
+    except Exception:
+        return None
+    return None
+
+
+def read_edition_from_shared_cache(db: Session, *, stale_ok: bool = True) -> Optional[Dict[str, Any]]:
+    from app.services.pipeline_cache_store import cache_read
+
+    try:
+        return cache_read(db, NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=stale_ok)
+    except Exception:
+        return None
+
+
+def generate_edition(db: Session, limit: int = 8, *, skip_openai_brief: bool = False) -> Dict[str, Any]:
     """
     Generate newsletter edition from hot/warm leads.
     Prioritizes RECENT signals so each day shows fresh content.
@@ -569,13 +625,17 @@ def generate_edition(db: Session, limit: int = 8) -> Dict[str, Any]:
         main_headline = "Automation Sales Leads with Actionable Signals"
         subheadline = "Daily roundup of robot-ready companies and buying intent. Subscribe for fresh leads."
 
-    industry_brief = build_industry_brief_payload(
-        db,
-        days=_strategic_brief_days(),
-        analytics=None,
-        use_cache=True,
-        force_refresh=False,
-    )
+    brief_days = _strategic_brief_days()
+    if skip_openai_brief:
+        industry_brief = _read_industry_brief_stale() or _heuristic_industry_brief(db, brief_days)
+    else:
+        industry_brief = build_industry_brief_payload(
+            db,
+            days=brief_days,
+            analytics=None,
+            use_cache=True,
+            force_refresh=False,
+        )
     research_findings = _research_agent_findings(db, limit=5, days=1)
     return {
         "latestEdition": {
@@ -626,9 +686,46 @@ def read_cached_edition(max_age_hours: float = 1.5) -> Optional[Dict[str, Any]]:
         return None
 
 
-def write_cached_edition(data: Dict[str, Any]) -> None:
-    """Write edition to cache file."""
+def write_cached_edition(data: Dict[str, Any], db: Optional[Session] = None) -> None:
+    """Write edition to local file cache and optional shared pipeline cache."""
     path = get_cache_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
+    if db is not None:
+        try:
+            from app.services.pipeline_cache_store import cache_write
+
+            cache_write(db, NEWSLETTER_PIPELINE_CACHE_KEY, data, ttl_minutes=24 * 60)
+        except Exception:
+            pass
+
+
+def fallback_edition(limit: int = 8) -> Dict[str, Any]:
+    """Minimal edition when generation is unavailable — keeps the public page usable."""
+    now = datetime.now(timezone.utc)
+    return {
+        "latestEdition": {
+            "date": now.strftime("%B %d, %Y"),
+            "edition": f"#{now.strftime('%j')}",
+            "headline": "Daily robot demand intelligence.",
+            "subheadline": "Buying signals and deployment moves curated for robotics sales teams.",
+        },
+        "industryBrief": {
+            "executive_take": "SCOUT is refreshing today's brief. Check back shortly for the full edition.",
+            "macro_trends": [],
+            "strategic_implications": [],
+            "risks_and_unknowns": [],
+            "watch_next": [],
+            "period_days": _strategic_brief_days(),
+            "generated_at": now.isoformat(),
+        },
+        "researchFindings": [],
+        "topStories": [],
+        "summary": {
+            "total_leads": 0,
+            "research_findings": 0,
+            "generated_at": now.isoformat(),
+            "fallback": True,
+        },
+    }

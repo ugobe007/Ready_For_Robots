@@ -333,7 +333,7 @@ def _scheduled_scraper_loop():
                         ndb, days=strategic_days, analytics=None, use_cache=True, force_refresh=True
                     )
                     edition = generate_edition(ndb, limit=8)
-                    write_cached_edition(edition)
+                    write_cached_edition(edition, ndb)
                     logger.info("Newsletter edition refreshed after scraper run")
                 finally:
                     ndb.close()
