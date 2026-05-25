@@ -1156,6 +1156,7 @@ def get_robot_companies(
     priority_tier: Optional[str] = None,
     market_entry_wave: Optional[str] = None,
     distributor_needed: Optional[str] = None,
+    outreach_status: Optional[str] = None,
     min_score: int = 0,
     search: Optional[str] = None,
     db: Session = Depends(get_db)
@@ -1171,6 +1172,7 @@ def get_robot_companies(
     - market_entry_wave: wave_1, wave_2, wave_3
     - distributor_needed: yes, maybe, no
     - min_score: minimum lead score (0-100)
+    - outreach_status: not_contacted, contacted, responded, meeting_scheduled, partnership
     - search: company name search
     """
     query = db.query(RobotCompany)
@@ -1195,6 +1197,9 @@ def get_robot_companies(
     
     if min_score > 0:
         query = query.filter(RobotCompany.lead_score >= min_score)
+
+    if outreach_status:
+        query = query.filter(RobotCompany.outreach_status == outreach_status)
     
     if search:
         query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
