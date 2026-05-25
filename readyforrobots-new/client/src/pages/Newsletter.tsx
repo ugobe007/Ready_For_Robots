@@ -126,30 +126,49 @@ export default function Newsletter() {
 
   useEffect(() => {
     let cancelled = false;
-    // Allow up to 90s — the AI brief generation can take ~60-90s on cold cache
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 90_000);
-    fetch(`${getApiBase()}/api/newsletter/edition?limit=15&cb=${Date.now()}`, liveFetchInit({
-      signal: controller.signal,
-    }))
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        if (data?.latestEdition) {
-          setEdition(data);
-          setLoadStatus(data?.summary?.fallback && !(data.topStories || []).length ? "error" : "ready");
-        } else {
+    let retryTimer: number | undefined;
+
+    const load = (attempt: number) => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 25_000);
+      fetch(`${getApiBase()}/api/newsletter/edition?limit=15&cb=${Date.now()}`, liveFetchInit({
+        signal: controller.signal,
+      }))
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled) return;
+          if (data?.latestEdition) {
+            setEdition(data);
+            const storyCount = Array.isArray(data.topStories) ? data.topStories.length : 0;
+            if (storyCount > 0) {
+              setLoadStatus("ready");
+              return;
+            }
+          }
+          if (attempt < 4) {
+            setLoadStatus("loading");
+            retryTimer = window.setTimeout(() => load(attempt + 1), 4000);
+            return;
+          }
           setLoadStatus("error");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLoadStatus("error");
-      })
-      .finally(() => window.clearTimeout(timeout));
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (attempt < 4) {
+            retryTimer = window.setTimeout(() => load(attempt + 1), 4000);
+            return;
+          }
+          setLoadStatus("error");
+        })
+        .finally(() => window.clearTimeout(timeout));
+    };
+
+    setLoadStatus("loading");
+    load(0);
+
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeout);
+      if (retryTimer) window.clearTimeout(retryTimer);
     };
   }, []);
 

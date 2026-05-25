@@ -148,16 +148,20 @@ def _get_mem_cache() -> Optional[dict]:
 
 
 def _load_any_cached_edition(db: Session, max_age_hours: float) -> Optional[dict]:
+    # File cache first — no DB round trip.
+    stale_file = read_cached_edition_stale()
+    if stale_file:
+        return stale_file
     fresh = read_cached_edition(max_age_hours=max_age_hours)
     if fresh:
         return fresh
-    shared = read_edition_from_shared_cache(db, stale_ok=True)
-    if shared:
-        return shared
-    shared_safe = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=5.0)
+    shared_safe = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=3.0)
     if shared_safe:
         return shared_safe
-    return read_cached_edition_stale()
+    try:
+        return read_edition_from_shared_cache(db, stale_ok=True)
+    except Exception:
+        return None
 
 
 def _schedule_edition_refresh(limit: int, *, full: bool) -> None:
@@ -272,9 +276,10 @@ def get_newsletter_edition(
         _schedule_edition_refresh(limit, full=True)
         return _trim_edition(stale, limit)
 
-    data = _build_edition_sync(limit)
+    # Cold miss: never block HTTP on generation (Fly/Vercel proxies timeout ~25–120s).
+    _schedule_edition_refresh(limit, full=False)
     _schedule_edition_refresh(limit, full=True)
-    return _trim_edition(data, limit)
+    return _trim_edition(fallback_edition(limit=limit), limit)
 
 
 def _warm_newsletter_cache_at_startup() -> None:
