@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "wouter";
+import { ArrowRight, BriefcaseBusiness, FileText, Link2, Upload, Users } from "lucide-react";
 import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +57,54 @@ type IntegrationConnection = {
 };
 
 const cardClass = "rounded-2xl border border-white/10 bg-white/[0.025] p-5";
+
+const marketplaceTeaserFeatures = [
+  {
+    icon: Users,
+    title: "Buyer & vendor profiles",
+    desc: "Publish your organization, decision makers, and procurement workflow so SCOUT can route the right documents to the right team.",
+    preview: [
+      { label: "Buy-side", value: "Regional hospital system · warehouse AMR rollout" },
+      { label: "Vendor", value: "Mobile robot OEM · logistics deployments" },
+    ],
+  },
+  {
+    icon: FileText,
+    title: "RFP builder",
+    desc: "Draft structured RFPs with technical requirements, evaluation criteria, and proposal deadlines — not just a PDF in email.",
+    preview: [
+      { label: "Open RFP", value: "Autonomous pallet transport · due Apr 18" },
+      { label: "Requirements", value: "12 technical · 4 compliance · ROI model" },
+    ],
+  },
+  {
+    icon: Upload,
+    title: "Vendor materials",
+    desc: "Upload decks, product specs, case studies, pricing sheets, and compliance docs in one shared workspace.",
+    preview: [
+      { label: "Assets", value: "product_spec · case_study · pricing · compliance" },
+      { label: "Visibility", value: "Private to buyer team until proposal stage" },
+    ],
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: "Quotes, invoices & POs",
+    desc: "Track official commercial documents from draft quote through signed PO — linked to the RFP and supporting assets.",
+    preview: [
+      { label: "Quote", value: "Q-2026-0412 · $284,000 · pending review" },
+      { label: "PO", value: "PO milestone scheduled after technical sign-off" },
+    ],
+  },
+  {
+    icon: Link2,
+    title: "MCP & API connections",
+    desc: "Connect ERP, quoting, and procurement systems via scoped MCP servers — credentials stay in your secret manager.",
+    preview: [
+      { label: "Scopes", value: "rfqs:read · quotes:create · invoices:read" },
+      { label: "Guardrail", value: "Secret references only — no raw API keys stored" },
+    ],
+  },
+];
 const inputClass = "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25";
 const labelClass = "mb-1 block text-[10px] uppercase tracking-widest text-white/30";
 
@@ -344,13 +393,7 @@ export default function Marketplace() {
     return <ShellMessage message="Loading marketplace workspace..." />;
   }
   if (!session) {
-    return (
-      <div className="min-h-screen px-4 pt-24 text-center" style={{ background: "#0d0520" }}>
-        <Header />
-        <p className="mb-4 text-white/60">Sign in to build marketplace profiles, RFPs, and official documents.</p>
-        <Link href="/login?next=/marketplace" className="text-sm text-amber-300 underline">Go to login</Link>
-      </div>
-    );
+    return <MarketplaceTeaser />;
   }
 
   return (
@@ -448,6 +491,82 @@ export default function Marketplace() {
             </div>
           </section>
         </div>
+      </main>
+    </div>
+  );
+}
+
+function MarketplaceTeaser() {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+      <Header />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-24">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
+          Robot automation marketplace
+        </p>
+        <h1 className="max-w-3xl text-3xl font-black text-white sm:text-4xl" style={{ fontFamily: "'Sora', system-ui" }}>
+          RFPs, proposals, quotes, and procurement — in one workspace
+        </h1>
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/45">
+          Ready For Robots connects buy-side automation teams with robot vendors through structured RFPs, shared materials,
+          and official commercial documents. SCOUT uses this context to route proposals, specs, and PO milestones between both sides.
+        </p>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {marketplaceTeaserFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <section key={feature.title} className={cardClass}>
+                <div className="mb-4 flex items-start gap-3">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{ color: "#03DAC5", background: "rgba(3,218,197,0.08)", border: "1px solid rgba(3,218,197,0.2)" }}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-white">{feature.title}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-white/42">{feature.desc}</p>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  {feature.preview.map((row) => (
+                    <div key={row.label} className="rounded-xl border border-white/8 bg-black/10 px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/28">{row.label}</p>
+                      <p className="mt-1 text-xs text-white/55">{row.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <section className={`${cardClass} mt-4 border-amber-400/25 bg-amber-400/[0.04]`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-white">Ready to publish an RFP or respond as a vendor?</p>
+              <p className="mt-1 text-xs text-white/40">
+                Create a free account to save profiles, upload materials, and manage official documents.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/signup?next=/marketplace"
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold"
+                style={{ color: "#160b2c", background: "#FFB000" }}
+              >
+                Create account <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/login?next=/marketplace"
+                className="inline-flex items-center rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold text-white/70"
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );

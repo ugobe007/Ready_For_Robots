@@ -237,6 +237,7 @@ function PipelineMetric({
 
 export default function Pipeline() {
   const { session } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [marketSnippet, setMarketSnippet] = useState<MarketSnippet>(DEFAULT_MARKET_SNIPPET);
@@ -268,8 +269,7 @@ export default function Pipeline() {
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Single parallel mount fetch: leads + summary + activations + settings all fire simultaneously.
-  // This eliminates the previous 4-useEffect waterfall that added 2-4s of sequential latency.
+  // Single parallel mount fetch: leads + summary + admin gate + settings.
   useEffect(() => {
     const base = getApiBase();
     let cancelled = false;
@@ -279,20 +279,33 @@ export default function Pipeline() {
     setLoadingActivations(true);
     setLoadErr("");
     setActivationErr("");
+    setIsAdmin(false);
 
     const token = session?.access_token;
     const authHdr = authHeader(token);
-    const fingerprint = encodeURIComponent(scoutFingerprint());
 
     Promise.allSettled([
       fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit()),
       fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
-      fetch(`${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`, liveFetchInit({ headers: authHdr })),
+      token
+        ? fetch(`${base}/api/user/me`, liveFetchInit({ headers: authHdr }))
+        : Promise.resolve(null),
       token
         ? fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHdr }))
         : Promise.resolve(null),
-    ]).then(async ([leadsResult, summaryResult, activationsResult, settingsResult]) => {
+    ]).then(async ([leadsResult, summaryResult, meResult, settingsResult]) => {
       if (cancelled) return;
+
+      let admin = false;
+      try {
+        if (meResult.status === "fulfilled" && meResult.value?.ok) {
+          const me = (await meResult.value.json()) as { is_admin?: boolean };
+          admin = Boolean(me.is_admin);
+          setIsAdmin(admin);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
 
       // Leads
       try {
@@ -328,18 +341,30 @@ export default function Pipeline() {
         setLoadingSummary(false);
       }
 
-      // Activations
+      // SCOUT activations — admin-only internal console
       try {
-        if (activationsResult.status === "fulfilled" && activationsResult.value?.ok) {
-          const payload = (await activationsResult.value.json()) as { activations?: ScoutActivation[] };
-          const rows = Array.isArray(payload.activations) ? payload.activations : [];
-          setActivations(rows);
-          setSelectedActivationId(rows[0]?.id ?? null);
+        if (admin && token) {
+          const fingerprint = encodeURIComponent(scoutFingerprint());
+          const activationsRes = await fetch(
+            `${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`,
+            liveFetchInit({ headers: authHdr }),
+          );
+          if (activationsRes.ok) {
+            const payload = (await activationsRes.json()) as { activations?: ScoutActivation[] };
+            const rows = Array.isArray(payload.activations) ? payload.activations : [];
+            setActivations(rows);
+            setSelectedActivationId(rows[0]?.id ?? null);
+          } else {
+            setActivations([]);
+          }
         } else {
           setActivations([]);
+          setSelectedActivationId(null);
         }
       } catch (e) {
-        setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
+        if (admin) {
+          setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
+        }
         setActivations([]);
       } finally {
         setLoadingActivations(false);
@@ -384,11 +409,11 @@ export default function Pipeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
-  // Load SCOUT stats once when authenticated
+  // Load SCOUT stats once when authenticated admin
   useEffect(() => {
-    if (session?.access_token) void loadScoutStats();
+    if (session?.access_token && isAdmin) void loadScoutStats();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.access_token]);
+  }, [session?.access_token, isAdmin]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const resolvedIndustryFilter = industryQuery.trim() || filter;
@@ -641,7 +666,7 @@ export default function Pipeline() {
 
       <main className="flex-1 pt-20 pb-6 px-4 lg:px-6">
         <div className="max-w-[1500px] mx-auto flex flex-col gap-4">
-          <AdminNav />
+          {isAdmin && <AdminNav />}
 
           {/* ── Top bar ── */}
           {loadErr && (
@@ -714,7 +739,9 @@ export default function Pipeline() {
             <PipelineMetric
               label="Working slice"
               value={formatMetric(visibleDeals)}
-              sub={`${formatMetric(queuedActivations)} SCOUT activations queued`}
+              sub={isAdmin
+                ? `${formatMetric(queuedActivations)} SCOUT activations queued`
+                : "Leads in your filtered view"}
               color="#a78bfa"
             />
           </section>
@@ -753,7 +780,8 @@ export default function Pipeline() {
             </div>
           </section>
 
-          {/* ── SCOUT activation queue ── */}
+          {/* ── SCOUT activation queue (admin only) ── */}
+          {isAdmin && (
           <div className="rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
             <div className="flex flex-col xl:flex-row">
               <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-white/8">
@@ -1021,9 +1049,10 @@ export default function Pipeline() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* ── SCOUT stats strip (above two-panel layout) ── */}
-          {session?.access_token && scoutStats && (
+          {/* ── SCOUT stats strip (admin only) ── */}
+          {isAdmin && session?.access_token && scoutStats && (
             <div className="flex items-center gap-3 flex-wrap text-[11px] text-white/40 px-1">
               <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#a78bfa" }}>Cal</span>
               <span>{scoutStats.drafted} drafted</span>
@@ -1044,15 +1073,15 @@ export default function Pipeline() {
             </div>
           )}
 
-          {/* Confirm modals for bulk actions */}
-          {scoutConfirm === "draft" && (
+          {/* Confirm modals for bulk actions (admin only) */}
+          {isAdmin && scoutConfirm === "draft" && (
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
               <p className="text-[11px] text-blue-100/80 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
               <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-500/20 border border-blue-400/40 text-blue-100">Run</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white/40">Cancel</button>
             </div>
           )}
-          {scoutConfirm === "send" && (
+          {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
               <p className="text-[11px] text-emerald-100/80 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
               <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/40 text-emerald-100">Send</button>
@@ -1159,7 +1188,8 @@ export default function Pipeline() {
               className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col"
               style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px", maxHeight: "calc(100vh - 100px)" }}
             >
-              {/* SCOUT action bar — always visible at top of panel */}
+              {/* SCOUT action bar — admin only */}
+              {isAdmin && (
               <ScoutActionBar
                 accessToken={session?.access_token}
                 stats={scoutStats}
@@ -1168,6 +1198,7 @@ export default function Pipeline() {
                 onActivateScout={() => setScoutConfirm("send")}
                 onTrackScout={() => void loadScoutStats()}
               />
+              )}
 
               {selected ? (
                 <>

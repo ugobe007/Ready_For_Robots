@@ -5,10 +5,11 @@
  * Mobile drawer: full-height slide-in from right, includes SCOUT chat entry
  */
 import { useState, useEffect } from "react";
-import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, UserRound, BriefcaseBusiness, ChevronRight, ChevronDown, Newspaper, ClipboardList } from "lucide-react"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, UserRound, BriefcaseBusiness, ChevronRight, ChevronDown, Newspaper, ClipboardList, LogOut } from "lucide-react"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useScoutChat } from "@/components/ScoutChat";
+import { supabase } from "@/lib/supabase";
 
 function smoothScroll(href: string) {
   if (href.startsWith("#")) {
@@ -58,13 +59,20 @@ export default function Header() {
 
   const closeDrawer = () => setOpen(false);
 
+  const handleSignOut = async () => {
+    closeDrawer();
+    await supabase?.auth.signOut();
+    window.location.href = "/";
+  };
+
+  const signedInEmail = session?.user?.email;
+
   const primaryNavLinks = [
     { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
     { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
     { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
     { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
-    { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid robot benchmark index" },
-    { label: "Benchmark", href: "/benchmark", icon: ClipboardList, desc: "6-criteria evaluation framework" },
+    { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & evaluation framework" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
   ];
@@ -123,7 +131,7 @@ export default function Header() {
               Live
             </span>
 
-            {!session && (
+            {!session ? (
               <Link
                 href="/signup"
                 className="hidden sm:inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
@@ -131,6 +139,24 @@ export default function Header() {
               >
                 Sign up
               </Link>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href="/profile"
+                  className="max-w-[140px] truncate rounded-lg px-3 py-2 text-xs font-semibold text-white/55 hover:text-white hover:bg-white/8 transition-colors"
+                  title={signedInEmail}
+                >
+                  {signedInEmail ?? "Account"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/12 px-3 py-2 text-xs font-semibold text-white/55 hover:text-white hover:bg-white/8 transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Sign out
+                </button>
+              </div>
             )}
 
             {/* Hamburger */}
@@ -215,7 +241,15 @@ export default function Header() {
         {/* Account links */}
         <div className="px-4 pb-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">Account</p>
-          {accountLinks.map((item) => {
+          {session && signedInEmail && (
+            <p className="px-3 mb-2 text-[11px] text-white/35 truncate" title={signedInEmail}>
+              Signed in as <span className="text-white/60">{signedInEmail}</span>
+            </p>
+          )}
+          {(session
+            ? accountLinks.filter((item) => item.href !== "/signup" && item.href !== "/login")
+            : accountLinks
+          ).map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
             return (
@@ -237,6 +271,19 @@ export default function Header() {
               </Link>
             );
           })}
+          {session && (
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              className="mt-2 flex w-full items-center gap-3 px-3 py-3 rounded-xl border border-red-500/25 text-red-300/90 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold leading-none">Sign out</p>
+                <p className="text-[11px] text-white/30 mt-0.5">End your session on this device</p>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Secondary links */}
