@@ -83,7 +83,7 @@ export default function Signup() {
             Turn robot demand signals into a working pipeline.
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/48">
-            Save matched leads, review signal context, and let SCOUT prioritize the workflow while Cal handles outreach.
+            Save matched leads, review signal context, and let SCOUT prioritize the workflow from signal to outreach.
           </p>
           <div className="mt-7 grid max-w-lg grid-cols-3 gap-2">
             {[

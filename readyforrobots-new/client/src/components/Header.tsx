@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "How is this different from a lead list?",
-    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a Cal outreach draft — so you reach the right buyer at the right moment.",
+    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a SCOUT-prepared outreach draft — so you reach the right buyer at the right moment.",
   },
   {
     q: "Do I need to sign up to see results?",
@@ -37,7 +37,7 @@ const faqs = [
   },
   {
     q: "How quickly does SCOUT act on new signals?",
-    a: "Signals are detected and scored within minutes. Cal outreach drafts are ready within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
+    a: "Signals are detected and scored within minutes. SCOUT prepares outreach drafts within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
   },
 ];
 

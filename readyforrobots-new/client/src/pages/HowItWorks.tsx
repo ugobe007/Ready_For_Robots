@@ -21,9 +21,9 @@ const ROBOT_IMAGE =
 const steps = [
   { num: "01", icon: Search,       title: "Signal Detection",  text: "150+ data sources — OSHA filings, job postings, SEC disclosures, LinkedIn, news — monitored 24/7 for buying signals." },
   { num: "02", icon: Cpu,          title: "AI Scoring",        text: "Each signal scored across Confidence, Urgency, and Fit. Only signals above 70 enter your pipeline." },
-  { num: "03", icon: FileText,     title: "Cal Drafts Outreach", text: "Cal prepares the subject line, opening hook, and call to action for every qualified signal, referencing the exact trigger event." },
-  { num: "04", icon: CheckCircle,  title: "You Review",        text: "Assisted: you approve before Cal sends. Auto: approved templates send automatically. Manual: you control every step." },
-  { num: "05", icon: TrendingUp,   title: "Pipeline Advances", text: "Responses and engagement are tracked. Cal follows up, and Max handles technical questions when needed." },
+  { num: "03", icon: FileText,     title: "SCOUT Drafts Outreach", text: "SCOUT prepares the subject line, opening hook, and call to action for every qualified signal, referencing the exact trigger event." },
+  { num: "04", icon: CheckCircle,  title: "You Review",        text: "Assisted: you approve before anything sends. Auto: approved templates send automatically. Manual: you control every step." },
+  { num: "05", icon: TrendingUp,   title: "Pipeline Advances", text: "Responses and engagement are tracked. SCOUT follows up and escalates technical questions when needed." },
 ];
 
 const sources = [
@@ -59,15 +59,15 @@ const autonomyModes = [
     mode: "Assisted",
     icon: Zap,
     color: "#a78bfa",
-    tagline: "Cal drafts, you approve",
-    steps: ["Signal detected and scored", "Cal drafts personalized email", "You review the draft in your queue", "You approve with one click", "Cal sends and tracks response"],
+    tagline: "SCOUT drafts, you approve",
+    steps: ["Signal detected and scored", "SCOUT drafts personalized email", "You review the draft in your queue", "You approve with one click", "SCOUT sends and tracks response"],
   },
   {
     mode: "Auto",
     icon: Clock,
     color: "#7c3aed",
     tagline: "Score 85+ triggers automatically",
-    steps: ["Signal detected and scored", "Cal drafts personalized email", "Auto-sends after 30-min review window", "Cal tracks replies", "Follow-up scheduled automatically"],
+    steps: ["Signal detected and scored", "SCOUT drafts personalized email", "Auto-sends after 30-min review window", "SCOUT tracks replies", "Follow-up scheduled automatically"],
   },
 ];
 
@@ -108,8 +108,7 @@ export default function HowItWorks() {
               </h1>
               <p className="text-base leading-relaxed mb-10 max-w-lg" style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}>
                 SCOUT is the web agent for robotics sales teams. It scans the market,
-                scores buyer intent, and matches each lead to your robot category. Cal handles outreach and
-                communication, with as much human oversight as you want.
+                scores buyer intent, matches each lead to your robot category, and prepares outreach with as much human oversight as you want.
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-4">
@@ -204,8 +203,7 @@ export default function HowItWorks() {
             Identify → Develop → Connect
           </h2>
           <p className="text-sm max-w-xl mb-10" style={{ color: "#9ca3af", fontFamily: "Inter, sans-serif" }}>
-            A live visualization of how SCOUT finds and scores an opportunity, then hands the communication work
-            to Cal for personalized outreach.
+            A live visualization of how SCOUT finds and scores an opportunity, then prepares personalized outreach for your review.
           </p>
           <ScoutWorkflowAnimation />
         </div>

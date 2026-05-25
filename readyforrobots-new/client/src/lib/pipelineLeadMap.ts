@@ -2,7 +2,7 @@
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { outreachInsightForIndustry } from "@/lib/industryContext";
-import { BUYER_SIGNAL_EXPLANATION, CAL_INTRO, CAL_SIGNATURE } from "@/lib/agentMessaging";
+import { OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 
 export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -131,13 +131,13 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
   return [
     "Hey,",
     "",
-    CAL_INTRO,
+    OUTREACH_INTRO,
     "",
     hook,
     "",
     "Worth a quick reply if there's any interest?",
     "",
-    CAL_SIGNATURE,
+    OUTREACH_SIGNATURE,
   ].join("\n");
 }
 

@@ -210,7 +210,7 @@ export default function Crm() {
       return [...lines, instruction].join("\n");
     });
     setStyleApproved(false);
-    setMsg("Cal voice feedback saved locally. Click Draft with Cal to apply it to the next draft.");
+    setMsg("Style feedback saved locally. Click Draft outreach to apply it to the next draft.");
   };
 
   const draftWithScout = async () => {
@@ -234,9 +234,9 @@ export default function Crm() {
       setSuggestions(Array.isArray(result.suggestions) ? result.suggestions : []);
       setAccounts((prev) => prev.map((a) => (a.id === selectedAccount.id ? { ...a, outreach_stage: "draft_ready", outreach_draft: result.outreach_draft } : a)));
       setStyleApproved(false);
-      setMsg(result.checkpoint || "Cal drafted this for review.");
+      setMsg(result.checkpoint || "SCOUT drafted this for review.");
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Could not draft with Cal");
+      setMsg(e instanceof Error ? e.message : "Could not draft outreach");
     } finally {
       setBusy(false);
     }
@@ -292,8 +292,8 @@ export default function Crm() {
         ),
       );
       const sentMsg = result?.warning
-        ? `Sent by Cal. ${result.warning}`
-        : `Sent by Cal. Replies route to ${result?.reply_to || "the Cal reply address"} and will notify you.`;
+        ? `Outreach sent. ${result.warning}`
+        : `Outreach sent. Replies route to ${result?.reply_to || "your Ready For Robots inbox"} and will notify you.`;
       setMsg(sentMsg);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Could not send outreach");
@@ -340,10 +340,10 @@ export default function Crm() {
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
-              CRM · Buyer email draft tools
+              CRM · Buyer outreach workspace
             </h1>
             <p className="text-xs text-white/40">
-              Review, edit, approve, and send buyer outreach from Cal. Replies come back to CRM and Sales Console.
+              Review, edit, approve, and send buyer outreach through SCOUT. Replies come back to CRM and your inbox.
             </p>
           </div>
           <Link href="/sales-console" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-white/65">
@@ -513,12 +513,12 @@ export default function Crm() {
                     setStyleApproved(false);
                   }}
                   rows={4}
-                  placeholder="Tell Cal how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
+                  placeholder="Tell SCOUT how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
                   className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-white/25"
                 />
               </label>
               <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.025] p-3">
-                <p className="mb-2 text-[10px] uppercase tracking-widest text-white/30">Teach Cal from this draft</p>
+                <p className="mb-2 text-[10px] uppercase tracking-widest text-white/30">Refine from this draft</p>
                 <div className="flex flex-wrap gap-1.5">
                   {VOICE_FEEDBACK.map((item) => (
                     <button
@@ -544,7 +544,7 @@ export default function Crm() {
                   disabled={busy || sending}
                   className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/80 disabled:opacity-50"
                 >
-                  Draft with Cal
+                  Draft outreach
                 </button>
                 <button
                   type="button"
@@ -560,12 +560,12 @@ export default function Crm() {
                   disabled={sending || !contactEmail || !draft || !styleApproved}
                   className="rounded-lg border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
                 >
-                  {sending ? "Sending..." : "Send with Cal"}
+                  {sending ? "Sending..." : "Send outreach"}
                 </button>
               </div>
               {!styleApproved && (
                 <p className="mt-2 text-[11px] text-white/35">
-                  Approve the draft first. This confirms the message and teaches Cal the format/style to reuse.
+                  Approve the draft first. This confirms the message and teaches SCOUT the format and style to reuse.
                 </p>
               )}
             </div>
@@ -602,8 +602,8 @@ export default function Crm() {
               <ol className="mt-3 space-y-3 text-xs text-white/55">
                 <li><span className="font-bold text-white/80">1. Lead captured:</span> user signs in and the account is saved to CRM.</li>
                 <li><span className="font-bold text-white/80">2. Draft review:</span> user checks recipient, subject, and body before approval.</li>
-                <li><span className="font-bold text-white/80">3. Send approval:</span> Cal sends via Resend only after this action unless Auto is enabled.</li>
-                <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies to a Cal token address, then CRM moves to replied.</li>
+                <li><span className="font-bold text-white/80">3. Send approval:</span> outreach sends via Ready For Robots only after this action unless Auto is enabled.</li>
+                <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies route back into CRM and move the account to replied.</li>
                 <li><span className="font-bold text-white/80">5. User follow-up:</span> SCOUT tracks the workflow and notifies you based on Profile settings.</li>
               </ol>
               {suggestions.length > 0 && (

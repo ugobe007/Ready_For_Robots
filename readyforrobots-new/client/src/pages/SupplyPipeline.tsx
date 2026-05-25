@@ -301,7 +301,7 @@ export default function SupplyPipeline() {
       return;
     }
     if (!test && !session?.access_token) {
-      toast.error("Sign in before sending live outreach so Cal can copy the message to your CRM.");
+      toast.error("Sign in before sending live outreach so SCOUT can copy the message to your CRM.");
       return;
     }
     patchDraft(id, { sending: true });
@@ -378,7 +378,7 @@ export default function SupplyPipeline() {
             Robot company outreach agent
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
-            Cal researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
+            SCOUT researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
             <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{approvedCount} approved</span>
@@ -414,7 +414,7 @@ export default function SupplyPipeline() {
             <aside className="rounded-2xl border border-white/10 bg-white/[0.025]">
               <div className="border-b border-white/8 px-4 py-3">
                 <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${visibleRows.length} shown · ${rows.length} total`}</p>
-                <p className="mt-1 text-[11px] text-white/35">Unsent prospects are separated from companies Cal already contacted.</p>
+                <p className="mt-1 text-[11px] text-white/35">Unsent prospects are separated from companies SCOUT already contacted.</p>
                 <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-white/8 bg-black/10 p-1">
                   {[
                     { key: "needs_action", label: "Unsent", count: needsActionCount },

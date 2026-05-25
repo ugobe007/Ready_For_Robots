@@ -89,7 +89,7 @@ function statusColor(status: string) {
 }
 
 function actionLabel(action: SalesAction) {
-  const persona = action.payload?.responder_persona === "max" ? "Max" : "Cal";
+  const persona = action.payload?.responder_persona === "max" ? "Technical" : "Outreach";
   return `${persona}: ${action.action_type.replace(/_/g, " ")}`;
 }
 
@@ -262,7 +262,7 @@ export default function SalesConsole() {
         <Header />
         <main className="max-w-3xl mx-auto px-6 pt-32">
           <h1 className="text-3xl font-bold">Sales Console</h1>
-          <p className="mt-4 text-white/60">Sign in to see Cal and Max replies, opportunity stage movement, and next-best actions.</p>
+          <p className="mt-4 text-white/60">Sign in to see buyer replies, opportunity stage movement, and next-best actions.</p>
           <Link href="/login?next=/sales-console" className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold" style={{ background: "#03DAC5", color: "#0d0520" }}>
             Sign in
           </Link>
@@ -278,10 +278,10 @@ export default function SalesConsole() {
         <AdminNav />
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>Cal and Max operator layer</p>
+            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>SCOUT sales console</p>
             <h1 className="mt-3 text-4xl md:text-5xl font-black tracking-tight">Sales Console</h1>
             <p className="mt-3 max-w-2xl text-white/60">
-              Review inbound replies, see what Cal or Max already sent, and decide the next action to advance each opportunity.
+              Review inbound replies, see what SCOUT already sent, and decide the next action to advance each opportunity.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -317,13 +317,13 @@ export default function SalesConsole() {
               {learningReport?.source_domain_priorities?.[0]?.key || "Waiting for replies"}
             </p>
             <p className="mt-1 text-sm text-white/45">
-              Cal uses positive reply history to guide scraper priorities.
+              SCOUT uses positive reply history to guide scraper priorities.
             </p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-white/35">Scraper guidance</p>
             <p className="mt-3 text-sm leading-relaxed text-white/60">
-              {learningReport?.scraper_guidance?.[0] || "Guidance appears after Cal observes enough outreach outcomes."}
+              {learningReport?.scraper_guidance?.[0] || "Guidance appears after SCOUT observes enough outreach outcomes."}
             </p>
           </div>
         </section>
@@ -374,7 +374,7 @@ export default function SalesConsole() {
               ))}
               {!rows.length && !busy && (
                 <div className="rounded-2xl border border-white/10 p-5 text-sm text-white/45">
-                  No sales opportunities yet. They appear here when Cal captures inbound replies.
+                  No sales opportunities yet. They appear here when SCOUT captures inbound replies.
                 </div>
               )}
             </div>
@@ -426,7 +426,7 @@ export default function SalesConsole() {
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
                   <p className="text-xs font-bold uppercase tracking-widest text-white/35">Next best action</p>
-                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "Cal will generate the next action from the latest conversation context."}</p>
+                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "SCOUT will generate the next action from the latest conversation context."}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {selected.crm_account_id && (
                       <Link href="/crm" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
@@ -446,7 +446,7 @@ export default function SalesConsole() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-white/35">Apollo prospect search</p>
                       <p className="mt-2 text-sm text-white/60">
-                        Find likely decision-makers for this opportunity and use them to route the next Cal outreach.
+                        Find likely decision-makers for this opportunity and use them to route the next outreach step.
                       </p>
                     </div>
                     <button

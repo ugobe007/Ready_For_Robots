@@ -23,6 +23,7 @@ import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
+import { BUYER_SIGNAL_EXPLANATION } from "@/lib/agentMessaging";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -151,17 +152,31 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
   "Meeting Set":   { color: "#FFB000", dot: "#FFB000", label: "Meeting Set",   desc: "On the calendar" },
 };
 
+const USER_STAGE_META: Record<Stage, { label: string; desc: string }> = {
+  "New Signal":    { label: "New Signal",    desc: "SCOUT just flagged this" },
+  "Draft Ready":   { label: "High Priority", desc: "Strong fit — worth pursuing" },
+  "Outreach Sent": { label: "In Progress",   desc: "Saved to your workspace" },
+  "Qualified":     { label: "Qualified",     desc: "Engaged opportunity" },
+  "Meeting Set":   { label: "Meeting Set",   desc: "Conversation scheduled" },
+};
+
 const scoreColor = (s: number) =>
   s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#FFB000";
 
 const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
-const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">) =>
-  deal.stage === "New Signal" ? deal.signalType : deal.stage;
+const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">, adminView: boolean) =>
+  deal.stage === "New Signal" ? deal.signalType : stageLabel(deal.stage, adminView);
 
 const displayStageColor = (deal: Pick<Deal, "stage" | "signalColor">) =>
   deal.stage === "New Signal" ? deal.signalColor : STAGE_META[deal.stage].color;
+
+const stageLabel = (stage: Stage, isAdmin: boolean) =>
+  isAdmin ? STAGE_META[stage].label : USER_STAGE_META[stage].label;
+
+const stageDesc = (stage: Stage, isAdmin: boolean) =>
+  isAdmin ? STAGE_META[stage].desc : USER_STAGE_META[stage].desc;
 
 const formatActivationTime = (value?: string | null) => {
   if (!value) return "just now";
@@ -370,9 +385,9 @@ export default function Pipeline() {
         setLoadingActivations(false);
       }
 
-      // Settings (advisory — never blocks UI)
+      // Settings (admin Cal automation only)
       try {
-        if (settingsResult.status === "fulfilled" && settingsResult.value?.ok) {
+        if (admin && settingsResult.status === "fulfilled" && settingsResult.value?.ok) {
           const settings = (await settingsResult.value.json()) as UserSettings;
           if (settings.scout_automation_level) setAutomationLevel(settings.scout_automation_level);
         }
@@ -430,7 +445,7 @@ export default function Pipeline() {
         const idx = STAGES.indexOf(d.stage);
         const next = STAGES[idx + direction];
         if (!next) return d;
-        toast.success(`Moved "${d.company}" to ${next}`);
+        toast.success(`Moved "${d.company}" to ${stageLabel(next, isAdmin)}`);
         return { ...d, stage: next, updatedAt: "just now" };
       })
     );
@@ -444,7 +459,43 @@ export default function Pipeline() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSaveLead = async (deal: Deal) => {
+    if (!session?.access_token) {
+      const next = `/pipeline?lead=${deal.id}`;
+      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
+      return;
+    }
+    setAdvancingLeadId(deal.id);
+    const base = getApiBase();
+    const headers = { ...authHeader(session.access_token), "Content-Type": "application/json" };
+    try {
+      const createResponse = await fetch(
+        `${base}/api/crm/accounts`,
+        liveFetchInit({
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            company_id: deal.id,
+            name: deal.company,
+            industry: deal.industry,
+          }),
+        }),
+      );
+      if (!createResponse.ok) throw new Error(await createResponse.text());
+      setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
+      toast.success("SCOUT saved this lead to your workspace.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save lead with SCOUT");
+    } finally {
+      setAdvancingLeadId(null);
+    }
+  };
+
   const handleAdvanceLead = async (deal: Deal) => {
+    if (!isAdmin) {
+      await handleSaveLead(deal);
+      return;
+    }
     if (!session?.access_token) {
       const next = `/pipeline?lead=${deal.id}`;
       window.location.href = `/signup?next=${encodeURIComponent(next)}`;
@@ -679,10 +730,12 @@ export default function Pipeline() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SCOUT</p>
                 <h1 className="font-extrabold text-white text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Active Signals → Live Pipeline
+                  {isAdmin ? "Active Signals → Live Pipeline" : "Your SCOUT Pipeline"}
                 </h1>
                 <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
-                  Authoritative database counts up top. A focused working slice below.
+                  {isAdmin
+                    ? "Authoritative database counts up top. Cal outreach controls below."
+                    : "Leads SCOUT flagged as robot-ready, with live signals and cited research."}
                 </p>
               </div>
             </div>
@@ -719,9 +772,11 @@ export default function Pipeline() {
 
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <PipelineMetric
-              label="Database total"
+              label={isAdmin ? "Database total" : "Market watchlist"}
               value={formatMetric(dbTotal)}
-              sub={loadingSummary ? "Refreshing market totals..." : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
+              sub={loadingSummary
+                ? "Refreshing market totals..."
+                : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
               color="#ffffff"
             />
             <PipelineMetric
@@ -1102,8 +1157,8 @@ export default function Pipeline() {
                     {/* Stage header row */}
                     <div className="flex items-center gap-2 px-3 py-2 mb-1">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
-                      <span className="text-xs font-bold" style={{ color: meta.color }}>{meta.label}</span>
-                      <span className="text-[10px] text-white/25 ml-0.5">— {meta.desc}</span>
+                      <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage, isAdmin)}</span>
+                      <span className="text-[10px] text-white/25 ml-0.5">— {stageDesc(stage, isAdmin)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -1151,7 +1206,7 @@ export default function Pipeline() {
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: displayStageColor(deal), background: `${displayStageColor(deal)}15` }}
                                   >
-                                    {displayStageLabel(deal)}
+                                    {displayStageLabel(deal, isAdmin)}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
@@ -1159,10 +1214,10 @@ export default function Pipeline() {
 
                               {/* Email status + time + arrow */}
                               <div className="flex items-center gap-2 shrink-0">
-                                {deal.stage === "Outreach Sent" && (
+                                {isAdmin && deal.stage === "Outreach Sent" && (
                                   <span title="Email sent"><Send className="h-3 w-3" style={{ color: "#34d399" }} /></span>
                                 )}
-                                {deal.stage === "Draft Ready" && (
+                                {isAdmin && deal.stage === "Draft Ready" && (
                                   <span title="Draft ready"><Mail className="h-3 w-3" style={{ color: "#60a5fa" }} /></span>
                                 )}
                                 <span className="text-[10px] text-white/20 font-mono hidden sm:block" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -1232,7 +1287,7 @@ export default function Pipeline() {
                         className="text-[10px] font-bold px-2 py-1 rounded-full"
                         style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
                       >
-                        {displayStageLabel(selected)}
+                        {displayStageLabel(selected, isAdmin)}
                       </span>
                       {selected.contact && (
                         <span className="text-[11px] text-white/40">
@@ -1310,12 +1365,13 @@ export default function Pipeline() {
                     )}
                   </div>
 
-                  {/* Outreach draft */}
+                  {/* Cal outreach — admin only */}
+                  {isAdmin && (
                   <div className="flex-1 overflow-y-auto px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Cal's Draft</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Cal&apos;s Draft</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <button
@@ -1341,7 +1397,6 @@ export default function Pipeline() {
                       </div>
                     </div>
 
-                    {/* Email status badges */}
                     {selected.stage === "Outreach Sent" && (
                       <div className="mb-2 flex items-center gap-2 flex-wrap">
                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
@@ -1360,15 +1415,18 @@ export default function Pipeline() {
                       </div>
                     )}
 
-                    {selected.outreachBody && (
+                    {selected.outreachBody ? (
                       <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
                         <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-white/55">
                           {selected.outreachBody}
                         </pre>
                       </div>
+                    ) : (
+                      <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-[11px] leading-relaxed text-white/35">
+                        No Cal draft yet. Use the Cal action bar above to draft outreach for this pipeline slice.
+                      </p>
                     )}
 
-                    {/* Send this email button (only if contact available and not yet sent) */}
                     {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && (
                       <button
                         type="button"
@@ -1385,6 +1443,42 @@ export default function Pipeline() {
                       </button>
                     )}
                   </div>
+                  )}
+
+                  {/* SCOUT read — user view */}
+                  {!isAdmin && (
+                  <div className="flex-1 overflow-y-auto px-5 py-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Zap className="h-3.5 w-3.5" style={{ color: "#03DAC5" }} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">SCOUT Read</p>
+                    </div>
+                    <div className="rounded-xl border border-teal-400/15 bg-teal-400/5 p-3">
+                      <p className="text-[11px] leading-relaxed text-white/55">
+                        {selected.score >= 85
+                          ? "SCOUT rates this as a high-confidence robot-ready opportunity based on timing, signal strength, and industry fit."
+                          : selected.score >= 65
+                            ? "SCOUT sees meaningful buying pressure here. Worth monitoring and qualifying before outreach."
+                            : "SCOUT flagged early signal activity. Track for additional corroboration before investing sales time."}
+                      </p>
+                      <p className="mt-2 text-[11px] leading-relaxed text-white/40">
+                        {marketInsightForIndustry(selected.industry)}
+                      </p>
+                    </div>
+                    <p className="mt-3 text-[11px] leading-relaxed text-white/35">
+                      {BUYER_SIGNAL_EXPLANATION} Save leads you want SCOUT to keep watching in your workspace.
+                    </p>
+                    {!session?.access_token && (
+                      <Link
+                        href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
+                        className="mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold"
+                        style={{ color: "#FFB000", borderColor: "#FFB000" }}
+                      >
+                        Sign up to save leads
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
+                  </div>
+                  )}
 
                   {/* Action bar */}
                   <div className="p-4 border-t border-white/8 flex items-center gap-2">
@@ -1398,38 +1492,71 @@ export default function Pipeline() {
                         Back
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        copyDraft();
-                        toast.success("Draft copied — ready to send");
-                      }}
-                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                      style={{ background: "rgba(124,58,237,0.2)", color: "#c4b5fd", border: "1px solid rgba(124,58,237,0.3)" }}
-                    >
-                      <Mail className="h-3.5 w-3.5" />
-                      Approve &amp; Copy
-                    </button>
-                    {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
-                      <button
-                        onClick={() => handleAdvanceLead(selected)}
-                        disabled={advancingLeadId === selected.id}
-                        className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                        style={{
-                          background: advancingLeadId === selected.id ? "rgba(124,58,237,0.45)" : "#7c3aed",
-                          color: "#fff",
-                          border: "1px solid #7c3aed",
-                        }}
-                      >
-                        {advancingLeadId === selected.id ? "Advancing..." : "Advance with SCOUT"}
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
+                    {isAdmin ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            copyDraft();
+                            toast.success("Draft copied — ready to send");
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+                          style={{ background: "rgba(124,58,237,0.2)", color: "#c4b5fd", border: "1px solid rgba(124,58,237,0.3)" }}
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                          Approve &amp; Copy
+                        </button>
+                        {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
+                          <button
+                            onClick={() => void handleAdvanceLead(selected)}
+                            disabled={advancingLeadId === selected.id}
+                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+                            style={{
+                              background: advancingLeadId === selected.id ? "rgba(124,58,237,0.45)" : "#7c3aed",
+                              color: "#fff",
+                              border: "1px solid #7c3aed",
+                            }}
+                          >
+                            {advancingLeadId === selected.id ? "Advancing..." : "Advance with Cal"}
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => void handleSaveLead(selected)}
+                          disabled={advancingLeadId === selected.id}
+                          className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all disabled:opacity-50"
+                          style={{ background: "rgba(3,218,197,0.12)", color: "#99f6e4", border: "1px solid rgba(3,218,197,0.28)" }}
+                        >
+                          {advancingLeadId === selected.id
+                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                            : <Zap className="h-3.5 w-3.5" />
+                          }
+                          {advancingLeadId === selected.id ? "Saving..." : "Save to workspace"}
+                        </button>
+                        {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
+                          <button
+                            onClick={() => moveStage(selected.id, 1)}
+                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
+                            style={{ background: "#7c3aed", color: "#fff", border: "1px solid #7c3aed" }}
+                          >
+                            Next stage
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
-                  <p className="text-sm text-white/25">Select a deal to see details and outreach draft</p>
+                  <p className="text-sm text-white/25">
+                    {isAdmin
+                      ? "Select a deal to review signal detail and Cal outreach"
+                      : "Select a lead to see SCOUT intelligence and research"}
+                  </p>
                 </div>
               )}
             </div>
@@ -1437,8 +1564,8 @@ export default function Pipeline() {
         </div>
       </main>
 
-      {/* Email Preview Modal */}
-      {previewOpen && selected && (
+      {/* Email Preview Modal — admin only */}
+      {isAdmin && previewOpen && selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}

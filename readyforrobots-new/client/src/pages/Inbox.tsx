@@ -72,7 +72,7 @@ export default function Inbox() {
         <Header />
         <main className="mx-auto max-w-3xl px-6 pt-32">
           <h1 className="text-3xl font-black">Inbox</h1>
-          <p className="mt-3 text-white/55">Sign in to review Cal replies.</p>
+          <p className="mt-3 text-white/55">Sign in to review buyer replies.</p>
           <Link href="/login?next=/inbox" className="mt-6 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-black text-[#160b2c]">
             Sign in
           </Link>
@@ -93,7 +93,7 @@ export default function Inbox() {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Operator inbox</p>
             <h1 className="mt-2 text-4xl font-black">Replies</h1>
             <p className="mt-2 max-w-2xl text-sm text-white/55">
-              Buyer and robot-company replies land here before you decide whether Cal, Max, or you should respond.
+              Buyer and robot-company replies land here before you decide whether SCOUT should respond or you should take over.
             </p>
           </div>
           <button onClick={() => void loadInbox()} disabled={busy} className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 disabled:opacity-50">
