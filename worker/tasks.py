@@ -458,26 +458,43 @@ def run_logistics_scraper_task(self, queries=None):
         db.close()
 
 
-@celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
-def generate_newsletter_edition_task(self, limit=8):
-    """
-    Generate and cache the daily newsletter edition.
-    Runs every 24 hours. Content is used for posting and social sharing.
-    """
-    from app.services.newsletter_service import generate_edition, write_cached_edition
+def _run_public_surface_refresh() -> dict:
+    from app.services.public_surface_cache import hydrate_public_surface_caches, refresh_all_public_surface_caches
 
     db = get_db()
     try:
-        data = generate_edition(db, limit=limit)
-        write_cached_edition(data, db)
-        count = data.get("summary", {}).get("total_leads", 0)
-        logger.info("Newsletter edition generated: %d stories cached", count)
-        return {"stories": count, "edition": data.get("latestEdition", {}).get("edition")}
+        stats = refresh_all_public_surface_caches(db)
+        hydrate_public_surface_caches()
+        return stats
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def refresh_public_surface_caches_task(self):
+    """
+    Rebuild all public page caches once each morning (newsletter, pipeline, homepage,
+    summaries, humanoid report). GET handlers serve these read-only — never regenerate on load.
+    """
+    try:
+        stats = _run_public_surface_refresh()
+        logger.info("Public surface caches refreshed: %s", stats)
+        return stats
+    except Exception as exc:
+        logger.error("Public surface cache refresh failed: %s", exc)
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
+def generate_newsletter_edition_task(self, limit=15):
+    """Legacy task name — runs the full public-surface daily refresh."""
+    try:
+        stats = _run_public_surface_refresh()
+        logger.info("Newsletter/public surfaces refreshed (legacy task): %s", stats)
+        return stats
     except Exception as exc:
         logger.error("Newsletter edition failed: %s", exc)
         raise self.retry(exc=exc)
-    finally:
-        db.close()
 
 
 @celery_app.task(bind=True, max_retries=1, default_retry_delay=30)
@@ -488,7 +505,7 @@ def run_all_scrapers_task(self):
         run_news_scraper_task.delay()
         run_company_news_task.delay(limit=80)  # XYZ company → news on XYZ
         run_enrich_companies_task.delay(limit=80)  # Enrich existing companies
-        generate_newsletter_edition_task.delay(limit=8)  # Daily newsletter for posting
+        generate_newsletter_edition_task.delay(limit=15)  # Daily public surface refresh
         run_rss_scraper_task.delay()
         run_serp_scraper_task.delay()
         run_logistics_scraper_task.delay()

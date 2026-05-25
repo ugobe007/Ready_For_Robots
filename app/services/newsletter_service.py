@@ -696,7 +696,7 @@ def write_cached_edition(data: Dict[str, Any], db: Optional[Session] = None) -> 
         try:
             from app.services.pipeline_cache_store import cache_write
 
-            cache_write(db, NEWSLETTER_PIPELINE_CACHE_KEY, data, ttl_minutes=24 * 60)
+            cache_write(db, NEWSLETTER_PIPELINE_CACHE_KEY, data, ttl_minutes=26 * 60)
         except Exception:
             pass
 

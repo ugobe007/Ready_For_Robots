@@ -3,19 +3,15 @@ Newsletter API
 ==============
 GET /api/newsletter/edition
 
-Returns fresh newsletter content for the daily brief:
-- Top hot leads with actionable signals
-- Formatted for social sharing
-
-Content is generated daily by generate_newsletter_edition_task (Celery).
-Cached edition is served when fresh (<25h); otherwise generated on-the-fly.
+Returns the daily pre-built newsletter edition (hot leads + industry brief).
+Content is generated once each morning by refresh_public_surface_caches_task (Celery)
+and served read-only from durable cache — never regenerated on page load.
 
 Force-regeneration (refresh=true, POST /generate): when NEWSLETTER_REGEN_SECRET is set in
 the environment, callers must send X-Newsletter-Regen-Key or an admin Bearer JWT.
 """
 import logging
 import os
-import threading
 import time
 from typing import Optional
 
@@ -34,19 +30,15 @@ from app.services.newsletter_service import (
     NEWSLETTER_PIPELINE_CACHE_KEY,
     fallback_edition,
     generate_edition,
-    read_cached_edition,
     read_cached_edition_stale,
-    read_edition_from_shared_cache,
     write_cached_edition,
 )
+from app.services.public_surface_cache import read_public_cache, write_public_cache
 from app.services.pipeline_cache_store import cache_read_safe
 
 router = APIRouter()
 
-_EDITION_MEM_TTL = 120.0  # seconds
 _edition_mem_cache: dict = {}
-_edition_refresh_lock = threading.Lock()
-_edition_refresh_in_progress = False
 
 
 class NewsletterSubscribeIn(BaseModel):
@@ -113,13 +105,6 @@ def _try_send_welcome(email: str) -> dict:
         return {"sent": False, "reason": str(exc)}
 
 
-def _cache_max_age_hours() -> float:
-    try:
-        return float(os.getenv("NEWSLETTER_CACHE_MAX_AGE_HOURS", "18"))
-    except ValueError:
-        return 18
-
-
 def _strategic_brief_days() -> int:
     try:
         return max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
@@ -134,97 +119,38 @@ def _trim_edition(data: dict, limit: int) -> dict:
     return data
 
 
-def _set_mem_cache(data: dict) -> None:
+def hydrate_newsletter_mem_cache(data: dict) -> None:
     _edition_mem_cache["v1"] = {"ts": time.monotonic(), "data": data}
 
 
 def _get_mem_cache() -> Optional[dict]:
     entry = _edition_mem_cache.get("v1")
-    if not entry:
-        return None
-    if time.monotonic() - entry["ts"] > _EDITION_MEM_TTL:
-        return None
-    return entry["data"]
+    if entry:
+        return entry["data"]
+    return None
 
 
-def _load_any_cached_edition(db: Session, max_age_hours: float) -> Optional[dict]:
-    # File cache first — no DB round trip.
+def _load_durable_edition() -> Optional[dict]:
+    mem = _get_mem_cache()
+    if mem:
+        return mem
+
+    cached = read_public_cache(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True)
+    if cached:
+        hydrate_newsletter_mem_cache(cached)
+        return cached
+
+    shared = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=3.0)
+    if shared:
+        hydrate_newsletter_mem_cache(shared)
+        return shared
+
     stale_file = read_cached_edition_stale()
     if stale_file:
+        hydrate_newsletter_mem_cache(stale_file)
         return stale_file
-    fresh = read_cached_edition(max_age_hours=max_age_hours)
-    if fresh:
-        return fresh
-    shared_safe = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=3.0)
-    if shared_safe:
-        return shared_safe
-    try:
-        return read_edition_from_shared_cache(db, stale_ok=True)
-    except Exception:
-        return None
 
-
-def _schedule_edition_refresh(limit: int, *, full: bool) -> None:
-    global _edition_refresh_in_progress
-    with _edition_refresh_lock:
-        if _edition_refresh_in_progress:
-            return
-        _edition_refresh_in_progress = True
-
-    def _run() -> None:
-        global _edition_refresh_in_progress
-        from app.database import SessionLocal
-
-        db = SessionLocal()
-        try:
-            data = generate_edition(db, limit=limit, skip_openai_brief=not full)
-            write_cached_edition(data, db)
-            _set_mem_cache(data)
-            _log.info(
-                "Newsletter edition refreshed in background (%s): %d stories",
-                "full" if full else "fast",
-                len(data.get("topStories") or []),
-            )
-        except Exception as exc:
-            _log.warning("Newsletter background refresh failed: %s", exc)
-        finally:
-            db.close()
-            with _edition_refresh_lock:
-                _edition_refresh_in_progress = False
-
-    threading.Thread(
-        target=_run,
-        daemon=True,
-        name=f"newsletter-edition-refresh-{'full' if full else 'fast'}",
-    ).start()
-
-
-def _build_edition_sync(limit: int) -> dict:
-    """Fast synchronous build — never blocks on OpenAI."""
-    from app.database import SessionLocal
-    from app.db_timeout import run_db
-
-    def _fast_build() -> dict:
-        db = SessionLocal()
-        try:
-            data = generate_edition(db, limit=limit, skip_openai_brief=True)
-            write_cached_edition(data, db)
-            _set_mem_cache(data)
-            return data
-        finally:
-            db.close()
-
-    try:
-        return run_db(_fast_build, timeout_sec=25, label="newsletter/edition-fast")
-    except TimeoutError:
-        _log.error("newsletter fast build timed out")
-        stale = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=5.0)
-        if stale:
-            return stale
-        stale_file = read_cached_edition_stale()
-        if stale_file:
-            return stale_file
-        return fallback_edition(limit=limit)
+    return None
 
 
 @router.get("/edition")
@@ -237,13 +163,9 @@ def get_newsletter_edition(
     db: Session = Depends(get_db),
 ):
     """
-    Fresh newsletter edition: hot leads with actionable signals.
-    Stale-while-revalidate: never block the page on a cold OpenAI brief rebuild.
+    Daily newsletter edition — read-only from pre-built cache.
     """
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    max_age = _cache_max_age_hours()
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     if refresh:
         assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
@@ -258,59 +180,38 @@ def get_newsletter_edition(
         )
         data = generate_edition(db, limit=limit, skip_openai_brief=False)
         write_cached_edition(data, db)
-        _set_mem_cache(data)
+        write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, data)
+        hydrate_newsletter_mem_cache(data)
         return _trim_edition(data, limit)
 
-    mem = _get_mem_cache()
-    if mem:
-        return _trim_edition(mem, limit)
-
-    cached = read_cached_edition(max_age_hours=max_age)
+    cached = _load_durable_edition()
     if cached:
-        _set_mem_cache(cached)
         return _trim_edition(cached, limit)
 
-    stale = _load_any_cached_edition(db, max_age)
-    if stale:
-        _set_mem_cache(stale)
-        _schedule_edition_refresh(limit, full=True)
-        return _trim_edition(stale, limit)
-
-    # Cold miss: never block HTTP on generation (Fly/Vercel proxies timeout ~25–120s).
-    _schedule_edition_refresh(limit, full=False)
-    _schedule_edition_refresh(limit, full=True)
     return _trim_edition(fallback_edition(limit=limit), limit)
 
 
 def _warm_newsletter_cache_at_startup() -> None:
-    """
-    Pre-generate a fast newsletter edition at startup so the first user request
-    does not hit a cold OpenAI brief rebuild (which can exceed proxy timeouts).
-    """
-    max_age = _cache_max_age_hours()
-
+    """Hydrate newsletter L1 from durable cache — no on-request generation."""
     def _warm() -> None:
-        from app.database import SessionLocal
-
-        db = SessionLocal()
         try:
-            cached = read_cached_edition(max_age_hours=max_age) or read_cached_edition_stale()
-            if cached and cached.get("topStories") and len(cached["topStories"]) >= 8:
-                _set_mem_cache(cached)
-                _log.info("Newsletter cache already warm (%d stories) — skipping startup regen.", len(cached["topStories"]))
-                return
-            _log.info("Newsletter cache cold — building fast edition at startup…")
-            data = generate_edition(db, limit=15, skip_openai_brief=True)
-            write_cached_edition(data, db)
-            _set_mem_cache(data)
-            _log.info("Newsletter fast cache warmed at startup: %d stories.", len(data.get("topStories") or []))
-            _schedule_edition_refresh(15, full=True)
-        except Exception as exc:
-            _log.warning("Newsletter startup warm-up failed (non-fatal): %s", exc)
-        finally:
-            db.close()
+            from app.services.public_surface_cache import hydrate_public_surface_caches
 
-    threading.Thread(target=_warm, daemon=True, name="newsletter-cache-warmer").start()
+            hydrate_public_surface_caches()
+            edition = _get_mem_cache()
+            if edition:
+                _log.info(
+                    "Newsletter L1 hydrated (%d stories)",
+                    len(edition.get("topStories") or []),
+                )
+            else:
+                _log.info("Newsletter cache empty — awaiting daily refresh task")
+        except Exception as exc:
+            _log.warning("Newsletter cache hydrate failed: %s", exc)
+
+    import threading
+
+    threading.Thread(target=_warm, daemon=True, name="newsletter-cache-hydrate").start()
 
 
 @router.post("/subscribe")
@@ -336,7 +237,7 @@ def subscribe_newsletter(body: NewsletterSubscribeIn, db: Session = Depends(get_
 @router.post("/generate")
 def trigger_newsletter_generate(
     background_tasks: BackgroundTasks,
-    limit: int = Query(8, description="Max top stories"),
+    limit: int = Query(15, description="Max top stories"),
     authorization: Optional[str] = Header(None),
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
 ):
@@ -349,24 +250,16 @@ def trigger_newsletter_generate(
     def _generate():
         from app.database import SessionLocal
         from app.services.industry_brief_service import build_industry_brief_payload
+        from app.services.public_surface_cache import refresh_all_public_surface_caches
 
         db = SessionLocal()
         try:
-            build_industry_brief_payload(
-                db,
-                days=_strategic_brief_days(),
-                analytics=None,
-                use_cache=True,
-                force_refresh=True,
-            )
-            data = generate_edition(db, limit=limit, skip_openai_brief=False)
-            write_cached_edition(data, db)
-            _set_mem_cache(data)
+            refresh_all_public_surface_caches(db)
         finally:
             db.close()
 
     background_tasks.add_task(_generate)
     return {
         "status": "generating",
-        "message": "Newsletter edition generating in background. Check /api/newsletter/edition in a few seconds.",
+        "message": "Public surfaces rebuilding in background. Check /api/newsletter/edition shortly.",
     }

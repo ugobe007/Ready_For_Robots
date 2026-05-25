@@ -993,6 +993,184 @@ def _schedule_leads_background_refresh(
     threading.Thread(target=_refresh, daemon=True, name=f"leads-refresh-{cache_key[:20]}").start()
 
 
+def _public_leads_durable_key(
+    min_score: float,
+    max_score: float,
+    tier: Optional[str],
+    industry: Optional[str],
+    signal_type: Optional[str],
+    exclude_junk: bool,
+    limit: int,
+    sort: str,
+    rotation_slot: Optional[int],
+) -> Optional[str]:
+    """Map standard public pipeline queries to pre-built durable cache keys."""
+    from app.services.public_surface_cache import (
+        KEY_LEADS_18,
+        KEY_LEADS_50,
+        KEY_LEADS_HOT_12,
+    )
+
+    if (
+        min_score == 0.0
+        and max_score == 100.0
+        and industry is None
+        and signal_type is None
+        and exclude_junk is True
+        and sort == "score"
+        and rotation_slot is None
+    ):
+        if tier is None and limit == 50:
+            return KEY_LEADS_50
+        if tier is None and limit == 18:
+            return KEY_LEADS_18
+        if tier and tier.upper() == "HOT" and limit == 12:
+            return KEY_LEADS_HOT_12
+    return None
+
+
+def build_public_leads_list(
+    db: Session,
+    *,
+    limit: int = 50,
+    tier: Optional[str] = None,
+    exclude_junk: bool = True,
+    sort: str = "score",
+) -> list:
+    """Build a pipeline leads list for the daily public-surface cache refresh."""
+    candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
+    rows = _lead_rows_query_limited(db, candidate_limit).all()
+
+    results = []
+    for row in rows:
+        junk, junk_reason = _row_is_junk(row.name)
+        if junk and exclude_junk:
+            continue
+        pri = _row_priority(row)
+        if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
+            continue
+        results.append(
+            {
+                "id": row.id,
+                "company_name": row.name,
+                "priority_tier": pri.tier,
+                "priority_score": round(pri.score, 1),
+                "priority_reasons": pri.reasons,
+                "is_junk": junk,
+                "junk_reason": junk_reason,
+                "signal_count": int(row.signal_count or 0),
+            }
+        )
+
+    if sort == "name":
+        results.sort(key=lambda x: (x["company_name"] or "").lower())
+    elif sort == "signals":
+        results.sort(key=lambda x: x["signal_count"], reverse=True)
+    else:
+        results.sort(key=lambda x: x["priority_score"], reverse=True)
+
+    pre_limit = min(250, max(limit * 5, 80))
+    results = results[:pre_limit]
+    if not results:
+        return []
+
+    ids = [r["id"] for r in results]
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+
+    staged = []
+    for r in results:
+        c = company_map.get(r["id"])
+        if not c:
+            continue
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        if junk and exclude_junk:
+            continue
+        if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
+            continue
+        staged.append((c, junk, junk_reason, pri))
+        if len(staged) >= limit:
+            break
+
+    staged = dedupe_staged_lead_tuples(staged)
+    return [
+        _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
+        for c, junk, junk_reason, pri in staged[:limit]
+    ]
+
+
+def hydrate_leads_public_caches(
+    *,
+    homepage: Optional[dict] = None,
+    summary: Optional[dict] = None,
+    exclude_junk: bool = True,
+    leads: Optional[list] = None,
+    limit: int = 50,
+    tier: Optional[str] = None,
+) -> None:
+    """Seed in-process L1 caches from durable public-surface store (startup / post-refresh)."""
+    if homepage is not None:
+        _set_homepage_cache(homepage)
+    if summary is not None:
+        _set_summary_cache(exclude_junk, summary)
+    if leads is not None:
+        tier_key = tier.upper() if tier else None
+        cache_key = f"0.0|100.0|{tier_key}|None|None|True|{limit}|score|None"
+        _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), leads)
+
+
+def _empty_homepage_payload() -> dict:
+    now = datetime.now(timezone.utc)
+    slot = int(now.timestamp() // LEADS_ROTATION_SEC)
+    return {
+        "summary": {
+            "total": 0,
+            "hot": 0,
+            "warm": 0,
+            "cold": 0,
+            "junk_filtered": 0,
+            "total_signals": 0,
+            "by_industry": {},
+        },
+        "hotLeads": [],
+        "tierLegend": HOMEPAGE_TIER_LEGEND,
+        "spotlightMix": {
+            "hot_slots": 35,
+            "warm_slots": 15,
+            "feed_limit": 50,
+            "rotation_period_sec": LEADS_ROTATION_SEC,
+            "rotation_slot": slot,
+            "rotation_day": str(now.date()),
+            "rotation_hour_utc": now.hour,
+            "rotation_minute_utc": now.minute,
+        },
+        "scoringSystem": get_scoring_system_public(),
+        "cache_pending": True,
+    }
+
+
+def _empty_summary_payload() -> dict:
+    return {
+        "total": 0,
+        "hot": 0,
+        "warm": 0,
+        "cold": 0,
+        "junk_filtered": 0,
+        "total_signals": 0,
+        "by_industry": {},
+        "companies_in_database": 0,
+        "signals_in_database": 0,
+        "summary_tier_slice_size": 0,
+        "leads_list_max_per_request": LEADS_PUBLIC_MAX,
+        "cache_pending": True,
+    }
+
+
 @router.get("")
 @router.get("/")
 @router.get("/leads")
@@ -1024,13 +1202,22 @@ def get_leads(
     _cached = _LEADS_LIST_CACHE.get(_cache_key)
     if _cached is not None:
         _ts, _data = _cached
-        age = time.monotonic() - _ts
-        if age < _LEADS_LIST_TTL:
-            if age > _LEADS_LIST_TTL * 0.8 and _cache_key not in _LEADS_LIST_REFRESHING:
-                _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
-            return _data
+        return _data
 
-    # L1 miss — check Supabase before running the slow query
+    public_key = _public_leads_durable_key(
+        min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot
+    )
+    if public_key:
+        from app.services.public_surface_cache import read_public_cache
+
+        public_data = read_public_cache(public_key, stale_ok=True)
+        if public_data is not None:
+            _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), public_data)
+            return public_data
+        logger.info("Public leads cache miss for %s — returning empty (no on-request rebuild)", public_key)
+        return []
+
+    # Legacy L2 for non-standard filtered queries (admin / research views).
     _db_data = _db_cache_read(_cache_key)
     if _db_data is not None:
         # Seed the L1 cache so subsequent requests on this machine are instant
@@ -1504,85 +1691,26 @@ def _schedule_homepage_background_refresh() -> None:
 
 
 def warm_summary_cache() -> None:
-    """Pre-populate fast SQL summary at startup so Pipeline cards never cold-block."""
+    """Hydrate summary L1 from durable public cache at startup."""
     def _warm() -> None:
         try:
-            from app.database import SessionLocal
+            from app.services.public_surface_cache import hydrate_public_surface_caches
 
-            with SessionLocal() as db:
-                for exclude_junk in (True, False):
-                    _set_summary_cache(exclude_junk, _compute_pipeline_summary_fast(db))
-                logger.info("Summary cache warmed (fast SQL totals)")
-            _schedule_summary_background_refresh(True)
+            hydrate_public_surface_caches()
         except Exception as exc:
-            logger.warning("Summary cache warm-up failed: %s", exc)
+            logger.warning("Summary cache hydrate failed: %s", exc)
 
-    threading.Thread(target=_warm, daemon=True, name="summary-cache-warmer").start()
+    threading.Thread(target=_warm, daemon=True, name="summary-cache-hydrate").start()
 
 
 def warm_pipeline_leads_cache() -> None:
-    """
-    Pre-populate the Pipeline page leads cache at startup so the first user
-    request to /pipeline is never slow.
-
-    Cache key format matches exactly what the /api/leads endpoint builds:
-      f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
-    The Pipeline page sends: /api/leads?limit=18&exclude_junk=true&sort=score
-    with no min_score, max_score, tier, industry, signal_type, or rotation_slot,
-    so all of those are None — the key must use None (not 0.0/100.0).
-    """
-
-    def _warm() -> None:
-        for lim in (18, 50):
-            # Exact key the /api/leads endpoint will build for these requests
-            key = f"None|None|None|None|None|True|{lim}|score|None"
-            if key in _LEADS_LIST_CACHE:
-                ts, _ = _LEADS_LIST_CACHE[key]
-                if time.monotonic() - ts < _LEADS_LIST_TTL:
-                    continue
-            try:
-                _schedule_leads_background_refresh(
-                    key,
-                    min_score=None, max_score=None,
-                    tier=None, industry=None, signal_type=None,
-                    exclude_junk=True, limit=lim, sort="score", rotation_slot=None,
-                )
-                logger.info("Pipeline leads cache warm-up scheduled: limit=%d key=%s", lim, key)
-            except Exception as exc:
-                logger.warning("Pipeline leads cache warm-up (limit=%d) failed: %s", lim, exc)
-
-    threading.Thread(target=_warm, daemon=True, name="pipeline-leads-cache-warmer").start()
+    """No-op — pipeline lists are pre-built daily; see refresh_public_surface_caches_task."""
+    pass
 
 
 def warm_homepage_cache() -> None:
-    """
-    Pre-populate the homepage cache in a background thread at startup so the
-    first real user request is not blocked on the cold aggregate query.
-    """
-
-    def _warm():
-        try:
-            from app.database import SessionLocal
-
-            db = SessionLocal()
-            try:
-                payload = _build_homepage_payload(db)
-                with _homepage_build_lock:
-                    if _homepage_cache.get("v1"):
-                        return
-                    _set_homepage_cache(payload)
-                    _schedule_summary_background_refresh(True)
-                    logger.info(
-                        "Homepage cache warmed at startup: %d total, %d hot",
-                        payload["summary"].get("total", 0),
-                        payload["summary"].get("hot", 0),
-                    )
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("Homepage cache warm-up failed (non-fatal): %s", exc)
-
-    threading.Thread(target=_warm, daemon=True, name="homepage-cache-warmer").start()
+    """No-op — homepage is pre-built daily; hydration runs via hydrate_public_surface_caches."""
+    pass
 
 
 @router.get("/homepage")
@@ -1590,58 +1718,22 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
     Batched endpoint for homepage: summary + spotlight leads in one response.
 
-    Spotlight uses classify_lead on full signals (aligned with list views).
-    Selection: sort by newest signal time, then score; take 3 HOT + 2 WARM with a
-    daily + hourly rotating window so the same top-score rows do not monopolize the list.
-    Includes tierLegend for UI copy (COLD band documented as "Emerging").
-
-    Performance: one aggregate query + Python sort; in-memory cache with stale-while-
-    revalidate so expired TTL does not block clients on a slow rebuild.
+    Serves the daily pre-built cache only — never runs aggregate queries on page load.
     """
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     entry = _homepage_cache.get("v1")
     if entry is not None:
-        age = time.monotonic() - entry["ts"]
-        if age < _HOMEPAGE_CACHE_TTL:
-            return entry["data"]
-        _schedule_homepage_background_refresh()
         return entry["data"]
 
-    # Cold miss: build in a worker thread with a fresh session + hard timeout.
-    from app.database import SessionLocal
-    from app.db_timeout import run_db
-    from fastapi.responses import JSONResponse
+    from app.services.public_surface_cache import KEY_HOMEPAGE, read_public_cache
 
-    def _cold_build() -> dict:
-        db = SessionLocal()
-        try:
-            return _build_homepage_payload(db, resolve_llm_urls=False)
-        finally:
-            db.close()
+    cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
+    if cached is not None:
+        _set_homepage_cache(cached)
+        return cached
 
-    try:
-        payload = run_db(_cold_build, timeout_sec=25, label="homepage/cold")
-    except TimeoutError:
-        logger.error("homepage cold build timed out")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "detail": "Database timeout loading homepage — retry shortly",
-                "summary": {"total": 0, "hot": 0, "warm": 0, "cold": 0},
-                "hotLeads": [],
-            },
-        )
-
-    with _homepage_build_lock:
-        entry = _homepage_cache.get("v1")
-        if entry is not None:
-            return entry["data"]
-        _set_homepage_cache(payload)
-        _schedule_summary_background_refresh(True)
-    _schedule_homepage_background_refresh()
-    return payload
+    return _empty_homepage_payload()
 
 
 @router.get("/scoring-system")
@@ -1700,42 +1792,27 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts for dashboard cards — capped query, stale-while-revalidate when TTL expires."""
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
+    """Pipeline counts for dashboard cards — daily pre-built cache only."""
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     cache_key = f"v1_{exclude_junk}"
     entry = _summary_cache.get(cache_key)
     if entry is not None:
-        age = time.monotonic() - entry["ts"]
-        if age < _SUMMARY_CACHE_TTL:
-            return entry["data"]
-        _schedule_summary_background_refresh(exclude_junk)
         return entry["data"]
 
-    from app.database import SessionLocal
-    from app.db_timeout import run_db
-    from fastapi.responses import JSONResponse
+    from app.services.public_surface_cache import (
+        KEY_SUMMARY_EXCLUDE_JUNK,
+        KEY_SUMMARY_INCLUDE_JUNK,
+        read_public_cache,
+    )
 
-    def _cold_summary() -> dict:
-        db = SessionLocal()
-        try:
-            return _compute_pipeline_summary_fast(db)
-        finally:
-            db.close()
+    durable_key = KEY_SUMMARY_EXCLUDE_JUNK if exclude_junk else KEY_SUMMARY_INCLUDE_JUNK
+    cached = read_public_cache(durable_key, stale_ok=True)
+    if cached is not None:
+        _set_summary_cache(exclude_junk, cached)
+        return cached
 
-    try:
-        result = run_db(_cold_summary, timeout_sec=8, label="summary/cold-fast")
-    except TimeoutError:
-        logger.error("summary fast cold build timed out")
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "Database timeout loading summary — retry shortly"},
-        )
-
-    _set_summary_cache(exclude_junk, result)
-    _schedule_summary_background_refresh(exclude_junk)
-    return result
+    return _empty_summary_payload()
 
 
 @router.post("/reclassify-unknown")

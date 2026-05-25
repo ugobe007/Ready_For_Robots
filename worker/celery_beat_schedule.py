@@ -197,11 +197,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.tasks.daily_scraper_report_task',
         'schedule': crontab(hour=8, minute=0),  # Daily at 8am UTC
     },
-    # ── NEWSLETTER ── Generate daily edition for posting (every 24h at 9am UTC)
-    'newsletter-daily': {
-        'task': 'worker.tasks.generate_newsletter_edition_task',
-        'schedule': crontab(hour=9, minute=0),
-        'kwargs': {'limit': 8},
+    # ── PUBLIC SURFACES ── Pre-build newsletter, pipeline, homepage, summaries (9:30 UTC)
+    'public-surfaces-daily': {
+        'task': 'worker.tasks.refresh_public_surface_caches_task',
+        'schedule': crontab(hour=9, minute=30),
     },
     # ── DAILY OPPORTUNITY ANALYTICS ── Automation types, robots needed, ROI, tasks (9:15am UTC)
     'daily-analytics-report': {

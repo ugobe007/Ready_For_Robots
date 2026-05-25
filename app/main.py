@@ -237,12 +237,48 @@ def startup():
                 logger.warning("%s warm-up failed: %s", label, exc)
         threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
 
-    _staggered_warm("summary", lambda: __import__("app.api.leads", fromlist=["warm_summary_cache"]).warm_summary_cache(), 3)
-    _staggered_warm("homepage", lambda: __import__("app.api.leads", fromlist=["warm_homepage_cache"]).warm_homepage_cache(), 8)
-    _staggered_warm("pipeline", lambda: __import__("app.api.leads", fromlist=["warm_pipeline_leads_cache"]).warm_pipeline_leads_cache(), 45)
-    _staggered_warm("newsletter", lambda: __import__("app.api.newsletter", fromlist=["_warm_newsletter_cache_at_startup"])._warm_newsletter_cache_at_startup(), 90)
-    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 120)
-    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 150)
+    # Hydrate L1 from durable Postgres cache — no heavy rebuild on boot.
+    def _hydrate_public_caches() -> None:
+        import time
+        time.sleep(5)
+        try:
+            from app.services.public_surface_cache import hydrate_public_surface_caches
+
+            hydrate_public_surface_caches()
+            logger.info("Public surface L1 hydration complete")
+
+            from app.api.newsletter import _get_mem_cache
+
+            if _get_mem_cache():
+                return
+
+            def _bootstrap_if_empty() -> None:
+                try:
+                    from app.database import SessionLocal
+                    from app.services.public_surface_cache import (
+                        hydrate_public_surface_caches as _hydrate,
+                        refresh_all_public_surface_caches,
+                    )
+
+                    with SessionLocal() as db:
+                        logger.info("Public surface caches empty — one-time background bootstrap")
+                        refresh_all_public_surface_caches(db)
+                    _hydrate()
+                except Exception as exc:
+                    logger.warning("Public surface bootstrap refresh failed: %s", exc)
+
+            threading.Thread(
+                target=_bootstrap_if_empty,
+                daemon=True,
+                name="public-surface-bootstrap",
+            ).start()
+        except Exception as exc:
+            logger.warning("Public surface hydration failed: %s", exc)
+
+    threading.Thread(target=_hydrate_public_caches, daemon=True, name="public-surface-hydrate").start()
+
+    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 30)
+    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 60)
 
 
 @app.get("/health")
@@ -317,28 +353,6 @@ def _scheduled_scraper_loop():
                     odb.close()
             except Exception as oe:
                 logger.warning("Scheduled OEM discovery skipped: %s", oe)
-            try:
-                from app.database import SessionLocal
-                from app.services.newsletter_service import generate_edition, write_cached_edition
-                from app.services.industry_brief_service import build_industry_brief_payload
-
-                ndb = SessionLocal()
-                try:
-                    # Refresh strategic brief first so newsletter embed matches post-scrape data.
-                    try:
-                        strategic_days = max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
-                    except ValueError:
-                        strategic_days = 7
-                    build_industry_brief_payload(
-                        ndb, days=strategic_days, analytics=None, use_cache=True, force_refresh=True
-                    )
-                    edition = generate_edition(ndb, limit=8)
-                    write_cached_edition(edition, ndb)
-                    logger.info("Newsletter edition refreshed after scraper run")
-                finally:
-                    ndb.close()
-            except Exception as ne:
-                logger.warning("Newsletter refresh after scraper skipped: %s", ne)
         except Exception as e:
             logger.exception("Scheduled intelligence scraper failed: %s", e)
         time.sleep(max(3600, int(interval_hours * 3600)))

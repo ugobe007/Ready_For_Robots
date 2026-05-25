@@ -29,6 +29,7 @@ router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
 
 _ROBOTS_LIST_CACHE: dict = {"ts": 0.0, "payload": None}
 _ROBOTS_LIST_TTL_SEC = 300
+_REPORT_MEM_CACHE: dict = {}
 
 
 def _seed_robots_payload() -> list[dict]:
@@ -195,11 +196,10 @@ async def cron_scrape_all(
 
 # ── Report generator ─────────────────────────────────────────────────────────
 
-@router.get("/report")
-def get_report(db: Session = Depends(get_db)):
+def build_humanoid_report_payload(db: Session) -> dict:
     """
-    Generate a structured benchmark report from current scores.
-    Used by Newsletter page and LinkedIn post generator.
+    Structured benchmark report from current scores.
+    Used by daily cache refresh, GET /report, and LinkedIn post generator.
     """
     rows = db.execute(
         text("""
@@ -219,7 +219,6 @@ def get_report(db: Session = Depends(get_db)):
     top3 = robots[:3]
     leader = robots[0]
 
-    # Category winners
     dims = {
         "Mobility":         "score_mobility",
         "Manipulation":     "score_manipulation",
@@ -231,15 +230,16 @@ def get_report(db: Session = Depends(get_db)):
     category_winners = {}
     for label, key in dims.items():
         best = max(robots, key=lambda r: r.get(key) or 0)
-        category_winners[label] = {"name": best["name"], "vendor": best["vendor"], "score": round(best.get(key) or 0, 1)}
+        category_winners[label] = {
+            "name": best["name"],
+            "vendor": best["vendor"],
+            "score": round(best.get(key) or 0, 1),
+        }
 
-    # Available vs pilot split
     available = [r for r in robots if r["status"] == "available"]
     pilot = [r for r in robots if r["status"] == "pilot"]
     research = [r for r in robots if r["status"] == "research"]
 
-    # Key findings
-    specs_leader = dict(leader["specs"] or {})
     findings = []
 
     fastest = max(robots, key=lambda r: float((r["specs"] or {}).get("top_speed_mps") or 0))
@@ -267,8 +267,20 @@ def get_report(db: Session = Depends(get_db)):
             "available_count": len(available),
             "pilot_count": len(pilot),
             "research_count": len(research),
-            "overall_leader": {"name": leader["name"], "vendor": leader["vendor"], "score": round(leader["score_total"] or 0, 1)},
-            "top_3": [{"name": r["name"], "vendor": r["vendor"], "score": round(r["score_total"] or 0, 1), "status": r["status"]} for r in top3],
+            "overall_leader": {
+                "name": leader["name"],
+                "vendor": leader["vendor"],
+                "score": round(leader["score_total"] or 0, 1),
+            },
+            "top_3": [
+                {
+                    "name": r["name"],
+                    "vendor": r["vendor"],
+                    "score": round(r["score_total"] or 0, 1),
+                    "status": r["status"],
+                }
+                for r in top3
+            ],
             "category_winners": category_winners,
             "key_findings": findings,
             "all_robots": [
@@ -292,6 +304,37 @@ def get_report(db: Session = Depends(get_db)):
     }
 
 
+def set_humanoid_report_mem_cache(data: dict) -> None:
+    _REPORT_MEM_CACHE["payload"] = data
+    _REPORT_MEM_CACHE["ts"] = time.monotonic()
+
+
+@router.get("/report")
+def get_report(db: Session = Depends(get_db)):
+    """
+    Benchmark report — daily pre-built cache only.
+    """
+    mem = _REPORT_MEM_CACHE.get("payload")
+    if mem is not None:
+        return mem
+
+    from app.services.public_surface_cache import KEY_HUMANOID_REPORT, read_public_cache
+
+    cached = read_public_cache(KEY_HUMANOID_REPORT, stale_ok=True)
+    if cached is not None:
+        set_humanoid_report_mem_cache(cached)
+        return cached
+
+    try:
+        payload = run_db(lambda: build_humanoid_report_payload(db), timeout_sec=8, label="humanoid/report-fallback")
+        if payload.get("report"):
+            set_humanoid_report_mem_cache(payload)
+        return payload
+    except TimeoutError:
+        logger.warning("humanoid/report fallback timed out")
+        return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat(), "cache_pending": True}
+
+
 # ── LinkedIn post generator ───────────────────────────────────────────────────
 
 @router.get("/linkedin-post")
@@ -300,8 +343,8 @@ def generate_linkedin_post(db: Session = Depends(get_db)):
     Generate a LinkedIn post from current benchmark results.
     Returns post text + a LinkedIn share URL.
     """
-    from app.api.humanoid_benchmark import get_report
-    report_data = get_report(db)
+    from app.api.humanoid_benchmark import build_humanoid_report_payload
+    report_data = build_humanoid_report_payload(db)
     report = report_data.get("report")
     if not report:
         raise HTTPException(status_code=404, detail="No benchmark data available. Run /seed first.")

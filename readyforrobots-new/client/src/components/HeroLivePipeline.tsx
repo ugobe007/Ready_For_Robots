@@ -88,7 +88,7 @@ export default function HeroLivePipeline() {
     (async () => {
       try {
         const base = getApiBase();
-        const r = await fetch(`${base}/api/leads/homepage?cb=${Date.now()}`, liveFetchInit());
+        const r = await fetch(`${base}/api/leads/homepage`, liveFetchInit());
         if (!r.ok || cancelled) return;
         const raw = await r.text();
         if (raw.trimStart().startsWith("<") || cancelled) return;
