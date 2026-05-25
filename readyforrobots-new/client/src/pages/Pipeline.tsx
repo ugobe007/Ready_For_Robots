@@ -152,12 +152,26 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
   "Meeting Set":   { color: "#FFB000", dot: "#FFB000", label: "Meeting Set",   desc: "On the calendar" },
 };
 
-const USER_STAGE_META: Record<Stage, { label: string; desc: string }> = {
-  "New Signal":    { label: "New Signal",    desc: "SCOUT just flagged this" },
-  "Draft Ready":   { label: "High Priority", desc: "Strong fit — worth pursuing" },
-  "Outreach Sent": { label: "In Progress",   desc: "Saved to your workspace" },
-  "Qualified":     { label: "Qualified",     desc: "Engaged opportunity" },
-  "Meeting Set":   { label: "Meeting Set",   desc: "Conversation scheduled" },
+type UserBucket = "Hot Leads" | "Warm Leads" | "Monitoring";
+
+const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
+
+const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string }> = {
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities" },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track" },
+  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SCOUT is watching" },
+};
+
+const userBucketForDeal = (deal: Pick<Deal, "score">): UserBucket => {
+  if (deal.score >= 85) return "Hot Leads";
+  if (deal.score >= 65) return "Warm Leads";
+  return "Monitoring";
+};
+
+const userTierBadge = (deal: Pick<Deal, "score">) => {
+  if (deal.score >= 85) return { label: "HOT", color: "#34d399" };
+  if (deal.score >= 65) return { label: "WARM", color: "#FFB000" };
+  return { label: "MONITOR", color: "#a78bfa" };
 };
 
 const scoreColor = (s: number) =>
@@ -172,11 +186,9 @@ const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">, adminView: 
 const displayStageColor = (deal: Pick<Deal, "stage" | "signalColor">) =>
   deal.stage === "New Signal" ? deal.signalColor : STAGE_META[deal.stage].color;
 
-const stageLabel = (stage: Stage, isAdmin: boolean) =>
-  isAdmin ? STAGE_META[stage].label : USER_STAGE_META[stage].label;
+const stageLabel = (stage: Stage) => STAGE_META[stage].label;
 
-const stageDesc = (stage: Stage, isAdmin: boolean) =>
-  isAdmin ? STAGE_META[stage].desc : USER_STAGE_META[stage].desc;
+const stageDesc = (stage: Stage) => STAGE_META[stage].desc;
 
 const formatActivationTime = (value?: string | null) => {
   if (!value) return "just now";
@@ -300,7 +312,7 @@ export default function Pipeline() {
     const authHdr = authHeader(token);
 
     Promise.allSettled([
-      fetch(`${base}/api/leads?limit=18&exclude_junk=true&sort=score`, liveFetchInit()),
+      fetch(`${base}/api/leads?limit=50&exclude_junk=true&sort=score`, liveFetchInit()),
       fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
       token
         ? fetch(`${base}/api/user/me`, liveFetchInit({ headers: authHdr }))
@@ -445,7 +457,7 @@ export default function Pipeline() {
         const idx = STAGES.indexOf(d.stage);
         const next = STAGES[idx + direction];
         if (!next) return d;
-        toast.success(`Moved "${d.company}" to ${stageLabel(next, isAdmin)}`);
+        toast.success(`Moved "${d.company}" to ${stageLabel(next)}`);
         return { ...d, stage: next, updatedAt: "just now" };
       })
     );
@@ -730,12 +742,12 @@ export default function Pipeline() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SCOUT</p>
                 <h1 className="font-extrabold text-white text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {isAdmin ? "Active Signals → Live Pipeline" : "Your SCOUT Pipeline"}
+                  {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                 </h1>
                 <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
                   {isAdmin
                     ? "Authoritative database counts up top. Cal outreach controls below."
-                    : "Leads SCOUT flagged as robot-ready, with live signals and cited research."}
+                    : "Live robot-ready leads ranked by buyer intent, signal strength, and industry fit."}
                 </p>
               </div>
             </div>
@@ -792,11 +804,11 @@ export default function Pipeline() {
               color="#FFB000"
             />
             <PipelineMetric
-              label="Working slice"
+              label={isAdmin ? "Working slice" : "In this view"}
               value={formatMetric(visibleDeals)}
               sub={isAdmin
                 ? `${formatMetric(queuedActivations)} SCOUT activations queued`
-                : "Leads in your filtered view"}
+                : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
               color="#a78bfa"
             />
           </section>
@@ -1147,9 +1159,15 @@ export default function Pipeline() {
           {/* ── Two-panel layout ── */}
           <div className="flex gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
 
-            {/* LEFT: Stage columns as inline row lists */}
+            {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
-              {STAGES.map((stage) => {
+              {loadingLeads && filtered.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-white/8 px-6 py-12 text-center">
+                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-white/20" />
+                  <p className="mt-3 text-sm text-white/35">Loading sales pipeline…</p>
+                </div>
+              ) : isAdmin ? (
+              STAGES.map((stage) => {
                 const stageDeals = filtered.filter((d) => d.stage === stage);
                 const meta = STAGE_META[stage];
                 return (
@@ -1157,8 +1175,8 @@ export default function Pipeline() {
                     {/* Stage header row */}
                     <div className="flex items-center gap-2 px-3 py-2 mb-1">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
-                      <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage, isAdmin)}</span>
-                      <span className="text-[10px] text-white/25 ml-0.5">— {stageDesc(stage, isAdmin)}</span>
+                      <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage)}</span>
+                      <span className="text-[10px] text-white/25 ml-0.5">— {stageDesc(stage)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -1187,7 +1205,6 @@ export default function Pipeline() {
                                   : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }
                               }
                             >
-                              {/* Score ring */}
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
                                 style={{ borderColor: scoreColor(deal.score), background: `${scoreColor(deal.score)}10` }}
@@ -1197,7 +1214,6 @@ export default function Pipeline() {
                                 </span>
                               </div>
 
-                              {/* Company + signal inline */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                   <span className="text-sm font-semibold text-white truncate">{deal.company}</span>
@@ -1206,18 +1222,17 @@ export default function Pipeline() {
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: displayStageColor(deal), background: `${displayStageColor(deal)}15` }}
                                   >
-                                    {displayStageLabel(deal, isAdmin)}
+                                    {displayStageLabel(deal, true)}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
                               </div>
 
-                              {/* Email status + time + arrow */}
                               <div className="flex items-center gap-2 shrink-0">
-                                {isAdmin && deal.stage === "Outreach Sent" && (
+                                {deal.stage === "Outreach Sent" && (
                                   <span title="Email sent"><Send className="h-3 w-3" style={{ color: "#34d399" }} /></span>
                                 )}
-                                {isAdmin && deal.stage === "Draft Ready" && (
+                                {deal.stage === "Draft Ready" && (
                                   <span title="Draft ready"><Mail className="h-3 w-3" style={{ color: "#60a5fa" }} /></span>
                                 )}
                                 <span className="text-[10px] text-white/20 font-mono hidden sm:block" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -1235,7 +1250,89 @@ export default function Pipeline() {
                     )}
                   </div>
                 );
-              })}
+              })
+              ) : (
+              USER_BUCKETS.map((bucket) => {
+                const bucketDeals = filtered.filter((d) => userBucketForDeal(d) === bucket);
+                const meta = USER_BUCKET_META[bucket];
+                return (
+                  <div key={bucket}>
+                    <div className="flex items-center gap-2 px-3 py-2 mb-1">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
+                      <span className="text-xs font-bold" style={{ color: meta.color }}>{bucket}</span>
+                      <span className="text-[10px] text-white/25 ml-0.5">— {meta.desc}</span>
+                      <span
+                        className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ color: meta.color, background: `${meta.color}15` }}
+                      >
+                        {bucketDeals.length}
+                      </span>
+                    </div>
+
+                    {bucketDeals.length === 0 ? (
+                      <div className="mx-1 mb-2 rounded-lg border border-dashed border-white/6 px-4 py-3">
+                        <p className="text-[11px] text-white/20 italic">No leads in this tier right now</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-0.5 mb-2">
+                        {bucketDeals.map((deal) => {
+                          const isSelected = deal.id === selectedId;
+                          const tier = userTierBadge(deal);
+                          return (
+                            <button
+                              key={deal.id}
+                              onClick={() => setSelectedId(deal.id)}
+                              className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group"
+                              style={
+                                isSelected
+                                  ? { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)" }
+                                  : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }
+                              }
+                            >
+                              <div
+                                className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
+                                style={{ borderColor: scoreColor(deal.score), background: `${scoreColor(deal.score)}10` }}
+                              >
+                                <span className="font-mono text-[10px] font-bold" style={{ color: scoreColor(deal.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                                  {deal.score}
+                                </span>
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="text-sm font-semibold text-white truncate">{deal.company}</span>
+                                  <span className="text-[10px] text-white/30 shrink-0">{deal.industry}</span>
+                                  <span
+                                    className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                    style={{ color: tier.color, background: `${tier.color}15` }}
+                                  >
+                                    {tier.label}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span
+                                  className="hidden sm:inline text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+                                  style={{ color: deal.signalColor, background: `${deal.signalColor}12` }}
+                                >
+                                  {deal.signalType}
+                                </span>
+                                <ChevronRight
+                                  className="h-3.5 w-3.5 transition-colors"
+                                  style={{ color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.15)" }}
+                                />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+              )}
             </div>
 
             {/* RIGHT: Deal detail + outreach draft */}
@@ -1281,14 +1378,27 @@ export default function Pipeline() {
                       </div>
                     </div>
 
-                    {/* Stage + contact inline */}
+                    {/* Tier / stage badge + contact inline */}
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span
-                        className="text-[10px] font-bold px-2 py-1 rounded-full"
-                        style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
-                      >
-                        {displayStageLabel(selected, isAdmin)}
-                      </span>
+                      {isAdmin ? (
+                        <span
+                          className="text-[10px] font-bold px-2 py-1 rounded-full"
+                          style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
+                        >
+                          {displayStageLabel(selected, true)}
+                        </span>
+                      ) : (
+                        <span
+                          className="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide"
+                          style={{
+                            color: userTierBadge(selected).color,
+                            background: `${userTierBadge(selected).color}15`,
+                            border: `1px solid ${userTierBadge(selected).color}25`,
+                          }}
+                        >
+                          {userTierBadge(selected).label}
+                        </span>
+                      )}
                       {selected.contact && (
                         <span className="text-[11px] text-white/40">
                           <span className="text-white/60 font-medium">{selected.contact}</span> · {selected.contactTitle}
@@ -1482,18 +1592,18 @@ export default function Pipeline() {
 
                   {/* Action bar */}
                   <div className="p-4 border-t border-white/8 flex items-center gap-2">
-                    {STAGES.indexOf(selected.stage) > 0 && (
-                      <button
-                        onClick={() => moveStage(selected.id, -1)}
-                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all"
-                        style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.03)" }}
-                      >
-                        <ArrowLeft className="h-3 w-3" />
-                        Back
-                      </button>
-                    )}
                     {isAdmin ? (
                       <>
+                        {STAGES.indexOf(selected.stage) > 0 && (
+                          <button
+                            onClick={() => moveStage(selected.id, -1)}
+                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all"
+                            style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.03)" }}
+                          >
+                            <ArrowLeft className="h-3 w-3" />
+                            Back
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             copyDraft();
@@ -1522,30 +1632,18 @@ export default function Pipeline() {
                         )}
                       </>
                     ) : (
-                      <>
-                        <button
-                          onClick={() => void handleSaveLead(selected)}
-                          disabled={advancingLeadId === selected.id}
-                          className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all disabled:opacity-50"
-                          style={{ background: "rgba(3,218,197,0.12)", color: "#99f6e4", border: "1px solid rgba(3,218,197,0.28)" }}
-                        >
-                          {advancingLeadId === selected.id
-                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                            : <Zap className="h-3.5 w-3.5" />
-                          }
-                          {advancingLeadId === selected.id ? "Saving..." : "Save to workspace"}
-                        </button>
-                        {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
-                          <button
-                            onClick={() => moveStage(selected.id, 1)}
-                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                            style={{ background: "#7c3aed", color: "#fff", border: "1px solid #7c3aed" }}
-                          >
-                            Next stage
-                            <ArrowRight className="h-3 w-3" />
-                          </button>
-                        )}
-                      </>
+                      <button
+                        onClick={() => void handleSaveLead(selected)}
+                        disabled={advancingLeadId === selected.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all disabled:opacity-50"
+                        style={{ background: "rgba(3,218,197,0.12)", color: "#99f6e4", border: "1px solid rgba(3,218,197,0.28)" }}
+                      >
+                        {advancingLeadId === selected.id
+                          ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          : <Zap className="h-3.5 w-3.5" />
+                        }
+                        {advancingLeadId === selected.id ? "Saving..." : "Save to workspace"}
+                      </button>
                     )}
                   </div>
                 </>
@@ -1555,7 +1653,7 @@ export default function Pipeline() {
                   <p className="text-sm text-white/25">
                     {isAdmin
                       ? "Select a deal to review signal detail and Cal outreach"
-                      : "Select a lead to see SCOUT intelligence and research"}
+                      : "Select a lead to review signals, research, and SCOUT scoring"}
                   </p>
                 </div>
               )}
