@@ -3,12 +3,9 @@ Newsletter API
 ==============
 GET /api/newsletter/edition
 
-Returns the daily pre-built newsletter edition (hot leads + industry brief).
-Content is generated once each morning by refresh_public_surface_caches_task (Celery)
-and served read-only from durable cache — never regenerated on page load.
-
-Force-regeneration (refresh=true, POST /generate): when NEWSLETTER_REGEN_SECRET is set in
-the environment, callers must send X-Newsletter-Regen-Key or an admin Bearer JWT.
+Serves the daily pre-built newsletter from durable cache + library archive.
+The bundled seed library guarantees instant story content on cold deploy; the
+morning agent (6:15 UTC) refreshes when lead/signal fingerprints change.
 """
 import logging
 import os
@@ -26,15 +23,16 @@ from app.api.auth_deps import assert_newsletter_regen_allowed
 from app.database import get_db
 from app.models.newsletter_subscriber import NewsletterSubscriber
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.newsletter_library import (
+    build_daily_newsletter_edition,
+    load_seed_edition,
+    resolve_edition_for_serving,
+)
 from app.services.newsletter_service import (
     NEWSLETTER_PIPELINE_CACHE_KEY,
-    fallback_edition,
-    generate_edition,
-    read_cached_edition_stale,
     write_cached_edition,
 )
 from app.services.public_surface_cache import read_public_cache, write_public_cache
-from app.services.pipeline_cache_store import cache_read_safe
 
 router = APIRouter()
 
@@ -120,6 +118,8 @@ def _trim_edition(data: dict, limit: int) -> dict:
 
 
 def hydrate_newsletter_mem_cache(data: dict) -> None:
+    if not (data.get("topStories") or []):
+        return
     _edition_mem_cache["v1"] = {"ts": time.monotonic(), "data": data}
 
 
@@ -130,27 +130,16 @@ def _get_mem_cache() -> Optional[dict]:
     return None
 
 
-def _load_durable_edition() -> Optional[dict]:
-    mem = _get_mem_cache()
-    if mem:
-        return mem
+def _install_seed_if_empty() -> None:
+    if _get_mem_cache():
+        return
+    seed = load_seed_edition()
+    if seed:
+        hydrate_newsletter_mem_cache(seed)
+        _log.info("Newsletter seed library loaded into L1 (%d stories)", len(seed.get("topStories") or []))
 
-    cached = read_public_cache(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True)
-    if cached:
-        hydrate_newsletter_mem_cache(cached)
-        return cached
 
-    shared = cache_read_safe(NEWSLETTER_PIPELINE_CACHE_KEY, stale_ok=True, timeout_sec=3.0)
-    if shared:
-        hydrate_newsletter_mem_cache(shared)
-        return shared
-
-    stale_file = read_cached_edition_stale()
-    if stale_file:
-        hydrate_newsletter_mem_cache(stale_file)
-        return stale_file
-
-    return None
+_install_seed_if_empty()
 
 
 @router.get("/edition")
@@ -162,50 +151,42 @@ def get_newsletter_edition(
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
     db: Session = Depends(get_db),
 ):
-    """
-    Daily newsletter edition — read-only from pre-built cache.
-    """
+    """Daily newsletter — instant from library; never empty when archive exists."""
     response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     if refresh:
         assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
-        from app.services.industry_brief_service import build_industry_brief_payload
-
-        build_industry_brief_payload(
-            db,
-            days=_strategic_brief_days(),
-            analytics=None,
-            use_cache=True,
-            force_refresh=True,
-        )
-        data = generate_edition(db, limit=limit, skip_openai_brief=False)
+        data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=False)
         write_cached_edition(data, db)
         write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, data)
         hydrate_newsletter_mem_cache(data)
         return _trim_edition(data, limit)
 
-    cached = _load_durable_edition()
-    if cached:
-        return _trim_edition(cached, limit)
+    mem = _get_mem_cache()
+    if mem and len(mem.get("topStories") or []) >= 1:
+        return _trim_edition(mem, limit)
 
-    return _trim_edition(fallback_edition(limit=limit), limit)
+    edition = resolve_edition_for_serving(db, limit=limit)
+    if len(edition.get("topStories") or []) >= 1:
+        hydrate_newsletter_mem_cache(edition)
+    return edition
 
 
 def _warm_newsletter_cache_at_startup() -> None:
-    """Hydrate newsletter L1 from durable cache — no on-request generation."""
+    """Hydrate newsletter L1 from library + durable cache."""
     def _warm() -> None:
         try:
+            _install_seed_if_empty()
             from app.services.public_surface_cache import hydrate_public_surface_caches
 
             hydrate_public_surface_caches()
             edition = _get_mem_cache()
             if edition:
                 _log.info(
-                    "Newsletter L1 hydrated (%d stories)",
+                    "Newsletter L1 ready (%d stories, served_from=%s)",
                     len(edition.get("topStories") or []),
+                    (edition.get("_meta") or {}).get("served_from", "mem"),
                 )
-            else:
-                _log.info("Newsletter cache empty — awaiting daily refresh task")
         except Exception as exc:
             _log.warning("Newsletter cache hydrate failed: %s", exc)
 
@@ -241,20 +222,20 @@ def trigger_newsletter_generate(
     authorization: Optional[str] = Header(None),
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
 ):
-    """
-    Manually trigger newsletter generation and caching.
-    Runs in background. Use before posting to refresh the edition.
-    """
+    """Manually trigger full public-surface rebuild (admin)."""
     assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
 
     def _generate():
         from app.database import SessionLocal
-        from app.services.industry_brief_service import build_industry_brief_payload
-        from app.services.public_surface_cache import refresh_all_public_surface_caches
+        from app.services.public_surface_cache import (
+            hydrate_public_surface_caches,
+            refresh_all_public_surface_caches,
+        )
 
         db = SessionLocal()
         try:
             refresh_all_public_surface_caches(db)
+            hydrate_public_surface_caches()
         finally:
             db.close()
 

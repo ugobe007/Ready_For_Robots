@@ -485,6 +485,39 @@ def refresh_public_surface_caches_task(self):
         raise self.retry(exc=exc)
 
 
+@celery_app.task(bind=True, max_retries=1, default_retry_delay=90)
+def incremental_newsletter_update_task(self):
+    """
+    Post-scraper check (10:00 UTC). Rebuilds only when lead/signal fingerprint changed;
+    otherwise rolls edition metadata forward from the library.
+    """
+    from app.services.newsletter_library import build_daily_newsletter_edition
+    from app.services.newsletter_service import NEWSLETTER_PIPELINE_CACHE_KEY, write_cached_edition
+    from app.services.public_surface_cache import hydrate_public_surface_caches, write_public_cache
+
+    db = get_db()
+    try:
+        edition = build_daily_newsletter_edition(db, limit=15, force=False, skip_openai_brief=False)
+        write_cached_edition(edition, db)
+        write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, edition)
+        hydrate_public_surface_caches()
+        meta = edition.get("_meta") or {}
+        logger.info(
+            "Incremental newsletter update: mode=%s stories=%d",
+            meta.get("update_mode"),
+            len(edition.get("topStories") or []),
+        )
+        return {
+            "update_mode": meta.get("update_mode"),
+            "stories": len(edition.get("topStories") or []),
+        }
+    except Exception as exc:
+        logger.error("Incremental newsletter update failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
 def generate_newsletter_edition_task(self, limit=15):
     """Legacy task name — runs the full public-surface daily refresh."""

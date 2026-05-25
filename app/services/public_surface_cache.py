@@ -18,7 +18,7 @@ from app.services.pipeline_cache_store import cache_read_safe, cache_write
 
 logger = logging.getLogger(__name__)
 
-# ~26 hours — survives a missed beat run; refreshed daily at 9:30 UTC.
+# ~26 hours — survives a missed beat run; refreshed daily at 6:15 UTC (+ 10:00 incremental).
 PUBLIC_CACHE_TTL_MINUTES = 26 * 60
 
 KEY_HOMEPAGE = "public:homepage:v1"
@@ -50,25 +50,21 @@ def refresh_all_public_surface_caches(db: Session) -> dict[str, Any]:
         build_public_leads_list,
     )
     from app.services.industry_brief_service import build_industry_brief_payload
-    from app.services.newsletter_service import generate_edition, write_cached_edition
+    from app.services.newsletter_library import build_daily_newsletter_edition
+    from app.services.newsletter_service import write_cached_edition
 
     stats: dict[str, Any] = {}
 
-    try:
-        days = max(1, int(__import__("os").getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
-    except ValueError:
-        days = 7
-
-    build_industry_brief_payload(
+    newsletter = build_daily_newsletter_edition(
         db,
-        days=days,
-        analytics=None,
-        use_cache=True,
-        force_refresh=True,
+        limit=15,
+        force=True,
+        skip_openai_brief=False,
     )
-    newsletter = generate_edition(db, limit=15, skip_openai_brief=False)
     write_cached_edition(newsletter, db)
+    write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, newsletter)
     stats["newsletter_stories"] = len(newsletter.get("topStories") or [])
+    stats["newsletter_update_mode"] = (newsletter.get("_meta") or {}).get("update_mode")
 
     homepage = _build_homepage_payload(db)
     write_public_cache(db, KEY_HOMEPAGE, homepage)
@@ -107,9 +103,22 @@ def hydrate_public_surface_caches() -> None:
     hydrated = 0
 
     newsletter = read_public_cache(NEWSLETTER_PIPELINE_CACHE_KEY)
-    if newsletter:
+    if newsletter and (newsletter.get("topStories") or []):
         hydrate_newsletter_mem_cache(newsletter)
         hydrated += 1
+    else:
+        from app.services.newsletter_library import load_library_latest, load_seed_edition
+        from app.api.newsletter import hydrate_newsletter_mem_cache as _hydrate_nl
+
+        library = load_library_latest()
+        if library and (library.get("topStories") or []):
+            _hydrate_nl(library)
+            hydrated += 1
+        else:
+            seed = load_seed_edition()
+            if seed:
+                _hydrate_nl(seed)
+                hydrated += 1
 
     homepage = read_public_cache(KEY_HOMEPAGE)
     if homepage:

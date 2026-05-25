@@ -249,7 +249,8 @@ def startup():
 
             from app.api.newsletter import _get_mem_cache
 
-            if _get_mem_cache():
+            mem = _get_mem_cache()
+            if mem and len(mem.get("topStories") or []) >= 8:
                 return
 
             def _bootstrap_if_empty() -> None:

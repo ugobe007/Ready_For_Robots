@@ -126,31 +126,52 @@ export default function Newsletter() {
 
   useEffect(() => {
     let cancelled = false;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 12_000);
+    let retryTimer: number | undefined;
+    let activeController: AbortController | null = null;
 
-    fetch(`${getApiBase()}/api/newsletter/edition?limit=15`, liveFetchInit({
-      signal: controller.signal,
-    }))
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        if (data?.latestEdition) {
-          setEdition(data);
-          setLoadStatus("ready");
-          return;
-        }
-        setLoadStatus("error");
-      })
-      .catch(() => {
-        if (!cancelled) setLoadStatus("error");
-      })
-      .finally(() => window.clearTimeout(timeout));
+    const load = (attempt: number) => {
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+      const timeout = window.setTimeout(() => controller.abort(), 10_000);
+      fetch(`${getApiBase()}/api/newsletter/edition?limit=15`, liveFetchInit({
+        signal: controller.signal,
+      }))
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled) return;
+          const storyCount = Array.isArray(data?.topStories) ? data.topStories.length : 0;
+          if (data?.latestEdition && storyCount > 0) {
+            setEdition(data);
+            setLoadStatus("ready");
+            return;
+          }
+          if (attempt < 3) {
+            retryTimer = window.setTimeout(() => load(attempt + 1), 2500);
+            return;
+          }
+          if (data?.latestEdition) {
+            setEdition(data);
+          }
+          setLoadStatus(storyCount > 0 ? "ready" : "error");
+        })
+        .catch(() => {
+          if (cancelled) return;
+          if (attempt < 3) {
+            retryTimer = window.setTimeout(() => load(attempt + 1), 2500);
+            return;
+          }
+          setLoadStatus("error");
+        })
+        .finally(() => window.clearTimeout(timeout));
+    };
+
+    load(0);
 
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeout);
+      activeController?.abort();
+      if (retryTimer) window.clearTimeout(retryTimer);
     };
   }, []);
 
@@ -262,8 +283,7 @@ export default function Newsletter() {
             <section className="mb-8 rounded-3xl border border-white/10 p-8 text-center" style={{ background: "rgba(255,255,255,0.025)" }}>
               <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${TEAL} transparent transparent transparent` }} />
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: TEAL }}>Building your intelligence brief</p>
-              <p className="text-sm text-white/40">Pulling signals from 4,000+ companies… {loadSec > 5 ? `${loadSec}s` : ""}</p>
-              {loadSec > 20 && <p className="mt-2 text-xs text-white/25">AI analysis is generating — this takes about 60 seconds on first load.</p>}
+              <p className="text-sm text-white/40">Loading today&apos;s brief from the archive… {loadSec > 3 ? `${loadSec}s` : ""}</p>
             </section>
           )}
 
@@ -444,6 +464,12 @@ export default function Newsletter() {
                   <span>{String(benchReport.pilot_count ?? 0)} in pilot</span>
                 </div>
               </div>
+            </section>
+          )}
+
+          {loadStatus === "ready" && stories.length === 0 && (
+            <section className="mb-8 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.04)" }}>
+              <p className="text-sm text-white/50">Today&apos;s signal stories are still syncing. The brief header loaded — reload in a moment for full accounts.</p>
             </section>
           )}
 
