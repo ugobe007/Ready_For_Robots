@@ -312,15 +312,14 @@ export default function Pipeline() {
     const authHdr = authHeader(token);
 
     Promise.allSettled([
-      fetch(`${base}/api/leads?limit=50&exclude_junk=true&sort=score`, liveFetchInit()),
-      fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit()),
+      fetch(`${base}/api/leads/homepage`, liveFetchInit()),
       token
         ? fetch(`${base}/api/user/me`, liveFetchInit({ headers: authHdr }))
         : Promise.resolve(null),
       token
         ? fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHdr }))
         : Promise.resolve(null),
-    ]).then(async ([leadsResult, summaryResult, meResult, settingsResult]) => {
+    ]).then(async ([homepageResult, meResult, settingsResult]) => {
       if (cancelled) return;
 
       let admin = false;
@@ -334,13 +333,18 @@ export default function Pipeline() {
         setIsAdmin(false);
       }
 
-      // Leads
+      // Batched homepage payload — cached server-side; avoids cold /api/leads full-table scan.
       try {
-        if (leadsResult.status === "fulfilled" && leadsResult.value?.ok) {
-          const rows = (await leadsResult.value.json()) as ApiLead[];
-          const mapped = Array.isArray(rows) ? rows.map(mapApiLeadToDeal) : [];
+        if (homepageResult.status === "fulfilled" && homepageResult.value?.ok) {
+          const payload = (await homepageResult.value.json()) as {
+            summary?: LeadSummary;
+            hotLeads?: ApiLead[];
+          };
+          const rows = Array.isArray(payload.hotLeads) ? payload.hotLeads : [];
+          const mapped = rows.map(mapApiLeadToDeal);
           setDeals(mapped);
           setSelectedId(mapped[0]?.id ?? null);
+          if (payload.summary) setSummary(payload.summary);
           setMarketSnippet(marketSnippetFromDeals(mapped));
         } else {
           throw new Error("Could not load pipeline");
@@ -351,22 +355,17 @@ export default function Pipeline() {
         setSelectedId(null);
       } finally {
         setLoadingLeads(false);
-      }
-
-      // Summary — fallback to homepage totals if /summary fails or times out
-      try {
-        if (summaryResult.status === "fulfilled" && summaryResult.value?.ok) {
-          setSummary((await summaryResult.value.json()) as LeadSummary);
-        } else {
-          const hp = await fetch(`${base}/api/leads/homepage`, liveFetchInit());
-          if (hp.ok) {
-            const data = await hp.json() as { summary?: LeadSummary };
-            if (data.summary) setSummary(data.summary);
-          }
-        }
-      } catch { /* advisory */ } finally {
         setLoadingSummary(false);
       }
+
+      // Non-blocking refresh of authoritative summary totals (served from warm cache when available).
+      void fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit())
+        .then(async (response) => {
+          if (!response.ok || cancelled) return;
+          const data = (await response.json()) as LeadSummary;
+          if (!cancelled) setSummary(data);
+        })
+        .catch(() => { /* advisory */ });
 
       // SCOUT activations — admin-only internal console
       try {
@@ -410,7 +409,7 @@ export default function Pipeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.access_token]);
 
-  // Lazy detail enrichment: fires only when a deal is selected and detail is not yet loaded.
+  // Lazy detail enrichment when a lead is selected.
   useEffect(() => {
     if (!selectedId) return;
     const existing = deals.find((deal) => deal.id === selectedId);
@@ -1281,6 +1280,7 @@ export default function Pipeline() {
                           return (
                             <button
                               key={deal.id}
+                              type="button"
                               onClick={() => setSelectedId(deal.id)}
                               className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group"
                               style={
@@ -1335,12 +1335,11 @@ export default function Pipeline() {
               )}
             </div>
 
-            {/* RIGHT: Deal detail + outreach draft */}
+            {/* RIGHT: selected lead detail */}
             <div
               className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col"
               style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px", maxHeight: "calc(100vh - 100px)" }}
             >
-              {/* SCOUT action bar — admin only */}
               {isAdmin && (
               <ScoutActionBar
                 accessToken={session?.access_token}
@@ -1555,7 +1554,7 @@ export default function Pipeline() {
                   </div>
                   )}
 
-                  {/* SCOUT read — user view */}
+                  {/* SCOUT read — user detail */}
                   {!isAdmin && (
                   <div className="flex-1 overflow-y-auto px-5 py-3">
                     <div className="flex items-center gap-1.5 mb-2">
