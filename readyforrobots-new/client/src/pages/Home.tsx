@@ -90,6 +90,14 @@ type NewsletterEdition = {
   topStories?: NewsletterStory[];
 };
 
+type HumanoidBenchReport = {
+  title?: string;
+  total_robots?: number;
+  available_count?: number;
+  overall_leader?: { name?: string; vendor?: string; score?: number };
+  key_findings?: string[];
+};
+
 const beforeAfter = [
   { before: "Cold lists with no context", after: "Signal-triggered outreach with exact buying reason" },
   { before: "Reach out and hope for the right timing", after: "Contact during the decision window, not after" },
@@ -117,6 +125,7 @@ export default function Home() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [dailyBrief, setDailyBrief] = useState<NewsletterEdition | null>(null);
+  const [benchReport, setBenchReport] = useState<HumanoidBenchReport | null>(null);
 
   const howItWorks = useFadeUp();
   const agentPitch = useFadeUp();
@@ -132,6 +141,19 @@ export default function Home() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data?.topStories) setDailyBrief(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${getApiBase()}/api/humanoid/report`, liveFetchInit())
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.report) setBenchReport(data.report);
       })
       .catch(() => undefined);
     return () => {
@@ -177,6 +199,11 @@ export default function Home() {
   const briefHeadline = cleanScrapedText(dailyBrief?.latestEdition?.headline) || "Fresh robot demand signals, updated daily.";
   const briefSubheadline = cleanScrapedText(dailyBrief?.latestEdition?.subheadline) || "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
 
+  const benchLeader = benchReport?.overall_leader;
+  const benchInlineText = benchLeader?.name
+    ? `${benchLeader.name} leads at ${benchLeader.score ?? "—"}/100${benchReport?.total_robots ? ` across ${benchReport.total_robots} humanoids` : ""}.`
+    : "Independent 6-criteria scores for every major humanoid — updated weekly.";
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
@@ -206,6 +233,15 @@ export default function Home() {
         <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-center">
           <div>
+            {/* Humanoid benchmark news */}
+            <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#a78bfa" }}>New · </span>
+              <Link href="/robots" className="font-semibold underline decoration-violet-400/35 underline-offset-2 transition-colors hover:text-white/75" style={{ color: "#c4b5fd" }}>
+                Humanoid robot benchmark
+              </Link>
+              {" — "}{benchInlineText}
+            </p>
+
             {/* Eyebrow */}
             <div className="inline-flex items-center gap-2 mb-7">
               <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#7c3aed" }} />
