@@ -207,6 +207,15 @@
     }
   }
 
+  @keyframes rfr-benchmark-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
   .rfr-animate-fade-in {
     animation: rfr-fade-in 0.45s ease-out both;
   }

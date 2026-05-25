@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
+import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -259,6 +260,8 @@ export default function Robots() {
           Estimates used where live test data is unavailable.
         </p>
       </section>
+
+      <HumanoidBenchmarkMarquee />
 
       {/* ── Controls ── */}
       <div className="mx-auto max-w-5xl px-4 pb-6 flex flex-wrap items-center gap-3">

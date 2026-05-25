@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
 import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
+import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
@@ -384,6 +385,8 @@ export default function Home() {
 
       {/* ── PIPELINE PREVIEW ── */}
       <PipelinePreview />
+
+      <HumanoidBenchmarkMarquee compact />
 
       {/* ── DAILY ROBOT INTELLIGENCE BRIEF ── */}
       <section className="px-6 py-16 border-t border-white/6" style={{ background: "#0d0520" }}>
