@@ -152,7 +152,10 @@ def get_newsletter_edition(
     db: Session = Depends(get_db),
 ):
     """Daily newsletter — instant from library; never empty when archive exists."""
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
+
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+    maybe_schedule_public_cache_refresh()
 
     if refresh:
         assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)

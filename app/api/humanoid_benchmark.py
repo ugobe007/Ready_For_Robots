@@ -312,27 +312,28 @@ def set_humanoid_report_mem_cache(data: dict) -> None:
 @router.get("/report")
 def get_report(db: Session = Depends(get_db)):
     """
-    Benchmark report — daily pre-built cache only.
+    Benchmark report — L1 → durable cache only; background refresh every 2 hours.
     """
+    from app.services.public_surface_cache import (
+        KEY_HUMANOID_REPORT,
+        maybe_schedule_public_cache_refresh,
+        read_public_cache,
+        schedule_public_cache_refresh,
+    )
+
+    maybe_schedule_public_cache_refresh()
+
     mem = _REPORT_MEM_CACHE.get("payload")
     if mem is not None:
         return mem
-
-    from app.services.public_surface_cache import KEY_HUMANOID_REPORT, read_public_cache
 
     cached = read_public_cache(KEY_HUMANOID_REPORT, stale_ok=True)
     if cached is not None:
         set_humanoid_report_mem_cache(cached)
         return cached
 
-    try:
-        payload = run_db(lambda: build_humanoid_report_payload(db), timeout_sec=8, label="humanoid/report-fallback")
-        if payload.get("report"):
-            set_humanoid_report_mem_cache(payload)
-        return payload
-    except TimeoutError:
-        logger.warning("humanoid/report fallback timed out")
-        return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat(), "cache_pending": True}
+    schedule_public_cache_refresh(pipeline_only=True, reason="humanoid_miss")
+    return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat(), "cache_pending": True}
 
 
 # ── LinkedIn post generator ───────────────────────────────────────────────────

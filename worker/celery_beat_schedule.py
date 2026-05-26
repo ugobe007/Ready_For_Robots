@@ -202,6 +202,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.tasks.refresh_public_surface_caches_task',
         'schedule': crontab(hour=6, minute=15),
     },
+    # ── PIPELINE SURFACES ── Homepage, summary, leads lists, humanoid — every 2 hours
+    'public-pipeline-surfaces-2h': {
+        'task': 'worker.tasks.refresh_pipeline_caches_task',
+        'schedule': 7200.0,  # 2 hours
+    },
     # ── NEWSLETTER INCREMENTAL ── After 9am intelligence scraper; skip if signals unchanged
     'newsletter-incremental': {
         'task': 'worker.tasks.incremental_newsletter_update_task',

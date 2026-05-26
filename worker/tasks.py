@@ -470,6 +470,23 @@ def _run_public_surface_refresh() -> dict:
         db.close()
 
 
+def _run_pipeline_surface_refresh() -> dict:
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_newsletter_surface_cache,
+        refresh_pipeline_surface_caches,
+    )
+
+    db = get_db()
+    try:
+        stats = refresh_pipeline_surface_caches(db)
+        stats.update(refresh_newsletter_surface_cache(db, force=False))
+        hydrate_public_surface_caches()
+        return stats
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
 def refresh_public_surface_caches_task(self):
     """
@@ -482,6 +499,21 @@ def refresh_public_surface_caches_task(self):
         return stats
     except Exception as exc:
         logger.error("Public surface cache refresh failed: %s", exc)
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def refresh_pipeline_caches_task(self):
+    """
+    Rebuild pipeline/public page caches every 2 hours (homepage, summary, leads,
+    humanoid) plus incremental newsletter when signals changed.
+    """
+    try:
+        stats = _run_pipeline_surface_refresh()
+        logger.info("Pipeline surface caches refreshed (2h): %s", stats)
+        return stats
+    except Exception as exc:
+        logger.error("Pipeline surface cache refresh failed: %s", exc)
         raise self.retry(exc=exc)
 
 

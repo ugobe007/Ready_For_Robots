@@ -321,7 +321,7 @@ LEADS_ROTATION_SEC = 300
 
 # In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
-_LEADS_LIST_TTL = 300.0  # 5 minutes
+_LEADS_LIST_TTL = 7200.0  # 2 hours — matches public cache refresh cadence
 
 # Keys currently being refreshed in the background (avoid double-refresh storms).
 _LEADS_LIST_REFRESHING: set[str] = set()
@@ -330,7 +330,7 @@ _LEADS_LIST_REFRESHING: set[str] = set()
 # Survives machine restarts and is shared across all Fly.io instances.
 # TTL is intentionally longer than L1 so deploys can serve stale-but-fast data
 # while the background thread rebuilds.
-_DB_CACHE_TTL_MINUTES = 10
+_DB_CACHE_TTL_MINUTES = 120  # aligned with PUBLIC_CACHE_TTL_MINUTES
 
 
 def _db_cache_read(cache_key: str) -> Optional[list]:
@@ -1195,6 +1195,10 @@ def get_leads(
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
 
+    from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
+
+    maybe_schedule_public_cache_refresh()
+
     # L1 (in-process): fast, per-machine, lost on restart.
     # L2 (Supabase):   persistent, shared across all machines — survives deploys.
     _cache_key = f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
@@ -1208,22 +1212,28 @@ def get_leads(
         min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot
     )
     if public_key:
-        from app.services.public_surface_cache import read_public_cache
+        from app.services.public_surface_cache import read_public_cache, schedule_public_cache_refresh
 
         public_data = read_public_cache(public_key, stale_ok=True)
         if public_data is not None and len(public_data) > 0:
             _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), public_data)
             return public_data
-        # Fall through to live query when daily cache is empty — never serve an empty pipeline.
+        schedule_public_cache_refresh(pipeline_only=True, reason=f"leads_miss_{public_key[-12:]}")
+        _db_data = _db_cache_read(_cache_key)
+        if _db_data is not None:
+            _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _db_data)
+            return _db_data
+        return []
 
     # Legacy L2 for non-standard filtered queries (admin / research views).
     _db_data = _db_cache_read(_cache_key)
     if _db_data is not None:
-        # Seed the L1 cache so subsequent requests on this machine are instant
         _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), _db_data)
-        # Background-refresh if the DB cache is also getting old
         if _cache_key not in _LEADS_LIST_REFRESHING:
-            _schedule_leads_background_refresh(_cache_key, min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot)
+            _schedule_leads_background_refresh(
+                _cache_key, min_score, max_score, tier, industry, signal_type,
+                exclude_junk, limit, sort, rotation_slot,
+            )
         return _db_data
 
     from app.db_timeout import run_db
@@ -1413,7 +1423,7 @@ def post_lead_rep_feedback(
 # clients do not block on a slow rebuild. Cold miss (empty cache) still runs
 # synchronously. Each Fly machine has its own RAM cache; stale serving avoids
 # thundering herds when TTLs expire.
-_HOMEPAGE_CACHE_TTL = 300  # 5 minutes — aligned with LEADS_ROTATION_SEC
+_HOMEPAGE_CACHE_TTL = 7200  # 2 hours — background refresh keeps L1 fresh
 _homepage_cache: dict = {}
 _homepage_build_lock = threading.Lock()
 _homepage_bg_refresh_lock = threading.Lock()
@@ -1660,33 +1670,10 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
 
 
 def _schedule_homepage_background_refresh() -> None:
-    """Single-flight async rebuild; callers already returned stale JSON."""
-    global _homepage_bg_refresh_in_progress
-    with _homepage_bg_refresh_lock:
-        if _homepage_bg_refresh_in_progress:
-            return
-        _homepage_bg_refresh_in_progress = True
+    """Delegate to centralized 2-hour public cache refresh."""
+    from app.services.public_surface_cache import schedule_public_cache_refresh
 
-    def _run():
-        global _homepage_bg_refresh_in_progress
-        try:
-            from app.database import SessionLocal
-
-            db = SessionLocal()
-            try:
-                payload = _build_homepage_payload(db)
-                with _homepage_build_lock:
-                    _set_homepage_cache(payload)
-                    _schedule_summary_background_refresh(True)
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("Homepage background refresh failed: %s", exc)
-        finally:
-            with _homepage_bg_refresh_lock:
-                _homepage_bg_refresh_in_progress = False
-
-    threading.Thread(target=_run, daemon=True, name="homepage-cache-refresh").start()
+    schedule_public_cache_refresh(pipeline_only=True, reason="homepage_stale")
 
 
 def warm_summary_cache() -> None:
@@ -1715,66 +1702,35 @@ def warm_homepage_cache() -> None:
 @router.get("/homepage")
 def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
-    Batched endpoint for homepage: summary + spotlight leads in one response.
+    Batched endpoint for homepage: summary + spotlight leads.
 
-    Prefer daily pre-built cache; fall back to a timed DB build when cache is empty
-    so the pipeline never renders with zero leads after deploy.
+    Serves L1 → durable cache only. Background workers refresh every 2 hours;
+    never blocks on a cold DB query during HTTP.
     """
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    from app.services.public_surface_cache import (
+        KEY_HOMEPAGE,
+        PUBLIC_CACHE_REVALIDATE_SEC,
+        maybe_schedule_public_cache_refresh,
+        read_public_cache,
+        schedule_public_cache_refresh,
+    )
+
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+    maybe_schedule_public_cache_refresh()
 
     entry = _homepage_cache.get("v1")
     if entry is not None:
-        data = entry["data"]
-        if (data.get("hotLeads") or []) or (data.get("summary") or {}).get("total", 0) > 0:
-            return data
-
-    from app.services.public_surface_cache import KEY_HOMEPAGE, read_public_cache, write_public_cache
+        if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
+            _schedule_homepage_background_refresh()
+        return entry["data"]
 
     cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
-    if cached is not None and ((cached.get("hotLeads") or []) or (cached.get("summary") or {}).get("total", 0) > 0):
+    if cached is not None:
         _set_homepage_cache(cached)
         return cached
 
-    from app.database import SessionLocal
-    from app.db_timeout import run_db
-    from fastapi.responses import JSONResponse
-
-    def _cold_build() -> dict:
-        cold_db = SessionLocal()
-        try:
-            return _build_homepage_payload(cold_db, resolve_llm_urls=False)
-        finally:
-            cold_db.close()
-
-    try:
-        payload = run_db(_cold_build, timeout_sec=25, label="homepage/cold")
-    except TimeoutError:
-        logger.error("homepage cold build timed out")
-        _schedule_homepage_background_refresh()
-        return JSONResponse(
-            status_code=503,
-            content={
-                "detail": "Database timeout loading homepage — retry shortly",
-                "summary": {"total": 0, "hot": 0, "warm": 0, "cold": 0},
-                "hotLeads": [],
-            },
-        )
-
-    _set_homepage_cache(payload)
-    _schedule_summary_background_refresh(True)
-    _schedule_homepage_background_refresh()
-
-    def _persist() -> None:
-        try:
-            from app.database import SessionLocal as _SL
-
-            with _SL() as persist_db:
-                write_public_cache(persist_db, KEY_HOMEPAGE, payload)
-        except Exception as exc:
-            logger.debug("homepage public cache write failed: %s", exc)
-
-    threading.Thread(target=_persist, daemon=True, name="homepage-public-cache-write").start()
-    return payload
+    schedule_public_cache_refresh(force=True, pipeline_only=True, reason="homepage_miss")
+    return _empty_homepage_payload()
 
 
 @router.get("/scoring-system")
@@ -1797,34 +1753,10 @@ def _set_summary_cache(exclude_junk: bool, data: dict) -> None:
 
 
 def _schedule_summary_background_refresh(exclude_junk: bool) -> None:
-    """Refresh stale summary without blocking the HTTP response."""
-    key = f"v1_{exclude_junk}"
-    with _summary_bg_lock:
-        if key in _summary_bg_in_progress:
-            return
-        _summary_bg_in_progress.add(key)
+    """Delegate to centralized 2-hour public cache refresh."""
+    from app.services.public_surface_cache import schedule_public_cache_refresh
 
-    def _run():
-        try:
-            from app.database import SessionLocal
-
-            db = SessionLocal()
-            try:
-                data = _compute_pipeline_summary(db, exclude_junk)
-                _set_summary_cache(exclude_junk, data)
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("Summary background refresh failed: %s", exc)
-        finally:
-            with _summary_bg_lock:
-                _summary_bg_in_progress.discard(key)
-
-    threading.Thread(
-        target=_run,
-        daemon=True,
-        name=f"summary-cache-refresh-{exclude_junk}",
-    ).start()
+    schedule_public_cache_refresh(pipeline_only=True, reason=f"summary_{exclude_junk}")
 
 
 @router.get("/summary")
@@ -1833,63 +1765,34 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts — prefer daily cache; fast SQL fallback when cache is empty."""
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+    """Pipeline counts — L1 → durable cache only; background refresh every 2 hours."""
+    from app.services.public_surface_cache import (
+        KEY_SUMMARY_EXCLUDE_JUNK,
+        KEY_SUMMARY_INCLUDE_JUNK,
+        PUBLIC_CACHE_REVALIDATE_SEC,
+        maybe_schedule_public_cache_refresh,
+        read_public_cache,
+        schedule_public_cache_refresh,
+    )
+
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+    maybe_schedule_public_cache_refresh()
 
     cache_key = f"v1_{exclude_junk}"
     entry = _summary_cache.get(cache_key)
     if entry is not None:
-        data = entry["data"]
-        if (data.get("total") or 0) > 0 or not data.get("cache_pending"):
-            return data
-
-    from app.services.public_surface_cache import (
-        KEY_SUMMARY_EXCLUDE_JUNK,
-        KEY_SUMMARY_INCLUDE_JUNK,
-        read_public_cache,
-        write_public_cache,
-    )
+        if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
+            _schedule_summary_background_refresh(exclude_junk)
+        return entry["data"]
 
     durable_key = KEY_SUMMARY_EXCLUDE_JUNK if exclude_junk else KEY_SUMMARY_INCLUDE_JUNK
     cached = read_public_cache(durable_key, stale_ok=True)
-    if cached is not None and (cached.get("total") or 0) > 0:
+    if cached is not None:
         _set_summary_cache(exclude_junk, cached)
         return cached
 
-    from app.database import SessionLocal
-    from app.db_timeout import run_db
-    from fastapi.responses import JSONResponse
-
-    def _cold_summary() -> dict:
-        cold_db = SessionLocal()
-        try:
-            return _compute_pipeline_summary_fast(cold_db)
-        finally:
-            cold_db.close()
-
-    try:
-        result = run_db(_cold_summary, timeout_sec=8, label="summary/cold-fast")
-    except TimeoutError:
-        logger.error("summary fast cold build timed out")
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "Database timeout loading summary — retry shortly"},
-        )
-
-    _set_summary_cache(exclude_junk, result)
-    _schedule_summary_background_refresh(exclude_junk)
-
-    def _persist() -> None:
-        try:
-            from app.database import SessionLocal as _SL
-
-            with _SL() as persist_db:
-                write_public_cache(persist_db, durable_key, result)
-        except Exception as exc:
-            logger.debug("summary public cache write failed: %s", exc)
-
-    threading.Thread(target=_persist, daemon=True, name="summary-public-cache-write").start()
-    return result
+    schedule_public_cache_refresh(force=True, pipeline_only=True, reason="summary_miss")
+    return _empty_summary_payload()
 
 
 @router.post("/reclassify-unknown")

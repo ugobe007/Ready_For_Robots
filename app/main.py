@@ -242,37 +242,22 @@ def startup():
         import time
         time.sleep(5)
         try:
-            from app.services.public_surface_cache import hydrate_public_surface_caches
+            from app.services.public_surface_cache import (
+                KEY_HOMEPAGE,
+                hydrate_public_surface_caches,
+                read_public_cache,
+                schedule_public_cache_refresh,
+                start_public_cache_refresh_loop,
+            )
 
             hydrate_public_surface_caches()
             logger.info("Public surface L1 hydration complete")
 
-            from app.services.public_surface_cache import KEY_HOMEPAGE, read_public_cache
+            start_public_cache_refresh_loop()
 
-            homepage = read_public_cache(KEY_HOMEPAGE)
-            if homepage and len(homepage.get("hotLeads") or []) >= 5:
-                return
-
-            def _bootstrap_if_empty() -> None:
-                try:
-                    from app.database import SessionLocal
-                    from app.services.public_surface_cache import (
-                        hydrate_public_surface_caches as _hydrate,
-                        refresh_all_public_surface_caches,
-                    )
-
-                    with SessionLocal() as db:
-                        logger.info("Public surface caches empty — one-time background bootstrap")
-                        refresh_all_public_surface_caches(db)
-                    _hydrate()
-                except Exception as exc:
-                    logger.warning("Public surface bootstrap refresh failed: %s", exc)
-
-            threading.Thread(
-                target=_bootstrap_if_empty,
-                daemon=True,
-                name="public-surface-bootstrap",
-            ).start()
+            homepage = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
+            if not homepage or not (homepage.get("hotLeads") or []):
+                schedule_public_cache_refresh(force=True, reason="bootstrap_empty")
         except Exception as exc:
             logger.warning("Public surface hydration failed: %s", exc)
 
