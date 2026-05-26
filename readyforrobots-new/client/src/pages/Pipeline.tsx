@@ -736,6 +736,11 @@ export default function Pipeline() {
               {loadErr}
             </div>
           )}
+          {!loadingLeads && !loadErr && filtered.length === 0 && (
+            <div className="rounded-lg border border-violet-400/25 bg-violet-400/8 px-3 py-2 text-xs text-violet-100/85">
+              Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-4">
               <div>

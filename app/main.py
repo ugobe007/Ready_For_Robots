@@ -247,10 +247,10 @@ def startup():
             hydrate_public_surface_caches()
             logger.info("Public surface L1 hydration complete")
 
-            from app.api.newsletter import _get_mem_cache
+            from app.services.public_surface_cache import KEY_HOMEPAGE, read_public_cache
 
-            mem = _get_mem_cache()
-            if mem and len(mem.get("topStories") or []) >= 8:
+            homepage = read_public_cache(KEY_HOMEPAGE)
+            if homepage and len(homepage.get("hotLeads") or []) >= 5:
                 return
 
             def _bootstrap_if_empty() -> None:
