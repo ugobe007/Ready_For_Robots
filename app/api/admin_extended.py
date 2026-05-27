@@ -1472,6 +1472,8 @@ def scout_diagnostic(
     if not inbound_secret_set:
         issues.append("RESEND_INBOUND_WEBHOOK_SECRET is not set — inbound email replies won't be captured")
 
+    from app.services.stagegate_voice import STAGEGATE_OUTREACH_RULES
+
     return {
         "config": {
             "from_email": from_email or None,
@@ -1479,6 +1481,9 @@ def scout_diagnostic(
             "api_key_set": api_key_set,
             "delivery_webhook_configured": webhook_secret_set,
             "inbound_webhook_configured": inbound_secret_set,
+        },
+        "cal_outreach_style": {
+            "stagegate_rules": list(STAGEGATE_OUTREACH_RULES),
         },
         "stats_30d": {
             "sent": status_counts.get("sent", 0) + status_counts.get("delivered", 0),

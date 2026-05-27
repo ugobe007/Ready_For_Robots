@@ -1,61 +1,86 @@
-"""StageGate Cal voice — show-ops infrastructure, not buyer-lead matching."""
+"""StageGate Cal voice — show-ops infrastructure outreach (not buyer-lead matching)."""
 from __future__ import annotations
 
 from typing import Any, Optional
 
-from app.services.agent_messaging import CAL_INTRO, cal_signature
 from app.services.semantic_frame import SemanticFrame, frame_signal_line, parse_news_semantic_frame
 
-STAGEGATE_EXPLANATION = (
-    "I track robotics companies heading into major US shows — especially teams with "
-    "small on-site crews, cross-border freight, or hardware that needs a real recovery plan "
-    "when something fails on the floor."
+# ── Cal training rules (StageGate OEM cold outreach) ─────────────────────────
+STAGEGATE_OUTREACH_RULES: tuple[str, ...] = (
+    "Greet a person by name when known; otherwise use the company name — never a generic bulk greeting.",
+    "Name the specific trade show, city, or dates when available — never say 'the upcoming show'.",
+    "Lead with StageGate show logistics (warehousing, staging, unpack/test, on-site demo support).",
+    "Include one concrete pain line: transit jostle, loose connectors, lab-pass sensors that fail on the floor.",
+    "Primary CTA: reply with booth number and move-in dates for a calendar link.",
+    "Secondary CTA only: onstage.bot self-serve registration.",
+    "Keep under ~130 words; no buzzwords, no ontology tags, no multi-brand signature clutter.",
+    "Sign as Cal · StageGate · onstage.bot · Las Vegas — not Ready For Robots.",
 )
 
-STAGEGATE_LOGIC_LINE = (
-    "StageGate is operational infrastructure for show week: receive off the truck, "
-    "power-up diagnostics, calibration, battery cycles, and live demo recovery — "
-    "so your booth team is not debugging alone at midnight."
+STAGEGATE_SERVICES_LINE = (
+    "I'm Cal with StageGate — we're in Las Vegas and help robotics OEMs with show logistics: "
+    "bonded warehousing, staging, unpack/test, and on-site tech support during demos."
 )
 
-STAGEGATE_OFFRAMP = (
-    "If the timing or show footprint is not real yet, I'll say so. "
-    "The point is fewer surprises on the floor, not another vendor pitch."
+STAGEGATE_PAIN_LINE = (
+    "Robots get jostled in transit — loose connectors, sensors that passed in the lab and won't boot on the floor. "
+    "We see it constantly. Our techs expect it and fix it before you hit the aisle."
 )
 
-STAGEGATE_CTA = "Worth a short call before your next US show?"
+STAGEGATE_CTA_PRIMARY = (
+    "If it's useful, reply with your booth number and move-in dates and I'll send a calendar link "
+    "to walk through your plan."
+)
+
+STAGEGATE_CTA_SECONDARY = "You can also register at onstage.bot if you prefer to self-serve."
 
 
-def cal_stagegate_opening() -> str:
+def stagegate_signature() -> str:
+    return "Thanks,\nCal\nStageGate · onstage.bot\nLas Vegas"
+
+
+def _greeting(company_name: str, contact_name: Optional[str] = None) -> str:
+    name = (contact_name or "").strip()
+    if name and "@" not in name:
+        return f"Hi {name},"
+    company = (company_name or "your team").strip() or "your team"
+    return f"Hi {company} team,"
+
+
+def _show_ask_paragraph(company_name: str, trade_show: Optional[str]) -> str:
+    company = (company_name or "your team").strip() or "your team"
+    if trade_show:
+        show = trade_show.strip()
+        return (
+            f"I saw {company} is exhibiting at {show} and wanted to ask: "
+            f"are you handling staging and pre-floor checks locally, or shipping everything direct to the hall?"
+        )
     return (
-        f"{CAL_INTRO}\n\n"
-        f"{STAGEGATE_EXPLANATION}\n\n"
-        f"{STAGEGATE_LOGIC_LINE}"
+        f"I saw {company} on the show circuit and wanted to ask: "
+        f"are you handling staging and pre-floor checks locally, or shipping everything direct to the hall?"
     )
 
 
-def stagegate_signal_paragraph(frame: SemanticFrame) -> str:
-    """One paragraph grounded in parsed actor / topic / goals — not raw headline hype."""
-    line = frame_signal_line(frame)
-    parts = [line]
+def _optional_signal_sentence(
+    frame: Optional[SemanticFrame],
+    source_text: str,
+) -> str:
+    """One short personalization line — omit if nothing useful."""
+    if frame:
+        line = frame_signal_line(frame).strip()
+        if line and len(line) <= 220:
+            return line
+    text = (source_text or "").strip()
+    if text and len(text) <= 180:
+        return text
+    return ""
 
-    if len(frame.goals) > 1:
-        extras = []
-        for g in frame.goals[1:3]:
-            q = f" by {g.quantifier}" if g.quantifier else ""
-            extras.append(f"{g.direction} in {g.metric}{q}")
-        parts.append(f"Related outcomes in the same signal: {', '.join(extras)}.")
 
-    if frame.hyperbolic_terms:
-        parts.append(
-            "The headline leans promotional; I normalized the frame to actor, action, and measurable outcomes."
-        )
-
-    if frame.ontology_concepts:
-        tags = ", ".join(t.replace("_", " ") for t in frame.ontology_concepts[:4])
-        parts.append(f"Ontology tags: {tags}.")
-
-    return " ".join(parts)
+def stagegate_subject(company_name: str, trade_show: Optional[str] = None) -> str:
+    company = (company_name or "your team").strip() or "your team"
+    if trade_show:
+        return f"{company} at {trade_show.strip()} — pre-floor staging & tech check?"
+    return f"{company} — show logistics & pre-floor tech check?"
 
 
 def stagegate_outreach_email(
@@ -64,31 +89,38 @@ def stagegate_outreach_email(
     semantic_frame: Optional[SemanticFrame] = None,
     source_text: str = "",
     trade_show: Optional[str] = None,
+    contact_name: Optional[str] = None,
 ) -> dict[str, str]:
-    """Cal draft for StageGate OEM / show-ops outreach."""
+    """Cal draft for StageGate OEM / show-ops outreach — follows STAGEGATE_OUTREACH_RULES."""
     frame = semantic_frame or (parse_news_semantic_frame(source_text) if source_text else None)
-    signal_block = stagegate_signal_paragraph(frame) if frame else (source_text[:280] or "Recent robotics news caught my eye.")
+    signal_line = _optional_signal_sentence(frame, source_text)
 
-    show_line = ""
-    if trade_show:
-        show_line = f"\n\nI noticed {trade_show} on your horizon — that's usually when operational risk peaks for teams without US show support."
+    paragraphs = [
+        _greeting(company_name, contact_name),
+        "",
+        STAGEGATE_SERVICES_LINE,
+        "",
+        _show_ask_paragraph(company_name, trade_show),
+    ]
+    if signal_line:
+        paragraphs.extend(["", signal_line])
+    paragraphs.extend(
+        [
+            "",
+            STAGEGATE_PAIN_LINE,
+            "",
+            STAGEGATE_CTA_PRIMARY,
+            "",
+            STAGEGATE_CTA_SECONDARY,
+            "",
+            stagegate_signature(),
+        ]
+    )
 
-    subject = f"Show-week ops for {company_name}"
-    if trade_show:
-        subject = f"{trade_show} show ops — {company_name}"
-
-    body = f"""Hello {company_name} team,
-
-{cal_stagegate_opening()}
-
-{signal_block}{show_line}
-
-{STAGEGATE_OFFRAMP}
-
-{STAGEGATE_CTA}
-
-{cal_signature()}"""
-    return {"subject": subject, "body": body}
+    return {
+        "subject": stagegate_subject(company_name, trade_show),
+        "body": "\n".join(paragraphs),
+    }
 
 
 def semantic_frame_from_market_intel(market_intelligence: Any) -> Optional[SemanticFrame]:

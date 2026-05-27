@@ -97,4 +97,6 @@ def test_cal_and_supply_share_same_stagegate_draft(db_session):
     cal_draft = cal_draft_for_stagegate_company(company)
 
     assert supply_draft["body"] == cal_draft["body"]
-    assert "show-week ops" in cal_draft["subject"].lower() or "German Bionic" in cal_draft["subject"]
+    assert "pre-floor" in cal_draft["subject"].lower() or "Yaskawa" in cal_draft["subject"] or "German Bionic" in cal_draft["subject"]
+    assert "onstage.bot" in cal_draft["body"]
+    assert "Ready For Robots" not in cal_draft["body"]

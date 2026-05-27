@@ -95,7 +95,11 @@ def build_stagegate_draft(
     )
 
 
-def cal_draft_for_stagegate_company(company: Company) -> dict[str, str]:
+def cal_draft_for_stagegate_company(
+    company: Company,
+    *,
+    contact_name: Optional[str] = None,
+) -> dict[str, str]:
     """Cal Admin draft from linked company.crm_metadata."""
     meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
     frame = semantic_frame_from_market_intel(meta)
@@ -104,6 +108,7 @@ def cal_draft_for_stagegate_company(company: Company) -> dict[str, str]:
         semantic_frame=frame,
         source_text=_source_headline_from_meta(meta),
         trade_show=meta.get("next_trade_show"),
+        contact_name=contact_name,
     )
 
 
