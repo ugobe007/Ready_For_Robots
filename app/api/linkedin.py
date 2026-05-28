@@ -5,15 +5,15 @@ Ready For Robots page: https://www.linkedin.com/company/114404417/admin/dashboar
 """
 from __future__ import annotations
 
-import os
 from typing import Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.admin_auth import check_admin_key as _check_admin_key
 from app.database import get_db
 from app.services.linkedin_oauth import (
     LinkedInError,
@@ -25,14 +25,6 @@ from app.services.linkedin_oauth import (
 )
 
 router = APIRouter()
-
-
-def _check_admin_key(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")) -> None:
-    key = os.getenv("ADMIN_KEY", "").strip()
-    if not key:
-        raise HTTPException(status_code=503, detail="ADMIN_KEY not configured")
-    if x_admin_key != key:
-        raise HTTPException(status_code=401, detail="Invalid X-Admin-Key")
 
 
 class LinkedInPublishIn(BaseModel):

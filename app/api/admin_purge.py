@@ -9,13 +9,13 @@ POST /api/admin/purge-junk
             {"dry_run": false}  — actually delete junk records
             {"dry_run": false, "limit": 500}  — cap deletions per call
 """
-import os
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.admin_auth import check_admin_key as _check_admin_key
 from app.database import get_db
 from app.models.company import Company
 
@@ -30,15 +30,6 @@ class PurgeJunkPayload(BaseModel):
 class DeleteByIdsPayload(BaseModel):
     company_ids: List[int]
     dry_run: bool = True
-
-
-def _check_admin_key(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")) -> None:
-    """Accept X-Admin-Key matching ADMIN_KEY env var."""
-    key = os.getenv("ADMIN_KEY", "").strip()
-    if not key:
-        raise HTTPException(status_code=503, detail="ADMIN_KEY not configured on server")
-    if x_admin_key != key:
-        raise HTTPException(status_code=401, detail="Invalid X-Admin-Key")
 
 
 @router.post("/purge-junk")

@@ -240,10 +240,14 @@ export default function Social() {
   const [linkedinStatus, setLinkedinStatus] = useState<LinkedInStatus | null>(null);
   const [adminKey, setAdminKey] = useState("");
   const [linkedinMsg, setLinkedinMsg] = useState("");
+  const [linkedinMsgIsError, setLinkedinMsgIsError] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     document.title = "Content Studio | Ready For Robots";
+    const stored = window.sessionStorage.getItem("rr_admin_key") || "";
+    if (stored) setAdminKey(stored);
   }, []);
 
   const fetchLinkedinStatus = useCallback(async () => {
@@ -255,40 +259,72 @@ export default function Social() {
     }
   }, []);
 
-  const getAdminKey = () => {
-    if (adminKey.trim()) return adminKey.trim();
-    const stored = window.sessionStorage.getItem("rr_admin_key") || "";
-    if (stored) return stored;
-    const entered = window.prompt("Admin key (X-Admin-Key) for LinkedIn connect/publish:");
-    if (entered) {
-      window.sessionStorage.setItem("rr_admin_key", entered);
-      setAdminKey(entered);
-      return entered;
-    }
-    return "";
+  const persistAdminKey = (value: string) => {
+    const trimmed = value.trim();
+    setAdminKey(trimmed);
+    if (trimmed) window.sessionStorage.setItem("rr_admin_key", trimmed);
+    else window.sessionStorage.removeItem("rr_admin_key");
   };
 
+  const clearStoredAdminKey = () => {
+    window.sessionStorage.removeItem("rr_admin_key");
+    setAdminKey("");
+  };
+
+  const showLinkedinMessage = (message: string, isError = false) => {
+    setLinkedinMsg(message);
+    setLinkedinMsgIsError(isError);
+  };
+
+  const resolveAdminKey = () => adminKey.trim();
+
   const connectLinkedIn = async () => {
-    const key = getAdminKey();
-    if (!key) return;
-    setLinkedinMsg("");
+    const key = resolveAdminKey();
+    if (!key) {
+      showLinkedinMessage("Enter your admin key below, then click Connect LinkedIn again.", true);
+      return;
+    }
+    setConnecting(true);
+    showLinkedinMessage("");
     try {
       const returnTo = `${window.location.origin}/social`;
       const res = await fetch(`${API}/api/linkedin/connect-url?return_to=${encodeURIComponent(returnTo)}`, {
         headers: { "X-Admin-Key": key },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `Connect failed (${res.status})`);
-      if (data.auth_url) window.location.href = data.auth_url;
+      let data: { auth_url?: string; detail?: string | { msg?: string } } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Connect failed (${res.status})`);
+      }
+      if (res.status === 401) {
+        clearStoredAdminKey();
+        throw new Error(typeof data.detail === "string" ? data.detail : "Invalid admin key — update the field below to match Fly ADMIN_KEY");
+      }
+      if (!res.ok) {
+        const detail = typeof data.detail === "string" ? data.detail : `Connect failed (${res.status})`;
+        throw new Error(detail);
+      }
+      if (data.auth_url) {
+        persistAdminKey(key);
+        window.location.assign(data.auth_url);
+        return;
+      }
+      throw new Error("LinkedIn connect URL missing from API response");
     } catch (e) {
-      setLinkedinMsg(e instanceof Error ? e.message : "Connect failed");
+      showLinkedinMessage(e instanceof Error ? e.message : "Connect failed", true);
+    } finally {
+      setConnecting(false);
     }
   };
 
   const publishToLinkedIn = async (text: string, articleUrl: string) => {
-    const key = getAdminKey();
-    if (!key) return;
-    setLinkedinMsg("");
+    const key = resolveAdminKey();
+    if (!key) {
+      showLinkedinMessage("Enter your admin key in the LinkedIn panel before publishing.", true);
+      return;
+    }
+    showLinkedinMessage("");
     setPublishing(true);
     try {
       const res = await fetch(`${API}/api/linkedin/publish`, {
@@ -296,11 +332,21 @@ export default function Social() {
         headers: { "Content-Type": "application/json", "X-Admin-Key": key },
         body: JSON.stringify({ commentary: text, article_url: articleUrl || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `Publish failed (${res.status})`);
-      setLinkedinMsg(`Published to LinkedIn (${data.published_as || "ok"})`);
+      let data: { detail?: string; published_as?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error(`Publish failed (${res.status})`);
+      }
+      if (res.status === 401) {
+        clearStoredAdminKey();
+        throw new Error(typeof data.detail === "string" ? data.detail : "Invalid admin key — update the field below to match Fly ADMIN_KEY");
+      }
+      if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Publish failed (${res.status})`);
+      persistAdminKey(key);
+      showLinkedinMessage(`Published to LinkedIn (${data.published_as || "ok"})`);
     } catch (e) {
-      setLinkedinMsg(e instanceof Error ? e.message : "Publish failed");
+      showLinkedinMessage(e instanceof Error ? e.message : "Publish failed", true);
     } finally {
       setPublishing(false);
     }
@@ -347,11 +393,11 @@ export default function Social() {
     const params = new URLSearchParams(window.location.search);
     const li = params.get("linkedin");
     if (li === "connected") {
-      setLinkedinMsg("LinkedIn connected.");
+      showLinkedinMessage("LinkedIn connected.");
       fetchLinkedinStatus();
       window.history.replaceState({}, "", "/social");
     } else if (li === "error") {
-      setLinkedinMsg(params.get("detail") || "LinkedIn connect failed");
+      showLinkedinMessage(params.get("detail") || "LinkedIn connect failed", true);
       window.history.replaceState({}, "", "/social");
     }
   }, [fetchLinkedinStatus]);
@@ -439,9 +485,24 @@ export default function Social() {
                     ? "Not connected — sign in with LinkedIn to enable one-click publish"
                     : "Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the API server"}
               </p>
-              {linkedinMsg && <p className="text-xs text-emerald-400 mt-2 font-mono">{linkedinMsg}</p>}
+              {linkedinMsg && (
+                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>{linkedinMsg}</p>
+              )}
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-end">
+              {!linkedinStatus?.connected && (
+                <label className="flex flex-col gap-1 min-w-[220px]">
+                  <span className="text-[10px] uppercase tracking-wide text-neutral-500">Admin key</span>
+                  <input
+                    type="password"
+                    value={adminKey}
+                    onChange={(e) => persistAdminKey(e.target.value)}
+                    placeholder="Same as Fly ADMIN_KEY"
+                    autoComplete="off"
+                    className="text-xs px-3 py-1.5 rounded border border-neutral-700 bg-neutral-950 text-neutral-200 font-mono"
+                  />
+                </label>
+              )}
               <a
                 href={linkedinStatus?.organization_url || "https://www.linkedin.com/company/114404417/admin/dashboard/"}
                 target="_blank"
@@ -451,8 +512,13 @@ export default function Social() {
                 Open Page Admin ↗
               </a>
               {!linkedinStatus?.connected && (
-                <button type="button" onClick={connectLinkedIn} className="text-xs px-3 py-1.5 rounded border border-blue-700 text-blue-300 hover:border-blue-500">
-                  Connect LinkedIn
+                <button
+                  type="button"
+                  onClick={connectLinkedIn}
+                  disabled={connecting}
+                  className="text-xs px-3 py-1.5 rounded border border-blue-700 text-blue-300 hover:border-blue-500 disabled:opacity-50"
+                >
+                  {connecting ? "Connecting…" : "Connect LinkedIn"}
                 </button>
               )}
             </div>

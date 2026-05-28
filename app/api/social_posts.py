@@ -5,10 +5,9 @@ GET  /api/social/daily-posts                 — return (or generate) today's 5 
 POST /api/social/daily-posts/refresh         — generate a fresh batch skipping already-posted leads
 POST /api/social/daily-posts/mark-posted     — record that a batch was posted (updates history)
 """
-import os
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -24,14 +23,6 @@ from app.services.social_posts_service import (
 router = APIRouter()
 
 _CACHE_MAX_AGE_HOURS = 4.0
-
-
-def _check_admin_key(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")) -> None:
-    key = os.getenv("ADMIN_KEY", "").strip()
-    if not key:
-        raise HTTPException(status_code=503, detail="ADMIN_KEY not configured")
-    if x_admin_key != key:
-        raise HTTPException(status_code=401, detail="Invalid X-Admin-Key")
 
 
 class RefreshPayload(BaseModel):
