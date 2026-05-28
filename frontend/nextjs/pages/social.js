@@ -78,7 +78,7 @@ function LinkedInShareButton({ url, title, summary }) {
   );
 }
 
-function PostCard({ post, index, onMarkPosted, isPosted }) {
+function PostCard({ post, index, onMarkPosted, isPosted, linkedinConnected, onPublishLinkedIn, publishing }) {
   const meta = POST_TYPE_META[post.type] || POST_TYPE_META.thought_leadership;
   const [activeTab, setActiveTab] = useState('twitter');
   const [twitterText, setTwitterText] = useState(post.twitter || '');
@@ -197,6 +197,16 @@ function PostCard({ post, index, onMarkPosted, isPosted }) {
               <div className="flex gap-2 flex-wrap">
                 <CopyButton text={linkedinText} label="Copy post" successLabel="✓ Copied" />
                 <LinkedInShareButton url={shareUrl} title={post.title || post.company_name} summary={linkedinText} />
+                {linkedinConnected && onPublishLinkedIn && (
+                  <button
+                    type="button"
+                    onClick={() => onPublishLinkedIn(linkedinText, shareUrl)}
+                    disabled={publishing}
+                    className="text-xs px-3 py-1.5 rounded border border-emerald-800 text-emerald-400 hover:border-emerald-600 hover:text-emerald-300 transition-colors font-mono disabled:opacity-50"
+                  >
+                    {publishing ? 'Publishing…' : 'Publish to Page ↗'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -226,6 +236,72 @@ export default function SocialContentStudio() {
   const [date, setDate] = useState('');
   const [generatedAt, setGeneratedAt] = useState('');
   const [batchPosted, setBatchPosted] = useState(false);
+  const [linkedinStatus, setLinkedinStatus] = useState(null);
+  const [adminKey, setAdminKey] = useState('');
+  const [linkedinMsg, setLinkedinMsg] = useState('');
+  const [publishingIdx, setPublishingIdx] = useState(null);
+
+  const fetchLinkedinStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/linkedin/status`);
+      if (res.ok) setLinkedinStatus(await res.json());
+    } catch {
+      /* optional */
+    }
+  }, []);
+
+  const getAdminKey = () => {
+    if (adminKey.trim()) return adminKey.trim();
+    if (typeof window !== 'undefined') {
+      const stored = window.sessionStorage.getItem('rr_admin_key') || '';
+      if (stored) return stored;
+    }
+    const entered = window.prompt('Admin key (X-Admin-Key) for LinkedIn connect/publish:');
+    if (entered) {
+      window.sessionStorage.setItem('rr_admin_key', entered);
+      setAdminKey(entered);
+      return entered;
+    }
+    return '';
+  };
+
+  const connectLinkedIn = async () => {
+    const key = getAdminKey();
+    if (!key) return;
+    setLinkedinMsg('');
+    try {
+      const returnTo = typeof window !== 'undefined' ? `${window.location.origin}/social` : 'https://readyforrobots.com/social';
+      const res = await fetch(`${API}/api/linkedin/connect-url?return_to=${encodeURIComponent(returnTo)}`, {
+        headers: { 'X-Admin-Key': key },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Connect failed (${res.status})`);
+      if (data.auth_url) window.location.href = data.auth_url;
+    } catch (e) {
+      setLinkedinMsg(e.message);
+    }
+  };
+
+  const publishToLinkedIn = async (text, articleUrl) => {
+    const key = getAdminKey();
+    if (!key) return;
+    setLinkedinMsg('');
+    setPublishingIdx(true);
+    try {
+      const res = await fetch(`${API}/api/linkedin/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+        body: JSON.stringify({ commentary: text, article_url: articleUrl || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Publish failed (${res.status})`);
+      setLinkedinMsg(`Published to LinkedIn company page (${data.post_id || 'ok'})`);
+    } catch (e) {
+      setLinkedinMsg(e.message);
+    } finally {
+      setPublishingIdx(null);
+    }
+  };
 
   const applyData = (data) => {
     setPosts(data.posts || []);
@@ -309,7 +385,21 @@ export default function SocialContentStudio() {
     setPostedIds(prev => new Set([...prev, post.company_id]));
   };
 
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+  useEffect(() => { fetchPosts(); fetchLinkedinStatus(); }, [fetchPosts, fetchLinkedinStatus]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const li = params.get('linkedin');
+    if (li === 'connected') {
+      setLinkedinMsg('LinkedIn company page connected.');
+      fetchLinkedinStatus();
+      window.history.replaceState({}, '', '/social');
+    } else if (li === 'error') {
+      setLinkedinMsg(params.get('detail') || 'LinkedIn connect failed');
+      window.history.replaceState({}, '', '/social');
+    }
+  }, [fetchLinkedinStatus]);
 
   const postedCount = postedIds.size;
   const totalLeadPosts = (posts || []).filter(p => p.company_id != null).length;
@@ -337,6 +427,42 @@ export default function SocialContentStudio() {
               Five posts from today&apos;s hot leads and strategic insights. Edit any post, then copy or share.
               Mark posts as shared to get a fresh batch with different companies.
             </p>
+          </div>
+
+          {/* LinkedIn company page */}
+          <div className="mb-6 p-4 border border-blue-900/60 rounded-xl bg-blue-950/20">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-blue-300">LinkedIn Company Page</p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  {linkedinStatus?.connected
+                    ? `Connected · org ${linkedinStatus.organization_id}`
+                    : linkedinStatus?.configured
+                      ? 'Not connected — authorize Ready For Robots page posting'
+                      : 'API credentials not configured on server (LINKEDIN_CLIENT_ID / SECRET)'}
+                </p>
+                {linkedinMsg && <p className="text-xs text-emerald-400 mt-2 font-mono">{linkedinMsg}</p>}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <a
+                  href={linkedinStatus?.organization_url || 'https://www.linkedin.com/company/114404417/admin/dashboard/'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded border border-neutral-700 text-neutral-400 hover:text-neutral-200"
+                >
+                  Open Page Admin ↗
+                </a>
+                {!linkedinStatus?.connected && (
+                  <button
+                    type="button"
+                    onClick={connectLinkedIn}
+                    className="text-xs px-3 py-1.5 rounded border border-blue-700 text-blue-300 hover:border-blue-500"
+                  >
+                    Connect LinkedIn Page
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Action bar */}
@@ -412,6 +538,9 @@ export default function SocialContentStudio() {
                     index={i}
                     onMarkPosted={handleMarkOnePosted}
                     isPosted={post.company_id != null && postedIds.has(post.company_id)}
+                    linkedinConnected={Boolean(linkedinStatus?.connected)}
+                    onPublishLinkedIn={publishToLinkedIn}
+                    publishing={publishingIdx !== null}
                   />
                 ))
               )}
