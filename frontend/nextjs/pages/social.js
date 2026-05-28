@@ -204,7 +204,7 @@ function PostCard({ post, index, onMarkPosted, isPosted, linkedinConnected, onPu
                     disabled={publishing}
                     className="text-xs px-3 py-1.5 rounded border border-emerald-800 text-emerald-400 hover:border-emerald-600 hover:text-emerald-300 transition-colors font-mono disabled:opacity-50"
                   >
-                    {publishing ? 'Publishing…' : 'Publish to Page ↗'}
+                    {publishing ? 'Publishing…' : 'Publish to LinkedIn ↗'}
                   </button>
                 )}
               </div>
@@ -295,7 +295,7 @@ export default function SocialContentStudio() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || `Publish failed (${res.status})`);
-      setLinkedinMsg(`Published to LinkedIn company page (${data.post_id || 'ok'})`);
+      setLinkedinMsg(`Published to LinkedIn (${data.published_as || 'ok'}${data.note ? ' — personal feed' : ''})`);
     } catch (e) {
       setLinkedinMsg(e.message);
     } finally {
@@ -429,18 +429,25 @@ export default function SocialContentStudio() {
             </p>
           </div>
 
-          {/* LinkedIn company page */}
+          {/* LinkedIn — member feed until Marketing API approved */}
           <div className="mb-6 p-4 border border-blue-900/60 rounded-xl bg-blue-950/20">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-blue-300">LinkedIn Company Page</p>
+                <p className="text-sm font-semibold text-blue-300">LinkedIn Publishing</p>
                 <p className="text-xs text-neutral-400 mt-1">
                   {linkedinStatus?.connected
-                    ? `Connected · org ${linkedinStatus.organization_id}`
+                    ? linkedinStatus.member_posting
+                      ? `Connected as ${linkedinStatus.member_name || 'your profile'} — posts go to your personal feed (Share on LinkedIn). Repost to the company page manually until Marketing API is approved.`
+                      : `Connected · company page org ${linkedinStatus.organization_id}`
                     : linkedinStatus?.configured
-                      ? 'Not connected — authorize Ready For Robots page posting'
-                      : 'API credentials not configured on server (LINKEDIN_CLIENT_ID / SECRET)'}
+                      ? 'Not connected — sign in with LinkedIn to enable one-click publish'
+                      : 'Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the API server'}
                 </p>
+                {linkedinStatus?.pending_marketing_api && (
+                  <p className="text-[11px] text-neutral-500 mt-1">
+                    Company page API pending LinkedIn review. Using Share on LinkedIn (personal profile) for now.
+                  </p>
+                )}
                 {linkedinMsg && <p className="text-xs text-emerald-400 mt-2 font-mono">{linkedinMsg}</p>}
               </div>
               <div className="flex gap-2 flex-wrap">
