@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
 import Header from "@/components/Header";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -24,6 +24,23 @@ type RobotRow = {
   score_total: number;
   last_scraped_at?: string;
 };
+
+const HEIR_REPORTS = [
+  {
+    title: "HEIR 2026 — Humanoid Engineering Intelligence Report",
+    description:
+      "Full engineering analysis of humanoid platforms: mobility, manipulation, autonomy, safety, endurance, and market readiness.",
+    href: "/reports/HEIR_2026_Humanoid_Engineering_Intelligence_Report.pdf",
+    fileLabel: "PDF · Full report",
+  },
+  {
+    title: "HEIR 2026 — Executive Summary",
+    description:
+      "Condensed overview for buyers, investors, and integrators evaluating humanoid deployment in 2026.",
+    href: "/reports/HEIR_2026_Report_Final.pdf",
+    fileLabel: "PDF · Executive summary",
+  },
+] as const;
 
 // ── Score bar ────────────────────────────────────────────────────────────────
 
@@ -262,6 +279,59 @@ export default function Robots() {
       </section>
 
       <HumanoidBenchmarkMarquee />
+
+      {/* ── HEIR 2026 reports ── */}
+      <section className="mx-auto max-w-5xl px-4 pb-10">
+        <div
+          className="rounded-2xl border p-6 sm:p-8"
+          style={{ background: "rgba(124,58,237,0.05)", borderColor: "rgba(167,139,250,0.22)" }}
+        >
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-300/70 mb-2">
+                HEIR 2026
+              </p>
+              <h2
+                className="text-2xl font-extrabold text-white sm:text-3xl"
+                style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
+              >
+                Humanoid Engineering Intelligence Report
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-white/45 leading-relaxed">
+                Download the research behind this benchmark index — vendor comparisons, scoring methodology,
+                and deployment guidance for 2026.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {HEIR_REPORTS.map((report) => (
+              <a
+                key={report.href}
+                href={report.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex h-full flex-col rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-violet-400/35 hover:bg-violet-500/[0.06]"
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div
+                    className="rounded-lg p-2.5"
+                    style={{ background: "rgba(167,139,250,0.12)", color: "#c4b5fd" }}
+                  >
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-300/80 group-hover:text-violet-200">
+                    Download <Download className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white leading-snug">{report.title}</h3>
+                <p className="mt-2 flex-1 text-[13px] text-white/45 leading-relaxed">{report.description}</p>
+                <p className="mt-4 text-[10px] font-mono uppercase tracking-wider text-white/30">{report.fileLabel}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── Controls ── */}
       <div className="mx-auto max-w-5xl px-4 pb-6 flex flex-wrap items-center gap-3">
