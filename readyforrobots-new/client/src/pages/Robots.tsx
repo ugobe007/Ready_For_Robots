@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp, FileText, Download } from "lucide-react";
+import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
+import HeirReportSections from "@/components/HeirReportSections";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
@@ -24,23 +25,6 @@ type RobotRow = {
   score_total: number;
   last_scraped_at?: string;
 };
-
-const HEIR_REPORTS = [
-  {
-    title: "HEIR 2026 — Humanoid Engineering Intelligence Report",
-    description:
-      "Full engineering analysis of humanoid platforms: mobility, manipulation, autonomy, safety, endurance, and market readiness.",
-    href: "/reports/HEIR_2026_Humanoid_Engineering_Intelligence_Report.pdf",
-    fileLabel: "PDF · Full report",
-  },
-  {
-    title: "HEIR 2026 — Executive Summary",
-    description:
-      "Condensed overview for buyers, investors, and integrators evaluating humanoid deployment in 2026.",
-    href: "/reports/HEIR_2026_Report_Final.pdf",
-    fileLabel: "PDF · Executive summary",
-  },
-] as const;
 
 // ── Score bar ────────────────────────────────────────────────────────────────
 
@@ -238,6 +222,10 @@ export default function Robots() {
   const api = getApiBase();
 
   useEffect(() => {
+    document.title = "Humanoid Index | Ready For Robots";
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     fetch(`${api}/api/humanoid/robots`, liveFetchInit())
       .then(r => r.ok ? r.json() : Promise.reject(r))
@@ -260,80 +248,33 @@ export default function Robots() {
       <Header />
 
       {/* ── Hero ── */}
-      <section className="mx-auto max-w-5xl px-4 pt-24 pb-12 text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/45">
+      <section className="mx-auto max-w-5xl px-4 pt-24 pb-8">
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#a78bfa" }}>
           Humanoid Robot Index
-        </div>
+        </p>
         <h1
-          className="mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl"
+          className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl"
           style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
         >
-          Benchmark every<br />
-          <span style={{ color: "#a78bfa" }}>humanoid on the market</span>
+          Engineering maturity,<br />
+          <span style={{ color: "#a78bfa" }}>not demo choreography.</span>
         </h1>
-        <p className="mx-auto max-w-2xl text-base text-white/45 leading-relaxed">
-          Scored across 6 dimensions using published specs and the Fraunhofer IPA framework.
-          Specs are scraped from manufacturer sites and updated automatically.
-          Estimates used where live test data is unavailable.
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/42">
+          HEIR 2026 research plus a live spec-based index — scored from published datasheets, updated periodically.
+          Use both to compare vendors before you deploy.
         </p>
       </section>
 
       <HumanoidBenchmarkMarquee />
 
-      {/* ── HEIR 2026 reports ── */}
-      <section className="mx-auto max-w-5xl px-4 pb-10">
-        <div
-          className="rounded-2xl border p-6 sm:p-8"
-          style={{ background: "rgba(124,58,237,0.05)", borderColor: "rgba(167,139,250,0.22)" }}
-        >
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-300/70 mb-2">
-                HEIR 2026
-              </p>
-              <h2
-                className="text-2xl font-extrabold text-white sm:text-3xl"
-                style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-              >
-                Humanoid Engineering Intelligence Report
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-white/45 leading-relaxed">
-                Download the research behind this benchmark index — vendor comparisons, scoring methodology,
-                and deployment guidance for 2026.
-              </p>
-            </div>
-          </div>
+      <HeirReportSections />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {HEIR_REPORTS.map((report) => (
-              <a
-                key={report.href}
-                href={report.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex h-full flex-col rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-violet-400/35 hover:bg-violet-500/[0.06]"
-              >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div
-                    className="rounded-lg p-2.5"
-                    style={{ background: "rgba(167,139,250,0.12)", color: "#c4b5fd" }}
-                  >
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-300/80 group-hover:text-violet-200">
-                    Download <Download className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-white leading-snug">{report.title}</h3>
-                <p className="mt-2 flex-1 text-[13px] text-white/45 leading-relaxed">{report.description}</p>
-                <p className="mt-4 text-[10px] font-mono uppercase tracking-wider text-white/30">{report.fileLabel}</p>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Controls ── */}
+      {/* ── Live index controls ── */}
+      <div className="mx-auto max-w-5xl px-4 pb-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30 mb-4">
+          Ranked by published specs · 0–100 scale
+        </p>
+      </div>
       <div className="mx-auto max-w-5xl px-4 pb-6 flex flex-wrap items-center gap-3">
         {/* Status filter */}
         <div className="flex items-center gap-1 rounded-xl border border-white/10 p-1">
@@ -386,41 +327,34 @@ export default function Robots() {
         )}
       </section>
 
-      {/* ── Scoring methodology ── */}
+      {/* ── Methodology ── */}
       <section className="mx-auto max-w-5xl px-4 pb-16">
-        <div
-          className="rounded-2xl border p-7"
-          style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-3">Scoring methodology</p>
-          <div className="grid gap-3 sm:grid-cols-3 text-[12px] text-white/45 leading-relaxed">
+        <div className="rounded-3xl border border-white/10 p-6 lg:p-8" style={{ background: "rgba(255,255,255,0.035)" }}>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Live index methodology</p>
+          <div className="grid gap-6 sm:grid-cols-3 text-sm leading-relaxed text-white/42">
             <div>
-              <p className="font-bold text-white/70 mb-1">6 dimensions</p>
-              Mobility (20%), Manipulation (20%), Autonomy (20%), Safety (15%), Endurance (15%), Market Readiness (10%).
+              <p className="mb-1 font-bold text-white/75">Six dimensions</p>
+              Mobility, manipulation, autonomy, safety, endurance, and market readiness — weighted from published specs.
             </div>
             <div>
-              <p className="font-bold text-white/70 mb-1">Data sources</p>
-              Manufacturer datasheets, press releases, third-party reviews, and the Fraunhofer IPA benchmark (May 2026).
-              Specs are scraped and re-scored periodically.
+              <p className="mb-1 font-bold text-white/75">Data sources</p>
+              Manufacturer datasheets, press releases, and third-party reviews. Re-scored when specs change.
             </div>
             <div>
-              <p className="font-bold text-white/70 mb-1">Limitations</p>
-              Where live test data is unavailable, published specs are used as estimates. Scores reflect reported capabilities, not independently verified results.
+              <p className="mb-1 font-bold text-white/75">Separate from HEIF</p>
+              HEIR research scores (above) assess engineering maturity from public evidence. This index uses a 0–100 spec model.
             </div>
           </div>
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="mx-auto max-w-5xl px-4 pb-24 text-center">
-        <div
-          className="rounded-2xl border px-8 py-10"
-          style={{ background: "rgba(124,58,237,0.06)", borderColor: "rgba(167,139,250,0.2)" }}
-        >
+      <section className="mx-auto max-w-5xl px-4 pb-24">
+        <div className="rounded-3xl border border-white/10 px-8 py-10 text-center" style={{ background: "rgba(255,255,255,0.035)" }}>
           <h2 className="text-xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
             Need help matching a robot to your operation?
           </h2>
-          <p className="text-sm text-white/40 mb-5">
+          <p className="text-sm text-white/40 mb-5 max-w-lg mx-auto">
             Ready For Robots matches buyer requirements to vendors with active deployments in your industry.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
