@@ -242,8 +242,11 @@ export default function Robots() {
         </div>
       </section>
 
+      {/* HEIR research — expandable, above live index */}
+      <HeirResearchAppendix />
+
       {/* ── Live spec-based index (primary) ── */}
-      <section id="live-index" className="mx-auto max-w-5xl px-4 pb-12">
+      <section id="live-index" className="mx-auto max-w-5xl px-4 pb-12 pt-10">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
@@ -302,9 +305,6 @@ export default function Robots() {
           )}
         </div>
       </section>
-
-      {/* HEIR research — collapsed appendix */}
-      <HeirResearchAppendix />
 
       {/* Footer CTA — inline, no panel */}
       <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-white/40">

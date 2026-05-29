@@ -4,7 +4,7 @@ import { HEIF_BENCHMARK, HEIR_PULL_QUOTES, HEIR_REPORTS } from "@/content/heir20
 /** Collapsed-by-default HEIR appendix — full detail stays in the PDFs. */
 export default function HeirResearchAppendix() {
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-20 border-t border-white/10 pt-14">
+    <section className="mx-auto max-w-5xl px-4 pb-8 border-b border-white/10 pt-2">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
           <div>
@@ -82,7 +82,7 @@ export default function HeirResearchAppendix() {
               </table>
             </div>
             <p className="mt-3 text-[11px] text-white/30">
-              HEIF is a research assessment. The live index above uses published specs on a separate 0–100 scale.
+              HEIF is a research assessment. The live index below uses published specs on a separate 0–100 scale.
             </p>
           </div>
         </div>
