@@ -37,9 +37,9 @@ const POST_TYPE_META: Record<
   PostType,
   { label: string; border: string; text: string; bg: string }
 > = {
-  hot_lead: { label: "🔥 Hot Lead Spotlight", border: "border-red-800", text: "text-red-400", bg: "bg-red-950/30" },
-  signal_alert: { label: "📊 Signal Alert", border: "border-amber-800", text: "text-amber-400", bg: "bg-amber-950/30" },
-  industry_insight: { label: "🧠 Industry Intelligence", border: "border-cyan-800", text: "text-cyan-400", bg: "bg-cyan-950/20" },
+  hot_lead: { label: "🔥 Buyer Spotlight", border: "border-red-800", text: "text-red-400", bg: "bg-red-950/30" },
+  signal_alert: { label: "📊 Buyer Alert", border: "border-amber-800", text: "text-amber-400", bg: "bg-amber-950/30" },
+  industry_insight: { label: "🧠 Industry Brief", border: "border-cyan-800", text: "text-cyan-400", bg: "bg-cyan-950/20" },
   market_trend: { label: "📈 Market Trend", border: "border-violet-800", text: "text-violet-400", bg: "bg-violet-950/20" },
   thought_leadership: { label: "🤖 Thought Leadership", border: "border-emerald-800", text: "text-emerald-400", bg: "bg-emerald-950/20" },
 };

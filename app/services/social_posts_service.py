@@ -179,80 +179,135 @@ def _format_hashtags(tags: List[str]) -> str:
     return " ".join(f"#{t}" for t in tags[:4])
 
 
+# Plain-English triggers for social copy — avoid internal "signal" jargon.
+_PLAIN_TRIGGERS: Dict[str, str] = {
+    "labor_shortage": "staffing pressure",
+    "expansion": "new locations or capacity growth",
+    "strategic_hire": "leadership changes driving new initiatives",
+    "capex": "capital budgets opening up",
+    "funding_round": "fresh investment to deploy",
+    "ma_activity": "M&A or portfolio moves",
+    "job_posting": "automation-related hiring",
+    "news": "public automation news",
+    "news_signal": "public automation news",
+    "automation_interest": "stated interest in automation",
+    "automation_intent": "active automation planning",
+    "labor_signal": "workforce strain",
+    "robot_installation": "robots already going in",
+    "rfp_posted": "vendor selection underway",
+    "budget_allocated": "budget set aside for automation",
+}
+
+
+def _plain_triggers(deduped: list, limit: int = 3) -> List[str]:
+    out: List[str] = []
+    for s in deduped[:limit]:
+        t = (getattr(s, "signal_type", None) or "").strip().lower()
+        label = _PLAIN_TRIGGERS.get(t) or _sig_label(t).lower()
+        if label and label not in out:
+            out.append(label)
+    return out
+
+
+def _format_trigger_list(triggers: List[str]) -> str:
+    if not triggers:
+        return "operational pressure is building"
+    if len(triggers) == 1:
+        return triggers[0]
+    if len(triggers) == 2:
+        return f"{triggers[0]} and {triggers[1]}"
+    return f"{triggers[0]}, {triggers[1]}, and {triggers[2]}"
+
+
+def _headline_excerpt(top_sig) -> str:
+    if not top_sig:
+        return ""
+    raw = (getattr(top_sig, "signal_text", None) or "").replace("\n", " ").strip()
+    raw = re.sub(r"<[^>]+>", "", raw).strip()
+    if not raw:
+        return ""
+    sentence = re.split(r"[.!?]\s+", raw)[0].strip()
+    # Drop trailing publisher / source names (common in scraped news).
+    if " - " in sentence:
+        sentence = sentence.split(" - ", 1)[0].strip()
+    # Drop long subtitle after colon (keep the headline lead).
+    if ": " in sentence and len(sentence) > 90:
+        lead, _sub = sentence.split(": ", 1)
+        if len(lead) >= 24:
+            sentence = lead.strip()
+    if len(sentence) > 120:
+        sentence = sentence[:120].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
+    return sentence
+
+
 # ── Post builders ─────────────────────────────────────────────────────────────
 
 def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank: int) -> Dict:
     name = company.name or "Company"
     industry = company.industry or "industrial"
     ind_display = _industry_display(industry)
-    ps = pick_primary_score(company.scores)
-    score = (ps.overall_intent_score if ps else 0) or pri.score
     automation_type, pain_point = _industry_automation_context(industry)
     hashtags = _industry_hashtags(industry)
 
     sig_count = len(sigs)
     top_sig = deduped[0] if deduped else (sigs[0] if sigs else None)
-    unique_labels = [_sig_label(getattr(s, "signal_type", "")) for s in deduped[:4]]
-    signals_str = ", ".join(unique_labels[:3]) if unique_labels else "automation interest"
+    triggers = _plain_triggers(deduped)
+    trigger_phrase = _format_trigger_list(triggers)
+    headline = _headline_excerpt(top_sig)
 
-    top_sig_excerpt = ""
-    if top_sig:
-        raw = (getattr(top_sig, "signal_text", None) or "").replace("\n", " ").strip()
-        # Strip HTML tags and truncate
-        raw = re.sub(r"<[^>]+>", "", raw).strip()
-        if raw:
-            top_sig_excerpt = raw[:200] + ("…" if len(raw) > 200 else "")
-
-    buy_months = "60–90" if pri.tier == "HOT" else "90–120"
+    buy_window = "60–90 days" if pri.tier == "HOT" else "90–120 days"
     emoji = "🔥" if rank == 1 else "📊"
+    spotlight = "Buyer spotlight" if rank == 1 else "Buyer alert"
+    ps = pick_primary_score(company.scores)
+    score = (ps.overall_intent_score if ps else 0) or pri.score
 
-    # ── Core intelligence sentence (the template the user asked for) ──────────
-    # "[Company] is targeting automation for their [use_case] due to [pain_point]
-    #  which aligns with our signals [signals]. The timing of the project is [X] months."
-    core = (
-        f"{name} is targeting automation for their {automation_type} "
-        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
-        f"The timing of this project is within {buy_months} days."
+    vendor_value = (
+        f"For robotics vendors and integrators: accounts like this often start "
+        f"evaluating partners within the next {buy_window}. "
+        f"A specific use case beats a generic pitch — especially before the RFP."
     )
 
     # ── Twitter ──────────────────────────────────────────────────────────────
     tw_tags = _format_hashtags(hashtags)
     tw_hook = f"{emoji} {ind_display} | {name}"
-    tw_core = f"{tw_hook}\n\n{core}"
+    tw_core = (
+        f"{tw_hook}\n\n"
+        f"{name} is investing in {automation_type} as {pain_point}. "
+        f"Vendor conversations often start within {buy_window}."
+    )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     # ── LinkedIn ─────────────────────────────────────────────────────────────
-    li_hook = f"{emoji} Automation Intelligence: {name}"
+    li_hook = f"{emoji} {spotlight}: {name}"
 
-    li_body = core
-
-    li_evidence = ""
-    if top_sig_excerpt:
-        li_evidence = f'\n\nKey evidence: "{top_sig_excerpt}"'
-
-    # Qualifying context
-    li_qualify = (
-        f"\n\nWith {len(sigs)} buying signals in our database and a priority score of "
-        f"{round(score)}/100, this account is likely to evaluate and select a vendor "
-        f"within {buy_months} days. First-mover outreach wins here."
+    li_body = (
+        f"{name} ({ind_display}) is moving on automation — {automation_type} — "
+        f"because {pain_point}.\n\n"
+        f"What's happening now: {trigger_phrase}."
     )
 
-    li_cta = f"\n\n🔗 Full dossier + signal breakdown → {SITE_URL}"
+    li_headline = ""
+    if headline:
+        li_headline = f"\n\nRecent headline: \"{headline}\""
+
+    li_value = f"\n\n{vendor_value}"
+
+    li_cta = f"\n\nSee who's on today's automation buyer list → {SITE_URL}"
     li_hashtag_str = "\n\n" + _format_hashtags(hashtags)
 
     linkedin = (
         f"{li_hook}\n\n"
         f"{li_body}"
-        f"{li_evidence}"
-        f"{li_qualify}"
+        f"{li_headline}"
+        f"{li_value}"
         f"{li_cta}"
         f"{li_hashtag_str}"
     )
 
     return {
         "type": "hot_lead" if rank == 1 else "signal_alert",
-        "title": f"{'🔥 Hot Lead Spotlight' if rank == 1 else '📊 Signal Alert'}: {name}",
+        "title": f"{'🔥 Buyer Spotlight' if rank == 1 else '📊 Buyer Alert'}: {name}",
         "source_name": name,
         "source_industry": ind_display,
         "source_tier": pri.tier,
@@ -279,14 +334,15 @@ def _build_industry_insight_post(executive_take: str) -> Dict:
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
-    # LinkedIn: full executive take + framing
+    # LinkedIn: full executive take + value framing
     linkedin = (
-        "🧠 Strategic Automation Intelligence\n\n"
+        "🧠 What we're seeing in automation this week\n\n"
         f"{executive_take}\n\n"
-        "Companies showing these signals are typically 60–90 days from a vendor decision. "
-        "Ready For Robots tracks thousands of buying indicators across hospitality, logistics, "
-        "manufacturing, and more — surfacing the accounts that are actively ready to invest.\n\n"
-        f"🔗 Explore today's signal dashboard → {SITE_URL}\n\n"
+        "The takeaway for vendors: companies under this kind of pressure don't announce "
+        "an RFP first — they talk to partners who show up with a concrete solution. "
+        "Ready For Robots surfaces those accounts daily so you can reach out while "
+        "the window is still open.\n\n"
+        f"See today's buyer list → {SITE_URL}/newsletter\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -316,12 +372,13 @@ def _build_market_trend_post(trend: Dict) -> Dict:
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     linkedin = (
-        f"📈 Automation Market Trend: {title}\n\n"
+        f"📈 Market trend: {title}\n\n"
         f"{detail}\n\n"
-        "This signal pattern is consistent with what we're tracking across thousands of companies "
-        "in our automation intelligence database. Companies that wait for this trend to mature before "
-        "acting risk losing ground to early movers already deploying.\n\n"
-        f"🔗 See today's full market brief → {SITE_URL}/newsletter\n\n"
+        "Why this matters if you sell robotics: when a trend shows up across multiple "
+        "sectors at once, buyers move from \"someday\" to \"this quarter.\" "
+        "Ready For Robots tracks which companies are actually acting on it — "
+        "not just reading about it.\n\n"
+        f"Read today's market brief → {SITE_URL}/newsletter\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -345,29 +402,30 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
     industries = [i for i in industries if i and i.lower() not in ("cross-sector", "strategic brief")][:3]
 
     hot_count = sum(1 for s in stories if s and s.get("source_tier") == "HOT")
-    total_signals = sum(s.get("signal_count", 0) for s in stories if s)
 
     industries_str = ", ".join(industries) if industries else "hospitality, logistics, and manufacturing"
 
     tw_tags = _format_hashtags(hashtags)
     tw_core = (
-        "🤖 Automation is no longer a future investment — it's a competitive necessity.\n\n"
-        f"Today's signal feed shows {hot_count} high-intent buyers across {industries_str}. "
-        "The window for being first to the conversation is closing."
+        "🤖 The automation buying window is getting shorter.\n\n"
+        f"Today's list includes {hot_count} high-intent accounts across {industries_str}. "
+        "The vendors who win are usually in the conversation before the RFP."
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     linkedin = (
-        "🤖 Why the Automation Buying Window is Narrowing\n\n"
-        f"Today's Ready For Robots signal feed picked up {total_signals}+ automation buying indicators "
-        f"across {industries_str} and beyond. {hot_count} accounts are showing HOT intent — meaning "
-        "they're likely to evaluate and select a vendor in the next 60–90 days.\n\n"
-        "The companies that get to these buyers first — with the right message — win the deal. "
-        "Those who wait for the RFP are already competing on price in a crowded field.\n\n"
-        "Automation ROI is no longer a debate. The debate now is: which robotics vendor is positioned "
-        "to capture the wave of first-time deployers coming to market this year?\n\n"
-        f"🔗 See today's full lead intelligence feed → {SITE_URL}\n\n"
+        "🤖 Why early outreach beats waiting for the RFP\n\n"
+        f"Across {industries_str}, we're tracking a wave of companies actively planning "
+        f"automation investments — not just talking about them. {hot_count} accounts on "
+        "today's list are high-intent, meaning vendor conversations are likely in the "
+        "next 60–90 days.\n\n"
+        "The pattern is consistent: teams that reach out with a specific use case and ROI "
+        "story get in early. Teams that wait for the public RFP compete on price in a "
+        "crowded field.\n\n"
+        "Ready For Robots publishes that buyer list daily — ranked, sourced, and ready "
+        "for outreach.\n\n"
+        f"See today's list → {SITE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 
