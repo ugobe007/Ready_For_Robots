@@ -11,8 +11,10 @@ import re
 from typing import Any, Dict, List, Optional
 
 from app.services.humanoid_catalog_cleanup import (
+    canonical_slug_for_vendor,
     is_excluded_humanoid_slug,
     is_junk_humanoid_row,
+    vendor_key,
 )
 
 # Each entry: name, vendor, optional model_slug, product_url, status, country, specs (partial)
@@ -227,7 +229,7 @@ def normalize_catalog_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def catalog_entries() -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
+    filtered: List[Dict[str, Any]] = []
     for entry in HUMANOID_CATALOG:
         normalized = normalize_catalog_entry(entry)
         slug = normalized["model_slug"]
@@ -235,7 +237,19 @@ def catalog_entries() -> List[Dict[str, Any]]:
             continue
         if is_junk_humanoid_row(normalized["name"], normalized["vendor"], slug):
             continue
-        out.append(normalized)
+        filtered.append(normalized)
+
+    from collections import defaultdict
+
+    by_vendor: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for entry in filtered:
+        by_vendor[vendor_key(entry["vendor"])].append(entry)
+
+    out: List[Dict[str, Any]] = []
+    for group in by_vendor.values():
+        keep_slug = canonical_slug_for_vendor(group[0]["vendor"], group)
+        match = next((e for e in group if e["model_slug"] == keep_slug), group[0])
+        out.append(match)
     return out
 
 

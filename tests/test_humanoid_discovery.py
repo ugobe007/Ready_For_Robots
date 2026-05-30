@@ -7,7 +7,7 @@ from app.services.humanoid_vendor_catalog import catalog_count, catalog_entries,
 
 
 def test_catalog_has_real_oem_entries():
-    assert catalog_count() >= 60
+    assert catalog_count() >= 50
 
 
 def test_slugify():
@@ -119,6 +119,7 @@ def test_rescore_existing_skips_after_agent_budget(monkeypatch):
     monkeypatch.setattr(hd, "_robot_company_candidates", lambda db: [])
     monkeypatch.setattr(hd, "_news_candidates", lambda max_queries=0: [])
     monkeypatch.setattr(hd, "_existing_slugs", lambda db: {f"r{i}" for i in range(5)})
+    monkeypatch.setattr(hd, "_existing_vendor_slugs", lambda db: {f"v{i}": f"r{i}" for i in range(5)})
 
     class FakeDb:
         def commit(self):

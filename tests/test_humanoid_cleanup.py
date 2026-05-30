@@ -35,7 +35,32 @@ def test_real_robot_kept():
 
 
 def test_catalog_filters_excluded_entries():
-    assert catalog_count() < 187
+    assert catalog_count() <= 65
+
+
+def test_catalog_one_entry_per_vendor():
+    from collections import defaultdict
+    from app.services.humanoid_vendor_catalog import catalog_entries
+    from app.services.humanoid_catalog_cleanup import vendor_key
+
+    by = defaultdict(list)
+    for e in catalog_entries():
+        by[vendor_key(e["vendor"])].append(e)
+    assert all(len(v) == 1 for v in by.values())
+
+
+def test_vendor_duplicate_removal():
+    from app.services.humanoid_catalog_cleanup import vendor_duplicate_rows
+
+    rows = [
+        {"id": 1, "model_slug": "figure-02", "name": "Figure 02", "vendor": "Figure AI", "heif_total": 2.5},
+        {"id": 2, "model_slug": "figure-01", "name": "Figure 01", "vendor": "Figure AI", "heif_total": 2.0},
+        {"id": 3, "model_slug": "boston-dynamics-atlas", "name": "Boston Dynamics Atlas", "vendor": "Boston Dynamics", "heif_total": 2.8},
+        {"id": 4, "model_slug": "boston-dynamics", "name": "Boston Dynamics Humanoid", "vendor": "Boston Dynamics", "heif_total": 1.0},
+    ]
+    dupes = vendor_duplicate_rows(rows)
+    slugs = {r["model_slug"] for r in dupes}
+    assert slugs == {"figure-01", "boston-dynamics"}
 
 
 def test_cleanup_dry_run():
@@ -47,8 +72,8 @@ def test_cleanup_dry_run():
 
                 def all(self):
                     return [
-                        {"id": 1, "model_slug": "unitree-g1", "name": "Unitree G1", "vendor": "Unitree"},
-                        {"id": 2, "model_slug": "bmw-figure", "name": "BMW Figure Pilot", "vendor": "BMW"},
+                        {"id": 1, "model_slug": "unitree-g1", "name": "Unitree G1", "vendor": "Unitree Robotics", "heif_total": 2.3, "score_total": 58.0},
+                        {"id": 2, "model_slug": "bmw-figure", "name": "BMW Figure Pilot", "vendor": "BMW", "heif_total": 1.0, "score_total": 25.0},
                     ]
 
             return R()
