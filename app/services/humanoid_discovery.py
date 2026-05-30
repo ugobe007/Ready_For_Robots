@@ -299,14 +299,14 @@ def run_humanoid_discovery(
                 "evidence_summary": assessment.get("evidence_summary", ""),
                 "sources": articles,
             }
-            result = upsert_humanoid_robot(db, robot, source="discovery", commit=False)
+            result = upsert_humanoid_robot(db, robot, source="discovery", commit=True)
             stats[result] = stats.get(result, 0) + 1
             existing.add(slug)
         except Exception as exc:
             logger.warning("Discovery failed for %s: %s", slug, exc)
             stats["errors"] += 1
+            db.rollback()
 
-    db.commit()
     stats["total_in_db"] = db.execute(
         text("SELECT COUNT(*) FROM humanoid_benchmarks")
     ).scalar() or 0

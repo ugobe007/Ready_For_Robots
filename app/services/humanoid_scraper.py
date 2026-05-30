@@ -839,77 +839,82 @@ def seed_robots(db_session: Any) -> dict:
 
     inserted = 0
     updated = 0
+    failed: list[str] = []
 
     for robot in SEED_ROBOTS:
         specs = robot["specs"]
         scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
         now = datetime.now(timezone.utc)
 
-        existing = db_session.execute(
-            text("SELECT id FROM humanoid_benchmarks WHERE model_slug = :slug"),
-            {"slug": robot["model_slug"]},
-        ).first()
+        try:
+            existing = db_session.execute(
+                text("SELECT id FROM humanoid_benchmarks WHERE model_slug = :slug"),
+                {"slug": robot["model_slug"]},
+            ).first()
 
-        if existing:
-            db_session.execute(
-                text("""
-                    UPDATE humanoid_benchmarks SET
-                        specs = cast(:specs as jsonb),
-                        score_mobility = :score_mobility,
-                        score_manipulation = :score_manipulation,
-                        score_autonomy = :score_autonomy,
-                        score_safety = :score_safety,
-                        score_endurance = :score_endurance,
-                        score_market_readiness = :score_market_readiness,
-                        score_total = :score_total,
-                        heif_mobility = :heif_mobility,
-                        heif_manipulation = :heif_manipulation,
-                        heif_cognition = :heif_cognition,
-                        heif_safety = :heif_safety,
-                        heif_data_pipeline = :heif_data_pipeline,
-                        heif_production = :heif_production,
-                        heif_total = :heif_total,
-                        updated_at = :now
-                    WHERE model_slug = :slug
-                """),
-                {"specs": json.dumps(specs), "now": now, "slug": robot["model_slug"], **scores},
-            )
-            updated += 1
-        else:
-            db_session.execute(
-                text("""
-                    INSERT INTO humanoid_benchmarks
-                        (name, vendor, model_slug, product_url, status, specs,
-                         score_mobility, score_manipulation, score_autonomy,
-                         score_safety, score_endurance, score_market_readiness,
-                         score_total,
-                         heif_mobility, heif_manipulation, heif_cognition,
-                         heif_safety, heif_data_pipeline, heif_production, heif_total,
-                         sources, last_scraped_at, created_at, updated_at)
-                    VALUES
-                        (:name, :vendor, :model_slug, :product_url, :status, cast(:specs as jsonb),
-                         :score_mobility, :score_manipulation, :score_autonomy,
-                         :score_safety, :score_endurance, :score_market_readiness,
-                         :score_total,
-                         :heif_mobility, :heif_manipulation, :heif_cognition,
-                         :heif_safety, :heif_data_pipeline, :heif_production, :heif_total,
-                         cast('[]' as jsonb), :now, :now, :now)
-                """),
-                {
-                    "name": robot["name"],
-                    "vendor": robot["vendor"],
-                    "model_slug": robot["model_slug"],
-                    "product_url": robot.get("product_url"),
-                    "status": robot["status"],
-                    "specs": json.dumps(specs),
-                    "now": now,
-                    **scores,
-                },
-            )
-            inserted += 1
+            if existing:
+                db_session.execute(
+                    text("""
+                        UPDATE humanoid_benchmarks SET
+                            specs = cast(:specs as jsonb),
+                            score_mobility = :score_mobility,
+                            score_manipulation = :score_manipulation,
+                            score_autonomy = :score_autonomy,
+                            score_safety = :score_safety,
+                            score_endurance = :score_endurance,
+                            score_market_readiness = :score_market_readiness,
+                            score_total = :score_total,
+                            heif_mobility = :heif_mobility,
+                            heif_manipulation = :heif_manipulation,
+                            heif_cognition = :heif_cognition,
+                            heif_safety = :heif_safety,
+                            heif_data_pipeline = :heif_data_pipeline,
+                            heif_production = :heif_production,
+                            heif_total = :heif_total,
+                            updated_at = :now
+                        WHERE model_slug = :slug
+                    """),
+                    {"specs": json.dumps(specs), "now": now, "slug": robot["model_slug"], **scores},
+                )
+                updated += 1
+            else:
+                db_session.execute(
+                    text("""
+                        INSERT INTO humanoid_benchmarks
+                            (name, vendor, model_slug, product_url, status, specs,
+                             score_mobility, score_manipulation, score_autonomy,
+                             score_safety, score_endurance, score_market_readiness,
+                             score_total,
+                             heif_mobility, heif_manipulation, heif_cognition,
+                             heif_safety, heif_data_pipeline, heif_production, heif_total,
+                             sources, last_scraped_at, created_at, updated_at)
+                        VALUES
+                            (:name, :vendor, :model_slug, :product_url, :status, cast(:specs as jsonb),
+                             :score_mobility, :score_manipulation, :score_autonomy,
+                             :score_safety, :score_endurance, :score_market_readiness,
+                             :score_total,
+                             :heif_mobility, :heif_manipulation, :heif_cognition,
+                             :heif_safety, :heif_data_pipeline, :heif_production, :heif_total,
+                             cast('[]' as jsonb), :now, :now, :now)
+                    """),
+                    {
+                        "name": robot["name"],
+                        "vendor": robot["vendor"],
+                        "model_slug": robot["model_slug"],
+                        "product_url": robot.get("product_url"),
+                        "status": robot["status"],
+                        "specs": json.dumps(specs),
+                        "now": now,
+                        **scores,
+                    },
+                )
+                inserted += 1
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+            failed.append(robot["model_slug"])
 
-    db_session.commit()
-    return {"inserted": inserted, "updated": updated, "total": len(SEED_ROBOTS)}
+    return {"inserted": inserted, "updated": updated, "failed": failed, "total": len(SEED_ROBOTS)}
 
 
 # ── AI HEIF agent + discovery upsert ─────────────────────────────────────────
