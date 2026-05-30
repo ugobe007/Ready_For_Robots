@@ -155,6 +155,41 @@ def run_intelligence_scraper_task(
 
 
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def run_humanoid_discovery_task(
+    self,
+    agent_limit: int = 25,
+    news_queries: int = 6,
+    rescore_existing: bool = False,
+):
+    """Discover humanoid startups, AI-score HEIF, upsert humanoid_benchmarks."""
+    from app.services.humanoid_discovery import run_humanoid_discovery
+
+    db = get_db()
+    try:
+        stats = run_humanoid_discovery(
+            db,
+            use_catalog=True,
+            use_robot_companies=True,
+            news_queries=news_queries,
+            agent_limit=agent_limit,
+            rescore_existing=rescore_existing,
+        )
+        logger.info(
+            "Humanoid discovery: +%d inserted, %d updated, %d agent-scored, %d total in DB",
+            stats.get("inserted", 0),
+            stats.get("updated", 0),
+            stats.get("agent_scored", 0),
+            stats.get("total_in_db", 0),
+        )
+        return stats
+    except Exception as exc:
+        logger.error("Humanoid discovery failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
 def run_oem_discovery_task(self, max_queries: int = 30):
     """XBOT / StageGate OEM prospect discovery — robot companies needing show ops infrastructure."""
     from app.services.oem_discovery import run_oem_discovery

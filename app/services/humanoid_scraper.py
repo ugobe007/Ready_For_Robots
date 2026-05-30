@@ -910,3 +910,262 @@ def seed_robots(db_session: Any) -> dict:
 
     db_session.commit()
     return {"inserted": inserted, "updated": updated, "total": len(SEED_ROBOTS)}
+
+
+# ── AI HEIF agent + discovery upsert ─────────────────────────────────────────
+
+HEIF_AGENT_SYSTEM = """You are a humanoid robotics analyst using the HEIR 2026 HEIF framework.
+
+Score each dimension 0.0–4.0 (one decimal):
+- mobility: dynamic locomotion, speed, terrain, stairs, recovery
+- manipulation: payload, dexterous hands, force-controlled grasping
+- cognition: task planning, autonomy level, SDK/API, commercial task execution
+- safety: e-stop, force-limited joints, certifications, collision force vs ISO TS 15066
+- data_pipeline: teleoperation data, fleet learning, sim-to-real, developer ecosystem
+- production: manufacturing scale, price transparency, commercial availability
+
+Reference anchors (HEIR 2026):
+Boston Dynamics mobility 4.0; AgiBot manipulation 3.5 / data_pipeline 4.0;
+Figure cognition 3.5; Tesla production 4.0; Unitree mobility 3.5 / production 3.5.
+
+Be conservative for research-stage or unverified startups. Use public evidence only.
+Return valid JSON only."""
+
+
+def _parse_json_object(text: str) -> dict:
+    import json
+    if not text:
+        return {}
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return {}
+    try:
+        return json.loads(match.group())
+    except json.JSONDecodeError:
+        return {}
+
+
+def agent_assess_humanoid(
+    name: str,
+    vendor: str,
+    *,
+    country: str = "",
+    status: str = "research",
+    product_url: str = "",
+    articles: Optional[list] = None,
+    existing_specs: Optional[dict] = None,
+) -> dict:
+    """
+    LLM agent assesses specs + HEIF dimensions per HEIR protocol.
+    Falls back to rule-based inference when no LLM is configured.
+    """
+    from app.services.llm_client import llm_json_completion
+
+    article_text = ""
+    if articles:
+        article_text = "\n".join(
+            f"- {a.get('title', '')} ({a.get('url', '')})" for a in articles[:8]
+        )
+
+    user_prompt = f"""Assess this humanoid robot for the HEIF benchmark leaderboard.
+
+Robot: {name}
+Vendor: {vendor}
+Country: {country or 'unknown'}
+Status hint: {status}
+Product URL: {product_url or 'unknown'}
+Known specs: {existing_specs or {}}
+Recent news:
+{article_text or '(none)'}
+
+Return JSON:
+{{
+  "status": "available|pilot|research|discontinued",
+  "specs": {{
+    "top_speed_mps": number|null,
+    "payload_kg": number|null,
+    "battery_life_h": number|null,
+    "finger_count": integer|null,
+    "has_dexterous_hands": boolean,
+    "can_climb_stairs": boolean,
+    "can_navigate_rough_terrain": boolean,
+    "can_run": boolean,
+    "has_estop": boolean,
+    "force_limited_joints": boolean,
+    "safety_certified": boolean,
+    "collision_force_n": number|null,
+    "autonomy_level": "full|semi|teleoperated|research",
+    "commercial_deployments": integer,
+    "price_usd": number|null,
+    "has_sdk": boolean,
+    "has_api": boolean,
+    "height_cm": number|null,
+    "weight_kg": number|null
+  }},
+  "heif": {{
+    "mobility": 0.0-4.0,
+    "manipulation": 0.0-4.0,
+    "cognition": 0.0-4.0,
+    "safety": 0.0-4.0,
+    "data_pipeline": 0.0-4.0,
+    "production": 0.0-4.0
+  }},
+  "confidence": 0.0-1.0,
+  "evidence_summary": "one sentence"
+}}"""
+
+    raw = llm_json_completion(HEIF_AGENT_SYSTEM, user_prompt, max_tokens=1200, temperature=0.2)
+    parsed = _parse_json_object(raw or "")
+
+    if not parsed:
+        specs = dict(existing_specs or {})
+        scores = compute_scores(specs, status=status, vendor=vendor)
+        return {
+            "status": status,
+            "specs": specs,
+            "scores": scores,
+            "confidence": 0.0,
+            "evidence_summary": "Rule-based inference (no LLM)",
+            "agent_scored": False,
+        }
+
+    agent_status = str(parsed.get("status") or status).lower()
+    if agent_status not in ("available", "pilot", "research", "discontinued"):
+        agent_status = status
+
+    agent_specs = {**(existing_specs or {}), **(parsed.get("specs") or {})}
+    agent_specs = {k: v for k, v in agent_specs.items() if v is not None}
+
+    scores = compute_scores(agent_specs, status=agent_status, vendor=vendor)
+
+    # Apply agent HEIF when no authoritative HEIR research override exists
+    agent_heif = parsed.get("heif") or {}
+    confidence = float(parsed.get("confidence") or 0.0)
+    research = HEIF_RESEARCH_BY_VENDOR.get(_normalize_vendor(vendor))
+    if agent_heif and confidence >= 0.45 and not research:
+        score_keys = {
+            "mobility": "score_mobility",
+            "manipulation": "score_manipulation",
+            "cognition": "score_cognition",
+            "safety": "score_safety",
+            "data_pipeline": "score_data_pipeline",
+            "production": "score_production",
+        }
+        for dim in HEIF_DIMS:
+            val = agent_heif.get(dim)
+            if val is not None:
+                scores[f"heif_{dim}"] = _clamp_heif(float(val))
+                scores[score_keys[dim]] = round(scores[f"heif_{dim}"] * 25, 1)
+        # Legacy aliases
+        scores["score_autonomy"] = scores["score_cognition"]
+        scores["score_endurance"] = scores["score_data_pipeline"]
+        scores["score_market_readiness"] = scores["score_production"]
+        heif_map = {d: scores[f"heif_{d}"] for d in HEIF_DIMS}
+        scores["heif_total"] = heif_total(heif_map)
+        scores["score_total"] = round(scores["heif_total"] * 25, 1)
+
+    return {
+        "status": agent_status,
+        "specs": agent_specs,
+        "scores": scores,
+        "confidence": confidence,
+        "evidence_summary": parsed.get("evidence_summary") or "",
+        "agent_scored": bool(agent_heif),
+    }
+
+
+def upsert_humanoid_robot(db_session: Any, robot: dict, *, source: str = "discovery") -> str:
+    """
+    Insert or update a humanoid_benchmarks row.
+    Returns 'inserted', 'updated', or 'skipped'.
+    """
+    from sqlalchemy import text
+    import json
+
+    slug = robot["model_slug"]
+    specs = robot.get("specs") or {}
+    status = robot.get("status") or "research"
+    vendor = robot.get("vendor") or ""
+    scores = robot.get("scores") or compute_scores(specs, status=status, vendor=vendor)
+    now = datetime.now(timezone.utc)
+
+    sources = robot.get("sources") or []
+    if source:
+        sources.append({
+            "type": source,
+            "scraped_at": now.isoformat(),
+            "summary": robot.get("evidence_summary", ""),
+        })
+
+    existing = db_session.execute(
+        text("SELECT id, specs, sources FROM humanoid_benchmarks WHERE model_slug = :slug"),
+        {"slug": slug},
+    ).mappings().first()
+
+    if existing:
+        merged_specs = {**(existing["specs"] or {}), **specs}
+        merged_sources = list(existing["sources"] or []) + sources
+        db_session.execute(
+            text("""
+                UPDATE humanoid_benchmarks SET
+                    name = :name, vendor = :vendor, product_url = :product_url,
+                    status = :status, specs = cast(:specs as jsonb),
+                    score_mobility = :score_mobility, score_manipulation = :score_manipulation,
+                    score_autonomy = :score_autonomy, score_safety = :score_safety,
+                    score_endurance = :score_endurance, score_market_readiness = :score_market_readiness,
+                    score_total = :score_total,
+                    heif_mobility = :heif_mobility, heif_manipulation = :heif_manipulation,
+                    heif_cognition = :heif_cognition, heif_safety = :heif_safety,
+                    heif_data_pipeline = :heif_data_pipeline, heif_production = :heif_production,
+                    heif_total = :heif_total,
+                    sources = cast(:sources as jsonb),
+                    last_scraped_at = :now, updated_at = :now
+                WHERE model_slug = :slug
+            """),
+            {
+                "name": robot["name"],
+                "vendor": vendor,
+                "product_url": robot.get("product_url"),
+                "status": status,
+                "specs": json.dumps(merged_specs),
+                "sources": json.dumps(merged_sources[-20:]),
+                "now": now,
+                "slug": slug,
+                **scores,
+            },
+        )
+        db_session.commit()
+        return "updated"
+
+    db_session.execute(
+        text("""
+            INSERT INTO humanoid_benchmarks
+                (name, vendor, model_slug, product_url, status, specs,
+                 score_mobility, score_manipulation, score_autonomy,
+                 score_safety, score_endurance, score_market_readiness, score_total,
+                 heif_mobility, heif_manipulation, heif_cognition,
+                 heif_safety, heif_data_pipeline, heif_production, heif_total,
+                 sources, last_scraped_at, created_at, updated_at)
+            VALUES
+                (:name, :vendor, :model_slug, :product_url, :status, cast(:specs as jsonb),
+                 :score_mobility, :score_manipulation, :score_autonomy,
+                 :score_safety, :score_endurance, :score_market_readiness, :score_total,
+                 :heif_mobility, :heif_manipulation, :heif_cognition,
+                 :heif_safety, :heif_data_pipeline, :heif_production, :heif_total,
+                 cast(:sources as jsonb), :now, :now, :now)
+        """),
+        {
+            "name": robot["name"],
+            "vendor": vendor,
+            "model_slug": slug,
+            "product_url": robot.get("product_url"),
+            "status": status,
+            "specs": json.dumps(specs),
+            "sources": json.dumps(sources[-20:]),
+            "now": now,
+            **scores,
+        },
+    )
+    db_session.commit()
+    return "inserted"
+

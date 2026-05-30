@@ -4,6 +4,7 @@ GET  /api/humanoid/robots               — list all with scores (public)
 GET  /api/humanoid/robots/{slug}        — single robot detail (public)
 GET  /api/humanoid/report               — formatted benchmark report (public)
 GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
+POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
 POST /api/humanoid/seed                 — seed known robots (admin)
 POST /api/humanoid/scrape/{slug}        — scrape + rescore one robot (admin)
 POST /api/humanoid/scrape-all           — scrape + rescore all robots (admin)
@@ -23,6 +24,8 @@ from sqlalchemy import text
 from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
+from app.services.humanoid_discovery import run_humanoid_discovery
+from app.services.humanoid_vendor_catalog import catalog_count
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
@@ -156,6 +159,33 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
 def seed(db: Session = Depends(get_db)):
     """Seed the 10 known humanoid robots with published specs + initial scores."""
     result = seed_robots(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return result
+
+
+@router.post("/discover")
+def discover_humanoids(
+    db: Session = Depends(get_db),
+    use_catalog: bool = Query(True, description="Import curated catalog (~180 products)"),
+    use_robot_companies: bool = Query(True, description="Include robot_companies humanoid vendors"),
+    news_queries: int = Query(8, ge=0, le=20, description="Google News RSS queries for new startups"),
+    agent_limit: int = Query(30, ge=0, le=100, description="Max AI HEIF assessments per run"),
+    rescore_existing: bool = Query(False, description="Re-run agent on robots already in DB"),
+):
+    """
+    Discover humanoid companies/startups, score with HEIR HEIF agent, upsert leaderboard.
+    Catalog rows beyond ``agent_limit`` get rule-based HEIF scores.
+    """
+    result = run_humanoid_discovery(
+        db,
+        use_catalog=use_catalog,
+        use_robot_companies=use_robot_companies,
+        news_queries=news_queries,
+        agent_limit=agent_limit,
+        rescore_existing=rescore_existing,
+    )
+    result["catalog_size"] = catalog_count()
+    _ROBOTS_LIST_CACHE.clear()
     return result
 
 
@@ -222,6 +252,45 @@ async def cron_scrape_all(
         "status": "started",
         "robots": len(slugs),
         "message": f"Scraping {len(slugs)} humanoid robots in background — scores updated in ~2 min.",
+    }
+
+
+@router.get("/cron/discover")
+async def cron_discover_humanoids(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="SCRAPER_CRON_TOKEN secret"),
+    agent_limit: int = Query(25, ge=0, le=50),
+    news_queries: int = Query(6, ge=0, le=15),
+):
+    """
+    Weekly discovery cron — import catalog + news, AI-score up to ``agent_limit`` robots.
+    GET /api/humanoid/cron/discover?token=YOUR_TOKEN
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    def _run():
+        from app.database import SessionLocal
+        with SessionLocal() as bg_db:
+            try:
+                run_humanoid_discovery(
+                    bg_db,
+                    use_catalog=True,
+                    use_robot_companies=True,
+                    news_queries=news_queries,
+                    agent_limit=agent_limit,
+                )
+                _ROBOTS_LIST_CACHE.clear()
+            except Exception as exc:
+                logger.warning("Cron humanoid discovery failed: %s", exc)
+
+    background_tasks.add_task(_run)
+    return {
+        "status": "started",
+        "catalog_size": catalog_count(),
+        "agent_limit": agent_limit,
+        "message": "Humanoid discovery running in background.",
     }
 
 
