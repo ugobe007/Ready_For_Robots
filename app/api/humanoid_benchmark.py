@@ -164,29 +164,59 @@ def seed(db: Session = Depends(get_db)):
 
 
 @router.post("/discover")
-def discover_humanoids(
+async def discover_humanoids(
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     use_catalog: bool = Query(True, description="Import curated catalog (~180 products)"),
     use_robot_companies: bool = Query(True, description="Include robot_companies humanoid vendors"),
     news_queries: int = Query(8, ge=0, le=20, description="Google News RSS queries for new startups"),
     agent_limit: int = Query(30, ge=0, le=100, description="Max AI HEIF assessments per run"),
     rescore_existing: bool = Query(False, description="Re-run agent on robots already in DB"),
+    sync: bool = Query(
+        False,
+        description="Wait for full run (can take 5–15 min). Default false runs in background.",
+    ),
 ):
     """
     Discover humanoid companies/startups, score with HEIR HEIF agent, upsert leaderboard.
-    Catalog rows beyond ``agent_limit`` get rule-based HEIF scores.
+    Runs in background by default so the HTTP request returns immediately.
     """
-    result = run_humanoid_discovery(
-        db,
+    kwargs = dict(
         use_catalog=use_catalog,
         use_robot_companies=use_robot_companies,
         news_queries=news_queries,
         agent_limit=agent_limit,
         rescore_existing=rescore_existing,
     )
-    result["catalog_size"] = catalog_count()
-    _ROBOTS_LIST_CACHE.clear()
-    return result
+
+    if sync:
+        result = run_humanoid_discovery(db, **kwargs)
+        result["catalog_size"] = catalog_count()
+        _ROBOTS_LIST_CACHE.clear()
+        return result
+
+    def _run():
+        from app.database import SessionLocal
+        with SessionLocal() as bg_db:
+            try:
+                result = run_humanoid_discovery(bg_db, **kwargs)
+                logger.info("Humanoid discovery finished: %s", result)
+                _ROBOTS_LIST_CACHE.clear()
+            except Exception as exc:
+                logger.warning("Humanoid discovery background run failed: %s", exc)
+
+    background_tasks.add_task(_run)
+    est_min = max(1, agent_limit // 4) if agent_limit else 1
+    return {
+        "status": "started",
+        "catalog_size": catalog_count(),
+        "agent_limit": agent_limit,
+        "rescore_existing": rescore_existing,
+        "message": (
+            f"Discovery running in background — up to {agent_limit} AI HEIF assessments, "
+            f"expect ~{est_min}–{est_min * 2} min. Poll GET /api/humanoid/robots for updates."
+        ),
+    }
 
 
 @router.post("/scrape/{slug}")

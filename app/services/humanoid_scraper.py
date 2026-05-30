@@ -1074,7 +1074,13 @@ Return JSON:
     }
 
 
-def upsert_humanoid_robot(db_session: Any, robot: dict, *, source: str = "discovery") -> str:
+def upsert_humanoid_robot(
+    db_session: Any,
+    robot: dict,
+    *,
+    source: str = "discovery",
+    commit: bool = True,
+) -> str:
     """
     Insert or update a humanoid_benchmarks row.
     Returns 'inserted', 'updated', or 'skipped'.
@@ -1134,7 +1140,8 @@ def upsert_humanoid_robot(db_session: Any, robot: dict, *, source: str = "discov
                 **scores,
             },
         )
-        db_session.commit()
+        if commit:
+            db_session.commit()
         return "updated"
 
     db_session.execute(
@@ -1166,6 +1173,7 @@ def upsert_humanoid_robot(db_session: Any, robot: dict, *, source: str = "discov
             **scores,
         },
     )
-    db_session.commit()
+    if commit:
+        db_session.commit()
     return "inserted"
 

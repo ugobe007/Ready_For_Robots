@@ -242,9 +242,13 @@ def run_humanoid_discovery(
         if not is_new and not rescore_existing:
             stats["skipped"] += 1
             continue
+        # Rescore mode: only AI-assess up to agent_limit — skip mass rule-based rewrites.
+        if not is_new and rescore_existing and agent_budget <= 0:
+            stats["skipped"] += 1
+            continue
 
         try:
-            use_agent = agent_budget > 0
+            use_agent = agent_budget > 0 and (is_new or rescore_existing)
             articles = list(entry.get("sources") or [])
             if use_agent and not articles:
                 articles = _search_robot_specs(entry["name"], entry["vendor"])
@@ -284,13 +288,14 @@ def run_humanoid_discovery(
                 "evidence_summary": assessment.get("evidence_summary", ""),
                 "sources": articles,
             }
-            result = upsert_humanoid_robot(db, robot, source="discovery")
+            result = upsert_humanoid_robot(db, robot, source="discovery", commit=False)
             stats[result] = stats.get(result, 0) + 1
             existing.add(slug)
         except Exception as exc:
             logger.warning("Discovery failed for %s: %s", slug, exc)
             stats["errors"] += 1
 
+    db.commit()
     stats["total_in_db"] = db.execute(
         text("SELECT COUNT(*) FROM humanoid_benchmarks")
     ).scalar() or 0

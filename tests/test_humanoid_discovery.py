@@ -81,3 +81,63 @@ def test_catalog_entries_have_slugs():
         assert entry.get("model_slug")
         assert entry.get("vendor")
         assert entry.get("name")
+
+
+def test_rescore_existing_skips_after_agent_budget(monkeypatch):
+    """rescore_existing should not rule-based rewrite entire catalog."""
+    from app.services import humanoid_discovery as hd
+
+    calls = {"agent": 0, "upsert": 0}
+
+    def fake_agent(*args, **kwargs):
+        calls["agent"] += 1
+        return {
+            "status": "research",
+            "specs": {},
+            "scores": {
+                "heif_mobility": 1.0, "heif_manipulation": 1.0, "heif_cognition": 1.0,
+                "heif_safety": 1.0, "heif_data_pipeline": 1.0, "heif_production": 1.0,
+                "heif_total": 1.0, "score_total": 25.0,
+                "score_mobility": 25.0, "score_manipulation": 25.0, "score_cognition": 25.0,
+                "score_autonomy": 25.0, "score_safety": 25.0, "score_data_pipeline": 25.0,
+                "score_endurance": 25.0, "score_production": 25.0, "score_market_readiness": 25.0,
+            },
+            "agent_scored": True,
+            "evidence_summary": "test",
+        }
+
+    def fake_upsert(db, robot, **kwargs):
+        calls["upsert"] += 1
+        return "updated"
+
+    monkeypatch.setattr(hd, "agent_assess_humanoid", fake_agent)
+    monkeypatch.setattr(hd, "upsert_humanoid_robot", fake_upsert)
+    monkeypatch.setattr(hd, "_catalog_candidates", lambda: [
+        {"name": f"R{i}", "vendor": f"V{i}", "model_slug": f"r{i}", "status": "research", "specs": {}}
+        for i in range(5)
+    ])
+    monkeypatch.setattr(hd, "_robot_company_candidates", lambda db: [])
+    monkeypatch.setattr(hd, "_news_candidates", lambda max_queries=0: [])
+    monkeypatch.setattr(hd, "_existing_slugs", lambda db: {f"r{i}" for i in range(5)})
+
+    class FakeDb:
+        def commit(self):
+            pass
+
+        def execute(self, *args, **kwargs):
+            class R:
+                def scalar(self):
+                    return 5
+            return R()
+
+    stats = hd.run_humanoid_discovery(
+        FakeDb(),
+        use_catalog=True,
+        use_robot_companies=False,
+        news_queries=0,
+        agent_limit=2,
+        rescore_existing=True,
+    )
+    assert calls["agent"] == 2
+    assert calls["upsert"] == 2
+    assert stats["skipped"] == 3
