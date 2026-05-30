@@ -25,6 +25,7 @@ from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 from app.services.humanoid_discovery import run_humanoid_discovery
+from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
 from app.services.humanoid_vendor_catalog import catalog_count
 
 logger = logging.getLogger(__name__)
@@ -217,6 +218,18 @@ async def discover_humanoids(
             f"expect ~{est_min}–{est_min * 2} min. Poll GET /api/humanoid/robots for updates."
         ),
     }
+
+
+@router.post("/cleanup")
+def cleanup_humanoids(
+    db: Session = Depends(get_db),
+    dry_run: bool = Query(False, description="Preview removals without deleting"),
+):
+    """Remove deployment pilots, duplicate variants, placeholders, and RSS junk."""
+    result = cleanup_humanoid_benchmarks(db, dry_run=dry_run)
+    if not dry_run:
+        _ROBOTS_LIST_CACHE.clear()
+    return result
 
 
 @router.post("/scrape/{slug}")

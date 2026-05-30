@@ -27,6 +27,7 @@ from app.services.humanoid_scraper import (
     upsert_humanoid_robot,
     _search_robot_specs,
 )
+from app.services.humanoid_catalog_cleanup import is_junk_humanoid_row
 from app.services.humanoid_vendor_catalog import catalog_entries, normalize_catalog_entry, slugify
 
 logger = logging.getLogger(__name__)
@@ -143,7 +144,7 @@ def _robot_company_candidates(db: Session) -> List[dict]:
             "country": row.get("country"),
             "specs": {},
         }))
-    return out
+    return [c for c in out if not is_junk_humanoid_row(c["name"], c["vendor"], c["model_slug"])]
 
 
 def _news_candidates(max_queries: int = 10) -> List[dict]:
@@ -171,7 +172,7 @@ def _news_candidates(max_queries: int = 10) -> List[dict]:
             })
         time.sleep(1.2)
 
-    return candidates
+    return [c for c in candidates if not is_junk_humanoid_row(c["name"], c["vendor"], c["model_slug"])]
 
 
 def _merge_candidates(*groups: List[dict]) -> List[dict]:

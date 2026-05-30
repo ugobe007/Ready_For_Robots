@@ -6,8 +6,8 @@ from app.services.humanoid_scraper import agent_assess_humanoid, compute_scores
 from app.services.humanoid_vendor_catalog import catalog_count, catalog_entries, slugify
 
 
-def test_catalog_has_100_plus_entries():
-    assert catalog_count() >= 100
+def test_catalog_has_real_oem_entries():
+    assert catalog_count() >= 60
 
 
 def test_slugify():

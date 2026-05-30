@@ -10,6 +10,11 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
+from app.services.humanoid_catalog_cleanup import (
+    is_excluded_humanoid_slug,
+    is_junk_humanoid_row,
+)
+
 # Each entry: name, vendor, optional model_slug, product_url, status, country, specs (partial)
 HUMANOID_CATALOG: List[Dict[str, Any]] = [
     # ── Tier 1 — commercially visible ────────────────────────────────────────
@@ -222,8 +227,17 @@ def normalize_catalog_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def catalog_entries() -> List[Dict[str, Any]]:
-    return [normalize_catalog_entry(e) for e in HUMANOID_CATALOG]
+    out: List[Dict[str, Any]] = []
+    for entry in HUMANOID_CATALOG:
+        normalized = normalize_catalog_entry(entry)
+        slug = normalized["model_slug"]
+        if is_excluded_humanoid_slug(slug):
+            continue
+        if is_junk_humanoid_row(normalized["name"], normalized["vendor"], slug):
+            continue
+        out.append(normalized)
+    return out
 
 
 def catalog_count() -> int:
-    return len(HUMANOID_CATALOG)
+    return len(catalog_entries())
