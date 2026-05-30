@@ -536,6 +536,7 @@ export default function Admin() {
     const token = session?.access_token ?? null;
     if (!token) {
       adminLoadedForToken.current = null;
+      setMeLoading(false);
       return;
     }
     if (adminLoadedForToken.current === token) return;
