@@ -333,11 +333,11 @@ def cleanup_humanoid_benchmarks(db: Session, *, dry_run: bool = False) -> Dict[s
     dupe_slugs = {r["model_slug"] for r in vendor_dupes}
 
     if not dry_run and to_delete:
-        ids = [r["id"] for r in to_delete]
-        db.execute(
-            text("DELETE FROM humanoid_benchmarks WHERE id = ANY(:ids)"),
-            {"ids": ids},
-        )
+        for row in to_delete:
+            db.execute(
+                text("DELETE FROM humanoid_benchmarks WHERE id = :id"),
+                {"id": row["id"]},
+            )
         db.commit()
 
     return {
