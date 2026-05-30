@@ -1,7 +1,7 @@
 """
 Humanoid Benchmark API  —  /api/humanoid
 GET  /api/humanoid/robots               — list all with scores (public)
-GET  /api/humanoid/robots/{slug}        — single robot detail (public)
+GET  /api/humanoid/gaps                 — missing spec fields for HEIF scoring (public)
 GET  /api/humanoid/report               — formatted benchmark report (public)
 GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
 POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
@@ -16,6 +16,7 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -26,6 +27,7 @@ from app.db_timeout import run_db
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 from app.services.humanoid_discovery import run_humanoid_discovery
 from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
+from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
 from app.services.humanoid_vendor_catalog import catalog_count
 
 logger = logging.getLogger(__name__)
@@ -152,6 +154,35 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Robot not found")
     return _enrich_robot_scores(dict(row))
+
+
+@router.get("/gaps")
+def get_spec_gaps(
+    db: Session = Depends(get_db),
+    sparse_only: bool = Query(False, description="Return only robots below fill threshold"),
+    sparse_threshold_pct: float = Query(80.0, ge=0, le=100),
+    slug: Optional[str] = Query(None, description="Gap report for one model_slug"),
+):
+    """
+    Missing spec fields needed for HEIF scoring.
+
+    Lists per-field coverage, per-dimension gaps, and robots that need backfill/scraping.
+    """
+    report = analyze_humanoid_spec_gaps(
+        db,
+        sparse_threshold_pct=sparse_threshold_pct,
+        slug=slug,
+    )
+    if sparse_only:
+        report = {
+            **{k: report[k] for k in (
+                "total_robots", "sparse_threshold_pct", "robots_sparse_specs",
+                "avg_spec_fill_pct", "catalog_not_in_db_count",
+            )},
+            "sparse_robots": report["sparse_robots"],
+            "worst_fields": report["field_coverage"][:8],
+        }
+    return report
 
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ from app.services.humanoid_scraper import (
     upsert_humanoid_robot,
     _search_robot_specs,
 )
+from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
 from app.services.humanoid_catalog_cleanup import is_excluded_humanoid_slug, is_junk_humanoid_row
 from app.services.humanoid_vendor_catalog import catalog_entries, normalize_catalog_entry, slugify
 
@@ -254,6 +255,10 @@ def run_humanoid_discovery(
             continue
 
         try:
+            entry = {
+                **entry,
+                "specs": {**(SEED_SPECS_BY_SLUG.get(slug) or {}), **(entry.get("specs") or {})},
+            }
             use_agent = agent_budget > 0 and (is_new or rescore_existing)
             articles = list(entry.get("sources") or [])
             if use_agent and not articles:
