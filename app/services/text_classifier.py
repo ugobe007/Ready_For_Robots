@@ -346,7 +346,7 @@ _SECTOR_DESCRIPTOR = re.compile(
     r"logistics|supply\s+chain|manufacturers?|retailers?|hotels?|"
     r"healthcare|hospitals?|airports?|operators?|robotics?|robots?|"
     r"strategic\s+business|scaling\s+restaurants"
-    r")\s*$",
+    r")(?:\s+(?:firm|company|group|operator|provider|business))?\s*$",
     re.IGNORECASE,
 )
 

@@ -428,9 +428,10 @@ _JUNK_PATTERNS = [
     # "Health Systems", "Hospital Systems" — generic category (not a named company)
     r"(?i)^(health|hospital|medical|care|pharmacy|clinical)\s+(systems?|networks?|services?|centers?|group)\s*$",
 
-    # "Global Real Estate", "Global Logistics" — pure generic+category (no proper noun)
+    # "Global Real Estate", "Global Logistics", "Global supply chain firm" — generic+category
     r"(?i)^(global|national|regional|local|american|european|asian)\s+"
-    r"(real estate|logistics|supply chain|automation|manufacturing|technology|innovation)\s*$",
+    r"(real estate|logistics|supply chain|automation|manufacturing|technology|innovation)"
+    r"(?:\s+(?:firm|company|group|operator|provider|startup|business|vendor))?\s*$",
 
     # "CPHI Frankfurt 2025", "ProPak Asia 2026" — conference acronym + city + year
     r"(?i)^[A-Za-z]{2,10}\s+(frankfurt|amsterdam|chicago|houston|las vegas|"
@@ -943,6 +944,10 @@ _JUNK_EXACT = frozenset({
     "the", "a", "an", "and", "or", "inc", "llc", "corp", "ltd", "co",
     # Domain / section titles scraped as “company” (not proper nouns)
     "supply chain", "supply-chain", "the supply chain",
+    "global supply chain firm",
+    "global logistics firm",
+    "national supply chain firm",
+    "regional logistics firm",
     "value chain", "the value chain",
     "logistics", "the logistics", "global logistics",
     "procurement", "strategic sourcing", "global sourcing", "sourcing",

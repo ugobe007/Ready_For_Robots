@@ -11,6 +11,7 @@ VENDOR_URLS = {
     "kepler-k2": "https://www.gotokepler.com/home",
     "booster-t1": "https://booster.tech",
     "persona-ai-gen1": "https://persona.ai",
+    "noble-machines": "https://www.noblemachines.ai",
 }
 
 
@@ -25,6 +26,7 @@ def test_dexmate_and_eden_have_baseline_specs():
     by_slug = {e["model_slug"]: e for e in catalog_entries()}
     assert by_slug["dexmate-vega"]["specs"]["payload_kg"] == 7.0
     assert by_slug["eden-robotics"]["specs"]["has_sdk"] is True
+    assert by_slug["noble-machines"]["specs"]["payload_kg"] == 23.0
 
 
 def test_limx_multiple_models():
