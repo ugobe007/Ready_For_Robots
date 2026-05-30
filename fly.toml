@@ -20,6 +20,7 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 [deploy]
   # Single-machine app — rolling deploy fails if Fly still references a destroyed VM ID.
   strategy = "immediate"
+  release_command = "alembic -c /code/alembic.ini upgrade head"
 
 [env]
   PORT = "8080"
