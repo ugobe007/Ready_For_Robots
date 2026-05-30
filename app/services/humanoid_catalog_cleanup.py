@@ -332,21 +332,33 @@ def cleanup_humanoid_benchmarks(db: Session, *, dry_run: bool = False) -> Dict[s
     to_delete = junk + vendor_dupes
     dupe_slugs = {r["model_slug"] for r in vendor_dupes}
 
+    deleted: List[dict] = []
+    failed: List[dict] = []
     if not dry_run and to_delete:
         for row in to_delete:
-            db.execute(
-                text("DELETE FROM humanoid_benchmarks WHERE id = :id"),
-                {"id": row["id"]},
-            )
-        db.commit()
+            try:
+                db.execute(
+                    text("DELETE FROM humanoid_benchmarks WHERE id = :id"),
+                    {"id": row["id"]},
+                )
+                db.commit()
+                deleted.append(row)
+            except Exception:
+                db.rollback()
+                failed.append(row)
+
+    removed = junk + deleted if not dry_run else to_delete
 
     return {
         "dry_run": dry_run,
         "scanned": len(rows),
-        "removed": len(to_delete),
+        "removed": len(removed),
         "removed_junk": len(junk),
         "removed_vendor_duplicates": len(vendor_dupes),
-        "remaining": len(rows) - len(to_delete),
-        "removed_slugs": [r["model_slug"] for r in to_delete],
+        "deleted": len(deleted),
+        "failed": len(failed),
+        "remaining": len(rows) - len(removed),
+        "removed_slugs": [r["model_slug"] for r in removed],
+        "failed_slugs": [r["model_slug"] for r in failed],
         "vendor_duplicate_slugs": sorted(dupe_slugs),
     }
