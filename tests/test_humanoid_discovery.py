@@ -119,7 +119,6 @@ def test_rescore_existing_skips_after_agent_budget(monkeypatch):
     monkeypatch.setattr(hd, "_robot_company_candidates", lambda db: [])
     monkeypatch.setattr(hd, "_news_candidates", lambda max_queries=0: [])
     monkeypatch.setattr(hd, "_existing_slugs", lambda db: {f"r{i}" for i in range(5)})
-    monkeypatch.setattr(hd, "_existing_vendor_slugs", lambda db: {f"v{i}": f"r{i}" for i in range(5)})
 
     class FakeDb:
         def commit(self):

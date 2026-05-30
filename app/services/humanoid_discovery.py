@@ -27,7 +27,7 @@ from app.services.humanoid_scraper import (
     upsert_humanoid_robot,
     _search_robot_specs,
 )
-from app.services.humanoid_catalog_cleanup import is_excluded_humanoid_slug, is_junk_humanoid_row, vendor_key
+from app.services.humanoid_catalog_cleanup import is_excluded_humanoid_slug, is_junk_humanoid_row
 from app.services.humanoid_vendor_catalog import catalog_entries, normalize_catalog_entry, slugify
 
 logger = logging.getLogger(__name__)
@@ -201,18 +201,6 @@ def _existing_slugs(db: Session) -> Set[str]:
     return {r[0] for r in rows if r[0]}
 
 
-def _existing_vendor_slugs(db: Session) -> Dict[str, str]:
-    rows = db.execute(
-        text("SELECT model_slug, vendor FROM humanoid_benchmarks")
-    ).mappings().all()
-    out: Dict[str, str] = {}
-    for row in rows:
-        key = vendor_key(row["vendor"] or "")
-        if key and key not in out:
-            out[key] = row["model_slug"]
-    return out
-
-
 def run_humanoid_discovery(
     db: Session,
     *,
@@ -237,7 +225,6 @@ def run_humanoid_discovery(
 
     candidates = _merge_candidates(*groups) if groups else []
     existing = _existing_slugs(db)
-    existing_vendors = _existing_vendor_slugs(db)
 
     stats = {
         "catalog_candidates": len(groups[0]) if use_catalog and groups else 0,
@@ -246,14 +233,12 @@ def run_humanoid_discovery(
         "updated": 0,
         "agent_scored": 0,
         "skipped": 0,
-        "skipped_vendor_duplicate": 0,
         "errors": 0,
     }
 
     agent_budget = agent_limit
     for entry in candidates:
         slug = entry["model_slug"]
-        vkey = vendor_key(entry.get("vendor") or "")
         if is_excluded_humanoid_slug(slug) or is_junk_humanoid_row(
             entry.get("name") or "", entry.get("vendor") or "", slug
         ):
@@ -262,9 +247,6 @@ def run_humanoid_discovery(
         is_new = slug not in existing
         if not is_new and not rescore_existing:
             stats["skipped"] += 1
-            continue
-        if is_new and vkey in existing_vendors and existing_vendors[vkey] != slug:
-            stats["skipped_vendor_duplicate"] += 1
             continue
         # Rescore mode: only AI-assess up to agent_limit — skip mass rule-based rewrites.
         if not is_new and rescore_existing and agent_budget <= 0:
@@ -315,8 +297,6 @@ def run_humanoid_discovery(
             result = upsert_humanoid_robot(db, robot, source="discovery", commit=False)
             stats[result] = stats.get(result, 0) + 1
             existing.add(slug)
-            if vkey:
-                existing_vendors[vkey] = slug
         except Exception as exc:
             logger.warning("Discovery failed for %s: %s", slug, exc)
             stats["errors"] += 1

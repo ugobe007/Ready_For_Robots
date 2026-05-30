@@ -14,83 +14,6 @@ from sqlalchemy.orm import Session
 
 from app.services.humanoid_scraper import _normalize_vendor
 
-# One flagship SKU per vendor on the leaderboard.
-CANONICAL_SLUG_BY_VENDOR: Dict[str, str] = {
-    "unitree": "unitree-g1",
-    "figure ai": "figure-02",
-    "boston dynamics": "boston-dynamics-atlas",
-    "agility robotics": "agility-digit",
-    "tesla": "tesla-optimus-gen2",
-    "apptronik": "apptronik-apollo",
-    "1x technologies": "1x-neo",
-    "sanctuary ai": "sanctuary-phoenix",
-    "agibot": "agibot-a2",
-    "ubtech robotics": "ubtech-walker-x",
-    "engineai": "engineai-pm01",
-    "fourier intelligence": "fourier-gr1",
-    "xpeng robotics": "xpeng-px5",
-    "leju robotics": "leju-kuavo",
-    "neura robotics": "neura-4ne1",
-    "pal robotics": "pal-talos",
-    "engineered arts": "engineered-arts-ameca",
-    "reflex robotics": "reflex-humanoid",
-    "mentee robotics": "mentee-bot",
-    "persona ai": "persona-ai-gen1",
-    "dlr": "dlr-toro",
-    "astribot": "astribot-s1",
-    "galbot": "galbot-g1",
-    "robotera": "robotera-star1",
-    "limx dynamics": "limx-tron1",
-    "kepler exploration robotics": "kepler-k2",
-    "booster robotics": "booster-t1",
-    "pndbotics": "pndbotics-adam",
-    "noetix robotics": "noetix-n2",
-    "xiaomi": "xiaomi-cyberone",
-    "toyota": "toyota-thr3",
-    "honda": "honda-asimo-successor",
-    "rainbow robotics": "rainbow-hubo",
-    "preferred networks": "pfn-humanoid",
-    "clone robotics": "clone-alpha",
-    "shadow robot company": "shadow-hand-platform",
-    "nasa johnson": "nasa-valkyrie",
-    "kawasaki robotics": "kawasaki-kaleido",
-    "softbank robotics": "softbank-pepper-next",
-    "samsung research": "samsung-bot-handy",
-    "lg electronics": "lg-cloi-suitbot",
-    "cloudminds": "cloudminds-ginger-xr",
-    "chery robotics": "chery-mornine",
-    "skild ai": "skild-humanoid-stack",
-    "physical intelligence": "pi-humanoid-research",
-    "covariant": "covariant-humanoid",
-    "openai robotics": "openai-humanoid-partner",
-    "meta fair": "meta-fair-humanoid",
-    "google deepmind": "deepmind-humanoid",
-    "waymo": "waymo-humanoid",
-    "apple robotics": "apple-humanoid",
-    "microsoft robotics": "microsoft-humanoid",
-    "intel labs": "intel-humanoid",
-    "qualcomm": "qualcomm-humanoid",
-    "amd": "amd-humanoid",
-    "arm robotics": "arm-humanoid",
-    "siemens": "siemens-humanoid",
-    "abb robotics": "abb-humanoid",
-    "fanuc": "fanuc-humanoid",
-    "kuka": "kuka-humanoid",
-    "yaskawa": "yaskawa-humanoid",
-    "universal robots": "ur-humanoid",
-    "techman robot": "techman-humanoid",
-    "doosan robotics": "doosan-humanoid",
-    "franka emika": "franka-humanoid",
-    "comau": "comau-humanoid",
-    "epson robotics": "epson-humanoid",
-    "omron robotics": "omron-humanoid",
-    "mitsubishi electric": "mitsubishi-humanoid",
-    "denso robotics": "denso-humanoid",
-    "nidec robotics": "nidec-humanoid",
-    "harmonic drive": "harmonic-humanoid",
-    "maxon group": "maxon-humanoid-kit",
-}
-
 # Buyer deployment pilots — not distinct robot products.
 DEPLOYMENT_PILOT_SLUGS: Set[str] = {
     "amazon-digit",
@@ -107,45 +30,11 @@ DEPLOYMENT_PILOT_SLUGS: Set[str] = {
     "siemens-humanoid",
 }
 
-# Older variants / merged vendors — keep flagship SKU per line.
-DUPLICATE_PRODUCT_SLUGS: Set[str] = {
+# Same robot imported twice under a renamed slug (not a distinct product version).
+SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     "1x-neo-beta",
-    "agility-digit-2",
-    "apptronik-a2",
-    "astribot-s2",
-    "booster-k1",
-    "engineai-sa01",
-    "engineai-t800",
-    "figure-01",
-    "figure-03",
-    "fourier-gr2",
-    "fourier-n1",
-    "galbot-g2",
     "halodi-eve",
     "ihmc-atlas",
-    "kepler-k1",
-    "leju-kuavo-3",
-    "limx-oli",
-    "mentee-bot-pro",
-    "neura-maira",
-    "noetix-e1",
-    "pal-ari",
-    "pal-reem-c",
-    "pndbotics-adam-u",
-    "persona-ai-gen2",
-    "reflex-gen2",
-    "robotera-star2",
-    "sanctuary-m-series",
-    "tesla-optimus-gen1",
-    "unitree-h1",
-    "unitree-r1",
-    "1x-eve",
-    "agibot-g5",
-    "ubtech-walker-s",
-    "xpeng-iron",
-    "engineered-arts-mesmer",
-    "dlr-justin",
-    "xiaomi-cyberone-pro",
     "zhiyuan-lingxi",
 }
 
@@ -249,7 +138,7 @@ def is_excluded_humanoid_slug(slug: str) -> bool:
         return True
     return (
         s in DEPLOYMENT_PILOT_SLUGS
-        or s in DUPLICATE_PRODUCT_SLUGS
+        or s in SAME_ROBOT_DUPLICATE_SLUGS
         or s in VENDOR_PLACEHOLDER_SLUGS
         or s in SPECULATIVE_CATALOG_SLUGS
     )
@@ -278,6 +167,10 @@ def is_junk_humanoid_row(name: str, vendor: str, model_slug: str) -> bool:
         if len(v) > 36 or len(base) > 36:
             return True
 
+    # "Figure Humanoid" / "Figure AI Humanoid" — generic vendor label, not a model SKU.
+    if re.match(r"^figure(\s+ai)?\s+humanoid$", n, re.I):
+        return True
+
     return False
 
 
@@ -285,26 +178,26 @@ def vendor_key(vendor: str) -> str:
     return _normalize_vendor(vendor or "")
 
 
-def canonical_slug_for_vendor(vendor: str, rows: List[dict]) -> str:
-    """Pick the single row to keep for a vendor."""
-    key = vendor_key(vendor)
-    preferred = CANONICAL_SLUG_BY_VENDOR.get(key)
-    slugs = {r.get("model_slug") for r in rows}
-    if preferred and preferred in slugs:
-        return preferred
-    if preferred:
-        return preferred
+def _has_distinct_model_identity(name: str, vendor: str, model_slug: str) -> bool:
+    """True when the row names a specific product SKU, not a vendor placeholder."""
+    if is_junk_humanoid_row(name, vendor, model_slug):
+        return False
+    slug = (model_slug or "").strip().lower()
+    if slug in VENDOR_PLACEHOLDER_SLUGS or slug in SAME_ROBOT_DUPLICATE_SLUGS:
+        return False
+    if re.search(r"\d", slug) or re.search(r"\d", name or ""):
+        return True
 
-    def sort_key(row: dict):
-        heif = float(row.get("heif_total") or 0)
-        score = float(row.get("score_total") or 0)
-        return (-heif, -score, row.get("model_slug") or "")
+    vendor_slug = re.sub(r"[^a-z0-9]+", "-", _normalize_vendor(vendor)).strip("-")
+    if slug in (vendor_slug, f"{vendor_slug}-humanoid"):
+        return False
 
-    return sorted(rows, key=sort_key)[0]["model_slug"]
+    # Named products without digits (Atlas, Digit, G1-style slugs, reflex-humanoid, etc.)
+    return "-" in slug and slug not in SPECULATIVE_CATALOG_SLUGS
 
 
 def vendor_duplicate_rows(rows: List[dict]) -> List[dict]:
-    """Return non-canonical rows to delete (one entry per vendor)."""
+    """Drop generic vendor placeholders when the same company has named model rows."""
     by_vendor: Dict[str, List[dict]] = {}
     for row in rows:
         key = vendor_key(row.get("vendor") or "")
@@ -314,11 +207,15 @@ def vendor_duplicate_rows(rows: List[dict]) -> List[dict]:
 
     to_delete: List[dict] = []
     for group in by_vendor.values():
-        if len(group) <= 1:
+        products = [
+            r
+            for r in group
+            if _has_distinct_model_identity(r["name"], r["vendor"], r["model_slug"])
+        ]
+        if not products:
             continue
-        keep_slug = canonical_slug_for_vendor(group[0].get("vendor") or "", group)
         for row in group:
-            if row.get("model_slug") != keep_slug:
+            if not _has_distinct_model_identity(row["name"], row["vendor"], row["model_slug"]):
                 to_delete.append(row)
     return to_delete
 
