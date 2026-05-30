@@ -82,7 +82,7 @@ export default function HeirResearchAppendix() {
               </table>
             </div>
             <p className="mt-3 text-[11px] text-white/30">
-              HEIF is a research assessment. The live index below uses published specs on a separate 0–100 scale.
+              HEIF snapshot below matches HEIR 2026 research for seven vendors. The live index applies the same framework to all robots in the ranking.
             </p>
           </div>
         </div>

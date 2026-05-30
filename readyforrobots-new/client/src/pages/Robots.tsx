@@ -19,35 +19,101 @@ type RobotRow = {
   score_mobility: number;
   score_manipulation: number;
   score_autonomy: number;
+  score_cognition?: number;
   score_safety: number;
   score_endurance: number;
+  score_data_pipeline?: number;
   score_market_readiness: number;
+  score_production?: number;
   score_total: number;
+  heif_mobility?: number;
+  heif_manipulation?: number;
+  heif_cognition?: number;
+  heif_safety?: number;
+  heif_data_pipeline?: number;
+  heif_production?: number;
+  heif_total?: number;
   last_scraped_at?: string;
 };
 
-const TEAL = "#03DAC5";
+const HEIF_DIMS = ["mobility", "manipulation", "cognition", "safety", "data_pipeline", "production"] as const;
 
-const DIM_COLORS: Record<string, string> = {
-  mobility: "#93c5fd",
-  manipulation: "#a78bfa",
-  autonomy: "#34d399",
-  safety: "#fbbf24",
-  endurance: "#6ee7b7",
-  market_readiness: "#f9a8d4",
-};
-
-const DIM_LABELS: Record<string, string> = {
+const HEIF_LABELS: Record<(typeof HEIF_DIMS)[number], string> = {
   mobility: "Mobility",
   manipulation: "Manipulation",
-  autonomy: "Autonomy",
+  cognition: "Cognition",
   safety: "Safety",
-  endurance: "Endurance",
-  market_readiness: "Market Ready",
+  data_pipeline: "Data",
+  production: "Prod",
 };
 
-function ScoreBar({ value, dim }: { value: number; dim: string }) {
-  const color = DIM_COLORS[dim] ?? "#a78bfa";
+const HEIF_COLORS: Record<(typeof HEIF_DIMS)[number], string> = {
+  mobility: "#93c5fd",
+  manipulation: "#a78bfa",
+  cognition: "#34d399",
+  safety: "#fbbf24",
+  data_pipeline: "#6ee7b7",
+  production: "#f9a8d4",
+};
+
+const INDEX_DIMS = ["mobility", "manipulation", "cognition", "safety", "data_pipeline", "production"] as const;
+
+const INDEX_LABELS: Record<(typeof INDEX_DIMS)[number], string> = {
+  mobility: "Mobility",
+  manipulation: "Manipulation",
+  cognition: "Cognition",
+  safety: "Safety",
+  data_pipeline: "Data pipeline",
+  production: "Production",
+};
+
+const INDEX_COLORS = HEIF_COLORS;
+
+const TEAL = "#03DAC5";
+
+function heifValue(robot: RobotRow, dim: (typeof HEIF_DIMS)[number]): number {
+  const key = `heif_${dim}` as keyof RobotRow;
+  const direct = robot[key];
+  if (typeof direct === "number") return direct;
+  const scoreKey =
+    dim === "cognition"
+      ? "score_autonomy"
+      : dim === "data_pipeline"
+        ? "score_endurance"
+        : dim === "production"
+          ? "score_market_readiness"
+          : (`score_${dim}` as keyof RobotRow);
+  const score = robot[scoreKey];
+  return typeof score === "number" ? score / 25 : 0;
+}
+
+function indexValue(robot: RobotRow, dim: (typeof INDEX_DIMS)[number]): number {
+  const scoreKey =
+    dim === "cognition"
+      ? robot.score_cognition ?? robot.score_autonomy
+      : dim === "data_pipeline"
+        ? robot.score_data_pipeline ?? robot.score_endurance
+        : dim === "production"
+          ? robot.score_production ?? robot.score_market_readiness
+          : (robot[`score_${dim}` as keyof RobotRow] as number | undefined);
+  return Number(scoreKey ?? 0);
+}
+
+function HeifBar({ value, dim }: { value: number; dim: (typeof HEIF_DIMS)[number] }) {
+  const color = HEIF_COLORS[dim];
+  const pct = (value / 4) * 100;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <span className="text-[10px] font-mono text-white/45 w-8 text-right">{value.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function ScoreBar({ value, dim }: { value: number; dim: (typeof INDEX_DIMS)[number] }) {
+  const color = INDEX_COLORS[dim];
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
@@ -75,7 +141,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
   const [open, setOpen] = useState(false);
-  const dims = ["mobility", "manipulation", "autonomy", "safety", "endurance", "market_readiness"] as const;
+  const heifTotal = robot.heif_total ?? robot.score_total / 25;
   const specs = robot.specs;
 
   return (
@@ -90,7 +156,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full grid gap-4 px-5 py-4 text-left"
-        style={{ gridTemplateColumns: "2rem 1fr 5rem 5rem 2rem" }}
+        style={{ gridTemplateColumns: "2rem 1fr 4.5rem 4.5rem 2rem" }}
       >
         <span className="text-xl font-black text-white/15 mt-0.5">#{rank}</span>
         <div>
@@ -99,25 +165,38 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
             <StatusBadge status={robot.status} />
           </div>
           <p className="text-[11px] text-white/35 mt-0.5">{robot.vendor}</p>
-          <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 max-w-xs">
-            {dims.map((d) => (
+          <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 max-w-md">
+            {HEIF_DIMS.map((d) => (
               <div key={d}>
-                <p className="text-[8px] text-white/25 mb-0.5 uppercase tracking-wider">{DIM_LABELS[d]}</p>
-                <ScoreBar value={Number((robot as unknown as Record<string, unknown>)[`score_${d}`] ?? 0)} dim={d} />
+                <p className="text-[8px] text-white/25 mb-0.5 uppercase tracking-wider">{HEIF_LABELS[d]}</p>
+                <HeifBar value={heifValue(robot, d)} dim={d} />
               </div>
             ))}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center">
+          <span className="text-[9px] text-white/30 uppercase tracking-widest">HEIF</span>
           <span
-            className="text-3xl font-black"
+            className="text-2xl font-black"
+            style={{
+              color: heifTotal >= 2.8 ? "#34d399" : heifTotal >= 2.0 ? "#fbbf24" : "#f87171",
+            }}
+          >
+            {heifTotal.toFixed(1)}
+          </span>
+          <span className="text-[9px] text-white/30">/ 4.0</span>
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-[9px] text-white/30 uppercase tracking-widest">Index</span>
+          <span
+            className="text-2xl font-black"
             style={{
               color: robot.score_total >= 65 ? "#34d399" : robot.score_total >= 45 ? "#fbbf24" : "#f87171",
             }}
           >
             {Math.round(robot.score_total)}
           </span>
-          <span className="text-[9px] text-white/30 uppercase tracking-widest -mt-0.5">total</span>
+          <span className="text-[9px] text-white/30">/ 100</span>
         </div>
         <div className="flex items-center justify-center">
           {robot.product_url ? (
@@ -138,15 +217,28 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-white/7 pt-4 grid gap-4 sm:grid-cols-2">
+        <div className="px-5 pb-5 border-t border-white/7 pt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Dimension scores</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">HEIF · 0–4</p>
             <div className="space-y-2">
-              {dims.map((d) => (
+              {HEIF_DIMS.map((d) => (
                 <div key={d} className="flex items-center gap-3">
-                  <span className="text-[11px] text-white/45 w-24 shrink-0">{DIM_LABELS[d]}</span>
+                  <span className="text-[11px] text-white/45 w-24 shrink-0">{INDEX_LABELS[d]}</span>
                   <div className="flex-1">
-                    <ScoreBar value={Number((robot as unknown as Record<string, unknown>)[`score_${d}`] ?? 0)} dim={d} />
+                    <HeifBar value={heifValue(robot, d)} dim={d} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Live index · 0–100</p>
+            <div className="space-y-2">
+              {INDEX_DIMS.map((d) => (
+                <div key={d} className="flex items-center gap-3">
+                  <span className="text-[11px] text-white/45 w-24 shrink-0">{INDEX_LABELS[d]}</span>
+                  <div className="flex-1">
+                    <ScoreBar value={indexValue(robot, d)} dim={d} />
                   </div>
                 </div>
               ))}
@@ -205,11 +297,31 @@ export default function Robots() {
   const filtered = robots
     .filter((r) => filter === "all" || r.status === filter)
     .sort((a, b) => {
-      const key = sortDim === "total" ? "score_total" : `score_${sortDim}`;
-      return ((b as unknown as Record<string, number>)[key] ?? 0) - ((a as unknown as Record<string, number>)[key] ?? 0);
+      if (sortDim === "total") {
+        return (b.score_total ?? 0) - (a.score_total ?? 0);
+      }
+      if (sortDim === "heif_total") {
+        return (b.heif_total ?? b.score_total / 25) - (a.heif_total ?? a.score_total / 25);
+      }
+      const heifKey = `heif_${sortDim}` as keyof RobotRow;
+      const scoreKey =
+        sortDim === "cognition"
+          ? "score_autonomy"
+          : sortDim === "data_pipeline"
+            ? "score_endurance"
+            : sortDim === "production"
+              ? "score_market_readiness"
+              : (`score_${sortDim}` as keyof RobotRow);
+      const bv = (b[heifKey] as number | undefined) ?? ((b[scoreKey] as number | undefined) ?? 0) / 25;
+      const av = (a[heifKey] as number | undefined) ?? ((a[scoreKey] as number | undefined) ?? 0) / 25;
+      return bv - av;
     });
 
-  const dims = ["total", "mobility", "manipulation", "autonomy", "safety", "endurance", "market_readiness"];
+  const sortOptions = [
+    { value: "total", label: "Index total" },
+    { value: "heif_total", label: "HEIF total" },
+    ...HEIF_DIMS.map((d) => ({ value: d, label: HEIF_LABELS[d] })),
+  ];
 
   return (
     <div className="min-h-screen" style={{ background: "#0a0118", color: "#fff" }}>
@@ -223,7 +335,7 @@ export default function Robots() {
               Humanoid Robot Index
             </h1>
             <p className="mt-2 max-w-xl text-sm text-white/42">
-              Live scores from published specs — mobility, manipulation, autonomy, safety, endurance, market readiness.
+              HEIF engineering maturity (HEIR 2026) plus a live 0–100 index from published specs — same six dimensions, two scales.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] shrink-0">
@@ -250,11 +362,11 @@ export default function Robots() {
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
-              Live spec-based index
+              Live humanoid index
             </p>
-            <h2 className="mt-1 text-xl font-bold text-white">Ranked humanoids · 0–100 scale</h2>
+            <h2 className="mt-1 text-xl font-bold text-white">Ranked by HEIF · dual 0–4 and 0–100</h2>
             <p className="mt-1 text-[13px] text-white/38">
-              Six dimensions from manufacturer datasheets. Updated when specs change.
+              Known vendors use HEIR 2026 research scores; others infer from datasheets. Index = HEIF × 25.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -282,9 +394,9 @@ export default function Robots() {
                 onChange={(e) => setSortDim(e.target.value)}
                 className="rounded-md border border-white/10 bg-transparent px-2 py-1 text-white/55 text-[11px] outline-none"
               >
-                {dims.map((d) => (
-                  <option key={d} value={d}>
-                    {d === "total" ? "Total" : d.replace("_", " ")}
+                {sortOptions.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
                   </option>
                 ))}
               </select>

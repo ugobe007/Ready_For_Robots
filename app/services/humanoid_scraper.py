@@ -1,9 +1,10 @@
 """
 Humanoid Robot Benchmark Scraper & Scoring Engine
 ==================================================
-• Scoring: 6 dimensions × 0-100, weighted composite
+• HEIF scoring: 6 dimensions × 0–4 (HEIR 2026 framework)
+• Live index: same dimensions mapped to 0–100 for ranking UI
 • Scraper: SERP/news search → OpenAI/Anthropic spec extraction
-• Seeder: known specs for 10 major humanoids (no live data needed)
+• Seeder: known specs for major humanoids (no live data needed)
 """
 from __future__ import annotations
 
@@ -11,21 +12,95 @@ import logging
 import os
 import re
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Dict, Optional
 
 import requests
 
 logger = logging.getLogger(__name__)
 
-# ── Scoring weights ─────────────────────────────────────────────────────────
-WEIGHTS = {
-    "mobility":         0.20,
-    "manipulation":     0.20,
-    "autonomy":         0.20,
-    "safety":           0.15,
-    "endurance":        0.15,
-    "market_readiness": 0.10,
+# ── HEIF (HEIR 2026) ─────────────────────────────────────────────────────────
+HEIF_DIMS = (
+    "mobility",
+    "manipulation",
+    "cognition",
+    "safety",
+    "data_pipeline",
+    "production",
+)
+
+HEIF_WEIGHTS = {d: 1.0 / len(HEIF_DIMS) for d in HEIF_DIMS}
+
+# Authoritative HEIR 2026 research scores (0–4) — vendor-level overrides.
+HEIF_RESEARCH_BY_VENDOR: Dict[str, Dict[str, float]] = {
+    "boston dynamics": {
+        "mobility": 4.0, "manipulation": 2.5, "cognition": 2.0,
+        "safety": 2.5, "data_pipeline": 2.0, "production": 2.0,
+    },
+    "engineai": {
+        "mobility": 3.5, "manipulation": 1.5, "cognition": 1.5,
+        "safety": 1.0, "data_pipeline": 2.0, "production": 2.0,
+    },
+    "agibot": {
+        "mobility": 3.0, "manipulation": 3.5, "cognition": 3.0,
+        "safety": 2.0, "data_pipeline": 4.0, "production": 3.0,
+    },
+    "zhiyuan": {
+        "mobility": 3.0, "manipulation": 3.5, "cognition": 3.0,
+        "safety": 2.0, "data_pipeline": 4.0, "production": 3.0,
+    },
+    "tesla": {
+        "mobility": 3.0, "manipulation": 2.5, "cognition": 3.0,
+        "safety": 2.0, "data_pipeline": 3.5, "production": 4.0,
+    },
+    "figure ai": {
+        "mobility": 2.5, "manipulation": 3.0, "cognition": 3.5,
+        "safety": 2.0, "data_pipeline": 3.5, "production": 2.0,
+    },
+    "figure": {
+        "mobility": 2.5, "manipulation": 3.0, "cognition": 3.5,
+        "safety": 2.0, "data_pipeline": 3.5, "production": 2.0,
+    },
+    "unitree": {
+        "mobility": 3.5, "manipulation": 2.0, "cognition": 1.5,
+        "safety": 1.5, "data_pipeline": 2.0, "production": 3.5,
+    },
+    "unitree robotics": {
+        "mobility": 3.5, "manipulation": 2.0, "cognition": 1.5,
+        "safety": 1.5, "data_pipeline": 2.0, "production": 3.5,
+    },
+    "agility robotics": {
+        "mobility": 2.5, "manipulation": 2.5, "cognition": 2.0,
+        "safety": 2.5, "data_pipeline": 2.0, "production": 3.0,
+    },
 }
+
+
+def _normalize_vendor(vendor: str) -> str:
+    v = (vendor or "").lower().strip()
+    v = re.sub(r"\s+", " ", v)
+    if "agibot" in v or "zhiyuan" in v:
+        return "agibot"
+    if "unitree" in v:
+        return "unitree"
+    if "figure" in v:
+        return "figure ai"
+    if "tesla" in v:
+        return "tesla"
+    if "agility" in v:
+        return "agility robotics"
+    if "boston dynamics" in v:
+        return "boston dynamics"
+    if "engineai" in v or "engine ai" in v:
+        return "engineai"
+    return v
+
+
+def _clamp_heif(value: float) -> float:
+    return round(min(4.0, max(0.0, value)), 1)
+
+
+def _heif_from_legacy_100(score_0_100: float) -> float:
+    return _clamp_heif(float(score_0_100) / 25.0)
 
 
 def score_mobility(specs: dict) -> float:
@@ -129,31 +204,135 @@ def score_market_readiness(specs: dict) -> float:
     return min(100.0, round(s, 1))
 
 
-def compute_scores(specs: dict, status: str = "research") -> dict[str, float]:
-    full_specs = {**specs, "status": status}
-    mob  = score_mobility(full_specs)
-    man  = score_manipulation(full_specs)
-    aut  = score_autonomy(full_specs)
-    saf  = score_safety(full_specs)
-    end  = score_endurance(full_specs)
-    mkt  = score_market_readiness(full_specs)
-    total = round(
-        mob  * WEIGHTS["mobility"] +
-        man  * WEIGHTS["manipulation"] +
-        aut  * WEIGHTS["autonomy"] +
-        saf  * WEIGHTS["safety"] +
-        end  * WEIGHTS["endurance"] +
-        mkt  * WEIGHTS["market_readiness"],
-        1
-    )
+def infer_heif_mobility(specs: dict) -> float:
+    return _heif_from_legacy_100(score_mobility(specs))
+
+
+def infer_heif_manipulation(specs: dict) -> float:
+    return _heif_from_legacy_100(score_manipulation(specs))
+
+
+def infer_heif_cognition(specs: dict) -> float:
+    """Task planning / autonomy maturity — SDK, deployments, autonomy level."""
+    level = str(specs.get("autonomy_level") or "research").lower()
+    s = {"full": 3.2, "semi": 2.0, "teleoperated": 1.0, "research": 0.6}.get(level, 0.6)
+    deployments = int(specs.get("commercial_deployments") or 0)
+    if deployments >= 100:
+        s += 0.8
+    elif deployments >= 20:
+        s += 0.5
+    elif deployments >= 5:
+        s += 0.3
+    if specs.get("has_sdk"):
+        s += 0.4
+    if specs.get("has_api"):
+        s += 0.2
+    return _clamp_heif(s)
+
+
+def infer_heif_safety(specs: dict) -> float:
+    return _heif_from_legacy_100(score_safety(specs))
+
+
+def infer_heif_data_pipeline(specs: dict) -> float:
+    """Fleet learning infrastructure — teleop data, SDK, sim-to-real signals."""
+    s = 0.8
+    if specs.get("has_sdk"):
+        s += 1.0
+    if specs.get("has_api"):
+        s += 0.6
+    deployments = int(specs.get("commercial_deployments") or 0)
+    if deployments >= 100:
+        s += 1.2
+    elif deployments >= 30:
+        s += 0.9
+    elif deployments >= 10:
+        s += 0.6
+    elif deployments >= 1:
+        s += 0.3
+    level = str(specs.get("autonomy_level") or "research").lower()
+    if level == "teleoperated":
+        s += 0.4  # teleop-heavy vendors often collect manipulation data
+    return _clamp_heif(s)
+
+
+def infer_heif_production(specs: dict, status: str = "research") -> float:
+    """Manufacturing scale and commercial deploy readiness."""
+    s = score_market_readiness({**specs, "status": status}) / 25.0
+    deployments = int(specs.get("commercial_deployments") or 0)
+    if deployments >= 100:
+        s = max(s, 3.5)
+    elif deployments >= 30:
+        s = max(s, 3.0)
+    elif deployments >= 10:
+        s = max(s, 2.5)
+    price = specs.get("price_usd")
+    if price and float(price) <= 25000:
+        s += 0.3
+    return _clamp_heif(s)
+
+
+def infer_heif_scores(specs: dict, status: str = "research") -> Dict[str, float]:
     return {
-        "score_mobility":         mob,
-        "score_manipulation":     man,
-        "score_autonomy":         aut,
-        "score_safety":           saf,
-        "score_endurance":        end,
-        "score_market_readiness": mkt,
-        "score_total":            total,
+        "mobility": infer_heif_mobility(specs),
+        "manipulation": infer_heif_manipulation(specs),
+        "cognition": infer_heif_cognition(specs),
+        "safety": infer_heif_safety(specs),
+        "data_pipeline": infer_heif_data_pipeline(specs),
+        "production": infer_heif_production(specs, status),
+    }
+
+
+def apply_heif_research(vendor: str, inferred: Dict[str, float]) -> Dict[str, float]:
+    """HEIR research overrides authoritative dimensions for known vendors."""
+    research = HEIF_RESEARCH_BY_VENDOR.get(_normalize_vendor(vendor))
+    if not research:
+        return inferred
+    merged = dict(inferred)
+    for dim in HEIF_DIMS:
+        if dim in research:
+            merged[dim] = research[dim]
+    return merged
+
+
+def heif_total(heif: Dict[str, float]) -> float:
+    return round(sum(heif[d] * HEIF_WEIGHTS[d] for d in HEIF_DIMS), 2)
+
+
+def compute_scores(
+    specs: dict,
+    status: str = "research",
+    vendor: str = "",
+) -> dict[str, float]:
+    """
+    HEIF-first scoring (0–4) with 0–100 live-index aliases for UI/API.
+
+    Legacy keys score_autonomy / score_endurance / score_market_readiness map to
+    cognition / data_pipeline / production for backward compatibility.
+    """
+    inferred = infer_heif_scores(specs, status=status)
+    heif = apply_heif_research(vendor, inferred)
+    total_heif = heif_total(heif)
+    to_100 = lambda v: round(v * 25.0, 1)
+
+    return {
+        "heif_mobility": heif["mobility"],
+        "heif_manipulation": heif["manipulation"],
+        "heif_cognition": heif["cognition"],
+        "heif_safety": heif["safety"],
+        "heif_data_pipeline": heif["data_pipeline"],
+        "heif_production": heif["production"],
+        "heif_total": total_heif,
+        "score_mobility": to_100(heif["mobility"]),
+        "score_manipulation": to_100(heif["manipulation"]),
+        "score_cognition": to_100(heif["cognition"]),
+        "score_autonomy": to_100(heif["cognition"]),
+        "score_safety": to_100(heif["safety"]),
+        "score_data_pipeline": to_100(heif["data_pipeline"]),
+        "score_endurance": to_100(heif["data_pipeline"]),
+        "score_production": to_100(heif["production"]),
+        "score_market_readiness": to_100(heif["production"]),
+        "score_total": to_100(total_heif),
     }
 
 
@@ -610,7 +789,7 @@ def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
     merged_specs = {**existing_specs, **{k: v for k, v in fresh_specs.items() if v is not None}}
 
     # Recompute scores
-    scores = compute_scores(merged_specs, status=row["status"])
+    scores = compute_scores(merged_specs, status=row["status"], vendor=vendor)
 
     now = datetime.now(timezone.utc)
     sources = list(row["sources"] or []) + articles
@@ -626,6 +805,13 @@ def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
                 score_endurance = :score_endurance,
                 score_market_readiness = :score_market_readiness,
                 score_total = :score_total,
+                heif_mobility = :heif_mobility,
+                heif_manipulation = :heif_manipulation,
+                heif_cognition = :heif_cognition,
+                heif_safety = :heif_safety,
+                heif_data_pipeline = :heif_data_pipeline,
+                heif_production = :heif_production,
+                heif_total = :heif_total,
                 sources = cast(:sources as jsonb),
                 last_scraped_at = :now,
                 updated_at = :now
@@ -656,7 +842,7 @@ def seed_robots(db_session: Any) -> dict:
 
     for robot in SEED_ROBOTS:
         specs = robot["specs"]
-        scores = compute_scores(specs, status=robot["status"])
+        scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
         now = datetime.now(timezone.utc)
 
         existing = db_session.execute(
@@ -676,6 +862,13 @@ def seed_robots(db_session: Any) -> dict:
                         score_endurance = :score_endurance,
                         score_market_readiness = :score_market_readiness,
                         score_total = :score_total,
+                        heif_mobility = :heif_mobility,
+                        heif_manipulation = :heif_manipulation,
+                        heif_cognition = :heif_cognition,
+                        heif_safety = :heif_safety,
+                        heif_data_pipeline = :heif_data_pipeline,
+                        heif_production = :heif_production,
+                        heif_total = :heif_total,
                         updated_at = :now
                     WHERE model_slug = :slug
                 """),
@@ -689,12 +882,18 @@ def seed_robots(db_session: Any) -> dict:
                         (name, vendor, model_slug, product_url, status, specs,
                          score_mobility, score_manipulation, score_autonomy,
                          score_safety, score_endurance, score_market_readiness,
-                         score_total, sources, last_scraped_at, created_at, updated_at)
+                         score_total,
+                         heif_mobility, heif_manipulation, heif_cognition,
+                         heif_safety, heif_data_pipeline, heif_production, heif_total,
+                         sources, last_scraped_at, created_at, updated_at)
                     VALUES
                         (:name, :vendor, :model_slug, :product_url, :status, cast(:specs as jsonb),
                          :score_mobility, :score_manipulation, :score_autonomy,
                          :score_safety, :score_endurance, :score_market_readiness,
-                         :score_total, cast('[]' as jsonb), :now, :now, :now)
+                         :score_total,
+                         :heif_mobility, :heif_manipulation, :heif_cognition,
+                         :heif_safety, :heif_data_pipeline, :heif_production, :heif_total,
+                         cast('[]' as jsonb), :now, :now, :now)
                 """),
                 {
                     "name": robot["name"],

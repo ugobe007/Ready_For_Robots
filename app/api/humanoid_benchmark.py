@@ -27,6 +27,24 @@ from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robo
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
 
+
+def _enrich_robot_scores(row: dict) -> dict:
+    """Backfill HEIF + aligned 0–100 scores when DB row predates migration."""
+    if row.get("heif_total") is not None:
+        out = dict(row)
+        if out.get("score_cognition") is None and out.get("score_autonomy") is not None:
+            out["score_cognition"] = out["score_autonomy"]
+        if out.get("score_data_pipeline") is None and out.get("score_endurance") is not None:
+            out["score_data_pipeline"] = out["score_endurance"]
+        if out.get("score_production") is None and out.get("score_market_readiness") is not None:
+            out["score_production"] = out["score_market_readiness"]
+        return out
+    specs = row.get("specs") or {}
+    scores = compute_scores(specs, status=row.get("status") or "research", vendor=row.get("vendor") or "")
+    out = dict(row)
+    out.update(scores)
+    return out
+
 _ROBOTS_LIST_CACHE: dict = {"ts": 0.0, "payload": None}
 _ROBOTS_LIST_TTL_SEC = 300
 _REPORT_MEM_CACHE: dict = {}
@@ -37,7 +55,7 @@ def _seed_robots_payload() -> list[dict]:
     rows = []
     for i, robot in enumerate(SEED_ROBOTS, start=1):
         specs = robot["specs"]
-        scores = compute_scores(specs, status=robot["status"])
+        scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
         rows.append({
             "id": i,
             "name": robot["name"],
@@ -50,10 +68,20 @@ def _seed_robots_payload() -> list[dict]:
             "score_mobility": scores["score_mobility"],
             "score_manipulation": scores["score_manipulation"],
             "score_autonomy": scores["score_autonomy"],
+            "score_cognition": scores["score_cognition"],
             "score_safety": scores["score_safety"],
             "score_endurance": scores["score_endurance"],
+            "score_data_pipeline": scores["score_data_pipeline"],
             "score_market_readiness": scores["score_market_readiness"],
+            "score_production": scores["score_production"],
             "score_total": scores["score_total"],
+            "heif_mobility": scores["heif_mobility"],
+            "heif_manipulation": scores["heif_manipulation"],
+            "heif_cognition": scores["heif_cognition"],
+            "heif_safety": scores["heif_safety"],
+            "heif_data_pipeline": scores["heif_data_pipeline"],
+            "heif_production": scores["heif_production"],
+            "heif_total": scores["heif_total"],
             "last_scraped_at": None,
         })
     rows.sort(key=lambda r: (-(r["score_total"] or 0), r["name"]))
@@ -67,12 +95,15 @@ def _fetch_robots_from_db() -> list[dict]:
                 SELECT id, name, vendor, model_slug, product_url, image_url, status,
                        specs, score_mobility, score_manipulation, score_autonomy,
                        score_safety, score_endurance, score_market_readiness,
-                       score_total, last_scraped_at
+                       score_total,
+                       heif_mobility, heif_manipulation, heif_cognition,
+                       heif_safety, heif_data_pipeline, heif_production, heif_total,
+                       last_scraped_at
                 FROM humanoid_benchmarks
                 ORDER BY score_total DESC NULLS LAST, name ASC
             """)
         ).mappings().all()
-        return [dict(r) for r in rows]
+        return [_enrich_robot_scores(dict(r)) for r in rows]
 
 
 def _require_admin(db: Session = Depends(get_db)):
@@ -116,7 +147,7 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
     ).mappings().first()
     if not row:
         raise HTTPException(status_code=404, detail="Robot not found")
-    return dict(row)
+    return _enrich_robot_scores(dict(row))
 
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
@@ -205,7 +236,9 @@ def build_humanoid_report_payload(db: Session) -> dict:
         text("""
             SELECT name, vendor, model_slug, status, specs,
                    score_mobility, score_manipulation, score_autonomy,
-                   score_safety, score_endurance, score_market_readiness, score_total
+                   score_safety, score_endurance, score_market_readiness, score_total,
+                   heif_mobility, heif_manipulation, heif_cognition,
+                   heif_safety, heif_data_pipeline, heif_production, heif_total
             FROM humanoid_benchmarks
             WHERE score_total IS NOT NULL
             ORDER BY score_total DESC
@@ -220,12 +253,12 @@ def build_humanoid_report_payload(db: Session) -> dict:
     leader = robots[0]
 
     dims = {
-        "Mobility":         "score_mobility",
-        "Manipulation":     "score_manipulation",
-        "Autonomy":         "score_autonomy",
-        "Safety":           "score_safety",
-        "Endurance":        "score_endurance",
-        "Market Readiness": "score_market_readiness",
+        "Mobility": "score_mobility",
+        "Manipulation": "score_manipulation",
+        "Cognition": "score_autonomy",
+        "Safety": "score_safety",
+        "Data Pipeline": "score_endurance",
+        "Production": "score_market_readiness",
     }
     category_winners = {}
     for label, key in dims.items():
@@ -296,6 +329,13 @@ def build_humanoid_report_payload(db: Session) -> dict:
                     "score_safety": round(r["score_safety"] or 0, 1),
                     "score_endurance": round(r["score_endurance"] or 0, 1),
                     "score_market_readiness": round(r["score_market_readiness"] or 0, 1),
+                    "heif_total": round(r.get("heif_total") or 0, 2),
+                    "heif_mobility": round(r.get("heif_mobility") or 0, 1),
+                    "heif_manipulation": round(r.get("heif_manipulation") or 0, 1),
+                    "heif_cognition": round(r.get("heif_cognition") or 0, 1),
+                    "heif_safety": round(r.get("heif_safety") or 0, 1),
+                    "heif_data_pipeline": round(r.get("heif_data_pipeline") or 0, 1),
+                    "heif_production": round(r.get("heif_production") or 0, 1),
                 }
                 for i, r in enumerate(robots)
             ],
@@ -365,7 +405,7 @@ def generate_linkedin_post(db: Session = Depends(get_db)):
 
     post = f"""🤖 Humanoid Robot Benchmark — {month_year}
 
-We scored {report['total_robots']} humanoid robots across 6 dimensions: Mobility, Manipulation, Autonomy, Safety, Endurance, and Market Readiness.
+We scored {report['total_robots']} humanoid robots using the HEIF framework (HEIR 2026): Mobility, Manipulation, Cognition, Safety, Data Pipeline, and Production — each 0–4, shown as 0–100 on the live index.
 
 📊 Top performers:
 {top3_lines}

@@ -21,14 +21,23 @@ CREATE TABLE IF NOT EXISTS humanoid_benchmarks (
     --   price_usd, has_sdk, commercial_deployments (int),
     --   height_cm, weight_kg
 
-    -- ── Computed benchmark scores (0-100 each) ────────────────────────────
-    score_mobility          FLOAT,   -- speed, terrain, stair
-    score_manipulation      FLOAT,   -- payload, fingers, precision
-    score_autonomy          FLOAT,   -- AI level, commercial deployments
-    score_safety            FLOAT,   -- collision force, e-stop, certifications
-    score_endurance         FLOAT,   -- battery life, charge time
-    score_market_readiness  FLOAT,   -- commercial status, price, SDK
-    score_total             FLOAT,   -- weighted composite
+    -- ── HEIF scores (0–4, HEIR 2026 framework) ───────────────────────────────
+    heif_mobility          FLOAT,
+    heif_manipulation      FLOAT,
+    heif_cognition         FLOAT,
+    heif_safety            FLOAT,
+    heif_data_pipeline     FLOAT,
+    heif_production        FLOAT,
+    heif_total             FLOAT,
+
+    -- ── Computed benchmark scores (0-100 each, HEIF × 25) ───────────────────
+    score_mobility          FLOAT,   -- mobility
+    score_manipulation      FLOAT,   -- manipulation
+    score_autonomy          FLOAT,   -- cognition (legacy column name)
+    score_safety            FLOAT,   -- safety
+    score_endurance         FLOAT,   -- data pipeline (legacy column name)
+    score_market_readiness  FLOAT,   -- production (legacy column name)
+    score_total             FLOAT,   -- HEIF composite × 25
 
     -- ── Provenance ────────────────────────────────────────────────────────
     sources         JSONB DEFAULT '[]',         -- [{url, title, scraped_at}]
@@ -42,4 +51,4 @@ CREATE INDEX IF NOT EXISTS idx_humanoid_benchmarks_status  ON humanoid_benchmark
 CREATE INDEX IF NOT EXISTS idx_humanoid_benchmarks_score   ON humanoid_benchmarks (score_total DESC NULLS LAST);
 
 COMMENT ON TABLE humanoid_benchmarks IS
-  'Humanoid robot specs and 6-dimension benchmark scores. Populated by scraper + scoring engine.';
+  'Humanoid robot specs, HEIF scores (0–4), and HEIF-aligned 0–100 index. Populated by scraper + HEIR research overrides.';
