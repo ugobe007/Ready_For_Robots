@@ -27,7 +27,7 @@ from app.services.humanoid_scraper import (
     upsert_humanoid_robot,
     _search_robot_specs,
 )
-from app.services.humanoid_catalog_cleanup import is_junk_humanoid_row, vendor_key
+from app.services.humanoid_catalog_cleanup import is_excluded_humanoid_slug, is_junk_humanoid_row, vendor_key
 from app.services.humanoid_vendor_catalog import catalog_entries, normalize_catalog_entry, slugify
 
 logger = logging.getLogger(__name__)
@@ -254,6 +254,11 @@ def run_humanoid_discovery(
     for entry in candidates:
         slug = entry["model_slug"]
         vkey = vendor_key(entry.get("vendor") or "")
+        if is_excluded_humanoid_slug(slug) or is_junk_humanoid_row(
+            entry.get("name") or "", entry.get("vendor") or "", slug
+        ):
+            stats["skipped"] += 1
+            continue
         is_new = slug not in existing
         if not is_new and not rescore_existing:
             stats["skipped"] += 1

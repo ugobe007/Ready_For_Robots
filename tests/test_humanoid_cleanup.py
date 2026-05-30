@@ -14,6 +14,7 @@ def test_deployment_pilot_slug_excluded():
 
 def test_duplicate_variant_excluded():
     assert is_excluded_humanoid_slug("figure-01")
+    assert is_excluded_humanoid_slug("unitree-h1")
     assert is_excluded_humanoid_slug("zhiyuan-lingxi")
 
 
