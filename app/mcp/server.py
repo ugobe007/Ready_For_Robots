@@ -274,8 +274,10 @@ def create_mcp_app() -> FastMCP:
 def mcp_http_app():
     """Starlette ASGI app for mounting on FastAPI at /mcp."""
     mcp = create_mcp_app()
-    middleware = [MCPBearerAuthMiddleware] if mcp_bearer_token() else None
-    return mcp.http_app(path="/", middleware=middleware, transport="streamable-http")
+    http_app = mcp.http_app(path="/", transport="streamable-http")
+    if mcp_bearer_token():
+        http_app.add_middleware(MCPBearerAuthMiddleware)
+    return http_app
 
 
 def run_standalone() -> None:
@@ -286,8 +288,9 @@ def run_standalone() -> None:
 
     mcp = create_mcp_app()
     if transport in ("http", "streamable-http", "streamable_http"):
-        middleware = [MCPBearerAuthMiddleware] if mcp_bearer_token() else None
-        http_app = mcp.http_app(path=path, middleware=middleware, transport="streamable-http")
+        http_app = mcp.http_app(path=path, transport="streamable-http")
+        if mcp_bearer_token():
+            http_app.add_middleware(MCPBearerAuthMiddleware)
         import uvicorn
 
         uvicorn.run(http_app, host=host, port=port)

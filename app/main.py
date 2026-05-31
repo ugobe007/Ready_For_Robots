@@ -4,6 +4,7 @@ import time
 import threading
 import logging
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -118,7 +119,99 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app = FastAPI(title="Ready for Robots", docs_url="/api/docs", redoc_url="/api/redoc")
+def _run_startup() -> None:
+    _start_scheduled_scraper()
+
+    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
+        logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
+        return
+
+    def _ensure_cache_table() -> None:
+        import time
+        time.sleep(3)
+        try:
+            from app.database import SessionLocal
+            from app.services.pipeline_cache_store import ensure_pipeline_cache_table
+
+            db = SessionLocal()
+            try:
+                ensure_pipeline_cache_table(db)
+                logger.info("pipeline_cache_store table ready")
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("pipeline_cache_store ensure failed: %s", exc)
+
+    threading.Thread(target=_ensure_cache_table, daemon=True, name="cache-table-ensure").start()
+
+    def _staggered_warm(label: str, fn, delay_sec: float) -> None:
+        def _run() -> None:
+            import time
+            time.sleep(delay_sec)
+            try:
+                fn()
+            except Exception as exc:
+                logger.warning("%s warm-up failed: %s", label, exc)
+        threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
+
+    def _hydrate_public_caches() -> None:
+        import time
+        time.sleep(5)
+        try:
+            from app.services.public_surface_cache import (
+                KEY_HOMEPAGE,
+                hydrate_public_surface_caches,
+                read_public_cache,
+                schedule_public_cache_refresh,
+                start_public_cache_refresh_loop,
+            )
+
+            hydrate_public_surface_caches()
+            logger.info("Public surface L1 hydration complete")
+
+            start_public_cache_refresh_loop()
+
+            homepage = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
+            if not homepage or not (homepage.get("hotLeads") or []):
+                schedule_public_cache_refresh(force=True, reason="bootstrap_empty")
+        except Exception as exc:
+            logger.warning("Public surface hydration failed: %s", exc)
+
+    threading.Thread(target=_hydrate_public_caches, daemon=True, name="public-surface-hydrate").start()
+
+    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 30)
+    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 60)
+
+
+@asynccontextmanager
+async def _app_lifespan(app):
+    _run_startup()
+    yield
+
+
+_mcp_asgi = None
+if os.getenv("R4R_MCP_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+    try:
+        from app.mcp.server import mcp_http_app
+
+        _mcp_asgi = mcp_http_app()
+    except Exception as exc:
+        logger.warning("MCP setup skipped: %s", exc)
+
+if _mcp_asgi is not None:
+    from fastmcp.utilities.lifespan import combine_lifespans
+
+    _lifespan = combine_lifespans(_app_lifespan, _mcp_asgi.lifespan)
+else:
+    _lifespan = _app_lifespan
+
+
+app = FastAPI(
+    title="Ready for Robots",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    lifespan=_lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -202,87 +295,9 @@ app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"]
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 
-
-def _mount_mcp_if_enabled() -> None:
-    if os.getenv("R4R_MCP_ENABLED", "").strip().lower() not in ("1", "true", "yes"):
-        return
-    try:
-        from app.mcp.server import mcp_http_app
-
-        app.mount("/mcp", mcp_http_app())
-        logger.info("MCP server mounted at /mcp (Streamable HTTP)")
-    except Exception as exc:
-        logger.warning("MCP mount skipped: %s", exc)
-
-
-_mount_mcp_if_enabled()
-
-
-@app.on_event("startup")
-def startup():
-    _start_scheduled_scraper()
-
-    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
-        logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
-        return
-
-    def _ensure_cache_table() -> None:
-        import time
-        time.sleep(3)
-        try:
-            from app.database import SessionLocal
-            from app.services.pipeline_cache_store import ensure_pipeline_cache_table
-
-            db = SessionLocal()
-            try:
-                ensure_pipeline_cache_table(db)
-                logger.info("pipeline_cache_store table ready")
-            finally:
-                db.close()
-        except Exception as exc:
-            logger.warning("pipeline_cache_store ensure failed: %s", exc)
-
-    threading.Thread(target=_ensure_cache_table, daemon=True, name="cache-table-ensure").start()
-
-    # Stagger cache warm-ups — never open multiple heavy DB queries at once on boot.
-    def _staggered_warm(label: str, fn, delay_sec: float) -> None:
-        def _run() -> None:
-            import time
-            time.sleep(delay_sec)
-            try:
-                fn()
-            except Exception as exc:
-                logger.warning("%s warm-up failed: %s", label, exc)
-        threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
-
-    # Hydrate L1 from durable Postgres cache — no heavy rebuild on boot.
-    def _hydrate_public_caches() -> None:
-        import time
-        time.sleep(5)
-        try:
-            from app.services.public_surface_cache import (
-                KEY_HOMEPAGE,
-                hydrate_public_surface_caches,
-                read_public_cache,
-                schedule_public_cache_refresh,
-                start_public_cache_refresh_loop,
-            )
-
-            hydrate_public_surface_caches()
-            logger.info("Public surface L1 hydration complete")
-
-            start_public_cache_refresh_loop()
-
-            homepage = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
-            if not homepage or not (homepage.get("hotLeads") or []):
-                schedule_public_cache_refresh(force=True, reason="bootstrap_empty")
-        except Exception as exc:
-            logger.warning("Public surface hydration failed: %s", exc)
-
-    threading.Thread(target=_hydrate_public_caches, daemon=True, name="public-surface-hydrate").start()
-
-    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 30)
-    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 60)
+if _mcp_asgi is not None:
+    app.mount("/mcp", _mcp_asgi, name="mcp")
+    logger.info("MCP server mounted at /mcp (Streamable HTTP)")
 
 
 @app.get("/health")

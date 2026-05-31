@@ -49,7 +49,7 @@ Generate per-partner tokens; store mapping in admin/marketplace connections.
 fly secrets set R4R_MCP_ENABLED=1 R4R_MCP_BEARER_TOKEN=<long-random-token>
 ```
 
-Endpoint: `https://ready-2-robot.fly.dev/mcp`
+Endpoint: `https://ready-2-robot.fly.dev/mcp/` (use trailing slash for Streamable HTTP POST)
 
 **B. Standalone process** — separate port or machine:
 
