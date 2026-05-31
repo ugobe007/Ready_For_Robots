@@ -151,6 +151,7 @@ async def rate_limit_and_block_probes(request: Request, call_next):
     # Rate limit by IP (only for catch-all paths; exclude API, health, root, static assets)
     if (
         not path.startswith("/api/")
+        and not path.startswith("/mcp")
         and not path.startswith("/_next/")
         and path != "/health"
         and path != "/"
@@ -200,6 +201,21 @@ app.include_router(calendar_router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
+
+
+def _mount_mcp_if_enabled() -> None:
+    if os.getenv("R4R_MCP_ENABLED", "").strip().lower() not in ("1", "true", "yes"):
+        return
+    try:
+        from app.mcp.server import mcp_http_app
+
+        app.mount("/mcp", mcp_http_app())
+        logger.info("MCP server mounted at /mcp (Streamable HTTP)")
+    except Exception as exc:
+        logger.warning("MCP mount skipped: %s", exc)
+
+
+_mount_mcp_if_enabled()
 
 
 @app.on_event("startup")
