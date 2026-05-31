@@ -12,6 +12,9 @@ VENDOR_URLS = {
     "booster-t1": "https://booster.tech",
     "persona-ai-gen1": "https://persona.ai",
     "noble-machines": "https://www.noblemachines.ai",
+    "fourier-gr1": "https://www.fftai.com/products-gr1",
+    "fourier-gr2": "https://www.fftai.com/products-gr2",
+    "fourier-gr3": "https://www.fftai.com/products-gr3",
 }
 
 
@@ -32,3 +35,12 @@ def test_dexmate_and_eden_have_baseline_specs():
 def test_limx_multiple_models():
     slugs = {e["model_slug"] for e in catalog_entries() if e["vendor"] == "LimX Dynamics"}
     assert {"limx-tron1", "limx-luna", "limx-oli", "limx-tron2"}.issubset(slugs)
+
+
+def test_fourier_gr3_baseline_specs():
+    by_slug = {e["model_slug"]: e for e in catalog_entries()}
+    gr3 = by_slug["fourier-gr3"]
+    assert gr3["vendor"] == "Fourier Robotics"
+    assert gr3["specs"]["height_cm"] == 165
+    assert gr3["specs"]["hot_swap_battery"] is True
+    assert gr3["specs"]["has_sdk"] is True

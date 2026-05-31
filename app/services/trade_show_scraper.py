@@ -109,6 +109,7 @@ _STATIC_OEM_HINTS: Tuple[str, ...] = (
     "Sanctuary AI",
     "1X Technologies",
     "Fourier Intelligence",
+    "Fourier Robotics",
     "UBTECH Robotics",
     "Engineered Arts",
     "Unitree Robotics",
