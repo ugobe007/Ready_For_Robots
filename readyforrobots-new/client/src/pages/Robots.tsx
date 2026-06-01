@@ -158,7 +158,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
-        style={{ gridTemplateColumns: "2rem 3rem 1fr 4.5rem 4.5rem 3rem" }}
+        style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
         <span className="text-xl font-black text-white/15">#{rank}</span>
         <RobotAvatar
