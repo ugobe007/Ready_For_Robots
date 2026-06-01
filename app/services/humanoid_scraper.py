@@ -438,7 +438,7 @@ SEED_ROBOTS: list[dict] = [
         "name": "Agility Digit",
         "vendor": "Agility Robotics",
         "model_slug": "agility-digit",
-        "product_url": "https://agilityrobotics.com/digit",
+        "product_url": "https://www.agilityrobotics.com/solutions",
         "status": "available",
         "specs": {
             "top_speed_mps": 1.5,
@@ -469,7 +469,7 @@ SEED_ROBOTS: list[dict] = [
         "name": "Tesla Optimus Gen 2",
         "vendor": "Tesla",
         "model_slug": "tesla-optimus-gen2",
-        "product_url": "https://www.tesla.com/optimus",
+        "product_url": "https://www.tesla.com/AI",
         "status": "pilot",
         "specs": {
             "top_speed_mps": 0.8,
@@ -655,7 +655,7 @@ SEED_ROBOTS: list[dict] = [
         "name": "UBTECH Walker X",
         "vendor": "UBTECH Robotics",
         "model_slug": "ubtech-walker-x",
-        "product_url": "https://www.ubtrobot.com/walker",
+        "product_url": "https://www.ubtrobot.com/en/",
         "status": "available",
         "specs": {
             "top_speed_mps": 0.8,
@@ -856,6 +856,7 @@ def seed_robots(db_session: Any) -> dict:
                 db_session.execute(
                     text("""
                         UPDATE humanoid_benchmarks SET
+                            product_url = :product_url,
                             specs = cast(:specs as jsonb),
                             score_mobility = :score_mobility,
                             score_manipulation = :score_manipulation,
@@ -874,7 +875,7 @@ def seed_robots(db_session: Any) -> dict:
                             updated_at = :now
                         WHERE model_slug = :slug
                     """),
-                    {"specs": json.dumps(specs), "now": now, "slug": robot["model_slug"], **scores},
+                    {"specs": json.dumps(specs), "now": now, "slug": robot["model_slug"], "product_url": robot.get("product_url"), **scores},
                 )
                 updated += 1
             else:

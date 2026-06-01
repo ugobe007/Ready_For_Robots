@@ -23,8 +23,8 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Unitree R1", "vendor": "Unitree Robotics", "model_slug": "unitree-r1", "product_url": "https://www.unitree.com", "status": "pilot", "country": "China"},
     {"name": "Figure 02", "vendor": "Figure AI", "model_slug": "figure-02", "product_url": "https://www.figure.ai", "status": "pilot", "country": "USA"},
     {"name": "Figure 01", "vendor": "Figure AI", "model_slug": "figure-01", "product_url": "https://www.figure.ai", "status": "research", "country": "USA"},
-    {"name": "Agility Digit", "vendor": "Agility Robotics", "model_slug": "agility-digit", "product_url": "https://agilityrobotics.com/digit", "status": "available", "country": "USA"},
-    {"name": "Tesla Optimus Gen 2", "vendor": "Tesla", "model_slug": "tesla-optimus-gen2", "product_url": "https://www.tesla.com/optimus", "status": "pilot", "country": "USA"},
+    {"name": "Agility Digit", "vendor": "Agility Robotics", "model_slug": "agility-digit", "product_url": "https://www.agilityrobotics.com/solutions", "status": "available", "country": "USA"},
+    {"name": "Tesla Optimus Gen 2", "vendor": "Tesla", "model_slug": "tesla-optimus-gen2", "product_url": "https://www.tesla.com/AI", "status": "pilot", "country": "USA"},
     {"name": "Boston Dynamics Atlas", "vendor": "Boston Dynamics", "model_slug": "boston-dynamics-atlas", "product_url": "https://bostondynamics.com/atlas", "status": "pilot", "country": "USA"},
     {"name": "Apptronik Apollo", "vendor": "Apptronik", "model_slug": "apptronik-apollo", "product_url": "https://apptronik.com/apollo", "status": "pilot", "country": "USA"},
     {"name": "1X NEO", "vendor": "1X Technologies", "model_slug": "1x-neo", "product_url": "https://www.1x.tech/neo", "status": "pilot", "country": "USA"},
@@ -32,8 +32,8 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Sanctuary Phoenix", "vendor": "Sanctuary AI", "model_slug": "sanctuary-phoenix", "product_url": "https://www.sanctuary.ai", "status": "pilot", "country": "Canada", "specs": {"has_dexterous_hands": True, "finger_count": 5, "autonomy_level": "semi", "has_sdk": True, "has_api": True, "has_estop": True, "force_limited_joints": True, "commercial_deployments": 10, "has_support_sla": True}},
     {"name": "Agibot A2", "vendor": "Agibot (Zhiyuan Robotics)", "model_slug": "agibot-a2", "product_url": "https://agibot.com", "status": "available", "country": "China"},
     {"name": "Agibot G5", "vendor": "Agibot (Zhiyuan Robotics)", "model_slug": "agibot-g5", "product_url": "https://agibot.com", "status": "pilot", "country": "China"},
-    {"name": "UBTECH Walker X", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-x", "product_url": "https://www.ubtrobot.com/walker", "status": "available", "country": "China"},
-    {"name": "UBTECH Walker S", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-s", "product_url": "https://www.ubtrobot.com", "status": "pilot", "country": "China"},
+    {"name": "UBTECH Walker X", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-x", "product_url": "https://www.ubtrobot.com/en/", "status": "available", "country": "China"},
+    {"name": "UBTECH Walker S", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-s", "product_url": "https://www.ubtrobot.com/en/", "status": "pilot", "country": "China"},
     {"name": "EngineAI PM01", "vendor": "EngineAI", "model_slug": "engineai-pm01", "product_url": "https://www.engineai.com", "status": "pilot", "country": "China"},
     {"name": "EngineAI T800", "vendor": "EngineAI", "model_slug": "engineai-t800", "product_url": "https://www.engineai.com", "status": "research", "country": "China"},
     {"name": "Fourier GR-1", "vendor": "Fourier Robotics", "model_slug": "fourier-gr1", "product_url": "https://www.fftai.com/products-gr1", "status": "pilot", "country": "China"},
@@ -48,7 +48,7 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "PAL Robotics REEM-C", "vendor": "PAL Robotics", "model_slug": "pal-reem-c", "product_url": "https://pal-robotics.com", "status": "research", "country": "Spain"},
     {"name": "Engineered Arts Ameca", "vendor": "Engineered Arts", "model_slug": "engineered-arts-ameca", "product_url": "https://engineeredarts.com", "status": "available", "country": "UK"},
     {"name": "Reflex Humanoid", "vendor": "Reflex Robotics", "model_slug": "reflex-humanoid", "product_url": "https://reflexrobotics.com", "status": "pilot", "country": "USA"},
-    {"name": "MenteeBot", "vendor": "Mentee Robotics", "model_slug": "mentee-bot", "product_url": "https://menteebotics.com", "status": "pilot", "country": "Israel"},
+    {"name": "MenteeBot", "vendor": "Mentee Robotics", "model_slug": "mentee-bot", "product_url": "https://www.menteebot.com", "status": "pilot", "country": "Israel"},
     {"name": "Persona AI Gen1", "vendor": "Persona AI", "model_slug": "persona-ai-gen1", "product_url": "https://persona.ai", "status": "pilot", "country": "USA", "specs": {"has_dexterous_hands": True, "finger_count": 5, "payload_kg": 5.0, "autonomy_level": "semi", "commercial_deployments": 5, "has_sdk": False, "has_api": False, "has_estop": True, "force_limited_joints": True}},
     {"name": "Xiaomi CyberOne", "vendor": "Xiaomi", "model_slug": "xiaomi-cyberone", "product_url": "https://www.mi.com", "status": "research", "country": "China"},
     {"name": "Toyota T-HR3", "vendor": "Toyota", "model_slug": "toyota-thr3", "product_url": "https://global.toyota", "status": "research", "country": "Japan"},
@@ -250,3 +250,31 @@ def catalog_entries() -> List[Dict[str, Any]]:
 
 def catalog_count() -> int:
     return len(catalog_entries())
+
+
+def sync_product_urls_from_catalog(db_session: Any) -> dict:
+    """Push curated catalog product_url values into humanoid_benchmarks."""
+    from sqlalchemy import text
+
+    updated = 0
+    skipped = 0
+    for entry in catalog_entries():
+        url = entry.get("product_url")
+        slug = entry.get("model_slug")
+        if not url or not slug:
+            skipped += 1
+            continue
+        result = db_session.execute(
+            text("""
+                UPDATE humanoid_benchmarks
+                SET product_url = :url, updated_at = NOW()
+                WHERE model_slug = :slug AND (product_url IS DISTINCT FROM :url)
+            """),
+            {"url": url, "slug": slug},
+        )
+        if result.rowcount:
+            updated += 1
+        else:
+            skipped += 1
+    db_session.commit()
+    return {"updated": updated, "skipped": skipped, "catalog_urls": sum(1 for e in catalog_entries() if e.get("product_url"))}
