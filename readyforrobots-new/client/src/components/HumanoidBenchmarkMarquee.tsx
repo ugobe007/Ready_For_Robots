@@ -8,6 +8,7 @@ type MarqueeRobot = {
   name: string;
   vendor: string;
   modelSlug?: string;
+  productUrl?: string;
   score: number;
   status: string;
 };
@@ -40,7 +41,18 @@ function MarqueeItem({ robot }: { robot: MarqueeRobot }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-white/10 px-3 py-1.5" style={{ background: "rgba(255,255,255,0.03)" }}>
       <RobotAvatar vendor={robot.vendor} modelSlug={robot.modelSlug} size="sm" />
-      <span className="text-xs font-bold text-white/85">{robot.name}</span>
+      {robot.productUrl ? (
+        <a
+          href={robot.productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-bold text-white/85 transition-colors hover:text-violet-200 hover:underline underline-offset-2"
+        >
+          {robot.name}
+        </a>
+      ) : (
+        <span className="text-xs font-bold text-white/85">{robot.name}</span>
+      )}
       <span className="text-[10px] text-white/30">{robot.vendor}</span>
       <span className="font-mono text-[11px] font-bold" style={{ color: scoreColor(robot.score), fontFamily: "'JetBrains Mono', monospace" }}>
         {robot.score}
@@ -71,10 +83,11 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
           .filter((row: { score_total?: number }) => typeof row.score_total === "number")
           .sort((a: { score_total: number }, b: { score_total: number }) => b.score_total - a.score_total)
           .slice(0, 14)
-          .map((row: { name?: string; vendor?: string; model_slug?: string; score_total?: number; status?: string }) => ({
+          .map((row: { name?: string; vendor?: string; model_slug?: string; product_url?: string; score_total?: number; status?: string }) => ({
             name: row.name || "Unknown",
             vendor: row.vendor || "",
             modelSlug: row.model_slug,
+            productUrl: row.product_url,
             score: Math.round(row.score_total ?? 0),
             status: row.status || "research",
           }));

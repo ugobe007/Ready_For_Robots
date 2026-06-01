@@ -141,6 +141,23 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function RobotNameLink({ name, url }: { name: string; url?: string }) {
+  if (!url) {
+    return <p className="font-bold text-white text-base leading-tight">{name}</p>;
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="font-bold text-white text-base leading-tight transition-colors hover:text-violet-200 underline-offset-2 hover:underline"
+    >
+      {name}
+    </a>
+  );
+}
+
 function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
   const [open, setOpen] = useState(false);
   const heifTotal = robot.heif_total ?? robot.score_total / 25;
@@ -171,7 +188,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         />
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-bold text-white text-base leading-tight">{robot.name}</p>
+            <RobotNameLink name={robot.name} url={robot.product_url} />
             <StatusBadge status={robot.status} />
           </div>
           <p className="text-[11px] text-white/35 mt-0.5">{robot.vendor}</p>
