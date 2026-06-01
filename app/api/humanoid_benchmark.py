@@ -3,11 +3,12 @@ Humanoid Benchmark API  —  /api/humanoid
 GET  /api/humanoid/robots               — list all with scores (public)
 GET  /api/humanoid/gaps                 — missing spec fields for HEIF scoring (public)
 GET  /api/humanoid/report               — formatted benchmark report (public)
+GET  /api/humanoid/deployment-report    — HEIF vs PoC/deployment evidence report (public)
 GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
 POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
 POST /api/humanoid/seed                 — seed known robots (admin)
 POST /api/humanoid/scrape/{slug}        — scrape + rescore one robot (admin)
-POST /api/humanoid/scrape-all           — scrape + rescore all robots (admin)
+POST /api/humanoid/deployment-news       — scan news for deployment/trial evidence (admin)
 GET  /api/humanoid/cron/scrape-all      — cron trigger for weekly auto-scrape
 """
 from __future__ import annotations
@@ -28,6 +29,8 @@ from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robo
 from app.services.humanoid_discovery import run_humanoid_discovery
 from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
+from app.services.humanoid_deployment_report import build_humanoid_deployment_report_payload
+from app.services.humanoid_deployment_news import run_humanoid_deployment_news_review
 from app.services.humanoid_vendor_catalog import catalog_count
 
 logger = logging.getLogger(__name__)
@@ -370,28 +373,34 @@ async def cron_discover_humanoids(
 
 # ── Report generator ─────────────────────────────────────────────────────────
 
+_HUMANOID_REPORT_SQL = """
+    SELECT name, vendor, model_slug, status, specs, sources,
+           score_mobility, score_manipulation, score_autonomy,
+           score_safety, score_endurance, score_market_readiness, score_total,
+           heif_mobility, heif_manipulation, heif_cognition,
+           heif_safety, heif_data_pipeline, heif_production, heif_total
+    FROM humanoid_benchmarks
+    WHERE score_total IS NOT NULL
+    ORDER BY score_total DESC
+"""
+
+
+def _fetch_scored_humanoids(db: Session) -> list[dict]:
+    rows = db.execute(text(_HUMANOID_REPORT_SQL)).mappings().all()
+    return [dict(r) for r in rows]
+
+
 def build_humanoid_report_payload(db: Session) -> dict:
     """
     Structured benchmark report from current scores.
     Used by daily cache refresh, GET /report, and LinkedIn post generator.
     """
-    rows = db.execute(
-        text("""
-            SELECT name, vendor, model_slug, status, specs,
-                   score_mobility, score_manipulation, score_autonomy,
-                   score_safety, score_endurance, score_market_readiness, score_total,
-                   heif_mobility, heif_manipulation, heif_cognition,
-                   heif_safety, heif_data_pipeline, heif_production, heif_total
-            FROM humanoid_benchmarks
-            WHERE score_total IS NOT NULL
-            ORDER BY score_total DESC
-        """)
-    ).mappings().all()
+    rows = _fetch_scored_humanoids(db)
 
     if not rows:
         return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat()}
 
-    robots = [dict(r) for r in rows]
+    robots = rows
     top3 = robots[:3]
     leader = robots[0]
 
@@ -436,6 +445,12 @@ def build_humanoid_report_payload(db: Session) -> dict:
     sdk_robots = [r for r in robots if (r["specs"] or {}).get("has_sdk")]
     findings.append(f"{len(sdk_robots)} of {len(robots)} robots offer a developer SDK")
 
+    deployment_payload = build_humanoid_deployment_report_payload(robots)
+    deployment_summary = deployment_payload.get("report")
+    if deployment_summary:
+        dep_findings = deployment_summary.get("key_findings") or []
+        findings.extend(dep_findings[:3])
+
     return {
         "report": {
             "title": f"Humanoid Robot Benchmark Report — {datetime.now(timezone.utc).strftime('%B %Y')}",
@@ -443,6 +458,19 @@ def build_humanoid_report_payload(db: Session) -> dict:
             "available_count": len(available),
             "pilot_count": len(pilot),
             "research_count": len(research),
+            "deployment_summary": {
+                k: deployment_summary[k]
+                for k in (
+                    "deployment_tier_breakdown",
+                    "evidence_class_breakdown",
+                    "commercial_deployments_breakdown",
+                    "poc_or_better_count",
+                    "deployment_signal_count",
+                    "poc_to_deployment_ratio",
+                    "key_findings",
+                )
+                if deployment_summary and k in deployment_summary
+            } if deployment_summary else None,
             "overall_leader": {
                 "name": leader["name"],
                 "vendor": leader["vendor"],
@@ -517,6 +545,80 @@ def get_report(db: Session = Depends(get_db)):
 
     schedule_public_cache_refresh(pipeline_only=True, reason="humanoid_miss")
     return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat(), "cache_pending": True}
+
+
+@router.get("/deployment-report")
+def get_deployment_report(db: Session = Depends(get_db)):
+    """
+    HEIF capability vs public PoC/deployment evidence.
+    Live from DB (not cached) — use for adoption reviews and CSV export clients.
+    """
+    robots = _fetch_scored_humanoids(db)
+    if not robots:
+        raise HTTPException(
+            status_code=404,
+            detail="No benchmark data available. Run /seed or /discover first.",
+        )
+    return build_humanoid_deployment_report_payload(robots)
+
+
+@router.post("/deployment-news")
+async def scan_deployment_news(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    persist: bool = Query(False, description="Save matched articles to humanoid_benchmarks.sources"),
+    max_queries: Optional[int] = Query(None, ge=1, le=300, description="Cap RSS queries (default: all EN + ZH)"),
+    include_chinese: bool = Query(True, description="Search Google News China RSS for Chinese vendors"),
+    translate_chinese: bool = Query(True, description="Translate Chinese headlines to English via LLM"),
+    sync: bool = Query(False, description="Wait for scan (5–10 min full run). Default false runs in background."),
+):
+    """
+    Scan Google News (EN + ZH) for deployment / pilot / trial headlines by vendor and robot name.
+    """
+    kwargs = dict(
+        persist=persist,
+        max_queries=max_queries,
+        use_db=True,
+        include_chinese=include_chinese,
+        translate_chinese=translate_chinese,
+    )
+    if sync:
+        return run_humanoid_deployment_news_review(db, **kwargs)
+
+    def _run():
+        from app.database import SessionLocal
+        with SessionLocal() as bg_db:
+            try:
+                result = run_humanoid_deployment_news_review(bg_db, **kwargs)
+                logger.info("Deployment news scan finished: %s", result.get("summary"))
+            except Exception as exc:
+                logger.warning("Deployment news scan failed: %s", exc)
+
+    background_tasks.add_task(_run)
+    return {
+        "status": "started",
+        "persist": persist,
+        "include_chinese": include_chinese,
+        "message": "Deployment news scan running in background (EN + Chinese RSS). Poll /api/humanoid/deployment-report for updated sources.",
+    }
+
+
+@router.get("/deployment-news/report")
+def get_deployment_news_report(
+    db: Session = Depends(get_db),
+    max_queries: Optional[int] = Query(40, ge=5, le=300),
+    include_chinese: bool = Query(True),
+    translate_chinese: bool = Query(True),
+):
+    """Run a bounded news scan and return results without persisting (preview)."""
+    return run_humanoid_deployment_news_review(
+        db,
+        persist=False,
+        max_queries=max_queries,
+        use_db=True,
+        include_chinese=include_chinese,
+        translate_chinese=translate_chinese,
+    )
 
 
 # ── LinkedIn post generator ───────────────────────────────────────────────────
