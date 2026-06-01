@@ -114,6 +114,7 @@ CONCEPTS: Dict[str, Concept] = {
             "boston dynamics atlas", "agility robotics", "figure ai", "figure robot",
             "optimus robot", "tesla bot", "apptronik", "sanctuary ai",
             "1x technologies", "fourier intelligence", "fourier robotics", "fftai", "ubtech", "engineered arts",
+            "deep robotics", "deeprobotics", "robotera", "星动纪元",
             "digit robot", "ameca robot", "nao robot", "pepper robot",
         ],
         synonyms=["humanoid bot", "bipedal machine", "android automaton"],

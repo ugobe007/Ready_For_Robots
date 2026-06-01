@@ -112,6 +112,8 @@ _STATIC_OEM_HINTS: Tuple[str, ...] = (
     "Fourier Robotics",
     "UBTECH Robotics",
     "Engineered Arts",
+    "Deep Robotics",
+    "Robotera",
     "Unitree Robotics",
     # Wheeled AMR / logistics robots
     "MiR",
