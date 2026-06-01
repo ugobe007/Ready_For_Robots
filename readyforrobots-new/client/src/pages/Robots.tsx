@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
+import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
@@ -14,6 +15,7 @@ type RobotRow = {
   vendor: string;
   model_slug: string;
   product_url?: string;
+  image_url?: string | null;
   status: "available" | "pilot" | "research" | "discontinued";
   specs: Record<string, unknown>;
   score_mobility: number;
@@ -155,10 +157,18 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full grid gap-4 px-5 py-4 text-left"
-        style={{ gridTemplateColumns: "2rem 1fr 4.5rem 4.5rem 2rem" }}
+        className="w-full grid gap-4 px-5 py-4 text-left items-center"
+        style={{ gridTemplateColumns: "2rem 3rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-white/15 mt-0.5">#{rank}</span>
+        <span className="text-xl font-black text-white/15">#{rank}</span>
+        <RobotAvatar
+          vendor={robot.vendor}
+          name={robot.name}
+          modelSlug={robot.model_slug}
+          productUrl={robot.product_url}
+          imageUrl={robot.image_url}
+          size="md"
+        />
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-bold text-white text-base leading-tight">{robot.name}</p>
@@ -198,7 +208,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           </span>
           <span className="text-[9px] text-white/30">/ 100</span>
         </div>
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           {robot.product_url ? (
             <a
               href={robot.product_url}
@@ -210,8 +220,6 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ) : null}
-        </div>
-        <div className="flex items-center justify-center">
           {open ? <ChevronUp className="h-4 w-4 text-white/25" /> : <ChevronDown className="h-4 w-4 text-white/25" />}
         </div>
       </button>
