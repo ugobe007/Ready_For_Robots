@@ -31,7 +31,7 @@ from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks, i
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
 from app.services.humanoid_deployment_report import build_humanoid_deployment_report_payload
 from app.services.humanoid_deployment_news import run_humanoid_deployment_news_review
-from app.services.humanoid_vendor_catalog import catalog_count
+from app.services.humanoid_vendor_catalog import catalog_count, sync_product_urls_from_catalog
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
@@ -334,6 +334,23 @@ async def cron_scrape_all(
         "robots": len(slugs),
         "message": f"Scraping {len(slugs)} humanoid robots in background — scores updated in ~2 min.",
     }
+
+
+@router.get("/cron/sync-product-urls")
+async def cron_sync_product_urls(
+    token: str = Query("", description="SCRAPER_CRON_TOKEN secret"),
+    db: Session = Depends(get_db),
+):
+    """
+    Push curated catalog product_url values into humanoid_benchmarks.
+    GET /api/humanoid/cron/sync-product-urls?token=YOUR_TOKEN
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    stats = sync_product_urls_from_catalog(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return {"status": "ok", **stats}
 
 
 @router.get("/cron/discover")
