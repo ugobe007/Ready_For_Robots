@@ -23,6 +23,7 @@ from app.models.marketplace import (
     BuyerProfile,
     MarketplaceCommercialDocument,
     MarketplaceIntegrationConnection,
+    MarketplacePartnerApiKey,
     OrganizationAsset,
     OrganizationProfile,
     Rfq,
@@ -30,6 +31,11 @@ from app.models.marketplace import (
     RfqRequirement,
     RfqScheduleEvent,
     VendorProfile,
+)
+from app.services.partner_api_keys import (
+    create_partner_api_key,
+    revoke_partner_api_key,
+    serialize_partner_api_key,
 )
 
 router = APIRouter()
@@ -146,6 +152,11 @@ class IntegrationConnectionBody(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict)
 
 
+class PartnerApiKeyBody(BaseModel):
+    name: str = Field("MCP partner key", min_length=1, max_length=180)
+    allowed_scopes: list[str] = Field(default_factory=list, max_length=100)
+
+
 def _uid_uuid(user: dict) -> uuid.UUID:
     return uuid.UUID(str(user["uid"]))
 
@@ -212,6 +223,22 @@ def _resolve_team(db: Session, user: dict, team_id: Optional[uuid.UUID]) -> Team
     if team_id:
         return _team_for_user(db, uid, team_id)
     return _default_team(db, uid, user.get("email") or "")
+
+
+def _connection_for_user(db: Session, user: dict, connection_id: uuid.UUID) -> MarketplaceIntegrationConnection:
+    uid = _uid_uuid(user)
+    row = (
+        db.query(MarketplaceIntegrationConnection)
+        .join(TeamMember, TeamMember.team_id == MarketplaceIntegrationConnection.team_id)
+        .filter(
+            MarketplaceIntegrationConnection.id == connection_id,
+            TeamMember.user_id == uid,
+        )
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Connection not found or access denied")
+    return row
 
 
 def _ensure_org_profile(db: Session, team: Team, org_type: str = "vendor") -> OrganizationProfile:
@@ -743,3 +770,73 @@ def list_integration_connections(
         .all()
     )
     return {"connections": [_serialize_connection(row) for row in rows]}
+
+
+@router.get("/connections/{connection_id}/api-keys")
+def list_partner_api_keys(
+    connection_id: uuid.UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    connection = _connection_for_user(db, user, connection_id)
+    rows = (
+        db.query(MarketplacePartnerApiKey)
+        .filter(MarketplacePartnerApiKey.connection_id == connection.id)
+        .order_by(MarketplacePartnerApiKey.created_at.desc())
+        .all()
+    )
+    return {
+        "connectionId": str(connection.id),
+        "apiKeys": [serialize_partner_api_key(row) for row in rows],
+    }
+
+
+@router.post("/connections/{connection_id}/api-keys")
+def issue_partner_api_key(
+    connection_id: uuid.UUID,
+    body: PartnerApiKeyBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    connection = _connection_for_user(db, user, connection_id)
+    row, raw_key = create_partner_api_key(
+        db,
+        connection=connection,
+        created_by_user_id=_uid_uuid(user),
+        name=body.name,
+        allowed_scopes=body.allowed_scopes or None,
+    )
+    return {
+        **serialize_partner_api_key(row),
+        "apiKey": raw_key,
+        "usage": {
+            "mcpUrl": connection.mcp_server_url or "https://ready-2-robot.fly.dev/mcp/",
+            "header": "Authorization: Bearer <apiKey>",
+            "altHeader": "X-R4R-API-Key: <apiKey>",
+        },
+        "warning": "Store this key now — it cannot be retrieved again.",
+    }
+
+
+@router.post("/connections/{connection_id}/api-keys/{key_id}/revoke")
+def revoke_connection_api_key(
+    connection_id: uuid.UUID,
+    key_id: uuid.UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    connection = _connection_for_user(db, user, connection_id)
+    row = (
+        db.query(MarketplacePartnerApiKey)
+        .filter(
+            MarketplacePartnerApiKey.id == key_id,
+            MarketplacePartnerApiKey.connection_id == connection.id,
+        )
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="API key not found")
+    if row.status == "revoked":
+        return serialize_partner_api_key(row)
+    row = revoke_partner_api_key(db, row)
+    return serialize_partner_api_key(row)

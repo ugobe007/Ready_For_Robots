@@ -12,6 +12,7 @@ from app.models.marketplace import (
     BuyerProfile,
     MarketplaceCommercialDocument,
     MarketplaceIntegrationConnection,
+    MarketplacePartnerApiKey,
     OrganizationAsset,
     OrganizationProfile,
     Rfq,

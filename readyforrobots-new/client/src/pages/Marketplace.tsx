@@ -164,7 +164,7 @@ export default function Marketplace() {
   const [connectionForm, setConnectionForm] = useState({
     connection_type: "mcp_server",
     name: "",
-    mcp_server_url: "",
+    mcp_server_url: "https://ready-2-robot.fly.dev/mcp/",
     base_url: "",
     auth_type: "api_key",
     secret_ref: "",
@@ -386,6 +386,25 @@ export default function Marketplace() {
     }
   };
 
+  const issuePartnerApiKey = async (connectionId: string, connectionName: string) => {
+    setBusy(true);
+    try {
+      const out = await authFetch(`/api/marketplace/connections/${connectionId}/api-keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: `${connectionName} MCP key` }),
+      });
+      toast.success("Partner API key created — copy it now; it won't be shown again.");
+      if (out?.apiKey) {
+        window.prompt("Copy this partner API key:", out.apiKey);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not issue API key");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!supabase) {
     return <ShellMessage message="Supabase is not configured in this build." />;
   }
@@ -486,8 +505,18 @@ export default function Marketplace() {
               </div>
             </div>
             <button onClick={() => void createConnection()} className="mt-3 rounded-lg border border-amber-400/35 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100">Create connection reference</button>
-            <div className="mt-3">
+            <div className="mt-3 space-y-2">
               <ListEmpty items={connections} empty="No connections yet." render={(connection) => `${connection.connectionType}: ${connection.name} (${connection.status})`} />
+              {connections.map((connection) => (
+                <button
+                  key={connection.id}
+                  type="button"
+                  onClick={() => void issuePartnerApiKey(connection.id, connection.name)}
+                  className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-white/70"
+                >
+                  Issue MCP API key for {connection.name}
+                </button>
+              ))}
             </div>
           </section>
         </div>

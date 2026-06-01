@@ -34,12 +34,25 @@ The MCP layer is a **read-mostly proxy** with curated tools. It does not expose 
 
 ### Authentication model
 
-Two layers (both optional in dev):
+Two layers:
 
-1. **MCP bearer** — partners send `Authorization: Bearer <R4R_MCP_BEARER_TOKEN>` to `/mcp`
-2. **Partner API key** — MCP forwards `X-R4R-API-Key` to the REST API (future rate-limit tiers)
+1. **Global MCP bearer** — `R4R_MCP_BEARER_TOKEN` for internal/admin bootstrap
+2. **Per-partner API keys** — issued from Marketplace → MCP/API Connections → **Issue MCP API key**
 
-Generate per-partner tokens; store mapping in admin/marketplace connections.
+Partners authenticate with either header:
+
+```
+Authorization: Bearer r4r_live_...
+X-R4R-API-Key: r4r_live_...
+```
+
+Keys are stored hashed in `marketplace_partner_api_keys` (prefix only shown in UI). Plaintext is returned once at issuance.
+
+**Marketplace API:**
+
+- `POST /api/marketplace/connections/{id}/api-keys` — issue key (JWT required)
+- `GET /api/marketplace/connections/{id}/api-keys` — list prefixes/status
+- `POST /api/marketplace/connections/{id}/api-keys/{key_id}/revoke` — revoke
 
 ### Deployment options
 

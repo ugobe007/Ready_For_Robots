@@ -23,6 +23,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.mcp.auth import authenticate_mcp_request
 from app.mcp.client import R4RApiError, format_json, get_client
 from app.mcp.config import mcp_bearer_token, premium_tools_enabled
 
@@ -40,16 +41,18 @@ Do not call admin, scraper, or purge endpoints through this server.
 
 
 class MCPBearerAuthMiddleware(BaseHTTPMiddleware):
-    """Optional bearer token gate for Streamable HTTP / mounted deployments."""
+    """Bearer token or marketplace partner API key for Streamable HTTP."""
 
     async def dispatch(self, request: Request, call_next):
-        required = mcp_bearer_token()
-        if not required:
-            return await call_next(request)
-        auth = request.headers.get("authorization", "")
-        if auth == f"Bearer {required}":
-            return await call_next(request)
-        return JSONResponse({"detail": "Unauthorized — send Authorization: Bearer <R4R_MCP_BEARER_TOKEN>"}, status_code=401)
+        ok, partner = authenticate_mcp_request(request)
+        if not ok:
+            detail = "Unauthorized — send Authorization: Bearer <key> or X-R4R-API-Key"
+            if mcp_bearer_token():
+                detail += " (global MCP token or marketplace partner key)"
+            return JSONResponse({"detail": detail}, status_code=401)
+        if partner is not None:
+            request.state.partner_api_key = partner
+        return await call_next(request)
 
 
 def _err(exc: Exception) -> str:
@@ -275,8 +278,7 @@ def mcp_http_app():
     """Starlette ASGI app for mounting on FastAPI at /mcp."""
     mcp = create_mcp_app()
     http_app = mcp.http_app(path="/", transport="streamable-http")
-    if mcp_bearer_token():
-        http_app.add_middleware(MCPBearerAuthMiddleware)
+    http_app.add_middleware(MCPBearerAuthMiddleware)
     return http_app
 
 
@@ -289,8 +291,7 @@ def run_standalone() -> None:
     mcp = create_mcp_app()
     if transport in ("http", "streamable-http", "streamable_http"):
         http_app = mcp.http_app(path=path, transport="streamable-http")
-        if mcp_bearer_token():
-            http_app.add_middleware(MCPBearerAuthMiddleware)
+        http_app.add_middleware(MCPBearerAuthMiddleware)
         import uvicorn
 
         uvicorn.run(http_app, host=host, port=port)
