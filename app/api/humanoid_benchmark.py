@@ -27,7 +27,7 @@ from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 from app.services.humanoid_discovery import run_humanoid_discovery
-from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
+from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks, is_junk_humanoid_row
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
 from app.services.humanoid_deployment_report import build_humanoid_deployment_report_payload
 from app.services.humanoid_deployment_news import run_humanoid_deployment_news_review
@@ -112,7 +112,11 @@ def _fetch_robots_from_db() -> list[dict]:
                 ORDER BY score_total DESC NULLS LAST, name ASC
             """)
         ).mappings().all()
-        return [_enrich_robot_scores(dict(r)) for r in rows]
+        return [
+            _enrich_robot_scores(dict(r))
+            for r in rows
+            if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+        ]
 
 
 def _require_admin(db: Session = Depends(get_db)):
@@ -400,7 +404,10 @@ def build_humanoid_report_payload(db: Session) -> dict:
     if not rows:
         return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat()}
 
-    robots = rows
+    robots = [
+        r for r in rows
+        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+    ]
     top3 = robots[:3]
     leader = robots[0]
 

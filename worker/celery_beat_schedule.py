@@ -69,7 +69,7 @@ CELERYBEAT_SCHEDULE = {
     'humanoid-discovery-weekly': {
         'task': 'worker.tasks.run_humanoid_discovery_task',
         'schedule': crontab(hour=5, minute=30, day_of_week=1),  # Monday 05:30 UTC
-        'kwargs': {'agent_limit': 25, 'news_queries': 6},
+        'kwargs': {'agent_limit': 25, 'news_queries': 0},
     },
     
     # ── NEWS SCRAPERS ── Industry news + local business news (daily / intraday)

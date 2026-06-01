@@ -125,6 +125,25 @@ NEWS_JUNK_RE = re.compile(
     re.I,
 )
 
+# RSS headlines mistaken for robot product names (IPO, funding, etc.)
+NEWS_HEADLINE_NAME_RE = re.compile(
+    r"("
+    r"fast-?tracks|"
+    r"\bIPO\b|"
+    r"valuation|"
+    r"target US\$|"
+    r"raises \$|"
+    r"Series [A-F]\b|"
+    r"reportedly|"
+    r"according to|"
+    r"\bannounces\b|"
+    r"\bunveils\b|"
+    r"startup .{0,40}(IPO|funding|valuation)|"
+    r"humanoid robotics startup"
+    r")",
+    re.I,
+)
+
 GENERIC_SUFFIX_RE = re.compile(
     r"\b(humanoid research|humanoid platform|humanoid stack|humanoid lab|"
     r"humanoid partner|humanoid pilot)\b",
@@ -144,6 +163,32 @@ def is_excluded_humanoid_slug(slug: str) -> bool:
     )
 
 
+def is_news_headline_robot_name(name: str) -> bool:
+    """True when ``name`` is a news headline, not a robot SKU."""
+    n = (name or "").strip()
+    if not n:
+        return False
+    words = n.split()
+    if len(words) >= 12:
+        return True
+    if len(n) >= 95:
+        return True
+    if NEWS_HEADLINE_NAME_RE.search(n):
+        return True
+    if re.search(
+        r"\b(announces|launch(?:es)?|unveil|expand|acquire[sd]?|deploys|raises|trials|tests)\b",
+        n,
+        re.I,
+    ) and len(words) >= 8:
+        return True
+    # "China's humanoid robotics startup Unitree fast-tracks Shanghai IPO..."
+    if re.search(r"\b(startup|company|firm)\b", n, re.I) and re.search(
+        r"\b(IPO|valuation|funding|million|billion)\b", n, re.I
+    ):
+        return True
+    return False
+
+
 def is_junk_humanoid_row(name: str, vendor: str, model_slug: str) -> bool:
     slug = (model_slug or "").strip().lower()
     n = (name or "").strip()
@@ -154,6 +199,9 @@ def is_junk_humanoid_row(name: str, vendor: str, model_slug: str) -> bool:
 
     blob = f"{n} {v} {slug}"
     if NEWS_JUNK_RE.search(blob):
+        return True
+
+    if is_news_headline_robot_name(n):
         return True
 
     if GENERIC_SUFFIX_RE.search(n) and slug.endswith("-humanoid"):

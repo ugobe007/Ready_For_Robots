@@ -27,6 +27,22 @@ def test_news_junk_detected():
     )
 
 
+def test_ipo_headline_is_junk():
+    assert is_junk_humanoid_row(
+        "China's humanoid robotics startup Unitree fast-tracks Shanghai IPO with target US$6.2 billion valuation",
+        "Unitree Robotics",
+        "unitree-robotics-china-s-humanoid-robotics-startup",
+    )
+
+
+def test_is_news_headline_robot_name():
+    from app.services.humanoid_catalog_cleanup import is_news_headline_robot_name
+
+    assert is_news_headline_robot_name(
+        "China's humanoid robotics startup Unitree fast-tracks Shanghai IPO with target US$6.2 billion valuation"
+    )
+    assert not is_news_headline_robot_name("Unitree G1")
+
 def test_vendor_placeholder_detected():
     assert is_junk_humanoid_row("Unitree Robotics Humanoid", "Unitree Robotics", "unitree-robotics")
     assert is_junk_humanoid_row("Figure Humanoid", "Figure AI", "figure-humanoid")

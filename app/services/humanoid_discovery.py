@@ -149,31 +149,13 @@ def _robot_company_candidates(db: Session) -> List[dict]:
 
 
 def _news_candidates(max_queries: int = 10) -> List[dict]:
-    seen_titles: Set[str] = set()
-    candidates: List[dict] = []
+    """
+    Deprecated — RSS headlines must not become ``humanoid_benchmarks`` rows.
 
-    for query in HUMANOID_DISCOVERY_QUERIES[:max_queries]:
-        for art in _fetch_rss(query):
-            title = art["title"]
-            if title in seen_titles:
-                continue
-            seen_titles.add(title)
-            vendor = _extract_vendor_from_headline(title)
-            if not vendor:
-                continue
-            slug = slugify(f"{vendor}-{title[:40]}")
-            candidates.append({
-                "name": title[:120],
-                "vendor": vendor,
-                "model_slug": slug,
-                "product_url": art.get("url"),
-                "status": "research",
-                "specs": {},
-                "sources": [art],
-            })
-        time.sleep(1.2)
-
-    return [c for c in candidates if not is_junk_humanoid_row(c["name"], c["vendor"], c["model_slug"])]
+    Deployment/trial news attaches to existing catalog robots via
+    ``humanoid_deployment_news`` (sources only, no new SKUs).
+    """
+    return []
 
 
 def _merge_candidates(*groups: List[dict]) -> List[dict]:
