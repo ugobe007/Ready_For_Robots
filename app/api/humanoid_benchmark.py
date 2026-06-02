@@ -5,6 +5,7 @@ GET  /api/humanoid/gaps                 — missing spec fields for HEIF scoring
 GET  /api/humanoid/report               — formatted benchmark report (public)
 GET  /api/humanoid/deployment-report    — HEIF vs PoC/deployment evidence report (public)
 GET  /api/humanoid/intelligence-report   — top scores explained + trials/customers (public)
+GET  /api/humanoid/intelligence-report/pdf — downloadable PDF (public)
 GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
 POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
 POST /api/humanoid/seed                 — seed known robots (admin)
@@ -21,6 +22,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -32,6 +34,7 @@ from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks, i
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
 from app.services.humanoid_deployment_report import build_humanoid_deployment_report_payload
 from app.services.humanoid_intelligence_report import build_humanoid_intelligence_report_payload
+from app.services.humanoid_intelligence_report_pdf import build_humanoid_intelligence_report_pdf
 from app.services.humanoid_deployment_news import run_humanoid_deployment_news_review
 from app.services.humanoid_vendor_catalog import catalog_count, sync_product_urls_from_catalog
 
@@ -607,6 +610,36 @@ def get_intelligence_report(
         if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
     ]
     return build_humanoid_intelligence_report_payload(robots, top_n=top_n)
+
+
+@router.get("/intelligence-report/pdf")
+def get_intelligence_report_pdf(
+    db: Session = Depends(get_db),
+    top_n: int = Query(12, ge=5, le=25, description="How many top robots to include"),
+):
+    """Download full humanoid intelligence report as PDF."""
+    robots = _fetch_scored_humanoids(db)
+    if not robots:
+        raise HTTPException(
+            status_code=404,
+            detail="No benchmark data available. Run /seed or /discover first.",
+        )
+    robots = [
+        r for r in robots
+        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+    ]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n)
+    if not payload.get("report"):
+        raise HTTPException(status_code=404, detail="Report unavailable")
+    try:
+        pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/deployment-news")

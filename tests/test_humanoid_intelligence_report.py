@@ -3,6 +3,7 @@ from app.services.humanoid_intelligence_report import (
     _parse_news_sources,
     build_humanoid_intelligence_report_payload,
 )
+from app.services.humanoid_intelligence_report_pdf import build_humanoid_intelligence_report_pdf
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores
 
 
@@ -74,3 +75,28 @@ def test_intelligence_report_customer_landscape():
     payload = build_humanoid_intelligence_report_payload([digit], top_n=1)
     landscape = payload["report"]["customer_landscape"]
     assert any(c["customer"] == "BMW" for c in landscape)
+
+
+def test_intelligence_report_comparisons():
+    robots = [
+        _scored_seed("unitree-g1"),
+        _scored_seed("agility-digit"),
+        _scored_seed("figure-02"),
+    ]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=3)
+    comparisons = payload["report"]["comparisons"]
+    assert len(comparisons["dimension_leaders"]) == 6
+    assert len(comparisons["index_vs_deployment"]) == 3
+    assert len(comparisons["peer_heif_matrix"]["robots"]) == 3
+    assert comparisons["fleet_deployment_tier_breakdown"]
+
+
+def test_intelligence_report_pdf_bytes():
+    robots = [
+        _scored_seed("unitree-g1"),
+        _scored_seed("agility-digit"),
+    ]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=2)
+    pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload)
+    assert pdf_bytes[:4] == b"%PDF"
+    assert filename.endswith(".pdf")

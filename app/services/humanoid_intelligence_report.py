@@ -364,6 +364,85 @@ def _executive_summary(
     return bullets
 
 
+def _build_comparisons(
+    sorted_robots: List[dict],
+    profiles: List[dict],
+    deployment_summary: dict,
+) -> dict:
+    """Cross-robot comparisons: dimension leaders, index vs deployment, HEIF matrix."""
+    summaries = deployment_summary.get("robots") or []
+    slug_to_row = {r["model_slug"]: r for r in sorted_robots}
+
+    dimension_leaders = []
+    for dim in HEIF_DIMS:
+        best = max(sorted_robots, key=lambda r: float(r.get(f"heif_{dim}") or 0))
+        dimension_leaders.append({
+            "dimension": DIM_LABELS[dim],
+            "dimension_key": dim,
+            "name": best.get("name"),
+            "vendor": best.get("vendor"),
+            "model_slug": best.get("model_slug"),
+            "heif": round(float(best.get(f"heif_{dim}") or 0), 2),
+            "index_score": round(float(best.get(SCORE_KEY[dim]) or 0), 1),
+        })
+
+    index_vs_deployment: List[dict] = []
+    for p in profiles:
+        gap = (p.get("heif_total") or 0) >= 2.5 and p.get("deployment_tier") in ("none", "demo", "poc")
+        index_vs_deployment.append({
+            "rank": p["rank"],
+            "name": p["name"],
+            "vendor": p["vendor"],
+            "score_total": p["score_total"],
+            "heif_total": p["heif_total"],
+            "deployment_tier": p["deployment_tier"],
+            "deployment_tier_label": p["deployment_tier_label"],
+            "commercial_deployments": p.get("commercial_deployments", 0),
+            "news_trial_headlines": (p.get("trials_and_pocs") or {}).get("news_trial_headlines", 0),
+            "news_deployment_headlines": (p.get("trials_and_pocs") or {}).get("news_deployment_headlines", 0),
+            "named_customers": (p.get("customer_integrations") or {}).get("named_customers") or [],
+            "capability_ahead_of_deployment": gap,
+        })
+
+    peer_heif_matrix = {
+        "dimension_labels": [DIM_LABELS[d] for d in HEIF_DIMS],
+        "robots": [],
+    }
+    for p in profiles:
+        row = slug_to_row.get(p["model_slug"]) or {}
+        peer_heif_matrix["robots"].append({
+            "rank": p["rank"],
+            "name": p["name"],
+            "vendor": p["vendor"],
+            "heif_total": p["heif_total"],
+            "score_total": p["score_total"],
+            "dimensions": {
+                dim: round(float(row.get(f"heif_{dim}") or 0), 2) for dim in HEIF_DIMS
+            },
+        })
+
+    gap = deployment_summary.get("gap_analysis") or {}
+    return {
+        "dimension_leaders": dimension_leaders,
+        "index_vs_deployment": index_vs_deployment,
+        "peer_heif_matrix": peer_heif_matrix,
+        "fleet_deployment_tier_breakdown": deployment_summary.get("deployment_tier_breakdown") or {},
+        "fleet_commercial_deployments_breakdown": deployment_summary.get("commercial_deployments_breakdown") or {},
+        "fleet_status_breakdown": deployment_summary.get("status_breakdown") or {},
+        "poc_to_deployment_ratio": deployment_summary.get("poc_to_deployment_ratio"),
+        "capability_vs_deployment_gaps": {
+            "high_heif_low_use": gap.get("high_heif_low_use") or [],
+            "high_production_heif_no_deployments": gap.get("high_production_heif_no_deployments") or [],
+        },
+        "vendor_leaderboard": deployment_summary.get("vendor_leaderboard") or [],
+        "deployment_weighted_top10": sorted(
+            summaries,
+            key=lambda s: s.get("deployment_weighted_heif") or 0,
+            reverse=True,
+        )[:10],
+    }
+
+
 def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int = 12) -> dict:
     """Full intelligence report: scores explained + trials/PoCs/customers."""
     if not robots:
@@ -387,6 +466,45 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
     )
 
     tier_counts = Counter(p["deployment_tier"] for p in profiles)
+    comparisons = _build_comparisons(sorted_robots, profiles, deployment_summary)
+    total = len(sorted_robots)
+
+    executive_summary = _executive_summary(
+        sorted_robots, profiles, deployment_summary, customer_landscape
+    )
+    leader_slugs = {entry["model_slug"] for entry in comparisons["dimension_leaders"]}
+    if len(leader_slugs) > 1:
+        executive_summary.append(
+            f"No single robot leads all six HEIF dimensions — {len(leader_slugs)} different models "
+            "top at least one category in this month's index."
+        )
+    if comparisons["vendor_leaderboard"]:
+        top_vendor = comparisons["vendor_leaderboard"][0]
+        executive_summary.append(
+            f"Vendor with strongest deployment signals: {top_vendor['vendor']} "
+            f"({top_vendor.get('deployment_signal', 0)} commercial/fleet robots, "
+            f"{top_vendor.get('total_deployments', 0)} catalog deployments)."
+        )
+
+    adoption_metrics = {
+        "robots_in_top_slice": len(profiles),
+        "catalog_commercial_deployments_sum": catalog_deployments,
+        "news_trial_headlines_top_slice": trial_headlines,
+        "news_deployment_headlines_top_slice": deployment_headlines,
+        "robots_with_named_customers_top_slice": sum(
+            1 for p in profiles
+            if (p.get("customer_integrations") or {}).get("named_customers")
+        ),
+        "deployment_tier_breakdown_top_slice": dict(tier_counts),
+        "fleet_total_robots": total,
+        "fleet_poc_or_better_count": deployment_summary.get("poc_or_better_count", 0),
+        "fleet_poc_or_better_pct": round(
+            100 * deployment_summary.get("poc_or_better_count", 0) / total, 1
+        ) if total else 0,
+        "fleet_deployment_signal_count": deployment_summary.get("deployment_signal_count", 0),
+        "fleet_with_news_sources": deployment_summary.get("robots_with_news_sources", 0),
+        "fleet_capability_only_count": deployment_summary.get("capability_only_count", 0),
+    }
 
     return {
         "report": {
@@ -398,21 +516,10 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
                 "Customer names are extracted from headline keyword matching — verify before citing."
             ),
             "deployment_tier_labels": TIER_LABELS,
-            "total_robots": len(sorted_robots),
-            "executive_summary": _executive_summary(
-                sorted_robots, profiles, deployment_summary, customer_landscape
-            ),
-            "adoption_metrics": {
-                "robots_in_top_slice": len(profiles),
-                "catalog_commercial_deployments_sum": catalog_deployments,
-                "news_trial_headlines_top_slice": trial_headlines,
-                "news_deployment_headlines_top_slice": deployment_headlines,
-                "robots_with_named_customers_top_slice": sum(
-                    1 for p in profiles
-                    if (p.get("customer_integrations") or {}).get("named_customers")
-                ),
-                "deployment_tier_breakdown_top_slice": dict(tier_counts),
-            },
+            "total_robots": total,
+            "executive_summary": executive_summary,
+            "adoption_metrics": adoption_metrics,
+            "comparisons": comparisons,
             "deployment_summary": {
                 k: deployment_summary[k]
                 for k in (

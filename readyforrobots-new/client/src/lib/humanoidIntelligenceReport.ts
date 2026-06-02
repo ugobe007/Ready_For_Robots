@@ -30,10 +30,44 @@ export type TopRobot = {
   top_headlines: { title?: string; url?: string; evidence_level?: string }[];
 };
 
+export type ReportComparisons = {
+  dimension_leaders?: {
+    dimension: string;
+    name: string;
+    vendor: string;
+    heif: number;
+    index_score: number;
+  }[];
+  index_vs_deployment?: {
+    rank: number;
+    name: string;
+    vendor: string;
+    score_total: number;
+    heif_total: number;
+    deployment_tier_label: string;
+    commercial_deployments: number;
+    capability_ahead_of_deployment?: boolean;
+  }[];
+  peer_heif_matrix?: {
+    dimension_labels: string[];
+    robots: { rank: number; name: string; heif_total: number; dimensions: Record<string, number> }[];
+  };
+  vendor_leaderboard?: {
+    vendor: string;
+    robot_count: number;
+    poc_or_deployment: number;
+    poc_or_deployment_pct: number;
+    deployment_signal: number;
+    total_deployments: number;
+  }[];
+  fleet_deployment_tier_breakdown?: Record<string, number>;
+};
+
 export type HumanoidIntelligenceReportData = {
   title: string;
   executive_summary: string[];
   adoption_metrics: Record<string, unknown>;
+  comparisons?: ReportComparisons;
   customer_landscape: {
     customer: string;
     robots: string[];
@@ -84,4 +118,8 @@ export function useHumanoidIntelligenceReport(topN = 12) {
   }, [api, topN]);
 
   return { report, loading, error };
+}
+
+export function humanoidReportPdfUrl(topN = 12): string {
+  return `${getApiBase()}/api/humanoid/intelligence-report/pdf?top_n=${topN}`;
 }

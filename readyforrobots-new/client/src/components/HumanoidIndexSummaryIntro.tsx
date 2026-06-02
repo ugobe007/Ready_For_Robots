@@ -1,4 +1,5 @@
-import { ChevronDown, RefreshCw } from "lucide-react";
+import { ChevronDown, Download, RefreshCw } from "lucide-react";
+import { humanoidReportPdfUrl } from "@/lib/humanoidIntelligenceReport";
 
 const TEAL = "#03DAC5";
 
@@ -58,16 +59,29 @@ export default function HumanoidIndexSummaryIntro({
           background: "linear-gradient(135deg, rgba(3,218,197,0.06) 0%, rgba(124,58,237,0.04) 100%)",
         }}
       >
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
-          Summary · updated monthly
-        </p>
-        <h2
-          id="index-summary-heading"
-          className="mt-1 text-xl font-bold text-white sm:text-2xl"
-          style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-        >
-          Humanoid readiness & deployment report
-        </h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
+              Summary · updated monthly
+            </p>
+            <h2
+              id="index-summary-heading"
+              className="mt-1 text-xl font-bold text-white sm:text-2xl"
+              style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
+            >
+              Humanoid readiness & deployment report
+            </h2>
+          </div>
+          <a
+            href={humanoidReportPdfUrl(12)}
+            download
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2.5 text-[13px] font-bold transition-colors hover:bg-white/[0.06]"
+            style={{ borderColor: "rgba(3,218,197,0.35)", color: TEAL, background: "rgba(3,218,197,0.08)" }}
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </a>
+        </div>
 
         <div className="mt-5 w-full space-y-4 text-[15px] sm:text-base leading-[1.7] text-white/58">
           {REPORT_INTRO.map((paragraph) => (

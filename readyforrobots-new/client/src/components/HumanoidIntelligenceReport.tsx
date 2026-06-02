@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, RefreshCw } from "lucide-react";
 import type { HumanoidIntelligenceReportData } from "@/lib/humanoidIntelligenceReport";
+import { humanoidReportPdfUrl } from "@/lib/humanoidIntelligenceReport";
 
 const TEAL = "#03DAC5";
 
@@ -45,10 +46,109 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
 
         {!loading && !error && report && (
           <div className="space-y-8">
-            <p className="text-sm text-white/45">
-              {report.title || "Humanoid intelligence report"} — metrics and robot-level detail. The summary above
-              mirrors the executive snapshot; expand each robot for score drivers and news evidence.
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-white/45">
+                {report.title || "Humanoid intelligence report"} — comparisons, fleet metrics, and per-robot evidence.
+              </p>
+              <a
+                href={humanoidReportPdfUrl(12)}
+                download
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-[12px] font-bold text-white/80 hover:bg-white/[0.05]"
+              >
+                <Download className="h-3.5 w-3.5" style={{ color: TEAL }} />
+                Download full PDF
+              </a>
+            </div>
+
+            {report.comparisons?.dimension_leaders && report.comparisons.dimension_leaders.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-white/80 mb-2">HEIF dimension leaders</h4>
+                <div className="overflow-x-auto rounded-lg border border-white/8">
+                  <table className="w-full min-w-[480px] text-left text-[11px]">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-white/35">
+                        <th className="px-3 py-2">Dimension</th>
+                        <th className="px-3 py-2">Robot</th>
+                        <th className="px-3 py-2">HEIF</th>
+                        <th className="px-3 py-2">Index</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.comparisons.dimension_leaders.map((row) => (
+                        <tr key={row.dimension} className="border-b border-white/6 last:border-0">
+                          <td className="px-3 py-2 text-white/55">{row.dimension}</td>
+                          <td className="px-3 py-2 font-semibold text-white/80">
+                            {row.name}
+                            <span className="block text-[10px] font-normal text-white/35">{row.vendor}</span>
+                          </td>
+                          <td className="px-3 py-2 font-mono text-white/60">{row.heif.toFixed(1)}</td>
+                          <td className="px-3 py-2 font-mono text-white/60">{Math.round(row.index_score)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {report.comparisons?.index_vs_deployment && report.comparisons.index_vs_deployment.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-white/80 mb-2">Capability vs deployment (top ranked)</h4>
+                <div className="overflow-x-auto rounded-lg border border-white/8">
+                  <table className="w-full min-w-[560px] text-left text-[11px]">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-white/35">
+                        <th className="px-3 py-2">#</th>
+                        <th className="px-3 py-2">Robot</th>
+                        <th className="px-3 py-2">Index</th>
+                        <th className="px-3 py-2">HEIF</th>
+                        <th className="px-3 py-2">Deployment tier</th>
+                        <th className="px-3 py-2">Catalog depl.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.comparisons.index_vs_deployment.map((row) => (
+                        <tr key={row.rank} className="border-b border-white/6 last:border-0">
+                          <td className="px-3 py-2 text-white/30">{row.rank}</td>
+                          <td className="px-3 py-2 font-semibold text-white/80">{row.name}</td>
+                          <td className="px-3 py-2 font-mono" style={{ color: TEAL }}>
+                            {Math.round(row.score_total)}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-white/60">{row.heif_total.toFixed(1)}</td>
+                          <td className="px-3 py-2 text-white/50">{row.deployment_tier_label}</td>
+                          <td className="px-3 py-2 text-white/50">
+                            {row.commercial_deployments}
+                            {row.capability_ahead_of_deployment ? (
+                              <span className="ml-1 text-amber-400/80">· gap</span>
+                            ) : null}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {report.comparisons?.vendor_leaderboard && report.comparisons.vendor_leaderboard.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-white/80 mb-2">Vendor deployment comparison</h4>
+                <div className="flex flex-wrap gap-2">
+                  {report.comparisons.vendor_leaderboard.slice(0, 10).map((v) => (
+                    <span
+                      key={v.vendor}
+                      className="rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/65"
+                      style={{ background: "rgba(255,255,255,0.02)" }}
+                    >
+                      <span className="font-semibold text-white/85">{v.vendor}</span>
+                      <span className="ml-2 text-white/35">
+                        {v.deployment_signal} commercial · {v.total_deployments} depl.
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
