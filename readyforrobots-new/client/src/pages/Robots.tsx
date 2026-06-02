@@ -3,10 +3,12 @@ import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
+import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
 import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { useHumanoidIntelligenceReport } from "@/lib/humanoidIntelligenceReport";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -306,6 +308,8 @@ export default function Robots() {
   const [filter, setFilter] = useState<"all" | "available" | "pilot" | "research">("all");
   const [sortDim, setSortDim] = useState<string>("total");
   const api = getApiBase();
+  const { report: intelligenceReport, loading: reportLoading, error: reportError } =
+    useHumanoidIntelligenceReport(12);
 
   useEffect(() => {
     document.title = "Humanoid Index | Ready For Robots";
@@ -349,6 +353,10 @@ export default function Robots() {
     ...HEIF_DIMS.map((d) => ({ value: d, label: HEIF_LABELS[d] })),
   ];
 
+  const indexLeader = robots.length
+    ? [...robots].sort((a, b) => (b.score_total ?? 0) - (a.score_total ?? 0))[0]
+    : null;
+
   return (
     <div className="min-h-screen" style={{ background: "#0a0118", color: "#fff" }}>
       <Header />
@@ -361,7 +369,7 @@ export default function Robots() {
               Humanoid Robot Index
             </h1>
             <p className="mt-2 max-w-xl text-sm text-white/42">
-              HEIF engineering maturity (HEIR 2026) plus a live 0–100 index from published specs — same six dimensions, two scales.
+              HEIR benchmarking, market signals, and live rankings — updated monthly.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] shrink-0">
@@ -380,16 +388,19 @@ export default function Robots() {
         </div>
       </section>
 
-      {/* HEIR research — expandable, above live index */}
+      {/* HEIR research — collapsed appendix */}
       <HeirResearchAppendix />
 
-      {/* Intelligence report — scores explained + trials/customers */}
-      <section id="intelligence-report" className="mx-auto max-w-5xl px-4 pb-10 pt-4">
-        <HumanoidIntelligenceReport />
-      </section>
+      <HumanoidIndexSummaryIntro
+        robotCount={robots.length}
+        summaryLines={intelligenceReport?.executive_summary ?? null}
+        loading={reportLoading}
+        leaderName={indexLeader?.name}
+        leaderScore={indexLeader?.score_total}
+      />
 
       {/* ── Live spec-based index (primary) ── */}
-      <section id="live-index" className="mx-auto max-w-5xl px-4 pb-12 pt-10">
+      <section id="live-index" className="mx-auto max-w-5xl px-4 pb-8 pt-2">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
@@ -447,6 +458,15 @@ export default function Robots() {
             filtered.map((robot, i) => <RobotCard key={robot.model_slug} robot={robot} rank={i + 1} />)
           )}
         </div>
+      </section>
+
+      {/* Optional analysis — below index, collapsed by default */}
+      <section id="intelligence-report" className="mx-auto max-w-5xl px-4 pb-10">
+        <HumanoidIntelligenceReport
+          report={intelligenceReport}
+          loading={reportLoading}
+          error={reportError}
+        />
       </section>
 
       {/* Footer CTA — inline, no panel */}

@@ -1,0 +1,87 @@
+import { useEffect, useState } from "react";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+
+export type DimRationale = {
+  label: string;
+  heif: number;
+  index_score: number;
+  drivers: string[];
+};
+
+export type TopRobot = {
+  rank: number;
+  name: string;
+  vendor: string;
+  score_total: number;
+  heif_total: number;
+  deployment_tier_label: string;
+  why_top_rank: string;
+  score_rationale: Record<string, DimRationale>;
+  trials_and_pocs: {
+    news_trial_headlines: number;
+    news_deployment_headlines: number;
+    catalog_pilot: boolean;
+    estimated_poc_signals: number;
+  };
+  customer_integrations: {
+    catalog_deployment_count: number;
+    named_customers: string[];
+  };
+  top_headlines: { title?: string; url?: string; evidence_level?: string }[];
+};
+
+export type HumanoidIntelligenceReportData = {
+  title: string;
+  executive_summary: string[];
+  adoption_metrics: Record<string, unknown>;
+  customer_landscape: {
+    customer: string;
+    robots: string[];
+    vendors: string[];
+    deployment_headlines: number;
+    trial_headlines: number;
+  }[];
+  top_ranked: TopRobot[];
+};
+
+export function isValidHumanoidReport(data: unknown): data is HumanoidIntelligenceReportData {
+  if (!data || typeof data !== "object") return false;
+  const r = data as HumanoidIntelligenceReportData;
+  return Array.isArray(r.top_ranked) && r.top_ranked.length > 0 && Array.isArray(r.executive_summary);
+}
+
+export function useHumanoidIntelligenceReport(topN = 12) {
+  const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const api = getApiBase();
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch(`${api}/api/humanoid/intelligence-report?top_n=${topN}`, liveFetchInit())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error((body as { detail?: string }).detail?.toString() || `HTTP ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((d) => {
+        const payload = d?.report;
+        if (!isValidHumanoidReport(payload)) {
+          setReport(null);
+          setError("Report data was empty or incomplete.");
+          return;
+        }
+        setReport(payload);
+      })
+      .catch((e) => {
+        setReport(null);
+        setError(e instanceof Error ? e.message : "Could not load report");
+      })
+      .finally(() => setLoading(false));
+  }, [api, topN]);
+
+  return { report, loading, error };
+}
