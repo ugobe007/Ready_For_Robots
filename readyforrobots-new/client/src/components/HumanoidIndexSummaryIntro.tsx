@@ -10,9 +10,11 @@ const REPORT_INTRO: readonly string[] = [
   "This market is fluid and quickly changing — we update this report monthly.",
 ];
 
+type Finding = { title: string; body: string };
+
 type Props = {
   robotCount: number;
-  summaryLines: string[] | null;
+  keyFindings: Finding[] | null;
   loading: boolean;
   leaderName?: string;
   leaderScore?: number;
@@ -38,14 +40,17 @@ function fallbackBullets(robotCount: number, leaderName?: string, leaderScore?: 
 
 export default function HumanoidIndexSummaryIntro({
   robotCount,
-  summaryLines,
+  keyFindings,
   loading,
   leaderName,
   leaderScore,
 }: Props) {
-  const snapshotBullets =
-    summaryLines?.filter((line): line is string => Boolean(line && String(line).trim())) ??
-    fallbackBullets(robotCount, leaderName, leaderScore);
+  const findings =
+    keyFindings?.filter((f) => f?.title && f?.body) ??
+    fallbackBullets(robotCount, leaderName, leaderScore).map((body, i) => ({
+      title: i === 0 ? "Index snapshot" : "Note",
+      body,
+    }));
 
   return (
     <section
@@ -106,11 +111,11 @@ export default function HumanoidIndexSummaryIntro({
                 Loading live signals…
               </div>
             ) : (
-              <ul className="w-full space-y-3">
-                {snapshotBullets.slice(0, 5).map((line) => (
-                  <li key={line} className="flex gap-3 text-[15px] sm:text-base leading-[1.65] text-white/65">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: TEAL }} />
-                    <span className="max-w-none">{line}</span>
+              <ul className="w-full space-y-4">
+                {findings.slice(0, 5).map((f) => (
+                  <li key={f.title + f.body.slice(0, 40)} className="text-[15px] sm:text-base leading-[1.65]">
+                    <p className="font-semibold text-white/80">{f.title}</p>
+                    <p className="mt-1 text-white/58 max-w-none">{f.body}</p>
                   </li>
                 ))}
               </ul>

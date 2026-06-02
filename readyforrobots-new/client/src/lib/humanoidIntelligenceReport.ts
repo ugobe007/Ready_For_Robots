@@ -61,11 +61,33 @@ export type ReportComparisons = {
     total_deployments: number;
   }[];
   fleet_deployment_tier_breakdown?: Record<string, number>;
+  ranking_divergence?: {
+    name: string;
+    index_rank: number;
+    deployment_weighted_rank: number;
+    rank_delta: number;
+    commentary: string;
+  }[];
+};
+
+export type NarrativeFinding = { title: string; body: string };
+
+export type ReportNarrative = {
+  subtitle?: string;
+  market_overview?: string[];
+  key_findings?: NarrativeFinding[];
+  competitive_dynamics?: string[];
+  deployment_reality?: string[];
+  ranking_commentary?: string[];
+  buyer_guidance?: string[];
+  at_a_glance?: Record<string, unknown>;
 };
 
 export type HumanoidIntelligenceReportData = {
   title: string;
+  subtitle?: string;
   executive_summary: string[];
+  narrative?: ReportNarrative;
   adoption_metrics: Record<string, unknown>;
   comparisons?: ReportComparisons;
   customer_landscape: {

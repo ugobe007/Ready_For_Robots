@@ -205,23 +205,22 @@ def _why_top_rank(row: dict, rank: int, news: dict, dep_summary: dict) -> str:
     customers = news.get("named_customers") or []
 
     parts = [
-        f"Rank #{rank} with index {dep.get('score_total', 0):.0f} "
-        f"(HEIF {dep.get('heif_total', 0):.1f}/4). "
-        f"Strongest dimensions: {', '.join(strengths)}.",
+        f"Ranks #{rank} on the live index ({dep.get('score_total', 0):.0f}/100, HEIF {dep.get('heif_total', 0):.1f}/4). "
+        f"Engineering strengths: {', '.join(strengths)}.",
     ]
     if tier:
-        parts.append(f"Deployment evidence: {tier}.")
+        parts.append(f"Field evidence: {tier}.")
     if dep_count:
-        parts.append(f"Catalog reports {dep_count} commercial deployment(s).")
+        parts.append(f"{dep_count} commercial deployment(s) in catalog.")
     if news.get("trial_article_count") or news.get("deployment_article_count"):
         parts.append(
-            f"News scan: {news.get('trial_article_count', 0)} trial/PoC headline(s), "
+            f"Press: {news.get('trial_article_count', 0)} trial/PoC and "
             f"{news.get('deployment_article_count', 0)} deployment headline(s)."
         )
     if customers:
-        parts.append(f"Named customers in headlines: {', '.join(customers[:5])}.")
+        parts.append(f"Customers cited: {', '.join(customers[:5])}.")
     elif news.get("article_count"):
-        parts.append("Press coverage without extracted customer names yet.")
+        parts.append("Headlines present but no customer names extracted yet.")
     return " ".join(parts)
 
 
@@ -469,23 +468,6 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
     comparisons = _build_comparisons(sorted_robots, profiles, deployment_summary)
     total = len(sorted_robots)
 
-    executive_summary = _executive_summary(
-        sorted_robots, profiles, deployment_summary, customer_landscape
-    )
-    leader_slugs = {entry["model_slug"] for entry in comparisons["dimension_leaders"]}
-    if len(leader_slugs) > 1:
-        executive_summary.append(
-            f"No single robot leads all six HEIF dimensions — {len(leader_slugs)} different models "
-            "top at least one category in this month's index."
-        )
-    if comparisons["vendor_leaderboard"]:
-        top_vendor = comparisons["vendor_leaderboard"][0]
-        executive_summary.append(
-            f"Vendor with strongest deployment signals: {top_vendor['vendor']} "
-            f"({top_vendor.get('deployment_signal', 0)} commercial/fleet robots, "
-            f"{top_vendor.get('total_deployments', 0)} catalog deployments)."
-        )
-
     adoption_metrics = {
         "robots_in_top_slice": len(profiles),
         "catalog_commercial_deployments_sum": catalog_deployments,
@@ -506,9 +488,23 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
         "fleet_capability_only_count": deployment_summary.get("capability_only_count", 0),
     }
 
+    from app.services.humanoid_intelligence_narrative import build_report_narrative
+
+    narrative = build_report_narrative(
+        sorted_robots=sorted_robots,
+        profiles=profiles,
+        deployment_summary=deployment_summary,
+        comparisons=comparisons,
+        adoption_metrics=adoption_metrics,
+        customer_landscape=customer_landscape,
+        top_n=top_n,
+    )
+    comparisons["ranking_divergence"] = narrative.get("ranking_divergence") or []
+
     return {
         "report": {
             "title": f"Humanoid Intelligence Report — {datetime.now(timezone.utc).strftime('%B %Y')}",
+            "subtitle": narrative.get("subtitle"),
             "framework": "HEIF (HEIR 2026) + deployment-news evidence + catalog deployment estimates",
             "methodology": (
                 "Index scores combine HEIR research benchmarks and inferred specs. "
@@ -517,7 +513,10 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
             ),
             "deployment_tier_labels": TIER_LABELS,
             "total_robots": total,
-            "executive_summary": executive_summary,
+            "executive_summary": narrative.get("executive_summary") or _executive_summary(
+                sorted_robots, profiles, deployment_summary, customer_landscape
+            ),
+            "narrative": narrative,
             "adoption_metrics": adoption_metrics,
             "comparisons": comparisons,
             "deployment_summary": {

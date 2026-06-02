@@ -393,7 +393,7 @@ export default function Robots() {
 
       <HumanoidIndexSummaryIntro
         robotCount={robots.length}
-        summaryLines={intelligenceReport?.executive_summary ?? null}
+        keyFindings={intelligenceReport?.narrative?.key_findings ?? null}
         loading={reportLoading}
         leaderName={indexLeader?.name}
         leaderScore={indexLeader?.score_total}

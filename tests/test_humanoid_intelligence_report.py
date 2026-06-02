@@ -91,6 +91,21 @@ def test_intelligence_report_comparisons():
     assert comparisons["fleet_deployment_tier_breakdown"]
 
 
+def test_intelligence_report_narrative():
+    robots = [
+        _scored_seed("unitree-g1"),
+        _scored_seed("agility-digit"),
+        _scored_seed("figure-02"),
+    ]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=3)
+    narrative = payload["report"]["narrative"]
+    assert narrative.get("market_overview")
+    assert len(narrative.get("key_findings") or []) >= 3
+    assert narrative["key_findings"][0].get("title")
+    assert narrative["key_findings"][0].get("body")
+    assert payload["report"]["executive_summary"]
+
+
 def test_intelligence_report_pdf_bytes():
     robots = [
         _scored_seed("unitree-g1"),

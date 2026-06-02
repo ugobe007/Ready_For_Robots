@@ -46,9 +46,32 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
 
         {!loading && !error && report && (
           <div className="space-y-8">
+            {report.narrative?.market_overview && report.narrative.market_overview.length > 0 && (
+              <div className="space-y-3 rounded-lg border border-white/8 px-4 py-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <h4 className="text-sm font-bold text-white/85">Market overview</h4>
+                {report.narrative.market_overview.map((p) => (
+                  <p key={p.slice(0, 48)} className="text-sm leading-relaxed text-white/55">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {report.narrative?.key_findings && report.narrative.key_findings.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white/85">Key findings</h4>
+                {report.narrative.key_findings.map((f) => (
+                  <div key={f.title} className="rounded-lg border border-white/8 px-4 py-3" style={{ background: "rgba(124,58,237,0.05)" }}>
+                    <p className="text-[13px] font-bold text-violet-200/90">{f.title}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/55">{f.body}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-white/45">
-                {report.title || "Humanoid intelligence report"} — comparisons, fleet metrics, and per-robot evidence.
+                {report.subtitle || report.title} — tables and robot-level evidence below.
               </p>
               <a
                 href={humanoidReportPdfUrl(12)}
@@ -122,6 +145,45 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
                               <span className="ml-1 text-amber-400/80">· gap</span>
                             ) : null}
                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {report.narrative?.ranking_commentary && report.narrative.ranking_commentary.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-white/80 mb-2">Ranking commentary</h4>
+                <ul className="space-y-2 text-sm text-white/55">
+                  {report.narrative.ranking_commentary.map((line) => (
+                    <li key={line} className="leading-relaxed">{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {report.comparisons?.ranking_divergence && report.comparisons.ranking_divergence.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-white/80 mb-2">Index vs deployment-weighted rank</h4>
+                <div className="overflow-x-auto rounded-lg border border-white/8">
+                  <table className="w-full min-w-[480px] text-left text-[11px]">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-white/35">
+                        <th className="px-3 py-2">Robot</th>
+                        <th className="px-3 py-2">Index #</th>
+                        <th className="px-3 py-2">Deployment #</th>
+                        <th className="px-3 py-2">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.comparisons.ranking_divergence.map((row) => (
+                        <tr key={row.name} className="border-b border-white/6 last:border-0">
+                          <td className="px-3 py-2 font-semibold text-white/75">{row.name}</td>
+                          <td className="px-3 py-2 text-white/50">{row.index_rank}</td>
+                          <td className="px-3 py-2 text-white/50">{row.deployment_weighted_rank}</td>
+                          <td className="px-3 py-2 text-white/45">{row.commentary}</td>
                         </tr>
                       ))}
                     </tbody>
