@@ -40,6 +40,7 @@ from app.api.calendar import router as calendar_router
 from app.api.proposals import router as proposals_router
 from app.api.scout import router as scout_router
 from app.api.waitlist import router as waitlist_router
+from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.social_posts import router as social_posts_router
@@ -294,6 +295,7 @@ app.include_router(calendar_router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
+app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 
 if _mcp_asgi is not None:
     app.mount("/mcp", _mcp_asgi, name="mcp")

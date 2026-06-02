@@ -74,6 +74,7 @@ export default function Header() {
     { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
     { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
     { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & evaluation framework" },
+    { label: "Find Robots", href: "/find-robots", icon: BriefcaseBusiness, desc: "Tell us your use case — we match vendors & deployments" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
     { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
   ];

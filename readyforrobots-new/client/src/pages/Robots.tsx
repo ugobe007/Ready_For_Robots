@@ -472,8 +472,12 @@ export default function Robots() {
       {/* Footer CTA — inline, no panel */}
       <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-white/40">
         <p>
-          Need help matching a robot to your operation?{" "}
-          <Link href="/" className="text-violet-300/90 hover:text-violet-200 underline underline-offset-4">
+          Looking for robots for your facility?{" "}
+          <Link href="/find-robots" className="text-violet-300/90 hover:text-violet-200 underline underline-offset-4">
+            Submit your use case
+          </Link>
+          {" · "}
+          <Link href="/" className="text-white/50 hover:text-white/75 underline underline-offset-4">
             Scan your operation
           </Link>
           {" · "}

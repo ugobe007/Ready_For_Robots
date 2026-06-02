@@ -23,6 +23,7 @@ import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
 import Benchmark from "./pages/Benchmark";
 import Robots from "./pages/Robots";
+import FindRobots from "./pages/FindRobots";
 import Admin from "./pages/Admin";
 import Social from "./pages/Social";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/benchmark" component={Benchmark} />
       <Route path="/robots" component={Robots} />
+      <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/social" component={Social} />
       <Route path="/login" component={Login} />

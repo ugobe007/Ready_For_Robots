@@ -1,48 +1,60 @@
 import { ChevronDown } from "lucide-react";
 import { HEIF_BENCHMARK, HEIR_PULL_QUOTES, HEIR_REPORTS } from "@/content/heir2026";
 
+const TEAL = "#03DAC5";
+
 /** Collapsed-by-default HEIR appendix — full detail stays in the PDFs. */
 export default function HeirResearchAppendix() {
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-8 border-b border-white/10 pt-2">
-      <details className="group">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">HEIR 2026 research</p>
-            <h2 className="mt-1 text-lg font-bold text-white/90" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+    <section className="mx-auto max-w-5xl px-4 pb-8 pt-2">
+      <details className="group rounded-xl border overflow-hidden transition-colors" style={{ borderColor: "rgba(124,58,237,0.35)", background: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(3,218,197,0.06) 50%, rgba(10,1,24,0.9) 100%)" }}>
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden hover:bg-white/[0.03]">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em]" style={{ color: TEAL }}>
+              HEIR 2026 research
+            </p>
+            <h2
+              className="mt-1.5 text-xl font-extrabold tracking-tight text-white sm:text-2xl"
+              style={{ fontFamily: "'Sora', system-ui, sans-serif", textShadow: "0 0 40px rgba(124,58,237,0.35)" }}
+            >
               Engineering maturity framework
             </h2>
-            <p className="mt-1 text-sm text-white/40">
+            <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-white/55 max-w-none">
               Demo culture vs deployment reality — HEIF scores, readiness funnel, and vendor analysis in the PDF.
             </p>
           </div>
-          <ChevronDown className="h-5 w-5 shrink-0 text-white/30 transition-transform group-open:rotate-180" />
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15"
+            style={{ background: "rgba(124,58,237,0.2)" }}
+          >
+            <ChevronDown className="h-5 w-5 text-white/70 transition-transform group-open:rotate-180" />
+          </span>
         </summary>
 
-        <div className="mt-8 space-y-8 text-sm leading-relaxed text-white/42">
-          <p className="max-w-3xl">
+        <div className="border-t border-white/10 px-5 pb-8 pt-6 sm:px-6 space-y-8 text-[15px] sm:text-base leading-[1.7] text-white/48">
+          <p className="w-full max-w-none text-white/55">
             HEIR measures humanoids by engineering maturity, not demo choreography. The Humanoid Engineering
             Intelligence Framework (HEIF) scores mobility, manipulation, cognition, safety, data pipeline, and
             production readiness from public evidence. No vendor leads every category today.
           </p>
 
-          <ul className="space-y-2 max-w-3xl">
+          <ul className="w-full max-w-none space-y-3">
             {HEIR_PULL_QUOTES.map((q) => (
-              <li key={q} className="flex gap-2 text-white/55">
-                <span className="text-white/25">—</span>
+              <li key={q} className="flex gap-3 text-white/60">
+                <span className="text-white/25 shrink-0">—</span>
                 <span>&ldquo;{q}&rdquo;</span>
               </li>
             ))}
           </ul>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
             {HEIR_REPORTS.map((r) => (
               <a
                 key={r.href}
                 href={r.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-violet-300/90 hover:text-violet-200 underline underline-offset-4 decoration-white/20"
+                className="font-semibold text-violet-300 hover:text-violet-100 underline underline-offset-4 decoration-violet-400/40"
               >
                 Download {r.title} ↗
               </a>
