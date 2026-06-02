@@ -4,6 +4,7 @@ GET  /api/humanoid/robots               — list all with scores (public)
 GET  /api/humanoid/gaps                 — missing spec fields for HEIF scoring (public)
 GET  /api/humanoid/report               — formatted benchmark report (public)
 GET  /api/humanoid/deployment-report    — HEIF vs PoC/deployment evidence report (public)
+GET  /api/humanoid/intelligence-report   — top scores explained + trials/customers (public)
 GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
 POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
 POST /api/humanoid/seed                 — seed known robots (admin)
@@ -30,6 +31,7 @@ from app.services.humanoid_discovery import run_humanoid_discovery
 from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks, is_junk_humanoid_row
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
 from app.services.humanoid_deployment_report import build_humanoid_deployment_report_payload
+from app.services.humanoid_intelligence_report import build_humanoid_intelligence_report_payload
 from app.services.humanoid_deployment_news import run_humanoid_deployment_news_review
 from app.services.humanoid_vendor_catalog import catalog_count, sync_product_urls_from_catalog
 
@@ -584,6 +586,27 @@ def get_deployment_report(db: Session = Depends(get_db)):
             detail="No benchmark data available. Run /seed or /discover first.",
         )
     return build_humanoid_deployment_report_payload(robots)
+
+
+@router.get("/intelligence-report")
+def get_intelligence_report(
+    db: Session = Depends(get_db),
+    top_n: int = Query(12, ge=5, le=25, description="How many top robots to explain in depth"),
+):
+    """
+    Why top-ranked humanoids score high — HEIF drivers, PoC/pilot counts, customers, headlines.
+    """
+    robots = _fetch_scored_humanoids(db)
+    if not robots:
+        raise HTTPException(
+            status_code=404,
+            detail="No benchmark data available. Run /seed or /discover first.",
+        )
+    robots = [
+        r for r in robots
+        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+    ]
+    return build_humanoid_intelligence_report_payload(robots, top_n=top_n)
 
 
 @router.post("/deployment-news")

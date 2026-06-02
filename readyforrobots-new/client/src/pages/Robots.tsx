@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
+import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
 import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -381,6 +382,11 @@ export default function Robots() {
 
       {/* HEIR research — expandable, above live index */}
       <HeirResearchAppendix />
+
+      {/* Intelligence report — scores explained + trials/customers */}
+      <section id="intelligence-report" className="mx-auto max-w-5xl px-4 pb-10 pt-4">
+        <HumanoidIntelligenceReport />
+      </section>
 
       {/* ── Live spec-based index (primary) ── */}
       <section id="live-index" className="mx-auto max-w-5xl px-4 pb-12 pt-10">
