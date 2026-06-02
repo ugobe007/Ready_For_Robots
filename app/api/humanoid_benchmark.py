@@ -609,7 +609,7 @@ def get_intelligence_report(
         r for r in robots
         if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
     ]
-    return build_humanoid_intelligence_report_payload(robots, top_n=top_n)
+    return build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
 
 
 @router.get("/intelligence-report/pdf")
@@ -628,7 +628,7 @@ def get_intelligence_report_pdf(
         r for r in robots
         if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
     ]
-    payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n)
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
     if not payload.get("report"):
         raise HTTPException(status_code=404, detail="Report unavailable")
     try:

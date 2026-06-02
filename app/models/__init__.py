@@ -33,3 +33,4 @@ from app.models.calendar import CalendarEvent
 from app.models.scout_chat import ScoutActivation, ScoutMessage, ScoutProfile, ScoutSession
 from app.models.waitlist import WaitlistSignup
 from app.models.robot_buyer_lead import RobotBuyerLead
+from app.models.humanoid_report_snapshot import HumanoidReportSnapshot

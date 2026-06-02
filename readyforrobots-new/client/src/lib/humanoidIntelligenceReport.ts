@@ -72,9 +72,34 @@ export type ReportComparisons = {
 
 export type NarrativeFinding = { title: string; body: string };
 
+export type MonthOverMonth = {
+  current_period?: string;
+  previous_period?: string | null;
+  has_prior: boolean;
+  baseline_note?: string;
+  narrative_bullets?: string[];
+  fleet_metrics?: Record<string, { current: number; previous: number; delta: number }>;
+  leader?: {
+    changed?: boolean;
+    current?: { name?: string; score?: number };
+    previous?: { name?: string; score?: number };
+  };
+  new_to_top10?: string[];
+  dropped_from_top10?: string[];
+  movers?: {
+    name: string;
+    rank_current?: number;
+    rank_previous?: number;
+    rank_delta?: number;
+    score_delta?: number;
+    type?: string;
+  }[];
+};
+
 export type ReportNarrative = {
   subtitle?: string;
   market_overview?: string[];
+  month_over_month?: string[];
   key_findings?: NarrativeFinding[];
   competitive_dynamics?: string[];
   deployment_reality?: string[];
@@ -88,6 +113,7 @@ export type HumanoidIntelligenceReportData = {
   subtitle?: string;
   executive_summary: string[];
   narrative?: ReportNarrative;
+  month_over_month?: MonthOverMonth;
   adoption_metrics: Record<string, unknown>;
   comparisons?: ReportComparisons;
   customer_landscape: {

@@ -77,6 +77,7 @@ def build_report_narrative(
     adoption_metrics: dict,
     customer_landscape: List[dict],
     top_n: int,
+    month_over_month: Optional[dict] = None,
 ) -> dict:
     total = len(sorted_robots)
     leader = profiles[0] if profiles else None
@@ -241,6 +242,22 @@ def build_report_narrative(
         ),
     })
 
+    mom_section: List[str] = []
+    if month_over_month:
+        if not month_over_month.get("has_prior"):
+            mom_section.append(month_over_month.get("baseline_note") or "")
+            key_findings.insert(0, {
+                "title": "Month over month",
+                "body": month_over_month.get("baseline_note") or "Baseline month recorded.",
+            })
+        else:
+            prev = month_over_month.get("previous_period")
+            key_findings.insert(0, {
+                "title": f"Vs last month ({prev})",
+                "body": " ".join(month_over_month.get("narrative_bullets") or [])[:1200],
+            })
+            mom_section = list(month_over_month.get("narrative_bullets") or [])
+
     competitive_dynamics = [
         (
             "The market splits into locomotion-first platforms (strong gait, weaker manipulation evidence), "
@@ -300,6 +317,7 @@ def build_report_narrative(
     return {
         "subtitle": "Monthly market intelligence on humanoid capability, deployments, and buyer readiness",
         "market_overview": market_overview,
+        "month_over_month": mom_section,
         "key_findings": key_findings,
         "competitive_dynamics": competitive_dynamics,
         "deployment_reality": deployment_reality,

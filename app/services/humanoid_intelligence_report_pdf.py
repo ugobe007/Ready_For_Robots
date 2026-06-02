@@ -187,6 +187,52 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
         for line in report.get("executive_summary") or []:
             story.append(Paragraph(f"• {_esc(line)}", bullet))
 
+    mom = report.get("month_over_month") or {}
+    if mom.get("has_prior"):
+        _section(story, f"Month over month (vs {mom.get('previous_period')})", h2)
+        for line in mom.get("narrative_bullets") or []:
+            story.append(Paragraph(f"• {_esc(line)}", bullet))
+        leader = mom.get("leader") or {}
+        if leader.get("changed"):
+            story.append(Paragraph(
+                f"<b>Leader change:</b> {_esc(leader.get('previous', {}).get('name'))} → "
+                f"{_esc(leader.get('current', {}).get('name'))}",
+                body,
+            ))
+        fm = mom.get("fleet_metrics") or {}
+        if fm:
+            mom_rows = [["Metric", "Prior", "Current", "Δ"]]
+            for label, key in (
+                ("Robots indexed", "total_robots"),
+                ("PoC-or-better", "poc_or_better_count"),
+                ("Commercial signals", "deployment_signal_count"),
+                ("Avg HEIF", "fleet_avg_heif"),
+            ):
+                block = fm.get(key)
+                if block:
+                    mom_rows.append([
+                        label,
+                        _esc(block.get("previous")),
+                        _esc(block.get("current")),
+                        _esc(block.get("delta")),
+                    ])
+            if len(mom_rows) > 1:
+                story.append(_table(mom_rows, [1.5 * inch, 0.9 * inch, 0.9 * inch, 0.8 * inch]))
+        movers = [m for m in (mom.get("movers") or []) if m.get("type") == "mover"][:6]
+        if movers:
+            mrows = [["Robot", "Rank was", "Rank now", "Score Δ"]]
+            for m in movers:
+                mrows.append([
+                    _esc(m.get("name")),
+                    _esc(m.get("rank_previous")),
+                    _esc(m.get("rank_current")),
+                    _esc(m.get("score_delta")),
+                ])
+            story.append(_table(mrows, [1.8 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch]))
+    elif mom.get("baseline_note"):
+        _section(story, "Month over month", h2)
+        story.append(Paragraph(_esc(mom.get("baseline_note")), body))
+
     findings = narrative.get("key_findings") or []
     if findings:
         _section(story, "Key findings", h2)

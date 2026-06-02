@@ -5,9 +5,12 @@ Combines HEIF scores, published specs, HEIR research overrides, and persisted de
 """
 from __future__ import annotations
 
+import logging
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from app.services.humanoid_deployment_report import (
     TIER_LABELS,
@@ -442,7 +445,12 @@ def _build_comparisons(
     }
 
 
-def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int = 12) -> dict:
+def build_humanoid_intelligence_report_payload(
+    robots: List[dict],
+    *,
+    top_n: int = 12,
+    db=None,
+) -> dict:
     """Full intelligence report: scores explained + trials/PoCs/customers."""
     if not robots:
         return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat()}
@@ -489,6 +497,17 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
     }
 
     from app.services.humanoid_intelligence_narrative import build_report_narrative
+    from app.services.humanoid_report_mom import attach_month_over_month
+
+    month_over_month = None
+    if db is not None:
+        try:
+            month_over_month = attach_month_over_month(
+                db, sorted_robots, deployment_summary, profiles, adoption_metrics
+            )
+        except Exception as exc:
+            logger.warning("month-over-month snapshot failed: %s", exc)
+            month_over_month = None
 
     narrative = build_report_narrative(
         sorted_robots=sorted_robots,
@@ -498,6 +517,7 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
         adoption_metrics=adoption_metrics,
         customer_landscape=customer_landscape,
         top_n=top_n,
+        month_over_month=month_over_month,
     )
     comparisons["ranking_divergence"] = narrative.get("ranking_divergence") or []
 
@@ -517,6 +537,7 @@ def build_humanoid_intelligence_report_payload(robots: List[dict], *, top_n: int
                 sorted_robots, profiles, deployment_summary, customer_landscape
             ),
             "narrative": narrative,
+            "month_over_month": month_over_month,
             "adoption_metrics": adoption_metrics,
             "comparisons": comparisons,
             "deployment_summary": {

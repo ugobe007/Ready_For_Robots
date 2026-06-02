@@ -57,6 +57,27 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
               </div>
             )}
 
+            {report.month_over_month?.has_prior && (report.month_over_month.narrative_bullets?.length ?? 0) > 0 && (
+              <div
+                className="rounded-lg border px-4 py-4"
+                style={{ borderColor: "rgba(3,218,197,0.25)", background: "rgba(3,218,197,0.06)" }}
+              >
+                <h4 className="text-sm font-bold" style={{ color: TEAL }}>
+                  Vs last month ({report.month_over_month.previous_period})
+                </h4>
+                <ul className="mt-3 space-y-2 text-sm text-white/60">
+                  {report.month_over_month.narrative_bullets.map((line) => (
+                    <li key={line} className="leading-relaxed">{line}</li>
+                  ))}
+                </ul>
+                {(report.month_over_month.new_to_top10?.length ?? 0) > 0 && (
+                  <p className="mt-3 text-[12px] text-white/45">
+                    Entered top 10: {report.month_over_month.new_to_top10.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+
             {report.narrative?.key_findings && report.narrative.key_findings.length > 0 && (
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-white/85">Key findings</h4>
