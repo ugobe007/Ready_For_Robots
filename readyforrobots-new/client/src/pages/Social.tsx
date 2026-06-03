@@ -4,9 +4,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import { getApiBase } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, liveFetchInit } from "@/lib/apiBase";
 
-const API = getApiBase();
+/** Social generation can exceed Vercel proxy limits — call Fly directly from marketing site. */
+const API = typeof window !== "undefined" ? getDirectApiBase() : getApiBase();
+const SOCIAL_FETCH_MS = 150_000;
 
 type PostType = "hot_lead" | "signal_alert" | "industry_insight" | "market_trend" | "thought_leadership";
 
@@ -243,6 +245,7 @@ export default function Social() {
   const [linkedinMsgIsError, setLinkedinMsgIsError] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [cacheStatus, setCacheStatus] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Content Studio | Ready For Robots";
@@ -371,15 +374,37 @@ export default function Social() {
   };
 
   const fetchPosts = useCallback(async () => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), SOCIAL_FETCH_MS);
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API}/api/social/daily-posts`);
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      applyData(await res.json());
+      setCacheStatus(null);
+      const res = await fetch(
+        `${API}/api/social/daily-posts`,
+        liveFetchInit({ signal: controller.signal }),
+      );
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(detail.slice(0, 160) || `API error ${res.status}`);
+      }
+      const data = await res.json();
+      setCacheStatus(
+        data.cache_status === "stale" || res.headers.get("X-Social-Cache") === "stale"
+          ? "stale"
+          : null,
+      );
+      applyData(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      const msg =
+        e instanceof Error && e.name === "AbortError"
+          ? "Request timed out — try again in a minute (cache may still be warming)"
+          : e instanceof Error
+            ? e.message
+            : "Failed to load";
+      setError(msg);
     } finally {
+      window.clearTimeout(timer);
       setLoading(false);
     }
   }, []);
@@ -470,6 +495,11 @@ export default function Social() {
           <p className="text-sm text-white/55 max-w-2xl">
             Five posts from today&apos;s hot leads and strategic insights. Edit, copy, share, or publish to LinkedIn.
           </p>
+          {cacheStatus === "stale" && (
+            <p className="mt-2 text-xs text-amber-400/90 font-mono">
+              Showing cached posts while a fresh batch generates in the background.
+            </p>
+          )}
         </div>
 
         <div className="mb-6 p-4 border border-blue-900/60 rounded-xl bg-blue-950/20">

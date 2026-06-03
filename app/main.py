@@ -180,6 +180,21 @@ def _run_startup() -> None:
 
     threading.Thread(target=_hydrate_public_caches, daemon=True, name="public-surface-hydrate").start()
 
+    def _warm_social_posts() -> None:
+        from app.database import SessionLocal
+        from app.services.social_posts_service import read_cached_posts, refresh_social_posts_cache
+
+        cached = read_cached_posts(max_age_hours=4.0)
+        if cached and (cached.get("posts") or []):
+            return
+        db = SessionLocal()
+        try:
+            refresh_social_posts_cache(db)
+            logger.info("Social posts cache warmed at startup")
+        finally:
+            db.close()
+
+    _staggered_warm("social-posts", _warm_social_posts, 20)
     _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 30)
     _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 60)
 

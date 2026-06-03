@@ -7,7 +7,9 @@ POST /api/social/daily-posts/mark-posted     — record that a batch was posted 
 """
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -15,12 +17,26 @@ from app.database import get_db
 from app.services.social_posts_service import (
     generate_daily_posts,
     read_cached_posts,
+    refresh_social_posts_cache,
     write_cached_posts,
     mark_companies_posted,
     get_recently_posted_ids,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _background_refresh_social_posts() -> None:
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        refresh_social_posts_cache(db)
+    except Exception as exc:
+        logger.warning("background social posts refresh failed: %s", exc)
+    finally:
+        db.close()
 
 _CACHE_MAX_AGE_HOURS = 4.0
 
@@ -38,6 +54,7 @@ class MarkPostedPayload(BaseModel):
 @router.get("/daily-posts")
 def get_daily_posts(
     response: Response,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """
@@ -47,11 +64,17 @@ def get_daily_posts(
     response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
 
     cached = read_cached_posts(max_age_hours=_CACHE_MAX_AGE_HOURS)
-    if cached:
+    if cached and (cached.get("posts") or []):
         return cached
 
+    stale = read_cached_posts(max_age_hours=None)
+    if stale and (stale.get("posts") or []):
+        response.headers["X-Social-Cache"] = "stale"
+        background_tasks.add_task(_background_refresh_social_posts)
+        return {**stale, "cache_status": "stale"}
+
     data = generate_daily_posts(db)
-    write_cached_posts(data)
+    write_cached_posts(data, db=db)
     return data
 
 
@@ -72,7 +95,7 @@ def refresh_daily_posts(
         exclude_ids=payload.exclude_ids or [],
         trend_offset=payload.trend_offset,
     )
-    write_cached_posts(data)
+    write_cached_posts(data, db=db)
     return data
 
 

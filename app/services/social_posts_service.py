@@ -48,31 +48,73 @@ def _data_dir() -> Path:
 def _cache_path() -> Path:
     return _data_dir() / "social_posts_latest.json"
 
+
+SOCIAL_DAILY_POSTS_CACHE_KEY = "public:social:daily_posts:v1"
+_SOCIAL_CACHE_TTL_MINUTES = 240  # 4 hours — matches API cache window
+
+
 def _history_path() -> Path:
     return _data_dir() / "social_posts_history.json"
 
 
-def read_cached_posts(max_age_hours: float = 4.0) -> Optional[Dict[str, Any]]:
+def read_cached_posts(max_age_hours: Optional[float] = 4.0) -> Optional[Dict[str, Any]]:
+    """Read cached daily posts (Postgres first, then local file). ``max_age_hours=None`` = any age."""
+    from app.services.pipeline_cache_store import cache_read_safe
+
+    stale_ok = max_age_hours is None
+    db_data = cache_read_safe(SOCIAL_DAILY_POSTS_CACHE_KEY, stale_ok=stale_ok)
+    if db_data and (db_data.get("posts") or []):
+        if max_age_hours is None:
+            return db_data
+        gen = db_data.get("generated_at")
+        if gen:
+            gen_dt = datetime.fromisoformat(str(gen).replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) - gen_dt <= timedelta(hours=max_age_hours):
+                return db_data
+
     p = _cache_path()
     if not p.exists():
-        return None
+        return db_data if stale_ok and db_data else None
     try:
         data = json.loads(p.read_text())
         gen = data.get("generated_at")
         if not gen:
-            return None
+            return db_data if stale_ok and db_data else None
         gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
-        if datetime.now(timezone.utc) - gen_dt > timedelta(hours=max_age_hours):
-            return None
+        if max_age_hours is not None and datetime.now(timezone.utc) - gen_dt > timedelta(hours=max_age_hours):
+            return db_data if stale_ok and db_data else None
         return data
     except Exception:
-        return None
+        return db_data if stale_ok and db_data else None
 
 
-def write_cached_posts(data: Dict[str, Any]) -> None:
+def write_cached_posts(data: Dict[str, Any], db: Optional[Session] = None) -> None:
     p = _cache_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, indent=2, default=str))
+
+    from app.services.pipeline_cache_store import cache_write
+
+    if db is not None:
+        cache_write(db, SOCIAL_DAILY_POSTS_CACHE_KEY, data, ttl_minutes=_SOCIAL_CACHE_TTL_MINUTES)
+        return
+    try:
+        from app.database import SessionLocal
+
+        session = SessionLocal()
+        try:
+            cache_write(session, SOCIAL_DAILY_POSTS_CACHE_KEY, data, ttl_minutes=_SOCIAL_CACHE_TTL_MINUTES)
+        finally:
+            session.close()
+    except Exception:
+        pass
+
+
+def refresh_social_posts_cache(db: Session) -> Dict[str, Any]:
+    """Build and persist daily social posts (background / startup warm)."""
+    data = generate_daily_posts(db)
+    write_cached_posts(data, db=db)
+    return {"posts": len(data.get("posts") or []), "generated_at": data.get("generated_at")}
 
 
 # ── Posted history (7-day rolling window per company) ─────────────────────────
@@ -467,7 +509,7 @@ def generate_daily_posts(
         .outerjoin(Score, Score.company_id == Company.id)
         .group_by(Company.id)
         .order_by(func.coalesce(func.max(Score.overall_intent_score), 0).desc())
-        .limit(500)
+        .limit(120)
         .all()
     )
     id_list = [r[0] for r in ranked_ids]

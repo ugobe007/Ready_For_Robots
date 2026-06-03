@@ -97,6 +97,15 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
     return stats
 
 
+def refresh_social_posts_surface_cache(db: Session) -> dict[str, Any]:
+    """Content Studio — daily social queue (cached 4h in pipeline_cache_store)."""
+    from app.services.social_posts_service import refresh_social_posts_cache
+
+    stats = refresh_social_posts_cache(db)
+    logger.info("Social posts surface cache refreshed: %s", stats)
+    return stats
+
+
 def refresh_newsletter_surface_cache(db: Session, *, force: bool = False) -> dict[str, Any]:
     """Newsletter edition — incremental unless force=True (morning full rebuild)."""
     from app.services.newsletter_library import build_daily_newsletter_edition
@@ -198,6 +207,10 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
             refresh_pipeline_surface_caches(db)
             if include_newsletter:
                 refresh_newsletter_surface_cache(db, force=False)
+            try:
+                refresh_social_posts_surface_cache(db)
+            except Exception as exc:
+                logger.warning("Social posts refresh skipped: %s", exc)
         hydrate_public_surface_caches()
         _last_refresh_monotonic = time.monotonic()
     except Exception as exc:

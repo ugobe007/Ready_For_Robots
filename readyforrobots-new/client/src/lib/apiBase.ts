@@ -46,6 +46,11 @@ function _metaTagApiBase(): string {
   }
 }
 
+/** Long-running endpoints (PDF, social queue) — bypass Vercel ~120s proxy timeout. */
+export function getDirectApiBase(): string {
+  return DEFAULT_PRODUCTION_API;
+}
+
 export function getApiBase(): string {
   // Marketing site (Vercel): same-origin /api/* is proxied to Fly — avoids cross-origin failures.
   if (typeof window !== "undefined") {
