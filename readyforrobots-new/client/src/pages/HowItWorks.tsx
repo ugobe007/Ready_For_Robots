@@ -1,11 +1,12 @@
 /**
  * How It Works — ReadyForRobots
  * Design: Dark violet 60-30-10. Flat open layout with amber SCOUT CTAs.
- * Robot image anchored right of hero. Inline text, numbered steps, clean dividers.
+ * Five-step pipeline diagram in hero (animated highlight). Inline text, numbered steps, clean dividers.
  * Typography: Sora headlines · Inter body · JetBrains Mono scores/labels
  */
 
 import Header from "@/components/Header";
+import ScoutPipelineDiagram from "@/components/ScoutPipelineDiagram";
 import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
 import { Link } from "wouter";
 import {
@@ -139,14 +140,9 @@ export default function HowItWorks() {
               </div>
             </div>
 
-            {/* Right — robot */}
-            <div className="relative flex justify-end items-end">
-              <img
-                src={ROBOT_IMAGE}
-                alt="Industrial robot arm"
-                className="w-full max-w-xs lg:max-w-sm object-contain"
-                style={{ filter: "drop-shadow(0 0 80px rgba(124, 58, 237, 0.45))", marginBottom: "-2px" }}
-              />
+            {/* Right — 5-step pipeline diagram */}
+            <div className="relative flex justify-center lg:justify-end items-end pb-8 lg:pb-12">
+              <ScoutPipelineDiagram variant="hero" className="lg:translate-y-2" />
             </div>
           </div>
         </div>
