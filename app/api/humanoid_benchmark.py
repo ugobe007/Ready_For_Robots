@@ -685,22 +685,44 @@ def get_intelligence_report(
     }
 
 
+def _intelligence_pdf_response(pdf_bytes: bytes, filename: str) -> StreamingResponse:
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def _build_intelligence_pdf_bytes(
+    db: Session, *, top_n: int = 12, renderer: str = "fast"
+) -> tuple[bytes, str]:
+    robots = _fetch_scored_humanoids(db)
+    if not robots:
+        raise HTTPException(status_code=404, detail="No benchmark data available.")
+    robots = [
+        r for r in robots
+        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+    ]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
+    if not payload.get("report"):
+        raise HTTPException(status_code=404, detail="Report unavailable")
+    return build_humanoid_intelligence_report_pdf(payload, renderer=renderer)
+
+
 @router.get("/intelligence-report/pdf")
 def get_intelligence_report_pdf(
+    top_n: int = Query(12, ge=5, le=25),
     renderer: str = Query(
         "fast",
-        description="fast = pre-built ReportLab PDF (default). manus = on-demand WeasyPrint (slow).",
+        description="fast = ReportLab PDF (default, ~10–30s). manus = WeasyPrint (slow).",
     ),
 ):
-    """Download HEIR intelligence report PDF — served from pre-built cache when renderer=fast."""
+    """Download HEIR intelligence report PDF — cache hit when warm; otherwise builds on demand."""
     import base64
 
     from app.services.content_surfaces import KEY_HUMANOID_INTELLIGENCE_PDF
-    from app.services.pipeline_cache_store import cache_read_safe
-    from app.services.public_surface_cache import (
-        maybe_schedule_public_cache_refresh,
-        schedule_public_cache_refresh,
-    )
+    from app.services.pipeline_cache_store import cache_read_safe, cache_write
+    from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
 
     maybe_schedule_public_cache_refresh()
     mode = (renderer or "fast").strip().lower()
@@ -710,41 +732,34 @@ def get_intelligence_report_pdf(
         if cached and cached.get("bytes_b64"):
             pdf_bytes = base64.standard_b64decode(cached["bytes_b64"])
             filename = cached.get("filename") or "Humanoid_Intelligence_Report.pdf"
-            return StreamingResponse(
-                iter([pdf_bytes]),
-                media_type="application/pdf",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-            )
-        schedule_public_cache_refresh(reason="intelligence_pdf_miss")
-        raise HTTPException(
-            status_code=503,
-            detail="PDF is being generated in the background. Retry in 1–2 minutes.",
-            headers={"Retry-After": "90"},
-        )
+            return _intelligence_pdf_response(pdf_bytes, filename)
 
-    # Optional slow path for Manus layout (admin / one-off)
-    from app.database import SessionLocal
+        db = SessionLocal()
+        try:
+            pdf_bytes, filename = _build_intelligence_pdf_bytes(db, top_n=top_n, renderer="fast")
+            try:
+                cache_write(
+                    db,
+                    KEY_HUMANOID_INTELLIGENCE_PDF,
+                    {
+                        "filename": filename,
+                        "bytes_b64": base64.standard_b64encode(pdf_bytes).decode("ascii"),
+                        "renderer": "fast",
+                    },
+                    ttl_minutes=120,
+                )
+            except Exception:
+                logger.warning("Failed to cache intelligence PDF after on-demand build", exc_info=True)
+        finally:
+            db.close()
+        return _intelligence_pdf_response(pdf_bytes, filename)
 
     db = SessionLocal()
     try:
-        robots = _fetch_scored_humanoids(db)
-        if not robots:
-            raise HTTPException(status_code=404, detail="No benchmark data available.")
-        robots = [
-            r for r in robots
-            if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
-        ]
-        payload = build_humanoid_intelligence_report_payload(robots, top_n=12, db=db)
-        if not payload.get("report"):
-            raise HTTPException(status_code=404, detail="Report unavailable")
-        pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload, renderer=renderer)
+        pdf_bytes, filename = _build_intelligence_pdf_bytes(db, top_n=top_n, renderer=renderer)
     finally:
         db.close()
-    return StreamingResponse(
-        iter([pdf_bytes]),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return _intelligence_pdf_response(pdf_bytes, filename)
 
 
 @router.post("/deployment-news")

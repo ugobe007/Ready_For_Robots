@@ -102,8 +102,15 @@ export function ReportBtnDownload({
     try {
       const res = await fetch(href, liveFetchInit());
       if (!res.ok) {
-        const detail = await res.text().catch(() => "");
-        throw new Error(detail.slice(0, 120) || `Download failed (${res.status})`);
+        const raw = await res.text().catch(() => "");
+        let message = `Download failed (${res.status})`;
+        try {
+          const parsed = JSON.parse(raw) as { detail?: string };
+          if (parsed.detail) message = String(parsed.detail);
+        } catch {
+          if (raw.trim()) message = raw.slice(0, 200);
+        }
+        throw new Error(message);
       }
       const blob = await res.blob();
       if (!blob.size || !blob.type.includes("pdf")) {
@@ -124,7 +131,6 @@ export function ReportBtnDownload({
     } catch (ex) {
       const msg = ex instanceof Error ? ex.message : "Download failed";
       setErr(msg);
-      window.open(href, "_blank", "noopener,noreferrer");
     } finally {
       setBusy(false);
     }
