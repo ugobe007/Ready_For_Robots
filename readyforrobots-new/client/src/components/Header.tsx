@@ -41,15 +41,29 @@ const faqs = [
   },
 ];
 
+const priorityNavLinks = [
+  { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
+  { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
+  { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
+  { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & HEIR" },
+  { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
+];
+
+const moreNavLinks = [
+  { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
+  { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
+  { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, and quotes" },
+  { label: "Pricing", href: "/pricing", icon: BriefcaseBusiness, desc: "Plans and billing" },
+];
+
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [location] = useLocation();
   const { openChat } = useScoutChat();
   const { session } = useAuth();
-
-  const isHome = location === "/";
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -57,7 +71,28 @@ export default function Header() {
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest("[data-nav-more]")) setMoreOpen(false);
+    };
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, [moreOpen]);
+
   const closeDrawer = () => setOpen(false);
+
+  const navLinkStyle = (href: string) =>
+    location === href
+      ? { color: "#03DAC5", background: "rgba(3,218,197,0.1)" }
+      : { color: "rgba(255,255,255,0.45)" };
+
+  const moreNavActive = moreNavLinks.some((l) => location === l.href);
 
   const handleSignOut = async () => {
     closeDrawer();
@@ -66,18 +101,6 @@ export default function Header() {
   };
 
   const signedInEmail = session?.user?.email;
-
-  const primaryNavLinks = [
-    { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
-    { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
-    { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
-    { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
-    { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
-    { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & evaluation framework" },
-    { label: "Find Robots", href: "/find-robots", icon: BriefcaseBusiness, desc: "Tell us your use case — we match vendors & deployments" },
-    { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, quotes, and connections" },
-    { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
-  ];
 
   const accountLinks = [
     { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
@@ -104,29 +127,72 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {primaryNavLinks.map((link) => (
+          {/* Desktop nav — priority links + More */}
+          <nav className="hidden lg:flex items-center gap-0.5 min-w-0">
+            {priorityNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors"
-                style={
-                  location === link.href
-                    ? { color: "#03DAC5", background: "rgba(3,218,197,0.1)" }
-                    : { color: "rgba(255,255,255,0.45)" }
-                }
+                className="px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap"
+                style={navLinkStyle(link.href)}
               >
                 {link.label}
               </Link>
             ))}
+            <div className="relative" data-nav-more>
+              <button
+                type="button"
+                onClick={() => setMoreOpen((v) => !v)}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap"
+                style={
+                  moreNavActive || moreOpen
+                    ? { color: "#03DAC5", background: "rgba(3,218,197,0.1)" }
+                    : { color: "rgba(255,255,255,0.45)" }
+                }
+                aria-expanded={moreOpen}
+                aria-haspopup="true"
+              >
+                More
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+              </button>
+              {moreOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 min-w-[200px] rounded-xl border border-white/10 py-1.5 shadow-2xl z-[60]"
+                  style={{ background: "rgba(13,5,32,0.98)", backdropFilter: "blur(16px)" }}
+                >
+                  {moreNavLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="block px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-white/5"
+                      style={location === link.href ? { color: "#03DAC5" } : { color: "rgba(255,255,255,0.7)" }}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/find-robots"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all hover:brightness-110 hover:-translate-y-0.5"
+              style={{
+                color: "#0d0520",
+                background: "#03DAC5",
+                border: "1px solid rgba(3,218,197,0.6)",
+                fontFamily: "'Sora', system-ui, sans-serif",
+              }}
+            >
+              Find Robots
+            </Link>
+
             {/* Live badge */}
             <span
-              className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+              className="hidden md:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
               style={{ color: "#03DAC5", background: "rgba(3,218,197,0.1)", border: "1px solid rgba(3,218,197,0.25)" }}
             >
               <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
@@ -215,8 +281,8 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Pipeline entry — prominent at top */}
-        <div className="px-4 pt-4 pb-3">
+        {/* CTAs */}
+        <div className="px-4 pt-4 pb-2 space-y-2">
           <Link
             href="/results?url="
             onClick={closeDrawer}
@@ -238,6 +304,66 @@ export default function Header() {
             </div>
             <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#FFB000" }} />
           </Link>
+          <Link
+            href="/find-robots"
+            onClick={closeDrawer}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+            style={{ color: "#0d0520", background: "#03DAC5" }}
+          >
+            <BriefcaseBusiness className="h-4 w-4" />
+            Find Robots
+          </Link>
+        </div>
+
+        {/* Priority nav */}
+        <div className="px-4 pb-2 border-b border-white/6">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">Product</p>
+          {priorityNavLinks.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeDrawer}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all mb-0.5"
+                style={isActive
+                  ? { background: "rgba(3,218,197,0.08)", color: "#03DAC5" }
+                  : { color: "rgba(255,255,255,0.6)" }}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold leading-none">{item.label}</p>
+                  <p className="text-[11px] text-white/30 mt-0.5">{item.desc}</p>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-white/20 shrink-0" />
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* More links */}
+        <div className="px-4 py-2 border-b border-white/6">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">More</p>
+          {moreNavLinks.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeDrawer}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-0.5"
+                style={isActive
+                  ? { background: "rgba(3,218,197,0.08)", color: "#03DAC5" }
+                  : { color: "rgba(255,255,255,0.5)" }}
+              >
+                <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                <span className="text-sm font-medium">{item.label}</span>
+                <ChevronRight className="h-3.5 w-3.5 text-white/20 shrink-0 ml-auto" />
+              </Link>
+            );
+          })}
         </div>
 
         {/* Account links */}
@@ -288,14 +414,12 @@ export default function Header() {
           )}
         </div>
 
-        {/* Secondary links */}
+        {/* Home anchors */}
         <div className="px-4 pt-1 pb-2 border-t border-white/6 mt-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2 mt-3">More</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2 mt-3">Company</p>
           {[
             { label: "About Us", href: "/#about" },
             { label: "Case Studies", href: "/#case-studies" },
-            { label: "Intelligence", href: "/intelligence" },
-            { label: "Pricing", href: "/pricing" },
           ].map((item) => (
             <Link
               key={item.label}
