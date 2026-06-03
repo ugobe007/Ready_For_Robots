@@ -5,6 +5,7 @@ GET  /api/social/daily-posts                 — return (or generate) today's 5 
 POST /api/social/daily-posts/refresh         — generate a fresh batch skipping already-posted leads
 POST /api/social/daily-posts/mark-posted     — record that a batch was posted (updates history)
 """
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import logging
@@ -73,9 +74,13 @@ def get_daily_posts(
         background_tasks.add_task(_background_refresh_social_posts)
         return {**stale, "cache_status": "stale"}
 
-    data = generate_daily_posts(db)
-    write_cached_posts(data, db=db)
-    return data
+    background_tasks.add_task(_background_refresh_social_posts)
+    return {
+        "date": datetime.now(timezone.utc).strftime("%B %d, %Y"),
+        "posts": [],
+        "cache_pending": True,
+        "message": "Daily posts are being generated in the background. Retry in 1–2 minutes.",
+    }
 
 
 @router.post("/daily-posts/refresh")

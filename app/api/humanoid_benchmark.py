@@ -658,52 +658,88 @@ def get_deployment_report(db: Session = Depends(get_db)):
 
 @router.get("/intelligence-report")
 def get_intelligence_report(
-    db: Session = Depends(get_db),
     top_n: int = Query(12, ge=5, le=25, description="How many top robots to explain in depth"),
 ):
     """
-    Why top-ranked humanoids score high — HEIF drivers, PoC/pilot counts, customers, headlines.
+    Why top-ranked humanoids score high — pre-built cache only (background refresh every 2h).
     """
-    robots = _fetch_scored_humanoids(db)
-    if not robots:
-        raise HTTPException(
-            status_code=404,
-            detail="No benchmark data available. Run /seed or /discover first.",
-        )
-    robots = [
-        r for r in robots
-        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
-    ]
-    return build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
+    from app.services.content_surfaces import KEY_HUMANOID_INTELLIGENCE
+    from app.services.public_surface_cache import (
+        maybe_schedule_public_cache_refresh,
+        read_public_cache,
+        schedule_public_cache_refresh,
+    )
+
+    maybe_schedule_public_cache_refresh()
+
+    cached = read_public_cache(KEY_HUMANOID_INTELLIGENCE, stale_ok=True)
+    if cached and cached.get("report"):
+        return cached
+
+    schedule_public_cache_refresh(pipeline_only=False, reason="intelligence_miss")
+    return {
+        "report": None,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "cache_pending": True,
+        "message": "Intelligence report is being generated in the background. Retry in 1–2 minutes.",
+    }
 
 
 @router.get("/intelligence-report/pdf")
 def get_intelligence_report_pdf(
-    db: Session = Depends(get_db),
-    top_n: int = Query(12, ge=5, le=25, description="How many top robots to include"),
     renderer: str = Query(
         "fast",
-        description="PDF engine: fast (ReportLab, default) or manus (WeasyPrint + charts, slow)",
+        description="fast = pre-built ReportLab PDF (default). manus = on-demand WeasyPrint (slow).",
     ),
 ):
-    """Download full humanoid intelligence report as PDF."""
-    robots = _fetch_scored_humanoids(db)
-    if not robots:
+    """Download HEIR intelligence report PDF — served from pre-built cache when renderer=fast."""
+    import base64
+
+    from app.services.content_surfaces import KEY_HUMANOID_INTELLIGENCE_PDF
+    from app.services.pipeline_cache_store import cache_read_safe
+    from app.services.public_surface_cache import (
+        maybe_schedule_public_cache_refresh,
+        schedule_public_cache_refresh,
+    )
+
+    maybe_schedule_public_cache_refresh()
+    mode = (renderer or "fast").strip().lower()
+
+    if mode in ("fast", "reportlab", ""):
+        cached = cache_read_safe(KEY_HUMANOID_INTELLIGENCE_PDF, stale_ok=True)
+        if cached and cached.get("bytes_b64"):
+            pdf_bytes = base64.standard_b64decode(cached["bytes_b64"])
+            filename = cached.get("filename") or "Humanoid_Intelligence_Report.pdf"
+            return StreamingResponse(
+                iter([pdf_bytes]),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            )
+        schedule_public_cache_refresh(reason="intelligence_pdf_miss")
         raise HTTPException(
-            status_code=404,
-            detail="No benchmark data available. Run /seed or /discover first.",
+            status_code=503,
+            detail="PDF is being generated in the background. Retry in 1–2 minutes.",
+            headers={"Retry-After": "90"},
         )
-    robots = [
-        r for r in robots
-        if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
-    ]
-    payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
-    if not payload.get("report"):
-        raise HTTPException(status_code=404, detail="Report unavailable")
+
+    # Optional slow path for Manus layout (admin / one-off)
+    from app.database import SessionLocal
+
+    db = SessionLocal()
     try:
+        robots = _fetch_scored_humanoids(db)
+        if not robots:
+            raise HTTPException(status_code=404, detail="No benchmark data available.")
+        robots = [
+            r for r in robots
+            if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
+        ]
+        payload = build_humanoid_intelligence_report_payload(robots, top_n=12, db=db)
+        if not payload.get("report"):
+            raise HTTPException(status_code=404, detail="Report unavailable")
         pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload, renderer=renderer)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    finally:
+        db.close()
     return StreamingResponse(
         iter([pdf_bytes]),
         media_type="application/pdf",

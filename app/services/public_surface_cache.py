@@ -36,13 +36,21 @@ PUBLIC_CACHE_REVALIDATE_SEC = int(
     )
 )
 
-KEY_HOMEPAGE = "public:homepage:v1"
-KEY_SUMMARY_EXCLUDE_JUNK = "public:summary:exclude_junk:true:v1"
-KEY_SUMMARY_INCLUDE_JUNK = "public:summary:exclude_junk:false:v1"
-KEY_LEADS_50 = "public:leads:list:50:score:v1"
-KEY_LEADS_18 = "public:leads:list:18:score:v1"
-KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v1"
-KEY_HUMANOID_REPORT = "public:humanoid:report:v1"
+from app.services.content_surfaces import (
+    KEY_HOMEPAGE,
+    KEY_HUMANOID_BENCHMARK_REPORT,
+    KEY_HUMANOID_INTELLIGENCE,
+    KEY_HUMANOID_INTELLIGENCE_PDF,
+    KEY_LEADS_18,
+    KEY_LEADS_50,
+    KEY_LEADS_HOT_12,
+    KEY_SUMMARY_EXCLUDE_JUNK,
+    KEY_SUMMARY_INCLUDE_JUNK,
+    refresh_all_content_surfaces,
+    refresh_intelligence_surface,
+)
+
+KEY_HUMANOID_REPORT = KEY_HUMANOID_BENCHMARK_REPORT  # backwards compatible alias
 
 _refresh_lock = threading.Lock()
 _refresh_in_progress = False
@@ -129,10 +137,8 @@ def refresh_newsletter_surface_cache(db: Session, *, force: bool = False) -> dic
 
 
 def refresh_all_public_surface_caches(db: Session) -> dict[str, Any]:
-    """Full rebuild — pipeline + newsletter (morning job / manual regen)."""
-    stats = refresh_pipeline_surface_caches(db)
-    stats.update(refresh_newsletter_surface_cache(db, force=True))
-    return stats
+    """Full rebuild — all registered content surfaces (morning job / manual regen)."""
+    return refresh_all_content_surfaces(db, newsletter_force=True)
 
 
 def hydrate_public_surface_caches() -> None:
@@ -211,6 +217,10 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
                 refresh_social_posts_surface_cache(db)
             except Exception as exc:
                 logger.warning("Social posts refresh skipped: %s", exc)
+            try:
+                refresh_intelligence_surface(db)
+            except Exception as exc:
+                logger.warning("Intelligence surface refresh skipped: %s", exc)
         hydrate_public_surface_caches()
         _last_refresh_monotonic = time.monotonic()
     except Exception as exc:

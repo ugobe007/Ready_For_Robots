@@ -361,7 +361,14 @@ export default function Social() {
     trend_offset?: number;
     date?: string;
     generated_at?: string;
+    cache_pending?: boolean;
+    message?: string;
   }) => {
+    if (data.cache_pending) {
+      setPosts([]);
+      setError(data.message || "Content is being prepared in the background. Retry in a minute.");
+      return;
+    }
     setPosts(data.posts || []);
     setCurrentCompanyIds(data.posted_company_ids || []);
     setCurrentTrendOffset(data.trend_offset || 0);

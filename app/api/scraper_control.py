@@ -70,6 +70,48 @@ async def cron_run_intelligence(
     return {"status": "started", "message": "Quick scrape running (20 queries)"}
 
 
+def _run_content_surfaces_refresh_sync(*, newsletter_force: bool = False) -> Dict[str, Any]:
+    import logging
+
+    log = logging.getLogger(__name__)
+    from app.services.content_surfaces import refresh_all_content_surfaces
+
+    db = SessionLocal()
+    try:
+        stats = refresh_all_content_surfaces(db, newsletter_force=newsletter_force)
+        from app.services.public_surface_cache import hydrate_public_surface_caches
+
+        hydrate_public_surface_caches()
+        log.info("Content surfaces refresh completed: %s", stats)
+        return stats
+    finally:
+        db.close()
+
+
+@router.get("/cron/refresh-content")
+async def cron_refresh_content_surfaces(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    force: bool = Query(False, description="Full newsletter rebuild"),
+) -> Dict[str, Any]:
+    """
+    Pre-build all public page caches (pipeline, newsletter, social, HEIR report + PDF).
+    GET /api/scraper/cron/refresh-content?token=YOUR_SCRAPER_CRON_TOKEN
+    Schedule every 2 hours alongside the in-app refresh loop.
+    """
+    import os
+
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    background_tasks.add_task(_run_content_surfaces_refresh_sync, newsletter_force=force)
+    return {
+        "status": "started",
+        "message": "Refreshing homepage, pipeline, newsletter, social posts, and HEIR intelligence caches.",
+    }
+
+
 @router.post("/run-intelligence")
 async def run_intelligence_scraper(
     background_tasks: BackgroundTasks,
