@@ -192,9 +192,9 @@ export default function HowItWorks() {
 
       <DIV />
 
-      {/* ── The Process (Supabase-style inline prose) ── */}
+      {/* ── The Process (Supabase-style — full content width) ── */}
       <section className="py-20">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 w-full">
           <p
             className="text-sm font-medium mb-4"
             style={{ color: "#3ecf8e", fontFamily: "Inter, sans-serif" }}
@@ -202,34 +202,45 @@ export default function HowItWorks() {
             The Process
           </p>
           <h2
-            className="text-3xl md:text-4xl font-semibold tracking-tight text-white max-w-3xl leading-tight"
+            className="text-3xl md:text-4xl font-semibold tracking-tight text-white leading-tight w-full"
             style={{ fontFamily: "Sora, sans-serif" }}
           >
             Five stages. One continuous pipeline.
           </h2>
           <p
-            className="mt-5 text-lg leading-relaxed max-w-3xl"
+            className="mt-5 text-lg md:text-xl leading-relaxed w-full"
             style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter, sans-serif" }}
           >
             SCOUT is not a single trick — it is a full go-to-market engine for robotics sales teams.
             Each stage below maps to what you saw in the hero animation.
           </p>
 
-          <div className="mt-14 max-w-2xl space-y-10">
-            {processSteps.map((step) => (
-              <p
+          <div
+            className="mt-14 w-full space-y-0"
+            style={{ borderTop: "1px solid rgba(124,58,237,0.15)" }}
+          >
+            {processSteps.map((step, i) => (
+              <div
                 key={step.title}
-                className="text-[17px] leading-[1.8]"
-                style={{ color: "rgba(255,255,255,0.62)", fontFamily: "Inter, sans-serif" }}
+                className="w-full py-8 md:py-10"
+                style={{
+                  borderBottom:
+                    i < processSteps.length - 1 ? "1px solid rgba(124,58,237,0.1)" : "none",
+                }}
               >
-                <strong className="font-semibold text-white">{step.title}.</strong> {step.body}
-                {step.pills?.map((pill) => (
-                  <span key={pill}>
-                    {" "}
-                    <InlinePill>{pill}</InlinePill>
-                  </span>
-                ))}
-              </p>
+                <p
+                  className="text-base md:text-[17px] leading-[1.85] w-full"
+                  style={{ color: "rgba(255,255,255,0.62)", fontFamily: "Inter, sans-serif" }}
+                >
+                  <strong className="font-semibold text-white">{step.title}.</strong> {step.body}
+                  {step.pills?.map((pill) => (
+                    <span key={pill}>
+                      {" "}
+                      <InlinePill>{pill}</InlinePill>
+                    </span>
+                  ))}
+                </p>
+              </div>
             ))}
           </div>
         </div>

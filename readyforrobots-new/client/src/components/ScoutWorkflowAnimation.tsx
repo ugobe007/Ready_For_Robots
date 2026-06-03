@@ -84,11 +84,14 @@ const STAGE_LABELS = ["Identify", "Develop", "Connect"];
 type ScoutWorkflowAnimationProps = {
   onStageChange?: (stage: ScoutWorkflowStage) => void;
   className?: string;
+  /** Inside ScoutHeroShowcase — no outer chrome or phase tabs (parent provides). */
+  embedded?: boolean;
 };
 
 export default function ScoutWorkflowAnimation({
   onStageChange,
   className = "",
+  embedded = false,
 }: ScoutWorkflowAnimationProps) {
   const [cycleIdx, setCycleIdx] = useState(0);
   const [stage, setStage] = useState<ScoutWorkflowStage>(0);
@@ -164,10 +167,17 @@ export default function ScoutWorkflowAnimation({
   const isPartnership = cycle.track === "partnership";
   const sources = ["job_boards", "earnings_calls", "osha_filings", "real_estate_permits"];
 
-  return (
-    <div
-      className={`flex flex-col overflow-hidden w-full ${className}`.trim()}
-      style={{
+  const shellStyle = embedded
+    ? {
+        background: "transparent",
+        border: "none",
+        borderRadius: 0,
+        opacity: fading ? 0 : 1,
+        transition: "opacity 0.4s ease",
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        boxShadow: "none",
+      }
+    : {
         background: "#130d2a",
         border: "1px solid rgba(124,58,237,0.2)",
         borderRadius: "16px",
@@ -175,59 +185,65 @@ export default function ScoutWorkflowAnimation({
         transition: "opacity 0.4s ease",
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
         boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 0 40px rgba(124,58,237,0.08), 0 24px 48px rgba(0,0,0,0.5)",
-      }}
-    >
-      <div
-        className="flex items-center justify-between px-4 py-2.5 shrink-0"
-        style={{
-          background: "rgba(124,58,237,0.06)",
-          borderBottom: "1px solid rgba(124,58,237,0.15)",
-        }}
-      >
-        <div className="flex items-center gap-1.5" aria-hidden>
-          <span className="h-3 w-3 rounded-full" style={{ background: "#ff5f57" }} />
-          <span className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
-          <span className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
-        </div>
-        <span className="rfr-scout-wordmark text-[10px] text-white/40">scout · live pipeline</span>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-          <span className="text-[11px] font-bold" style={{ color: "#03DAC5" }}>
-            LIVE
-          </span>
-        </div>
-      </div>
+      };
 
-      <div
-        className="flex shrink-0"
-        style={{ borderBottom: "1px solid rgba(124,58,237,0.12)", background: "rgba(0,0,0,0.2)" }}
-      >
-        {STAGE_LABELS.map((label, i) => {
-          const isActive = stage === i;
-          const isDone = stage > i;
-          return (
-            <div
-              key={label}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-500"
-              style={{
-                color: isDone ? "rgba(3,218,197,0.55)" : isActive ? "#03DAC5" : "rgba(255,255,255,0.22)",
-                background: isActive ? "rgba(3,218,197,0.05)" : "transparent",
-                borderBottom: isActive ? "2px solid #03DAC5" : "2px solid transparent",
-                borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
-              }}
-            >
-              {isDone ? (
-                <CheckCircle2 className="h-3 w-3 shrink-0" />
-              ) : isActive ? (
-                <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
-              ) : (
-                <Circle className="h-3 w-3 shrink-0" />
-              )}
-              {label}
+  return (
+    <div className={`flex flex-col overflow-hidden w-full h-full ${className}`.trim()} style={shellStyle}>
+      {!embedded && (
+        <>
+          <div
+            className="flex items-center justify-between px-4 py-2.5 shrink-0"
+            style={{
+              background: "rgba(124,58,237,0.06)",
+              borderBottom: "1px solid rgba(124,58,237,0.15)",
+            }}
+          >
+            <div className="flex items-center gap-1.5" aria-hidden>
+              <span className="h-3 w-3 rounded-full" style={{ background: "#ff5f57" }} />
+              <span className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
+              <span className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
             </div>
-          );
-        })}
-      </div>
+            <span className="rfr-scout-wordmark text-[10px] text-white/40">scout · live pipeline</span>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+              <span className="text-[11px] font-bold" style={{ color: "#03DAC5" }}>
+                LIVE
+              </span>
+            </div>
+          </div>
+
+          <div
+            className="flex shrink-0"
+            style={{ borderBottom: "1px solid rgba(124,58,237,0.12)", background: "rgba(0,0,0,0.2)" }}
+          >
+            {STAGE_LABELS.map((label, i) => {
+              const isActive = stage === i;
+              const isDone = stage > i;
+              return (
+                <div
+                  key={label}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-500"
+                  style={{
+                    color: isDone ? "rgba(3,218,197,0.55)" : isActive ? "#03DAC5" : "rgba(255,255,255,0.22)",
+                    background: isActive ? "rgba(3,218,197,0.05)" : "transparent",
+                    borderBottom: isActive ? "2px solid #03DAC5" : "2px solid transparent",
+                    borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                  }}
+                >
+                  {isDone ? (
+                    <CheckCircle2 className="h-3 w-3 shrink-0" />
+                  ) : isActive ? (
+                    <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+                  ) : (
+                    <Circle className="h-3 w-3 shrink-0" />
+                  )}
+                  {label}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <div
         className="px-4 py-3 shrink-0"
@@ -430,18 +446,22 @@ export default function ScoutWorkflowAnimation({
         )}
       </div>
 
-      <div
-        className="flex items-center justify-between px-4 py-2 shrink-0"
-        style={{
-          background: "rgba(124,58,237,0.06)",
-          borderTop: "1px solid rgba(124,58,237,0.15)",
-        }}
-      >
-        <span className="rfr-scout-wordmark text-[9px] text-white/30">scout · {STAGE_LABELS[stage].toLowerCase()}</span>
-        <span className="text-[10px] text-white/25">
-          {(cycleIdx % CYCLES.length) + 1} / {CYCLES.length} opportunities
-        </span>
-      </div>
+      {!embedded && (
+        <div
+          className="flex items-center justify-between px-4 py-2 shrink-0"
+          style={{
+            background: "rgba(124,58,237,0.06)",
+            borderTop: "1px solid rgba(124,58,237,0.15)",
+          }}
+        >
+          <span className="rfr-scout-wordmark text-[9px] text-white/30">scout · {STAGE_LABELS[stage].toLowerCase()}</span>
+          <span className="text-[10px] text-white/25">
+            {(cycleIdx % CYCLES.length) + 1} / {CYCLES.length} opportunities
+          </span>
+        </div>
+      )}
     </div>
   );
 }
+
+export { STAGE_LABELS };

@@ -78,16 +78,19 @@ type Props = {
   className?: string;
   /** When set, highlights sync to SCOUT in motion (no independent cycling). */
   workflowStage?: ScoutWorkflowStage;
+  /** Flat list inside ScoutHeroShowcase — no nested card chrome. */
+  embedded?: boolean;
 };
 
 export default function ScoutPipelineDiagram({
   variant = "hero",
   className = "",
   workflowStage,
+  embedded = false,
 }: Props) {
   const [soloActive, setSoloActive] = useState(0);
   const synced = workflowStage !== undefined;
-  const rail = variant === "rail";
+  const rail = embedded || variant === "rail";
 
   useEffect(() => {
     if (synced) return;
@@ -97,62 +100,8 @@ export default function ScoutPipelineDiagram({
 
   const activeIndices = synced ? STAGE_HIGHLIGHTS[workflowStage] : [soloActive];
 
-  return (
-    <div
-      className={`w-full ${rail ? "max-w-[220px]" : "max-w-md lg:max-w-lg"} ${className}`}
-      aria-label="SCOUT five-step pipeline: detect, score, draft, review, advance"
-    >
-      <style>{`
-        @keyframes scout-pipeline-pop {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
-        }
-        .scout-pipeline-step-active {
-          animation: scout-pipeline-pop 2.4s ease-in-out infinite;
-        }
-      `}</style>
-
-      <div
-        className="overflow-hidden h-full"
-        style={{
-          background: "linear-gradient(145deg, #130d2a 0%, #0d0520 55%, #0a1628 100%)",
-          border: synced
-            ? "1px solid rgba(3, 218, 197, 0.22)"
-            : "1px solid rgba(124, 58, 237, 0.28)",
-          borderRadius: rail ? 14 : 18,
-          boxShadow: synced
-            ? "0 0 32px rgba(3,218,197,0.08), 0 16px 40px rgba(0,0,0,0.45)"
-            : "0 0 0 1px rgba(255,176,0,0.06), 0 0 60px rgba(124,58,237,0.18), 0 28px 56px rgba(0,0,0,0.55)",
-        }}
-      >
-        <div
-          className="flex items-center justify-between px-3 py-2"
-          style={{
-            borderBottom: "1px solid rgba(124,58,237,0.18)",
-            background: "rgba(124,58,237,0.07)",
-          }}
-        >
-          <span
-            className="text-[9px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: "rgba(255,255,255,0.45)", fontFamily: "JetBrains Mono, monospace" }}
-          >
-            {rail ? "5 stages" : "scout · 5-stage engine"}
-          </span>
-          {synced ? (
-            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#03DAC5" }}>
-              {STAGE_LABELS[workflowStage]}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-              <span className="text-[9px] font-bold" style={{ color: "#03DAC5" }}>
-                LIVE
-              </span>
-            </span>
-          )}
-        </div>
-
-        <div className={rail ? "px-2 py-2" : "px-3 py-3 sm:px-4 sm:py-4"}>
+  const stepsBlock = (
+    <div className={embedded ? "px-2 py-2 flex-1" : rail ? "px-2 py-2" : "px-3 py-3 sm:px-4 sm:py-4"}>
           <div className="relative flex flex-col gap-0.5">
             <div
               className="absolute left-[18px] top-2 bottom-2 w-px pointer-events-none"
@@ -240,7 +189,76 @@ export default function ScoutPipelineDiagram({
               );
             })}
           </div>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className={`w-full h-full flex flex-col ${className}`} aria-label="SCOUT five-step pipeline">
+        <style>{`
+          @keyframes scout-pipeline-pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+          }
+          .scout-pipeline-step-active { animation: scout-pipeline-pop 2.4s ease-in-out infinite; }
+        `}</style>
+        {stepsBlock}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`w-full ${rail ? "max-w-[220px]" : "max-w-md lg:max-w-lg"} ${className}`}
+      aria-label="SCOUT five-step pipeline: detect, score, draft, review, advance"
+    >
+      <style>{`
+        @keyframes scout-pipeline-pop {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+        .scout-pipeline-step-active { animation: scout-pipeline-pop 2.4s ease-in-out infinite; }
+      `}</style>
+
+      <div
+        className="overflow-hidden h-full"
+        style={{
+          background: "linear-gradient(145deg, #130d2a 0%, #0d0520 55%, #0a1628 100%)",
+          border: synced ? "1px solid rgba(3, 218, 197, 0.22)" : "1px solid rgba(124, 58, 237, 0.28)",
+          borderRadius: rail ? 14 : 18,
+          boxShadow: synced
+            ? "0 0 32px rgba(3,218,197,0.08), 0 16px 40px rgba(0,0,0,0.45)"
+            : "0 0 0 1px rgba(255,176,0,0.06), 0 0 60px rgba(124,58,237,0.18), 0 28px 56px rgba(0,0,0,0.55)",
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-3 py-2"
+          style={{
+            borderBottom: "1px solid rgba(124,58,237,0.18)",
+            background: "rgba(124,58,237,0.07)",
+          }}
+        >
+          <span
+            className="text-[9px] font-bold uppercase tracking-[0.2em]"
+            style={{ color: "rgba(255,255,255,0.45)", fontFamily: "JetBrains Mono, monospace" }}
+          >
+            {rail ? "5 stages" : "scout · 5-stage engine"}
+          </span>
+          {synced ? (
+            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#03DAC5" }}>
+              {STAGE_LABELS[workflowStage!]}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+              <span className="text-[9px] font-bold" style={{ color: "#03DAC5" }}>
+                LIVE
+              </span>
+            </span>
+          )}
         </div>
+
+        {stepsBlock}
 
         {!rail && (
           <div
