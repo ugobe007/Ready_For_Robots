@@ -15,30 +15,36 @@ import {
 const processSteps: {
   title: string;
   body: string;
+  accent: string;
   pills?: string[];
 }[] = [
   {
     title: "Signal detection",
+    accent: "#a78bfa",
     body: "SCOUT monitors OSHA filings, job postings, SEC disclosures, LinkedIn activity, press, permits, and dozens of other public sources — continuously, so your team does not have to.",
     pills: ["150+ sources", "24/7"],
   },
   {
     title: "AI scoring",
+    accent: "#818cf8",
     body: "Every signal is scored on Confidence, Urgency, and Fit. Only opportunities at or above the threshold enter your pipeline — noise stays out.",
     pills: ["score ≥ 70"],
   },
   {
     title: "SCOUT drafts outreach",
+    accent: "#FFB000",
     body: "For each qualified signal, SCOUT writes a subject line, opening hook, and call to action tied to the exact trigger event — expansion, filing, hire, CapEx, or pilot news.",
     pills: ["<2 min to draft"],
   },
   {
     title: "You review",
+    accent: "#c4b5fd",
     body: "Choose how much automation you want: Manual (you send everything), Assisted (SCOUT drafts, you approve), or Auto (high-confidence signals send after a short review window).",
     pills: ["Manual", "Assisted", "Auto"],
   },
   {
     title: "Pipeline advances",
+    accent: "#03DAC5",
     body: "Replies, opens, and engagement feed back into the pipeline. SCOUT schedules follow-ups and can escalate technical questions so deals keep moving.",
   },
 ];
@@ -125,8 +131,8 @@ export default function HowItWorks() {
       {/* ── Hero: live SCOUT + synced rail ── */}
       <section className="relative overflow-hidden" style={{ paddingTop: "112px" }}>
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start pb-12 lg:pb-16">
-            <div className="pt-4 lg:pt-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16">
+            <div className="pt-4 lg:py-4">
               <p className="text-xs font-mono tracking-widest uppercase mb-6" style={{ color: "#FFB000" }}>
                 Meet SCOUT
               </p>
@@ -179,7 +185,7 @@ export default function HowItWorks() {
               </div>
             </div>
 
-            <div className="w-full min-w-0">
+            <div className="w-full min-w-0 lg:pt-10">
               <ScoutHeroShowcase />
             </div>
           </div>
@@ -192,11 +198,11 @@ export default function HowItWorks() {
 
       <DIV />
 
-      {/* ── The Process (Supabase-style — full content width) ── */}
-      <section className="py-20">
+      {/* ── The Process — tight inline prose, accent titles + glow ── */}
+      <section className="py-12 lg:py-14">
         <div className="max-w-6xl mx-auto px-6 lg:px-8 w-full">
           <p
-            className="text-sm font-medium mb-4"
+            className="text-sm font-medium mb-2"
             style={{ color: "#3ecf8e", fontFamily: "Inter, sans-serif" }}
           >
             The Process
@@ -208,31 +214,27 @@ export default function HowItWorks() {
             Five stages. One continuous pipeline.
           </h2>
           <p
-            className="mt-5 text-lg md:text-xl leading-relaxed w-full"
-            style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter, sans-serif" }}
+            className="mt-3 text-base md:text-lg leading-relaxed w-full"
+            style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Inter, sans-serif" }}
           >
             SCOUT is not a single trick — it is a full go-to-market engine for robotics sales teams.
             Each stage below maps to what you saw in the hero animation.
           </p>
 
-          <div
-            className="mt-14 w-full space-y-0"
-            style={{ borderTop: "1px solid rgba(124,58,237,0.15)" }}
-          >
-            {processSteps.map((step, i) => (
-              <div
-                key={step.title}
-                className="w-full py-8 md:py-10"
-                style={{
-                  borderBottom:
-                    i < processSteps.length - 1 ? "1px solid rgba(124,58,237,0.1)" : "none",
-                }}
-              >
-                <p
-                  className="text-base md:text-[17px] leading-[1.85] w-full"
-                  style={{ color: "rgba(255,255,255,0.62)", fontFamily: "Inter, sans-serif" }}
+          <div className="mt-8 w-full">
+            {processSteps.map((step) => (
+              <div key={step.title} className="w-full pb-5 mb-5 last:mb-0 last:pb-0">
+                <h3
+                  className="text-lg md:text-xl font-semibold tracking-tight"
+                  style={{ fontFamily: "Sora, sans-serif", color: step.accent }}
                 >
-                  <strong className="font-semibold text-white">{step.title}.</strong> {step.body}
+                  {step.title}
+                </h3>
+                <p
+                  className="mt-2 text-base md:text-[17px] leading-[1.75] w-full"
+                  style={{ color: "rgba(255,255,255,0.58)", fontFamily: "Inter, sans-serif" }}
+                >
+                  {step.body}
                   {step.pills?.map((pill) => (
                     <span key={pill}>
                       {" "}
@@ -240,6 +242,14 @@ export default function HowItWorks() {
                     </span>
                   ))}
                 </p>
+                <div
+                  className="mt-4 h-[2px] w-full rounded-full"
+                  style={{
+                    background: `linear-gradient(90deg, transparent 0%, ${step.accent}99 35%, ${step.accent} 50%, ${step.accent}99 65%, transparent 100%)`,
+                    boxShadow: `0 6px 28px ${step.accent}55, 0 2px 12px ${step.accent}33`,
+                  }}
+                  aria-hidden
+                />
               </div>
             ))}
           </div>
