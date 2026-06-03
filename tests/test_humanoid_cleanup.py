@@ -43,6 +43,25 @@ def test_is_news_headline_robot_name():
     )
     assert not is_news_headline_robot_name("Unitree G1")
 
+
+def test_screenshot_headlines_are_junk():
+    """RSS titles mistaken for robot SKUs (production index pollution)."""
+    assert is_junk_humanoid_row(
+        "China Assigns Digital Identity Codes to Thousands of Humanoid Robots",
+        "CA",
+        "china-assigns-digital-identity",
+    )
+    assert is_junk_humanoid_row(
+        "BMW to deploy humanoid robots at Leipzig plant",
+        "BM",
+        "bmw-to-deploy-humanoid-robots",
+    )
+    assert is_junk_humanoid_row(
+        "Apptronik Scores $935 Million, Hits Top 3 For Humanoid Robotics Funding",
+        "Apptronik",
+        "apptronik-scores-935-million",
+    )
+
 def test_vendor_placeholder_detected():
     assert is_junk_humanoid_row("Unitree Robotics Humanoid", "Unitree Robotics", "unitree-robotics")
     assert is_junk_humanoid_row("Figure Humanoid", "Figure AI", "figure-humanoid")

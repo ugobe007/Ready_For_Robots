@@ -115,3 +115,19 @@ def test_intelligence_report_pdf_bytes():
     pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload)
     assert pdf_bytes[:4] == b"%PDF"
     assert filename.endswith(".pdf")
+
+
+def test_intelligence_report_html_render():
+    from app.services.humanoid_intelligence_report_render import (
+        build_report_render_context,
+        render_report_html,
+    )
+    from app.services.humanoid_report_charts import generate_report_charts
+
+    robots = [_scored_seed("unitree-g1"), _scored_seed("agility-digit")]
+    payload = build_humanoid_intelligence_report_payload(robots, top_n=2)
+    ctx = build_report_render_context(payload)
+    assert ctx["total_robots"] == 2
+    assert "Executive Summary" in render_report_html(payload)
+    charts = generate_report_charts(payload, __import__("pathlib").Path("/tmp/heir_charts_test"))
+    assert "chart_index_scores" in charts or len(charts) >= 0

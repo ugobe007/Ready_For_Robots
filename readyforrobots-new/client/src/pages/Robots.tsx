@@ -358,7 +358,7 @@ export default function Robots() {
     : null;
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0118", color: "#fff" }}>
+    <div className="min-h-screen" style={{ background: "#0d0520", color: "#fff" }}>
       <Header />
 
       {/* Compact page header */}

@@ -133,13 +133,31 @@ NEWS_HEADLINE_NAME_RE = re.compile(
     r"valuation|"
     r"target US\$|"
     r"raises \$|"
+    r"scores \$|"
+    r"hits top|"
+    r"hits top \d+|"
+    r"funding round|"
     r"Series [A-F]\b|"
     r"reportedly|"
     r"according to|"
     r"\bannounces\b|"
     r"\bunveils\b|"
+    r"\bassigns\b|"
+    r"digital identity|"
+    r"thousands of humanoid|"
+    r"to deploy humanoid|"
     r"startup .{0,40}(IPO|funding|valuation)|"
     r"humanoid robotics startup"
+    r")",
+    re.I,
+)
+
+# Sentence-shaped RSS titles (not product SKUs like "Unitree G1")
+NEWS_SENTENCE_RE = re.compile(
+    r"("
+    r"^[A-Z][^.!?]{20,}\s+to\s+(deploy|launch|expand|test)\b|"
+    r"\b(scores|raises|secures|assigns|targets|valued at)\b.{0,30}\b(million|billion|\$)|"
+    r"\bfor humanoid robotics funding\b"
     r")",
     re.I,
 )
@@ -169,22 +187,27 @@ def is_news_headline_robot_name(name: str) -> bool:
     if not n:
         return False
     words = n.split()
-    if len(words) >= 12:
+    if len(words) >= 10:
         return True
-    if len(n) >= 95:
+    if len(n) >= 72:
         return True
     if NEWS_HEADLINE_NAME_RE.search(n):
         return True
+    if NEWS_SENTENCE_RE.search(n):
+        return True
     if re.search(
-        r"\b(announces|launch(?:es)?|unveil|expand|acquire[sd]?|deploys|raises|trials|tests)\b",
+        r"\b(announces|launch(?:es)?|unveil|expand|acquire[sd]?|deploys?|raises|scores|assigns|trials|tests)\b",
         n,
         re.I,
-    ) and len(words) >= 8:
+    ) and len(words) >= 7:
         return True
     # "China's humanoid robotics startup Unitree fast-tracks Shanghai IPO..."
     if re.search(r"\b(startup|company|firm)\b", n, re.I) and re.search(
         r"\b(IPO|valuation|funding|million|billion)\b", n, re.I
     ):
+        return True
+    # Product names rarely end with generic plural topic nouns
+    if re.search(r"\bhumanoid robots?\s*$", n, re.I) and len(words) >= 6:
         return True
     return False
 
@@ -202,6 +225,10 @@ def is_junk_humanoid_row(name: str, vendor: str, model_slug: str) -> bool:
         return True
 
     if is_news_headline_robot_name(n):
+        return True
+
+    # Headline rows often get a 2-letter vendor from title initials (BM, CA)
+    if len(n) >= 40 and len(v) <= 4 and v.isalpha() and v.upper() == v:
         return True
 
     if GENERIC_SUFFIX_RE.search(n) and slug.endswith("-humanoid"):

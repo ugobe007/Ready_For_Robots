@@ -174,11 +174,16 @@ def run_humanoid_discovery_task(
             agent_limit=agent_limit,
             rescore_existing=rescore_existing,
         )
+        from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
+
+        cleanup = cleanup_humanoid_benchmarks(db, dry_run=False)
+        stats["cleanup_removed"] = cleanup.get("removed", 0)
         logger.info(
-            "Humanoid discovery: +%d inserted, %d updated, %d agent-scored, %d total in DB",
+            "Humanoid discovery: +%d inserted, %d updated, %d agent-scored, %d cleanup removed, %d total in DB",
             stats.get("inserted", 0),
             stats.get("updated", 0),
             stats.get("agent_scored", 0),
+            stats.get("cleanup_removed", 0),
             stats.get("total_in_db", 0),
         )
         return stats

@@ -1,26 +1,52 @@
-"""Generate downloadable PDF for the humanoid intelligence report."""
+"""Generate downloadable PDF for the humanoid intelligence report (Manus / RFR layout)."""
 from __future__ import annotations
 
 import html
 import io
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any, List
 
+logger = logging.getLogger(__name__)
+
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    BaseDocTemplate,
+    Frame,
+    NextPageTemplate,
+    PageBreak,
+    PageTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-from app.services.humanoid_deployment_report import TIER_LABELS
 from app.services.humanoid_scraper import HEIF_DIMS
 
-TEAL = colors.HexColor("#0d9488")
-PURPLE = colors.HexColor("#6d28d9")
+# Ready For Robots brand (matches readyforrobots.com/robots)
+BG_DARK = colors.HexColor("#0d0520")
+TEAL = colors.HexColor("#03DAC5")
+PURPLE = colors.HexColor("#7c3aed")
+PURPLE_LIGHT = colors.HexColor("#a78bfa")
 MUTED = colors.HexColor("#64748b")
-INK = colors.HexColor("#1e293b")
+INK = colors.HexColor("#1e1b2e")
+WHITE = colors.white
+TEAL_TINT = colors.HexColor("#ecfeff")
+PURPLE_TINT = colors.HexColor("#f5f3ff")
+BORDER = colors.HexColor("#e2e8f0")
+
+PAGE_W, PAGE_H = letter
+MARGIN_L = 0.65 * inch
+MARGIN_R = 0.65 * inch
+MARGIN_T = 0.72 * inch
+MARGIN_B = 0.85 * inch
+CONTENT_W = PAGE_W - MARGIN_L - MARGIN_R
 
 
 def _esc(text: Any) -> str:
@@ -29,42 +55,257 @@ def _esc(text: Any) -> str:
     return html.escape(str(text))
 
 
-def _table(data: List[List[Any]], col_widths: List[float] | None = None) -> Table:
-    t = Table(data, colWidths=col_widths, repeatRows=1)
+def _tier_upper(tier_label: str) -> str:
+    if not tier_label:
+        return "—"
+    return str(tier_label).upper().replace("_", " ")
+
+
+def _pdf_filename(report: dict) -> str:
+    title = report.get("title") or "Humanoid_Intelligence_Report"
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", title).strip("_")
+    if not slug.lower().endswith(".pdf"):
+        return f"{slug}.pdf"
+    return slug
+
+
+def _footer(canvas, doc) -> None:
+    canvas.saveState()
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(MUTED)
+    page_num = canvas.getPageNumber()
+    if page_num > 1:
+        canvas.drawString(MARGIN_L, 0.48 * inch, "Ready For Robots · HEIR 2026")
+        canvas.drawRightString(PAGE_W - MARGIN_R, 0.48 * inch, str(page_num))
+    canvas.restoreState()
+
+
+def _cover_page(canvas, doc) -> None:
+    canvas.saveState()
+    canvas.setFillColor(BG_DARK)
+    canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+    canvas.setFillColor(TEAL)
+    canvas.setFont("Helvetica-Bold", 10)
+    canvas.drawString(MARGIN_L, PAGE_H - 1.0 * inch, "READY FOR ROBOTS")
+    canvas.setFillColor(WHITE)
+    canvas.setFont("Helvetica-Bold", 32)
+    canvas.drawString(MARGIN_L, PAGE_H - 1.65 * inch, "Humanoid Intelligence")
+    canvas.setFont("Helvetica-Bold", 28)
+    canvas.drawString(MARGIN_L, PAGE_H - 2.05 * inch, "Report")
+    canvas.setFillColor(PURPLE_LIGHT)
+    canvas.setFont("Helvetica", 12)
+    y = PAGE_H - 2.65 * inch
+    for line in (
+        "Monthly market intelligence on humanoid capability,",
+        "deployments, and buyer readiness",
+    ):
+        canvas.drawString(MARGIN_L, y, line)
+        y -= 16
+    canvas.setFillColor(TEAL)
+    canvas.setFont("Helvetica", 10)
+    y -= 0.25 * inch
+    meta = getattr(doc, "_cover_meta", {})
+    for label, key in (
+        ("Edition:", "edition"),
+        ("Published:", "published"),
+        ("Framework:", "framework"),
+    ):
+        canvas.drawString(MARGIN_L, y, f"{label} {_esc(meta.get(key, ''))}")
+        y -= 14
+    canvas.setFillColor(PURPLE_LIGHT)
+    canvas.drawString(MARGIN_L, 1.1 * inch, "readyforrobots.com/robots")
+    canvas.restoreState()
+
+
+def _styles():
+    base = getSampleStyleSheet()
+    return {
+        "section": ParagraphStyle(
+            "RptSection",
+            parent=base["Heading2"],
+            fontSize=11,
+            textColor=PURPLE,
+            fontName="Helvetica-Bold",
+            spaceBefore=14,
+            spaceAfter=8,
+            leading=13,
+        ),
+        "subsection": ParagraphStyle(
+            "RptSub",
+            parent=base["Heading3"],
+            fontSize=10,
+            textColor=INK,
+            fontName="Helvetica-Bold",
+            spaceBefore=10,
+            spaceAfter=5,
+        ),
+        "body": ParagraphStyle(
+            "RptBody",
+            parent=base["Normal"],
+            fontSize=9.5,
+            leading=13,
+            spaceAfter=7,
+            alignment=TA_JUSTIFY,
+            textColor=INK,
+        ),
+        "finding": ParagraphStyle(
+            "RptFinding",
+            parent=base["Normal"],
+            fontSize=9.5,
+            leading=13,
+            spaceAfter=9,
+            textColor=INK,
+        ),
+        "bullet": ParagraphStyle(
+            "RptBullet",
+            parent=base["Normal"],
+            fontSize=9.5,
+            leading=13,
+            leftIndent=14,
+            bulletIndent=0,
+            spaceAfter=5,
+            textColor=INK,
+        ),
+        "callout": ParagraphStyle(
+            "RptCallout",
+            parent=base["Normal"],
+            fontSize=9,
+            leading=12,
+            textColor=INK,
+        ),
+        "profile_title": ParagraphStyle(
+            "RptProfTitle",
+            parent=base["Normal"],
+            fontSize=10,
+            fontName="Helvetica-Bold",
+            textColor=INK,
+            spaceAfter=3,
+        ),
+        "profile_meta": ParagraphStyle(
+            "RptProfMeta",
+            parent=base["Normal"],
+            fontSize=9,
+            textColor=MUTED,
+            spaceAfter=4,
+        ),
+        "profile_body": ParagraphStyle(
+            "RptProfBody",
+            parent=base["Normal"],
+            fontSize=9,
+            leading=12,
+            spaceAfter=12,
+            textColor=INK,
+        ),
+    }
+
+
+def _data_table(
+    data: List[List[Any]],
+    col_widths: List[float],
+    *,
+    header_rows: int = 1,
+) -> Table:
+    t = Table(data, colWidths=col_widths, repeatRows=header_rows)
     t.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), TEAL),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, 0), 9),
-                ("FONTSIZE", (0, 1), (-1, -1), 8),
+                ("BACKGROUND", (0, 0), (-1, header_rows - 1), PURPLE),
+                ("TEXTCOLOR", (0, 0), (-1, header_rows - 1), WHITE),
+                ("FONTNAME", (0, 0), (-1, header_rows - 1), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, header_rows - 1), 8),
+                ("FONTSIZE", (0, header_rows), (-1, -1), 8),
+                ("FONTNAME", (0, header_rows), (-1, -1), "Helvetica"),
+                ("TEXTCOLOR", (0, header_rows), (-1, -1), INK),
                 ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#e2e8f0")),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.25, BORDER),
+                ("ROWBACKGROUNDS", (0, header_rows), (-1, -1), [WHITE, PURPLE_TINT]),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
             ]
         )
     )
     return t
 
 
-def _pdf_filename(report: dict) -> str:
-    title = report.get("title") or "Humanoid_Intelligence_Report"
-    slug = re.sub(r"[^A-Za-z0-9]+", "_", title).strip("_")
-    return f"{slug}.pdf"
+def _metric_cards(glance: dict) -> Table:
+    """Three KPI tiles on executive summary page."""
+    cells = [
+        [
+            Paragraph(f'<para align="center"><font size="18" color="#7c3aed"><b>{_esc(glance.get("robots_indexed"))}</b></font></para>', _styles()["body"]),
+            Paragraph(f'<para align="center"><font size="18" color="#7c3aed"><b>{_esc(glance.get("poc_or_better_pct"))}%</b></font></para>', _styles()["body"]),
+            Paragraph(f'<para align="center"><font size="18" color="#7c3aed"><b>{_esc(glance.get("commercial_signal_pct"))}%</b></font></para>', _styles()["body"]),
+        ],
+        [
+            Paragraph('<para align="center"><font size="7" color="#64748b"><b>ROBOTS INDEXED</b></font></para>', _styles()["body"]),
+            Paragraph('<para align="center"><font size="7" color="#64748b"><b>POC-OR-BETTER (FLEET)</b></font></para>', _styles()["body"]),
+            Paragraph('<para align="center"><font size="7" color="#64748b"><b>COMMERCIAL / FLEET SIGNALS</b></font></para>', _styles()["body"]),
+        ],
+    ]
+    col = CONTENT_W / 3
+    t = Table(cells, colWidths=[col, col, col])
+    t.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), PURPLE_TINT),
+                ("BOX", (0, 0), (-1, -1), 0.75, PURPLE_LIGHT),
+                ("INNERGRID", (0, 0), (-1, -1), 0.5, BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ]
+        )
+    )
+    return t
 
 
-def _section(story: list, title: str, h2: ParagraphStyle) -> None:
-    story.append(Paragraph(title, h2))
+def _callout_box(title: str, body: str, st: dict) -> List[Any]:
+    inner = [
+        [Paragraph(f"<b>{_esc(title)}</b>", st["subsection"])],
+        [Paragraph(_esc(body), st["callout"])],
+    ]
+    t = Table(inner, colWidths=[CONTENT_W - 16])
+    t.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), TEAL_TINT),
+                ("BOX", (0, 0), (-1, -1), 0.75, TEAL),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    return [t, Spacer(1, 8)]
 
 
-def _paragraphs(story: list, lines: List[str], style: ParagraphStyle) -> None:
-    for line in lines:
-        if line and str(line).strip():
-            story.append(Paragraph(_esc(line), style))
+def _section(story: list, title: str, st: dict) -> None:
+    story.append(Paragraph(title.upper(), st["section"]))
+
+
+def _profile_block(robot: dict, st: dict) -> List[Any]:
+    rank = robot.get("rank")
+    name = robot.get("name")
+    vendor = robot.get("vendor")
+    tier = _tier_upper(robot.get("deployment_tier_label") or "")
+    customers = robot.get("customer_integrations") or {}
+    dep_count = customers.get("catalog_deployment_count", 0)
+    score = robot.get("score_total")
+    heif = robot.get("heif_total")
+    header = Paragraph(
+        f"<b>#{rank} {_esc(name)}</b> — {_esc(vendor)} &nbsp;&nbsp; "
+        f'<font color="#7c3aed">{_esc(tier)}</font>',
+        st["profile_title"],
+    )
+    meta = Paragraph(
+        f"Index {_esc(score)} · HEIF {_esc(heif)}/4 · {_esc(dep_count)} catalog deployments",
+        st["profile_meta"],
+    )
+    body = Paragraph(_esc(robot.get("why_top_rank") or ""), st["profile_body"])
+    return [header, meta, body]
 
 
 def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
@@ -72,186 +313,124 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
     report = payload.get("report")
     if not report:
         raise ValueError("Report payload is empty")
+    try:
+        from app.services.humanoid_intelligence_report_render import (
+            build_humanoid_intelligence_report_pdf_weasyprint,
+        )
+
+        return build_humanoid_intelligence_report_pdf_weasyprint(payload)
+    except Exception as exc:
+        logger.info("WeasyPrint PDF unavailable (%s); using ReportLab", exc)
+    return _build_humanoid_intelligence_report_pdf_reportlab(payload)
+
+
+def _build_humanoid_intelligence_report_pdf_reportlab(payload: dict) -> tuple[bytes, str]:
+    """ReportLab fallback when WeasyPrint or matplotlib is unavailable."""
+    report = payload.get("report")
+    if not report:
+        raise ValueError("Report payload is empty")
 
     narrative = report.get("narrative") or {}
     glance = narrative.get("at_a_glance") or {}
+    st = _styles()
+    generated = payload.get("generated_at") or datetime.now(timezone.utc).isoformat()
+    pub_date = generated[:10]
+    edition_match = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}", report.get("title") or "")
+    edition = edition_match.group(0) if edition_match else pub_date[:7]
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
+    doc = BaseDocTemplate(
         buffer,
         pagesize=letter,
-        rightMargin=0.7 * inch,
-        leftMargin=0.7 * inch,
-        topMargin=0.65 * inch,
-        bottomMargin=0.75 * inch,
+        leftMargin=MARGIN_L,
+        rightMargin=MARGIN_R,
+        topMargin=MARGIN_T,
+        bottomMargin=MARGIN_B,
     )
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        "RptTitle",
-        parent=styles["Heading1"],
-        fontSize=22,
-        textColor=PURPLE,
-        spaceAfter=6,
-        alignment=TA_CENTER,
-        fontName="Helvetica-Bold",
-    )
-    subtitle_style = ParagraphStyle(
-        "RptSub",
-        parent=styles["Normal"],
-        fontSize=11,
-        textColor=MUTED,
-        alignment=TA_CENTER,
-        spaceAfter=10,
-    )
-    h2 = ParagraphStyle(
-        "RptH2",
-        parent=styles["Heading2"],
-        fontSize=14,
-        textColor=TEAL,
-        spaceBefore=16,
-        spaceAfter=8,
-        fontName="Helvetica-Bold",
-    )
-    h3 = ParagraphStyle(
-        "RptH3",
-        parent=styles["Heading3"],
-        fontSize=11,
-        textColor=INK,
-        spaceBefore=10,
-        spaceAfter=4,
-        fontName="Helvetica-Bold",
-    )
-    body = ParagraphStyle(
-        "RptBody",
-        parent=styles["Normal"],
-        fontSize=10,
-        leading=14,
-        spaceAfter=8,
-        alignment=TA_JUSTIFY,
-        textColor=INK,
-    )
-    bullet = ParagraphStyle(
-        "RptBullet",
-        parent=body,
-        leftIndent=14,
-        spaceAfter=6,
-        alignment=TA_JUSTIFY,
-    )
-    finding_style = ParagraphStyle(
-        "RptFinding",
-        parent=body,
-        leftIndent=0,
-        spaceAfter=10,
-    )
+    doc._cover_meta = {
+        "edition": edition,
+        "published": pub_date,
+        "framework": "HEIF (HEIR 2026)",
+    }
+
+    frame = Frame(MARGIN_L, MARGIN_B, CONTENT_W, PAGE_H - MARGIN_T - MARGIN_B, id="normal")
+    doc.addPageTemplates([
+        PageTemplate(id="cover", frames=[frame], onPage=_cover_page),
+        PageTemplate(id="body", frames=[frame], onPage=_footer),
+    ])
 
     story: list[Any] = []
-    generated = payload.get("generated_at") or datetime.now(timezone.utc).isoformat()
 
-    story.append(Spacer(1, 0.35 * inch))
-    story.append(Paragraph(_esc(report.get("title")), title_style))
-    story.append(Paragraph(_esc(narrative.get("subtitle") or report.get("subtitle")), subtitle_style))
-    story.append(Paragraph(
-        f"Ready For Robots · HEIR 2026 / HEIF · Generated {generated[:10]} · readyforrobots.com/robots",
-        subtitle_style,
-    ))
+    # ── Cover (page 1) — drawn in _cover_page; switch to body template after ──
+    story.append(Spacer(1, 0.01))
+    story.append(NextPageTemplate("body"))
+    story.append(PageBreak())
 
+    # ── Executive summary (page 2) ───────────────────────────────────────────
+    _section(story, "Executive Summary", st)
     if glance:
-        story.append(Spacer(1, 10))
-        glance_rows = [
-            ["At a glance", ""],
-            ["Robots indexed", _esc(glance.get("robots_indexed"))],
-            ["Index leader", _esc(f"{glance.get('index_leader')} ({glance.get('index_leader_score')})")],
-            ["PoC-or-better (fleet)", _esc(f"{glance.get('poc_or_better_pct')}%")],
-            ["Commercial / fleet signals", _esc(f"{glance.get('commercial_signal_pct')}%")],
-            ["Distinct dimension leaders", _esc(glance.get("dimension_leader_count"))],
-        ]
-        gt = Table(glance_rows, colWidths=[2.2 * inch, 3.8 * inch])
-        gt.setStyle(
-            TableStyle([
-                ("BACKGROUND", (0, 0), (-1, 0), PURPLE),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("SPAN", (0, 0), (1, 0)),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#f5f3ff")),
-                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#c4b5fd")),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ])
-        )
-        story.append(gt)
+        story.append(_metric_cards(glance))
+        story.append(Spacer(1, 12))
 
-    _section(story, "Market overview", h2)
-    _paragraphs(story, narrative.get("market_overview") or [], body)
-    if not narrative.get("market_overview"):
-        for line in report.get("executive_summary") or []:
-            story.append(Paragraph(f"• {_esc(line)}", bullet))
+    story.append(Paragraph("Market Overview", st["subsection"]))
+    for para in narrative.get("market_overview") or []:
+        if para and str(para).strip():
+            story.append(Paragraph(_esc(para), st["body"]))
 
+    callout = narrative.get("deployment_news_callout")
+    if callout:
+        story.extend(_callout_box("Deployment News Status", callout, st))
+
+    mom_lines = narrative.get("month_over_month") or []
     mom = report.get("month_over_month") or {}
-    if mom.get("has_prior"):
-        _section(story, f"Month over month (vs {mom.get('previous_period')})", h2)
-        for line in mom.get("narrative_bullets") or []:
-            story.append(Paragraph(f"• {_esc(line)}", bullet))
-        leader = mom.get("leader") or {}
-        if leader.get("changed"):
-            story.append(Paragraph(
-                f"<b>Leader change:</b> {_esc(leader.get('previous', {}).get('name'))} → "
-                f"{_esc(leader.get('current', {}).get('name'))}",
-                body,
-            ))
-        fm = mom.get("fleet_metrics") or {}
-        if fm:
-            mom_rows = [["Metric", "Prior", "Current", "Δ"]]
-            for label, key in (
-                ("Robots indexed", "total_robots"),
-                ("PoC-or-better", "poc_or_better_count"),
-                ("Commercial signals", "deployment_signal_count"),
-                ("Avg HEIF", "fleet_avg_heif"),
-            ):
-                block = fm.get(key)
-                if block:
-                    mom_rows.append([
-                        label,
-                        _esc(block.get("previous")),
-                        _esc(block.get("current")),
-                        _esc(block.get("delta")),
-                    ])
-            if len(mom_rows) > 1:
-                story.append(_table(mom_rows, [1.5 * inch, 0.9 * inch, 0.9 * inch, 0.8 * inch]))
-        movers = [m for m in (mom.get("movers") or []) if m.get("type") == "mover"][:6]
-        if movers:
-            mrows = [["Robot", "Rank was", "Rank now", "Score Δ"]]
-            for m in movers:
-                mrows.append([
-                    _esc(m.get("name")),
-                    _esc(m.get("rank_previous")),
-                    _esc(m.get("rank_current")),
-                    _esc(m.get("score_delta")),
-                ])
-            story.append(_table(mrows, [1.8 * inch, 0.8 * inch, 0.8 * inch, 0.8 * inch]))
-    elif mom.get("baseline_note"):
-        _section(story, "Month over month", h2)
-        story.append(Paragraph(_esc(mom.get("baseline_note")), body))
+    if mom_lines or mom.get("baseline_note") or mom.get("has_prior"):
+        story.append(Paragraph("Month over Month", st["subsection"]))
+        if mom.get("has_prior"):
+            for line in mom.get("narrative_bullets") or []:
+                story.append(Paragraph(f"• {_esc(line)}", st["bullet"]))
+        elif mom.get("baseline_note"):
+            story.append(Paragraph(_esc(mom.get("baseline_note")), st["body"]))
+        else:
+            for line in mom_lines:
+                story.append(Paragraph(_esc(line), st["body"]))
 
+    # ── Key findings (page 3) ────────────────────────────────────────────────
     findings = narrative.get("key_findings") or []
     if findings:
-        _section(story, "Key findings", h2)
+        story.append(PageBreak())
+        _section(story, "Key Findings", st)
         for item in findings:
-            story.append(Paragraph(f"<b>{_esc(item.get('title'))}</b>", h3))
-            story.append(Paragraph(_esc(item.get("body")), finding_style))
+            title = (item.get("title") or "Finding").strip()
+            body = (item.get("body") or "").strip()
+            if title.lower() == "month over month" and mom.get("baseline_note"):
+                continue
+            story.append(
+                Paragraph(
+                    f"<b>{_esc(title)}:</b> {_esc(body)}",
+                    st["finding"],
+                )
+            )
 
-    for section_title, key in (
-        ("Competitive dynamics", "competitive_dynamics"),
-        ("Deployment reality", "deployment_reality"),
-        ("How to read the rankings", "ranking_commentary"),
-    ):
-        lines = narrative.get(key) or []
-        if lines:
-            _section(story, section_title, h2)
-            _paragraphs(story, lines, body)
+    # ── Competitive dynamics & deployment funnel (page 4) ─────────────────
+    comp = narrative.get("competitive_dynamics") or []
+    dep_real = narrative.get("deployment_reality") or []
+    if comp or dep_real:
+        story.append(PageBreak())
+        _section(story, "Competitive Dynamics & Deployment Funnel", st)
+        for para in comp:
+            story.append(Paragraph(_esc(para), st["body"]))
+        if dep_real:
+            story.append(Paragraph("Deployment Funnel", st["subsection"]))
+            for para in dep_real:
+                story.append(Paragraph(_esc(para), st["body"]))
 
+    # ── Evidence & dimension leaders (page 5) ───────────────────────────────
     metrics = report.get("adoption_metrics") or {}
-    _section(story, "Evidence base (full fleet)", h2)
+    comparisons = report.get("comparisons") or {}
+    story.append(PageBreak())
+    _section(story, "Evidence & Dimension Leaders", st)
+
+    story.append(Paragraph("Evidence Base (Full Fleet)", st["subsection"]))
     metric_rows = [
         ["Metric", "Value"],
         ["Robots in index", _esc(metrics.get("fleet_total_robots") or report.get("total_robots"))],
@@ -260,13 +439,13 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
         ["Capability-only scoring", _esc(metrics.get("fleet_capability_only_count"))],
         ["With news in catalog", _esc(metrics.get("fleet_with_news_sources"))],
     ]
-    story.append(_table(metric_rows, [2.6 * inch, 3.6 * inch]))
+    story.append(_data_table(metric_rows, [2.4 * inch, CONTENT_W - 2.4 * inch]))
+    story.append(Spacer(1, 10))
 
-    comparisons = report.get("comparisons") or {}
     divergence = comparisons.get("ranking_divergence") or []
     if divergence:
-        _section(story, "Index vs deployment-weighted rank", h2)
-        drows = [["Robot", "Index #", "Deployment #", "Comment"]]
+        story.append(Paragraph("Index vs Deployment-Weighted Rank", st["subsection"]))
+        drows = [["Robot", "Index #", "Depl. #", "Comment"]]
         for d in divergence[:6]:
             drows.append([
                 _esc(d.get("name")),
@@ -274,11 +453,12 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
                 _esc(d.get("deployment_weighted_rank")),
                 _esc(d.get("commentary")),
             ])
-        story.append(_table(drows, [1.4 * inch, 0.65 * inch, 0.85 * inch, 2.4 * inch]))
+        story.append(_data_table(drows, [1.35 * inch, 0.55 * inch, 0.55 * inch, CONTENT_W - 2.45 * inch]))
 
     leaders = comparisons.get("dimension_leaders") or []
     if leaders:
-        _section(story, "Who leads each HEIF dimension", h2)
+        story.append(Spacer(1, 8))
+        story.append(Paragraph("HEIF Dimension Leaders", st["subsection"]))
         lrows = [["Dimension", "Robot", "Vendor", "HEIF", "Index"]]
         for entry in leaders:
             lrows.append([
@@ -288,17 +468,23 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
                 _esc(entry.get("heif")),
                 _esc(entry.get("index_score")),
             ])
-        story.append(_table(lrows, [1.15 * inch, 1.45 * inch, 1.25 * inch, 0.55 * inch, 0.55 * inch]))
+        story.append(_data_table(lrows, [1.0 * inch, 1.2 * inch, 1.1 * inch, 0.45 * inch, 0.45 * inch]))
 
+    # ── Top robots & peer comparison (pages 6–7) ──────────────────────────────
     idx_dep = comparisons.get("index_vs_deployment") or []
-    if idx_dep:
+    matrix = comparisons.get("peer_heif_matrix") or {}
+    matrix_robots = matrix.get("robots") or []
+    if idx_dep or matrix_robots:
         story.append(PageBreak())
-        _section(story, "Top robots — capability vs field evidence", h2)
+        _section(story, "Top Robots & Peer Comparison", st)
+
+    if idx_dep:
+        story.append(Paragraph("Top Robots — Capability vs Field Evidence", st["subsection"]))
         story.append(Paragraph(
             "Index score reflects engineering maturity from specs and HEIR research. "
             "Deployment tier reflects catalog status, deployment counts, and news. "
             "Gap = high HEIF (≥2.5) but tier still PoC or weaker.",
-            body,
+            st["body"],
         ))
         irows = [["#", "Robot", "Index", "HEIF", "Tier", "Depl.", "Gap"]]
         for row in idx_dep:
@@ -307,31 +493,44 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
                 _esc(row.get("name")),
                 _esc(row.get("score_total")),
                 _esc(row.get("heif_total")),
-                _esc((row.get("deployment_tier_label") or "")[:22]),
+                _esc((row.get("deployment_tier_label") or "")[:24]),
                 _esc(row.get("commercial_deployments")),
                 _esc("Yes" if row.get("capability_ahead_of_deployment") else ""),
             ])
-        story.append(_table(irows, [0.35 * inch, 1.55 * inch, 0.5 * inch, 0.45 * inch, 1.35 * inch, 0.45 * inch, 0.4 * inch]))
+        cw = CONTENT_W
+        story.append(_data_table(
+            irows,
+            [0.32 * inch, 1.45 * inch, 0.48 * inch, 0.42 * inch, 1.35 * inch, 0.42 * inch, cw - 3.44 * inch],
+        ))
 
-    matrix = comparisons.get("peer_heif_matrix") or {}
-    matrix_robots = matrix.get("robots") or []
     if matrix_robots:
-        _section(story, "Peer comparison — HEIF by dimension (0–4)", h2)
+        story.append(Spacer(1, 10))
+        _section(story, "HEIF Dimension Comparison", st)
         dim_labels = matrix.get("dimension_labels") or []
-        header = ["Robot", "Total"] + [lbl[:7] for lbl in dim_labels]
+        short = ["Mob.", "Manip.", "Cog.", "Safe.", "Data", "Prod."]
+        header = ["Robot", "Total"] + short[: len(dim_labels)]
         mrows = [header]
         for r in matrix_robots:
             dims = r.get("dimensions") or {}
             mrows.append(
-                [_esc((r.get("name") or "")[:20]), _esc(r.get("heif_total"))]
+                [_esc((r.get("name") or "")[:22]), _esc(r.get("heif_total"))]
                 + [_esc(dims.get(dim, "")) for dim in HEIF_DIMS]
             )
-        story.append(_table(mrows, [1.35 * inch, 0.5 * inch] + [0.52 * inch] * 6))
+        ncol = len(header)
+        first = 1.25 * inch
+        rest = (CONTENT_W - first - 0.42 * inch) / max(1, ncol - 2)
+        story.append(_data_table(mrows, [first, 0.42 * inch] + [rest] * (ncol - 2)))
 
+    # ── Vendor analysis & buyer guidance (page 8) ───────────────────────────
     vendors = comparisons.get("vendor_leaderboard") or []
+    guidance = narrative.get("buyer_guidance") or []
+    if vendors or guidance:
+        story.append(PageBreak())
+        _section(story, "Vendor Analysis & Buyer Guidance", st)
+
     if vendors:
-        _section(story, "Vendor comparison", h2)
-        vrows = [["Vendor", "Models", "PoC+", "Commercial", "Deployments"]]
+        story.append(Paragraph("Vendor Comparison", st["subsection"]))
+        vrows = [["Vendor", "Models", "PoC+ Rate", "Commercial Models", "Deployments"]]
         for v in vendors[:10]:
             vrows.append([
                 _esc(v.get("vendor")),
@@ -340,34 +539,30 @@ def build_humanoid_intelligence_report_pdf(payload: dict) -> tuple[bytes, str]:
                 _esc(v.get("deployment_signal")),
                 _esc(v.get("total_deployments")),
             ])
-        story.append(_table(vrows, [1.5 * inch, 0.65 * inch, 1.0 * inch, 0.9 * inch, 1.0 * inch]))
+        story.append(_data_table(vrows, [1.35 * inch, 0.5 * inch, 0.95 * inch, 0.95 * inch, CONTENT_W - 3.75 * inch]))
 
-    guidance = narrative.get("buyer_guidance") or []
     if guidance:
-        _section(story, "Buyer guidance", h2)
+        story.append(Paragraph("Buyer Guidance & Recommendations", st["subsection"]))
         for g in guidance:
-            story.append(Paragraph(f"• {_esc(g)}", bullet))
+            story.append(Paragraph(f"• {_esc(g)}", st["bullet"]))
 
+    # ── Robot profiles (pages 9–10) ───────────────────────────────────────────
+    top_ranked = report.get("top_ranked") or []
+    if top_ranked:
+        story.append(PageBreak())
+        _section(story, "Robot Profiles (Top Ranked)", st)
+        for robot in top_ranked:
+            story.extend(_profile_block(robot, st))
+
+    # ── Methodology (page 11) ─────────────────────────────────────────────────
     story.append(PageBreak())
-    _section(story, "Robot profiles (top ranked)", h2)
-    for robot in report.get("top_ranked") or []:
-        story.append(Paragraph(
-            f"<b>#{robot.get('rank')} {_esc(robot.get('name'))}</b> — {_esc(robot.get('vendor'))}",
-            h3,
-        ))
-        story.append(Paragraph(
-            f"Index {_esc(robot.get('score_total'))} · HEIF {_esc(robot.get('heif_total'))}/4 · "
-            f"{_esc(robot.get('deployment_tier_label'))}",
-            body,
-        ))
-        story.append(Paragraph(_esc(robot.get("why_top_rank")), finding_style))
-
-    _section(story, "Methodology", h2)
-    story.append(Paragraph(_esc(report.get("methodology")), body))
+    _section(story, "Robot Profiles & Methodology", st)
+    story.append(Paragraph("Methodology", st["subsection"]))
+    story.append(Paragraph(_esc(report.get("methodology")), st["body"]))
     story.append(Paragraph(
         "Verify customer names and deployment claims before external citation. "
         "© Ready For Robots — monthly index update.",
-        bullet,
+        st["body"],
     ))
 
     doc.build(story)

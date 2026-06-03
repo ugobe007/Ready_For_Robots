@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report.title or 'Humanoid Intelligence Report' }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+            @bottom-right {
+                content: counter(page);
+                font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9px;
+                color: #64748B;
+            }
+            @bottom-left {
+                content: "Ready For Robots · HEIR 2026";
+                font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9px;
+                color: #64748B;
+            }
+        }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #0F172A;
+            line-height: 1.6;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF;
+        }
+        h1, h2, h3 { color: #1E293B; font-weight: 700; margin-top: 0; }
+        h1 { font-size: 28px; line-height: 1.2; margin-bottom: 10px; }
+        h2 {
+            font-size: 18px;
+            border-bottom: 2px solid #E2E8F0;
+            padding-bottom: 6px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #0F172A;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        h3 { font-size: 13px; margin-top: 20px; margin-bottom: 8px; }
+        p { margin-bottom: 12px; text-align: justify; }
+        .page-break { page-break-before: always; }
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: #0F172A;
+            color: #FFFFFF;
+            margin: -20mm;
+            padding: 40mm 20mm;
+            height: 297mm;
+            box-sizing: border-box;
+        }
+        .cover-header { border-left: 4px solid #10B981; padding-left: 20px; }
+        .cover h1 { color: #FFFFFF; font-size: 38px; margin: 0 0 15px 0; font-weight: 800; }
+        .cover-subtitle { font-size: 16px; color: #94A3B8; margin: 0; }
+        .cover-image-container {
+            margin: 40px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            height: 240px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #064e3b 100%);
+        }
+        .cover-image { width: 100%; height: 100%; object-fit: cover; }
+        .cover-footer {
+            border-top: 1px solid #334155;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #94A3B8;
+        }
+        .cover-brand { font-weight: 700; color: #10B981; font-size: 14px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background-color: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-val { font-size: 24px; font-weight: 800; color: #10B981; margin-bottom: 4px; }
+        .stat-label {
+            font-size: 10px;
+            color: #64748B;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10.5px; }
+        th {
+            background-color: #0F172A;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 10px;
+        }
+        td { padding: 8px 10px; border-bottom: 1px solid #E2E8F0; color: #334155; }
+        tr:nth-child(even) td { background-color: #F8FAFC; }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-commercial { background-color: #D1FAE5; color: #065F46; }
+        .badge-pilot { background-color: #E0F2FE; color: #0369A1; }
+        .badge-poc { background-color: #EEF2FF; color: #4338CA; }
+        .badge-demo { background-color: #FEF3C7; color: #92400E; }
+        .gap-yes { color: #EF4444; font-weight: bold; }
+        .chart-container { text-align: center; margin: 25px 0; }
+        .chart-img { max-width: 100%; height: auto; border-radius: 6px; }
+        .callout {
+            background-color: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 20px 0;
+        }
+        .callout-title { font-weight: 700; color: #1E3A8A; margin-bottom: 5px; }
+        .guidance-box {
+            background-color: #ECFDF5;
+            border-left: 4px solid #10B981;
+            padding: 15px;
+            border-radius: 0 6px 6px 0;
+            margin: 20px 0;
+        }
+        .guidance-title { font-weight: 700; color: #065F46; margin-bottom: 5px; }
+        .profile-card {
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #F8FAFC;
+        }
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .profile-title { font-size: 14px; font-weight: 700; color: #0F172A; margin: 0; }
+        .profile-meta { font-size: 10px; color: #64748B; margin-bottom: 8px; }
+        .flex-container { display: flex; justify-content: space-between; gap: 20px; }
+        .flex-col { flex: 1; }
+        .finding { margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="cover">
+        <div class="cover-header">
+            <h1>Humanoid Intelligence<br>Report</h1>
+            <div class="cover-subtitle">{{ narrative.subtitle or report.subtitle or 'Monthly market intelligence on humanoid capability, deployments, and buyer readiness' }}</div>
+        </div>
+        <div class="cover-image-container">
+            {% if cover_image_uri %}
+            <img class="cover-image" src="{{ cover_image_uri }}" alt="Humanoid robot">
+            {% endif %}
+        </div>
+        <div class="cover-footer">
+            <div>
+                <span><strong>Edition:</strong> {{ edition }}</span><br>
+                <span><strong>Published:</strong> {{ published }}</span><br>
+                <span><strong>Framework:</strong> HEIF (HEIR 2026)</span>
+            </div>
+            <div>
+                <div class="cover-brand">Ready For Robots</div>
+                <div>readyforrobots.com/robots</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>Executive Summary</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-val">{{ total_robots }}</div>
+            <div class="stat-label">Robots Indexed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">{{ poc_pct }}%</div>
+            <div class="stat-label">PoC-or-Better (Fleet)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">{{ commercial_pct }}%</div>
+            <div class="stat-label">Commercial / Fleet Signals</div>
+        </div>
+    </div>
+
+    <h3>Market Overview</h3>
+    {% for para in (narrative.market_overview or narrative.executive_summary or report.executive_summary or []) %}
+    <p>{{ para }}</p>
+    {% else %}
+    <p>Fleet-wide humanoid index with HEIF scoring and deployment evidence.</p>
+    {% endfor %}
+
+    {% if deployment_news_callout %}
+    <div class="callout">
+        <div class="callout-title">Deployment News Status</div>
+        {{ deployment_news_callout }}
+    </div>
+    {% endif %}
+
+    <h3>Month over Month</h3>
+    {% if month_over_month and month_over_month.get('summary') %}
+    <p>{{ month_over_month.summary }}</p>
+    {% else %}
+    <p>This edition is the baseline or first stored snapshot for month-over-month tracking. Future editions will compare fleet size, PoC rate, and commercial signals against this run.</p>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>Key Findings</h2>
+    {% for finding in findings %}
+    <div class="finding">
+        {% if finding is mapping and finding.title %}
+        <strong>{{ finding.title }}:</strong> {{ finding.body }}
+        {% else %}
+        {{ finding }}
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="page-break"></div>
+
+    <h2>Competitive Dynamics &amp; Deployment Funnel</h2>
+    {% if narrative.competitive_dynamics %}
+    <p>{{ narrative.competitive_dynamics }}</p>
+    {% endif %}
+    {% if narrative.deployment_reality %}
+    <h3>Deployment Funnel</h3>
+    {% for para in narrative.deployment_reality %}
+    <p>{{ para }}</p>
+    {% endfor %}
+    {% endif %}
+    {% if charts.chart_funnel %}
+    <div class="chart-container">
+        <img class="chart-img" src="{{ charts.chart_funnel }}" alt="Deployment funnel" style="max-height: 280px;">
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>Evidence &amp; Dimension Leaders</h2>
+    <div class="flex-container">
+        <div class="flex-col">
+            <h3>Evidence Base (Full Fleet)</h3>
+            <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Robots in index</td><td>{{ total_robots }}</td></tr>
+                <tr><td>PoC-or-better evidence</td><td>{{ poc_count }} ({{ poc_pct }}%)</td></tr>
+                <tr><td>Commercial / fleet signals</td><td>{{ commercial_count }}</td></tr>
+                <tr><td>Capability-only scoring</td><td>{{ capability_only }}</td></tr>
+                <tr><td>With news in catalog</td><td>{{ with_news }}</td></tr>
+            </table>
+        </div>
+        <div class="flex-col">
+            <h3>Index vs Deployment-Weighted Rank</h3>
+            <table>
+                <tr><th>Robot</th><th>Index #</th><th>Depl. #</th><th>Comment</th></tr>
+                {% for row in index_dep_table %}
+                <tr>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.index_rank }}</td>
+                    <td>{{ row.deployment_rank }}</td>
+                    <td>{{ row.comment }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    {% if charts.chart_dimension_leaders %}
+    <div class="chart-container">
+        <img class="chart-img" src="{{ charts.chart_dimension_leaders }}" alt="Dimension leaders" style="max-height: 280px;">
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>Top Robots &amp; Peer Comparison</h2>
+    <h3>Top Robots — Capability vs Field Evidence</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th><th>Robot</th><th>Index</th><th>HEIF</th><th>Tier</th><th>Depl.</th><th>Gap</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in index_vs_deployment %}
+            <tr>
+                <td>{{ r.rank }}</td>
+                <td><strong>{{ r.name }}</strong></td>
+                <td>{{ "%.1f"|format(r.score_total|float) }}</td>
+                <td>{{ "%.2f"|format(r.heif_total|float) }}</td>
+                <td><span class="badge {{ r.deployment_tier_label|tier_badge }}">{{ r.deployment_tier_label }}</span></td>
+                <td>{{ r.commercial_deployments or 0 }}</td>
+                <td>{% if r.capability_ahead_of_deployment %}<span class="gap-yes">Yes</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if charts.chart_index_scores %}
+    <div class="chart-container">
+        <img class="chart-img" src="{{ charts.chart_index_scores }}" alt="Index scores" style="max-height: 250px;">
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>HEIF Dimension Comparison</h2>
+    <div class="flex-container">
+        <div class="flex-col" style="flex: 1.2;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Robot</th><th>Total</th>
+                        {% for dim in heif_dims %}<th>{{ dim_short[dim] }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in peer_heif_matrix.robots %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td>{{ "%.2f"|format(row.heif_total|float) }}</td>
+                        {% for dim in heif_dims %}
+                        <td>{{ "%.1f"|format((row.dimensions[dim] or 0)|float) }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if charts.chart_radar %}
+        <div class="flex-col" style="flex: 0.8; text-align: center;">
+            <img class="chart-img" src="{{ charts.chart_radar }}" alt="Radar chart" style="max-height: 250px;">
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>Vendor Analysis &amp; Buyer Guidance</h2>
+    <h3>Vendor Comparison</h3>
+    <table>
+        <thead>
+            <tr><th>Vendor</th><th>Models</th><th>PoC+ Rate</th><th>Commercial Models</th><th>Deployments</th></tr>
+        </thead>
+        <tbody>
+            {% for v in vendor_leaderboard %}
+            <tr>
+                <td><strong>{{ v.vendor }}</strong></td>
+                <td>{{ v.robot_count }}</td>
+                <td>{{ v.poc_or_deployment }} ({{ v.poc_or_deployment_pct }}%)</td>
+                <td>{{ v.deployment_signal }}</td>
+                <td>{{ v.total_deployments }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if charts.chart_vendors %}
+    <div class="chart-container">
+        <img class="chart-img" src="{{ charts.chart_vendors }}" alt="Vendor chart" style="max-height: 220px;">
+    </div>
+    {% endif %}
+
+    {% if guidance %}
+    <div class="guidance-box">
+        <div class="guidance-title">Buyer Guidance &amp; Recommendations</div>
+        <ul>
+            {% for g in guidance %}
+            <li>{{ g }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>Robot Profiles (Top Ranked)</h2>
+    {% for robot in top_ranked %}
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-title">#{{ robot.rank }} {{ robot.name }} — {{ robot.vendor }}</div>
+            <span class="badge {{ robot.deployment_tier_label|tier_badge }}">{{ robot.deployment_tier_label }}</span>
+        </div>
+        <div class="profile-meta">
+            Index {{ "%.1f"|format(robot.score_total|float) }} · HEIF {{ "%.2f"|format(robot.heif_total|float) }}/4 · {{ robot.commercial_deployments or 0 }} catalog deployments
+        </div>
+        <div class="profile-details">
+            {% if robot.why_top_rank %}{{ robot.why_top_rank }}{% endif %}
+            {% if robot.capability_ahead_of_deployment %} Capability scores run ahead of field evidence — treat as watch-list until pilot references are confirmed.{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="page-break"></div>
+
+    <h2>Methodology</h2>
+    <p>{{ report.methodology }}</p>
+    <p style="font-size: 9px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: center;">
+        Verify customer names and deployment claims before external citation. © Ready For Robots — monthly index update.
+        Sign up at <strong>readyforrobots.com</strong> for the next edition.
+    </p>
+
+</body>
+</html>

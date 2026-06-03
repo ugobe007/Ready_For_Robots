@@ -29,6 +29,12 @@ from sqlalchemy import text
 from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
+from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
+from app.services.humanoid_benchmark_backfill import (
+    backfill_humanoid_specs,
+    ensure_priority_humanoids,
+    repair_humanoid_index,
+)
 from app.services.humanoid_discovery import run_humanoid_discovery
 from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks, is_junk_humanoid_row
 from app.services.humanoid_spec_gaps import analyze_humanoid_spec_gaps
@@ -43,9 +49,24 @@ router = APIRouter(prefix="/api/humanoid", tags=["humanoid-benchmark"])
 
 
 def _enrich_robot_scores(row: dict) -> dict:
-    """Backfill HEIF + aligned 0–100 scores when DB row predates migration."""
-    if row.get("heif_total") is not None:
+    """Backfill HEIF + aligned 0–100 scores when DB row predates migration or specs are sparse."""
+    slug = row.get("model_slug") or ""
+    specs = dict(row.get("specs") or {})
+    seed = SEED_SPECS_BY_SLUG.get(slug) or {}
+    if seed:
+        for key, val in seed.items():
+            if val is None:
+                continue
+            cur = specs.get(key)
+            if cur is None or cur == "" or cur == 0:
+                specs[key] = val
+
+    needs_rescore = row.get("heif_total") is None or (
+        seed and float(row.get("heif_total") or 0) < 1.5
+    )
+    if not needs_rescore and row.get("heif_total") is not None:
         out = dict(row)
+        out["specs"] = specs
         if out.get("score_cognition") is None and out.get("score_autonomy") is not None:
             out["score_cognition"] = out["score_autonomy"]
         if out.get("score_data_pipeline") is None and out.get("score_endurance") is not None:
@@ -53,9 +74,10 @@ def _enrich_robot_scores(row: dict) -> dict:
         if out.get("score_production") is None and out.get("score_market_readiness") is not None:
             out["score_production"] = out["score_market_readiness"]
         return out
-    specs = row.get("specs") or {}
+
     scores = compute_scores(specs, status=row.get("status") or "research", vendor=row.get("vendor") or "")
     out = dict(row)
+    out["specs"] = specs
     out.update(scores)
     return out
 
@@ -275,6 +297,32 @@ def cleanup_humanoids(
     return result
 
 
+@router.post("/repair")
+def repair_humanoids(db: Session = Depends(get_db)):
+    """
+    One-shot index repair: delete headline junk, upsert Unitree/flagship seeds, backfill specs.
+    """
+    result = repair_humanoid_index(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return result
+
+
+@router.post("/backfill-specs")
+def backfill_specs(db: Session = Depends(get_db)):
+    """Merge SEED_ROBOTS + catalog specs into sparse humanoid_benchmarks rows."""
+    result = backfill_humanoid_specs(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return result
+
+
+@router.post("/ensure-priority")
+def ensure_priority(db: Session = Depends(get_db)):
+    """Upsert Unitree G1/H1/R1 and other flagship robots from seed data."""
+    result = ensure_priority_humanoids(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return result
+
+
 @router.post("/scrape/{slug}")
 def scrape_one(slug: str, db: Session = Depends(get_db)):
     """Scrape fresh specs and recompute scores for one robot."""
@@ -339,6 +387,23 @@ async def cron_scrape_all(
         "robots": len(slugs),
         "message": f"Scraping {len(slugs)} humanoid robots in background — scores updated in ~2 min.",
     }
+
+
+@router.get("/cron/repair-index")
+async def cron_repair_humanoid_index(
+    token: str = Query("", description="SCRAPER_CRON_TOKEN secret"),
+    db: Session = Depends(get_db),
+):
+    """
+    Delete headline junk, upsert Unitree/flagships, backfill HEIF specs.
+    GET /api/humanoid/cron/repair-index?token=YOUR_SCRAPER_CRON_TOKEN
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    result = repair_humanoid_index(db)
+    _ROBOTS_LIST_CACHE.clear()
+    return {"status": "ok", **result}
 
 
 @router.get("/cron/sync-product-urls")

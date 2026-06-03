@@ -38,7 +38,7 @@ if _shell_database_url and database_url_is_template_or_sqlite(_loaded_after_dote
 
 from app.database import SessionLocal
 from app.models.company import Company
-from app.services.lead_filter import is_junk
+from app.services.lead_name_gate import check_lead_name
 
 
 def main():
@@ -61,7 +61,8 @@ def main():
         junk = []
         reason_counts: Counter = Counter()
         for c in companies:
-            bad, reason = is_junk(c.name)
+            ok, reason = check_lead_name(c.name or "")
+            bad = not ok
             if bad:
                 short_reason = reason.split(":")[0]
                 reason_counts[short_reason] += 1

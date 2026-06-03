@@ -1094,10 +1094,16 @@ def upsert_humanoid_robot(
     from sqlalchemy import text
     import json
 
+    from app.services.humanoid_catalog_cleanup import is_junk_humanoid_row
+
     slug = robot["model_slug"]
+    name = robot.get("name") or ""
+    vendor = robot.get("vendor") or ""
+    if is_junk_humanoid_row(name, vendor, slug):
+        logger.info("Skipping junk humanoid upsert: %s (%s)", name[:80], slug)
+        return "skipped"
     specs = robot.get("specs") or {}
     status = robot.get("status") or "research"
-    vendor = robot.get("vendor") or ""
     scores = robot.get("scores") or compute_scores(specs, status=status, vendor=vendor)
     now = datetime.now(timezone.utc)
 

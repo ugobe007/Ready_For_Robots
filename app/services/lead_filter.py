@@ -1075,6 +1075,12 @@ _HEADLINE_FRAGMENT_PATTERNS = [
     r"(?i)\b\d+\s*%\s+reduction\b",
     r"(?i)^with\s+expansion\s*$",
     r"(?i),\s+with\s+expansion\b",
+    # "Nabisco is looking to automate its logistics pipeline…"
+    r"(?i)\bis\s+looking\s+to\s+(automate|expand|deploy|invest|modernize|streamline)\b",
+    r"(?i)\blooking\s+to\s+automate\b",
+    r"(?i)\blogistics\s+pipeline\b",
+    r"(?i)\bplans\s+to\s+automate\b",
+    r"(?i)\baims\s+to\s+automate\b",
 ]
 _HEADLINE_FRAGMENT_RE = [re.compile(p) for p in _HEADLINE_FRAGMENT_PATTERNS]
 
@@ -1162,6 +1168,11 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
         return True, "ISIN bond/stock identifier embedded in name"
 
     # Article titles / listicles scraped as company.name — real buyer legal names here are short.
+    if len(stripped) >= 55 and re.search(
+        r"(?i)\b(is|are|was|will|plans|aims|looking|said|announces|deploys|scores|raises)\b",
+        stripped,
+    ):
+        return True, "long sentence-shaped headline (not a company name)"
     if len(stripped) >= 68:
         return True, "name too long (likely article headline, not a company)"
 

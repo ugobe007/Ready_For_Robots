@@ -18,5 +18,8 @@ uvicorn
 tailwindcss
 PyJWT[crypto]>=2.8.0
 reportlab
+jinja2>=3.1.0
+matplotlib>=3.8.0
+weasyprint>=62.0
 fastmcp>=2.3.0
 httpx>=0.27.0

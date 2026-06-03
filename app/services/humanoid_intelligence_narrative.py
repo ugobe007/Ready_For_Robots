@@ -121,14 +121,15 @@ def build_report_narrative(
         ),
     ]
 
+    deployment_news_callout: Optional[str] = None
     if news_count == 0:
-        market_overview.append(
+        deployment_news_callout = (
             "Deployment-news scanning has not yet been run for this dataset (or returned no persisted headlines). "
             "Customer and trial counts below reflect catalog evidence only — re-run the deployment-news job "
             "on the API to enrich press-linked customers before sharing externally."
         )
     elif news_count < total * 0.1:
-        market_overview.append(
+        deployment_news_callout = (
             f"Only {news_count} robots have persisted news sources in the catalog; treat headline-linked "
             "customers as a lower bound, not a complete map of the market."
         )
@@ -154,13 +155,25 @@ def build_report_narrative(
     if runner_up and leader:
         score_gap = leader["score_total"] - runner_up["score_total"]
         if score_gap < 1:
+            tier_a = _tier_label(runner_up.get("deployment_tier", ""))
+            tier_b = _tier_label(leader.get("deployment_tier", ""))
+            if tier_a == tier_b:
+                dep_a = int(runner_up.get("commercial_deployments") or 0)
+                dep_b = int(leader.get("commercial_deployments") or 0)
+                tier_compare = (
+                    f"both at {tier_a.lower()}, but {dep_b} vs {dep_a} catalog deployments"
+                    if dep_a != dep_b
+                    else f"both at {tier_a.lower()} with similar catalog deployment counts"
+                )
+            else:
+                tier_compare = f"{tier_a} vs {tier_b}"
             key_findings.append({
                 "title": "Tight race at the top",
                 "body": (
                     f"{runner_up['name']} ties or nearly ties the leader on index score "
                     f"({runner_up['score_total']:.0f} vs {leader['score_total']:.0f}). "
-                    f"Differentiate on deployment tier ({_tier_label(runner_up.get('deployment_tier', ''))} vs "
-                    f"{_tier_label(leader.get('deployment_tier', ''))}) and dimension strengths, not headline index alone."
+                    f"Differentiate on field evidence ({tier_compare}) and dimension strengths, "
+                    "not headline index alone."
                 ),
             })
 
@@ -325,6 +338,7 @@ def build_report_narrative(
         "ranking_divergence": divergence,
         "buyer_guidance": buyer_guidance,
         "executive_summary": executive_summary,
+        "deployment_news_callout": deployment_news_callout,
         "at_a_glance": {
             "robots_indexed": total,
             "index_leader": leader.get("name") if leader else None,
