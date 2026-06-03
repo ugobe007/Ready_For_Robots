@@ -315,25 +315,26 @@ def build_humanoid_intelligence_report_pdf(
 ) -> tuple[bytes, str]:
     """Build PDF bytes from build_humanoid_intelligence_report_payload() result.
 
-    ``renderer=fast`` (default): ReportLab — ~10–30s, suitable for API + Vercel proxy.
-    ``renderer=manus`` / ``weasyprint``: HTML + charts via WeasyPrint — slow on small VMs.
+    ``renderer=fast`` (default): Manus HTML layout + charts via WeasyPrint (see reports/Improving…).
+    ``renderer=reportlab``: Plain fallback when WeasyPrint/Cairo unavailable.
     """
     report = payload.get("report")
     if not report:
         raise ValueError("Report payload is empty")
 
     mode = (renderer or "fast").strip().lower()
-    if mode in ("manus", "weasyprint", "html"):
-        try:
-            from app.services.humanoid_intelligence_report_render import (
-                build_humanoid_intelligence_report_pdf_weasyprint,
-            )
+    if mode == "reportlab":
+        return _build_humanoid_intelligence_report_pdf_reportlab(payload)
 
-            return build_humanoid_intelligence_report_pdf_weasyprint(payload)
-        except Exception as exc:
-            logger.warning("WeasyPrint PDF failed (%s); using ReportLab", exc)
+    try:
+        from app.services.humanoid_intelligence_report_render import (
+            build_humanoid_intelligence_report_pdf_weasyprint,
+        )
 
-    return _build_humanoid_intelligence_report_pdf_reportlab(payload)
+        return build_humanoid_intelligence_report_pdf_weasyprint(payload)
+    except Exception as exc:
+        logger.warning("WeasyPrint PDF failed (%s); using ReportLab", exc)
+        return _build_humanoid_intelligence_report_pdf_reportlab(payload)
 
 
 def _build_humanoid_intelligence_report_pdf_reportlab(payload: dict) -> tuple[bytes, str]:

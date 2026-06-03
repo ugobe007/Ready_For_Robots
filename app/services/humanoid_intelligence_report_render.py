@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import logging
 import re
+import shutil
 import tempfile
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -46,6 +48,33 @@ def _pdf_filename(report: dict) -> str:
     return slug if slug.lower().endswith(".pdf") else f"{slug}.pdf"
 
 
+def _materialize_cover_image(work_dir: Path, payload: dict) -> Optional[str]:
+    """Copy or download cover art into ``work_dir``; return basename for HTML ``src``."""
+    report = payload.get("report") or {}
+    for robot in report.get("top_ranked") or []:
+        url = robot.get("image_url")
+        if not url or not str(url).startswith(("http://", "https://")):
+            continue
+        try:
+            dest = work_dir / "cover_robot.jpg"
+            req = urllib.request.Request(str(url), headers={"User-Agent": "ReadyForRobots/1.0"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = resp.read()
+            if len(data) > 5000:
+                dest.write_bytes(data)
+                return dest.name
+        except Exception as exc:
+            logger.warning("cover image download failed for %s: %s", url, exc)
+
+    for name in ("robot_industrial.jpg", "cover.jpg"):
+        bundled = _ASSETS_DIR / name
+        if bundled.is_file():
+            dest = work_dir / name
+            shutil.copy2(bundled, dest)
+            return dest.name
+    return None
+
+
 def _edition_strings(report: dict) -> Tuple[str, str]:
     now = datetime.now(timezone.utc)
     title = report.get("title") or ""
@@ -72,13 +101,10 @@ def build_report_render_context(payload: dict, *, assets_dir: Optional[Path] = N
     comm_pct = round(100 * commercial / total, 1) if total else 0
 
     work_dir = assets_dir or Path(tempfile.mkdtemp(prefix="heir_report_"))
+    work_dir.mkdir(parents=True, exist_ok=True)
     chart_files = generate_report_charts(payload, work_dir)
-    chart_paths = {k: (work_dir / v).as_uri() for k, v in chart_files.items()}
-
-    cover_path = _ASSETS_DIR / "robot_industrial.jpg"
-    if not cover_path.is_file():
-        cover_path = _ASSETS_DIR / "cover.jpg"
-    cover_image_uri = cover_path.as_uri() if cover_path.is_file() else None
+    chart_paths = dict(chart_files)
+    cover_image_src = _materialize_cover_image(work_dir, payload)
 
     peer = comparisons.get("peer_heif_matrix") or {}
     dim_labels = peer.get("dimension_labels") or [
@@ -133,7 +159,7 @@ def build_report_render_context(payload: dict, *, assets_dir: Optional[Path] = N
         "heif_dims": HEIF_DIMS,
         "index_dep_table": index_dep_table,
         "charts": chart_paths,
-        "cover_image_uri": cover_image_uri,
+        "cover_image_src": cover_image_src,
         "tier_badge_class": tier_badge_class,
         "work_dir": str(work_dir),
     }

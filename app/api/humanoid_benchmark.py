@@ -714,7 +714,7 @@ def get_intelligence_report_pdf(
     top_n: int = Query(12, ge=5, le=25),
     renderer: str = Query(
         "fast",
-        description="fast = ReportLab PDF (default, ~10–30s). manus = WeasyPrint (slow).",
+        description="fast = Manus HTML/WeasyPrint PDF (default). reportlab = plain fallback.",
     ),
 ):
     """Download HEIR intelligence report PDF — cache hit when warm; otherwise builds on demand."""

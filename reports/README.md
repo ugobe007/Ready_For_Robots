@@ -22,6 +22,8 @@ PYTHONPATH=. python3 scripts/generate_humanoid_report_pdf.py --html-only -o repo
 
 ```bash
 curl -o report.pdf "https://ready-2-robot.fly.dev/api/humanoid/intelligence-report/pdf?top_n=12"
+
+Layout reference: `reports/Improving Report Layout, Content, Colors, and Graphics/` (HTML + charts + cover art). Production PDFs use WeasyPrint from `app/templates/humanoid_intelligence_report/report.html` with bundled `app/report_assets/humanoid/robot_industrial.jpg`.
 ```
 
 If WeasyPrint or system libraries are missing on the host, the API falls back to ReportLab (no embedded charts).

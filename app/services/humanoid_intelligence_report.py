@@ -248,6 +248,7 @@ def _build_robot_profile(row: dict, rank: int) -> dict:
         "model_slug": row.get("model_slug"),
         "name": row.get("name"),
         "vendor": row.get("vendor"),
+        "image_url": row.get("image_url"),
         "status": row.get("status"),
         "score_total": dep["score_total"],
         "heif_total": dep["heif_total"],
