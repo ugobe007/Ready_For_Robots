@@ -15,18 +15,15 @@ import {
 const processSteps: {
   title: string;
   body: string;
-  accent: string;
   pills?: string[];
 }[] = [
   {
     title: "Signal detection",
-    accent: "#a78bfa",
     body: "SCOUT monitors OSHA filings, job postings, SEC disclosures, LinkedIn activity, press, permits, and dozens of other public sources — continuously, so your team does not have to.",
     pills: ["150+ sources", "24/7"],
   },
   {
     title: "AI scoring",
-    accent: "#818cf8",
     body: "Every signal is scored on Confidence, Urgency, and Fit. Only opportunities at or above the threshold enter your pipeline — noise stays out.",
     pills: ["score ≥ 70"],
   },
@@ -208,31 +205,32 @@ export default function HowItWorks() {
             The Process
           </p>
           <h2
-            className="text-3xl md:text-4xl font-semibold tracking-tight text-white leading-tight w-full"
+            className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight w-full"
             style={{ fontFamily: "Sora, sans-serif" }}
           >
-            Five stages. One continuous pipeline.
+            <span style={{ color: "#FFB000" }}>Five stages.</span>{" "}
+            <span className="text-white">One continuous pipeline.</span>
           </h2>
           <p
             className="mt-3 text-base md:text-lg leading-relaxed w-full"
-            style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Inter, sans-serif" }}
+            style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
           >
             SCOUT is not a single trick — it is a full go-to-market engine for robotics sales teams.
             Each stage below maps to what you saw in the hero animation.
           </p>
 
-          <div className="mt-8 w-full">
-            {processSteps.map((step) => (
-              <div key={step.title} className="w-full pb-5 mb-5 last:mb-0 last:pb-0">
+          <div className="mt-3 w-full">
+            {processSteps.map((step, i) => (
+              <div key={step.title} className="w-full pb-4 last:pb-0">
                 <h3
                   className="text-lg md:text-xl font-semibold tracking-tight"
-                  style={{ fontFamily: "Sora, sans-serif", color: step.accent }}
+                  style={{ fontFamily: "Sora, sans-serif", color: "#FFB000" }}
                 >
                   {step.title}
                 </h3>
                 <p
-                  className="mt-2 text-base md:text-[17px] leading-[1.75] w-full"
-                  style={{ color: "rgba(255,255,255,0.58)", fontFamily: "Inter, sans-serif" }}
+                  className="mt-1.5 text-base md:text-[17px] leading-[1.72] w-full"
+                  style={{ color: "#e9d5ff", fontFamily: "Inter, sans-serif" }}
                 >
                   {step.body}
                   {step.pills?.map((pill) => (
@@ -242,14 +240,25 @@ export default function HowItWorks() {
                     </span>
                   ))}
                 </p>
-                <div
-                  className="mt-4 h-[2px] w-full rounded-full"
-                  style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${step.accent}99 35%, ${step.accent} 50%, ${step.accent}99 65%, transparent 100%)`,
-                    boxShadow: `0 6px 28px ${step.accent}55, 0 2px 12px ${step.accent}33`,
-                  }}
-                  aria-hidden
-                />
+                {i < processSteps.length - 1 && (
+                  <div className="mt-4 w-full" aria-hidden>
+                    <div
+                      className="h-8 w-full rounded-sm"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent 0%, rgba(255,176,0,0.08) 15%, rgba(255,176,0,0.18) 50%, rgba(255,176,0,0.08) 85%, transparent 100%)",
+                      }}
+                    />
+                    <div
+                      className="-mt-5 mx-auto h-[2px] w-[88%] rounded-full"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent 0%, rgba(255,176,0,0.45) 20%, #FFB000 50%, rgba(255,176,0,0.45) 80%, transparent 100%)",
+                        boxShadow: "0 4px 24px rgba(255,176,0,0.35)",
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
