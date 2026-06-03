@@ -168,6 +168,13 @@ export function useHumanoidIntelligenceReport(topN = 12) {
   return { report, loading, error };
 }
 
-export function humanoidReportPdfUrl(topN = 12): string {
-  return `${getApiBase()}/api/humanoid/intelligence-report/pdf?top_n=${topN}`;
+/** Fly origin for binary PDF — avoids Vercel rewrite timeouts on long renders. */
+export const HEIR_PDF_ORIGIN = "https://ready-2-robot.fly.dev";
+
+export function humanoidReportPdfUrl(topN = 12, renderer: "fast" | "manus" = "fast"): string {
+  const params = new URLSearchParams({
+    top_n: String(topN),
+    renderer,
+  });
+  return `${HEIR_PDF_ORIGIN}/api/humanoid/intelligence-report/pdf?${params}`;
 }

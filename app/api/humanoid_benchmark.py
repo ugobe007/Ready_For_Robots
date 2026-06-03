@@ -681,6 +681,10 @@ def get_intelligence_report(
 def get_intelligence_report_pdf(
     db: Session = Depends(get_db),
     top_n: int = Query(12, ge=5, le=25, description="How many top robots to include"),
+    renderer: str = Query(
+        "fast",
+        description="PDF engine: fast (ReportLab, default) or manus (WeasyPrint + charts, slow)",
+    ),
 ):
     """Download full humanoid intelligence report as PDF."""
     robots = _fetch_scored_humanoids(db)
@@ -697,7 +701,7 @@ def get_intelligence_report_pdf(
     if not payload.get("report"):
         raise HTTPException(status_code=404, detail="Report unavailable")
     try:
-        pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload)
+        pdf_bytes, filename = build_humanoid_intelligence_report_pdf(payload, renderer=renderer)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return StreamingResponse(

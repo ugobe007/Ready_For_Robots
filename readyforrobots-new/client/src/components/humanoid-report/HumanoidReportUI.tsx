@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { liveFetchInit } from "@/lib/apiBase";
 import { RR } from "@/lib/humanoidReportTheme";
 
 export function ReportKicker({ children }: { children: ReactNode }) {
@@ -63,6 +64,20 @@ export function ReportPanel({ children, accent = "purple", className = "" }: Pan
   );
 }
 
+function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (star?.[1]) {
+    try {
+      return decodeURIComponent(star[1].trim());
+    } catch {
+      /* ignore */
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header);
+  return plain?.[1]?.trim() || null;
+}
+
 export function ReportBtnDownload({
   href,
   label = "Download PDF",
@@ -72,22 +87,70 @@ export function ReportBtnDownload({
   label?: string;
   compact?: boolean;
 }) {
-  return (
-    <a
-      href={href}
-      download
-      className={
-        compact
-          ? "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-bold transition-opacity hover:opacity-90"
-          : "inline-flex shrink-0 items-center gap-2 rounded-md px-3.5 py-2 text-[12px] font-bold transition-opacity hover:opacity-90"
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const className = compact
+    ? "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-bold transition-opacity hover:opacity-90 disabled:opacity-60"
+    : "inline-flex shrink-0 items-center gap-2 rounded-md px-3.5 py-2 text-[12px] font-bold transition-opacity hover:opacity-90 disabled:opacity-60";
+
+  async function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(href, liveFetchInit());
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(detail.slice(0, 120) || `Download failed (${res.status})`);
       }
-      style={{
-        background: RR.teal,
-        color: RR.bg,
-      }}
-    >
-      {label}
-    </a>
+      const blob = await res.blob();
+      if (!blob.size || !blob.type.includes("pdf")) {
+        throw new Error("Server did not return a PDF");
+      }
+      const name =
+        filenameFromContentDisposition(res.headers.get("Content-Disposition")) ||
+        "Humanoid_Intelligence_Report.pdf";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (ex) {
+      const msg = ex instanceof Error ? ex.message : "Download failed";
+      setErr(msg);
+      window.open(href, "_blank", "noopener,noreferrer");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <span className="inline-flex flex-col items-end gap-0.5">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={busy}
+        className={className}
+        style={{
+          background: RR.teal,
+          color: RR.bg,
+        }}
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+        {busy ? "Generating…" : label}
+      </button>
+      {err ? (
+        <span className="max-w-[220px] text-right text-[10px] leading-tight" style={{ color: RR.textDim }}>
+          Opened in new tab — {err}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
