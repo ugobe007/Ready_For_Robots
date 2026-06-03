@@ -1,0 +1,17 @@
+# Static marketing site only — API runs on Fly.io (ready-2-robot.fly.dev).
+# Prevents Vercel Hobby 12-function limit from Python/Next/Express auto-detection.
+
+app/
+worker/
+migrations/
+scripts/
+tests/
+frontend/
+docs/
+*.py
+requirements.txt
+alembic.ini
+Dockerfile
+fly.toml
+readyforrobots-new/server/
+readyforrobots-new/dist/index.js

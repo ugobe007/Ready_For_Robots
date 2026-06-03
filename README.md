@@ -75,7 +75,14 @@ Legacy Next.js commands are still available with the `legacy:next:*` script name
 
 ### Vercel settings
 
-The Vercel project for `readyforrobots.com` should use the repository root so it reads `vercel.json`.
+The Vercel project for `readyforrobots.com` must be a **static** deploy (0 serverless functions):
+
+- **Root Directory:** repository root (`.`) **or** `readyforrobots-new` (both have `vercel.json` — static Vite only).
+- **Do not** set Root Directory to `frontend/nextjs` (legacy Next.js creates 12+ serverless routes on Hobby).
+- **Framework Preset:** Other (not Next.js / not Python).
+- API lives on Fly (`ready-2-robot.fly.dev`); `/api/*` is rewritten in `vercel.json`, not implemented on Vercel.
+
+If the build fails with “No more than 12 Serverless Functions”, the project is building server/API code on Vercel — fix Root Directory and redeploy.
 
 - Framework preset: Vite or Other
 - Install command: `npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new`
