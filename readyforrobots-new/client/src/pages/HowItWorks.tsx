@@ -29,19 +29,16 @@ const processSteps: {
   },
   {
     title: "SCOUT drafts outreach",
-    accent: "#FFB000",
     body: "For each qualified signal, SCOUT writes a subject line, opening hook, and call to action tied to the exact trigger event — expansion, filing, hire, CapEx, or pilot news.",
     pills: ["<2 min to draft"],
   },
   {
     title: "You review",
-    accent: "#c4b5fd",
     body: "Choose how much automation you want: Manual (you send everything), Assisted (SCOUT drafts, you approve), or Auto (high-confidence signals send after a short review window).",
     pills: ["Manual", "Assisted", "Auto"],
   },
   {
     title: "Pipeline advances",
-    accent: "#03DAC5",
     body: "Replies, opens, and engagement feed back into the pipeline. SCOUT schedules follow-ups and can escalate technical questions so deals keep moving.",
   },
 ];
@@ -241,23 +238,13 @@ export default function HowItWorks() {
                   ))}
                 </p>
                 {i < processSteps.length - 1 && (
-                  <div className="mt-4 w-full" aria-hidden>
-                    <div
-                      className="h-8 w-full rounded-sm"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, transparent 0%, rgba(255,176,0,0.08) 15%, rgba(255,176,0,0.18) 50%, rgba(255,176,0,0.08) 85%, transparent 100%)",
-                      }}
-                    />
-                    <div
-                      className="-mt-5 mx-auto h-[2px] w-[88%] rounded-full"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, transparent 0%, rgba(255,176,0,0.45) 20%, #FFB000 50%, rgba(255,176,0,0.45) 80%, transparent 100%)",
-                        boxShadow: "0 4px 24px rgba(255,176,0,0.35)",
-                      }}
-                    />
-                  </div>
+                  <div
+                    className="mt-4 h-px w-full"
+                    aria-hidden
+                    style={{
+                      background: `linear-gradient(90deg, transparent 0%, ${i % 2 === 0 ? "rgba(62, 207, 142, 0.55)" : "rgba(124, 58, 237, 0.55)"} 25%, ${i % 2 === 0 ? "#3ecf8e" : "#7c3aed"} 50%, ${i % 2 === 0 ? "rgba(62, 207, 142, 0.55)" : "rgba(124, 58, 237, 0.55)"} 75%, transparent 100%)`,
+                    }}
+                  />
                 )}
               </div>
             ))}
