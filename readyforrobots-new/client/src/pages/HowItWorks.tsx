@@ -1,51 +1,67 @@
 /**
  * How It Works — ReadyForRobots
- * Design: Dark violet 60-30-10. Flat open layout with amber SCOUT CTAs.
- * Five-step pipeline diagram in hero (animated highlight). Inline text, numbered steps, clean dividers.
- * Typography: Sora headlines · Inter body · JetBrains Mono scores/labels
+ * Hero: SCOUT in motion + synced 5-step rail. Process: Supabase-style inline prose.
  */
 
 import Header from "@/components/Header";
-import ScoutPipelineDiagram from "@/components/ScoutPipelineDiagram";
-import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
+import ScoutHeroShowcase from "@/components/ScoutHeroShowcase";
 import { Link } from "wouter";
 import {
-  Search, Cpu, FileText, CheckCircle, TrendingUp,
   Zap, Shield, Clock, ArrowRight,
   Briefcase, BarChart3, AlertTriangle, Building2,
   Newspaper, Activity, Globe, MapPin,
 } from "lucide-react";
 
-const ROBOT_IMAGE =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/robot-hiw-Yopt6ezNpbmPkaFHBTsEx6.webp";
-
-const steps = [
-  { num: "01", icon: Search,       title: "Signal Detection",  text: "150+ data sources — OSHA filings, job postings, SEC disclosures, LinkedIn, news — monitored 24/7 for buying signals." },
-  { num: "02", icon: Cpu,          title: "AI Scoring",        text: "Each signal scored across Confidence, Urgency, and Fit. Only signals above 70 enter your pipeline." },
-  { num: "03", icon: FileText,     title: "SCOUT Drafts Outreach", text: "SCOUT prepares the subject line, opening hook, and call to action for every qualified signal, referencing the exact trigger event." },
-  { num: "04", icon: CheckCircle,  title: "You Review",        text: "Assisted: you approve before anything sends. Auto: approved templates send automatically. Manual: you control every step." },
-  { num: "05", icon: TrendingUp,   title: "Pipeline Advances", text: "Responses and engagement are tracked. SCOUT follows up and escalates technical questions when needed." },
+const processSteps: {
+  title: string;
+  body: string;
+  pills?: string[];
+}[] = [
+  {
+    title: "Signal detection",
+    body: "SCOUT monitors OSHA filings, job postings, SEC disclosures, LinkedIn activity, press, permits, and dozens of other public sources — continuously, so your team does not have to.",
+    pills: ["150+ sources", "24/7"],
+  },
+  {
+    title: "AI scoring",
+    body: "Every signal is scored on Confidence, Urgency, and Fit. Only opportunities at or above the threshold enter your pipeline — noise stays out.",
+    pills: ["score ≥ 70"],
+  },
+  {
+    title: "SCOUT drafts outreach",
+    body: "For each qualified signal, SCOUT writes a subject line, opening hook, and call to action tied to the exact trigger event — expansion, filing, hire, CapEx, or pilot news.",
+    pills: ["<2 min to draft"],
+  },
+  {
+    title: "You review",
+    body: "Choose how much automation you want: Manual (you send everything), Assisted (SCOUT drafts, you approve), or Auto (high-confidence signals send after a short review window).",
+    pills: ["Manual", "Assisted", "Auto"],
+  },
+  {
+    title: "Pipeline advances",
+    body: "Replies, opens, and engagement feed back into the pipeline. SCOUT schedules follow-ups and can escalate technical questions so deals keep moving.",
+  },
 ];
 
 const sources = [
-  { icon: Briefcase,     label: "Job Postings",         sub: "LinkedIn · Indeed · ZipRecruiter" },
-  { icon: BarChart3,     label: "Earnings Calls",       sub: "SEC filings · CapEx announcements" },
-  { icon: AlertTriangle, label: "OSHA Filings",         sub: "Safety incidents · Workers' comp" },
-  { icon: Building2,     label: "Real Estate",          sub: "Permits · Lease filings · Expansions" },
-  { icon: Newspaper,     label: "Press Releases",       sub: "News · PR Newswire · Business Wire" },
-  { icon: Activity,      label: "Intent Signals",       sub: "RFP databases · Automation searches" },
-  { icon: Globe,         label: "Web Signals",          sub: "Careers pages · Tech stack changes" },
-  { icon: MapPin,        label: "Local Data",           sub: "Permits · Zoning · Construction starts" },
-  { icon: BarChart3,     label: "Trade Publications",   sub: "Industry journals · Analyst reports" },
-  { icon: Building2,     label: "Facility Expansions",  sub: "New sites · Capacity increases" },
-  { icon: AlertTriangle, label: "Safety Incidents",     sub: "OSHA 300 logs · Inspection reports" },
-  { icon: Briefcase,     label: "CapEx Announcements",  sub: "Capital expenditure filings · Budgets" },
+  { icon: Briefcase, label: "Job Postings", sub: "LinkedIn · Indeed · ZipRecruiter" },
+  { icon: BarChart3, label: "Earnings Calls", sub: "SEC filings · CapEx announcements" },
+  { icon: AlertTriangle, label: "OSHA Filings", sub: "Safety incidents · Workers' comp" },
+  { icon: Building2, label: "Real Estate", sub: "Permits · Lease filings · Expansions" },
+  { icon: Newspaper, label: "Press Releases", sub: "News · PR Newswire · Business Wire" },
+  { icon: Activity, label: "Intent Signals", sub: "RFP databases · Automation searches" },
+  { icon: Globe, label: "Web Signals", sub: "Careers pages · Tech stack changes" },
+  { icon: MapPin, label: "Local Data", sub: "Permits · Zoning · Construction starts" },
+  { icon: BarChart3, label: "Trade Publications", sub: "Industry journals · Analyst reports" },
+  { icon: Building2, label: "Facility Expansions", sub: "New sites · Capacity increases" },
+  { icon: AlertTriangle, label: "Safety Incidents", sub: "OSHA 300 logs · Inspection reports" },
+  { icon: Briefcase, label: "CapEx Announcements", sub: "Capital expenditure filings · Budgets" },
 ];
 
 const scoreDimensions = [
   { label: "Confidence", sublabel: "Source reliability & corroboration", value: 88, color: "#a78bfa" },
-  { label: "Urgency",    sublabel: "Decision window & buying intent",     value: 72, color: "#818cf8" },
-  { label: "Fit",        sublabel: "ICP match & company profile",         value: 95, color: "#7c3aed" },
+  { label: "Urgency", sublabel: "Decision window & buying intent", value: 72, color: "#818cf8" },
+  { label: "Fit", sublabel: "ICP match & company profile", value: 95, color: "#7c3aed" },
 ];
 
 const autonomyModes = [
@@ -85,18 +101,32 @@ const SCOUT_CTA_STYLE = {
   fontFamily: "Sora, sans-serif",
 };
 
+function InlinePill({ children }: { children: string }) {
+  return (
+    <span
+      className="mx-0.5 inline-block rounded px-1.5 py-px text-[13px] font-medium align-baseline"
+      style={{
+        fontFamily: "JetBrains Mono, monospace",
+        color: "#03DAC5",
+        background: "rgba(3, 218, 197, 0.1)",
+        border: "1px solid rgba(3, 218, 197, 0.25)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function HowItWorks() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0d0520", color: "#f0eaff" }}>
       <Header />
 
-      {/* ── Hero ── */}
+      {/* ── Hero: live SCOUT + synced rail ── */}
       <section className="relative overflow-hidden" style={{ paddingTop: "112px" }}>
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-0 items-end min-h-[480px]">
-
-            {/* Left */}
-            <div className="pb-16 lg:pb-0 pt-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start pb-12 lg:pb-16">
+            <div className="pt-4 lg:pt-8">
               <p className="text-xs font-mono tracking-widest uppercase mb-6" style={{ color: "#FFB000" }}>
                 Meet SCOUT
               </p>
@@ -107,9 +137,12 @@ export default function HowItWorks() {
                 How SCOUT turns signals into{" "}
                 <span style={{ color: "#FFB000" }}>sales motion.</span>
               </h1>
-              <p className="text-base leading-relaxed mb-10 max-w-lg" style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}>
-                SCOUT is the web agent for robotics sales teams. It scans the market,
-                scores buyer intent, matches each lead to your robot category, and prepares outreach with as much human oversight as you want.
+              <p
+                className="text-base leading-relaxed mb-10 max-w-lg"
+                style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
+              >
+                Watch SCOUT find a live opportunity, score it, and draft outreach — with a five-stage
+                pipeline behind every Identify → Develop → Connect phase.
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-4">
@@ -129,79 +162,76 @@ export default function HowItWorks() {
                 </Link>
               </div>
 
-              {/* Inline stats */}
               <div className="flex flex-wrap gap-x-8 gap-y-3">
                 {[["150+", "data sources"], ["24/7", "monitoring"], ["<2 min", "signal to draft"], ["70+", "score threshold"]].map(([num, label]) => (
                   <div key={label} className="flex items-baseline gap-2">
-                    <span className="font-mono font-bold text-xl" style={{ color: label === "signal to draft" ? "#FFB000" : "#a78bfa" }}>{num}</span>
-                    <span className="text-sm" style={{ color: "#6b7280" }}>{label}</span>
+                    <span
+                      className="font-mono font-bold text-xl"
+                      style={{ color: label === "signal to draft" ? "#FFB000" : "#a78bfa" }}
+                    >
+                      {num}
+                    </span>
+                    <span className="text-sm" style={{ color: "#6b7280" }}>
+                      {label}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Right — 5-step pipeline diagram */}
-            <div className="relative flex justify-center lg:justify-end items-end pb-8 lg:pb-12">
-              <ScoutPipelineDiagram variant="hero" className="lg:translate-y-2" />
+            <div className="w-full min-w-0">
+              <ScoutHeroShowcase />
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }} />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }}
+        />
       </section>
 
       <DIV />
 
-      {/* ── 5-step process ── */}
+      {/* ── The Process (Supabase-style inline prose) ── */}
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <p className="text-xs font-mono tracking-widest uppercase mb-12" style={{ color: "#7c3aed" }}>
+          <p
+            className="text-sm font-medium mb-4"
+            style={{ color: "#3ecf8e", fontFamily: "Inter, sans-serif" }}
+          >
             The Process
           </p>
-          <div className="space-y-0">
-            {steps.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.num}>
-                  <div className="grid grid-cols-[56px_1fr] lg:grid-cols-[56px_180px_1fr] gap-6 items-start py-7">
-                    <span className="font-mono font-bold text-2xl leading-none pt-0.5" style={{ color: "rgba(124,58,237,0.35)" }}>
-                      {step.num}
-                    </span>
-                    <div className="flex items-start gap-2.5">
-                      <Icon size={16} style={{ color: "#a78bfa", marginTop: "3px", flexShrink: 0 }} />
-                      <span className="font-semibold text-sm" style={{ fontFamily: "Sora, sans-serif", color: "#ffffff" }}>
-                        {step.title}
-                      </span>
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: "#9ca3af", fontFamily: "Inter, sans-serif" }}>
-                      {step.text}
-                    </p>
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="h-px ml-14" style={{ backgroundColor: "rgba(124,58,237,0.1)" }} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <DIV />
-
-      {/* ── SCOUT workflow animation (rfr_cursor_package) ── */}
-      <section className="py-20">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <p className="text-xs font-mono tracking-widest uppercase mb-4" style={{ color: "#7c3aed" }}>
-            SCOUT in motion
-          </p>
-          <h2 className="font-bold text-2xl md:text-3xl text-white mb-3" style={{ fontFamily: "Sora, sans-serif" }}>
-            Identify → Develop → Connect
+          <h2
+            className="text-3xl md:text-4xl font-semibold tracking-tight text-white max-w-3xl leading-tight"
+            style={{ fontFamily: "Sora, sans-serif" }}
+          >
+            Five stages. One continuous pipeline.
           </h2>
-          <p className="text-sm max-w-xl mb-10" style={{ color: "#9ca3af", fontFamily: "Inter, sans-serif" }}>
-            A live visualization of how SCOUT finds and scores an opportunity, then prepares personalized outreach for your review.
+          <p
+            className="mt-5 text-lg leading-relaxed max-w-3xl"
+            style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter, sans-serif" }}
+          >
+            SCOUT is not a single trick — it is a full go-to-market engine for robotics sales teams.
+            Each stage below maps to what you saw in the hero animation.
           </p>
-          <ScoutWorkflowAnimation />
+
+          <div className="mt-14 max-w-2xl space-y-10">
+            {processSteps.map((step) => (
+              <p
+                key={step.title}
+                className="text-[17px] leading-[1.8]"
+                style={{ color: "rgba(255,255,255,0.62)", fontFamily: "Inter, sans-serif" }}
+              >
+                <strong className="font-semibold text-white">{step.title}.</strong> {step.body}
+                {step.pills?.map((pill) => (
+                  <span key={pill}>
+                    {" "}
+                    <InlinePill>{pill}</InlinePill>
+                  </span>
+                ))}
+              </p>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -216,7 +246,9 @@ export default function HowItWorks() {
                 Signal Sources
               </p>
               <h2 className="font-bold text-2xl mb-4" style={{ fontFamily: "Sora, sans-serif", color: "#ffffff" }}>
-                150+ sources,<br />one pipeline.
+                150+ sources,
+                <br />
+                one pipeline.
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: "#9ca3af" }}>
                 Public and semi-public data across regulatory filings, employment signals,
@@ -230,8 +262,12 @@ export default function HowItWorks() {
                   <div key={s.label} className="flex items-start gap-2.5 w-[calc(50%-1rem)] lg:w-auto">
                     <Icon size={14} style={{ color: "#7c3aed", marginTop: "2px", flexShrink: 0 }} />
                     <div>
-                      <p className="text-sm font-medium" style={{ color: "#e9d5ff" }}>{s.label}</p>
-                      <p className="text-xs" style={{ color: "#6b7280" }}>{s.sub}</p>
+                      <p className="text-sm font-medium" style={{ color: "#e9d5ff" }}>
+                        {s.label}
+                      </p>
+                      <p className="text-xs" style={{ color: "#6b7280" }}>
+                        {s.sub}
+                      </p>
                     </div>
                   </div>
                 );
@@ -252,7 +288,9 @@ export default function HowItWorks() {
                 Scoring Model
               </p>
               <h2 className="font-bold text-2xl mb-4" style={{ fontFamily: "Sora, sans-serif", color: "#ffffff" }}>
-                Three dimensions.<br />One score.
+                Three dimensions.
+                <br />
+                One score.
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: "#9ca3af" }}>
                 Signals below 70 are filtered out automatically. Above 70, they enter your pipeline
@@ -261,8 +299,12 @@ export default function HowItWorks() {
               <div className="mt-6 flex flex-col gap-2">
                 {[["80–100", "#a78bfa", "Act now"], ["60–79", "#818cf8", "Watch"], ["<60", "#4b5563", "Monitor only"]].map(([range, color, label]) => (
                   <div key={range} className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold w-14" style={{ color }}>{range}</span>
-                    <span className="text-xs" style={{ color: "#9ca3af" }}>{label}</span>
+                    <span className="font-mono text-xs font-bold w-14" style={{ color }}>
+                      {range}
+                    </span>
+                    <span className="text-xs" style={{ color: "#9ca3af" }}>
+                      {label}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -275,9 +317,14 @@ export default function HowItWorks() {
                       <span className="font-semibold text-sm" style={{ color: "#ffffff", fontFamily: "Sora, sans-serif" }}>
                         {dim.label}
                       </span>
-                      <span className="text-xs" style={{ color: "#6b7280" }}>{dim.sublabel}</span>
+                      <span className="text-xs" style={{ color: "#6b7280" }}>
+                        {dim.sublabel}
+                      </span>
                     </div>
-                    <span className="font-mono font-bold text-lg" style={{ color: dim.color, fontFamily: "JetBrains Mono, monospace" }}>
+                    <span
+                      className="font-mono font-bold text-lg"
+                      style={{ color: dim.color, fontFamily: "JetBrains Mono, monospace" }}
+                    >
                       {dim.value}
                     </span>
                   </div>
@@ -320,12 +367,18 @@ export default function HowItWorks() {
                       {m.mode}
                     </span>
                   </div>
-                  <p className="text-xs mb-5" style={{ color: "#6b7280" }}>{m.tagline}</p>
+                  <p className="text-xs mb-5" style={{ color: "#6b7280" }}>
+                    {m.tagline}
+                  </p>
                   <ol className="space-y-2.5">
                     {m.steps.map((s, si) => (
                       <li key={si} className="flex items-start gap-2.5">
-                        <span className="font-mono text-xs mt-0.5 flex-shrink-0" style={{ color: m.color }}>{si + 1}.</span>
-                        <span className="text-sm leading-relaxed" style={{ color: "#9ca3af" }}>{s}</span>
+                        <span className="font-mono text-xs mt-0.5 flex-shrink-0" style={{ color: m.color }}>
+                          {si + 1}.
+                        </span>
+                        <span className="text-sm leading-relaxed" style={{ color: "#9ca3af" }}>
+                          {s}
+                        </span>
                       </li>
                     ))}
                   </ol>
@@ -338,7 +391,7 @@ export default function HowItWorks() {
 
       <DIV />
 
-      {/* ── Bottom CTA — inline, no panel ── */}
+      {/* ── Bottom CTA ── */}
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -361,7 +414,6 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="py-8 border-t" style={{ borderColor: "rgba(124,58,237,0.15)" }}>
         <div className="max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between">
           <span className="font-bold text-sm" style={{ fontFamily: "Sora, sans-serif", color: "#7c3aed" }}>

@@ -78,12 +78,20 @@ const CYCLES: Cycle[] = [
 const STAGE_DURATIONS = [4000, 4500, 5000] as const;
 const BETWEEN_CYCLES = 900;
 
-type Stage = 0 | 1 | 2;
+export type ScoutWorkflowStage = 0 | 1 | 2;
 const STAGE_LABELS = ["Identify", "Develop", "Connect"];
 
-export default function ScoutWorkflowAnimation() {
+type ScoutWorkflowAnimationProps = {
+  onStageChange?: (stage: ScoutWorkflowStage) => void;
+  className?: string;
+};
+
+export default function ScoutWorkflowAnimation({
+  onStageChange,
+  className = "",
+}: ScoutWorkflowAnimationProps) {
   const [cycleIdx, setCycleIdx] = useState(0);
-  const [stage, setStage] = useState<Stage>(0);
+  const [stage, setStage] = useState<ScoutWorkflowStage>(0);
   const [scoreProgress, setScoreProgress] = useState(0);
   const [outreachIdx, setOutreachIdx] = useState(0);
   const [sent, setSent] = useState(false);
@@ -94,6 +102,10 @@ export default function ScoutWorkflowAnimation() {
   const outreachTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cycle = CYCLES[cycleIdx % CYCLES.length];
+
+  useEffect(() => {
+    onStageChange?.(stage);
+  }, [stage, onStageChange]);
 
   useEffect(() => {
     setScoreProgress(0);
@@ -134,7 +146,7 @@ export default function ScoutWorkflowAnimation() {
   useEffect(() => {
     timerRef.current = setTimeout(() => {
       if (stage < 2) {
-        setStage((s) => (s + 1) as Stage);
+        setStage((s) => (s + 1) as ScoutWorkflowStage);
       } else {
         setFading(true);
         setTimeout(() => {
@@ -154,7 +166,7 @@ export default function ScoutWorkflowAnimation() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden max-w-xl mx-auto w-full"
+      className={`flex flex-col overflow-hidden w-full ${className}`.trim()}
       style={{
         background: "#130d2a",
         border: "1px solid rgba(124,58,237,0.2)",
