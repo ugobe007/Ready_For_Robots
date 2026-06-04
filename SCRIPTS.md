@@ -172,14 +172,24 @@ curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/purge-junk" \
 
 Set `"dry_run": false` to delete (same logic as `is_junk`).
 
-**Lead inference / enrichment agent** (same `X-Admin-Key`, or admin Supabase JWT):
+**Lead enrichment agent** (recommended — uses `ADMIN_KEY` from `.env`):
 
 ```bash
-curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/leads/enrich-agent?limit=300" \
-  -H "X-Admin-Key: YOUR_ADMIN_KEY"
+./scripts/sync_fly_admin_key.sh      # sync .env ADMIN_KEY → Fly (once)
+./scripts/run_lead_enrich_agent.sh 300
 ```
 
-Do **not** use the literal string `YOUR_ADMIN_JWT` — that is documentation placeholder only. For JWT auth, sign in on the site as an `ADMIN_EMAILS` user and copy the real `access_token` from the browser (DevTools → Application → localStorage, key containing `auth-token`).
+Manual curl (must be the real key, not the `fly secrets list` digest):
+
+```bash
+set -a && source .env && set +a
+curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/leads/enrich-agent?limit=300" \
+  -H "X-Admin-Key: ${ADMIN_KEY}"
+```
+
+Or `?token=${SCRAPER_CRON_TOKEN}` on the same URL if that secret is on Fly.
+
+**Fly gotcha:** never run `fly secrets set ADMIN_KEY=part1 part2` — spaces/commas create invalid secret names. Use one quoted value: `fly secrets set 'ADMIN_KEY=my-secret' -a ready-2-robot`.
 
 ---
 
