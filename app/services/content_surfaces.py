@@ -20,12 +20,12 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 # Cache keys (pipeline_cache_store)
-KEY_HOMEPAGE = "public:homepage:v1"
+KEY_HOMEPAGE = "public:homepage:v2"
 KEY_SUMMARY_EXCLUDE_JUNK = "public:summary:exclude_junk:true:v1"
 KEY_SUMMARY_INCLUDE_JUNK = "public:summary:exclude_junk:false:v1"
-KEY_LEADS_50 = "public:leads:list:50:score:v1"
-KEY_LEADS_18 = "public:leads:list:18:score:v1"
-KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v1"
+KEY_LEADS_50 = "public:leads:list:50:score:v2"
+KEY_LEADS_18 = "public:leads:list:18:score:v2"
+KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v2"
 KEY_HUMANOID_BENCHMARK_REPORT = "public:humanoid:report:v1"
 KEY_HUMANOID_INTELLIGENCE = "public:humanoid:intelligence:v1"
 KEY_HUMANOID_INTELLIGENCE_PDF = "public:humanoid:intelligence_pdf:weasyprint:v2"

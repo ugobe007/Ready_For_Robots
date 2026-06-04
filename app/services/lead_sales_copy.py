@@ -281,4 +281,5 @@ def build_lead_intelligence_copy(
         f"{name}: {observed}. {robots_str}. "
         f"Window: {'60–90' if tier == 'HOT' else '90–120'} days. Ready For Robots."
     )
-    return blurb[:220], summary[:900]
+    blurb_cut = blurb[:220].rsplit(" ", 1)[0] if len(blurb) > 220 else blurb
+    return blurb_cut.rstrip(",;:"), summary

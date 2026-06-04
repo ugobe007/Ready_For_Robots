@@ -32,5 +32,26 @@ export function cleanScrapedText(raw: string | null | undefined): string {
 export function cleanAndClampText(raw: string | null | undefined, maxLength: number): string {
   const text = cleanScrapedText(raw);
   if (!text || text.length <= maxLength) return text;
-  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+  const slice = text.slice(0, maxLength - 1);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > 40 ? slice.slice(0, lastSpace) : slice;
+  return `${cut.trimEnd().replace(/[,;:]$/u, "")}…`;
+}
+
+/** One or two complete sentences for card previews — never mid-word. */
+export function leadPreviewSentences(raw: string | null | undefined, maxSentences = 2, maxChars = 320): string {
+  const text = cleanScrapedText(raw);
+  if (!text) return "";
+  const parts = text.split(/(?<=[.!?])\s+/).filter((p) => p.trim().length > 12);
+  if (!parts.length) return cleanAndClampText(text, maxChars);
+  let out = "";
+  for (const part of parts.slice(0, maxSentences)) {
+    const next = out ? `${out} ${part.trim()}` : part.trim();
+    if (next.length > maxChars) break;
+    out = next;
+    if (!out.endsWith(".") && !out.endsWith("!") && !out.endsWith("?")) {
+      out += ".";
+    }
+  }
+  return out || cleanAndClampText(text, maxChars);
 }

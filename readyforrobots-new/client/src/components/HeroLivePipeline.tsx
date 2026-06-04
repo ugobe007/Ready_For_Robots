@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { cleanAndClampText } from "@/lib/text";
+import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
 
 export type HomepageLeadRow = {
@@ -53,7 +53,7 @@ const STATIC_FALLBACK: HomepageLeadRow[] = [
 ];
 
 function heroSubline(lead: HomepageLeadRow): string {
-  const summary = cleanAndClampText(lead.share_summary, 140);
+  const summary = leadPreviewSentences(lead.share_summary, 1, 200);
   if (summary) return summary;
   const need = cleanAndClampText(lead.core_need, 72);
   if (need) return need;

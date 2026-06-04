@@ -136,63 +136,43 @@ def _intelligence_summary(
     pri,
     sigs: list,
     deduped_sigs: list,
+    *,
+    crm_metadata: Optional[dict] = None,
 ) -> str:
-    """
-    Generates a 4-5 sentence intelligence paragraph leading with:
-    '[Company] is targeting automation for their [use_case] due to [pain_point]
-    which align with our signals [types]. The timing of the project is [X] months.'
-    """
-    ind = _industry_display(industry)
-    loc = ""
-    if location_city and location_state:
-        loc = f", based in {location_city}, {location_state}"
-    elif location_state:
-        loc = f", based in {location_state}"
+    """Natural-language intelligence paragraph (shared with /api/leads)."""
+    from app.services.automation_profile import infer_automation_profile
+    from app.services.lead_sales_copy import build_lead_intelligence_copy
+    from app.services.lead_signal_display import strip_extraction_artifacts
 
-    size = _company_size_descriptor(employee_estimate)
-    size_str = f"{size} " if size else ""
     automation_type, pain_point = _industry_automation_context(industry)
-
-    # Signal labels
     unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped_sigs]))[:4]
     labels = [_sig_label(t) for t in unique_types if t]
-    signals_str = ", ".join(labels[:3]) if labels else "automation interest"
-
-    buy_months = "60–90" if pri.tier == "HOT" else "90–120"
-
-    # Sentence 1 — the intelligence-led hook (user's requested template)
-    s1 = (
-        f"{name} is targeting automation for their {automation_type} "
-        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
-        f"The timing of this project is within {buy_months} days."
+    signal_blob = " ".join(
+        strip_extraction_artifacts(getattr(s, "signal_text", None))
+        for s in (deduped_sigs or sigs)[:12]
     )
+    profile = infer_automation_profile(
+        industry=industry,
+        signals=[
+            {"signal_type": getattr(s, "signal_type", ""), "raw_text": getattr(s, "signal_text", "") or ""}
+            for s in (deduped_sigs or sigs)
+        ],
+        company_name=name,
+    ).to_dict()
 
-    # Sentence 2 — company context + location
-    loc_str = f" {loc.strip(',').strip()}" if loc else ""
-    s2 = f"{name} is a {size_str}{ind} company{loc} with {len(sigs)} active buying indicators in our database."
-
-    # Sentence 3 — strongest evidence (clean, no raw HTML or noise)
-    top = deduped_sigs[0] if deduped_sigs else None
-    s3 = ""
-    if top:
-        label = _sig_label(getattr(top, "signal_type", ""))
-        raw = (getattr(top, "signal_text", None) or "").replace("\n", " ")
-        excerpt = _clean_signal_text(raw, max_len=180)
-        if excerpt:
-            s3 = f'Key evidence — {label}: "{excerpt}"'
-        else:
-            s3 = f"The leading indicator is a {label}, consistent with companies actively evaluating {automation_type}."
-
-    # Sentence 4 — qualifying reasons
-    reasons = pri.reasons or []
-    s4 = f"Qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
-
-    parts = [s1, s2]
-    if s3:
-        parts.append(s3)
-    if s4:
-        parts.append(s4)
-    return " ".join(p for p in parts if p)
+    _blurb, summary = build_lead_intelligence_copy(
+        company_name=name,
+        industry=_industry_display(industry),
+        tier=pri.tier,
+        signal_labels=labels,
+        signal_types=unique_types,
+        automation_type=automation_type,
+        pain_point=pain_point,
+        automation_profile=profile,
+        crm_metadata=crm_metadata,
+        signal_blob=signal_blob,
+    )
+    return summary
 
 
 def _intelligence_fulltext(
@@ -555,6 +535,7 @@ def generate_edition(db: Session, limit: int = 8, *, skip_openai_brief: bool = F
             pri=pri,
             sigs=sigs,
             deduped_sigs=deduped,
+            crm_metadata=c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else None,
         )
 
         fullText = _intelligence_fulltext(

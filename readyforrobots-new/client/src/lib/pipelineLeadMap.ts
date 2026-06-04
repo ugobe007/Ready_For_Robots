@@ -78,13 +78,11 @@ function topSignal(lead: ApiLead): { type: string; text: string; color: string }
   const sigs = lead.signals || [];
   const first = sigs[0];
   const typ = (first?.signal_type || "news").replace(/ /g, "_").toLowerCase();
-  const text = cleanAndClampText(
-    (first as { display_text?: string })?.display_text ||
-    first?.text ||
-    lead.share_summary ||
-    "Buying signal detected",
-    220,
-  ) || "Buying signal detected";
+  const text =
+    cleanAndClampText(
+      (first as { display_text?: string })?.display_text || first?.text || "",
+      220,
+    ) || "Buying signal detected";
   const color = SIGNAL_COLORS[typ] || SIGNAL_COLORS.default;
   const label = typ.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   return { type: label, text, color };

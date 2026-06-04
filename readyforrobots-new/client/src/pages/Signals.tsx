@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
+import { cleanAndClampText, cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
@@ -260,7 +260,9 @@ function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySigna
     leadId: typeof lead.id === "number" ? lead.id : undefined,
     company: lead.company_name || `Scored Lead ${index + 1}`,
     type,
-    text: cleanAndClampText(lead.share_summary || String(text), 220) || "SCOUT found a scored automation opportunity worth reviewing.",
+    text:
+      leadPreviewSentences(lead.share_summary || String(text), 3, 480) ||
+      "SCOUT found a scored automation opportunity worth reviewing.",
     score: leadScore(lead),
     track,
     time: index < 3 ? `${Math.max(index * 4 + 2, 2)}m ago` : "live",
