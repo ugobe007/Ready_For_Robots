@@ -52,6 +52,22 @@ def test_stored_hospitality_plus_hotel_signal_flips_automotive_mislabel():
     assert eff == "Hospitality"
 
 
+def test_japan_airlines_not_automotive_despite_robot_manufacturing_signal():
+    """Airline names must not be labeled Automotive when news mentions factory/robot vocabulary."""
+    sig = SimpleNamespace(
+        signal_text=(
+            "Japan Airlines explores humanoid robot deployment for baggage handling "
+            "and manufacturing partner pilot at airport terminal operations"
+        )
+    )
+    eff = effective_industry_for_lead("Japan Airlines", "Automotive & Manufacturing", [sig])
+    assert eff == "Airports & Aviation"
+
+
+def test_known_airline_alias_infers_aviation():
+    assert infer_industry_from_text("Japan Airlines fleet expansion") == "Airports & Aviation"
+
+
 @pytest.mark.parametrize(
     "name",
     [

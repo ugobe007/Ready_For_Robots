@@ -48,7 +48,29 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "forward air acquisition": "Logistics",
     # Entertainment / gaming
     "mgm springfield": "Casinos & Gaming",
+    # Airlines / aviation (signal text often mentions factory/manufacturing/robot deployment)
+    "japan airlines": "Airports & Aviation",
+    "all nippon airways": "Airports & Aviation",
+    "ana holdings": "Airports & Aviation",
+    "united airlines": "Airports & Aviation",
+    "american airlines": "Airports & Aviation",
+    "delta air lines": "Airports & Aviation",
+    "southwest airlines": "Airports & Aviation",
+    "jetblue airways": "Airports & Aviation",
+    "british airways": "Airports & Aviation",
+    "lufthansa": "Airports & Aviation",
+    "emirates airline": "Airports & Aviation",
+    "qantas airways": "Airports & Aviation",
+    "singapore airlines": "Airports & Aviation",
+    "cathay pacific": "Airports & Aviation",
+    "air france": "Airports & Aviation",
+    "klm royal dutch airlines": "Airports & Aviation",
 }
+
+# Company name looks like a passenger airline (not an automaker).
+_AIRLINE_NAME_RE = re.compile(
+    r"(?i)\b(airlines?|airways|air\s+lines?)\b"
+)
 
 # When two industries have the same raw keyword score, pick the higher-priority one first.
 INDUSTRY_TIE_PRIORITY: Tuple[str, ...] = (
@@ -318,6 +340,28 @@ def _keyword_hits(text_lower: str, industry: str) -> int:
     return sum(1 for kw in kws if kw in text_lower)
 
 
+def _name_suggests_airline(name: str) -> bool:
+    low = (name or "").strip().lower()
+    if not low:
+        return False
+    return bool(_AIRLINE_NAME_RE.search(low))
+
+
+def _stored_suggests_aviation(stored: str) -> bool:
+    low = (stored or "").lower()
+    if not low.strip():
+        return False
+    return any(
+        tok in low
+        for tok in (
+            "airport",
+            "aviation",
+            "airline",
+            "airlines",
+        )
+    )
+
+
 def _stored_suggests_hospitality(stored: str) -> bool:
     low = (stored or "").lower()
     if not low.strip():
@@ -347,7 +391,7 @@ def effective_industry_for_lead(
     Industry for UI and share copy: infer from name + signal text; fall back to stored.
 
     Disambiguation: generic industrial vocabulary in headlines must not override clear
-    hospitality/hotel context (fixes hotel groups labeled Automotive & Manufacturing).
+    hospitality/hotel or airline context (fixes mislabels like Marriott or Japan Airlines → Automotive).
     Still prefers OEM/automotive inference when signal copy is vehicle-centric (Faraday, etc.).
     """
     name = (company_name or "").strip()
@@ -365,6 +409,9 @@ def effective_industry_for_lead(
     hosp_hits_all = _keyword_hits(tl_all, "Hospitality")
     hosp_hits_sig = _keyword_hits(tl_sig, "Hospitality")
     food_hits_all = _keyword_hits(tl_all, "Food Service")
+    aviation_hits_all = _keyword_hits(tl_all, "Airports & Aviation")
+    aviation_hits_sig = _keyword_hits(tl_sig, "Airports & Aviation")
+    airline_name = _name_suggests_airline(name)
 
     hotel_brand_tokens = (
         "marriott", "hilton", "hyatt", "ihg", "accor", "wyndham", "choice hotels",
@@ -384,6 +431,10 @@ def effective_industry_for_lead(
             inferred = "Hospitality"
         elif hosp_sc >= 2 and hosp_sc + 1 >= auto_sc:
             inferred = "Hospitality"
+        elif airline_name or aviation_hits_sig >= 2 or (
+            _stored_suggests_aviation(stored) and aviation_hits_sig >= 1
+        ):
+            inferred = "Airports & Aviation"
 
     # Food-forward venues vs industrial tie
     if inferred == "Automotive & Manufacturing" and food_hits_all >= 2 and hosp_hits_all < 2:
