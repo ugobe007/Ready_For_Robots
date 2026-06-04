@@ -3,7 +3,7 @@ import { ArrowRight, BarChart3, Mail, Radio, Zap, TrendingUp, AlertTriangle, Eye
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { cleanScrapedText } from "@/lib/text";
+import { cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 
 type NewsletterStory = {
   category?: string;
@@ -516,7 +516,11 @@ export default function Newsletter() {
                         {cleanScrapedText(story.company || story.headline)}
                       </h2>
                       <p className="mt-2 text-sm leading-relaxed text-white/50">
-                        {cleanScrapedText(story.snippet || story.summary || "").slice(0, 200)}
+                        {leadPreviewSentences(
+                          story.summary || story.snippet,
+                          4,
+                          650,
+                        ) || "SCOUT is tracking automation signals for this account."}
                       </p>
 
                       {/* Signal evidence bullets */}

@@ -29,7 +29,7 @@ KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v2"
 KEY_HUMANOID_BENCHMARK_REPORT = "public:humanoid:report:v1"
 KEY_HUMANOID_INTELLIGENCE = "public:humanoid:intelligence:v1"
 KEY_HUMANOID_INTELLIGENCE_PDF = "public:humanoid:intelligence_pdf:weasyprint:v2"
-KEY_NEWSLETTER_EDITION = "public:newsletter:edition:v1"  # alias of newsletter durable key
+KEY_NEWSLETTER_EDITION = "public:newsletter:edition:v2"  # alias of newsletter durable key
 KEY_SOCIAL_DAILY_POSTS = "public:social:daily_posts:v1"
 
 RefreshFn = Callable[[Session], dict[str, Any]]

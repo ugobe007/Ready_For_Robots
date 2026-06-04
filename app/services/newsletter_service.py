@@ -19,7 +19,7 @@ from app.models.signal import Signal
 from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
-NEWSLETTER_PIPELINE_CACHE_KEY = "newsletter:edition:v1"
+NEWSLETTER_PIPELINE_CACHE_KEY = "newsletter:edition:v2"
 
 # ── Fix 1: Robot vendor exclusion ─────────────────────────────────────────────
 # Delegates to the canonical vendor list maintained in robot_vendor_names.py.
@@ -553,11 +553,9 @@ def generate_edition(db: Session, limit: int = 8, *, skip_openai_brief: bool = F
         top_sig_text = getattr(top_sig, "signal_text", None) or ""
         headline = _editorial_headline(name, sig_type, top_sig_text, c.industry or "")
 
-        # Snippet: first 2 sentences of summary (shows under headline in collapsed view)
-        sentences = summary.split(". ")
-        snippet = ". ".join(sentences[:2]).strip()
-        if not snippet.endswith("."):
-            snippet += "."
+        from app.services.lead_sales_copy import preview_sentences
+
+        snippet = preview_sentences(summary, max_sentences=3, max_chars=520)
 
         signal_strength = min(10, max(1, int(score / 10)))
         base_score = (2 if pri.tier == "HOT" else 1) * score

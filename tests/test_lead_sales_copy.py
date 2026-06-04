@@ -3,6 +3,7 @@ from app.services.lead_sales_copy import (
     build_lead_intelligence_copy,
     humanize_robot_types,
     is_low_quality_sales_text,
+    preview_sentences,
 )
 
 
@@ -39,6 +40,19 @@ def test_humanize_robot_types_from_profile():
     )
     assert "humanoid robots" in types
     assert "service robots" in types
+
+
+def test_preview_sentences_no_mid_word_cut():
+    long = (
+        "Omni Fort Lauderdale Hotel is targeting automation for their room service robots "
+        "due to labor vacancies, which aligns with our signals: labor shortage. "
+        "The timing of the project is 90 to 120 days."
+    )
+    out = preview_sentences(long, max_sentences=2, max_chars=220)
+    assert not out.rstrip().endswith("w")
+    assert not out.rstrip().endswith("aligns w")
+    assert out.endswith(".")
+    assert "labor shortage" in out.lower()
 
 
 def test_is_low_quality_sales_text():

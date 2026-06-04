@@ -18,7 +18,11 @@ function buildTweetText(headline, description) {
   if (!body) return head.slice(0, 240);
   // Combine: headline\n\nbody — truncate body so total fits
   const maxBody = 240 - head.length - 2;
-  const truncBody = maxBody > 30 ? (body.length > maxBody ? body.slice(0, maxBody - 1) + '…' : body) : '';
+  const truncBody = maxBody > 30
+    ? (body.length > maxBody
+      ? (body.slice(0, maxBody - 1).replace(/\s+\S*$/, '') || body.slice(0, maxBody - 1)) + '…'
+      : body)
+    : '';
   return truncBody ? `${head}\n\n${truncBody}` : head;
 }
 
@@ -502,8 +506,10 @@ export default function Newsletter() {
                     </div>
                   </div>
 
-                  {/* Preview (always visible) */}
-                  <p className="text-sm text-neutral-400 mb-3 italic">{story.snippet}</p>
+                  {/* Preview (always visible) — full sentences, not a hard character chop */}
+                  <p className="text-sm text-neutral-400 mb-3 italic leading-relaxed">
+                    {story.snippet || (story.summary || '').split(/(?<=[.!?])\s+/).slice(0, 3).join(' ').trim()}
+                  </p>
 
                   {/* Quick Stats - Enhanced with icons */}
                   <div className="grid grid-cols-3 gap-3 mb-3">

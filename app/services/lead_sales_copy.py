@@ -71,6 +71,32 @@ _INITIATIVE_RE = re.compile(
 )
 
 
+def preview_sentences(text: Optional[str], *, max_sentences: int = 3, max_chars: int = 520) -> str:
+    """Card/newsletter preview — complete sentences only, never mid-word."""
+    t = (text or "").strip()
+    if not t:
+        return ""
+    parts = re.split(r"(?<=[.!?])\s+", t)
+    parts = [p.strip() for p in parts if len(p.strip()) > 12]
+    if not parts:
+        if len(t) <= max_chars:
+            return t
+        cut = t[: max_chars - 1].rsplit(" ", 1)[0]
+        return (cut or t[:max_chars]).rstrip(",;:") + "…"
+    out: List[str] = []
+    for part in parts[:max_sentences]:
+        candidate = " ".join(out + [part]) if out else part
+        if len(candidate) > max_chars:
+            break
+        out.append(part)
+    if not out:
+        return preview_sentences(t, max_sentences=1, max_chars=max_chars)
+    joined = " ".join(out)
+    if not joined.endswith((".", "!", "?")):
+        joined += "."
+    return joined
+
+
 def is_low_quality_sales_text(text: Optional[str]) -> bool:
     """True when text should not be shown to reps or in share copy."""
     t = (text or "").strip()
