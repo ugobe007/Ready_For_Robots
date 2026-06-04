@@ -171,6 +171,15 @@ curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/purge-junk" \
 
 Set `"dry_run": false` to delete (same logic as `is_junk`).
 
+**Lead inference / enrichment agent** (same `X-Admin-Key`, or admin Supabase JWT):
+
+```bash
+curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/leads/enrich-agent?limit=300" \
+  -H "X-Admin-Key: YOUR_ADMIN_KEY"
+```
+
+Do **not** use the literal string `YOUR_ADMIN_JWT` — that is documentation placeholder only. For JWT auth, sign in on the site as an `ADMIN_EMAILS` user and copy the real `access_token` from the browser (DevTools → Application → localStorage, key containing `auth-token`).
+
 ---
 
 ## 11. Optional / data ops (use when you know you need them)

@@ -42,6 +42,7 @@ from app.api.scout import router as scout_router
 from app.api.waitlist import router as waitlist_router
 from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
+from app.api.admin_lead_ops import router as admin_lead_ops_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.social_posts import router as social_posts_router
 from app.api.linkedin import router as linkedin_router
@@ -288,6 +289,7 @@ app.include_router(admin_snapshot_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_lead_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
 app.include_router(social_posts_router, prefix="/api/social", tags=["social"])
 app.include_router(linkedin_router, prefix="/api/linkedin", tags=["linkedin"])
