@@ -1184,16 +1184,21 @@ def get_leads(
                 KEY_LEADS_50,
                 KEY_LEADS_HOT_12,
             )
+            from app.services.public_surface_cache import read_public_caches_many
 
-            for alt_key in (
-                *_LEADS_LIST_LEGACY_KEYS,
-                KEY_LEADS_HOT_12,
-                KEY_LEADS_18,
-                KEY_LEADS_50,
-            ):
-                if alt_key == public_key:
-                    continue
-                alt = read_public_cache(alt_key, stale_ok=True)
+            alt_keys = [
+                k
+                for k in (
+                    *_LEADS_LIST_LEGACY_KEYS,
+                    KEY_LEADS_HOT_12,
+                    KEY_LEADS_18,
+                    KEY_LEADS_50,
+                )
+                if k != public_key
+            ]
+            blobs = read_public_caches_many(alt_keys, stale_ok=True)
+            for alt_key in alt_keys:
+                alt = blobs.get(alt_key)
                 if isinstance(alt, list) and len(alt) > 0:
                     public_data = alt[:limit]
                     break
@@ -1440,25 +1445,43 @@ def _summary_for_homepage(summary: dict) -> dict:
     }
 
 
-def _homepage_from_surface_caches() -> Optional[dict]:
-    """Stitch homepage from any warm durable surface (legacy v1, summary, leads lists)."""
+def _homepage_surface_cache_keys() -> tuple[str, ...]:
     from app.services.content_surfaces import (
         KEY_LEADS_18,
         KEY_LEADS_50,
         KEY_LEADS_HOT_12,
         KEY_SUMMARY_EXCLUDE_JUNK,
     )
-    from app.services.public_surface_cache import read_public_cache
+
+    return (
+        *_HOMEPAGE_LEGACY_KEYS,
+        KEY_SUMMARY_EXCLUDE_JUNK,
+        *_LEADS_LIST_LEGACY_KEYS,
+        KEY_LEADS_HOT_12,
+        KEY_LEADS_18,
+        KEY_LEADS_50,
+    )
+
+
+def _homepage_from_surface_caches() -> Optional[dict]:
+    """Stitch homepage from any warm durable surface (one batch DB read)."""
+    from app.services.public_surface_cache import read_public_caches_many
+
+    blobs = read_public_caches_many(list(_homepage_surface_cache_keys()), stale_ok=True)
 
     for key in _HOMEPAGE_LEGACY_KEYS:
-        legacy = read_public_cache(key, stale_ok=True)
+        legacy = blobs.get(key)
         if legacy and (legacy.get("hotLeads") or []):
             return legacy
 
-    summary_raw = read_public_cache(KEY_SUMMARY_EXCLUDE_JUNK, stale_ok=True)
+    from app.services.content_surfaces import KEY_SUMMARY_EXCLUDE_JUNK
+
+    summary_raw = blobs.get(KEY_SUMMARY_EXCLUDE_JUNK)
     hot_leads: list = []
-    for key in (*_LEADS_LIST_LEGACY_KEYS, KEY_LEADS_HOT_12, KEY_LEADS_18, KEY_LEADS_50):
-        chunk = read_public_cache(key, stale_ok=True)
+    for key in _homepage_surface_cache_keys():
+        if key in _HOMEPAGE_LEGACY_KEYS or key == KEY_SUMMARY_EXCLUDE_JUNK:
+            continue
+        chunk = blobs.get(key)
         if isinstance(chunk, list) and len(chunk) > 0:
             hot_leads = chunk
             break
@@ -1476,19 +1499,39 @@ def _homepage_from_surface_caches() -> Optional[dict]:
     return payload
 
 
-def _homepage_fast_live_build(db: Session) -> Optional[dict]:
-    """Bounded sync rebuild when all durable caches are cold (no OpenAI URLs)."""
-    from app.db_timeout import run_db
+def _schedule_homepage_live_bootstrap() -> None:
+    """Never block GET /homepage on a full rebuild — warm L1 in a daemon thread."""
+    global _homepage_bg_refresh_in_progress
+    if _homepage_bg_refresh_in_progress:
+        return
+    with _homepage_bg_refresh_lock:
+        if _homepage_bg_refresh_in_progress:
+            return
+        _homepage_bg_refresh_in_progress = True
 
-    try:
-        return run_db(
-            lambda: _build_homepage_payload(db, resolve_llm_urls=False),
-            timeout_sec=8.0,
-            label="homepage-live-fallback",
-        )
-    except Exception as exc:
-        logger.warning("homepage live fallback failed: %s", exc)
-        return None
+    def _run() -> None:
+        global _homepage_bg_refresh_in_progress
+        try:
+            from app.database import SessionLocal
+
+            db = SessionLocal()
+            try:
+                live = _build_homepage_payload(db, resolve_llm_urls=False)
+                if live and (live.get("hotLeads") or []):
+                    _set_homepage_cache(live)
+                    from app.services.content_surfaces import KEY_HOMEPAGE
+                    from app.services.public_surface_cache import write_public_cache
+
+                    write_public_cache(db, KEY_HOMEPAGE, live)
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.warning("homepage background bootstrap failed: %s", exc)
+        finally:
+            with _homepage_bg_refresh_lock:
+                _homepage_bg_refresh_in_progress = False
+
+    threading.Thread(target=_run, daemon=True, name="homepage-live-bootstrap").start()
 
 
 def _merge_homepage_payload(primary: dict, fallback: dict) -> dict:
@@ -1811,18 +1854,13 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
             return merged
 
     fallback = _homepage_from_surface_caches()
-    if fallback and (fallback.get("hotLeads") or []):
+    if fallback:
         _set_homepage_cache(fallback)
         schedule_public_cache_refresh(pipeline_only=True, reason="homepage_surface_fallback")
         return fallback
 
-    live = _homepage_fast_live_build(db)
-    if live and (live.get("hotLeads") or []):
-        _set_homepage_cache(live)
-        schedule_public_cache_refresh(pipeline_only=True, reason="homepage_live_bootstrap")
-        return live
-
     schedule_public_cache_refresh(force=True, pipeline_only=True, reason="homepage_miss")
+    _schedule_homepage_live_bootstrap()
     return _empty_homepage_payload()
 
 

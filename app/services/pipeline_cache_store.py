@@ -67,7 +67,71 @@ def cache_read(db: Session, cache_key: str, *, stale_ok: bool = True) -> Optiona
         return None
 
 
-def cache_read_safe(cache_key: str, *, stale_ok: bool = True, timeout_sec: float = 8.0) -> Optional[Any]:
+def cache_read_many(
+    db: Session,
+    cache_keys: list[str],
+    *,
+    stale_ok: bool = True,
+) -> dict[str, Any]:
+    """Read multiple cache keys in one round trip."""
+    if not cache_keys:
+        return {}
+    try:
+        ensure_pipeline_cache_table(db)
+        rows = db.execute(
+            text(
+                "SELECT cache_key, data, expires_at FROM pipeline_cache_store "
+                "WHERE cache_key = ANY(:keys)"
+            ),
+            {"keys": list(cache_keys)},
+        ).fetchall()
+        now = datetime.now(timezone.utc)
+        out: dict[str, Any] = {}
+        for row in rows:
+            if not stale_ok and row.expires_at and row.expires_at < now:
+                continue
+            raw = row.data
+            out[str(row.cache_key)] = json.loads(raw) if isinstance(raw, str) else raw
+        return out
+    except Exception as exc:
+        logger.warning("pipeline_cache_store read_many failed: %s", exc)
+        db.rollback()
+        return {}
+
+
+def cache_read_many_safe(
+    cache_keys: list[str],
+    *,
+    stale_ok: bool = True,
+    timeout_sec: float = 3.0,
+) -> dict[str, Any]:
+    """Batch cache read — one DB session, bounded timeout."""
+    if not cache_keys:
+        return {}
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+
+    def _read() -> dict[str, Any]:
+        db = SessionLocal()
+        try:
+            return cache_read_many(db, cache_keys, stale_ok=stale_ok)
+        finally:
+            db.close()
+
+    try:
+        return (
+            run_db(_read, timeout_sec=timeout_sec, label="cache-read-many")
+            or {}
+        )
+    except TimeoutError:
+        logger.warning("pipeline_cache_store read_many timed out (%d keys)", len(cache_keys))
+        return {}
+    except Exception as exc:
+        logger.warning("pipeline_cache_store read_many failed: %s", exc)
+        return {}
+
+
+def cache_read_safe(cache_key: str, *, stale_ok: bool = True, timeout_sec: float = 3.0) -> Optional[Any]:
     """Read cache in a timeout-bound thread — never block the request on a hung pooler."""
     from app.database import SessionLocal
     from app.db_timeout import run_db

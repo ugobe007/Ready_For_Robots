@@ -301,67 +301,43 @@ export default function Pipeline() {
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Single parallel mount fetch: leads + summary + admin gate + settings.
+  // Public pipeline data — once on mount (not tied to auth, avoids double 30–60s load).
   useEffect(() => {
     const base = getApiBase();
     let cancelled = false;
 
     setLoadingLeads(true);
     setLoadingSummary(true);
-    setLoadingActivations(true);
     setLoadErr("");
-    setActivationErr("");
-    setIsAdmin(false);
 
-    const token = session?.access_token;
-    const authHdr = authHeader(token);
+    const PIPELINE_TIMEOUT = 8_000;
+
+    // Summary often returns in <1s — paint metrics before leads finish loading.
+    void fetchWithTimeout(`${base}/api/leads/summary?exclude_junk=true`, {}, PIPELINE_TIMEOUT)
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const data = (await res.json()) as LeadSummary;
+        if ((data.total ?? 0) > 0 || (data.hot ?? 0) > 0) {
+          setSummary(data);
+          setLoadingSummary(false);
+        }
+      })
+      .catch(() => { /* advisory */ });
 
     Promise.allSettled([
-      fetchWithTimeout(`${base}/api/leads/homepage`),
-      fetchWithTimeout(`${base}/api/leads/summary?exclude_junk=true`, {}, 10_000),
-      token
-        ? fetchWithTimeout(`${base}/api/user/me`, { headers: authHdr }, 10_000)
-        : Promise.resolve(null),
-      token
-        ? fetchWithTimeout(`${base}/api/user/settings`, { headers: authHdr }, 10_000)
-        : Promise.resolve(null),
-    ]).then(async ([homepageResult, summaryResult, meResult, settingsResult]) => {
+      fetchWithTimeout(`${base}/api/leads/homepage`, {}, PIPELINE_TIMEOUT),
+      fetchWithTimeout(
+        `${base}/api/leads?limit=30&exclude_junk=true&sort=score`,
+        {},
+        PIPELINE_TIMEOUT,
+      ),
+    ]).then(async ([homepageResult, leadsListResult]) => {
       if (cancelled) return;
 
-      let admin = false;
+      let rows: ApiLead[] = [];
+      let payloadSummary: LeadSummary | null = null;
+
       try {
-        if (meResult.status === "fulfilled" && meResult.value?.ok) {
-          const me = (await meResult.value.json()) as { is_admin?: boolean };
-          admin = Boolean(me.is_admin);
-          setIsAdmin(admin);
-        }
-      } catch {
-        setIsAdmin(false);
-      }
-
-      // Summary totals (fast durable cache) — load in parallel with homepage.
-      try {
-        if (summaryResult.status === "fulfilled" && summaryResult.value?.ok) {
-          const data = (await summaryResult.value.json()) as LeadSummary;
-          if ((data.total ?? 0) > 0 || (data.hot ?? 0) > 0) {
-            setSummary(data);
-          }
-        }
-      } catch { /* advisory */ }
-
-      const applyLeads = (rows: ApiLead[], payloadSummary?: LeadSummary | null) => {
-        const mapped = rows.map(mapApiLeadToDeal);
-        setDeals(mapped);
-        setSelectedId(mapped[0]?.id ?? null);
-        if (payloadSummary) setSummary(payloadSummary);
-        setMarketSnippet(marketSnippetFromDeals(mapped));
-      };
-
-      // Batched homepage payload — cached server-side; fall back to public leads list if cold.
-      try {
-        let rows: ApiLead[] = [];
-        let payloadSummary: LeadSummary | null = null;
-
         if (homepageResult.status === "fulfilled" && homepageResult.value?.ok) {
           const payload = (await homepageResult.value.json()) as {
             summary?: LeadSummary;
@@ -371,29 +347,39 @@ export default function Pipeline() {
           payloadSummary = payload.summary ?? null;
         }
 
-        if (rows.length === 0) {
-          const fallbackRes = await fetchWithTimeout(
-            `${base}/api/leads?limit=30&exclude_junk=true&sort=score`,
-            {},
-            12_000,
-          );
-          if (fallbackRes.ok) {
-            const fallbackRows = (await fallbackRes.json()) as ApiLead[];
-            if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
-              rows = fallbackRows;
-            }
+        if (
+          rows.length === 0 &&
+          leadsListResult.status === "fulfilled" &&
+          leadsListResult.value?.ok
+        ) {
+          const listRows = (await leadsListResult.value.json()) as ApiLead[];
+          if (Array.isArray(listRows) && listRows.length > 0) {
+            rows = listRows;
           }
         }
 
         if (rows.length > 0) {
-          applyLeads(rows, payloadSummary);
-        } else if (homepageResult.status === "rejected") {
-          throw homepageResult.reason instanceof Error
-            ? homepageResult.reason
-            : new Error("Could not load pipeline");
-        } else if (homepageResult.status === "fulfilled" && !homepageResult.value?.ok) {
-          throw new Error("Could not load pipeline");
+          const mapped = rows.map(mapApiLeadToDeal);
+          setDeals(mapped);
+          setSelectedId(mapped[0]?.id ?? null);
+          if (payloadSummary) setSummary(payloadSummary);
+          setMarketSnippet(marketSnippetFromDeals(mapped));
         } else {
+          const homepageFailed =
+            homepageResult.status === "rejected" ||
+            (homepageResult.status === "fulfilled" && !homepageResult.value?.ok);
+          const listFailed =
+            leadsListResult.status === "rejected" ||
+            (leadsListResult.status === "fulfilled" && !leadsListResult.value?.ok);
+          if (homepageFailed && listFailed) {
+            const reason =
+              homepageResult.status === "rejected"
+                ? homepageResult.reason
+                : leadsListResult.status === "rejected"
+                  ? leadsListResult.reason
+                  : null;
+            throw reason instanceof Error ? reason : new Error("Could not load pipeline");
+          }
           setDeals([]);
           setSelectedId(null);
           if (payloadSummary) setSummary(payloadSummary);
@@ -410,17 +396,59 @@ export default function Pipeline() {
         setDeals([]);
         setSelectedId(null);
       } finally {
-        setLoadingLeads(false);
-        setLoadingSummary(false);
+        if (!cancelled) {
+          setLoadingLeads(false);
+          setLoadingSummary(false);
+        }
+      }
+    });
+
+    return () => { cancelled = true; };
+  // Mount-only: never re-run when Supabase session resolves (was causing ~2× load time).
+  }, []);
+
+  // Auth-only extras — do not re-fetch public leads when Supabase session resolves.
+  useEffect(() => {
+    const base = getApiBase();
+    let cancelled = false;
+    const token = session?.access_token;
+    const authHdr = authHeader(token);
+
+    setLoadingActivations(true);
+    setActivationErr("");
+
+    if (!token) {
+      setIsAdmin(false);
+      setActivations([]);
+      setSelectedActivationId(null);
+      setLoadingActivations(false);
+      return () => { cancelled = true; };
+    }
+
+    Promise.allSettled([
+      fetchWithTimeout(`${base}/api/user/me`, { headers: authHdr }, 8_000),
+      fetchWithTimeout(`${base}/api/user/settings`, { headers: authHdr }, 8_000),
+    ]).then(async ([meResult, settingsResult]) => {
+      if (cancelled) return;
+
+      let admin = false;
+      try {
+        if (meResult.status === "fulfilled" && meResult.value?.ok) {
+          const me = (await meResult.value.json()) as { is_admin?: boolean };
+          admin = Boolean(me.is_admin);
+          setIsAdmin(admin);
+        }
+      } catch {
+        setIsAdmin(false);
       }
 
-      // SCOUT activations — admin-only internal console
       try {
-        if (admin && token) {
+        if (admin) {
           const fingerprint = encodeURIComponent(scoutFingerprint());
-          const activationsRes = await fetch(
+          const activationsRes = await fetchWithTimeout(
             `${base}/api/scout/activations?fingerprint=${fingerprint}&limit=6`,
-            liveFetchInit({ headers: authHdr }),
+            { headers: authHdr },
+            8_000,
           );
           if (activationsRes.ok) {
             const payload = (await activationsRes.json()) as { activations?: ScoutActivation[] };
@@ -440,10 +468,9 @@ export default function Pipeline() {
         }
         setActivations([]);
       } finally {
-        setLoadingActivations(false);
+        if (!cancelled) setLoadingActivations(false);
       }
 
-      // Settings (admin Cal automation only)
       try {
         if (admin && settingsResult.status === "fulfilled" && settingsResult.value?.ok) {
           const settings = (await settingsResult.value.json()) as UserSettings;
@@ -453,7 +480,6 @@ export default function Pipeline() {
     });
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.access_token]);
 
   // Lazy detail enrichment when a lead is selected.
@@ -466,7 +492,11 @@ export default function Pipeline() {
     (async () => {
       setLoadingResearch(true);
       try {
-        const response = await fetch(`${base}/api/leads/by-id/${selectedId}`, liveFetchInit());
+        const response = await fetchWithTimeout(
+          `${base}/api/leads/by-id/${selectedId}`,
+          {},
+          8_000,
+        );
         if (!response.ok) throw new Error(await response.text());
         const lead = (await response.json()) as ApiLead;
         const mapped = mapApiLeadToDeal(lead);

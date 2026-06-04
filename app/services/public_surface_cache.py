@@ -59,7 +59,14 @@ _loop_started = False
 
 
 def read_public_cache(cache_key: str, *, stale_ok: bool = True) -> Optional[Any]:
-    return cache_read_safe(cache_key, stale_ok=stale_ok, timeout_sec=8.0)
+    return cache_read_safe(cache_key, stale_ok=stale_ok, timeout_sec=3.0)
+
+
+def read_public_caches_many(cache_keys: list[str], *, stale_ok: bool = True) -> dict[str, Any]:
+    """Single round-trip read for homepage/pipeline fallbacks."""
+    from app.services.pipeline_cache_store import cache_read_many_safe
+
+    return cache_read_many_safe(cache_keys, stale_ok=stale_ok, timeout_sec=3.0)
 
 
 def write_public_cache(db: Session, cache_key: str, data: Any) -> None:
