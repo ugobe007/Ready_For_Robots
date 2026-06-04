@@ -870,7 +870,12 @@ def _fmt_company(
             "problem_size": (inf or {}).get("problem_size") or {},
             "robot_categories": (inf or {}).get("robot_categories") or [],
             "application_areas": (inf or {}).get("application_areas") or [],
-        } if inf else None,
+            "agent_enrichment": (
+                crm_meta.get("agent_enrichment")
+                if isinstance(crm_meta.get("agent_enrichment"), dict)
+                else None
+            ),
+        } if (inf or crm_meta.get("agent_enrichment")) else None,
         **link_extras,
     }
     if outreach_guess:

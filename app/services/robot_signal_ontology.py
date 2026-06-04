@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, List, Optional, Sequence
 
 
 @dataclass(frozen=True)
@@ -33,6 +33,7 @@ class OntologyMatches:
     capex_financial_signals: tuple[str, ...] = ()
     expansion_facility_signals: tuple[str, ...] = ()
     regulatory_compliance_signals: tuple[str, ...] = ()
+    word_shape_hits: tuple[dict, ...] = ()
 
     @property
     def has_any(self) -> bool:
@@ -45,6 +46,7 @@ class OntologyMatches:
                 self.capex_financial_signals,
                 self.expansion_facility_signals,
                 self.regulatory_compliance_signals,
+                self.word_shape_hits,
             )
         )
 
@@ -161,9 +163,18 @@ def _word_matches(text_norm: str, words: Iterable[str]) -> tuple[str, ...]:
     return tuple(matches)
 
 
-def match_ontology_features(text: str) -> OntologyMatches:
-    features = load_robot_signal_ontology()
+def match_ontology_features(text: str, db: Optional[Any] = None) -> OntologyMatches:
+    from app.services.learned_signal_ontology import (
+        get_learned_overlay,
+        load_effective_ontology_features,
+        match_word_shapes,
+    )
+
+    features = load_effective_ontology_features(db)
     text_norm = _norm(text)
+    overlay = get_learned_overlay(db)
+    shapes = overlay.get("word_shapes") if isinstance(overlay.get("word_shapes"), list) else []
+    shape_hits = tuple(match_word_shapes(text, shapes))
     return OntologyMatches(
         pain_words=_word_matches(text_norm, features.pain_words),
         buying_phrases=_phrase_matches(text_norm, features.buying_phrases),
@@ -172,11 +183,12 @@ def match_ontology_features(text: str) -> OntologyMatches:
         capex_financial_signals=_phrase_matches(text_norm, features.capex_financial_signals),
         expansion_facility_signals=_phrase_matches(text_norm, features.expansion_facility_signals),
         regulatory_compliance_signals=_phrase_matches(text_norm, features.regulatory_compliance_signals),
+        word_shape_hits=shape_hits,
     )
 
 
-def signal_types_from_ontology_matches(text: str) -> list[str]:
-    matches = match_ontology_features(text)
+def signal_types_from_ontology_matches(text: str, db: Optional[Any] = None) -> list[str]:
+    matches = match_ontology_features(text, db=db)
     if not matches.has_any:
         return []
 
@@ -185,6 +197,11 @@ def signal_types_from_ontology_matches(text: str) -> list[str]:
     def add(signal_type: str) -> None:
         if signal_type not in signals:
             signals.append(signal_type)
+
+    for shape in matches.word_shape_hits:
+        maps_to = str(shape.get("maps_to") or "").strip()
+        if maps_to:
+            add(maps_to.replace("-", "_"))
 
     # Trigger expressions are exact-match, high-confidence rules.
     if matches.trigger_expressions:

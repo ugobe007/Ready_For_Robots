@@ -61,6 +61,12 @@ export interface ApiLead {
     problem_size?: Record<string, unknown>;
     robot_categories?: string[];
     application_areas?: string[];
+    agent_enrichment?: {
+      rich_facts?: Array<{ claim?: string; evidence_span?: string }>;
+      procurement_clues?: string[];
+      timing_clues?: string[];
+      ontology_gaps?: string[];
+    } | null;
   } | null;
   lead_inference?: Record<string, unknown> | null;
 }

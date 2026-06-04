@@ -9,6 +9,7 @@ Endpoints for the Ready for Robots admin panel.
   GET  /api/admin/scrape/targets     — list all registered scrape targets
   POST /api/admin/scrape/trigger     — manually trigger a scraper run
   POST /api/admin/leads/refresh-inference — re-run inference on top pipeline companies
+  POST /api/admin/leads/enrich-agent — AI agent enriches leads + grows learned ontology
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
@@ -783,6 +784,34 @@ def refresh_pipeline_lead_inference(
         "message": (
             f"Refreshing inference for up to {limit} top pipeline companies in the "
             "background, then rebuilding public caches."
+        ),
+    }
+
+
+@router.post("/leads/enrich-agent")
+def enrich_pipeline_leads_with_agent(
+    background_tasks: BackgroundTasks,
+    limit: int = Query(300, ge=1, le=500, description="Top pipeline leads to enrich"),
+    use_llm: bool = Query(True, description="Use LLM for phrase mining when API keys are set"),
+):
+    """
+    Active enrichment agent: inference engine + rich phrase/word-shape ontology learning
+    for top pipeline sales leads, then rebuild public caches.
+    """
+    from app.services.lead_enrichment_agent import run_sales_leads_enrichment_batch_and_refresh_caches
+
+    background_tasks.add_task(
+        run_sales_leads_enrichment_batch_and_refresh_caches,
+        limit=limit,
+        use_llm=use_llm,
+    )
+    return {
+        "status": "started",
+        "limit": limit,
+        "use_llm": use_llm,
+        "message": (
+            f"Enrichment agent processing up to {limit} leads — inference refresh, "
+            "rich data extraction, and learned ontology update."
         ),
     }
 
