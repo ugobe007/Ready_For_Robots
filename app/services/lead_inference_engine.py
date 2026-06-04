@@ -26,6 +26,7 @@ from app.services.inference_engine import analyze
 from app.services.lead_filter import priority_tier
 from app.services.lead_name_gate import check_lead_name
 from app.services.lead_value import compute_lead_value
+from app.services.lead_project_timing import merge_project_timing_into_crm_metadata, resolve_project_timing
 
 # Problem language → human label
 _PROBLEM_PATTERNS: List[tuple[re.Pattern[str], str]] = [
@@ -330,17 +331,42 @@ def evaluate_lead_candidate(
         tier=pri.tier,
         tier_reasons=list(pri.reasons),
         lead_value_score=lv["lead_value_score"],
-        score_components=lv.get("components") or {},
+        score_components={
+            **(lv.get("components") or {}),
+            "procurement_hints": lv.get("procurement_hints") or [],
+        },
         gtm_readiness=gtm,
         references=refs,
     )
 
 
-def persist_lead_inference(company, dossier: LeadInferenceDossier, db) -> None:
+def persist_lead_inference(
+    company,
+    dossier: LeadInferenceDossier,
+    db,
+    *,
+    signal_blob: str = "",
+    signal_types: Optional[Sequence[str]] = None,
+) -> None:
     """Merge dossier into company.crm_metadata and refresh automation_profile."""
     meta = dict(company.crm_metadata or {})
-    meta["lead_inference"] = dossier.to_dict()
-    company.crm_metadata = meta
+    inf_dict = dossier.to_dict()
+    proc_strength = float((dossier.score_components or {}).get("procurement_timeline") or 0)
+    project_timing = resolve_project_timing(
+        tier=dossier.tier,
+        crm_metadata=meta,
+        lead_inference=inf_dict,
+        signal_blob=signal_blob,
+        signal_types=[r.get("value") for r in dossier.references if r.get("type") == "signal_type"],
+        procurement_hints=(dossier.score_components or {}).get("procurement_hints")
+        if isinstance(dossier.score_components, dict)
+        else [],
+        intent_score=dossier.intent_score,
+        procurement_strength=proc_strength,
+    )
+    company.crm_metadata = merge_project_timing_into_crm_metadata(
+        meta, project_timing, lead_inference=inf_dict
+    )
 
     if dossier.is_lead and dossier.robot_categories:
         ap = dict(company.automation_profile or {})
@@ -358,7 +384,9 @@ def persist_lead_inference(company, dossier: LeadInferenceDossier, db) -> None:
 
 
 def refresh_company_inference(company, signals: Sequence[Any], db) -> LeadInferenceDossier:
-    """Re-run inference after signals exist (API / post-scrape enrichment)."""
+    """Re-run inference + CRM extraction after signals exist (API / post-scrape enrichment)."""
+    from app.services.crm_extractor import build_crm_metadata_dict, extract
+
     sig_types: List[str] = []
     texts: List[str] = []
     for s in signals or []:
@@ -378,6 +406,29 @@ def refresh_company_inference(company, signals: Sequence[Any], db) -> LeadInfere
         employee_estimate=company.employee_estimate,
         is_new_company=False,
     )
-    if dossier.is_lead:
-        persist_lead_inference(company, dossier, db)
+    if dossier.is_lead and db is not None:
+        sig_list = list(signals or [])
+        try:
+            descriptors = extract(company, sig_list, db)
+            crm = build_crm_metadata_dict(descriptors)
+            merged = dict(company.crm_metadata or {})
+            merged.update(crm)
+            company.crm_metadata = merged
+        except Exception:
+            pass
+        dossier.score_components = dossier.score_components or {}
+        if isinstance(dossier.score_components, dict):
+            lv_hints = compute_lead_value(
+                dossier.intent_score,
+                company.employee_estimate,
+                company.automation_profile,
+                sig_list,
+                extra_timeline_text=context[:500],
+            )
+            dossier.score_components["procurement_hints"] = lv_hints.get("procurement_hints") or []
+            dossier.score_components["procurement_timeline"] = (
+                (lv_hints.get("components") or {}).get("procurement_timeline")
+            )
+        persist_lead_inference(company, dossier, db, signal_blob=context, signal_types=sig_types)
+        db.commit()
     return dossier

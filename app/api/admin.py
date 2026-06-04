@@ -8,9 +8,10 @@ Endpoints for the Ready for Robots admin panel.
   POST /api/admin/import/companies   — bulk-import company records (JSON)
   GET  /api/admin/scrape/targets     — list all registered scrape targets
   POST /api/admin/scrape/trigger     — manually trigger a scraper run
+  POST /api/admin/leads/refresh-inference — re-run inference on top pipeline companies
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from pydantic import BaseModel
@@ -751,6 +752,38 @@ def list_scrape_targets(
             }
             for t in targets
         ],
+    }
+
+
+# ── Pipeline inference batch ───────────────────────────────────────────────────
+
+@router.post("/leads/refresh-inference")
+def refresh_pipeline_lead_inference(
+    background_tasks: BackgroundTasks,
+    limit: int = Query(
+        300,
+        ge=1,
+        le=500,
+        description="Number of top pipeline companies to refresh (by priority score)",
+    ),
+):
+    """
+    Re-run lead inference + CRM timing for the top N pipeline companies, then rebuild
+    public pipeline caches. Requires admin JWT (ADMIN_EMAILS).
+    """
+    from app.services.pipeline_inference_batch import run_pipeline_inference_batch_and_refresh_caches
+
+    background_tasks.add_task(
+        run_pipeline_inference_batch_and_refresh_caches,
+        limit=limit,
+    )
+    return {
+        "status": "started",
+        "limit": limit,
+        "message": (
+            f"Refreshing inference for up to {limit} top pipeline companies in the "
+            "background, then rebuilding public caches."
+        ),
     }
 
 

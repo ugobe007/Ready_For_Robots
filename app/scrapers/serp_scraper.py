@@ -214,6 +214,7 @@ class SerpScraper:
 
     def _save_signal(self, article: dict, company_name: str, industry: str) -> bool:
         from app.services.scraper_intelligence import (
+            classify_article_signals,
             gate_lead_candidate,
             persist_dossier,
             primary_signal_type,
@@ -222,8 +223,15 @@ class SerpScraper:
 
         article_url = article.get("url") or ""
         context = article.get("text") or ""
+        signal_types = classify_article_signals(
+            context, article_url=article_url, rss_source_name=industry
+        )
         accepted, dossier = gate_lead_candidate(
-            company_name, context, article_url=article_url, industry=industry
+            company_name,
+            context,
+            article_url=article_url,
+            industry=industry,
+            signal_types=signal_types,
         )
         if not accepted:
             return False
@@ -231,7 +239,9 @@ class SerpScraper:
         company = self._get_or_create_company(company_name, industry)
         if not company:
             return False
-        persist_dossier(company, dossier, self.db, context_text=context)
+        persist_dossier(
+            company, dossier, self.db, context_text=context, signal_types=signal_types
+        )
 
         signal_text = context[:600]
         existing = self.db.query(Signal).filter(

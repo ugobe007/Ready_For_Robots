@@ -46,6 +46,23 @@ export interface ApiLead {
     significance_score?: number;
   } | null;
   gtm?: { suggested_motion?: string };
+  project_timing?: {
+    label?: string;
+    display_phrase?: string;
+    source?: string;
+    day_min?: number | null;
+    day_max?: number | null;
+    confidence?: number;
+  } | null;
+  lead_highlights?: {
+    specific_problem?: string | null;
+    why_lead?: string[];
+    procurement?: Record<string, unknown>;
+    problem_size?: Record<string, unknown>;
+    robot_categories?: string[];
+    application_areas?: string[];
+  } | null;
+  lead_inference?: Record<string, unknown> | null;
 }
 
 const SIGNAL_COLORS: Record<string, string> = {
@@ -175,5 +192,7 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,
+    projectTiming: lead.project_timing || undefined,
+    leadHighlights: lead.lead_highlights || undefined,
   };
 }

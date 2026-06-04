@@ -104,12 +104,25 @@ def enrich_new_company_website(company, *, sleep_s: float = 0.5) -> None:
         logger.debug("Website enrich failed for %r: %s", getattr(company, "name", ""), exc)
 
 
-def persist_dossier(company, dossier, db, *, context_text: str = "") -> None:
+def persist_dossier(
+    company,
+    dossier,
+    db,
+    *,
+    context_text: str = "",
+    signal_types: Optional[list] = None,
+) -> None:
     """Store lead inference dossier and optional semantic frame on company.crm_metadata."""
     from app.services.lead_inference_engine import persist_lead_inference
 
     if dossier and getattr(dossier, "is_lead", False):
-        persist_lead_inference(company, dossier, db)
+        persist_lead_inference(
+            company,
+            dossier,
+            db,
+            signal_blob=(context_text or "")[:4000],
+            signal_types=signal_types or [],
+        )
         if context_text:
             company.crm_metadata = attach_semantic_frame_to_metadata(
                 dict(company.crm_metadata or {}),

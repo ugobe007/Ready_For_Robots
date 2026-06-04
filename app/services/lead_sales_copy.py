@@ -9,6 +9,7 @@ import re
 from typing import Any, List, Optional, Sequence, Tuple
 
 from app.services.lead_signal_display import pick_primary_sentence, strip_extraction_artifacts
+from app.services.lead_project_timing import resolve_project_timing
 
 # Internal automation_profile ids → rep-friendly robot labels
 ROBOT_CATEGORY_LABELS: dict[str, str] = {
@@ -196,17 +197,27 @@ def _initiative_clause(name: str, signal_blob: str, signal_types: Sequence[str])
     return ""
 
 
-def _timing_clause(tier: str, crm_meta: Optional[dict]) -> str:
-    meta = crm_meta if isinstance(crm_meta, dict) else {}
-    timing = meta.get("timing") if isinstance(meta.get("timing"), dict) else {}
-    top = timing.get("top_window") if timing else None
-    if top and str(top).strip():
-        window = str(top).strip()
-        if re.search(r"(?i)q[1-4]|quarter|month|week|fy|fiscal", window):
-            return f"The timing of the project looks like {window}."
-        return f"The timing of the project is {window}."
-    days = "60 to 90" if tier == "HOT" else "90 to 120"
-    return f"The timing of the project is {days} days."
+def _timing_clause(
+    tier: str,
+    crm_meta: Optional[dict],
+    *,
+    signal_blob: str = "",
+    signal_types: Optional[Sequence[str]] = None,
+    procurement_hints: Optional[Sequence[str]] = None,
+    intent_score: float = 0,
+    procurement_strength: float = 0,
+) -> str:
+    timing = resolve_project_timing(
+        tier=tier,
+        crm_metadata=crm_meta,
+        lead_inference=(crm_meta or {}).get("lead_inference") if isinstance(crm_meta, dict) else None,
+        signal_blob=signal_blob,
+        signal_types=signal_types,
+        procurement_hints=procurement_hints,
+        intent_score=intent_score,
+        procurement_strength=procurement_strength,
+    )
+    return timing.display_phrase
 
 
 def _decision_maker_clause(crm_meta: Optional[dict]) -> str:
@@ -268,6 +279,9 @@ def build_lead_intelligence_copy(
     automation_profile: Optional[dict],
     crm_metadata: Optional[dict],
     signal_blob: str = "",
+    procurement_hints: Optional[Sequence[str]] = None,
+    intent_score: float = 0,
+    procurement_strength: float = 0,
 ) -> Tuple[str, str]:
     """
     Returns (share_blurb ~220 chars, share_summary multi-sentence paragraph).
@@ -292,7 +306,17 @@ def build_lead_intelligence_copy(
     if initiative:
         sentences.append(initiative)
 
-    sentences.append(_timing_clause(tier, crm_metadata))
+    project_timing = resolve_project_timing(
+        tier=tier,
+        crm_metadata=crm_metadata,
+        lead_inference=(crm_metadata or {}).get("lead_inference") if isinstance(crm_metadata, dict) else None,
+        signal_blob=signal_blob,
+        signal_types=signal_types,
+        procurement_hints=procurement_hints,
+        intent_score=intent_score,
+        procurement_strength=procurement_strength,
+    )
+    sentences.append(project_timing.display_phrase)
 
     sentences.append(f"Robot types that fit this account: {robots_str}.")
 
@@ -303,9 +327,12 @@ def build_lead_intelligence_copy(
     sentences.append(_poc_clause(name, signal_blob))
 
     summary = " ".join(sentences)
+    window_short = project_timing.label
+    if project_timing.day_min is not None and project_timing.day_max is not None:
+        window_short = f"{project_timing.day_min}–{project_timing.day_max} days"
     blurb = (
         f"{name}: {observed}. {robots_str}. "
-        f"Window: {'60–90' if tier == 'HOT' else '90–120'} days. Ready For Robots."
+        f"Window: {window_short}. Ready For Robots."
     )
     blurb_cut = blurb[:220].rsplit(" ", 1)[0] if len(blurb) > 220 else blurb
     return blurb_cut.rstrip(",;:"), summary

@@ -602,7 +602,9 @@ class NewsScraper:
         if company is None:
             return
 
-        persist_dossier(company, dossier, self.db, context_text=context)
+        persist_dossier(
+            company, dossier, self.db, context_text=context, signal_types=signal_types
+        )
 
         # De-duplicate by signal_text (truncated title)
         signal_text = context[:600]

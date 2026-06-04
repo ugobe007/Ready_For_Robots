@@ -67,6 +67,22 @@ interface Deal {
     detected_at?: string | null;
     significance_score?: number;
   } | null;
+  projectTiming?: {
+    label?: string;
+    display_phrase?: string;
+    source?: string;
+    day_min?: number | null;
+    day_max?: number | null;
+    confidence?: number;
+  };
+  leadHighlights?: {
+    specific_problem?: string | null;
+    why_lead?: string[];
+    procurement?: Record<string, unknown>;
+    problem_size?: Record<string, unknown>;
+    robot_categories?: string[];
+    application_areas?: string[];
+  };
 }
 
 interface ScoutActivationLead {
@@ -1465,9 +1481,36 @@ export default function Pipeline() {
                         <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>{selected.signal}</p>
                       </div>
                     </div>
-                    {(selected.notes || selected.shareSummary || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
+                    {(selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
+                      <div className="mt-2 flex items-center gap-2 text-[10px] text-white/35">
+                        <Clock className="h-3 w-3 shrink-0 text-violet-400/80" />
+                        <span>
+                          <span className="font-semibold text-white/50">Project window: </span>
+                          {selected.projectTiming?.day_min != null && selected.projectTiming?.day_max != null
+                            ? `${selected.projectTiming.day_min}–${selected.projectTiming.day_max} days`
+                            : selected.projectTiming?.label}
+                          {selected.projectTiming?.source === "estimated" && (
+                            <span className="text-white/25"> · estimated from signals</span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                       <div className="mt-2 border-t border-white/5 pt-2">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-1">Intelligence</p>
+                        {selected.leadHighlights?.specific_problem && (
+                          <p className="break-words text-[11px] leading-relaxed text-white/50 mb-1.5">
+                            <span className="font-semibold text-white/60">Problem: </span>
+                            {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
+                          </p>
+                        )}
+                        {(selected.leadHighlights?.why_lead || []).length > 0 && (
+                          <ul className="mb-1.5 list-disc pl-4 text-[10px] leading-relaxed text-white/40">
+                            {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
+                              <li key={i}>{cleanAndClampText(line, 160)}</li>
+                            ))}
+                          </ul>
+                        )}
                         <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
                         {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
                           <p className="mt-2 text-[10px] leading-relaxed text-white/35">

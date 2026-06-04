@@ -420,7 +420,18 @@ def rectify_and_enrich_crm_task(self, limit=100, hours_since_scraped=48):
                 existing = company.crm_metadata or {}
                 existing.update(metadata)
                 company.crm_metadata = existing
-                db.commit()
+
+                # ── Step 3: Lead inference dossier (problem, robots, timetable) ──
+                try:
+                    from app.services.lead_inference_engine import refresh_company_inference
+                    refresh_company_inference(company, signals, db)
+                except Exception as inf_exc:
+                    logger.warning(
+                        "Lead inference refresh failed for company %d (%r): %s",
+                        company.id, company.name, inf_exc,
+                    )
+                    db.commit()
+
                 crm_enriched += 1
 
             except Exception as e:

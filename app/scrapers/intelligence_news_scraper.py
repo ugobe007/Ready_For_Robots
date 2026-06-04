@@ -976,7 +976,13 @@ class IntelligenceNewsScraper:
             if not company:
                 continue
 
-            persist_lead_inference(company, dossier, self.db)
+            persist_lead_inference(
+                company,
+                dossier,
+                self.db,
+                signal_blob=body_text[:4000],
+                signal_types=signal_types,
+            )
 
             for signal_type in signal_types:
                 try:

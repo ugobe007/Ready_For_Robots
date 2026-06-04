@@ -682,6 +682,15 @@ def _build_share_blurb(
     ]
     signal_blob = " ".join(p for p in blob_parts if p)
 
+    overall_100 = float(s.overall_intent_score) if (s := pick_primary_score(c.scores)) else 0.0
+    lv_preview = compute_lead_value(
+        overall_100,
+        c.employee_estimate,
+        automation_profile,
+        sigs,
+        extra_timeline_text=signal_blob[:500],
+    )
+
     return build_lead_intelligence_copy(
         company_name=c.name or "Company",
         industry=ind,
@@ -693,6 +702,9 @@ def _build_share_blurb(
         automation_profile=automation_profile,
         crm_metadata=c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else None,
         signal_blob=signal_blob,
+        procurement_hints=lv_preview.get("procurement_hints") or [],
+        intent_score=overall_100,
+        procurement_strength=float((lv_preview.get("components") or {}).get("procurement_timeline") or 0),
     )
 
 
@@ -748,10 +760,6 @@ def _fmt_company(
     ov = industry_display if industry_display != raw_stored else None
     automation_profile = get_automation_profile_for_response(c, industry_override=ov)
 
-    share_blurb, share_summary = _build_share_blurb(
-        c, pri, sigs, industry_for_copy=industry_display, automation_profile=automation_profile
-    )
-
     overall_100 = float(s.overall_intent_score) if s else 0.0
     lv = compute_lead_value(
         overall_100,
@@ -760,6 +768,29 @@ def _fmt_company(
         sigs,
     )
     gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
+
+    share_blurb, share_summary = _build_share_blurb(
+        c, pri, sigs, industry_for_copy=industry_display, automation_profile=automation_profile
+    )
+
+    from app.services.lead_project_timing import resolve_project_timing
+
+    crm_meta = c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else {}
+    inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
+    signal_blob = " ".join(
+        strip_extraction_artifacts(getattr(sig, "signal_text", None))
+        for sig in (sigs or [])[:12]
+    )
+    project_timing = resolve_project_timing(
+        tier=pri.tier,
+        crm_metadata=crm_meta,
+        lead_inference=inf,
+        signal_blob=signal_blob,
+        signal_types=[getattr(sig, "signal_type", "") for sig in (sigs or [])[:8]],
+        procurement_hints=lv.get("procurement_hints") or [],
+        intent_score=overall_100,
+        procurement_strength=float((lv.get("components") or {}).get("procurement_timeline") or 0),
+    )
 
     link_extras = enrich_lead_link_fields(
         website=c.website,
@@ -830,7 +861,16 @@ def _fmt_company(
         ),
         "automation_profile": automation_profile,
         "gtm": gtm,
-        "lead_inference": (c.crm_metadata or {}).get("lead_inference"),
+        "lead_inference": inf or (crm_meta.get("lead_inference") if isinstance(crm_meta, dict) else None),
+        "project_timing": project_timing.to_dict(),
+        "lead_highlights": {
+            "specific_problem": (inf or {}).get("specific_problem"),
+            "why_lead": (inf or {}).get("why_lead") or [],
+            "procurement": (inf or {}).get("procurement") or {},
+            "problem_size": (inf or {}).get("problem_size") or {},
+            "robot_categories": (inf or {}).get("robot_categories") or [],
+            "application_areas": (inf or {}).get("application_areas") or [],
+        } if inf else None,
         **link_extras,
     }
     if outreach_guess:
