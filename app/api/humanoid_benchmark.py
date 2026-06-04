@@ -28,6 +28,7 @@ from sqlalchemy import text
 
 from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
+from app.services.humanoid_ai_stack import enrich_robot_with_ai_stack, resolve_ai_stack, scoring_specs
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
 from app.services.humanoid_benchmark_backfill import (
@@ -55,6 +56,8 @@ def _enrich_robot_scores(row: dict) -> dict:
     seed = SEED_SPECS_BY_SLUG.get(slug) or {}
     if seed:
         for key, val in seed.items():
+            if key == "ai_stack":
+                continue
             if val is None:
                 continue
             cur = specs.get(key)
@@ -73,13 +76,17 @@ def _enrich_robot_scores(row: dict) -> dict:
             out["score_data_pipeline"] = out["score_endurance"]
         if out.get("score_production") is None and out.get("score_market_readiness") is not None:
             out["score_production"] = out["score_market_readiness"]
-        return out
+        return enrich_robot_with_ai_stack(out)
 
-    scores = compute_scores(specs, status=row.get("status") or "research", vendor=row.get("vendor") or "")
+    scores = compute_scores(
+        scoring_specs(specs),
+        status=row.get("status") or "research",
+        vendor=row.get("vendor") or "",
+    )
     out = dict(row)
     out["specs"] = specs
     out.update(scores)
-    return out
+    return enrich_robot_with_ai_stack(out)
 
 _ROBOTS_LIST_CACHE: dict = {"ts": 0.0, "payload": None}
 _ROBOTS_LIST_TTL_SEC = 300
@@ -89,10 +96,16 @@ _REPORT_MEM_CACHE: dict = {}
 def _seed_robots_payload() -> list[dict]:
     """Static fallback when Postgres is unreachable (matches SEED_ROBOTS shape)."""
     rows = []
+    from app.services.humanoid_ai_stack import specs_for_storage
+
     for i, robot in enumerate(SEED_ROBOTS, start=1):
-        specs = robot["specs"]
-        scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
-        rows.append({
+        specs = specs_for_storage(robot["specs"], robot["model_slug"], robot.get("ai_stack"))
+        scores = compute_scores(
+            scoring_specs(specs),
+            status=robot["status"],
+            vendor=robot["vendor"],
+        )
+        payload = {
             "id": i,
             "name": robot["name"],
             "vendor": robot["vendor"],
@@ -119,7 +132,11 @@ def _seed_robots_payload() -> list[dict]:
             "heif_production": scores["heif_production"],
             "heif_total": scores["heif_total"],
             "last_scraped_at": None,
-        })
+        }
+        stack = resolve_ai_stack(specs, robot["model_slug"])
+        if stack:
+            payload["ai_stack"] = stack
+        rows.append(payload)
     rows.sort(key=lambda r: (-(r["score_total"] or 0), r["name"]))
     return rows
 

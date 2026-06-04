@@ -14,6 +14,7 @@ from typing import Any, Dict, List
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.services.humanoid_ai_stack import get_ai_stack, scoring_specs, specs_for_storage
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, upsert_humanoid_robot
 from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
 from app.services.humanoid_vendor_catalog import catalog_entries
@@ -63,8 +64,12 @@ def ensure_priority_humanoids(db: Session) -> dict:
         if not robot:
             stats["missing_seed"].append(slug)
             continue
-        specs = robot["specs"]
-        scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
+        specs = specs_for_storage(robot["specs"], slug, robot.get("ai_stack"))
+        scores = compute_scores(
+            scoring_specs(specs),
+            status=robot["status"],
+            vendor=robot["vendor"],
+        )
         result = upsert_humanoid_robot(
             db,
             {
@@ -111,12 +116,13 @@ def backfill_humanoid_specs(db: Session, *, sparse_heif_below: float = 1.2) -> d
             continue
 
         merged = _merge_specs(existing_specs, catalog_specs, seed_specs)
+        merged = specs_for_storage(merged, slug)
         if merged == existing_specs and (row["heif_total"] or 0) >= sparse_heif_below:
             skipped += 1
             continue
 
         scores = compute_scores(
-            merged,
+            scoring_specs(merged),
             status=row["status"] or "research",
             vendor=row["vendor"] or "",
         )

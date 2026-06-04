@@ -39,6 +39,25 @@ type RobotRow = {
   heif_production?: number;
   heif_total?: number;
   last_scraped_at?: string;
+  ai_stack?: AiStack;
+};
+
+type AiStack = {
+  primary_model?: string;
+  model_family?: string;
+  stack_layers?: string[];
+  compute?: string;
+  third_party?: string[];
+  unique_claim?: string;
+};
+
+const MODEL_FAMILY_LABELS: Record<string, string> = {
+  vla: "Vision-Language-Action (VLA)",
+  world_model: "World model",
+  physics_fm: "Physics foundation model",
+  hybrid: "Hybrid cognitive stack",
+  fleet_platform: "Fleet / ops platform",
+  research_stack: "Research / open stack",
 };
 
 const HEIF_DIMS = ["mobility", "manipulation", "cognition", "safety", "data_pipeline", "production"] as const;
@@ -161,10 +180,57 @@ function RobotNameLink({ name, url }: { name: string; url?: string }) {
   );
 }
 
+function resolveAiStack(robot: RobotRow): AiStack | null {
+  if (robot.ai_stack?.primary_model) return robot.ai_stack;
+  const nested = robot.specs?.ai_stack;
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    const s = nested as AiStack;
+    if (s.primary_model) return s;
+  }
+  return null;
+}
+
+function AiStackPanel({ stack }: { stack: AiStack }) {
+  const family = stack.model_family
+    ? MODEL_FAMILY_LABELS[stack.model_family] ?? stack.model_family
+    : null;
+  return (
+    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-violet-300/80 mb-2">AI stack</p>
+      <p className="text-sm font-semibold text-white">{stack.primary_model}</p>
+      {family ? <p className="text-[11px] text-white/45 mt-0.5">{family}</p> : null}
+      {stack.stack_layers && stack.stack_layers.length > 0 ? (
+        <p className="text-[11px] text-white/50 mt-2">
+          <span className="text-white/30">Layers: </span>
+          {stack.stack_layers.join(" → ")}
+        </p>
+      ) : null}
+      {stack.compute ? (
+        <p className="text-[11px] text-white/50 mt-1">
+          <span className="text-white/30">Compute: </span>
+          {stack.compute}
+        </p>
+      ) : null}
+      {stack.third_party && stack.third_party.length > 0 ? (
+        <p className="text-[11px] text-white/50 mt-1">
+          <span className="text-white/30">Partners / platform: </span>
+          {stack.third_party.join(", ")}
+        </p>
+      ) : null}
+      {stack.unique_claim ? (
+        <p className="text-[11px] text-white/60 mt-2 leading-relaxed border-t border-white/8 pt-2">
+          {stack.unique_claim}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
   const [open, setOpen] = useState(false);
   const heifTotal = robot.heif_total ?? robot.score_total / 25;
   const specs = robot.specs;
+  const aiStack = resolveAiStack(robot);
 
   return (
     <div
@@ -195,6 +261,11 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
             <StatusBadge status={robot.status} />
           </div>
           <p className="text-[11px] text-white/35 mt-0.5">{robot.vendor}</p>
+          {aiStack?.primary_model ? (
+            <p className="text-[10px] text-violet-300/70 mt-1 truncate max-w-md" title={aiStack.primary_model}>
+              {aiStack.primary_model}
+            </p>
+          ) : null}
           <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 max-w-md">
             {HEIF_DIMS.map((d) => (
               <div key={d}>
@@ -296,6 +367,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                 ))}
             </div>
           </div>
+          {aiStack ? <AiStackPanel stack={aiStack} /> : null}
         </div>
       )}
     </div>

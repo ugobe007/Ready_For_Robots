@@ -682,6 +682,192 @@ SEED_ROBOTS: list[dict] = [
             "hot_swap_battery": False,
         },
     },
+    {
+        "name": "Galaxea Kengo",
+        "vendor": "Galaxea Dynamics",
+        "model_slug": "galaxea-kengo",
+        "product_url": "https://humanoid.guide/welcome-kengo/",
+        "status": "research",
+        "specs": {
+            "top_speed_mps": 1.0,
+            "payload_kg": 5.0,
+            "battery_life_h": 2.0,
+            "charge_time_h": 2.0,
+            "has_dexterous_hands": True,
+            "finger_count": 5,
+            "can_climb_stairs": True,
+            "can_navigate_rough_terrain": True,
+            "can_run": False,
+            "autonomy_level": "semi",
+            "has_estop": True,
+            "collision_force_n": 280,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": True,
+            "has_api": True,
+            "has_support_sla": False,
+            "commercial_deployments": 0,
+            "height_cm": 170,
+            "weight_kg": 65,
+            "hot_swap_battery": False,
+        },
+    },
+    {
+        "name": "Foundation Phantom",
+        "vendor": "Foundation Future Industries",
+        "model_slug": "foundation-phantom",
+        "product_url": "https://foundation.bot/",
+        "status": "research",
+        "specs": {
+            "top_speed_mps": 0.8,
+            "payload_kg": 15.0,
+            "battery_life_h": 4.0,
+            "charge_time_h": 2.0,
+            "has_dexterous_hands": True,
+            "finger_count": 5,
+            "can_climb_stairs": False,
+            "can_navigate_rough_terrain": True,
+            "can_run": False,
+            "autonomy_level": "semi",
+            "has_estop": True,
+            "collision_force_n": 250,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": False,
+            "has_api": False,
+            "has_support_sla": False,
+            "commercial_deployments": 0,
+            "height_cm": 175,
+            "weight_kg": 70,
+            "hot_swap_battery": False,
+        },
+    },
+    {
+        "name": "High Torque Mini Pi plus",
+        "vendor": "High Torque Robotics",
+        "model_slug": "high-torque-mini-pi-plus",
+        "product_url": "https://www.hightorquerobotics.com/",
+        "status": "available",
+        "specs": {
+            "top_speed_mps": 0.6,
+            "payload_kg": 2.0,
+            "battery_life_h": 1.5,
+            "charge_time_h": 1.5,
+            "has_dexterous_hands": False,
+            "finger_count": 3,
+            "can_climb_stairs": False,
+            "can_navigate_rough_terrain": False,
+            "can_run": False,
+            "autonomy_level": "research",
+            "has_estop": True,
+            "collision_force_n": 120,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": True,
+            "has_api": True,
+            "has_support_sla": False,
+            "commercial_deployments": 10,
+            "height_cm": 90,
+            "weight_kg": 12,
+            "hot_swap_battery": False,
+        },
+    },
+    {
+        "name": "Andromeda Abi",
+        "vendor": "Andromeda Robotics",
+        "model_slug": "andromeda-abi",
+        "product_url": "https://andromedarobotics.ai/",
+        "status": "pilot",
+        "specs": {
+            "top_speed_mps": 0.5,
+            "payload_kg": 2.0,
+            "battery_life_h": 6.0,
+            "charge_time_h": 2.0,
+            "has_dexterous_hands": True,
+            "finger_count": 5,
+            "can_climb_stairs": False,
+            "can_navigate_rough_terrain": True,
+            "can_run": False,
+            "autonomy_level": "semi",
+            "has_estop": True,
+            "collision_force_n": 100,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": False,
+            "has_api": False,
+            "has_support_sla": True,
+            "commercial_deployments": 15,
+            "height_cm": 140,
+            "weight_kg": 45,
+            "hot_swap_battery": False,
+        },
+    },
+    {
+        "name": "Humanoid HMND 01 Alpha Bipedal",
+        "vendor": "Humanoid (SKL Robotics)",
+        "model_slug": "humanoid-hmnd01-alpha-bipedal",
+        "product_url": "https://thehumanoid.ai/",
+        "status": "pilot",
+        "specs": {
+            "top_speed_mps": 1.2,
+            "payload_kg": 20.0,
+            "battery_life_h": 4.0,
+            "charge_time_h": 2.0,
+            "has_dexterous_hands": True,
+            "finger_count": 5,
+            "can_climb_stairs": True,
+            "can_navigate_rough_terrain": True,
+            "can_run": False,
+            "autonomy_level": "semi",
+            "has_estop": True,
+            "collision_force_n": 220,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": True,
+            "has_api": True,
+            "has_support_sla": True,
+            "commercial_deployments": 50,
+            "height_cm": 175,
+            "weight_kg": 75,
+            "hot_swap_battery": False,
+        },
+    },
+    {
+        "name": "Generalist GEN-1",
+        "vendor": "Generalist AI",
+        "model_slug": "generalist-gen1",
+        "product_url": "https://generalistai.com/",
+        "status": "research",
+        "specs": {
+            "top_speed_mps": 0.5,
+            "payload_kg": 5.0,
+            "battery_life_h": 4.0,
+            "charge_time_h": 2.0,
+            "has_dexterous_hands": True,
+            "finger_count": 5,
+            "can_climb_stairs": False,
+            "can_navigate_rough_terrain": True,
+            "can_run": False,
+            "autonomy_level": "semi",
+            "has_estop": True,
+            "collision_force_n": 150,
+            "safety_certified": False,
+            "force_limited_joints": True,
+            "price_usd": None,
+            "has_sdk": False,
+            "has_api": False,
+            "has_support_sla": False,
+            "commercial_deployments": 0,
+            "height_cm": None,
+            "weight_kg": None,
+            "hot_swap_battery": False,
+        },
+    },
 ]
 
 
@@ -786,10 +972,13 @@ def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
     fresh_specs = _extract_specs_with_llm(robot_name, vendor, articles)
 
     # Merge: fresh data wins over seeded data
+    from app.services.humanoid_ai_stack import scoring_specs, specs_for_storage
+
     merged_specs = {**existing_specs, **{k: v for k, v in fresh_specs.items() if v is not None}}
+    merged_specs = specs_for_storage(merged_specs, model_slug)
 
     # Recompute scores
-    scores = compute_scores(merged_specs, status=row["status"], vendor=vendor)
+    scores = compute_scores(scoring_specs(merged_specs), status=row["status"], vendor=vendor)
 
     now = datetime.now(timezone.utc)
     sources = list(row["sources"] or []) + articles
@@ -841,9 +1030,15 @@ def seed_robots(db_session: Any) -> dict:
     updated = 0
     failed: list[str] = []
 
+    from app.services.humanoid_ai_stack import specs_for_storage, scoring_specs
+
     for robot in SEED_ROBOTS:
-        specs = robot["specs"]
-        scores = compute_scores(specs, status=robot["status"], vendor=robot["vendor"])
+        specs = specs_for_storage(robot["specs"], robot["model_slug"], robot.get("ai_stack"))
+        scores = compute_scores(
+            scoring_specs(specs),
+            status=robot["status"],
+            vendor=robot["vendor"],
+        )
         now = datetime.now(timezone.utc)
 
         try:
@@ -1023,9 +1218,11 @@ Return JSON:
     raw = llm_json_completion(HEIF_AGENT_SYSTEM, user_prompt, max_tokens=1200, temperature=0.2)
     parsed = _parse_json_object(raw or "")
 
+    from app.services.humanoid_ai_stack import scoring_specs, specs_for_storage
+
     if not parsed:
-        specs = dict(existing_specs or {})
-        scores = compute_scores(specs, status=status, vendor=vendor)
+        specs = specs_for_storage(dict(existing_specs or {}), model_slug)
+        scores = compute_scores(scoring_specs(specs), status=status, vendor=vendor)
         return {
             "status": status,
             "specs": specs,
@@ -1040,9 +1237,10 @@ Return JSON:
         agent_status = status
 
     agent_specs = {**(existing_specs or {}), **(parsed.get("specs") or {})}
-    agent_specs = {k: v for k, v in agent_specs.items() if v is not None}
+    agent_specs = {k: v for k, v in agent_specs.items() if v is not None and k != "ai_stack"}
+    agent_specs = specs_for_storage(agent_specs, model_slug)
 
-    scores = compute_scores(agent_specs, status=agent_status, vendor=vendor)
+    scores = compute_scores(scoring_specs(agent_specs), status=agent_status, vendor=vendor)
 
     # Apply agent HEIF when no authoritative HEIR research override exists
     agent_heif = parsed.get("heif") or {}
@@ -1102,9 +1300,14 @@ def upsert_humanoid_robot(
     if is_junk_humanoid_row(name, vendor, slug):
         logger.info("Skipping junk humanoid upsert: %s (%s)", name[:80], slug)
         return "skipped"
-    specs = robot.get("specs") or {}
+    from app.services.humanoid_ai_stack import specs_for_storage, scoring_specs
+
+    raw_specs = robot.get("specs") or {}
+    specs = specs_for_storage(raw_specs, slug, robot.get("ai_stack"))
     status = robot.get("status") or "research"
-    scores = robot.get("scores") or compute_scores(specs, status=status, vendor=vendor)
+    scores = robot.get("scores") or compute_scores(
+        scoring_specs(specs), status=status, vendor=vendor
+    )
     now = datetime.now(timezone.utc)
 
     sources = robot.get("sources") or []
