@@ -10,7 +10,7 @@ GET /api/leads
     industry      str    partial match, e.g. "hospitality"
     signal_type   str    filter to leads that have this signal type
     exclude_junk  bool   default true  — remove garbage-named leads
-    limit         int    default 50 (max 50; pool rotates every 5 minutes)
+    limit         int    default 50 (max 50; pool rotates every 30 minutes by default)
     sort          str    score|name|signals  default score
 """
 import logging
@@ -64,6 +64,10 @@ from app.services.company_domain import (
     pick_canonical_company,
 )
 from app.services.outreach_email_inference import infer_outreach_emails
+from app.services.pipeline_cache_policy import (
+    PIPELINE_LEADS_ROTATION_SEC,
+    PUBLIC_CACHE_TTL_MINUTES,
+)
 
 router = APIRouter()
 
@@ -315,14 +319,17 @@ def _lead_rows_query(db: Session):
 # Cap how many grouped company rows we load for summaries / homepage (not full-table scans).
 _PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "2000"))
 
-# Public list endpoint: never return more than this; pool rotates on a 5-minute clock.
+# Public list endpoint: never return more than this; pool rotates on the pipeline cache clock.
 LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
-LEADS_ROTATION_SEC = 300
+
+LEADS_ROTATION_SEC = PIPELINE_LEADS_ROTATION_SEC
+PIPELINE_FEED_LIMIT = 30
 
 # In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
-_LEADS_LIST_TTL = 7200.0  # 2 hours — matches public cache refresh cadence
+_PIPELINE_FEED_MEM: dict = {}
+_LEADS_LIST_TTL = float(PIPELINE_LEADS_ROTATION_SEC * 2)
 
 # Keys currently being refreshed in the background (avoid double-refresh storms).
 _LEADS_LIST_REFRESHING: set[str] = set()
@@ -331,7 +338,7 @@ _LEADS_LIST_REFRESHING: set[str] = set()
 # Survives machine restarts and is shared across all Fly.io instances.
 # TTL is intentionally longer than L1 so deploys can serve stale-but-fast data
 # while the background thread rebuilds.
-_DB_CACHE_TTL_MINUTES = 120  # aligned with PUBLIC_CACHE_TTL_MINUTES
+_DB_CACHE_TTL_MINUTES = PUBLIC_CACHE_TTL_MINUTES
 
 
 def _db_cache_read(cache_key: str) -> Optional[list]:
@@ -553,13 +560,31 @@ def _shuffle_spotlight_order(leads: List[Company], h_seed: int, w_seed: int) -> 
     return out
 
 
+def _current_rotation_slot(now: Optional[datetime] = None) -> int:
+    """Rotation slot index — advances every LEADS_ROTATION_SEC (default 30 minutes)."""
+    ts = now or datetime.now(timezone.utc)
+    return int(ts.timestamp() // LEADS_ROTATION_SEC)
+
+
+def _rotate_staged_leads(staged: list, limit: int, *, slot: Optional[int] = None) -> list:
+    """Slide a window across the scored pool so each cache rebuild surfaces different leads."""
+    if not staged:
+        return []
+    slot = _current_rotation_slot() if slot is None else slot
+    if len(staged) <= limit:
+        return staged[:limit]
+    span = len(staged) - limit
+    start = (slot * 1103515245) % (span + 1)
+    return staged[start : start + limit]
+
+
 def _spotlight_rotation_seeds(now: datetime) -> tuple[int, int, int]:
     """
     Deterministic seeds for HOT vs WARM circular picks on the homepage spotlight.
-    Changes every LEADS_ROTATION_SEC (5 minutes) so the spotlight batch rotates, not every minute.
+    Changes every LEADS_ROTATION_SEC (default 30 minutes, aligned with cache rebuild).
     """
     day_o = int(now.date().toordinal())
-    slot = int(now.timestamp() // LEADS_ROTATION_SEC)
+    slot = _current_rotation_slot(now)
     h_seed = day_o * 7919 + slot * 9176 + 203
     w_seed = day_o * 9283 + slot * 5843 + 411
     return h_seed, w_seed, slot
@@ -1055,14 +1080,27 @@ def build_public_leads_list(
         if tier and tier.upper() != "ALL" and pri.tier != tier.upper():
             continue
         staged.append((c, junk, junk_reason, pri))
-        if len(staged) >= limit:
-            break
 
     staged = dedupe_staged_lead_tuples(staged)
+    staged = _rotate_staged_leads(staged, limit)
     return [
         _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
-        for c, junk, junk_reason, pri in staged[:limit]
+        for c, junk, junk_reason, pri in staged
     ]
+
+
+def hydrate_pipeline_feed_cache(feed: dict) -> None:
+    """Seed L1 for GET /api/leads/pipeline after durable refresh or hydrate."""
+    if not feed or not isinstance(feed, dict):
+        return
+    _PIPELINE_FEED_MEM["v1"] = {"ts": time.monotonic(), "data": feed}
+    leads = feed.get("leads") or []
+    if leads:
+        cache_key = f"0.0|100.0|None|None|None|True|{PIPELINE_FEED_LIMIT}|score|None"
+        _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), leads)
+    summary_raw = feed.get("summary_raw") or feed.get("summary")
+    if summary_raw and (summary_raw.get("total") or summary_raw.get("hot")):
+        _set_summary_cache(True, summary_raw)
 
 
 def hydrate_leads_public_caches(
@@ -1303,13 +1341,8 @@ def get_leads(
                 staged.append((c, junk, junk_reason, pri))
 
             staged = dedupe_staged_lead_tuples(staged)
-            slot = rotation_slot if rotation_slot is not None else int(time.time() // LEADS_ROTATION_SEC)
-            if len(staged) > limit:
-                span = len(staged) - limit
-                start = (slot * 1103515245) % (span + 1)
-                staged = staged[start : start + limit]
-            else:
-                staged = staged[:limit]
+            slot = rotation_slot if rotation_slot is not None else _current_rotation_slot()
+            staged = _rotate_staged_leads(staged, limit, slot=slot)
 
             result = [
                 _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
@@ -1409,7 +1442,7 @@ def post_lead_rep_feedback(
 # clients do not block on a slow rebuild. Cold miss (empty cache) still runs
 # synchronously. Each Fly machine has its own RAM cache; stale serving avoids
 # thundering herds when TTLs expire.
-_HOMEPAGE_CACHE_TTL = 7200  # 2 hours — background refresh keeps L1 fresh
+_HOMEPAGE_CACHE_TTL = float(PIPELINE_LEADS_ROTATION_SEC * 2)
 _homepage_cache: dict = {}
 _homepage_build_lock = threading.Lock()
 _homepage_bg_refresh_lock = threading.Lock()
@@ -1807,47 +1840,42 @@ def warm_homepage_cache() -> None:
     pass
 
 
-_PIPELINE_FEED_LIMIT = 30
-
-
 @router.get("/pipeline")
 def leads_pipeline_feed(response: Response):
     """
-    Single batched read for /pipeline UI — summary + top leads, one cache round trip.
-    Never runs live SQL on the request path.
+    Single batched read for /pipeline UI — summary + rotated top leads.
+
+    Rebuilt every PUBLIC_CACHE_REFRESH_INTERVAL_SEC (default 30 minutes) from the
+    scraper-fed database; never runs live SQL on the request path.
     """
-    from app.services.content_surfaces import KEY_LEADS_50, KEY_SUMMARY_EXCLUDE_JUNK
-    from app.services.public_surface_cache import read_public_caches_many, schedule_public_cache_refresh
-
-    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
-
-    cache_key = f"0.0|100.0|None|None|None|True|{_PIPELINE_FEED_LIMIT}|score|None"
-    mem = _LEADS_LIST_CACHE.get(cache_key)
-    if mem is not None:
-        _ts, data = mem
-        if isinstance(data, list) and data:
-            summary_entry = _summary_cache.get("v1_True")
-            summary = summary_entry["data"] if summary_entry else {}
-            return {"summary": summary, "leads": data}
-
-    blobs = read_public_caches_many(
-        [KEY_SUMMARY_EXCLUDE_JUNK, KEY_LEADS_50],
-        stale_ok=True,
+    from app.services.content_surfaces import KEY_PIPELINE_FEED
+    from app.services.public_surface_cache import (
+        PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
+        maybe_schedule_public_cache_refresh,
+        read_public_cache,
+        schedule_public_cache_refresh,
     )
-    summary_raw = blobs.get(KEY_SUMMARY_EXCLUDE_JUNK)
-    leads_raw = blobs.get(KEY_LEADS_50)
-    leads = (leads_raw[:_PIPELINE_FEED_LIMIT] if isinstance(leads_raw, list) else []) or []
 
-    if not leads:
-        schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
-        empty = _empty_summary_payload()
-        return {"summary": empty, "leads": [], "cache_pending": True}
+    response.headers["Cache-Control"] = (
+        f"public, max-age={min(120, PUBLIC_CACHE_REFRESH_INTERVAL_SEC // 2)}, "
+        f"stale-while-revalidate={PUBLIC_CACHE_REFRESH_INTERVAL_SEC}"
+    )
+    maybe_schedule_public_cache_refresh()
 
-    summary = _summary_for_homepage(summary_raw) if summary_raw else _empty_summary_payload()
-    _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), leads)
-    if summary_raw:
-        _set_summary_cache(True, summary_raw)
-    return {"summary": summary, "leads": leads}
+    mem = _PIPELINE_FEED_MEM.get("v1")
+    if mem is not None:
+        data = mem["data"]
+        if isinstance(data, dict) and (data.get("leads") or []):
+            return data
+
+    cached = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
+    if cached and isinstance(cached, dict) and (cached.get("leads") or []):
+        hydrate_pipeline_feed_cache(cached)
+        return cached
+
+    schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
+    empty = _empty_summary_payload()
+    return {"summary": empty, "leads": [], "cache_pending": True}
 
 
 @router.get("/homepage")
@@ -1855,7 +1883,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
     Batched endpoint for homepage: summary + spotlight leads.
 
-    Serves L1 → durable cache only. Background workers refresh every 2 hours;
+    Serves L1 → durable cache only. Background workers refresh every 30 minutes (configurable);
     never blocks on a cold DB query during HTTP.
     """
     from app.services.public_surface_cache import (
@@ -1923,7 +1951,7 @@ def leads_summary(
     exclude_junk: bool = Query(True),
     db: Session = Depends(get_db),
 ):
-    """Pipeline counts — L1 → durable cache only; background refresh every 2 hours."""
+    """Pipeline counts — L1 → durable cache only; background refresh every 30 minutes."""
     from app.services.public_surface_cache import (
         KEY_SUMMARY_EXCLUDE_JUNK,
         KEY_SUMMARY_INCLUDE_JUNK,

@@ -39,6 +39,12 @@ def _run_intelligence_scraper_sync(
             stats.get("companies_enriched", 0),
             stats.get("signals_created", 0),
         )
+        try:
+            from app.services.public_surface_cache import schedule_public_cache_refresh
+
+            schedule_public_cache_refresh(pipeline_only=True, reason="scraper_complete")
+        except Exception as refresh_exc:
+            log.warning("Pipeline cache refresh after scraper failed: %s", refresh_exc)
         return stats
     except Exception as e:
         log.exception("Intelligence scraper failed: %s", e)
@@ -88,6 +94,48 @@ def _run_content_surfaces_refresh_sync(*, newsletter_force: bool = False) -> Dic
         db.close()
 
 
+def _run_pipeline_surface_refresh_sync() -> Dict[str, Any]:
+    """Rebuild sales-lead caches only (homepage, summary, rotated lists, /pipeline feed)."""
+    import logging
+
+    log = logging.getLogger(__name__)
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_pipeline_surface_caches,
+    )
+
+    db = SessionLocal()
+    try:
+        stats = refresh_pipeline_surface_caches(db)
+        hydrate_public_surface_caches()
+        log.info("Pipeline surface refresh completed: %s", stats)
+        return stats
+    finally:
+        db.close()
+
+
+@router.get("/cron/refresh-pipeline")
+async def cron_refresh_pipeline_surfaces(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+) -> Dict[str, Any]:
+    """
+    Rebuild pipeline/sales-lead caches with rotation (default cadence: 30 minutes).
+    GET /api/scraper/cron/refresh-pipeline?token=YOUR_SCRAPER_CRON_TOKEN
+    """
+    import os
+
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    background_tasks.add_task(_run_pipeline_surface_refresh_sync)
+    return {
+        "status": "started",
+        "message": "Refreshing homepage, summary, rotated lead lists, and /pipeline feed.",
+    }
+
+
 @router.get("/cron/refresh-content")
 async def cron_refresh_content_surfaces(
     background_tasks: BackgroundTasks,
@@ -97,7 +145,7 @@ async def cron_refresh_content_surfaces(
     """
     Pre-build all public page caches (pipeline, newsletter, social, HEIR report + PDF).
     GET /api/scraper/cron/refresh-content?token=YOUR_SCRAPER_CRON_TOKEN
-    Schedule every 2 hours alongside the in-app refresh loop.
+    Schedule every 30 minutes (or match PUBLIC_CACHE_REFRESH_INTERVAL_SEC on Fly).
     """
     import os
 

@@ -1,11 +1,12 @@
 """
-Pre-built public page caches — background refresh every 2 hours, read-only on GET.
+Pre-built public page caches — background refresh every 30 minutes (configurable), read-only on GET.
 
 Policy:
   • GET handlers never run heavy DB/OpenAI work on the request path.
   • Durable Postgres cache (pipeline_cache_store) + in-process L1 always serve first.
-  • Background workers refresh all pipeline/newsletter surfaces on a fixed interval
-    and on deploy; stale payloads stay served while refresh runs.
+  • Background workers refresh pipeline surfaces on a fixed interval (default 30m),
+    rotating which sales leads appear in each build; stale payloads serve during rebuild.
+  • Intelligence scraper completion also schedules a pipeline-only refresh.
 """
 
 from __future__ import annotations
@@ -23,17 +24,11 @@ from app.services.pipeline_cache_store import cache_read_safe, cache_write
 
 logger = logging.getLogger(__name__)
 
-# Cache TTL and refresh cadence (default: 2 hours).
-PUBLIC_CACHE_TTL_MINUTES = int(os.getenv("PUBLIC_CACHE_TTL_MINUTES", str(2 * 60)))
-PUBLIC_CACHE_REFRESH_INTERVAL_SEC = int(
-    os.getenv("PUBLIC_CACHE_REFRESH_INTERVAL_SEC", str(2 * 60 * 60))
-)
-# Start a background rebuild when the last successful refresh is older than this.
-PUBLIC_CACHE_REVALIDATE_SEC = int(
-    os.getenv(
-        "PUBLIC_CACHE_REVALIDATE_SEC",
-        str(max(PUBLIC_CACHE_REFRESH_INTERVAL_SEC - 300, PUBLIC_CACHE_REFRESH_INTERVAL_SEC * 9 // 10)),
-    )
+from app.services.pipeline_cache_policy import (
+    PIPELINE_LEADS_ROTATION_SEC,
+    PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
+    PUBLIC_CACHE_REVALIDATE_SEC,
+    PUBLIC_CACHE_TTL_MINUTES,
 )
 
 from app.services.content_surfaces import (
@@ -44,6 +39,7 @@ from app.services.content_surfaces import (
     KEY_LEADS_18,
     KEY_LEADS_50,
     KEY_LEADS_HOT_12,
+    KEY_PIPELINE_FEED,
     KEY_SUMMARY_EXCLUDE_JUNK,
     KEY_SUMMARY_INCLUDE_JUNK,
     refresh_all_content_surfaces,
@@ -74,26 +70,32 @@ def write_public_cache(db: Session, cache_key: str, data: Any) -> None:
 
 
 def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
-    """Pipeline/homepage/summary/leads/humanoid — runs every 2 hours."""
+    """Pipeline/homepage/summary/leads/humanoid — default every 30 minutes with lead rotation."""
+    from datetime import datetime, timezone
+
     from app.api.humanoid_benchmark import build_humanoid_report_payload
     from app.api.leads import (
+        PIPELINE_FEED_LIMIT,
         _build_homepage_payload,
         _compute_pipeline_summary,
+        _current_rotation_slot,
+        _summary_for_homepage,
         build_public_leads_list,
+        hydrate_pipeline_feed_cache,
     )
+    from app.services.content_surfaces import KEY_PIPELINE_FEED
 
     stats: dict[str, Any] = {}
+    rotation_slot = _current_rotation_slot()
 
     homepage = _build_homepage_payload(db)
     write_public_cache(db, KEY_HOMEPAGE, homepage)
     stats["homepage_hot_leads"] = len(homepage.get("hotLeads") or [])
+    stats["rotation_slot"] = rotation_slot
 
-    for exclude_junk, key in (
-        (True, KEY_SUMMARY_EXCLUDE_JUNK),
-        (False, KEY_SUMMARY_INCLUDE_JUNK),
-    ):
-        summary = _compute_pipeline_summary(db, exclude_junk)
-        write_public_cache(db, key, summary)
+    summary_exclude = _compute_pipeline_summary(db, True)
+    write_public_cache(db, KEY_SUMMARY_EXCLUDE_JUNK, summary_exclude)
+    write_public_cache(db, KEY_SUMMARY_INCLUDE_JUNK, _compute_pipeline_summary(db, False))
 
     for limit, tier, key in (
         (50, None, KEY_LEADS_50),
@@ -103,6 +105,19 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
         leads = build_public_leads_list(db, limit=limit, tier=tier)
         write_public_cache(db, key, leads)
         stats[f"leads_{limit}_{tier or 'all'}"] = len(leads)
+
+    pipeline_leads = build_public_leads_list(db, limit=PIPELINE_FEED_LIMIT)
+    pipeline_feed = {
+        "leads": pipeline_leads,
+        "summary": _summary_for_homepage(summary_exclude),
+        "summary_raw": summary_exclude,
+        "rotation_slot": rotation_slot,
+        "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+    }
+    write_public_cache(db, KEY_PIPELINE_FEED, pipeline_feed)
+    hydrate_pipeline_feed_cache(pipeline_feed)
+    stats["pipeline_feed_leads"] = len(pipeline_leads)
 
     report = build_humanoid_report_payload(db)
     write_public_cache(db, KEY_HUMANOID_REPORT, report)
@@ -197,6 +212,13 @@ def hydrate_public_surface_caches() -> None:
             hydrate_leads_public_caches(leads=leads, limit=limit, tier=tier)
             hydrated += 1
 
+    pipeline_feed = read_public_cache(KEY_PIPELINE_FEED)
+    if pipeline_feed and isinstance(pipeline_feed, dict):
+        from app.api.leads import hydrate_pipeline_feed_cache
+
+        hydrate_pipeline_feed_cache(pipeline_feed)
+        hydrated += 1
+
     report = read_public_cache(KEY_HUMANOID_REPORT)
     if report:
         set_humanoid_report_mem_cache(report)
@@ -277,7 +299,7 @@ def maybe_schedule_public_cache_refresh(*, force: bool = False) -> None:
 
 
 def start_public_cache_refresh_loop() -> None:
-    """In-app 2-hour refresh loop (Fly web machine when Celery Beat is absent)."""
+    """In-app pipeline refresh loop (default every 30 minutes on Fly)."""
     global _loop_started
     if _loop_started:
         return
