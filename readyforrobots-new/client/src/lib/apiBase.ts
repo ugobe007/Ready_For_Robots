@@ -86,3 +86,18 @@ export function liveFetchInit(overrides: RequestInit = {}): RequestInit {
     headers: { "Cache-Control": "no-cache", ...(hdr as Record<string, string>) },
   };
 }
+
+/** Abort slow proxy/API calls so pages can fall back instead of spinning forever. */
+export async function fetchWithTimeout(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = 14_000,
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...liveFetchInit(init), signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}

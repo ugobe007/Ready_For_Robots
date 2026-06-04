@@ -17,7 +17,7 @@ import ScoutActionBar from "@/components/ScoutActionBar";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { fetchWithTimeout, getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
@@ -317,14 +317,15 @@ export default function Pipeline() {
     const authHdr = authHeader(token);
 
     Promise.allSettled([
-      fetch(`${base}/api/leads/homepage`, liveFetchInit()),
+      fetchWithTimeout(`${base}/api/leads/homepage`),
+      fetchWithTimeout(`${base}/api/leads/summary?exclude_junk=true`, {}, 10_000),
       token
-        ? fetch(`${base}/api/user/me`, liveFetchInit({ headers: authHdr }))
+        ? fetchWithTimeout(`${base}/api/user/me`, { headers: authHdr }, 10_000)
         : Promise.resolve(null),
       token
-        ? fetch(`${base}/api/user/settings`, liveFetchInit({ headers: authHdr }))
+        ? fetchWithTimeout(`${base}/api/user/settings`, { headers: authHdr }, 10_000)
         : Promise.resolve(null),
-    ]).then(async ([homepageResult, meResult, settingsResult]) => {
+    ]).then(async ([homepageResult, summaryResult, meResult, settingsResult]) => {
       if (cancelled) return;
 
       let admin = false;
@@ -338,39 +339,80 @@ export default function Pipeline() {
         setIsAdmin(false);
       }
 
-      // Batched homepage payload — cached server-side; avoids cold /api/leads full-table scan.
+      // Summary totals (fast durable cache) — load in parallel with homepage.
       try {
+        if (summaryResult.status === "fulfilled" && summaryResult.value?.ok) {
+          const data = (await summaryResult.value.json()) as LeadSummary;
+          if ((data.total ?? 0) > 0 || (data.hot ?? 0) > 0) {
+            setSummary(data);
+          }
+        }
+      } catch { /* advisory */ }
+
+      const applyLeads = (rows: ApiLead[], payloadSummary?: LeadSummary | null) => {
+        const mapped = rows.map(mapApiLeadToDeal);
+        setDeals(mapped);
+        setSelectedId(mapped[0]?.id ?? null);
+        if (payloadSummary) setSummary(payloadSummary);
+        setMarketSnippet(marketSnippetFromDeals(mapped));
+      };
+
+      // Batched homepage payload — cached server-side; fall back to public leads list if cold.
+      try {
+        let rows: ApiLead[] = [];
+        let payloadSummary: LeadSummary | null = null;
+
         if (homepageResult.status === "fulfilled" && homepageResult.value?.ok) {
           const payload = (await homepageResult.value.json()) as {
             summary?: LeadSummary;
             hotLeads?: ApiLead[];
           };
-          const rows = Array.isArray(payload.hotLeads) ? payload.hotLeads : [];
-          const mapped = rows.map(mapApiLeadToDeal);
-          setDeals(mapped);
-          setSelectedId(mapped[0]?.id ?? null);
-          if (payload.summary) setSummary(payload.summary);
-          setMarketSnippet(marketSnippetFromDeals(mapped));
-        } else {
+          rows = Array.isArray(payload.hotLeads) ? payload.hotLeads : [];
+          payloadSummary = payload.summary ?? null;
+        }
+
+        if (rows.length === 0) {
+          const fallbackRes = await fetchWithTimeout(
+            `${base}/api/leads?limit=30&exclude_junk=true&sort=score`,
+            {},
+            12_000,
+          );
+          if (fallbackRes.ok) {
+            const fallbackRows = (await fallbackRes.json()) as ApiLead[];
+            if (Array.isArray(fallbackRows) && fallbackRows.length > 0) {
+              rows = fallbackRows;
+            }
+          }
+        }
+
+        if (rows.length > 0) {
+          applyLeads(rows, payloadSummary);
+        } else if (homepageResult.status === "rejected") {
+          throw homepageResult.reason instanceof Error
+            ? homepageResult.reason
+            : new Error("Could not load pipeline");
+        } else if (homepageResult.status === "fulfilled" && !homepageResult.value?.ok) {
           throw new Error("Could not load pipeline");
+        } else {
+          setDeals([]);
+          setSelectedId(null);
+          if (payloadSummary) setSummary(payloadSummary);
         }
       } catch (e) {
-        setLoadErr(e instanceof Error ? e.message : "Could not load pipeline");
+        const aborted = e instanceof DOMException && e.name === "AbortError";
+        setLoadErr(
+          aborted
+            ? "Pipeline request timed out — try refreshing in a moment."
+            : e instanceof Error
+              ? e.message
+              : "Could not load pipeline",
+        );
         setDeals([]);
         setSelectedId(null);
       } finally {
         setLoadingLeads(false);
         setLoadingSummary(false);
       }
-
-      // Non-blocking refresh of authoritative summary totals (served from warm cache when available).
-      void fetch(`${base}/api/leads/summary?exclude_junk=true`, liveFetchInit())
-        .then(async (response) => {
-          if (!response.ok || cancelled) return;
-          const data = (await response.json()) as LeadSummary;
-          if (!cancelled) setSummary(data);
-        })
-        .catch(() => { /* advisory */ });
 
       // SCOUT activations — admin-only internal console
       try {

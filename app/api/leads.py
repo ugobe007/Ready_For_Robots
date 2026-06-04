@@ -1178,6 +1178,25 @@ def get_leads(
         from app.services.public_surface_cache import read_public_cache, schedule_public_cache_refresh
 
         public_data = read_public_cache(public_key, stale_ok=True)
+        if not public_data or len(public_data) < 1:
+            from app.services.content_surfaces import (
+                KEY_LEADS_18,
+                KEY_LEADS_50,
+                KEY_LEADS_HOT_12,
+            )
+
+            for alt_key in (
+                *_LEADS_LIST_LEGACY_KEYS,
+                KEY_LEADS_HOT_12,
+                KEY_LEADS_18,
+                KEY_LEADS_50,
+            ):
+                if alt_key == public_key:
+                    continue
+                alt = read_public_cache(alt_key, stale_ok=True)
+                if isinstance(alt, list) and len(alt) > 0:
+                    public_data = alt[:limit]
+                    break
         if public_data is not None and len(public_data) > 0:
             _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), public_data)
             return public_data
@@ -1395,6 +1414,90 @@ _homepage_bg_refresh_in_progress = False
 
 def _set_homepage_cache(data: dict) -> None:
     _homepage_cache["v1"] = {"ts": time.monotonic(), "data": data}
+
+
+# Pre-v2 durable keys — still served when v2 caches are cold after a key bump.
+_HOMEPAGE_LEGACY_KEYS = ("public:homepage:v1",)
+_LEADS_LIST_LEGACY_KEYS = (
+    "public:leads:list:12:hot:score:v1",
+    "public:leads:list:18:score:v1",
+    "public:leads:list:50:score:v1",
+)
+
+
+def _summary_for_homepage(summary: dict) -> dict:
+    """Normalize durable summary → homepage summary shape."""
+    return {
+        "total": int(summary.get("total") or summary.get("companies_in_database") or 0),
+        "hot": int(summary.get("hot") or 0),
+        "warm": int(summary.get("warm") or 0),
+        "cold": int(summary.get("cold") or 0),
+        "junk_filtered": int(summary.get("junk_filtered") or 0),
+        "total_signals": int(
+            summary.get("total_signals") or summary.get("signals_in_database") or 0
+        ),
+        "by_industry": summary.get("by_industry") or {},
+    }
+
+
+def _homepage_from_surface_caches() -> Optional[dict]:
+    """Stitch homepage from any warm durable surface (legacy v1, summary, leads lists)."""
+    from app.services.content_surfaces import (
+        KEY_LEADS_18,
+        KEY_LEADS_50,
+        KEY_LEADS_HOT_12,
+        KEY_SUMMARY_EXCLUDE_JUNK,
+    )
+    from app.services.public_surface_cache import read_public_cache
+
+    for key in _HOMEPAGE_LEGACY_KEYS:
+        legacy = read_public_cache(key, stale_ok=True)
+        if legacy and (legacy.get("hotLeads") or []):
+            return legacy
+
+    summary_raw = read_public_cache(KEY_SUMMARY_EXCLUDE_JUNK, stale_ok=True)
+    hot_leads: list = []
+    for key in (*_LEADS_LIST_LEGACY_KEYS, KEY_LEADS_HOT_12, KEY_LEADS_18, KEY_LEADS_50):
+        chunk = read_public_cache(key, stale_ok=True)
+        if isinstance(chunk, list) and len(chunk) > 0:
+            hot_leads = chunk
+            break
+
+    if not summary_raw and not hot_leads:
+        return None
+
+    payload = _empty_homepage_payload()
+    if summary_raw:
+        payload["summary"] = _summary_for_homepage(summary_raw)
+    if hot_leads:
+        payload["hotLeads"] = hot_leads
+    payload.pop("cache_pending", None)
+    payload["cache_fallback"] = True
+    return payload
+
+
+def _homepage_fast_live_build(db: Session) -> Optional[dict]:
+    """Bounded sync rebuild when all durable caches are cold (no OpenAI URLs)."""
+    from app.db_timeout import run_db
+
+    try:
+        return run_db(
+            lambda: _build_homepage_payload(db, resolve_llm_urls=False),
+            timeout_sec=8.0,
+            label="homepage-live-fallback",
+        )
+    except Exception as exc:
+        logger.warning("homepage live fallback failed: %s", exc)
+        return None
+
+
+def _merge_homepage_payload(primary: dict, fallback: dict) -> dict:
+    merged = {**primary, **fallback}
+    if fallback.get("summary"):
+        merged["summary"] = fallback["summary"]
+    if fallback.get("hotLeads"):
+        merged["hotLeads"] = fallback["hotLeads"]
+    return merged
 
 
 def _score_tier_counts(db: Session):
@@ -1685,12 +1788,39 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     if entry is not None:
         if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
             _schedule_homepage_background_refresh()
-        return entry["data"]
+        data = entry["data"]
+        if data.get("hotLeads"):
+            return data
+        fallback = _homepage_from_surface_caches()
+        if fallback and (fallback.get("hotLeads") or []):
+            merged = _merge_homepage_payload(data, fallback)
+            _set_homepage_cache(merged)
+            return merged
+        return data
 
     cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
     if cached is not None:
         _set_homepage_cache(cached)
-        return cached
+        if cached.get("hotLeads"):
+            return cached
+        fallback = _homepage_from_surface_caches()
+        if fallback and (fallback.get("hotLeads") or []):
+            merged = _merge_homepage_payload(cached, fallback)
+            _set_homepage_cache(merged)
+            schedule_public_cache_refresh(pipeline_only=True, reason="homepage_surface_fallback")
+            return merged
+
+    fallback = _homepage_from_surface_caches()
+    if fallback and (fallback.get("hotLeads") or []):
+        _set_homepage_cache(fallback)
+        schedule_public_cache_refresh(pipeline_only=True, reason="homepage_surface_fallback")
+        return fallback
+
+    live = _homepage_fast_live_build(db)
+    if live and (live.get("hotLeads") or []):
+        _set_homepage_cache(live)
+        schedule_public_cache_refresh(pipeline_only=True, reason="homepage_live_bootstrap")
+        return live
 
     schedule_public_cache_refresh(force=True, pipeline_only=True, reason="homepage_miss")
     return _empty_homepage_payload()
