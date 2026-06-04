@@ -983,10 +983,8 @@ def _public_leads_durable_key(
         and sort == "score"
         and rotation_slot is None
     ):
-        if tier is None and limit == 50:
+        if tier is None and 1 <= limit <= 50:
             return KEY_LEADS_50
-        if tier is None and limit == 18:
-            return KEY_LEADS_18
         if tier and tier.upper() == "HOT" and limit == 12:
             return KEY_LEADS_HOT_12
     return None
@@ -1203,8 +1201,9 @@ def get_leads(
                     public_data = alt[:limit]
                     break
         if public_data is not None and len(public_data) > 0:
-            _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), public_data)
-            return public_data
+            sliced = public_data[:limit] if len(public_data) > limit else public_data
+            _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), sliced)
+            return sliced
         schedule_public_cache_refresh(pipeline_only=True, reason=f"leads_miss_{public_key[-12:]}")
         _db_data = _db_cache_read(_cache_key)
         if _db_data is not None:
@@ -1808,6 +1807,49 @@ def warm_homepage_cache() -> None:
     pass
 
 
+_PIPELINE_FEED_LIMIT = 30
+
+
+@router.get("/pipeline")
+def leads_pipeline_feed(response: Response):
+    """
+    Single batched read for /pipeline UI — summary + top leads, one cache round trip.
+    Never runs live SQL on the request path.
+    """
+    from app.services.content_surfaces import KEY_LEADS_50, KEY_SUMMARY_EXCLUDE_JUNK
+    from app.services.public_surface_cache import read_public_caches_many, schedule_public_cache_refresh
+
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+
+    cache_key = f"0.0|100.0|None|None|None|True|{_PIPELINE_FEED_LIMIT}|score|None"
+    mem = _LEADS_LIST_CACHE.get(cache_key)
+    if mem is not None:
+        _ts, data = mem
+        if isinstance(data, list) and data:
+            summary_entry = _summary_cache.get("v1_True")
+            summary = summary_entry["data"] if summary_entry else {}
+            return {"summary": summary, "leads": data}
+
+    blobs = read_public_caches_many(
+        [KEY_SUMMARY_EXCLUDE_JUNK, KEY_LEADS_50],
+        stale_ok=True,
+    )
+    summary_raw = blobs.get(KEY_SUMMARY_EXCLUDE_JUNK)
+    leads_raw = blobs.get(KEY_LEADS_50)
+    leads = (leads_raw[:_PIPELINE_FEED_LIMIT] if isinstance(leads_raw, list) else []) or []
+
+    if not leads:
+        schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
+        empty = _empty_summary_payload()
+        return {"summary": empty, "leads": [], "cache_pending": True}
+
+    summary = _summary_for_homepage(summary_raw) if summary_raw else _empty_summary_payload()
+    _LEADS_LIST_CACHE[cache_key] = (time.monotonic(), leads)
+    if summary_raw:
+        _set_summary_cache(True, summary_raw)
+    return {"summary": summary, "leads": leads}
+
+
 @router.get("/homepage")
 def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
@@ -1831,27 +1873,12 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     if entry is not None:
         if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
             _schedule_homepage_background_refresh()
-        data = entry["data"]
-        if data.get("hotLeads"):
-            return data
-        fallback = _homepage_from_surface_caches()
-        if fallback and (fallback.get("hotLeads") or []):
-            merged = _merge_homepage_payload(data, fallback)
-            _set_homepage_cache(merged)
-            return merged
-        return data
+        return entry["data"]
 
     cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
     if cached is not None:
         _set_homepage_cache(cached)
-        if cached.get("hotLeads"):
-            return cached
-        fallback = _homepage_from_surface_caches()
-        if fallback and (fallback.get("hotLeads") or []):
-            merged = _merge_homepage_payload(cached, fallback)
-            _set_homepage_cache(merged)
-            schedule_public_cache_refresh(pipeline_only=True, reason="homepage_surface_fallback")
-            return merged
+        return cached
 
     fallback = _homepage_from_surface_caches()
     if fallback:

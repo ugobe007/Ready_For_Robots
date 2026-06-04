@@ -310,98 +310,55 @@ export default function Pipeline() {
     setLoadingSummary(true);
     setLoadErr("");
 
-    const PIPELINE_TIMEOUT = 8_000;
+    const PIPELINE_TIMEOUT = 6_000;
 
-    // Summary often returns in <1s — paint metrics before leads finish loading.
-    void fetchWithTimeout(`${base}/api/leads/summary?exclude_junk=true`, {}, PIPELINE_TIMEOUT)
+    void fetchWithTimeout(`${base}/api/leads/pipeline`, {}, PIPELINE_TIMEOUT)
       .then(async (res) => {
-        if (cancelled || !res.ok) return;
-        const data = (await res.json()) as LeadSummary;
-        if ((data.total ?? 0) > 0 || (data.hot ?? 0) > 0) {
-          setSummary(data);
-          setLoadingSummary(false);
-        }
-      })
-      .catch(() => { /* advisory */ });
-
-    Promise.allSettled([
-      fetchWithTimeout(`${base}/api/leads/homepage`, {}, PIPELINE_TIMEOUT),
-      fetchWithTimeout(
-        `${base}/api/leads?limit=30&exclude_junk=true&sort=score`,
-        {},
-        PIPELINE_TIMEOUT,
-      ),
-    ]).then(async ([homepageResult, leadsListResult]) => {
-      if (cancelled) return;
-
-      let rows: ApiLead[] = [];
-      let payloadSummary: LeadSummary | null = null;
-
-      try {
-        if (homepageResult.status === "fulfilled" && homepageResult.value?.ok) {
-          const payload = (await homepageResult.value.json()) as {
+        if (cancelled) return;
+        try {
+          if (!res.ok) throw new Error("Could not load pipeline");
+          const payload = (await res.json()) as {
             summary?: LeadSummary;
-            hotLeads?: ApiLead[];
+            leads?: ApiLead[];
           };
-          rows = Array.isArray(payload.hotLeads) ? payload.hotLeads : [];
-          payloadSummary = payload.summary ?? null;
-        }
-
-        if (
-          rows.length === 0 &&
-          leadsListResult.status === "fulfilled" &&
-          leadsListResult.value?.ok
-        ) {
-          const listRows = (await leadsListResult.value.json()) as ApiLead[];
-          if (Array.isArray(listRows) && listRows.length > 0) {
-            rows = listRows;
+          const rows = Array.isArray(payload.leads) ? payload.leads : [];
+          if (payload.summary && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)) {
+            setSummary(payload.summary);
           }
-        }
-
-        if (rows.length > 0) {
-          const mapped = rows.map(mapApiLeadToDeal);
-          setDeals(mapped);
-          setSelectedId(mapped[0]?.id ?? null);
-          if (payloadSummary) setSummary(payloadSummary);
-          setMarketSnippet(marketSnippetFromDeals(mapped));
-        } else {
-          const homepageFailed =
-            homepageResult.status === "rejected" ||
-            (homepageResult.status === "fulfilled" && !homepageResult.value?.ok);
-          const listFailed =
-            leadsListResult.status === "rejected" ||
-            (leadsListResult.status === "fulfilled" && !leadsListResult.value?.ok);
-          if (homepageFailed && listFailed) {
-            const reason =
-              homepageResult.status === "rejected"
-                ? homepageResult.reason
-                : leadsListResult.status === "rejected"
-                  ? leadsListResult.reason
-                  : null;
-            throw reason instanceof Error ? reason : new Error("Could not load pipeline");
+          if (rows.length > 0) {
+            const mapped = rows.map(mapApiLeadToDeal);
+            setDeals(mapped);
+            setSelectedId(mapped[0]?.id ?? null);
+            setMarketSnippet(marketSnippetFromDeals(mapped));
+          } else {
+            setDeals([]);
+            setSelectedId(null);
           }
+        } catch (e) {
+          const aborted = e instanceof DOMException && e.name === "AbortError";
+          setLoadErr(
+            aborted
+              ? "Pipeline request timed out — try refreshing in a moment."
+              : e instanceof Error
+                ? e.message
+                : "Could not load pipeline",
+          );
           setDeals([]);
           setSelectedId(null);
-          if (payloadSummary) setSummary(payloadSummary);
+        } finally {
+          if (!cancelled) {
+            setLoadingLeads(false);
+            setLoadingSummary(false);
+          }
         }
-      } catch (e) {
-        const aborted = e instanceof DOMException && e.name === "AbortError";
-        setLoadErr(
-          aborted
-            ? "Pipeline request timed out — try refreshing in a moment."
-            : e instanceof Error
-              ? e.message
-              : "Could not load pipeline",
-        );
-        setDeals([]);
-        setSelectedId(null);
-      } finally {
+      })
+      .catch(() => {
         if (!cancelled) {
+          setLoadErr("Could not load pipeline");
           setLoadingLeads(false);
           setLoadingSummary(false);
         }
-      }
-    });
+      });
 
     return () => { cancelled = true; };
   // Mount-only: never re-run when Supabase session resolves (was causing ~2× load time).
