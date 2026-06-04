@@ -91,7 +91,7 @@ export function liveFetchInit(overrides: RequestInit = {}): RequestInit {
 export async function fetchWithTimeout(
   url: string,
   init: RequestInit = {},
-  timeoutMs = 14_000,
+  timeoutMs = 8_000,
 ): Promise<Response> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
