@@ -160,12 +160,13 @@ python3 -m pytest tests/test_automation_profile.py tests/test_industry_inference
 
 ## 10. Admin API (junk purge via HTTP)
 
-If `ADMIN_KEY` is set on the server:
+If `ADMIN_KEY` is set on the server (use the **secret value** you chose when running
+`fly secrets set ADMIN_KEY=...` — **not** the 16-char hex digest shown by `fly secrets list`):
 
 ```bash
 curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/purge-junk" \
   -H "Content-Type: application/json" \
-  -H "X-Admin-Key: YOUR_ADMIN_KEY" \
+  -H "X-Admin-Key: your-actual-admin-key-string" \
   -d '{"dry_run": true}'
 ```
 
