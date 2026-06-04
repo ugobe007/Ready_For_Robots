@@ -10,6 +10,7 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { Link } from "wouter";
 import { toast } from "sonner";
+import LeadShareBar from "@/components/LeadShareBar";
 
 type ApiLead = {
   id?: number | string;
@@ -19,6 +20,8 @@ type ApiLead = {
   priority_score?: number;
   priority_reasons?: string[];
   share_summary?: string | null;
+  share_blurb?: string | null;
+  robot_types_needed?: string[];
   score?: number | {
     overall_score?: number;
     overall_intent_score?: number;
@@ -43,6 +46,7 @@ type OpportunityTrack = "Sales" | "Partnership";
 
 type LiveOpportunitySignal = {
   id: string;
+  leadId?: number;
   company: string;
   type: string;
   text: string;
@@ -51,6 +55,11 @@ type LiveOpportunitySignal = {
   time: string;
   color: string;
   industry: string;
+  priorityTier?: string;
+  shareSummary?: string;
+  shareBlurb?: string;
+  robotTypes?: string[];
+  signals?: ApiLead["signals"];
 };
 
 type LeadSummary = {
@@ -248,14 +257,20 @@ function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySigna
     "SCOUT found a scored automation opportunity worth reviewing.";
   return {
     id: String(lead.id ?? `${lead.company_name || "lead"}-${index}`),
+    leadId: typeof lead.id === "number" ? lead.id : undefined,
     company: lead.company_name || `Scored Lead ${index + 1}`,
     type,
-    text: cleanAndClampText(String(text), 150) || "SCOUT found a scored automation opportunity worth reviewing.",
+    text: cleanAndClampText(lead.share_summary || String(text), 220) || "SCOUT found a scored automation opportunity worth reviewing.",
     score: leadScore(lead),
     track,
     time: index < 3 ? `${Math.max(index * 4 + 2, 2)}m ago` : "live",
     color: signalColor(type, track),
     industry: lead.industry || "Market",
+    priorityTier: lead.priority_tier || undefined,
+    shareSummary: lead.share_summary || undefined,
+    shareBlurb: lead.share_blurb || undefined,
+    robotTypes: lead.robot_types_needed,
+    signals: lead.signals,
   };
 }
 
@@ -452,6 +467,26 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
               <p className="text-sm leading-relaxed text-white/56">
                 {activeSignal.text}
               </p>
+              {activeSignal.robotTypes && activeSignal.robotTypes.length > 0 && (
+                <p className="mt-3 text-xs text-white/45">
+                  <span className="font-semibold text-white/55">Robots needed: </span>
+                  {activeSignal.robotTypes.slice(0, 4).join(" · ")}
+                </p>
+              )}
+              {activeSignal.leadId != null && (
+                <div className="mt-4">
+                  <LeadShareBar
+                    lead={{
+                      id: activeSignal.leadId,
+                      company_name: activeSignal.company,
+                      priority_tier: activeSignal.priorityTier,
+                      share_summary: activeSignal.shareSummary,
+                      share_blurb: activeSignal.shareBlurb,
+                      signals: activeSignal.signals,
+                    }}
+                  />
+                </div>
+              )}
               <div className="mt-5 rounded-2xl border border-white/8 p-3" style={{ background: "rgba(0,0,0,0.18)" }}>
                 <div className="text-[10px] font-bold uppercase tracking-widest text-white/26">Recommended motion</div>
                 <p className="mt-2 text-xs leading-relaxed text-white/48">

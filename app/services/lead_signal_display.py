@@ -131,8 +131,12 @@ def normalize_signal_text_for_storage(raw: Optional[str], *, max_chars: int = 80
 
 def format_signal_for_sales(raw: Optional[str], *, max_chars: int = 360) -> str:
     """Paragraph-length card copy: cleaned body, hard cap for UI density."""
+    from app.services.lead_sales_copy import is_low_quality_sales_text
+
     t = strip_extraction_artifacts(raw)
-    if not t:
+    if not t or is_low_quality_sales_text(t):
+        t = pick_primary_sentence(raw, max_chars=max_chars)
+    if not t or is_low_quality_sales_text(t):
         return ""
     if len(t) <= max_chars:
         return t

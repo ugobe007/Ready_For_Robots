@@ -55,6 +55,7 @@ from app.services.lead_value import compute_lead_value
 from app.services.gtm_readiness import compute_gtm_readiness
 from app.services.lead_primary_link import enrich_lead_link_fields
 from app.services.lead_signal_display import format_signal_for_sales, strip_extraction_artifacts
+from app.services.lead_sales_copy import humanize_robot_types
 from app.services.company_url_openai import resolve_homepage_urls_for_companies
 from app.services.company_domain import (
     dedupe_companies_ordered,
@@ -637,83 +638,37 @@ def _build_share_blurb(
     sigs: list,
     *,
     industry_for_copy: Optional[str] = None,
+    automation_profile: Optional[dict] = None,
 ) -> tuple:
-    """
-    Returns (share_blurb ~220c for Twitter/copy, share_summary 4-5 sentence intelligence paragraph).
-    Format: '[Company] is targeting automation for their [use_case] due to [pain_point]
-    which aligns with our signals [types]. The timing of the project is [X] months.'
-    """
-    import re as _re
+    """Returns (share_blurb, share_summary) — natural-language intelligence paragraph."""
+    from app.services.lead_sales_copy import build_lead_intelligence_copy
+
     raw_ind = (industry_for_copy if industry_for_copy is not None else (c.industry or "")).strip()
     ind = raw_ind if raw_ind and raw_ind.lower() not in ("unknown", "other") else "New"
-    name = c.name or "Company"
-    tier = pri.tier
-    score = pri.score
     automation_type, pain_point = _automation_ctx(raw_ind)
 
-    if not sigs:
-        summary = (
-            f"{name} is targeting automation for their {automation_type} "
-            f"due to {pain_point}. Signals detected on Ready For Robots suggest early buying intent."
-        )
-        return summary[:220], summary
-
-    deduped = _dedup_top_signals(sigs, 5)
-    size_word = _company_size_word(c.employee_estimate)
-
+    deduped = _dedup_top_signals(sigs, 5) if sigs else []
     unique_types = list(dict.fromkeys([getattr(s, "signal_type", "") for s in deduped]))[:4]
     labels = [_signal_label(t) for t in unique_types if t]
-    signals_str = ", ".join(labels[:3]) if labels else "automation interest"
-    sig_count = len(sigs)
 
-    buy_months = "60–90" if tier == "HOT" else "90–120"
+    blob_parts = [
+        strip_extraction_artifacts(getattr(s, "signal_text", None))
+        for s in (sigs or [])[:12]
+    ]
+    signal_blob = " ".join(p for p in blob_parts if p)
 
-    loc = ""
-    if c.location_city and c.location_state:
-        loc = f" based in {c.location_city}, {c.location_state},"
-    elif c.location_state:
-        loc = f" based in {c.location_state},"
-
-    # S1 — intelligence-led hook (user's template)
-    s1 = (
-        f"{name} is targeting automation for their {automation_type} "
-        f"due to {pain_point}, which aligns with our signals: {signals_str}. "
-        f"The timing of this project is within {buy_months} days."
+    return build_lead_intelligence_copy(
+        company_name=c.name or "Company",
+        industry=ind,
+        tier=pri.tier,
+        signal_labels=labels,
+        signal_types=unique_types,
+        automation_type=automation_type,
+        pain_point=pain_point,
+        automation_profile=automation_profile,
+        crm_metadata=c.crm_metadata if isinstance(getattr(c, "crm_metadata", None), dict) else None,
+        signal_blob=signal_blob,
     )
-
-    # S2 — company context
-    s2 = f"{name} is a {size_word}{ind} company{loc} with {sig_count} active buying indicators in our database."
-
-    # S3 — strongest evidence (HTML-stripped)
-    top = deduped[0] if deduped else None
-    s3 = ""
-    if top:
-        raw = strip_extraction_artifacts(getattr(top, "signal_text", None))
-        top_label = _signal_label(getattr(top, "signal_type", ""))
-        if raw and len(raw) > 20:
-            excerpt = raw[:180] + ("…" if len(raw) > 180 else "")
-            s3 = f'Key evidence — {top_label}: "{excerpt}"'
-        else:
-            s3 = f"The leading indicator is a {top_label}, consistent with companies actively evaluating {automation_type}."
-
-    # S4 — qualifying reasons
-    reasons = pri.reasons or []
-    s4 = f"Qualifying factors: {'; '.join(reasons[:2])}." if reasons else ""
-
-    parts = [s1, s2]
-    if s3:
-        parts.append(s3)
-    if s4:
-        parts.append(s4)
-    summary = " ".join(p for p in parts if p)
-
-    # Short blurb for Twitter character limit
-    blurb = (
-        f"{name} is targeting automation for their {automation_type} "
-        f"due to {pain_point}. Signals: {signals_str}. "
-        f"Project window: {buy_months} days."
-    )
-    return blurb[:220], summary[:700]
 
 
 def _fmt_company(
@@ -764,13 +719,13 @@ def _fmt_company(
     if not industry_display or industry_display.lower() in ("unknown", "other"):
         industry_display = "New"
 
-    share_blurb, share_summary = _build_share_blurb(
-        c, pri, sigs, industry_for_copy=industry_display
-    )
-
     raw_stored = (c.industry or "").strip()
     ov = industry_display if industry_display != raw_stored else None
     automation_profile = get_automation_profile_for_response(c, industry_override=ov)
+
+    share_blurb, share_summary = _build_share_blurb(
+        c, pri, sigs, industry_for_copy=industry_display, automation_profile=automation_profile
+    )
 
     overall_100 = float(s.overall_intent_score) if s else 0.0
     lv = compute_lead_value(
@@ -840,6 +795,14 @@ def _fmt_company(
         ],
         "share_blurb": share_blurb,
         "share_summary": share_summary,
+        "robot_types_needed": humanize_robot_types(
+            automation_profile,
+            industry=industry_display,
+            signal_blob=" ".join(
+                strip_extraction_artifacts(getattr(sig, "signal_text", None))
+                for sig in (sigs or [])[:8]
+            ),
+        ),
         "automation_profile": automation_profile,
         "gtm": gtm,
         "lead_inference": (c.crm_metadata or {}).get("lead_inference"),

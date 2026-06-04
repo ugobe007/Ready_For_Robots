@@ -24,6 +24,7 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { BUYER_SIGNAL_EXPLANATION } from "@/lib/agentMessaging";
+import LeadShareBar from "@/components/LeadShareBar";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -43,6 +44,10 @@ interface Deal {
   outreachSubject?: string;
   outreachBody?: string;
   notes?: string;
+  shareSummary?: string;
+  shareBlurb?: string;
+  priorityTier?: string;
+  robotTypesNeeded?: string[];
   researchUpdates?: Array<{
     id: number;
     update_type?: string;
@@ -1232,7 +1237,17 @@ export default function Pipeline() {
                                 <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <LeadShareBar
+                                  compact
+                                  lead={{
+                                    id: deal.id,
+                                    company_name: deal.company,
+                                    priority_tier: deal.priorityTier,
+                                    share_summary: deal.shareSummary,
+                                    share_blurb: deal.shareBlurb,
+                                  }}
+                                />
                                 {deal.stage === "Outreach Sent" && (
                                   <span title="Email sent"><Send className="h-3 w-3" style={{ color: "#34d399" }} /></span>
                                 )}
@@ -1421,8 +1436,28 @@ export default function Pipeline() {
                         <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>{selected.signal}</p>
                       </div>
                     </div>
-                    {selected.notes && (
-                      <p className="mt-2 break-words border-t border-white/5 pt-2 text-[10px] italic leading-relaxed text-white/25">{selected.notes}</p>
+                    {(selected.notes || selected.shareSummary || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
+                      <div className="mt-2 border-t border-white/5 pt-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-1">Intelligence</p>
+                        <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
+                        {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
+                          <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+                            <span className="font-semibold text-white/50">Robots needed: </span>
+                            {selected.robotTypesNeeded.join(" · ")}
+                          </p>
+                        )}
+                        <div className="mt-2">
+                          <LeadShareBar
+                            lead={{
+                              id: selected.id,
+                              company_name: selected.company,
+                              priority_tier: selected.priorityTier,
+                              share_summary: selected.shareSummary,
+                              share_blurb: selected.shareBlurb,
+                            }}
+                          />
+                        </div>
+                      </div>
                     )}
                   </div>
 

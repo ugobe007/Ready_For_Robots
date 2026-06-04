@@ -18,7 +18,14 @@ export interface ApiLead {
   score?: number | { overall_score?: number; overall_intent_score?: number };
   priority_tier?: string | null;
   share_summary?: string | null;
-  signals?: Array<{ signal_type?: string; display_text?: string; text?: string }>;
+  share_blurb?: string | null;
+  robot_types_needed?: string[];
+  signals?: Array<{
+    signal_type?: string;
+    signal_label?: string;
+    display_text?: string;
+    text?: string;
+  }>;
   research_updates?: Array<{
     id: number;
     update_type?: string;
@@ -163,6 +170,10 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     outreachSubject: outreachSubject(lead.company_name, type),
     outreachBody: outreachBody(lead, type, text),
     notes: cleanScrapedText(lead.share_summary) || undefined,
+    shareSummary: lead.share_summary || undefined,
+    shareBlurb: lead.share_blurb || undefined,
+    priorityTier: lead.priority_tier || undefined,
+    robotTypesNeeded: lead.robot_types_needed || [],
     researchUpdates: lead.research_updates,
     lastResearchedAt: lead.last_researched_at || null,
     latestMaterialUpdate: lead.latest_material_update || null,

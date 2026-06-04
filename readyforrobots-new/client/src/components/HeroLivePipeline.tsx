@@ -7,13 +7,18 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText } from "@/lib/text";
+import LeadShareBar from "@/components/LeadShareBar";
+
 export type HomepageLeadRow = {
   id: number;
   company_name?: string;
   industry?: string;
   priority_tier?: string;
   core_need?: string | null;
-  signals?: { display_text?: string }[];
+  share_summary?: string | null;
+  share_blurb?: string | null;
+  robot_types_needed?: string[];
+  signals?: { display_text?: string; signal_label?: string; signal_type?: string }[];
   score?: { overall_score?: number };
 };
 
@@ -48,6 +53,8 @@ const STATIC_FALLBACK: HomepageLeadRow[] = [
 ];
 
 function heroSubline(lead: HomepageLeadRow): string {
+  const summary = cleanAndClampText(lead.share_summary, 140);
+  if (summary) return summary;
   const need = cleanAndClampText(lead.core_need, 72);
   if (need) return need;
   const t = cleanAndClampText(lead.signals?.[0]?.display_text, 72);
@@ -205,13 +212,33 @@ export default function HeroLivePipeline() {
                       Why SCOUT surfaced this
                     </p>
                     <p className="text-sm text-white/60 leading-relaxed">{heroSubline(lead)}</p>
+                    {lead.robot_types_needed && lead.robot_types_needed.length > 0 && (
+                      <p className="mt-2 text-[11px] text-white/45">
+                        <span className="font-semibold text-white/55">Robots: </span>
+                        {lead.robot_types_needed.slice(0, 3).join(" · ")}
+                      </p>
+                    )}
                     {lead.id > 0 && (
-                      <Link
-                        href="/pipeline"
-                        className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-violet-300 hover:text-violet-200"
-                      >
-                        Open in pipeline →
-                      </Link>
+                      <>
+                        <div className="mt-3">
+                          <LeadShareBar
+                            lead={{
+                              id: lead.id,
+                              company_name: lead.company_name,
+                              priority_tier: lead.priority_tier,
+                              share_summary: lead.share_summary,
+                              share_blurb: lead.share_blurb,
+                              signals: lead.signals,
+                            }}
+                          />
+                        </div>
+                        <Link
+                          href="/pipeline"
+                          className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-violet-300 hover:text-violet-200"
+                        >
+                          Open in pipeline →
+                        </Link>
+                      </>
                     )}
                   </div>
                 )}

@@ -32,6 +32,7 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
+import LeadShareBar from "@/components/LeadShareBar";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -107,6 +108,10 @@ type Prospect = {
   scoreReason: string;
   draft: string;
   stage: string;
+  leadId?: number;
+  shareSummary?: string;
+  priorityTier?: string;
+  robotTypes?: string[];
 };
 
 type MaterialChoice = "upload" | "suggest" | "skip";
@@ -224,7 +229,10 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
   const company = lead.company_name || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
   const whyNow = lead.gtm?.why_now?.filter(Boolean) || [];
-  const relevance = cleanRelevanceCopy(lead.value_proposition || lead.share_summary || whyNow.join(" "), signal) || `${company} is relevant because SCOUT found active buying signals and a strong automation fit.`;
+  const relevance =
+    cleanScrapedText(lead.share_summary || "") ||
+    cleanRelevanceCopy(lead.value_proposition || whyNow.join(" "), signal) ||
+    `${company} is looking for automation based on active buying signals in our feed.`;
   const scoreReason = [
     `${score}/100 match score`,
     lead.priority_tier ? `${lead.priority_tier} priority` : "qualified lead",
@@ -247,6 +255,10 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     scoreReason,
     draft: "",
     stage,
+    leadId: typeof lead.id === "number" ? lead.id : undefined,
+    shareSummary: lead.share_summary || undefined,
+    priorityTier: lead.priority_tier || undefined,
+    robotTypes: lead.robot_types_needed,
   };
   prospect.draft = draftOutreach(prospect);
   return prospect;
@@ -819,6 +831,35 @@ export default function Results() {
                           </div>
                         </div>
                       </div>
+
+                      {(p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
+                        <div className="px-6 pb-2">
+                          <div className="rounded-xl border border-cyan-500/15 p-3" style={{ background: "rgba(6,182,212,0.06)" }}>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/80 mb-1">Intelligence</p>
+                            {p.shareSummary && (
+                              <p className="text-xs text-white/55 leading-relaxed">{p.shareSummary}</p>
+                            )}
+                            {p.robotTypes && p.robotTypes.length > 0 && (
+                              <p className="mt-2 text-[11px] text-white/40">
+                                <span className="font-semibold text-white/55">Robots: </span>
+                                {p.robotTypes.join(" · ")}
+                              </p>
+                            )}
+                            {p.leadId != null && (
+                              <div className="mt-3">
+                                <LeadShareBar
+                                  lead={{
+                                    id: p.leadId,
+                                    company_name: p.company,
+                                    priority_tier: p.priorityTier,
+                                    share_summary: p.shareSummary,
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
                         <div className="min-w-0 rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
