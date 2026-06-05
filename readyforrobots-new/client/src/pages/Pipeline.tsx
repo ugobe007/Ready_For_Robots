@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, MapPin, Filter, ChevronRight,
+  AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
   Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
   Zap, RefreshCw
@@ -207,8 +207,8 @@ const scoreColor = (s: number) =>
 const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
-const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">, adminView: boolean) =>
-  deal.stage === "New Signal" ? deal.signalType : stageLabel(deal.stage, adminView);
+const displayStageLabel = (deal: Pick<Deal, "stage" | "signalType">, _adminView?: boolean) =>
+  deal.stage === "New Signal" ? deal.signalType : stageLabel(deal.stage);
 
 const displayStageColor = (deal: Pick<Deal, "stage" | "signalColor">) =>
   deal.stage === "New Signal" ? deal.signalColor : STAGE_META[deal.stage].color;
@@ -323,6 +323,11 @@ export default function Pipeline() {
   const [developingLeadId, setDevelopingLeadId] = useState<number | null>(null);
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+
+  useEffect(() => {
+    setIntelligenceOpen(false);
+  }, [selectedId]);
 
   // Public pipeline data — once on mount (not tied to auth, avoids double 30–60s load).
   useEffect(() => {
@@ -333,7 +338,7 @@ export default function Pipeline() {
     setLoadingSummary(true);
     setLoadErr("");
 
-    const PIPELINE_TIMEOUT = 6_000;
+    const PIPELINE_TIMEOUT = 15_000;
 
     void fetchWithTimeout(`${base}/api/leads/pipeline`, {}, PIPELINE_TIMEOUT)
       .then(async (res) => {
@@ -349,7 +354,14 @@ export default function Pipeline() {
             setSummary(payload.summary);
           }
           if (rows.length > 0) {
-            const mapped = rows.map(mapApiLeadToDeal);
+            const mapped: Deal[] = [];
+            for (const row of rows) {
+              try {
+                mapped.push(mapApiLeadToDeal(row) as Deal);
+              } catch {
+                /* skip malformed pipeline row */
+              }
+            }
             setDeals(mapped);
             setSelectedId(mapped[0]?.id ?? null);
             setMarketSnippet(marketSnippetFromDeals(mapped));
@@ -383,7 +395,11 @@ export default function Pipeline() {
         }
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      setLoadingLeads(false);
+      setLoadingSummary(false);
+    };
   // Mount-only: never re-run when Supabase session resolves (was causing ~2× load time).
   }, []);
 
@@ -502,7 +518,11 @@ export default function Pipeline() {
   const resolvedIndustryFilter = industryQuery.trim() || filter;
   const filtered = !resolvedIndustryFilter || resolvedIndustryFilter === "All"
     ? deals
-    : deals.filter((d) => d.industry.toLowerCase().includes(resolvedIndustryFilter.toLowerCase()));
+    : deals.filter((d) =>
+        String(d.industry || "")
+          .toLowerCase()
+          .includes(resolvedIndustryFilter.toLowerCase()),
+      );
   const selected = deals.find((d) => d.id === selectedId) ?? null;
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
@@ -1276,7 +1296,7 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="flex gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 200px)" }}>
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
@@ -1482,9 +1502,9 @@ export default function Pipeline() {
               )}
 
               {selected ? (
-                <>
+                <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                   {/* Detail header */}
-                  <div className="p-5 border-b border-white/8">
+                  <div className="shrink-0 p-5 border-b border-white/8">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
                         <p className="text-base font-bold text-white mb-0.5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
@@ -1537,7 +1557,7 @@ export default function Pipeline() {
                   </div>
 
                   {/* Signal block */}
-                  <div className="px-5 py-3 border-b border-white/6">
+                  <div className="shrink-0 px-5 py-3 border-b border-white/6">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Trigger Signal</p>
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
@@ -1562,61 +1582,91 @@ export default function Pipeline() {
                     )}
                     {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                       <div className="mt-2 border-t border-white/5 pt-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-1">Intelligence</p>
-                        {selected.leadHighlights?.specific_problem && (
-                          <p className="break-words text-[11px] leading-relaxed text-white/50 mb-1.5">
-                            <span className="font-semibold text-white/60">Problem: </span>
-                            {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
-                          </p>
-                        )}
-                        {(selected.leadHighlights?.why_lead || []).length > 0 && (
-                          <ul className="mb-1.5 list-disc pl-4 text-[10px] leading-relaxed text-white/40">
-                            {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
-                              <li key={i}>{cleanAndClampText(line, 160)}</li>
-                            ))}
-                          </ul>
-                        )}
-                        {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
-                          <div className="mb-1.5 space-y-1">
-                            {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
-                              <p key={i} className="text-[10px] leading-relaxed text-violet-200/70">
-                                {cleanAndClampText(fact.claim || "", 200)}
+                        <button
+                          type="button"
+                          onClick={() => setIntelligenceOpen((open) => !open)}
+                          className="w-full flex items-center gap-2 text-left rounded-lg py-1.5 px-1 -mx-1 transition-colors hover:bg-white/[0.03]"
+                          aria-expanded={intelligenceOpen}
+                        >
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/25 shrink-0">
+                            Intelligence
+                          </span>
+                          {!intelligenceOpen && (
+                            <span className="flex-1 min-w-0 text-[10px] leading-snug text-white/35 truncate">
+                              {cleanAndClampText(
+                                selected.leadHighlights?.specific_problem
+                                  || selected.shareSummary
+                                  || selected.notes
+                                  || "SCOUT summary & robot fit",
+                                80,
+                              )}
+                            </span>
+                          )}
+                          {intelligenceOpen ? (
+                            <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/30" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
+                          )}
+                        </button>
+                        {intelligenceOpen && (
+                          <div className="pt-2 pb-0.5">
+                            {selected.leadHighlights?.specific_problem && (
+                              <p className="break-words text-[11px] leading-relaxed text-white/50 mb-1.5">
+                                <span className="font-semibold text-white/60">Problem: </span>
+                                {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
                               </p>
-                            ))}
+                            )}
+                            {(selected.leadHighlights?.why_lead || []).length > 0 && (
+                              <ul className="mb-1.5 list-disc pl-4 text-[10px] leading-relaxed text-white/40">
+                                {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
+                                  <li key={i}>{cleanAndClampText(line, 160)}</li>
+                                ))}
+                              </ul>
+                            )}
+                            {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
+                              <div className="mb-1.5 space-y-1">
+                                {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
+                                  <p key={i} className="text-[10px] leading-relaxed text-violet-200/70">
+                                    {cleanAndClampText(fact.claim || "", 200)}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                            {((selected.leadHighlights?.agent_enrichment?.procurement_clues || []).length > 0
+                              || (selected.leadHighlights?.agent_enrichment?.timing_clues || []).length > 0) && (
+                              <p className="text-[10px] leading-relaxed text-white/30">
+                                {[...(selected.leadHighlights?.agent_enrichment?.procurement_clues || []).slice(0, 2),
+                                  ...(selected.leadHighlights?.agent_enrichment?.timing_clues || []).slice(0, 2)]
+                                  .join(" · ")}
+                              </p>
+                            )}
+                            <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
+                            {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
+                              <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+                                <span className="font-semibold text-white/50">Robots needed: </span>
+                                {selected.robotTypesNeeded.join(" · ")}
+                              </p>
+                            )}
+                            <div className="mt-2">
+                              <LeadShareBar
+                                lead={{
+                                  id: selected.id,
+                                  company_name: selected.company,
+                                  priority_tier: selected.priorityTier,
+                                  share_summary: selected.shareSummary,
+                                  share_blurb: selected.shareBlurb,
+                                }}
+                              />
+                            </div>
                           </div>
                         )}
-                        {((selected.leadHighlights?.agent_enrichment?.procurement_clues || []).length > 0
-                          || (selected.leadHighlights?.agent_enrichment?.timing_clues || []).length > 0) && (
-                          <p className="text-[10px] leading-relaxed text-white/30">
-                            {[...(selected.leadHighlights?.agent_enrichment?.procurement_clues || []).slice(0, 2),
-                              ...(selected.leadHighlights?.agent_enrichment?.timing_clues || []).slice(0, 2)]
-                              .join(" · ")}
-                          </p>
-                        )}
-                        <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
-                        {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
-                          <p className="mt-2 text-[10px] leading-relaxed text-white/35">
-                            <span className="font-semibold text-white/50">Robots needed: </span>
-                            {selected.robotTypesNeeded.join(" · ")}
-                          </p>
-                        )}
-                        <div className="mt-2">
-                          <LeadShareBar
-                            lead={{
-                              id: selected.id,
-                              company_name: selected.company,
-                              priority_tier: selected.priorityTier,
-                              share_summary: selected.shareSummary,
-                              share_blurb: selected.shareBlurb,
-                            }}
-                          />
-                        </div>
                       </div>
                     )}
                   </div>
 
+                  <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
                   {/* Latest research */}
-                  <div className="px-5 py-3 border-b border-white/6">
+                  <div className="shrink-0 px-5 py-3 border-b border-white/6">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Latest Research</p>
                       {selected.lastResearchedAt && (
@@ -1670,7 +1720,7 @@ export default function Pipeline() {
 
                   {/* Cal outreach — admin only */}
                   {isAdmin && (
-                  <div className="flex-1 overflow-y-auto px-5 py-3">
+                  <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
@@ -1777,7 +1827,7 @@ export default function Pipeline() {
 
                   {/* SCOUT read — user detail */}
                   {!isAdmin && (
-                  <div className="flex-1 overflow-y-auto px-5 py-3">
+                  <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center gap-1.5 mb-2">
                       <Zap className="h-3.5 w-3.5" style={{ color: "#03DAC5" }} />
                       <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">SCOUT Read</p>
@@ -1794,24 +1844,31 @@ export default function Pipeline() {
                         {marketInsightForIndustry(selected.industry)}
                       </p>
                     </div>
-                    <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-                      {BUYER_SIGNAL_EXPLANATION} Save leads you want SCOUT to keep watching in your workspace.
-                    </p>
-                    {!session?.access_token && (
+                  </div>
+                  )}
+                  </div>
+
+                  {!isAdmin && !session?.access_token && (
+                    <div
+                      className="shrink-0 px-5 py-4 border-t border-amber-500/25"
+                      style={{ background: "linear-gradient(180deg, rgba(255,176,0,0.08) 0%, rgba(255,176,0,0.02) 100%)" }}
+                    >
+                      <p className="text-[11px] leading-relaxed text-white/50 mb-3">
+                        {BUYER_SIGNAL_EXPLANATION} Create a free account to save this lead and have SCOUT keep watching it.
+                      </p>
                       <Link
                         href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
-                        className="mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold"
-                        style={{ color: "#FFB000", borderColor: "#FFB000" }}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all hover:brightness-110"
+                        style={{ color: "#0d0520", background: "#FFB000", border: "1px solid #FFB000" }}
                       >
                         Sign up to save leads
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <ArrowRight className="h-4 w-4" />
                       </Link>
-                    )}
-                  </div>
+                    </div>
                   )}
 
                   {/* Action bar */}
-                  <div className="p-4 border-t border-white/8 flex items-center gap-2">
+                  <div className="shrink-0 p-4 border-t border-white/8 flex items-center gap-2">
                     {isAdmin ? (
                       <>
                         {STAGES.indexOf(selected.stage) > 0 && (
@@ -1866,7 +1923,7 @@ export default function Pipeline() {
                       </button>
                     )}
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
