@@ -114,7 +114,7 @@ def _company_query_base(db: Session):
     return (
         db.query(Company, Score)
         .join(Score, Score.company_id == Company.id)
-        .options(joinedload(Company.signals))
+        .options(joinedload(Company.signals), joinedload(Company.scores))
         .filter(Score.overall_intent_score >= WARM_THRESHOLD)
     )
 
@@ -256,7 +256,7 @@ def develop_lead_brief(
         except Exception as exc:
             logger.warning("SCOUT inference refresh failed for %s: %s", company_id, exc)
 
-    pri = classify_lead(company, company.scores, company.signals)
+    _, _, pri = classify_lead(company, company.scores, company.signals)
     score_row = pick_primary_score(company.scores)
     intent = float(score_row.overall_intent_score or 0) if score_row else 0.0
 
@@ -409,7 +409,7 @@ def discover_prospects(
             continue
         intent = float(score_row.overall_intent_score or 0)
         tier = _tier_from_score(intent)
-        pri = classify_lead(company, company.scores, company.signals)
+        _, _, pri = classify_lead(company, company.scores, company.signals)
         signal_text, signal_type = _top_signal_summary(company)
         crm_meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
         inf = crm_meta.get("lead_inference") if isinstance(crm_meta.get("lead_inference"), dict) else {}
