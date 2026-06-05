@@ -3,6 +3,7 @@
  * Full LLM + history lives in FastAPI `/api/scout/*`; this UI is a lightweight placeholder until wired.
  */
 import { createContext, useCallback, useContext, useState } from "react";
+import { useLocation } from "wouter";
 import { MessageSquare, X } from "lucide-react";
 
 type ScoutChatCtx = { openChat: () => void };
@@ -49,7 +50,9 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
 
 export function ScoutChat({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [location] = useLocation();
   const openChat = useCallback(() => setOpen(true), []);
+  const onPipeline = location === "/pipeline" || location.startsWith("/admin/prospects");
 
   return (
     <ScoutChatContext.Provider value={{ openChat }}>
@@ -59,7 +62,7 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
+          className={`fixed right-4 z-40 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 ${onPipeline ? "bottom-24" : "bottom-4"}`}
           style={{
             color: "#FFB000",
             border: "1.5px solid #FFB000",

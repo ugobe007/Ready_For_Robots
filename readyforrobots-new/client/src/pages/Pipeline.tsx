@@ -1621,8 +1621,8 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col"
-              style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px", maxHeight: "calc(100vh - 100px)" }}
+              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)]"
+              style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px" }}
             >
               {isAdmin && (
               <ScoutActionBar
@@ -1690,11 +1690,12 @@ export default function Pipeline() {
                     </div>
                   </div>
 
+                  <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
                   {!isAdmin && (() => {
                     const verdict = scoutVerdictForDeal(selected);
                     return (
                       <div
-                        className="shrink-0 mx-5 mb-3 rounded-xl border px-3.5 py-3"
+                        className="shrink-0 mx-5 mt-3 mb-3 rounded-xl border px-3.5 py-3"
                         style={{ borderColor: `${verdict.color}33`, background: `${verdict.color}0c` }}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
@@ -1737,7 +1738,7 @@ export default function Pipeline() {
                         )}
                         {panelPlan === "anonymous" && (
                           <p className="mt-2.5 text-[10px] leading-relaxed text-violet-200/75">
-                            Preview only — sign up free to save this lead, unlock cited SCOUT research, and connect HubSpot via API.
+                            Preview only — sign up free to unlock cited SCOUT research and HubSpot API sync.
                           </p>
                         )}
                       </div>
@@ -1769,8 +1770,6 @@ export default function Pipeline() {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
                   {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                     <div className="shrink-0 px-5 py-3 border-b border-white/6">
                       <button
@@ -1797,7 +1796,7 @@ export default function Pipeline() {
                           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
                         )}
                       </button>
-                      {(intelligenceOpen || panelPlan === "anonymous") && (
+                      {intelligenceOpen && (
                         <div className="pt-3 space-y-2.5">
                           {selected.leadHighlights?.specific_problem && (
                             <p className="break-words text-[12px] leading-relaxed text-white/80">
@@ -2033,21 +2032,21 @@ export default function Pipeline() {
 
                   {!isAdmin && (
                     <div
-                      className="shrink-0 p-4 border-t border-teal-400/20"
-                      style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.1) 0%, rgba(13,5,32,0.4) 100%)" }}
+                      className="shrink-0 z-20 p-4 pb-16 border-t border-teal-400/20 shadow-[0_-12px_32px_rgba(0,0,0,0.45)]"
+                      style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.14) 0%, rgba(13,5,32,0.98) 55%)" }}
                     >
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <Zap className="h-4 w-4" style={{ color: "#03DAC5" }} />
                         <p className="text-xs font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                           Put SCOUT on this lead
                         </p>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-white/65 mb-3">
+                      <p className="text-[11px] leading-relaxed text-white/65 mb-2.5">
                         {session?.access_token
                           ? panelPlan === "free"
-                            ? `Save to your SCOUT workspace (${entitlements?.saved_limit ?? 5} included on free). SCOUT tracks signals and timing on this account.`
-                            : "Save to your workspace. SCOUT keeps tracking signals, timing, and research on this account."
-                          : "Free account — preview the signal, then put SCOUT on this lead to watch it 24/7."}
+                            ? `Save to your SCOUT workspace (${entitlements?.saved_limit ?? 5} on free).`
+                            : "Save to your workspace — SCOUT tracks signals and research."
+                          : "Free account — activate SCOUT to watch this lead 24/7."}
                       </p>
                       {session?.access_token ? (
                         <button
@@ -2100,19 +2099,14 @@ export default function Pipeline() {
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
-                      <ol className="mt-2.5 space-y-1 text-[10px] leading-relaxed text-white/42">
-                        <li>1. Activate SCOUT on this lead</li>
-                        <li>2. Link your HubSpot account with a private app token (API)</li>
-                        <li>3. SCOUT pushes score, signal, and brief into your existing CRM</li>
-                      </ol>
                       <p className="mt-2 text-center text-[10px] leading-relaxed text-white/35">
                         {session?.access_token
                           ? hubspotIntegration?.connected
-                            ? "Qualified leads sync into the HubSpot workspace your team already uses."
+                            ? "HubSpot API connected — qualified leads sync into your CRM."
                             : hubspotIntegration?.entitled === false
-                              ? "Pro and Premium include HubSpot outbound sync via API."
-                              : "Connect once on Integrations — no manual copy-paste into HubSpot."
-                          : "After SCOUT is active, connect HubSpot via API so leads land in your existing account."}
+                              ? "Pro+ includes HubSpot API sync after SCOUT is active."
+                              : "Then connect HubSpot via private app token on Integrations."
+                          : "Then link HubSpot with a private app token — SCOUT pushes leads via API."}
                       </p>
                     </div>
                   )}
