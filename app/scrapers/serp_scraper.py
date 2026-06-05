@@ -26,7 +26,7 @@ from app.database import SessionLocal
 from app.models.company import Company
 from app.models.signal import Signal
 from app.services.inference_engine import analyze
-from app.scrapers.news_scraper import KNOWN_COMPANIES, _COMPANY_ANNOUNCE_RE
+from app.scrapers.news_scraper import extract_company_from_article_text
 from app.scrapers.base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
@@ -183,16 +183,7 @@ class SerpScraper:
         return articles
 
     def _extract_company(self, text: str):
-        lower = text.lower()
-        for key in sorted(KNOWN_COMPANIES.keys(), key=len, reverse=True):
-            if key in lower:
-                return KNOWN_COMPANIES[key]
-        match = _COMPANY_ANNOUNCE_RE.search(text)
-        if match:
-            extracted = match.group(1).strip()
-            if 2 < len(extracted) <= 60 and extracted.lower() not in ("the", "a", "an", "this", "our"):
-                return extracted, _infer_industry(text)
-        return None, None
+        return extract_company_from_article_text(text)
 
     def _get_or_create_company(self, name: str, industry: str) -> Optional[Company]:
         if not name:

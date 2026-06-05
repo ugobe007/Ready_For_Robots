@@ -118,6 +118,7 @@ KNOWN_COMPANIES: dict = {
     "target stores": ("Target Corporation", "Retail"),
     "target.com": ("Target Corporation", "Retail"),
     "kroger": ("Kroger Company", "Retail"),
+    "nike": ("Nike", "Retail"),
     "walmart": ("Walmart", "Retail"),
     "walmart stores": ("Walmart", "Retail"),
     "costco": ("Costco Wholesale", "Retail"),
@@ -246,10 +247,101 @@ KNOWN_COMPANIES: dict = {
     "abm": ("ABM Industries", "Real Estate & Facilities"),
 }
 
-# Regex to find "Company X announces/says/reports/invests/opens" patterns
+# Regex to find "Company X [action verb]" patterns in headlines
 _COMPANY_ANNOUNCE_RE = re.compile(
-    r'\b([A-Z][A-Za-z0-9&\.\' ]{2,40}?)\s+(?:announces?|says?|reports?|invests?|opens?|launches?|deploys?|hires?|appoints?|raises?|acquires?|pilots?)\b'
+    r'\b([A-Z][A-Za-z0-9&\.\' ]{1,40}?)\s+'
+    r'(?:announces?|says?|reports?|invests?|opens?|launches?|deploys?|hires?|appoints?|raises?|acquires?|pilots?|'
+    r'axes|cuts|slashes|trims|sheds|eliminates|lays?\s+off|plans?|targets?|expands?|closes?|automates?)\b',
+    re.IGNORECASE,
 )
+
+
+def _headline_lead_clause(text: str) -> str:
+    """Primary headline before subtitle/comparison clauses (e.g. '— Joining GM and Tyson…')."""
+    t = text.strip()
+    for sep in (" — ", " – ", " | "):
+        if sep in t:
+            return t.split(sep, 1)[0].strip()
+    if " - " in t:
+        head, tail = t.split(" - ", 1)
+        if len(head) >= 20 and len(tail) >= 12:
+            return head.strip()
+    return t
+
+
+def _canonicalize_known_actor(actor: str) -> Optional[tuple]:
+    lower = actor.lower().strip()
+    for key, val in KNOWN_COMPANIES.items():
+        canonical, industry = val
+        if lower == key or lower == canonical.lower():
+            return canonical, industry
+    return None
+
+
+def _earliest_lookup_match(lower: str, lookup: dict) -> Optional[tuple]:
+    """Pick the company whose key appears earliest — avoids 'Tyson' in a comparison clause beating 'Nike'."""
+    best = None
+    for key, val in lookup.items():
+        pos = lower.find(key)
+        if pos < 0:
+            continue
+        name, industry = val
+        candidate = (pos, -len(key), name, industry)
+        if best is None or candidate < best:
+            best = candidate
+    if best:
+        return best[2], best[3]
+    return None
+
+
+def extract_company_from_article_text(
+    text: str,
+    *,
+    db_lookup: Optional[dict] = None,
+) -> tuple[Optional[str], Optional[str]]:
+    """
+    Identify the primary company an article is about.
+    Prefers headline subject / lead clause over later name-drops in comparison phrases.
+    """
+    from app.services.headline_parser import extract_actor
+    from app.services.industry_inference import infer_industry_from_text
+
+    text = (text or "").strip()
+    if not text:
+        return None, None
+
+    lead = _headline_lead_clause(text)
+    scopes = (lead, text) if lead != text else (text,)
+
+    for scope in scopes:
+        scope_lower = scope.lower()
+
+        actor = extract_actor(scope)
+        if actor:
+            known = _canonicalize_known_actor(actor)
+            if known:
+                return known
+            return actor, infer_industry_from_text(text)
+
+        match = _COMPANY_ANNOUNCE_RE.search(scope)
+        if match:
+            extracted = match.group(1).strip()
+            if len(extracted) > 1 and extracted.lower() not in ("the", "a", "an", "this"):
+                known = _canonicalize_known_actor(extracted)
+                if known:
+                    return known
+                return extracted, infer_industry_from_text(text)
+
+        hit = _earliest_lookup_match(scope_lower, KNOWN_COMPANIES)
+        if hit:
+            return hit
+
+        if db_lookup:
+            hit = _earliest_lookup_match(scope_lower, db_lookup)
+            if hit:
+                return hit
+
+    return None, None
 
 # ── Open market intent queries (no specific company) ─────────────────────────
 INTENT_QUERIES = [
@@ -504,36 +596,9 @@ class NewsScraper:
             return {}
 
     def _extract_company_from_text(self, text: str) -> tuple[Optional[str], Optional[str]]:
-        """
-        Try to identify a known company in the article text.
-        Returns (canonical_name, industry) or (None, None).
-        Priority: KNOWN_COMPANIES > DB companies > regex. Longer matches first.
-        """
-        lower = text.lower()
-        # 1. KNOWN_COMPANIES (longest-first)
-        for key in sorted(KNOWN_COMPANIES.keys(), key=len, reverse=True):
-            if key in lower:
-                return KNOWN_COMPANIES[key]
-        # 2. DB companies (discovered by intelligence scraper, etc.)
+        """Try to identify the primary company in article text."""
         db_lookup = getattr(self, "_db_company_lookup", None) or self._build_db_company_lookup()
-        for key in sorted(db_lookup.keys(), key=len, reverse=True):
-            if key in lower:
-                return db_lookup[key]
-        # 3. Verb-anchor / possessive extraction — understands actor vs descriptor
-        from app.services.headline_parser import extract_actor
-        actor = extract_actor(text)
-        if actor:
-            industry = infer_industry_from_text(text)
-            return actor, industry
-
-        # 4. Regex fallback: "Company Name announces/invests/opens ..."
-        match = _COMPANY_ANNOUNCE_RE.search(text)
-        if match:
-            extracted = match.group(1).strip()
-            if len(extracted) > 2 and extracted.lower() not in ("the", "a", "an", "this"):
-                industry = infer_industry_from_text(text)
-                return extracted, industry
-        return None, None
+        return extract_company_from_article_text(text, db_lookup=db_lookup)
 
     # ── DB persistence ────────────────────────────────────────────────────────
 

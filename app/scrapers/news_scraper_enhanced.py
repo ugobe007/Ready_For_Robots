@@ -376,23 +376,13 @@ class EnhancedNewsScraper:
         
         Uses ontology-based entity extraction
         """
-        # Try to extract company from title
+        from app.scrapers.news_scraper import extract_company_from_article_text
+
         company_name = None
         industry = "Unknown"
-        
-        # Check against known companies
-        title_lower = title.lower()
-        for company_key, (canonical_name, company_industry) in KNOWN_COMPANIES.items():
-            if company_key in title_lower:
-                company_name = canonical_name
-                industry = company_industry
-                break
-        
-        # Fallback: extract first capitalized phrase
-        if not company_name:
-            match = re.search(r'\b([A-Z][A-Za-z0-9&\.\' ]{2,40}?)\b', title)
-            if match:
-                company_name = match.group(1).strip()
+        extracted = extract_company_from_article_text(f"{title}. {description}".strip())
+        if extracted[0]:
+            company_name, industry = extracted[0], extracted[1] or "Unknown"
         
         if not company_name:
             logger.debug(f"No company extracted from: {title[:60]}...")

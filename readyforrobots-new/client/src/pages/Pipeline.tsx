@@ -23,7 +23,6 @@ import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
-import { BUYER_SIGNAL_EXPLANATION } from "@/lib/agentMessaging";
 import LeadShareBar from "@/components/LeadShareBar";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
@@ -264,6 +263,30 @@ const formatResearchTime = (value?: string | null) => {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
 
+const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
+  if (deal.score >= 85) {
+    return {
+      headline: "High-confidence opportunity",
+      detail: "SCOUT rates timing, signal strength, and industry fit as strong — worth prioritizing now.",
+      color: "#34d399",
+    };
+  }
+  if (deal.score >= 65) {
+    return {
+      headline: "Meaningful buying pressure",
+      detail: "SCOUT sees real automation intent. Qualify and monitor before full outreach.",
+      color: "#FFB000",
+    };
+  }
+  return {
+    headline: "Early signal — SCOUT is watching",
+    detail: "Activity is building. SCOUT will flag when corroboration strengthens the case.",
+    color: "#a78bfa",
+  };
+};
+
+const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-violet-200/90";
+
 function PipelineMetric({
   label,
   value,
@@ -324,9 +347,11 @@ export default function Pipeline() {
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+  const [researchOpen, setResearchOpen] = useState(false);
 
   useEffect(() => {
     setIntelligenceOpen(false);
+    setResearchOpen(false);
   }, [selectedId]);
 
   // Public pipeline data — once on mount (not tied to auth, avoids double 30–60s load).
@@ -1556,165 +1581,190 @@ export default function Pipeline() {
                     </div>
                   </div>
 
+                  {!isAdmin && (() => {
+                    const verdict = scoutVerdictForDeal(selected);
+                    return (
+                      <div
+                        className="shrink-0 mx-5 mb-3 rounded-xl border px-3.5 py-3"
+                        style={{ borderColor: `${verdict.color}33`, background: `${verdict.color}0c` }}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <Zap className="h-3.5 w-3.5 shrink-0" style={{ color: verdict.color }} />
+                          <p className="text-xs font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                            SCOUT · {verdict.headline}
+                          </p>
+                        </div>
+                        <p className="text-[12px] leading-relaxed text-white/75">{verdict.detail}</p>
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">
+                          {marketInsightForIndustry(selected.industry)}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
                   {/* Signal block */}
                   <div className="shrink-0 px-5 py-3 border-b border-white/6">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Trigger Signal</p>
+                    <p className={`${panelSectionLabel} mb-2`}>Buying signal</p>
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>{selected.signal}</p>
+                        <p className="break-words text-[12px] leading-relaxed text-white/80">{selected.signal}</p>
                       </div>
                     </div>
                     {(selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
-                      <div className="mt-2 flex items-center gap-2 text-[10px] text-white/35">
-                        <Clock className="h-3 w-3 shrink-0 text-violet-400/80" />
+                      <div className="mt-2.5 flex items-center gap-2 text-[11px] text-white/60">
+                        <Clock className="h-3 w-3 shrink-0 text-violet-300/90" />
                         <span>
-                          <span className="font-semibold text-white/50">Project window: </span>
+                          <span className="font-semibold text-white/75">Project window: </span>
                           {selected.projectTiming?.day_min != null && selected.projectTiming?.day_max != null
                             ? `${selected.projectTiming.day_min}–${selected.projectTiming.day_max} days`
                             : selected.projectTiming?.label}
                           {selected.projectTiming?.source === "estimated" && (
-                            <span className="text-white/25"> · estimated from signals</span>
+                            <span className="text-white/40"> · estimated from signals</span>
                           )}
                         </span>
-                      </div>
-                    )}
-                    {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
-                      <div className="mt-2 border-t border-white/5 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setIntelligenceOpen((open) => !open)}
-                          className="w-full flex items-center gap-2 text-left rounded-lg py-1.5 px-1 -mx-1 transition-colors hover:bg-white/[0.03]"
-                          aria-expanded={intelligenceOpen}
-                        >
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/25 shrink-0">
-                            Intelligence
-                          </span>
-                          {!intelligenceOpen && (
-                            <span className="flex-1 min-w-0 text-[10px] leading-snug text-white/35 truncate">
-                              {cleanAndClampText(
-                                selected.leadHighlights?.specific_problem
-                                  || selected.shareSummary
-                                  || selected.notes
-                                  || "SCOUT summary & robot fit",
-                                80,
-                              )}
-                            </span>
-                          )}
-                          {intelligenceOpen ? (
-                            <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/30" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
-                          )}
-                        </button>
-                        {intelligenceOpen && (
-                          <div className="pt-2 pb-0.5">
-                            {selected.leadHighlights?.specific_problem && (
-                              <p className="break-words text-[11px] leading-relaxed text-white/50 mb-1.5">
-                                <span className="font-semibold text-white/60">Problem: </span>
-                                {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
-                              </p>
-                            )}
-                            {(selected.leadHighlights?.why_lead || []).length > 0 && (
-                              <ul className="mb-1.5 list-disc pl-4 text-[10px] leading-relaxed text-white/40">
-                                {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
-                                  <li key={i}>{cleanAndClampText(line, 160)}</li>
-                                ))}
-                              </ul>
-                            )}
-                            {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
-                              <div className="mb-1.5 space-y-1">
-                                {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
-                                  <p key={i} className="text-[10px] leading-relaxed text-violet-200/70">
-                                    {cleanAndClampText(fact.claim || "", 200)}
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                            {((selected.leadHighlights?.agent_enrichment?.procurement_clues || []).length > 0
-                              || (selected.leadHighlights?.agent_enrichment?.timing_clues || []).length > 0) && (
-                              <p className="text-[10px] leading-relaxed text-white/30">
-                                {[...(selected.leadHighlights?.agent_enrichment?.procurement_clues || []).slice(0, 2),
-                                  ...(selected.leadHighlights?.agent_enrichment?.timing_clues || []).slice(0, 2)]
-                                  .join(" · ")}
-                              </p>
-                            )}
-                            <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
-                            {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
-                              <p className="mt-2 text-[10px] leading-relaxed text-white/35">
-                                <span className="font-semibold text-white/50">Robots needed: </span>
-                                {selected.robotTypesNeeded.join(" · ")}
-                              </p>
-                            )}
-                            <div className="mt-2">
-                              <LeadShareBar
-                                lead={{
-                                  id: selected.id,
-                                  company_name: selected.company,
-                                  priority_tier: selected.priorityTier,
-                                  share_summary: selected.shareSummary,
-                                  share_blurb: selected.shareBlurb,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-                  {/* Latest research */}
-                  <div className="shrink-0 px-5 py-3 border-b border-white/6">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Latest Research</p>
-                      {selected.lastResearchedAt && (
-                        <span className="text-[10px] text-white/25">
-                          Checked {formatResearchTime(selected.lastResearchedAt)}
-                        </span>
+                  {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
+                    <div className="shrink-0 px-5 py-3 border-b border-white/6">
+                      <button
+                        type="button"
+                        onClick={() => setIntelligenceOpen((open) => !open)}
+                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
+                        aria-expanded={intelligenceOpen}
+                      >
+                        <span className={panelSectionLabel}>SCOUT intelligence</span>
+                        {!intelligenceOpen && (
+                          <span className="flex-1 min-w-0 text-[11px] leading-snug text-white/65 truncate">
+                            {cleanAndClampText(
+                              selected.leadHighlights?.specific_problem
+                                || selected.shareSummary
+                                || selected.notes
+                                || "Problem, robot fit, and why this lead matters",
+                              72,
+                            )}
+                          </span>
+                        )}
+                        {intelligenceOpen ? (
+                          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                        )}
+                      </button>
+                      {intelligenceOpen && (
+                        <div className="pt-3 space-y-2.5">
+                          {selected.leadHighlights?.specific_problem && (
+                            <p className="break-words text-[12px] leading-relaxed text-white/80">
+                              <span className="font-semibold text-white">Problem: </span>
+                              {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
+                            </p>
+                          )}
+                          {(selected.leadHighlights?.why_lead || []).length > 0 && (
+                            <ul className="list-disc pl-4 text-[11px] leading-relaxed text-white/70 space-y-1">
+                              {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
+                                <li key={i}>{cleanAndClampText(line, 160)}</li>
+                              ))}
+                            </ul>
+                          )}
+                          {(selected.notes || selected.shareSummary) && (
+                            <p className="break-words text-[12px] leading-relaxed text-white/75">
+                              {cleanAndClampText(selected.notes || selected.shareSummary, 360)}
+                            </p>
+                          )}
+                          {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
+                            <p className="text-[11px] leading-relaxed text-white/70">
+                              <span className="font-semibold text-white/90">Robot fit: </span>
+                              {selected.robotTypesNeeded.join(" · ")}
+                            </p>
+                          )}
+                          {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
+                            <div className="space-y-1 rounded-lg border border-violet-400/15 bg-violet-400/5 p-2.5">
+                              {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
+                                <p key={i} className="text-[11px] leading-relaxed text-violet-100/85">
+                                  {cleanAndClampText(fact.claim || "", 200)}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          <LeadShareBar
+                            lead={{
+                              id: selected.id,
+                              company_name: selected.company,
+                              priority_tier: selected.priorityTier,
+                              share_summary: selected.shareSummary,
+                              share_blurb: selected.shareBlurb,
+                            }}
+                          />
+                        </div>
                       )}
                     </div>
-                    {loadingResearch && !selected.researchUpdates ? (
-                      <p className="text-[11px] leading-relaxed text-white/35">SCOUT is loading cited updates…</p>
-                    ) : (selected.researchUpdates || []).length > 0 ? (
-                      <div className="space-y-2">
-                        {(selected.researchUpdates || []).slice(0, 3).map((update) => (
-                          <div
-                            key={update.id}
-                            className="rounded-lg border p-2.5"
-                            style={{ borderColor: "rgba(255,176,0,0.18)", background: "rgba(255,176,0,0.06)" }}
-                          >
-                            <div className="mb-1 flex items-center justify-between gap-2">
-                              <p className="break-words text-[11px] font-semibold" style={{ color: "#FFB000" }}>
-                                {cleanAndClampText(update.title, 120) || "Research update"}
-                              </p>
-                              {typeof update.significance_score === "number" && (
-                                <span className="shrink-0 font-mono text-[10px]" style={{ color: "#FFB000" }}>
-                                  {Math.round(update.significance_score * 100)}
-                                </span>
-                              )}
-                            </div>
-                            <p className="break-words text-[11px] leading-relaxed" style={{ color: "#FFB000" }}>
-                              {cleanAndClampText(update.summary, 220)}
-                            </p>
-                            <div className="mt-1.5 flex items-center gap-2 text-[10px] text-white/25">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatResearchTime(update.detected_at) || "recent"}</span>
-                              {update.source_domain && (
-                                <>
-                                  <span>·</span>
-                                  <span className="break-all">{update.source_domain}</span>
-                                </>
-                              )}
-                            </div>
+                  )}
+
+                  {/* Latest research */}
+                  <div className="shrink-0 px-5 py-3 border-b border-white/6">
+                    <button
+                      type="button"
+                      onClick={() => setResearchOpen((open) => !open)}
+                      className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
+                      aria-expanded={researchOpen}
+                    >
+                      <span className={panelSectionLabel}>SCOUT research</span>
+                      {!researchOpen && (
+                        <span className="flex-1 min-w-0 text-[11px] text-white/55 truncate">
+                          {(selected.researchUpdates || []).length > 0
+                            ? `${(selected.researchUpdates || []).length} cited update(s)`
+                            : "Monitoring for new material"}
+                        </span>
+                      )}
+                      {researchOpen ? (
+                        <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                      )}
+                    </button>
+                    {researchOpen && (
+                      <div className="pt-3">
+                        {selected.lastResearchedAt && (
+                          <p className="mb-2 text-[10px] text-white/45">
+                            Last checked {formatResearchTime(selected.lastResearchedAt)}
+                          </p>
+                        )}
+                        {loadingResearch && !selected.researchUpdates ? (
+                          <p className="text-[11px] leading-relaxed text-white/55">SCOUT is loading cited updates…</p>
+                        ) : (selected.researchUpdates || []).length > 0 ? (
+                          <div className="space-y-2">
+                            {(selected.researchUpdates || []).slice(0, 3).map((update) => (
+                              <div
+                                key={update.id}
+                                className="rounded-lg border p-2.5"
+                                style={{ borderColor: "rgba(255,176,0,0.22)", background: "rgba(255,176,0,0.08)" }}
+                              >
+                                <div className="mb-1 flex items-center justify-between gap-2">
+                                  <p className="break-words text-[11px] font-semibold text-amber-200">
+                                    {cleanAndClampText(update.title, 120) || "Research update"}
+                                  </p>
+                                  {typeof update.significance_score === "number" && (
+                                    <span className="shrink-0 font-mono text-[10px] text-amber-200/90">
+                                      {Math.round(update.significance_score * 100)}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="break-words text-[11px] leading-relaxed text-white/75">
+                                  {cleanAndClampText(update.summary, 220)}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : (
+                          <p className="text-[11px] leading-relaxed text-white/55">
+                            SCOUT will add cited updates when fresh signals arrive for this account.
+                          </p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-[11px] leading-relaxed text-white/35">
-                        No material research updates yet. SCOUT will add cited changes as fresh signals arrive.
-                      </p>
                     )}
                   </div>
 
@@ -1825,51 +1875,55 @@ export default function Pipeline() {
                   </div>
                   )}
 
-                  {/* SCOUT read — user detail */}
+                  </div>
+
                   {!isAdmin && (
-                  <div className="shrink-0 px-5 py-3">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Zap className="h-3.5 w-3.5" style={{ color: "#03DAC5" }} />
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">SCOUT Read</p>
-                    </div>
-                    <div className="rounded-xl border border-teal-400/15 bg-teal-400/5 p-3">
-                      <p className="text-[11px] leading-relaxed text-white/55">
-                        {selected.score >= 85
-                          ? "SCOUT rates this as a high-confidence robot-ready opportunity based on timing, signal strength, and industry fit."
-                          : selected.score >= 65
-                            ? "SCOUT sees meaningful buying pressure here. Worth monitoring and qualifying before outreach."
-                            : "SCOUT flagged early signal activity. Track for additional corroboration before investing sales time."}
-                      </p>
-                      <p className="mt-2 text-[11px] leading-relaxed text-white/40">
-                        {marketInsightForIndustry(selected.industry)}
-                      </p>
-                    </div>
-                  </div>
-                  )}
-                  </div>
-
-                  {!isAdmin && !session?.access_token && (
                     <div
-                      className="shrink-0 px-5 py-4 border-t border-amber-500/25"
-                      style={{ background: "linear-gradient(180deg, rgba(255,176,0,0.08) 0%, rgba(255,176,0,0.02) 100%)" }}
+                      className="shrink-0 p-4 border-t border-teal-400/20"
+                      style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.1) 0%, rgba(13,5,32,0.4) 100%)" }}
                     >
-                      <p className="text-[11px] leading-relaxed text-white/50 mb-3">
-                        {BUYER_SIGNAL_EXPLANATION} Create a free account to save this lead and have SCOUT keep watching it.
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                        <p className="text-xs font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                          Put SCOUT on this lead
+                        </p>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-white/65 mb-3">
+                        {session?.access_token
+                          ? "Save to your workspace. SCOUT keeps tracking signals, timing, and research on this account."
+                          : "Free account — SCOUT watches this lead 24/7 and surfaces when buying intent strengthens."}
                       </p>
-                      <Link
-                        href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all hover:brightness-110"
-                        style={{ color: "#0d0520", background: "#FFB000", border: "1px solid #FFB000" }}
-                      >
-                        Sign up to save leads
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
+                      {session?.access_token ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveLead(selected)}
+                          disabled={advancingLeadId === selected.id}
+                          className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50 hover:brightness-110"
+                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                        >
+                          {advancingLeadId === selected.id
+                            ? <RefreshCw className="h-4 w-4 animate-spin" />
+                            : <Zap className="h-4 w-4" />
+                          }
+                          {advancingLeadId === selected.id ? "Saving…" : "Save to SCOUT workspace"}
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
+                          className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all hover:brightness-110"
+                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                        >
+                          Activate SCOUT — free
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
 
-                  {/* Action bar */}
+                  {/* Action bar — admin only */}
+                  {isAdmin && (
                   <div className="shrink-0 p-4 border-t border-white/8 flex items-center gap-2">
-                    {isAdmin ? (
+                    {
                       <>
                         {STAGES.indexOf(selected.stage) > 0 && (
                           <button
@@ -1908,21 +1962,9 @@ export default function Pipeline() {
                           </button>
                         )}
                       </>
-                    ) : (
-                      <button
-                        onClick={() => void handleSaveLead(selected)}
-                        disabled={advancingLeadId === selected.id}
-                        className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all disabled:opacity-50"
-                        style={{ background: "rgba(3,218,197,0.12)", color: "#99f6e4", border: "1px solid rgba(3,218,197,0.28)" }}
-                      >
-                        {advancingLeadId === selected.id
-                          ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                          : <Zap className="h-3.5 w-3.5" />
-                        }
-                        {advancingLeadId === selected.id ? "Saving..." : "Save to workspace"}
-                      </button>
-                    )}
+                    }
                   </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
