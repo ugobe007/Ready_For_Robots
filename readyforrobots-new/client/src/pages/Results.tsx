@@ -264,6 +264,53 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
   return prospect;
 }
 
+type ScoutProspectRow = {
+  id?: string;
+  company?: string;
+  industry?: string;
+  location?: string;
+  score?: number;
+  tier?: string;
+  signal?: string;
+  signalType?: string;
+  timing?: string;
+  action?: string;
+  relevance?: string;
+  match_score?: number;
+};
+
+function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
+  const score = Math.round(row.match_score ?? row.score ?? 70);
+  const company = row.company || `Matched Lead ${index + 1}`;
+  const signal = cleanScrapedText(row.signal || "") || "SCOUT matched this account to your URL profile.";
+  const signalType = titleize((row.signalType || "buying_signal").replace(/_/g, " "));
+  const prospect: Prospect = {
+    id: String(row.id ?? `${company}-${index}`),
+    company,
+    location: row.location || "Location unknown",
+    industry: row.industry || "Industry unknown",
+    employees: "—",
+    score,
+    signal,
+    signalType,
+    signalColor: scoreColor(score),
+    timing: row.timing || timingFromScore(score),
+    action: row.action || "Reach out with a personalized automation use case",
+    relevance: cleanScrapedText(row.relevance || "") || `${company} shows active buying signals in the ReadyForRobots pipeline.`,
+    scoreReason: [
+      `${score}/100 match score`,
+      row.tier ? `${row.tier} priority` : "",
+      "matched via SCOUT scan-for-results",
+    ].filter(Boolean).join(" · "),
+    draft: "",
+    stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
+    leadId: row.id && /^\d+$/.test(String(row.id)) ? Number(row.id) : undefined,
+    priorityTier: row.tier,
+  };
+  prospect.draft = draftOutreach(prospect);
+  return prospect;
+}
+
 const fallbackProspects: Prospect[] = [
   {
     id: "silver-peak",
@@ -370,11 +417,37 @@ export default function Results() {
 
     async function runScan() {
       try {
+        const host = (() => {
+          try {
+            return new URL(submittedUrl).hostname.replace(/^www\./, "");
+          } catch {
+            return "prospect";
+          }
+        })();
+        const scoutRes = await fetch(`${getApiBase()}/api/scout/scan-for-results`, liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company_url: submittedUrl,
+            fingerprint: scoutFingerprint(),
+            robot_name: host,
+            limit: 8,
+          }),
+        }));
+        if (scoutRes.ok) {
+          const scoutData = await scoutRes.json() as { prospects?: ScoutProspectRow[] };
+          const rows = Array.isArray(scoutData.prospects) ? scoutData.prospects : [];
+          const mapped = rows.map(mapScoutProspect);
+          if (mapped.length) {
+            if (!cancelled) setProspects(mapped);
+            return;
+          }
+        }
         const response = await fetch(`${getApiBase()}/api/robot-ready/submit`, liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            robot_name: new URL(submittedUrl).hostname.replace(/^www\./, ""),
+            robot_name: host,
             url: submittedUrl,
           }),
         }));

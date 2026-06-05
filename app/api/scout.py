@@ -3,10 +3,11 @@ Public SCOUT marketing chat API (anonymous fingerprint sessions).
 
 Parity target: rfr_cursor_package `scout.getSession`, `scout.updateSession`,
 `scout.saveMessage`, `scout.chat` — v1 implements session + chat + history.
-Skill endpoints (scanCompany, …) can follow.
+Skill endpoints: discover, develop-lead, scan-company, scan-for-results, run activation.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
@@ -24,6 +25,9 @@ from app.models.scout_chat import ScoutActivation, ScoutSession
 from app.models.user_profile import UserProfile
 from app.services import scout_chat_service as scsvc
 from app.services.scout_llm import scout_chat_completion
+from app.services import scout_discovery_agent as discovery
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -134,6 +138,45 @@ class ActivationControlBody(BaseModel):
     message_note: Optional[str] = Field(None, max_length=2000)
     timing_note: Optional[str] = Field(None, max_length=1000)
     cadence_note: Optional[str] = Field(None, max_length=1000)
+
+
+class DiscoverBody(BaseModel):
+    fingerprint: str = Field(..., min_length=8, max_length=80)
+    category: Optional[str] = Field(None, max_length=120)
+    robot_category: Optional[str] = Field(None, max_length=120)
+    robotCategory: Optional[str] = Field(None, max_length=120)
+    vertical: Optional[str] = Field(None, max_length=120)
+    territory: Optional[str] = Field(None, max_length=120)
+    limit: int = Field(8, ge=1, le=25)
+
+    def category_value(self) -> Optional[str]:
+        return self.category or self.robot_category or self.robotCategory
+
+
+class DevelopLeadBody(BaseModel):
+    fingerprint: Optional[str] = Field(None, min_length=8, max_length=80)
+    company_id: int = Field(..., ge=1)
+    refresh_inference: bool = True
+
+
+class ScanCompanyBody(BaseModel):
+    fingerprint: str = Field(..., min_length=8, max_length=80)
+    url: Optional[str] = Field(None, max_length=512)
+    company_name: Optional[str] = Field(None, max_length=240)
+    companyName: Optional[str] = Field(None, max_length=240)
+    robot_category: Optional[str] = Field(None, max_length=120)
+    robotCategory: Optional[str] = Field(None, max_length=120)
+
+
+class ScanForResultsBody(BaseModel):
+    company_url: str = Field(..., min_length=4, max_length=512)
+    companyUrl: Optional[str] = Field(None, max_length=512)
+    fingerprint: Optional[str] = Field(None, min_length=8, max_length=80)
+    robot_name: Optional[str] = Field(None, max_length=200)
+    limit: int = Field(8, ge=1, le=25)
+
+    def url_value(self) -> str:
+        return (self.company_url or self.companyUrl or "").strip()
 
 
 def _serialize_message(m: Any) -> Dict[str, Any]:
@@ -412,14 +455,18 @@ def scout_create_activation(
         material_filename=body.filename(),
         scope_choice=body.scope(),
         mode_choice=body.mode(),
-        status="awaiting_approval",
+        status="evaluating",
         lead_ids=[lead["id"] for lead in leads],
         leads_snapshot=leads,
         work_plan=_activation_work_plan(body),
         activity_log=[
             {
+                "type": "evaluating",
+                "message": f"SCOUT is developing {len(leads)} lead(s): inference, sales brief, and Cal drafts.",
+            },
+            {
                 "type": "review_queue_created",
-                "message": f"SCOUT review queue created for {len(leads)} lead(s). Leads were saved to CRM; no outbound action will run until approved.",
+                "message": f"Review queue created for {len(leads)} lead(s). Leads saved to CRM; sends require approval.",
             },
             {
                 "type": "crm_capture",
@@ -458,17 +505,185 @@ def scout_create_activation(
     )
     db.commit()
     db.refresh(activation)
+
+    discovery.schedule_activation_run(activation.id, user_id, team.id)
+
     return {
         "id": activation.id,
-        "status": activation.status,
+        "status": "evaluating",
         "leadCount": len(leads),
         "mode": activation.mode_choice,
         "scope": activation.scope_choice,
         "material": activation.material_choice,
         "workPlan": activation.work_plan,
         "activityLog": activation.activity_log,
-        "requiresAccount": activation.status == "preview",
+        "requiresAccount": False,
+        "automationStarted": True,
     }
+
+
+@router.post("/discover")
+def scout_discover_prospects(body: DiscoverBody, db: Session = Depends(get_db)):
+    """findProspects — ranked HOT/WARM companies from the live pipeline."""
+    sess, _ = scsvc.upsert_session(db, body.fingerprint)
+    if body.vertical:
+        scsvc.update_session_context(db, sess.id, vertical=body.vertical)
+    if body.territory:
+        scsvc.update_session_context(db, sess.id, territory=body.territory)
+    cat = body.category_value()
+    if cat:
+        scsvc.update_session_context(db, sess.id, robot_category=cat)
+
+    result = discovery.discover_prospects(
+        db,
+        robot_category=cat,
+        vertical=body.vertical,
+        territory=body.territory,
+        limit=body.limit,
+    )
+    scsvc.append_message(
+        db,
+        sess.id,
+        "scout",
+        result.get("summary") or f"Found {result.get('count', 0)} prospects.",
+        "findProspects",
+        result,
+    )
+    db.commit()
+    return result
+
+
+@router.post("/develop-lead")
+def scout_develop_lead(
+    body: DevelopLeadBody,
+    db: Session = Depends(get_db),
+    user: Optional[dict] = Depends(optional_user),
+):
+    """Develop one pipeline lead: inference, brief, Cal draft preview."""
+    if body.fingerprint:
+        scsvc.upsert_session(db, body.fingerprint)
+    try:
+        payload = discovery.develop_lead_brief(
+            db,
+            body.company_id,
+            refresh_inference=body.refresh_inference,
+            include_draft=True,
+        )
+    except Exception as exc:
+        logger.exception("develop-lead failed")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if not payload.get("found"):
+        raise HTTPException(status_code=404, detail=payload.get("error") or "Lead not found")
+    if body.fingerprint and user is None:
+        sess, _ = scsvc.upsert_session(db, body.fingerprint)
+        scsvc.append_message(
+            db,
+            sess.id,
+            "scout",
+            f"Developed lead brief for company {body.company_id}.",
+            "developLead",
+            payload,
+        )
+        db.commit()
+    return payload
+
+
+@router.post("/scan-company")
+def scout_scan_company(body: ScanCompanyBody, db: Session = Depends(get_db)):
+    """scanCompany — match URL or name to pipeline company + development brief."""
+    sess, _ = scsvc.upsert_session(db, body.fingerprint)
+    url = (body.url or "").strip() or None
+    name = body.company_name or body.companyName
+    cat = body.robot_category or body.robotCategory
+    if url:
+        scsvc.update_session_context(db, sess.id, company_url=url)
+
+    result = discovery.scan_company_in_pipeline(
+        db, url=url, company_name=name, robot_category=cat
+    )
+    msg = (
+        f"Scanned {url or name}: score {result.get('score')}/100"
+        if result.get("found")
+        else (result.get("message") or "Company not in pipeline.")
+    )
+    scsvc.append_message(db, sess.id, "scout", msg, "scanCompany", result)
+    db.commit()
+    return result
+
+
+@router.post("/scan-for-results")
+def scout_scan_for_results(body: ScanForResultsBody, db: Session = Depends(get_db)):
+    """Results page: robot-ready match + SCOUT timing/relevance on each prospect."""
+    if body.fingerprint:
+        sess, _ = scsvc.upsert_session(db, body.fingerprint)
+        scsvc.update_session_context(db, sess.id, company_url=body.url_value())
+
+    try:
+        result = discovery.scan_for_results(
+            db,
+            company_url=body.url_value(),
+            robot_name=body.robot_name,
+            limit=body.limit,
+        )
+    except Exception as exc:
+        logger.exception("scan-for-results failed")
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if body.fingerprint:
+        scsvc.append_message(
+            db,
+            sess.id,
+            "scout",
+            f"Matched {len(result.get('prospects') or [])} prospects for {body.url_value()}.",
+            "scanForResults",
+            {"prospect_count": len(result.get("prospects") or [])},
+        )
+        db.commit()
+    return result
+
+
+@router.get("/discovery-digest")
+def scout_discovery_digest(
+    fingerprint: str = Query(..., min_length=8, max_length=80),
+    robot_category: Optional[str] = Query(None),
+    robotCategory: Optional[str] = Query(None),
+    vertical: Optional[str] = Query(None),
+    territory: Optional[str] = Query(None),
+    limit: int = Query(5, ge=1, le=12),
+    db: Session = Depends(get_db),
+):
+    """Proactive digest of top matching pipeline prospects (real data)."""
+    sess, _ = scsvc.upsert_session(db, fingerprint)
+    cat = robot_category or robotCategory or sess.robot_category
+    vert = vertical or sess.vertical
+    terr = territory or sess.territory
+    return discovery.discovery_digest(
+        db,
+        robot_category=cat,
+        vertical=vert,
+        territory=terr,
+        limit=limit,
+    )
+
+
+@router.post("/activations/{activation_id}/run")
+def scout_run_activation(
+    activation_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """Re-run discovery + development for an existing activation queue."""
+    try:
+        user_id = UUID(str(user["uid"]))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Sign in required") from None
+    activation = _activation_for_user(db, activation_id, user_id)
+    team = _ensure_default_team(db, user_id, user.get("email") or "")
+    result = discovery.execute_activation(
+        db, activation, team_id=team.id, owner_user_id=user_id
+    )
+    db.refresh(activation)
+    return {"activation": _serialize_activation(activation), "run": result}
 
 
 @router.patch("/activations/{activation_id}/control")

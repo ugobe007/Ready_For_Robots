@@ -320,6 +320,7 @@ export default function Pipeline() {
   const [scoutBusy, setScoutBusy] = useState<"draft" | "send" | null>(null);
   const [scoutConfirm, setScoutConfirm] = useState<"draft" | "send" | null>(null);
   const [sendingLeadId, setSendingLeadId] = useState<number | null>(null);
+  const [developingLeadId, setDevelopingLeadId] = useState<number | null>(null);
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -769,6 +770,64 @@ export default function Pipeline() {
       toast.error(e instanceof Error ? e.message : "Send failed");
     } finally {
       setSendingLeadId(null);
+    }
+  };
+
+  const developLeadWithScout = async (deal: Deal) => {
+    setDevelopingLeadId(deal.id);
+    const base = getApiBase();
+    try {
+      const response = await fetch(`${base}/api/scout/develop-lead`, liveFetchInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fingerprint: scoutFingerprint(),
+          company_id: deal.id,
+          refresh_inference: true,
+        }),
+      }));
+      if (!response.ok) throw new Error(await response.text());
+      const data = await response.json() as {
+        brief?: {
+          draft_subject?: string;
+          draft_body?: string;
+          share_summary?: string;
+          sales_angle?: string;
+          timing_label?: string;
+          talk_track?: string[];
+          robot_fit?: string[];
+        };
+      };
+      const brief = data.brief;
+      if (!brief) throw new Error("No development brief returned");
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === deal.id
+            ? {
+                ...d,
+                outreachSubject: brief.draft_subject || d.outreachSubject,
+                outreachBody: brief.draft_body || d.outreachBody,
+                shareSummary: brief.share_summary || d.shareSummary,
+                stage: brief.draft_body ? ("Draft Ready" as Stage) : d.stage,
+                updatedAt: "just now",
+                leadHighlights: {
+                  ...d.leadHighlights,
+                  specific_problem: brief.sales_angle || d.leadHighlights?.specific_problem,
+                  why_lead: brief.talk_track || d.leadHighlights?.why_lead,
+                },
+                projectTiming: brief.timing_label
+                  ? { display_phrase: brief.timing_label, label: brief.timing_label, source: "scout" }
+                  : d.projectTiming,
+                robotTypesNeeded: brief.robot_fit?.length ? brief.robot_fit : d.robotTypesNeeded,
+              }
+            : d,
+        ),
+      );
+      toast.success("SCOUT developed this lead — inference, brief, and Cal draft are ready.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "SCOUT could not develop this lead");
+    } finally {
+      setDevelopingLeadId(null);
     }
   };
 
@@ -1517,6 +1576,23 @@ export default function Pipeline() {
                             ))}
                           </ul>
                         )}
+                        {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
+                          <div className="mb-1.5 space-y-1">
+                            {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
+                              <p key={i} className="text-[10px] leading-relaxed text-violet-200/70">
+                                {cleanAndClampText(fact.claim || "", 200)}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {((selected.leadHighlights?.agent_enrichment?.procurement_clues || []).length > 0
+                          || (selected.leadHighlights?.agent_enrichment?.timing_clues || []).length > 0) && (
+                          <p className="text-[10px] leading-relaxed text-white/30">
+                            {[...(selected.leadHighlights?.agent_enrichment?.procurement_clues || []).slice(0, 2),
+                              ...(selected.leadHighlights?.agent_enrichment?.timing_clues || []).slice(0, 2)]
+                              .join(" · ")}
+                          </p>
+                        )}
                         <p className="break-words text-[11px] leading-relaxed text-white/45">{selected.notes || selected.shareSummary}</p>
                         {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
                           <p className="mt-2 text-[10px] leading-relaxed text-white/35">
@@ -1649,9 +1725,36 @@ export default function Pipeline() {
                         </pre>
                       </div>
                     ) : (
-                      <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-[11px] leading-relaxed text-white/35">
-                        No Cal draft yet. Use the Cal action bar above to draft outreach for this pipeline slice.
-                      </p>
+                      <div className="rounded-lg border border-dashed border-white/10 px-3 py-4">
+                        <p className="text-[11px] leading-relaxed text-white/35 mb-3">
+                          No Cal draft yet. Run SCOUT on this lead to refresh inference and generate outreach.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={developingLeadId === selected.id}
+                          onClick={() => void developLeadWithScout(selected)}
+                          className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
+                          style={{ background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)", color: "#6ee7d7" }}
+                        >
+                          {developingLeadId === selected.id
+                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                            : <Zap className="h-3.5 w-3.5" />
+                          }
+                          {developingLeadId === selected.id ? "SCOUT developing…" : "Develop lead with SCOUT"}
+                        </button>
+                      </div>
+                    )}
+
+                    {selected.outreachBody && isAdmin && (
+                      <button
+                        type="button"
+                        disabled={developingLeadId === selected.id}
+                        onClick={() => void developLeadWithScout(selected)}
+                        className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg py-2 text-[10px] font-semibold border transition-all disabled:opacity-50"
+                        style={{ borderColor: "rgba(3,218,197,0.2)", color: "rgba(3,218,197,0.85)" }}
+                      >
+                        {developingLeadId === selected.id ? "Refreshing…" : "Re-run SCOUT development"}
+                      </button>
                     )}
 
                     {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && (
