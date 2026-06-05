@@ -9,7 +9,7 @@ import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
   Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
-  Zap, RefreshCw, ExternalLink
+  Zap, RefreshCw
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
@@ -297,7 +297,8 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 25;
 const PIPELINE_LIMIT_PAID = 50;
-const HUBSPOT_PRIVATE_APP_DOCS = "https://developers.hubspot.com/docs/api/private-apps";
+const HUBSPOT_CONNECT_PATH = "/integrations/hubspot";
+const HUBSPOT_SIGNUP_PATH = `/signup?intent=hubspot&next=${encodeURIComponent("/integrations/hubspot")}`;
 
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
@@ -361,7 +362,7 @@ export default function Pipeline() {
   const [developingLeadId, setDevelopingLeadId] = useState<number | null>(null);
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
   const [hubspotIntegration, setHubspotIntegration] = useState<{
@@ -2006,33 +2007,20 @@ export default function Pipeline() {
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       )}
-                      {session?.access_token ? (
-                        <Link
-                          href={hubspotIntegration?.entitled === false ? "/pricing" : "/integrations"}
-                          className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
-                          style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
-                        >
-                          {hubspotIntegration?.connected ? (
-                            <>
-                              <CheckCheck className="h-3 w-3" />
-                              HubSpot connected
-                            </>
-                          ) : (
-                            "Connect HubSpot API"
-                          )}
-                        </Link>
-                      ) : (
-                        <a
-                          href={HUBSPOT_PRIVATE_APP_DOCS}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
-                          style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
-                        >
-                          HubSpot API sync
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
+                      <Link
+                        href={session?.access_token ? HUBSPOT_CONNECT_PATH : HUBSPOT_SIGNUP_PATH}
+                        className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
+                        style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
+                      >
+                        {hubspotIntegration?.connected ? (
+                          <>
+                            <CheckCheck className="h-3 w-3" />
+                            HubSpot connected
+                          </>
+                        ) : (
+                          "HubSpot API sync"
+                        )}
+                      </Link>
                     </div>
                   )}
 

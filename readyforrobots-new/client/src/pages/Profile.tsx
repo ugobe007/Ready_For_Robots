@@ -310,16 +310,24 @@ export default function Profile() {
           </label>
         </div>
         <div className="rounded-xl border border-white/10 mb-4 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <p className="text-[10px] uppercase tracking-widest text-white/30">Integrations</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/30">HubSpot sync</p>
           <p className="mt-1 text-xs leading-relaxed text-white/45">
-            Connect HubSpot and GitHub with one token — same flow as Vercel or GitHub app installs.
+            Choose auto-sync for all saved leads or pick specific accounts to push into HubSpot via SCOUT.
           </p>
-          <Link
-            href="/integrations"
-            className="mt-3 inline-flex rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200"
-          >
-            Open integrations
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/integrations/hubspot"
+              className="inline-flex rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100"
+            >
+              HubSpot connection
+            </Link>
+            <Link
+              href="/integrations"
+              className="inline-flex rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200"
+            >
+              All integrations
+            </Link>
+          </div>
         </div>
         <p className="text-xs text-white/35 mb-4">
           CRM outreach is on{" "}

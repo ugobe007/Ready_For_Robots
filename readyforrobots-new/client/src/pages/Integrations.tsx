@@ -247,6 +247,15 @@ export default function Integrations() {
                         <Unplug className="h-3.5 w-3.5" />
                         {isBusy ? "Disconnecting…" : "Disconnect"}
                       </button>
+                    ) : integration.provider === "hubspot" ? (
+                      <Link
+                        href="/integrations/hubspot"
+                        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold"
+                        style={{ color: "#160b2c", background: "#FFB000" }}
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                        Connect {integration.name}
+                      </Link>
                     ) : integration.entitled ? (
                       <button
                         type="button"

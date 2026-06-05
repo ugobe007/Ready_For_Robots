@@ -33,10 +33,11 @@ class ConnectIntegrationIn(BaseModel):
 
 
 def _hubspot_entitled(user: dict) -> tuple[bool, Optional[str]]:
+    """HubSpot OAuth connect is available to all signed-in workspaces; bulk sync is Pro+."""
     plan = resolve_plan_tier(user)
     if plan == PLAN_PAID:
         return True, None
-    return False, "HubSpot sync is included on Pro and Premium. Upgrade to connect your CRM."
+    return True, "Connect free — auto-sync all saved leads requires Pro or Premium."
 
 
 @router.get("")

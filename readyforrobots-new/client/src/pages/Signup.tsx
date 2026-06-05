@@ -1,20 +1,32 @@
 /**
  * Sign up — account creation entry point using the existing Supabase auth flows.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
+
+const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
 export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
 
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  const hubspotIntent = params.get("intent") === "hubspot";
+
   const nextPath = () => {
     if (typeof window === "undefined") return "/profile";
-    const next = new URLSearchParams(window.location.search).get("next");
+    const next = params.get("next");
     return next && next.startsWith("/") ? next : "/profile";
+  };
+
+  const persistFullName = () => {
+    if (typeof window === "undefined" || !fullName.trim()) return;
+    window.localStorage.setItem(SIGNUP_NAME_KEY, fullName.trim());
   };
 
   useEffect(() => {
@@ -39,6 +51,12 @@ export default function Signup() {
       setErrMsg("Configure VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY.");
       return;
     }
+    if (hubspotIntent && !fullName.trim()) {
+      setStatus("error");
+      setErrMsg("Enter your full name so SCOUT can authenticate your HubSpot workspace.");
+      return;
+    }
+    persistFullName();
     setErrMsg("");
     const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
@@ -51,6 +69,12 @@ export default function Signup() {
   async function magicLink(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !supabase) return;
+    if (hubspotIntent && !fullName.trim()) {
+      setStatus("error");
+      setErrMsg("Enter your full name so SCOUT can authenticate your HubSpot workspace.");
+      return;
+    }
+    persistFullName();
     setStatus("sending");
     setErrMsg("");
     const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
@@ -66,6 +90,8 @@ export default function Signup() {
     }
   }
 
+  const loginHref = `/login${search}`;
+
   return (
     <div className="min-h-screen px-4 py-16" style={{ background: "radial-gradient(circle at 50% 0%, rgba(255,176,0,0.12), transparent 32%), #0d0520" }}>
       <div className="mx-auto grid min-h-[calc(100vh-8rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
@@ -77,26 +103,18 @@ export default function Signup() {
             </span>
           </Link>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: "#FFB000" }}>
-            Create your SCOUT workspace
+            {hubspotIntent ? "HubSpot + SCOUT workspace" : "Create your SCOUT workspace"}
           </p>
           <h1 className="max-w-xl text-4xl font-black leading-tight text-white md:text-5xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-            Turn robot demand signals into a working pipeline.
+            {hubspotIntent
+              ? "Sign up, then SCOUT links HubSpot automatically."
+              : "Turn robot demand signals into a working pipeline."}
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/48">
-            Save matched leads, review signal context, and let SCOUT prioritize the workflow from signal to outreach.
+            {hubspotIntent
+              ? "Use your work email and full name. After signup, SCOUT provisions the HubSpot API connection and MCP bridge — no manual app setup."
+              : "Save matched leads, review signal context, and let SCOUT prioritize the workflow from signal to outreach."}
           </p>
-          <div className="mt-7 grid max-w-lg grid-cols-3 gap-2">
-            {[
-              ["4,427", "qualified leads"],
-              ["629", "hot accounts"],
-              ["7,515", "signals"],
-            ].map(([value, label]) => (
-              <div key={label} className="rounded-2xl border border-white/8 p-3" style={{ background: "rgba(255,255,255,0.035)" }}>
-                <div className="font-mono text-lg font-black" style={{ color: "#10b981" }}>{value}</div>
-                <div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/26">{label}</div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {status === "sent" ? (
@@ -111,9 +129,23 @@ export default function Signup() {
           </div>
         ) : (
           <div className="rounded-3xl border border-white/10 p-6 shadow-2xl shadow-black/40" style={{ background: "rgba(255,255,255,0.04)" }}>
-            <h2 className="text-xl font-bold text-white">Start free</h2>
-            <p className="mt-2 text-sm text-white/42">Create an account with Google, GitHub, or a magic link.</p>
-            <div className="mt-6 flex flex-col gap-2">
+            <h2 className="text-xl font-bold text-white">{hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}</h2>
+            <p className="mt-2 text-sm text-white/42">
+              {hubspotIntent
+                ? "Email + full name required. Next step: one-click HubSpot authorize."
+                : "Create an account with Google, GitHub, or a magic link."}
+            </p>
+            {hubspotIntent && (
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Full name"
+                className="mt-4 w-full rounded-xl border border-white/15 bg-transparent px-3 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-amber-400/60"
+              />
+            )}
+            <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
               <button
                 type="button"
                 onClick={() => void oauth("google")}
@@ -155,12 +187,12 @@ export default function Signup() {
                 className="w-full rounded-xl px-4 py-3 text-sm font-black text-black transition-all hover:-translate-y-0.5 disabled:opacity-40"
                 style={{ background: "#FFB000" }}
               >
-                {status === "sending" ? "Sending..." : "Send signup link"}
+                {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Send signup link"}
               </button>
             </form>
             <p className="mt-5 text-center text-xs text-white/35">
               Already have an account?{" "}
-              <Link href="/login" className="font-semibold" style={{ color: "#03DAC5" }}>
+              <Link href={loginHref} className="font-semibold" style={{ color: "#03DAC5" }}>
                 Sign in
               </Link>
             </p>
