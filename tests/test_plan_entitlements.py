@@ -40,16 +40,25 @@ def test_apply_pipeline_entitlements_trims_and_tags():
     assert "share_summary" in out["leads"][0]
 
 
-def test_sanitize_anonymous_strips_depth():
+def test_sanitize_anonymous_keeps_scout_teaser():
     lead = {
         "company_name": "Acme",
-        "share_summary": "long story",
-        "signals": [{"display_text": "x" * 200, "source_url": "https://example.com"}],
+        "share_summary": "x" * 300,
+        "lead_highlights": {
+            "specific_problem": "y" * 300,
+            "why_lead": ["reason one", "reason two", "reason three"],
+            "robot_categories": ["AMR", "cobot", "cleaning"],
+        },
+        "robot_types_needed": ["AMR", "arm", "drone"],
+        "signals": [{"display_text": "z" * 250, "source_url": "https://example.com"}],
     }
     row = sanitize_lead_for_plan(lead, PLAN_ANONYMOUS)
-    assert "share_summary" not in row
+    assert "share_summary" in row
+    assert len(row["share_summary"]) <= 240
+    assert row["lead_highlights"]["why_lead"] == ["reason one", "reason two"]
+    assert row["robot_types_needed"] == ["AMR", "arm", "drone"]
     assert "source_url" not in row["signals"][0]
-    assert len(row["signals"][0]["display_text"]) <= 140
+    assert len(row["signals"][0]["display_text"]) <= 200
 
 
 def test_saved_limit_free():

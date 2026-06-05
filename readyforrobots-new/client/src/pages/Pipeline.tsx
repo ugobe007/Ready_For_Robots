@@ -9,7 +9,7 @@ import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
   Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
-  Zap, RefreshCw
+  Zap, RefreshCw, ExternalLink
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
@@ -297,6 +297,22 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 25;
 const PIPELINE_LIMIT_PAID = 50;
+const HUBSPOT_PRIVATE_APP_DOCS = "https://developers.hubspot.com/docs/api/private-apps";
+
+function scoutOpportunitySummary(deal: Deal) {
+  const problem = deal.leadHighlights?.specific_problem;
+  const summary =
+    cleanAndClampText(deal.shareSummary || deal.notes || "", 320)
+    || cleanAndClampText(problem || "", 320)
+    || cleanAndClampText(deal.signal, 220);
+  const whyLead = (deal.leadHighlights?.why_lead || []).slice(0, 2);
+  const robotFit = [
+    ...(deal.robotTypesNeeded || []),
+    ...((deal.leadHighlights?.robot_categories as string[] | undefined) || []),
+  ].filter(Boolean);
+  const uniqueRobots = [...new Set(robotFit)].slice(0, 3);
+  return { summary, whyLead, robotFit: uniqueRobots };
+}
 
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
@@ -1688,9 +1704,40 @@ export default function Pipeline() {
                           </p>
                         </div>
                         <p className="text-[12px] leading-relaxed text-white/75">{verdict.detail}</p>
-                        {showFullPanel && (
-                          <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">
-                            {marketInsightForIndustry(selected.industry)}
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">
+                          {marketInsightForIndustry(selected.industry)}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {!isAdmin && (() => {
+                    const opportunity = scoutOpportunitySummary(selected);
+                    if (!opportunity.summary && opportunity.whyLead.length === 0 && opportunity.robotFit.length === 0) {
+                      return null;
+                    }
+                    return (
+                      <div className="shrink-0 mx-5 mb-3 rounded-xl border border-violet-400/20 bg-violet-400/[0.05] px-3.5 py-3">
+                        <p className={`${panelSectionLabel} mb-2`}>SCOUT opportunity summary</p>
+                        {opportunity.summary && (
+                          <p className="text-[12px] leading-relaxed text-white/82">{opportunity.summary}</p>
+                        )}
+                        {opportunity.whyLead.length > 0 && (
+                          <ul className="mt-2 list-disc space-y-1 pl-4 text-[11px] leading-relaxed text-white/68">
+                            {opportunity.whyLead.map((line, index) => (
+                              <li key={index}>{line}</li>
+                            ))}
+                          </ul>
+                        )}
+                        {opportunity.robotFit.length > 0 && (
+                          <p className="mt-2 text-[11px] leading-relaxed text-white/62">
+                            <span className="font-semibold text-white/82">Robot fit: </span>
+                            {opportunity.robotFit.join(" · ")}
+                          </p>
+                        )}
+                        {panelPlan === "anonymous" && (
+                          <p className="mt-2.5 text-[10px] leading-relaxed text-violet-200/75">
+                            Preview only — sign up free to save this lead, unlock cited SCOUT research, and connect HubSpot via API.
                           </p>
                         )}
                       </div>
@@ -1704,14 +1751,10 @@ export default function Pipeline() {
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="break-words text-[12px] leading-relaxed text-white/80">
-                          {panelPlan === "anonymous"
-                            ? cleanAndClampText(selected.signal, 120)
-                            : selected.signal}
-                        </p>
+                        <p className="break-words text-[12px] leading-relaxed text-white/80">{selected.signal}</p>
                       </div>
                     </div>
-                    {(showStandardPanel || showFullPanel) && (selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
+                    {(selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
                       <div className="mt-2.5 flex items-center gap-2 text-[11px] text-white/60">
                         <Clock className="h-3 w-3 shrink-0 text-violet-300/90" />
                         <span>
@@ -1728,7 +1771,7 @@ export default function Pipeline() {
                   </div>
 
                   <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-                  {(showStandardPanel || showFullPanel) && (selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
+                  {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                     <div className="shrink-0 px-5 py-3 border-b border-white/6">
                       <button
                         type="button"
@@ -1754,24 +1797,32 @@ export default function Pipeline() {
                           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
                         )}
                       </button>
-                      {intelligenceOpen && (
+                      {(intelligenceOpen || panelPlan === "anonymous") && (
                         <div className="pt-3 space-y-2.5">
                           {selected.leadHighlights?.specific_problem && (
                             <p className="break-words text-[12px] leading-relaxed text-white/80">
                               <span className="font-semibold text-white">Problem: </span>
-                              {cleanAndClampText(selected.leadHighlights.specific_problem, 280)}
+                              {cleanAndClampText(
+                                selected.leadHighlights.specific_problem,
+                                panelPlan === "anonymous" ? 220 : 280,
+                              )}
                             </p>
                           )}
                           {(selected.leadHighlights?.why_lead || []).length > 0 && (
                             <ul className="list-disc pl-4 text-[11px] leading-relaxed text-white/70 space-y-1">
-                              {(selected.leadHighlights?.why_lead || []).slice(0, 3).map((line, i) => (
-                                <li key={i}>{cleanAndClampText(line, 160)}</li>
-                              ))}
+                              {(selected.leadHighlights?.why_lead || [])
+                                .slice(0, panelPlan === "anonymous" ? 2 : 3)
+                                .map((line, i) => (
+                                  <li key={i}>{cleanAndClampText(line, panelPlan === "anonymous" ? 140 : 160)}</li>
+                                ))}
                             </ul>
                           )}
                           {(selected.notes || selected.shareSummary) && (
                             <p className="break-words text-[12px] leading-relaxed text-white/75">
-                              {cleanAndClampText(selected.notes || selected.shareSummary, 360)}
+                              {cleanAndClampText(
+                                selected.notes || selected.shareSummary,
+                                panelPlan === "anonymous" ? 240 : 360,
+                              )}
                             </p>
                           )}
                           {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
@@ -1780,7 +1831,7 @@ export default function Pipeline() {
                               {selected.robotTypesNeeded.join(" · ")}
                             </p>
                           )}
-                          {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
+                          {showFullPanel && (selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
                             <div className="space-y-1 rounded-lg border border-violet-400/15 bg-violet-400/5 p-2.5">
                               {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
                                 <p key={i} className="text-[11px] leading-relaxed text-violet-100/85">
@@ -1789,15 +1840,17 @@ export default function Pipeline() {
                               ))}
                             </div>
                           )}
-                          <LeadShareBar
-                            lead={{
-                              id: selected.id,
-                              company_name: selected.company,
-                              priority_tier: selected.priorityTier,
-                              share_summary: selected.shareSummary,
-                              share_blurb: selected.shareBlurb,
-                            }}
-                          />
+                          {panelPlan !== "anonymous" && (
+                            <LeadShareBar
+                              lead={{
+                                id: selected.id,
+                                company_name: selected.company,
+                                priority_tier: selected.priorityTier,
+                                share_summary: selected.shareSummary,
+                                share_blurb: selected.shareBlurb,
+                              }}
+                            />
+                          )}
                         </div>
                       )}
                     </div>
@@ -2020,34 +2073,46 @@ export default function Pipeline() {
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       )}
-                      <Link
-                        href={
-                          session?.access_token
-                            ? hubspotIntegration?.entitled === false
-                              ? "/pricing"
-                              : "/integrations"
-                            : `/signup?next=${encodeURIComponent("/integrations")}`
-                        }
-                        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
-                        style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
-                      >
-                        {hubspotIntegration?.connected ? (
-                          <>
-                            <CheckCheck className="h-3 w-3" />
-                            HubSpot connected
-                          </>
-                        ) : (
-                          "HubSpot sync"
-                        )}
-                      </Link>
-                      <p className="mt-2 text-center text-[10px] leading-relaxed text-white/40">
+                      {session?.access_token ? (
+                        <Link
+                          href={hubspotIntegration?.entitled === false ? "/pricing" : "/integrations"}
+                          className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
+                          style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
+                        >
+                          {hubspotIntegration?.connected ? (
+                            <>
+                              <CheckCheck className="h-3 w-3" />
+                              HubSpot connected
+                            </>
+                          ) : (
+                            "Connect HubSpot API"
+                          )}
+                        </Link>
+                      ) : (
+                        <a
+                          href={HUBSPOT_PRIVATE_APP_DOCS}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
+                          style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
+                        >
+                          HubSpot API sync
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      <ol className="mt-2.5 space-y-1 text-[10px] leading-relaxed text-white/42">
+                        <li>1. Activate SCOUT on this lead</li>
+                        <li>2. Link your HubSpot account with a private app token (API)</li>
+                        <li>3. SCOUT pushes score, signal, and brief into your existing CRM</li>
+                      </ol>
+                      <p className="mt-2 text-center text-[10px] leading-relaxed text-white/35">
                         {session?.access_token
                           ? hubspotIntegration?.connected
-                            ? "SCOUT-qualified leads can flow into your existing HubSpot CRM."
+                            ? "Qualified leads sync into the HubSpot workspace your team already uses."
                             : hubspotIntegration?.entitled === false
-                              ? "Upgrade to push SCOUT leads into the HubSpot account your team already lives in."
-                              : "Connect HubSpot once — keep working in the CRM your sales team already uses."
-                          : "Sign up, activate SCOUT, then sync qualified leads into your HubSpot account."}
+                              ? "Pro and Premium include HubSpot outbound sync via API."
+                              : "Connect once on Integrations — no manual copy-paste into HubSpot."
+                          : "After SCOUT is active, connect HubSpot via API so leads land in your existing account."}
                       </p>
                     </div>
                   )}

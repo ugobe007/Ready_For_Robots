@@ -99,16 +99,36 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
         row.pop("latest_material_update", None)
         return row
 
-    # anonymous teaser
+    # Anonymous preview — enough SCOUT context to excite signup without full workspace depth.
+    row["share_summary"] = _truncate(row.get("share_summary"), 240)
+    row["share_blurb"] = _truncate(row.get("share_blurb"), 160)
+    highlights = row.get("lead_highlights")
+    if isinstance(highlights, dict):
+        teaser: dict[str, Any] = {}
+        if highlights.get("specific_problem"):
+            teaser["specific_problem"] = _truncate(highlights.get("specific_problem"), 220)
+        why = highlights.get("why_lead")
+        if isinstance(why, list):
+            teaser["why_lead"] = [_truncate(str(item), 140) for item in why[:2] if item]
+        robots = highlights.get("robot_categories") or highlights.get("application_areas")
+        if isinstance(robots, list):
+            teaser["robot_categories"] = [str(item) for item in robots[:3] if item]
+        if teaser:
+            row["lead_highlights"] = teaser
+        else:
+            row.pop("lead_highlights", None)
+    else:
+        row.pop("lead_highlights", None)
+
+    robots_needed = row.get("robot_types_needed")
+    if isinstance(robots_needed, list):
+        row["robot_types_needed"] = [str(item) for item in robots_needed[:3] if item]
+
     for key in (
-        "share_summary",
-        "share_blurb",
-        "lead_highlights",
         "lead_inference",
         "research_updates",
         "last_researched_at",
         "latest_material_update",
-        "robot_types_needed",
         "automation_profile",
         "gtm",
         "procurement_hints",
@@ -124,8 +144,8 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
     signals = row.get("signals")
     if isinstance(signals, list) and signals:
         first = deepcopy(signals[0])
-        first["display_text"] = _truncate(first.get("display_text"), 140)
-        first["raw_text"] = _truncate(first.get("raw_text"), 140)
+        first["display_text"] = _truncate(first.get("display_text"), 200)
+        first["raw_text"] = _truncate(first.get("raw_text"), 200)
         first.pop("source_url", None)
         row["signals"] = [first]
     row["signal_count"] = min(int(row.get("signal_count") or 1), 1)
