@@ -21,6 +21,7 @@ import CalendarPage from "./pages/Calendar";
 import SalesConsole from "./pages/SalesConsole";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
+import Integrations from "./pages/Integrations";
 import Benchmark from "./pages/Benchmark";
 import Robots from "./pages/Robots";
 import FindRobots from "./pages/FindRobots";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/sales-console" component={SalesConsole} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
+      <Route path="/integrations" component={Integrations} />
       <Route path="/admin/prospects" component={Pipeline} />
       <Route path="/admin" component={Admin} />
       <Route path="/readyforrobots/admin/prospects" component={Pipeline} />

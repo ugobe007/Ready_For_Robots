@@ -53,6 +53,7 @@ const moreNavLinks = [
   { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
   { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
   { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, and quotes" },
+  { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot, GitHub, and CRM sync" },
   { label: "Pricing", href: "/pricing", icon: BriefcaseBusiness, desc: "Plans and billing" },
 ];
 
@@ -108,6 +109,7 @@ export default function Header() {
     { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
     { label: "Calendar", href: "/calendar", icon: BriefcaseBusiness, desc: "Schedule meetings and send invites" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "Manage RFPs and vendor docs" },
+    { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "Connect HubSpot and GitHub" },
   ];
 
   return (

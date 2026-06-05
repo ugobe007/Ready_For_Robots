@@ -798,6 +798,14 @@ def create_account(
             db.refresh(existing)
             row = existing
         else:
+            from app.services.plan_entitlements import (
+                assert_can_save_lead,
+                count_workspace_leads,
+                resolve_plan_tier,
+            )
+
+            plan = resolve_plan_tier(user)
+            assert_can_save_lead(plan, count_workspace_leads(db, uid))
             row = CrmAccount(
             team_id=tid,
             company_id=body.company_id,

@@ -287,6 +287,20 @@ const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
 
 const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-violet-200/90";
 
+type PipelineEntitlements = {
+  plan: "anonymous" | "free" | "paid";
+  pipeline_limit: number;
+  visible_count: number;
+  saved_limit: number | null;
+  upgrade_url: string;
+};
+
+const PIPELINE_LIMIT_FREE = 25;
+const PIPELINE_LIMIT_PAID = 50;
+
+const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
+  isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
+
 function PipelineMetric({
   label,
   value,
@@ -348,13 +362,53 @@ export default function Pipeline() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [researchOpen, setResearchOpen] = useState(false);
+  const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
+  const [hubspotIntegration, setHubspotIntegration] = useState<{
+    connected: boolean;
+    entitled: boolean;
+  } | null>(null);
+
+  const panelPlan = panelPlanFor(isAdmin, entitlements);
+  const showFullPanel = panelPlan === "paid";
+  const showStandardPanel = panelPlan === "free";
 
   useEffect(() => {
     setIntelligenceOpen(false);
     setResearchOpen(false);
   }, [selectedId]);
 
-  // Public pipeline data — once on mount (not tied to auth, avoids double 30–60s load).
+  useEffect(() => {
+    if (!session?.access_token) {
+      setHubspotIntegration(null);
+      return;
+    }
+    const token = session.access_token;
+    let cancelled = false;
+    void fetch(
+      `${getApiBase()}/api/integrations`,
+      liveFetchInit({ headers: { ...authHeader(token) } }),
+    )
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const payload = (await res.json()) as {
+          integrations?: Array<{ provider: string; connected?: boolean; entitled?: boolean }>;
+        };
+        const hubspot = (payload.integrations || []).find((row) => row.provider === "hubspot");
+        if (hubspot) {
+          setHubspotIntegration({
+            connected: Boolean(hubspot.connected),
+            entitled: hubspot.entitled !== false,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setHubspotIntegration(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token]);
+
   useEffect(() => {
     const base = getApiBase();
     let cancelled = false;
@@ -364,8 +418,9 @@ export default function Pipeline() {
     setLoadErr("");
 
     const PIPELINE_TIMEOUT = 15_000;
+    const headers = session?.access_token ? authHeader(session.access_token) : undefined;
 
-    void fetchWithTimeout(`${base}/api/leads/pipeline`, {}, PIPELINE_TIMEOUT)
+    void fetchWithTimeout(`${base}/api/leads/pipeline`, liveFetchInit({ headers }), PIPELINE_TIMEOUT)
       .then(async (res) => {
         if (cancelled) return;
         try {
@@ -373,8 +428,10 @@ export default function Pipeline() {
           const payload = (await res.json()) as {
             summary?: LeadSummary;
             leads?: ApiLead[];
+            entitlements?: PipelineEntitlements;
           };
           const rows = Array.isArray(payload.leads) ? payload.leads : [];
+          if (payload.entitlements) setEntitlements(payload.entitlements);
           if (payload.summary && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)) {
             setSummary(payload.summary);
           }
@@ -388,7 +445,7 @@ export default function Pipeline() {
               }
             }
             setDeals(mapped);
-            setSelectedId(mapped[0]?.id ?? null);
+            setSelectedId((prev) => (prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null));
             setMarketSnippet(marketSnippetFromDeals(mapped));
           } else {
             setDeals([]);
@@ -425,8 +482,7 @@ export default function Pipeline() {
       setLoadingLeads(false);
       setLoadingSummary(false);
     };
-  // Mount-only: never re-run when Supabase session resolves (was causing ~2× load time).
-  }, []);
+  }, [session?.access_token]);
 
   // Auth-only extras — do not re-fetch public leads when Supabase session resolves.
   useEffect(() => {
@@ -594,7 +650,20 @@ export default function Pipeline() {
           }),
         }),
       );
-      if (!createResponse.ok) throw new Error(await createResponse.text());
+      if (!createResponse.ok) {
+        const errText = await createResponse.text();
+        try {
+          const parsed = JSON.parse(errText) as { detail?: { code?: string; message?: string } | string };
+          const detail = parsed.detail;
+          if (typeof detail === "object" && detail?.code === "saved_leads_limit") {
+            toast.error(detail.message || "Free workspace lead limit reached.");
+            return;
+          }
+        } catch {
+          /* not JSON */
+        }
+        throw new Error(errText);
+      }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
       toast.success("SCOUT saved this lead to your workspace.");
     } catch (e) {
@@ -901,6 +970,26 @@ export default function Pipeline() {
               Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
             </div>
           )}
+          {!isAdmin && entitlements && entitlements.plan !== "paid" && (
+            <div
+              className="rounded-xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              style={{ borderColor: "rgba(255,176,0,0.25)", background: "rgba(255,176,0,0.06)" }}
+            >
+              <p className="text-[11px] leading-relaxed text-white/65">
+                {entitlements.plan === "anonymous"
+                  ? `Showing ${entitlements.visible_count} preview leads. Create a free account for ${PIPELINE_LIMIT_FREE} leads and ${entitlements.saved_limit ?? 5} SCOUT workspaces.`
+                  : `Free plan: ${entitlements.visible_count}/${entitlements.pipeline_limit} pipeline leads · ${entitlements.saved_limit ?? 5} saved workspaces. Upgrade for ${PIPELINE_LIMIT_PAID} leads and HubSpot sync on /integrations.`}
+              </p>
+              <Link
+                href={entitlements.plan === "anonymous" ? "/signup?next=%2Fpipeline" : "/pricing"}
+                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold"
+                style={{ color: "#0d0520", background: "#FFB000" }}
+              >
+                {entitlements.plan === "anonymous" ? "Sign up free" : "Upgrade"}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-4">
               <div>
@@ -911,7 +1000,11 @@ export default function Pipeline() {
                 <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
                   {isAdmin
                     ? "Authoritative database counts up top. Cal outreach controls below."
-                    : "Live robot-ready leads ranked by buyer intent, signal strength, and industry fit."}
+                    : panelPlan === "anonymous"
+                      ? `Preview ${entitlements?.pipeline_limit ?? 12} SCOUT-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SCOUT on your workspace.`
+                      : panelPlan === "free"
+                        ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
+                        : "Full SCOUT intelligence — live robot-ready leads ranked by buyer intent and timing."}
                 </p>
               </div>
             </div>
@@ -1595,9 +1688,11 @@ export default function Pipeline() {
                           </p>
                         </div>
                         <p className="text-[12px] leading-relaxed text-white/75">{verdict.detail}</p>
-                        <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">
-                          {marketInsightForIndustry(selected.industry)}
-                        </p>
+                        {showFullPanel && (
+                          <p className="mt-1.5 text-[11px] leading-relaxed text-white/50">
+                            {marketInsightForIndustry(selected.industry)}
+                          </p>
+                        )}
                       </div>
                     );
                   })()}
@@ -1609,10 +1704,14 @@ export default function Pipeline() {
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="break-words text-[12px] leading-relaxed text-white/80">{selected.signal}</p>
+                        <p className="break-words text-[12px] leading-relaxed text-white/80">
+                          {panelPlan === "anonymous"
+                            ? cleanAndClampText(selected.signal, 120)
+                            : selected.signal}
+                        </p>
                       </div>
                     </div>
-                    {(selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
+                    {(showStandardPanel || showFullPanel) && (selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
                       <div className="mt-2.5 flex items-center gap-2 text-[11px] text-white/60">
                         <Clock className="h-3 w-3 shrink-0 text-violet-300/90" />
                         <span>
@@ -1629,7 +1728,7 @@ export default function Pipeline() {
                   </div>
 
                   <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-                  {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
+                  {(showStandardPanel || showFullPanel) && (selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                     <div className="shrink-0 px-5 py-3 border-b border-white/6">
                       <button
                         type="button"
@@ -1704,7 +1803,8 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  {/* Latest research */}
+                  {/* Latest research — paid workspace */}
+                  {showFullPanel && (
                   <div className="shrink-0 px-5 py-3 border-b border-white/6">
                     <button
                       type="button"
@@ -1767,6 +1867,7 @@ export default function Pipeline() {
                       </div>
                     )}
                   </div>
+                  )}
 
                   {/* Cal outreach — admin only */}
                   {isAdmin && (
@@ -1890,8 +1991,10 @@ export default function Pipeline() {
                       </div>
                       <p className="text-[11px] leading-relaxed text-white/65 mb-3">
                         {session?.access_token
-                          ? "Save to your workspace. SCOUT keeps tracking signals, timing, and research on this account."
-                          : "Free account — SCOUT watches this lead 24/7 and surfaces when buying intent strengthens."}
+                          ? panelPlan === "free"
+                            ? `Save to your SCOUT workspace (${entitlements?.saved_limit ?? 5} included on free). SCOUT tracks signals and timing on this account.`
+                            : "Save to your workspace. SCOUT keeps tracking signals, timing, and research on this account."
+                          : "Free account — preview the signal, then put SCOUT on this lead to watch it 24/7."}
                       </p>
                       {session?.access_token ? (
                         <button
@@ -1917,6 +2020,35 @@ export default function Pipeline() {
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       )}
+                      <Link
+                        href={
+                          session?.access_token
+                            ? hubspotIntegration?.entitled === false
+                              ? "/pricing"
+                              : "/integrations"
+                            : `/signup?next=${encodeURIComponent("/integrations")}`
+                        }
+                        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
+                        style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
+                      >
+                        {hubspotIntegration?.connected ? (
+                          <>
+                            <CheckCheck className="h-3 w-3" />
+                            HubSpot connected
+                          </>
+                        ) : (
+                          "HubSpot sync"
+                        )}
+                      </Link>
+                      <p className="mt-2 text-center text-[10px] leading-relaxed text-white/40">
+                        {session?.access_token
+                          ? hubspotIntegration?.connected
+                            ? "SCOUT-qualified leads can flow into your existing HubSpot CRM."
+                            : hubspotIntegration?.entitled === false
+                              ? "Upgrade to push SCOUT leads into the HubSpot account your team already lives in."
+                              : "Connect HubSpot once — keep working in the CRM your sales team already uses."
+                          : "Sign up, activate SCOUT, then sync qualified leads into your HubSpot account."}
+                      </p>
                     </div>
                   )}
 

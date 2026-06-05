@@ -309,6 +309,18 @@ export default function Profile() {
             />
           </label>
         </div>
+        <div className="rounded-xl border border-white/10 mb-4 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <p className="text-[10px] uppercase tracking-widest text-white/30">Integrations</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/45">
+            Connect HubSpot and GitHub with one token — same flow as Vercel or GitHub app installs.
+          </p>
+          <Link
+            href="/integrations"
+            className="mt-3 inline-flex rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200"
+          >
+            Open integrations
+          </Link>
+        </div>
         <p className="text-xs text-white/35 mb-4">
           CRM outreach is on{" "}
           <Link href="/crm" className="text-violet-400 underline">

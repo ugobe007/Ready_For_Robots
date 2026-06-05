@@ -346,9 +346,14 @@ export default function Crm() {
               Review, edit, approve, and send buyer outreach through SCOUT. Replies come back to CRM and your inbox.
             </p>
           </div>
-          <Link href="/sales-console" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-white/65">
-            Open Sales Console
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/integrations" className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200">
+              Connect HubSpot / GitHub
+            </Link>
+            <Link href="/sales-console" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-white/65">
+              Open Sales Console
+            </Link>
+          </div>
         </div>
         {msg && <p className="text-sm text-amber-200/90 mb-4 border border-amber-500/30 rounded p-2">{msg}</p>}
 

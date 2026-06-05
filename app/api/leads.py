@@ -324,7 +324,7 @@ LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
 
 LEADS_ROTATION_SEC = PIPELINE_LEADS_ROTATION_SEC
-PIPELINE_FEED_LIMIT = 30
+PIPELINE_FEED_LIMIT = 50
 
 # In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
@@ -1886,14 +1886,21 @@ def warm_homepage_cache() -> None:
 
 
 @router.get("/pipeline")
-def leads_pipeline_feed(response: Response):
+def leads_pipeline_feed(
+    response: Response,
+    user: Optional[dict] = Depends(optional_user),
+):
     """
     Single batched read for /pipeline UI — summary + rotated top leads.
 
     Rebuilt every PUBLIC_CACHE_REFRESH_INTERVAL_SEC (default 30 minutes) from the
     scraper-fed database; never runs live SQL on the request path.
+
+    Entitlements (anonymous / free / paid) are applied per request after cache read.
     """
+    from app.api.auth_deps import optional_user
     from app.services.content_surfaces import KEY_PIPELINE_FEED
+    from app.services.plan_entitlements import apply_pipeline_entitlements, resolve_plan_tier
     from app.services.public_surface_cache import (
         PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
         maybe_schedule_public_cache_refresh,
@@ -1907,20 +1914,25 @@ def leads_pipeline_feed(response: Response):
     )
     maybe_schedule_public_cache_refresh()
 
+    plan = resolve_plan_tier(user)
+
+    def _finish(payload: dict) -> dict:
+        return apply_pipeline_entitlements(payload, plan)
+
     mem = _PIPELINE_FEED_MEM.get("v1")
     if mem is not None:
         data = mem["data"]
         if isinstance(data, dict) and (data.get("leads") or []):
-            return data
+            return _finish(data)
 
     cached = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
     if cached and isinstance(cached, dict) and (cached.get("leads") or []):
         hydrate_pipeline_feed_cache(cached)
-        return cached
+        return _finish(cached)
 
     schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
     empty = _empty_summary_payload()
-    return {"summary": empty, "leads": [], "cache_pending": True}
+    return _finish({"summary": empty, "leads": [], "cache_pending": True})
 
 
 @router.get("/homepage")

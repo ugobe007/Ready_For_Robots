@@ -277,9 +277,8 @@ export default function Home() {
 
             {/* Subheadline */}
             <p className="text-base text-white/60 leading-relaxed mb-6 max-w-lg" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              ReadyForRobots helps robot companies find buyers from live market signals.{" "}
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> finds buyers, scores intent, and prepares your pipeline.<br />
-              Your team just closes.
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> is your robotics sales intelligence layer — not another CRM. It finds buyers from live signals, scores timing, and builds strategy per lead.<br />
+              Sync to HubSpot when you are ready; your team focuses on closing.
             </p>
 
             {/* CTA — Activate Pipeline */}

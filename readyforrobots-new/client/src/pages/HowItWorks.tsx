@@ -141,8 +141,9 @@ export default function HowItWorks() {
                 className="text-base leading-relaxed mb-10 max-w-lg"
                 style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
               >
-                Watch SCOUT find a live opportunity, score it, and draft outreach — with a five-stage
-                pipeline behind every Identify → Develop → Connect phase.
+                SCOUT sits above your CRM: it discovers robot-ready buyers, scores intent, and develops
+                outreach strategy per account. HubSpot stays your system of record — SCOUT pushes qualified
+                leads and context when you upgrade.
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-4">

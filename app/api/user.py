@@ -498,7 +498,21 @@ def save_company(
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
+    from app.services.plan_entitlements import (
+        assert_can_save_lead,
+        count_workspace_leads,
+        resolve_plan_tier,
+    )
+
     _ensure_profile(db, _uid(user), user["email"])
+    uid = _uid(user)
+    existing = db.execute(
+        text("SELECT 1 FROM user_saved_companies WHERE user_id = :uid AND company_id = :cid LIMIT 1"),
+        {"uid": uid, "cid": body.company_id},
+    ).first()
+    if not existing:
+        plan = resolve_plan_tier(user)
+        assert_can_save_lead(plan, count_workspace_leads(db, uid))
     db.execute(
         text("""
             INSERT INTO user_saved_companies

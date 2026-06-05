@@ -89,7 +89,14 @@ def optional_user(authorization: Optional[str] = Header(None)) -> Optional[dict]
         token = authorization.split(" ", 1)[1]
         payload = _verify_jwt(token)
         email = _extract_email(payload) or ""
-        return {"uid": payload["sub"], "email": email}
+        app_meta = payload.get("app_metadata") if isinstance(payload.get("app_metadata"), dict) else {}
+        plan_tier = (
+            app_meta.get("plan_tier")
+            or app_meta.get("plan")
+            or payload.get("plan_tier")
+            or ""
+        )
+        return {"uid": payload["sub"], "email": email, "plan_tier": str(plan_tier).strip().lower()}
     except HTTPException:
         return None
 
@@ -101,7 +108,14 @@ def _require_user(authorization: Optional[str] = Header(None)) -> dict:
     token = authorization.split(" ", 1)[1]
     payload = _verify_jwt(token)
     email = _extract_email(payload) or ""
-    return {"uid": payload["sub"], "email": email}
+    app_meta = payload.get("app_metadata") if isinstance(payload.get("app_metadata"), dict) else {}
+    plan_tier = (
+        app_meta.get("plan_tier")
+        or app_meta.get("plan")
+        or payload.get("plan_tier")
+        or ""
+    )
+    return {"uid": payload["sub"], "email": email, "plan_tier": str(plan_tier).strip().lower()}
 
 
 def _is_admin(email: str) -> bool:

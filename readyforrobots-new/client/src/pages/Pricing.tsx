@@ -14,7 +14,7 @@ const tiers = [
     name: "Starter",
     price: "$19",
     period: "/month",
-    tagline: "Start finding real robot-ready buyers",
+    tagline: "SCOUT intelligence layer — start finding robot-ready buyers",
     color: "#03DAC5",
     icon: Zap,
     cta: "Start Starter",
@@ -28,7 +28,7 @@ const tiers = [
       "Daily newsletter and market signal brief",
     ],
     limitations: [
-      "Limited saved leads",
+      "No SCOUT research feed",
       "Manual SCOUT workflow",
     ],
     highlight: false,
@@ -37,7 +37,7 @@ const tiers = [
     name: "Pro",
     price: "$49",
     period: "/month",
-    tagline: "Run a focused robotics sales pipeline",
+    tagline: "Full pipeline + SCOUT workspace for active sellers",
     color: "#FFB000",
     icon: Cpu,
     cta: "Start Pro",
@@ -66,8 +66,9 @@ const tiers = [
     ctaAction: "sales",
     features: [
       "Everything in Pro",
+      "50 live pipeline leads",
       "Priority SCOUT research coverage",
-      "More saved leads and team workflow",
+      "Team workflow + priority support",
       "Premium signal monitoring",
       "Advanced CRM-ready lead context",
       "Priority support queue",
@@ -112,7 +113,11 @@ const faqs = [
   },
   {
     q: "Can I use this with my existing CRM?",
-    a: "Yes. Pro and Premium include CRM-ready lead context. Technical support and deeper CRM setup can be added as an optional service.",
+    a: "Yes — that is the point. ReadyForRobots is SCOUT-powered intelligence on top of your stack. Pro and Premium add HubSpot outbound sync (push qualified leads with SCOUT score, signal, and brief). Salesforce and Pipedrive integrations follow the same API pattern.",
+  },
+  {
+    q: "Is ReadyForRobots a HubSpot competitor?",
+    a: "No. HubSpot is your system of record. SCOUT finds robot-ready buyers, scores timing, and drafts outreach — then pushes context into HubSpot (or your native SCOUT workspace) so your team acts faster.",
   },
   {
     q: "Do you help with robot deployment services?",
@@ -148,7 +153,7 @@ export default function Pricing() {
               Simple pricing for robot sales teams
             </h1>
             <p className="text-sm text-white/40 max-w-xl mx-auto">
-              Start with signal intelligence, then add SCOUT workflow support as your pipeline grows.
+              SCOUT is your robotics sales intelligence layer — not a HubSpot replacement. Find buyers, build strategy per lead, and sync to your CRM when you are ready.
             </p>
           </div>
 
