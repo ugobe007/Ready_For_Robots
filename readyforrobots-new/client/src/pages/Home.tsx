@@ -234,11 +234,11 @@ export default function Home() {
         <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-center">
           <div className="min-w-0">
-            {/* Humanoid benchmark news */}
+            {/* Live benchmark — product intelligence (links to /robots) */}
             <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#a78bfa" }}>New · </span>
+              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#a78bfa" }}>Live · </span>
               <Link href="/robots" className="font-semibold underline decoration-violet-400/35 underline-offset-2 transition-colors hover:text-white/75" style={{ color: "#c4b5fd" }}>
-                Humanoid robot benchmark
+                Humanoid benchmark
               </Link>
               {" — "}{benchInlineText}
             </p>
@@ -279,8 +279,8 @@ export default function Home() {
             </p>
 
             {/* Primary CTA */}
-            <div className="flex w-full max-w-md flex-col gap-2">
-              <Link href="/results?url=" className="w-full">
+            <div className="w-full max-w-md">
+              <Link href="/results?url=" className="block w-full">
                 <button
                   type="button"
                   className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-base font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
@@ -291,7 +291,13 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
-              <div className="flex w-full justify-center">
+              <p className="mt-2 text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                No signup required · Free to start · Results in seconds
+              </p>
+
+              {/* Research report — separate from live benchmark above */}
+              <div className="mt-6 flex w-full flex-col items-center gap-1.5 border-t border-white/6 pt-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">Research report</p>
                 <button
                   type="button"
                   onClick={() => setReportOpen(true)}
@@ -302,9 +308,6 @@ export default function Home() {
                   2026 Automation Imperative Report
                 </button>
               </div>
-              <p className="text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-                No signup required · Free to start · Results in seconds
-              </p>
             </div>
           </div>
 
