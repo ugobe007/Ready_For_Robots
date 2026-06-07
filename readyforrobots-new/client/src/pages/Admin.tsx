@@ -885,9 +885,65 @@ export default function Admin() {
           </p>
         ) : null}
 
-        <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
+            <p className="mt-0.5 text-[11px] text-white/35">Run SCOUT from the bar below · Cal queue scrolls under daily brief</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-xl border border-white/10 p-1">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.value}
+                  onClick={() => setTimeRange(range.value)}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
+                  style={{
+                    color: timeRange === range.value ? "#0d0520" : "rgba(255,255,255,0.52)",
+                    background: timeRange === range.value ? "#FFB000" : "transparent",
+                  }}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/60">
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+            <a href={`${api}/api/docs`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
+              <Database className="h-3.5 w-3.5" /> API
+            </a>
+          </div>
+        </div>
 
-        {/* ── SCOUT action bar — top of page, always visible ── */}
+        <details className="mb-4 rounded-xl border border-white/8 px-4 py-3 group" style={{ background: "rgba(255,255,255,0.02)" }}>
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-white/50 marker:content-none">
+            Reply notification email
+            <span className="ml-2 font-normal text-white/30">optional · forwards Cal replies</span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="email"
+              value={replyForwardEmail}
+              onChange={(e) => setReplyForwardEmail(e.target.value)}
+              placeholder="ugobe07@gmail.com"
+              className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+            />
+            <button
+              type="button"
+              disabled={replySettingBusy}
+              onClick={() => void saveReplySettings()}
+              className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold border transition-all disabled:opacity-50"
+              style={
+                replySettingSaved
+                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }
+                  : { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)", color: "#c4b5fd" }
+              }
+            >
+              {replySettingBusy ? "Saving…" : replySettingSaved ? "✓ Saved" : "Save"}
+            </button>
+          </div>
+        </details>
+
         <div className="mb-4 rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(13,5,32,0.6)" }}>
           <ScoutActionBar
             accessToken={session?.access_token}
@@ -906,92 +962,22 @@ export default function Admin() {
           />
         </div>
 
-        {/* ── Reply notification settings ── */}
-        <div className="mb-4 rounded-2xl border border-white/8 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4" style={{ background: "rgba(255,255,255,0.025)" }}>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: "#a78bfa" }}>Reply notifications</p>
-            <p className="text-[11px] text-white/40">
-              When a prospect replies to Cal, forward a copy to this email immediately.
-              {" "}<span className="text-white/25">Replies are also stored in the Sales Console.</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-            <input
-              type="email"
-              value={replyForwardEmail}
-              onChange={(e) => setReplyForwardEmail(e.target.value)}
-              placeholder="ugobe07@gmail.com"
-              className="flex-1 sm:w-64 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
-            />
-            <button
-              type="button"
-              disabled={replySettingBusy}
-              onClick={() => void saveReplySettings()}
-              className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold border transition-all disabled:opacity-50"
-              style={
-                replySettingSaved
-                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }
-                  : { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)", color: "#c4b5fd" }
-              }
-            >
-              {replySettingBusy ? "Saving…" : replySettingSaved ? "✓ Saved" : "Save"}
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-4 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Operations</p>
-            <h1 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>ReadyForRobots Command Center</h1>
-            <p className="mt-0.5 max-w-md text-[11px] text-white/35">
-              Same operating surface as the live prospects pipeline: compact, signal-first, and action-oriented.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin/prospects" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
-              Prospects <ExternalLink className="h-3.5 w-3.5" />
-            </Link>
-            <div className="mr-1 flex rounded-xl border border-white/10 p-1">
-              {TIME_RANGES.map((range) => (
-                <button
-                  key={range.value}
-                  onClick={() => setTimeRange(range.value)}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
-                  style={{
-                    color: timeRange === range.value ? "#0d0520" : "rgba(255,255,255,0.52)",
-                    background: timeRange === range.value ? "#FFB000" : "transparent",
-                  }}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/60">
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
-            </button>
-            <a href={`${api}/api/docs`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
-              <Database className="h-3.5 w-3.5" /> API docs
-            </a>
-          </div>
-        </div>
+        <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
 
         {message && <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-200">{message}</div>}
         {error && <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm text-red-200">{error}</div>}
 
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
-        <section id="cal-outreach" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.07), rgba(255,176,0,0.035))" }}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Mail className="h-4 w-4" style={{ color: "#a78bfa" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Cal outreach</p>
+        <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-white/8 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <Mail className="h-4 w-4 shrink-0" style={{ color: "#a78bfa" }} />
+              <div className="min-w-0">
+                <h2 className="text-base font-extrabold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  Cal outreach queue
+                </h2>
+                <p className="text-[11px] text-white/40">Draft &amp; send from SCOUT bar above · expand a row for preview</p>
               </div>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                HOT + WARM prospect drafts
-              </h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
-                Cal's template voice — no LLM. When no contact is on file, defaults to industry role inboxes (e.g. <span className="font-mono text-white/65">operations@domain</span>, <span className="font-mono text-white/65">plantmanager@domain</span>) with <span className="font-mono text-white/65">info@domain</span> CC.
-              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex rounded-xl border border-white/10 p-1">
@@ -999,7 +985,7 @@ export default function Admin() {
                   <button
                     key={f}
                     onClick={() => setCalFilter(f)}
-                    className="rounded-lg px-3 py-1.5 text-[11px] font-bold capitalize transition"
+                    className="rounded-lg px-2.5 py-1 text-[10px] font-bold capitalize transition"
                     style={{
                       color: calFilter === f ? "#0d0520" : "rgba(255,255,255,0.45)",
                       background: calFilter === f ? "#a78bfa" : "transparent",
@@ -1010,44 +996,19 @@ export default function Admin() {
                 ))}
               </div>
               <button
-                onClick={() => void loadCalStatus()}
-                disabled={!!actionBusy}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/55 disabled:opacity-40"
-              >
-                <RefreshCw className="h-3 w-3" /> Refresh
-              </button>
-              <button
-                onClick={() => void runCalBulkDraft(false)}
-                disabled={!!actionBusy}
-                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
-                style={{ color: "#a78bfa", borderColor: "rgba(167,139,250,0.5)" }}
-              >
-                {actionBusy === "cal-draft" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Drafting…</> : <><Mail className="h-3.5 w-3.5" /> Draft pending</>}
-              </button>
-              <button
                 onClick={() => void runCalBulkDraft(true)}
                 disabled={!!actionBusy}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
-                title="Regenerate all drafts including existing ones"
+                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
+                title="Regenerate all drafts"
               >
-                Regenerate all
-              </button>
-              <button
-                onClick={() => setSendConfirm("bulk")}
-                disabled={!!actionBusy || !calStatus?.summary?.drafted}
-                className="inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
-                style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.55)", background: "rgba(255,176,0,0.08)" }}
-                title={`Send all ${calStatus?.summary?.drafted ?? 0} drafted emails`}
-              >
-                {actionBusy === "cal-send" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Sending…</> : <><Play className="h-3.5 w-3.5" /> Send unsent ({calStatus?.summary?.sendable ?? calStatus?.summary?.unsent_drafted ?? 0} sendable)</>}
+                Regenerate
               </button>
               <button
                 onClick={() => void runCalReinferContacts()}
                 disabled={!!actionBusy}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
-                title="Apply industry role inboxes (operations@, plantmanager@, …) — replaces empty or legacy sales@ contacts"
+                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
               >
-                {actionBusy === "cal-reinfer" ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Re-inferring…</> : <>Re-infer all contacts</>}
+                {actionBusy === "cal-reinfer" ? "Re-inferring…" : "Re-infer contacts"}
               </button>
               {(calStatus?.summary?.no_email ?? 0) > 0 && (
                 <button
@@ -1072,10 +1033,9 @@ export default function Admin() {
                     } finally { setActionBusy(""); }
                   })()}
                   disabled={!!actionBusy}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-white/45 disabled:opacity-40"
-                  title={`Look up websites for ${calStatus?.summary?.no_email} contacts with no email`}
+                  className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
                 >
-                  Fix {calStatus?.summary?.no_email} missing emails
+                  Fix {calStatus?.summary?.no_email} emails
                 </button>
               )}
             </div>
@@ -1107,17 +1067,13 @@ export default function Admin() {
             </div>
           )}
 
-          {/* Summary pills */}
-          <div className="mb-5 grid grid-cols-3 gap-3 md:grid-cols-6 lg:grid-cols-9">
-            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub="HOT + WARM" />
-            <AdminCard label="HOT" value={formatNumber(calStatus?.summary?.hot)} sub="highest priority" />
-            <AdminCard label="WARM" value={formatNumber(calStatus?.summary?.warm)} sub="strong signals" />
-            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub="ready to send" />
-            <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need drafts" />
-            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="emails out" />
-            <AdminCard label="Opened" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.opened)} sub="email opened" />
-            <AdminCard label="Clicked" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.clicked)} sub="link clicked" />
-            <AdminCard label="Replied" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.replied)} sub="replied to Cal" />
+          <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-6">
+            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub={`${formatNumber(calStatus?.summary?.hot)} hot · ${formatNumber(calStatus?.summary?.warm)} warm`} />
+            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub={`${formatNumber(calStatus?.summary?.sendable ?? calStatus?.summary?.unsent_drafted)} sendable`} />
+            <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need draft" />
+            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="delivered" />
+            <AdminCard label="Opened" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.opened)} sub="engagement" />
+            <AdminCard label="Replied" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.replied)} sub="to Cal" />
           </div>
 
           {/* Prospect table */}
@@ -1313,32 +1269,6 @@ export default function Admin() {
             )}
           </div>
         </section>
-
-        {/* ── SCOUT Automation ─────────────────────────────────────────────── */}
-        <section id="scout-automation" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(167,139,250,0.035))" }}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>SCOUT Automation</p>
-              </div>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Fully automated prospect outreach</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">
-                Use the buttons at the top of this page to run the full workflow.
-              </p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <AdminCard label="Total Prospects" value={formatNumber(scoutStatus?.total_prospects)} sub="HOT + WARM" />
-            <AdminCard label="Activated" value={formatNumber(scoutStatus?.activated)} sub="SCOUT running" />
-            <AdminCard label="Drafted" value={formatNumber(scoutStatus?.drafted)} sub="ready to send" />
-            <AdminCard label="Pending Approval" value={formatNumber(scoutStatus?.pending_approval)} sub="awaiting review" />
-            <AdminCard label="Sent" value={formatNumber(scoutStatus?.sent)} sub="emails delivered" />
-          </div>
-        </section>
-
 
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
