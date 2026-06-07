@@ -138,12 +138,12 @@ export default function HowItWorks() {
                 <span style={{ color: "#FFB000" }}>sales motion.</span>
               </h1>
               <p
-                className="text-base leading-relaxed mb-10 max-w-lg"
+                className="text-base leading-relaxed mb-10 max-w-xl"
                 style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
               >
-                SCOUT sits above your CRM: it discovers robot-ready buyers, scores intent, and develops
-                outreach strategy per account. HubSpot stays your system of record — SCOUT pushes qualified
-                leads and context when you upgrade.
+                Not a revenue OS. Robotics intelligence on{" "}
+                <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
+                —live signals, scored timing, your team closes.
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-4">
@@ -189,6 +189,27 @@ export default function HowItWorks() {
           className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
           style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }}
         />
+      </section>
+
+      <DIV />
+
+      {/* ── vs all-in-one revenue platforms ── */}
+      <section className="py-6 lg:py-8">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div
+            className="rounded-2xl border px-6 py-5"
+            style={{ borderColor: "rgba(3,218,197,0.2)", background: "rgba(3,218,197,0.04)" }}
+          >
+            <p className="text-sm font-bold text-white/80 mb-2" style={{ fontFamily: "Sora, sans-serif" }}>
+              Intelligence layer, not a stack replacement
+            </p>
+            <p className="text-sm leading-relaxed text-white/45" style={{ fontFamily: "Inter, sans-serif" }}>
+              All-in-one revenue platforms consolidate CRM, sequences, and AI into one workspace—you migrate your stack.
+              SCOUT does the opposite: robotics-focused signals and outreach on HubSpot. HubSpot stays system of record;
+              SCOUT is system of opportunity.
+            </p>
+          </div>
+        </div>
       </section>
 
       <DIV />

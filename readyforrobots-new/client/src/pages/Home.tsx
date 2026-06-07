@@ -243,14 +243,6 @@ export default function Home() {
               {" — "}{benchInlineText}
             </p>
 
-            {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 mb-7">
-              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#7c3aed" }} />
-              <span className="text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "#c4b5fd" }}>
-                SCOUT — AI Sales &amp; Partnership Agent for Robotics
-              </span>
-            </div>
-
             {/* Headline */}
             <h1
               className="font-extrabold leading-[1.05] tracking-tight mb-3 text-white"
@@ -276,9 +268,11 @@ export default function Home() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base text-white/60 leading-relaxed mb-6 max-w-lg" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>SCOUT</span> is your robotics sales intelligence layer — not another CRM. It finds buyers from live signals, scores timing, and builds strategy per lead.<br />
-              Sync to HubSpot when you are ready; your team focuses on closing.
+            <p className="text-base text-white/60 leading-relaxed mb-7 max-w-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#c4b5fd" }}>SCOUT — AI sales &amp; partnership agent for robotics.</span>{" "}
+              Not a revenue OS. Robotics intelligence on{" "}
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
+              —live signals, scored timing, your team closes.
             </p>
 
             {/* CTA — Activate Pipeline */}

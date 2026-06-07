@@ -300,6 +300,33 @@ const PIPELINE_LIMIT_PAID = 50;
 const HUBSPOT_CONNECT_PATH = "/integrations/hubspot";
 const HUBSPOT_SIGNUP_PATH = `/signup?intent=hubspot&next=${encodeURIComponent("/integrations/hubspot")}`;
 
+function HubSpotCtaLink({
+  connected,
+  hasSession,
+  className = "px-4 py-2.5 text-sm",
+}: {
+  connected?: boolean;
+  hasSession: boolean;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={hasSession ? HUBSPOT_CONNECT_PATH : HUBSPOT_SIGNUP_PATH}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border font-bold transition-all hover:bg-[#FFB000]/[0.06] ${className}`}
+      style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
+    >
+      {connected ? (
+        <>
+          <CheckCheck className="h-4 w-4" />
+          HubSpot connected
+        </>
+      ) : (
+        "Connect to Hubspot"
+      )}
+    </Link>
+  );
+}
+
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
@@ -1163,24 +1190,28 @@ export default function Pipeline() {
                 {selectedActivation ? (
                   <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                     <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h2 className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-base font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                             Activation #{selectedActivation.id}
                           </h2>
-                          <p className="mt-1 break-all text-[11px] text-white/35">
+                          <p className="mt-1 break-all text-xs text-white/40">
                             {activationSourceLabel(selectedActivation.sourceUrl)}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/45 capitalize">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <span className="rounded-full border border-white/10 px-2.5 py-1 text-xs font-semibold text-white/50 capitalize">
                             {selectedActivation.mode}
                           </span>
                           {selectedActivation.requiresAccount && (
-                            <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: "rgba(251,146,60,0.12)", color: "#fdba74" }}>
+                            <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: "rgba(251,146,60,0.12)", color: "#fdba74" }}>
                               Account required
                             </span>
                           )}
+                          <HubSpotCtaLink
+                            connected={hubspotIntegration?.connected}
+                            hasSession={Boolean(session?.access_token)}
+                          />
                         </div>
                       </div>
 
@@ -1221,115 +1252,139 @@ export default function Pipeline() {
                             </div>
                           ))}
                         </div>
-                        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/25">Work plan</p>
-                        <p className="break-words text-[11px] text-white/45 leading-relaxed">
+                        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/30">Work plan</p>
+                        <p className="break-words text-sm text-white/55 leading-relaxed">
                           {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SCOUT will evaluate the selected leads and prepare Cal outreach."}
                         </p>
-                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                          {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
-                            <div key={step} className="flex items-start gap-2 text-[11px] text-white/40">
-                              <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#7c3aed" }} />
-                              <span className="break-words">{cleanScrapedText(step)}</span>
+                        {((selectedActivation.workPlan?.steps || []).length > 0
+                          || selectedActivation.workPlan?.deck_strategy
+                          || (selectedActivation.workPlan?.safety_requirements || []).length > 0
+                          || selectedActivation.workPlan?.notification_policy) && (
+                          <details className="mt-3 rounded-lg border border-white/7 bg-black/10 group">
+                            <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-white/45 hover:text-white/65 [&::-webkit-details-marker]:hidden">
+                              <span className="inline-flex items-center gap-1.5">
+                                <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
+                                Work plan details
+                              </span>
+                            </summary>
+                            <div className="border-t border-white/6 px-3 py-3 space-y-3">
+                              {(selectedActivation.workPlan?.steps || []).length > 0 && (
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
+                                    <div key={step} className="flex items-start gap-2 text-xs text-white/45">
+                                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#7c3aed" }} />
+                                      <span className="break-words">{cleanScrapedText(step)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {selectedActivation.workPlan?.deck_strategy && (
+                                <div className="rounded-lg border border-violet-400/15 bg-violet-400/5 p-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Deck strategy</p>
+                                  <p className="mt-1 text-xs font-semibold text-white/65">
+                                    {cleanScrapedText(selectedActivation.workPlan.deck_strategy.recommended_format)}
+                                  </p>
+                                  <p className="mt-1 text-xs text-white/40">
+                                    {cleanScrapedText(selectedActivation.workPlan.deck_strategy.positioning)}
+                                  </p>
+                                </div>
+                              )}
+                              {(selectedActivation.workPlan?.safety_requirements || []).length > 0 && (
+                                <div className="rounded-lg border border-white/7 bg-black/10 p-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Sending guardrails</p>
+                                  <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {(selectedActivation.workPlan?.safety_requirements || []).map((item) => (
+                                      <span
+                                        key={item.key}
+                                        className="rounded-full border px-2 py-1 text-[10px] font-semibold"
+                                        style={
+                                          item.required
+                                            ? { borderColor: "rgba(251,146,60,0.25)", color: "#fdba74", background: "rgba(251,146,60,0.08)" }
+                                            : { borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.02)" }
+                                        }
+                                      >
+                                        {item.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {selectedActivation.workPlan?.notification_policy && (
+                                <div className="rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
+                                  <p className="mt-1 text-xs text-white/45">
+                                    {cleanScrapedText(selectedActivation.workPlan.notification_policy.reply)}
+                                  </p>
+                                  <p className="mt-1 text-xs text-white/35">
+                                    {cleanScrapedText(selectedActivation.workPlan.notification_policy.meeting)}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                        {selectedActivation.workPlan?.deck_strategy && (
-                          <div className="mt-3 rounded-lg border border-violet-400/15 bg-violet-400/5 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Deck strategy</p>
-                            <p className="mt-1 text-[11px] font-semibold text-white/65">
-                              {cleanScrapedText(selectedActivation.workPlan.deck_strategy.recommended_format)}
-                            </p>
-                            <p className="mt-1 text-[11px] text-white/40">
-                              {cleanScrapedText(selectedActivation.workPlan.deck_strategy.positioning)}
-                            </p>
-                          </div>
+                          </details>
                         )}
-                        {(selectedActivation.workPlan?.safety_requirements || []).length > 0 && (
-                          <div className="mt-3 rounded-lg border border-white/7 bg-black/10 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Sending guardrails</p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {(selectedActivation.workPlan?.safety_requirements || []).map((item) => (
-                                <span
-                                  key={item.key}
-                                  className="rounded-full border px-2 py-1 text-[10px] font-semibold"
-                                  style={
-                                    item.required
-                                      ? { borderColor: "rgba(251,146,60,0.25)", color: "#fdba74", background: "rgba(251,146,60,0.08)" }
-                                      : { borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.02)" }
-                                  }
-                                >
-                                  {item.label}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {selectedActivation.workPlan?.notification_policy && (
-                          <div className="mt-3 rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
-                            <p className="mt-1 text-[11px] text-white/45">
-                              {cleanScrapedText(selectedActivation.workPlan.notification_policy.reply)}
+                        <details className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 group">
+                          <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-200/80 hover:text-amber-100 [&::-webkit-details-marker]:hidden">
+                            <span className="inline-flex items-center gap-1.5">
+                              <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
+                              Adjust SCOUT
+                            </span>
+                          </summary>
+                          <div className="border-t border-amber-400/15 px-3 py-3">
+                            <p className="text-xs leading-relaxed text-white/45">
+                              Pause SCOUT or change Cal&apos;s message, timing, and cadence before any outbound step.
                             </p>
-                            <p className="mt-1 text-[11px] text-white/35">
-                              {cleanScrapedText(selectedActivation.workPlan.notification_policy.meeting)}
-                            </p>
-                          </div>
-                        )}
-                        <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/80">Interrupt / adjust SCOUT</p>
-                          <p className="mt-1 text-[11px] leading-relaxed text-white/40">
-                            SCOUT can work in the background, but you can pause it or change Cal's message, timing, and cadence before any outbound step.
-                          </p>
-                          <div className="mt-3 grid gap-2">
-                            <textarea
-                              value={messageNote}
-                              onChange={(e) => setMessageNote(e.target.value)}
-                              rows={2}
-                              placeholder="Message changes, e.g. shorter, more technical, ask for call first..."
-                              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
-                            />
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <input
-                                value={timingNote}
-                                onChange={(e) => setTimingNote(e.target.value)}
-                                placeholder="Timing, e.g. wait until next Tuesday"
-                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
+                            <div className="mt-3 grid gap-2">
+                              <textarea
+                                value={messageNote}
+                                onChange={(e) => setMessageNote(e.target.value)}
+                                rows={2}
+                                placeholder="Message changes, e.g. shorter, more technical, ask for call first..."
+                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
                               />
-                              <input
-                                value={cadenceNote}
-                                onChange={(e) => setCadenceNote(e.target.value)}
-                                placeholder="Cadence, e.g. follow up once after 5 days"
-                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25"
-                              />
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <input
+                                  value={timingNote}
+                                  onChange={(e) => setTimingNote(e.target.value)}
+                                  placeholder="Timing, e.g. wait until next Tuesday"
+                                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                                />
+                                <input
+                                  value={cadenceNote}
+                                  onChange={(e) => setCadenceNote(e.target.value)}
+                                  placeholder="Cadence, e.g. follow up once after 5 days"
+                                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => void controlActivation("pause")}
+                                disabled={activationControlBusy}
+                                className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-sm font-bold text-amber-100 disabled:opacity-50"
+                              >
+                                Pause SCOUT
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void controlActivation("update_plan")}
+                                disabled={activationControlBusy}
+                                className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-4 py-2.5 text-sm font-bold text-violet-100 disabled:opacity-50"
+                              >
+                                Save adjustments
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void controlActivation("resume")}
+                                disabled={activationControlBusy}
+                                className="rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-4 py-2.5 text-sm font-bold text-emerald-100 disabled:opacity-50"
+                              >
+                                Resume review queue
+                              </button>
                             </div>
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => void controlActivation("pause")}
-                              disabled={activationControlBusy}
-                              className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-[11px] font-bold text-amber-100 disabled:opacity-50"
-                            >
-                              Pause SCOUT
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void controlActivation("update_plan")}
-                              disabled={activationControlBusy}
-                              className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-[11px] font-bold text-violet-100 disabled:opacity-50"
-                            >
-                              Save adjustments
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void controlActivation("resume")}
-                              disabled={activationControlBusy}
-                              className="rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-100 disabled:opacity-50"
-                            >
-                              Resume review queue
-                            </button>
-                          </div>
-                        </div>
+                        </details>
                       </div>
                     </div>
 
@@ -1784,7 +1839,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-violet-200/75">
-                              Sign up free to unlock full SCOUT research and HubSpot API sync.
+                              Sign up free to unlock full SCOUT research and connect to Hubspot.
                             </p>
                           )}
                           {panelPlan !== "anonymous" && (
@@ -1983,20 +2038,11 @@ export default function Pipeline() {
                       className="shrink-0 z-20 px-3 py-2.5 pb-12 border-t border-teal-400/20 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]"
                       style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.12) 0%, rgba(13,5,32,0.98) 50%)" }}
                     >
-                      <Link
-                        href={session?.access_token ? HUBSPOT_CONNECT_PATH : HUBSPOT_SIGNUP_PATH}
-                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
-                        style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
-                      >
-                        {hubspotIntegration?.connected ? (
-                          <>
-                            <CheckCheck className="h-3 w-3" />
-                            HubSpot connected
-                          </>
-                        ) : (
-                          "HubSpot API sync"
-                        )}
-                      </Link>
+                      <HubSpotCtaLink
+                        connected={hubspotIntegration?.connected}
+                        hasSession={Boolean(session?.access_token)}
+                        className="w-full px-4 py-3 text-base"
+                      />
                       {session?.access_token ? (
                         <button
                           type="button"

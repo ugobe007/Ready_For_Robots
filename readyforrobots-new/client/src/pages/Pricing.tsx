@@ -117,7 +117,11 @@ const faqs = [
   },
   {
     q: "Is ReadyForRobots a HubSpot competitor?",
-    a: "No. HubSpot is your system of record. SCOUT finds robot-ready buyers, scores timing, and drafts outreach — then pushes context into HubSpot (or your native SCOUT workspace) so your team acts faster.",
+    a: "No. HubSpot is your system of record. ReadyForRobots is robotics intelligence on top—live signals, scored timing, and Cal outreach—synced into HubSpot when you upgrade. Your team closes in the CRM you already run.",
+  },
+  {
+    q: "How is ReadyForRobots different from an AI revenue OS?",
+    a: "Revenue operating systems replace CRM, engagement, and intelligence in one platform—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. SCOUT adds a robotics wedge on HubSpot: find robot-ready buyers from live signals, score timing, draft trigger-based outreach, and push qualified context into HubSpot. No stack rip-and-replace.",
   },
   {
     q: "Do you help with robot deployment services?",
@@ -153,7 +157,9 @@ export default function Pricing() {
               Simple pricing for robot sales teams
             </h1>
             <p className="text-sm text-white/40 max-w-xl mx-auto">
-              SCOUT is your robotics sales intelligence layer — not a HubSpot replacement. Find buyers, build strategy per lead, and sync to your CRM when you are ready.
+              Not a revenue OS. Robotics intelligence on{" "}
+              <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
+              —live signals, scored timing, your team closes.
             </p>
           </div>
 
