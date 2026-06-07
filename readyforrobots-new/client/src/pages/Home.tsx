@@ -278,8 +278,8 @@ export default function Home() {
               {" or your CRM."}
             </p>
 
-            {/* CTAs — equal width */}
-            <div className="flex w-full max-w-md flex-col gap-3">
+            {/* Primary CTA */}
+            <div className="flex w-full max-w-md flex-col gap-2">
               <Link href="/results?url=" className="w-full">
                 <button
                   type="button"
@@ -291,18 +291,17 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
+              <p className="text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                No signup required · Free to start · Results in seconds
+              </p>
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
-                className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-base font-bold transition-all hover:-translate-y-0.5 hover:bg-teal-400/6"
-                style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.04)" }}
+                className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-white/35 transition-colors hover:text-teal-300/80"
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-3 w-3 shrink-0 opacity-70" />
                 2026 Automation Imperative Report
               </button>
-              <p className="text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-                No signup required · Free to start · Results in seconds
-              </p>
             </div>
           </div>
 
