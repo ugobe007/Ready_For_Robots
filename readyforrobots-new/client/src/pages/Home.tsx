@@ -233,7 +233,7 @@ export default function Home() {
 
         <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-center">
-          <div>
+          <div className="min-w-0">
             {/* Humanoid benchmark news */}
             <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#a78bfa" }}>New · </span>
@@ -267,10 +267,13 @@ export default function Home() {
               )}
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-base text-white/60 leading-relaxed mb-7 max-w-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+            {/* Subheadline — width capped to headline column */}
+            <p
+              className="mb-7 max-w-md text-[0.95rem] leading-relaxed text-white/60 sm:text-base"
+              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+            >
               <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#c4b5fd" }}>Signal</span>
-              {" — robotics prospecting, qualifying, and outreach synced to "}
+              {" — robot sales management workflow. Prospecting, qualifying, and outreach synced to "}
               <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
               {" or your CRM."}
             </p>
