@@ -375,7 +375,7 @@ export default function Pipeline() {
   const showStandardPanel = panelPlan === "free";
 
   useEffect(() => {
-    setIntelligenceOpen(false);
+    setIntelligenceOpen(true);
     setResearchOpen(false);
   }, [selectedId]);
 
@@ -1983,33 +1983,9 @@ export default function Pipeline() {
                       className="shrink-0 z-20 px-3 py-2.5 pb-12 border-t border-teal-400/20 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]"
                       style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.12) 0%, rgba(13,5,32,0.98) 50%)" }}
                     >
-                      {session?.access_token ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleSaveLead(selected)}
-                          disabled={advancingLeadId === selected.id}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50 hover:brightness-110"
-                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
-                        >
-                          {advancingLeadId === selected.id
-                            ? <RefreshCw className="h-4 w-4 animate-spin" />
-                            : <Zap className="h-4 w-4" />
-                          }
-                          {advancingLeadId === selected.id ? "Saving…" : "Save to SCOUT workspace"}
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110"
-                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
-                        >
-                          Activate SCOUT — free
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      )}
                       <Link
                         href={session?.access_token ? HUBSPOT_CONNECT_PATH : HUBSPOT_SIGNUP_PATH}
-                        className="mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-all hover:bg-[#FFB000]/[0.06]"
                         style={{ borderColor: "#FFB000", color: "#FFB000", background: "transparent" }}
                       >
                         {hubspotIntegration?.connected ? (
@@ -2021,6 +1997,30 @@ export default function Pipeline() {
                           "HubSpot API sync"
                         )}
                       </Link>
+                      {session?.access_token ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveLead(selected)}
+                          disabled={advancingLeadId === selected.id}
+                          className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50 hover:brightness-110"
+                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                        >
+                          {advancingLeadId === selected.id
+                            ? <RefreshCw className="h-4 w-4 animate-spin" />
+                            : <Zap className="h-4 w-4" />
+                          }
+                          {advancingLeadId === selected.id ? "Saving…" : "Save to SCOUT workspace"}
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
+                          className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110"
+                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                        >
+                          Activate SCOUT — free
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
 
