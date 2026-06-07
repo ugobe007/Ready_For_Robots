@@ -80,7 +80,7 @@ export default function HubSpotConnect() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("connected") === "1") {
-      toast.success("HubSpot connected — choose how SCOUT syncs your saved leads.");
+      toast.success("HubSpot connected — choose how Signal syncs your saved leads.");
       window.history.replaceState({}, "", "/integrations/hubspot");
     }
     const err = params.get("error");
@@ -92,7 +92,7 @@ export default function HubSpotConnect() {
 
   const saveProfile = async () => {
     if (!fullName.trim()) {
-      toast.error("Enter your full name so SCOUT can authenticate your HubSpot workspace.");
+      toast.error("Enter your full name so Signal can authenticate your HubSpot workspace.");
       return;
     }
     setBusy(true);
@@ -165,13 +165,13 @@ export default function HubSpotConnect() {
         <Header />
         <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-16 pt-24 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-            HubSpot + SCOUT
+            HubSpot + Signal
           </p>
           <h1 className="mt-2 text-2xl font-black text-white" style={{ fontFamily: "'Sora', system-ui" }}>
             Connect HubSpot automatically
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-white/45">
-            Create your SCOUT workspace first with email and full name. We provision the HubSpot API link and MCP bridge —
+            Create your Signal workspace first with email and full name. We provision the HubSpot API link and MCP bridge —
             no manual private-app setup.
           </p>
           <Link
@@ -196,11 +196,11 @@ export default function HubSpotConnect() {
           HubSpot integration
         </p>
         <h1 className="text-2xl font-black text-white" style={{ fontFamily: "'Sora', system-ui" }}>
-          Link HubSpot to SCOUT
+          Link HubSpot to Signal
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-white/45">
-          SCOUT connects to your HubSpot account via OAuth, provisions the MCP server bridge, and syncs saved sales leads —
-          automatically or only the accounts you pick.
+          Signal connects to your HubSpot account via OAuth, provisions the MCP server bridge, and syncs saved sales leads —
+          automatically or only the accounts you pick. Use another CRM? Run Signal in the native workspace until Salesforce or Pipedrive ships.
         </p>
 
         {!setup ? (
@@ -249,12 +249,12 @@ export default function HubSpotConnect() {
                       HubSpot account: {setup.connection.account_login || setup.connection.account_name}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-white/35">MCP bridge provisioned on SCOUT — no manual HubSpot app setup.</p>
+                  <p className="mt-1 text-xs text-white/35">MCP bridge provisioned on Signal — no manual HubSpot app setup.</p>
                 </div>
               ) : (
                 <div className="mt-3">
                   <p className="text-sm text-white/55 mb-3">
-                    One click authorizes SCOUT with HubSpot. We build the API link automatically.
+                    One click authorizes Signal with HubSpot. We build the API link automatically.
                   </p>
                   <button
                     type="button"
@@ -292,7 +292,7 @@ export default function HubSpotConnect() {
               <section className={cardClass}>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Step 3 · Sync saved leads</p>
                 <p className="mt-2 text-sm text-white/55">
-                  Choose whether SCOUT sends every saved lead to HubSpot or only the accounts you select.
+                  Choose whether Signal sends every saved lead to HubSpot or only the accounts you select.
                 </p>
                 <div className="mt-3 flex flex-col gap-2">
                   <label className="flex items-start gap-2 rounded-lg border border-white/10 px-3 py-2.5 cursor-pointer">
@@ -305,7 +305,7 @@ export default function HubSpotConnect() {
                     />
                     <span>
                       <span className="block text-sm font-bold text-white">Auto-sync all saved leads</span>
-                      <span className="block text-xs text-white/40">SCOUT pushes every lead in your workspace to HubSpot.</span>
+                      <span className="block text-xs text-white/40">Signal pushes every lead in your workspace to HubSpot.</span>
                     </span>
                   </label>
                   <label className="flex items-start gap-2 rounded-lg border border-white/10 px-3 py-2.5 cursor-pointer">

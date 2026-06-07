@@ -46,6 +46,34 @@ function GitHubMark() {
   );
 }
 
+function CrmMark({ label, color }: { label: string; color: string }) {
+  return (
+    <div
+      className="flex h-11 w-11 items-center justify-center rounded-xl text-xs font-black"
+      style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}
+    >
+      {label}
+    </div>
+  );
+}
+
+const upcomingCrms = [
+  {
+    id: "salesforce",
+    name: "Salesforce",
+    mark: "SF",
+    color: "#00A1E0",
+    description: "Push qualified leads, Signal scores, and outreach briefs into Salesforce opportunities—same OAuth pattern as HubSpot.",
+  },
+  {
+    id: "pipedrive",
+    name: "Pipedrive",
+    mark: "PD",
+    color: "#017737",
+    description: "Sync robot-ready accounts and trigger-based outreach into Pipedrive deals and activities.",
+  },
+];
+
 export default function Integrations() {
   const { session, loading } = useAuth();
   const [integrations, setIntegrations] = useState<IntegrationCard[]>([]);
@@ -164,7 +192,7 @@ export default function Integrations() {
             Connect your stack
           </h1>
           <p className="mt-3 text-sm text-white/45">
-            Sign in to connect HubSpot and GitHub — same one-click flow as Vercel or GitHub app installs.
+            Sign in to connect HubSpot (live) and GitHub. Salesforce and Pipedrive are next—run Signal in the native workspace until your CRM connector ships.
           </p>
           <Link
             href="/login?next=/integrations"
@@ -186,14 +214,15 @@ export default function Integrations() {
           Integrations
         </p>
         <h1 className="text-2xl font-black text-white" style={{ fontFamily: "'Sora', system-ui" }}>
-          Connect HubSpot and GitHub
+          Connect Signal to your stack
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/45">
-          Paste a private app token or personal access token once. SCOUT handles outbound CRM sync and developer context —
-          no MCP URLs or secret manager references required.
+          <span className="font-semibold text-white/65">HubSpot</span> sync is live—OAuth connect, no manual app setup.
+          Use the native Signal workspace if you run another CRM today; Salesforce and Pipedrive connectors are coming soon.
         </p>
 
-        <div className="mt-8 space-y-4">
+        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Available now</p>
+        <div className="mt-3 space-y-4">
           {integrations.map((integration) => {
             const Icon = integration.provider === "github" ? GitHubMark : HubSpotMark;
             const isBusy = busyProvider === integration.provider;
@@ -282,7 +311,46 @@ export default function Integrations() {
           })}
         </div>
 
-        <section className={`${cardClass} mt-6 border-violet-500/20 bg-violet-500/[0.04]`}>
+        <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">CRM connectors · coming soon</p>
+        <div className="mt-3 space-y-4">
+          {upcomingCrms.map((crm) => (
+            <section key={crm.id} className={cardClass}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <CrmMark label={crm.mark} color={crm.color} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-black text-white">{crm.name}</h2>
+                      <span className="rounded-full border border-white/12 bg-white/[0.04] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/40">
+                        Coming soon
+                      </span>
+                    </div>
+                    <p className="mt-1 max-w-xl text-sm text-white/45">{crm.description}</p>
+                    <p className="mt-2 text-xs text-white/30">
+                      Until launch: prospect, qualify, and run outreach in Signal—export leads and briefs into {crm.name}.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/pipeline"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/12 px-4 py-2 text-xs font-bold text-white/55 hover:text-white/80"
+                >
+                  Use Signal workspace
+                </Link>
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <section className={`${cardClass} mt-6 border-teal-400/15 bg-teal-400/[0.04]`}>
+          <p className="text-sm font-bold text-white">No external CRM yet?</p>
+          <p className="mt-1 text-xs text-white/40">
+            Signal includes a native pipeline for prospecting, qualifying, and outreach. Connect{" "}
+            <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span> when you are ready—your system of record stays yours.
+          </p>
+        </section>
+
+        <section className={`${cardClass} mt-4 border-violet-500/20 bg-violet-500/[0.04]`}>
           <p className="text-sm font-bold text-white">Need ERP or MCP partner keys?</p>
           <p className="mt-1 text-xs text-white/40">
             Advanced marketplace connections (scoped MCP servers, secret references) live on the{" "}

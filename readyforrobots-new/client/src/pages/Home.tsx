@@ -106,16 +106,16 @@ const beforeAfter = [
   { before: "3% reply rate on cold outreach", after: "Warm conversations with buyers who have a real need" },
   { before: "Find out about deals after the RFP drops", after: "Shape requirements before competitors know it exists" },
   { before: "SDR spends 70% of time prospecting", after: "SDR spends 100% of time on qualified conversations" },
-  { before: "No visibility into partnership opportunities", after: "SCOUT surfaces integrators and channel partners ready to carry your product" },
+  { before: "No visibility into partnership opportunities", after: "Signal surfaces integrators and channel partners ready to carry your product" },
 ];
 
 const agentFeatures = [
-  { icon: Search, title: "Lead prospecting", desc: "Finds buyers before they post an RFP" },
-  { icon: Users, title: "Partnership development", desc: "Identifies integrators, distributors & channel partners" },
-  { icon: FileText, title: "Outreach drafts", desc: "Signal-specific emails ready to send or edit" },
-  { icon: RefreshCw, title: "Pipeline development", desc: "Nurtures leads and partners from signal to close" },
-  { icon: Shield, title: "Qualification", desc: "Scores every opportunity — only real buyers reach you" },
-  { icon: Globe, title: "Market intelligence", desc: "150+ sources monitored 24/7 for buying signals" },
+  { icon: Search, title: "Prospecting", desc: "Find robot-ready companies from live market signals—updated 24/7" },
+  { icon: Shield, title: "Qualifying", desc: "Score timing, fit, and automation intent before anyone reaches out" },
+  { icon: FileText, title: "Outreach campaigns", desc: "Signal-based sequences synced to HubSpot—or pushed into your CRM" },
+  { icon: Globe, title: "CRM intelligence", desc: "Scores, triggers, and briefs flow into HubSpot, Salesforce, Pipedrive, or your stack" },
+  { icon: Users, title: "Partnership pipeline", desc: "Integrators, distributors, and channel partners in the same workflow" },
+  { icon: RefreshCw, title: "Pipeline continuity", desc: "From first signal through follow-up—one service, not another platform" },
 ];
 
 export default function Home() {
@@ -269,36 +269,38 @@ export default function Home() {
 
             {/* Subheadline */}
             <p className="text-base text-white/60 leading-relaxed mb-7 max-w-2xl" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#c4b5fd" }}>SCOUT — AI sales &amp; partnership agent for robotics.</span>{" "}
-              Not a revenue OS. Robotics intelligence on{" "}
+              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#c4b5fd" }}>Signal</span>
+              {" — robotics prospecting, qualifying, and outreach synced to "}
               <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
-              —live signals, scored timing, your team closes.
+              {" or your CRM."}
             </p>
 
-            {/* CTA — Activate Pipeline */}
-            <Link href="/results?url=">
+            {/* CTAs — equal width */}
+            <div className="flex w-full max-w-md flex-col gap-3">
+              <Link href="/results?url=" className="w-full">
+                <button
+                  type="button"
+                  className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-base font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                  style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+                >
+                  <Zap className="h-4.5 w-4.5" />
+                  Activate Pipeline
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Link>
               <button
-                className="inline-flex items-center gap-2.5 font-bold px-7 py-3.5 rounded-2xl mb-4 transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                style={{ fontSize: "1rem", color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+                type="button"
+                onClick={() => setReportOpen(true)}
+                className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-base font-bold transition-all hover:-translate-y-0.5 hover:bg-teal-400/6"
+                style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.04)" }}
               >
-                <Zap className="h-4.5 w-4.5" />
-                Activate Pipeline
-                <ArrowRight className="h-4 w-4" />
+                <FileText className="h-4 w-4" />
+                2026 Automation Imperative Report
               </button>
-            </Link>
-
-            <p className="text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              No signup required · Free to start · Results in seconds
-            </p>
-            <button
-              type="button"
-              onClick={() => setReportOpen(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition-all hover:-translate-y-0.5"
-              style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.04)" }}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Download the 2026 Automation Imperative Report
-            </button>
+              <p className="text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                No signup required · Free to start · Results in seconds
+              </p>
+            </div>
           </div>
 
           {/* SCOUT Workflow Animation — right column */}
@@ -323,13 +325,15 @@ export default function Home() {
 
           <div>
             <p className="text-base leading-relaxed text-white/50">
-              ReadyForRobots monitors public market signals, scores companies for automation intent, and matches those buyers to the robot products most likely to solve their operational problem. Instead of giving robotics sales teams a cold list, we show why a company is ready, what triggered the signal, and how to start the conversation.
+              We find companies ready for robots using live market signals—fresh 24/7 updates and CRM intelligence that flows into{" "}
+              <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span>, Salesforce, Pipedrive, or the sales stack your team already runs.
+              No cold lists: every account shows why it is ready, what triggered the signal, and how to open the conversation.
             </p>
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                ["Find", "Labor gaps, expansions, CapEx, hiring, and deployment news."],
-                ["Match", "Buyer pain mapped to robot categories and vendor positioning."],
-                ["Act", "Ranked sales leads with timing, evidence, and outreach prompts."],
+                ["Prospecting", "Labor gaps, expansions, CapEx, hiring, and deployment news—monitored 24/7."],
+                ["Qualifying", "Automation intent scored on fit, timing, and evidence before outreach."],
+                ["Outreach", "Campaigns and drafts aligned with HubSpot—or exported into the CRM and sequences you use."],
               ].map(([label, copy], index) => (
                 <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <p className="mb-2 font-mono text-xs font-bold" style={{ color: index === 1 ? "#03DAC5" : "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
@@ -350,9 +354,9 @@ export default function Home() {
           <p ref={howItWorks.ref as React.RefObject<HTMLParagraphElement>} className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-7 ${fadeUpClass(howItWorks.visible)}`} style={{ color: "#a78bfa" }}>How it works</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: "rgba(255,255,255,0.06)" }}>
             {[
-              { step: "01", icon: Search, title: "We find the signals", desc: "Scanning 150+ sources for labor shortages, expansion plans, CapEx signals, and hiring patterns that indicate automation readiness.", color: "#8b5cf6" },
-              { step: "02", icon: Shield, title: "We qualify the prospects", desc: "Every company is scored on 4 factors — labor pain, expansion stage, automation fit, and timing. Only real opportunities make the cut.", color: "#03DAC5" },
-              { step: "03", icon: Zap, title: "We deliver ready actions", desc: "You get a prioritized pipeline with drafted outreach, recommended timing, and the exact signal that triggered the opportunity.", color: "#a78bfa" },
+              { step: "01", icon: Search, title: "Prospecting", desc: "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.", color: "#8b5cf6" },
+              { step: "02", icon: Shield, title: "Qualifying", desc: "Every company is scored on labor pain, expansion stage, automation fit, and timing. Only qualified opportunities enter your pipeline.", color: "#03DAC5" },
+              { step: "03", icon: Zap, title: "Outreach campaigns", desc: "Prioritized accounts with signal-specific drafts and timing—synced to HubSpot and the outreach tools your reps already use.", color: "#a78bfa" },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -434,7 +438,7 @@ export default function Home() {
             <Mail className="mb-5 h-5 w-5" style={{ color: "#03DAC5" }} />
             <p className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Get the brief daily</p>
             <p className="mt-3 text-sm leading-relaxed text-white/42">
-              A short, signal-driven digest of robot demand, buyer timing, and where SCOUT sees sales or partnership motion.
+              A short, signal-driven digest of robot demand, buyer timing, and where Signal sees sales or partnership motion.
             </p>
             <form onSubmit={submitNewsletter} className="mt-5 space-y-2">
               <input
@@ -527,23 +531,25 @@ export default function Home() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left: copy */}
           <div ref={agentPitch.ref as React.RefObject<HTMLDivElement>} className={fadeUpClass(agentPitch.visible)}>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#a78bfa" }}>Meet SCOUT</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#a78bfa" }}>The service</p>
             <h2
               className="font-extrabold text-white leading-tight mb-5"
               style={{ fontSize: "clamp(2rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Sales &amp; partnerships,{" "}
+              Prospecting, qualifying, and outreach—{" "}
               <span
                 style={{
                   background: "linear-gradient(135deg, #03DAC5, #7c3aed)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
-              >fully automated
+              >in your sales workflow
               </span>
             </h2>
             <p className="text-white/45 text-base leading-relaxed mb-8">
-              SCOUT is ReadyForRobots' AI sales &amp; partnership agent. It works 24/7 to find buyers, identify strategic partners, and develop every opportunity from first signal to closed deal — so your team focuses on conversations that matter, not hunting for them.
+              Signal is ReadyForRobots&apos; managed pipeline service—not a personified agent.
+              It monitors market signals 24/7, qualifies robot-ready accounts, and runs outreach campaigns synced to{" "}
+              <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span> or the CRM your team already uses.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {agentFeatures.map((f) => {
@@ -581,11 +587,11 @@ export default function Home() {
                 <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: "#7c3aed" }}>
                   <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
                 </div>
-                <span className="text-sm font-semibold text-white">SCOUT</span>
+                <span className="text-sm font-semibold text-white">Signal</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "#03DAC5" }}>
                 <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-                Running
+                Active · 24/7
               </div>
             </div>
 
@@ -889,9 +895,11 @@ export default function Home() {
             className="font-extrabold text-white mb-3"
             style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
           >
-            Let SCOUT run your pipeline.
+            Run prospecting, qualifying, and outreach from one service.
           </h2>
-          <p className="text-white/35 text-sm mb-8">SCOUT scans for buyers, scores each lead, drafts signal-specific outreach, and tracks follow-up through your pipeline.</p>
+          <p className="text-white/35 text-sm mb-8">
+            Signal finds robot-ready companies from live market signals, scores timing and fit, and pushes outreach into HubSpot—or the CRM your team already uses.
+          </p>
 
           {/* CTA — Activate Pipeline */}
           <Link href="/results?url=">
@@ -941,7 +949,7 @@ export default function Home() {
             <img src="/logo-r.png" alt="" width={24} height={24} className="h-6 w-6 object-contain opacity-90" />
             <span className="text-sm font-semibold text-white/50">ReadyForRobots</span>
           </div>
-          <p className="text-xs text-white/20">© 2026 SCOUT by ReadyForRobots · Signal intelligence for robotics sales.</p>
+          <p className="text-xs text-white/20">© 2026 ReadyForRobots · Signal for robotics sales.</p>
         </div>
       </footer>
       {reportOpen && (

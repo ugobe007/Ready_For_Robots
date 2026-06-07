@@ -19,7 +19,7 @@ const processSteps: {
 }[] = [
   {
     title: "Signal detection",
-    body: "SCOUT monitors OSHA filings, job postings, SEC disclosures, LinkedIn activity, press, permits, and dozens of other public sources — continuously, so your team does not have to.",
+    body: "Signal monitors OSHA filings, job postings, SEC disclosures, LinkedIn activity, press, permits, and dozens of other public sources — continuously, so your team does not have to.",
     pills: ["150+ sources", "24/7"],
   },
   {
@@ -28,18 +28,18 @@ const processSteps: {
     pills: ["score ≥ 70"],
   },
   {
-    title: "SCOUT drafts outreach",
-    body: "For each qualified signal, SCOUT writes a subject line, opening hook, and call to action tied to the exact trigger event — expansion, filing, hire, CapEx, or pilot news.",
+    title: "Outreach campaigns",
+    body: "For each qualified signal, Signal writes a subject line, opening hook, and call to action tied to the exact trigger event — expansion, filing, hire, CapEx, or pilot news.",
     pills: ["<2 min to draft"],
   },
   {
     title: "You review",
-    body: "Choose how much automation you want: Manual (you send everything), Assisted (SCOUT drafts, you approve), or Auto (high-confidence signals send after a short review window).",
+    body: "Choose how much automation you want: Manual (you send everything), Assisted (Signal drafts, you approve), or Auto (high-confidence signals send after a short review window).",
     pills: ["Manual", "Assisted", "Auto"],
   },
   {
     title: "Pipeline advances",
-    body: "Replies, opens, and engagement feed back into the pipeline. SCOUT schedules follow-ups and can escalate technical questions so deals keep moving.",
+    body: "Replies, opens, and engagement feed back into the pipeline. Signal schedules follow-ups and syncs context to HubSpot—or the CRM your team already uses.",
   },
 ];
 
@@ -76,15 +76,15 @@ const autonomyModes = [
     mode: "Assisted",
     icon: Zap,
     color: "#a78bfa",
-    tagline: "SCOUT drafts, you approve",
-    steps: ["Signal detected and scored", "SCOUT drafts personalized email", "You review the draft in your queue", "You approve with one click", "SCOUT sends and tracks response"],
+    tagline: "Signal drafts, you approve",
+    steps: ["Signal detected and scored", "Signal drafts personalized email", "You review the draft in your queue", "You approve with one click", "Signal sends and tracks response"],
   },
   {
     mode: "Auto",
     icon: Clock,
     color: "#7c3aed",
     tagline: "Score 85+ triggers automatically",
-    steps: ["Signal detected and scored", "SCOUT drafts personalized email", "Auto-sends after 30-min review window", "SCOUT tracks replies", "Follow-up scheduled automatically"],
+    steps: ["Signal detected and scored", "Signal drafts personalized email", "Auto-sends after 30-min review window", "Signal tracks replies", "Follow-up scheduled automatically"],
   },
 ];
 
@@ -128,22 +128,23 @@ export default function HowItWorks() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16">
             <div className="pt-4 lg:py-4">
               <p className="text-xs font-mono tracking-widest uppercase mb-6" style={{ color: "#FFB000" }}>
-                Meet SCOUT
+                Signal
               </p>
               <h1
                 className="font-bold leading-none mb-6"
                 style={{ fontFamily: "Sora, sans-serif", fontSize: "clamp(2.4rem, 4.5vw, 3.8rem)", color: "#ffffff" }}
               >
-                How SCOUT turns signals into{" "}
+                How Signal turns market signals into{" "}
                 <span style={{ color: "#FFB000" }}>sales motion.</span>
               </h1>
               <p
                 className="text-base leading-relaxed mb-10 max-w-xl"
                 style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
               >
-                Not a revenue OS. Robotics intelligence on{" "}
+                <span className="font-bold uppercase tracking-[0.1em]" style={{ color: "#c4b5fd" }}>Signal</span>
+                {" — robotics prospecting, qualifying, and outreach synced to "}
                 <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
-                —live signals, scored timing, your team closes.
+                {" or your CRM."}
               </p>
 
               <div className="mb-10 flex flex-wrap items-center gap-4">
@@ -152,7 +153,7 @@ export default function HowItWorks() {
                   className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
                   style={SCOUT_CTA_STYLE}
                 >
-                  Activate SCOUT <Zap size={15} />
+                  Activate Signal <Zap size={15} />
                 </Link>
                 <Link
                   href="/intelligence"
@@ -205,8 +206,7 @@ export default function HowItWorks() {
             </p>
             <p className="text-sm leading-relaxed text-white/45" style={{ fontFamily: "Inter, sans-serif" }}>
               All-in-one revenue platforms consolidate CRM, sequences, and AI into one workspace—you migrate your stack.
-              SCOUT does the opposite: robotics-focused signals and outreach on HubSpot. HubSpot stays system of record;
-              SCOUT is system of opportunity.
+              Signal does the opposite: robotics prospecting, qualifying, and outreach synced to HubSpot, Salesforce, Pipedrive, or your native workspace. Your CRM stays system of record; Signal is system of opportunity.
             </p>
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function HowItWorks() {
             className="mt-3 text-base md:text-lg leading-relaxed w-full"
             style={{ color: "#c4b5fd", fontFamily: "Inter, sans-serif" }}
           >
-            SCOUT is not a single trick — it is a full go-to-market engine for robotics sales teams.
+            Signal runs prospecting, qualifying, and outreach as one continuous service for robotics sales teams.
             Each stage below maps to what you saw in the hero animation.
           </p>
 
@@ -386,7 +386,7 @@ export default function HowItWorks() {
             Autonomy Modes
           </p>
           <h2 className="font-bold text-2xl mb-12" style={{ fontFamily: "Sora, sans-serif", color: "#ffffff" }}>
-            You choose how much SCOUT does.
+            You choose how much Signal automates.
           </h2>
           <div className="grid lg:grid-cols-3 gap-0">
             {autonomyModes.map((m, mi) => {
@@ -447,7 +447,7 @@ export default function HowItWorks() {
               className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
               style={SCOUT_CTA_STYLE}
             >
-              Activate SCOUT <ArrowRight size={15} />
+              Activate Signal <ArrowRight size={15} />
             </Link>
           </div>
         </div>

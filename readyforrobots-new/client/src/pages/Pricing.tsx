@@ -14,7 +14,7 @@ const tiers = [
     name: "Starter",
     price: "$19",
     period: "/month",
-    tagline: "SCOUT intelligence layer — start finding robot-ready buyers",
+    tagline: "Signal — start finding robot-ready buyers",
     color: "#03DAC5",
     icon: Zap,
     cta: "Start Starter",
@@ -28,8 +28,8 @@ const tiers = [
       "Daily newsletter and market signal brief",
     ],
     limitations: [
-      "No SCOUT research feed",
-      "Manual SCOUT workflow",
+      "No Signal research feed",
+      "Manual Signal workflow",
     ],
     highlight: false,
   },
@@ -37,7 +37,7 @@ const tiers = [
     name: "Pro",
     price: "$49",
     period: "/month",
-    tagline: "Full pipeline + SCOUT workspace for active sellers",
+    tagline: "Full pipeline + Signal workspace for active sellers",
     color: "#FFB000",
     icon: Cpu,
     cta: "Start Pro",
@@ -67,7 +67,7 @@ const tiers = [
     features: [
       "Everything in Pro",
       "50 live pipeline leads",
-      "Priority SCOUT research coverage",
+      "Priority Signal research coverage",
       "Team workflow + priority support",
       "Premium signal monitoring",
       "Advanced CRM-ready lead context",
@@ -113,15 +113,19 @@ const faqs = [
   },
   {
     q: "Can I use this with my existing CRM?",
-    a: "Yes — that is the point. ReadyForRobots is SCOUT-powered intelligence on top of your stack. Pro and Premium add HubSpot outbound sync (push qualified leads with SCOUT score, signal, and brief). Salesforce and Pipedrive integrations follow the same API pattern.",
+    a: "Yes — that is the point. Signal is ReadyForRobots' pipeline service on top of your stack. Pro and Premium add HubSpot sync (push qualified leads with score, trigger, and brief). No CRM? Use the native Signal workspace. Salesforce and Pipedrive use the same sync pattern—shipping after HubSpot.",
+  },
+  {
+    q: "What if we use Salesforce or Pipedrive instead of HubSpot?",
+    a: "HubSpot sync is live today on Pro and Premium. Salesforce and Pipedrive are next on the roadmap—the same OAuth push model as HubSpot. Until then, run prospecting, qualifying, and outreach in Signal, then export leads and briefs into your CRM. You never have to switch systems of record.",
   },
   {
     q: "Is ReadyForRobots a HubSpot competitor?",
-    a: "No. HubSpot is your system of record. ReadyForRobots is robotics intelligence on top—live signals, scored timing, and Cal outreach—synced into HubSpot when you upgrade. Your team closes in the CRM you already run.",
+    a: "No. HubSpot is your system of record. Signal is robotics intelligence on top—live signals, scored timing, and outreach—synced into HubSpot when you upgrade. Your team closes in the CRM you already run.",
   },
   {
     q: "How is ReadyForRobots different from an AI revenue OS?",
-    a: "Revenue operating systems replace CRM, engagement, and intelligence in one platform—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. SCOUT adds a robotics wedge on HubSpot: find robot-ready buyers from live signals, score timing, draft trigger-based outreach, and push qualified context into HubSpot. No stack rip-and-replace.",
+    a: "Revenue operating systems replace CRM, engagement, and intelligence in one platform—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. Signal adds a robotics wedge: find robot-ready buyers from live signals, score timing, run outreach, and push context into HubSpot or your CRM. No stack rip-and-replace.",
   },
   {
     q: "Do you help with robot deployment services?",
@@ -157,9 +161,10 @@ export default function Pricing() {
               Simple pricing for robot sales teams
             </h1>
             <p className="text-sm text-white/40 max-w-xl mx-auto">
-              Not a revenue OS. Robotics intelligence on{" "}
+              <span className="font-bold uppercase tracking-[0.1em]" style={{ color: "#c4b5fd" }}>Signal</span>
+              {" — robotics prospecting, qualifying, and outreach synced to "}
               <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
-              —live signals, scored timing, your team closes.
+              {" or your CRM."}
             </p>
           </div>
 

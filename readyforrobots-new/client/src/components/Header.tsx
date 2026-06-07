@@ -21,7 +21,7 @@ function smoothScroll(href: string) {
 const faqs = [
   {
     q: "How does ReadyForRobots find buying signals?",
-    a: "We monitor 150+ sources continuously — job boards, earnings calls, press releases, OSHA filings, real estate permits, and industry news. SCOUT detects patterns that indicate a company is ready to invest in automation.",
+    a: "We monitor 150+ sources continuously — job boards, earnings calls, press releases, OSHA filings, real estate permits, and industry news. Signal detects patterns that indicate a company is ready to invest in automation.",
   },
   {
     q: "What types of robots does this work for?",
@@ -29,15 +29,15 @@ const faqs = [
   },
   {
     q: "How is this different from a lead list?",
-    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a SCOUT-prepared outreach draft — so you reach the right buyer at the right moment.",
+    a: "A lead list gives you names. We give you timing, context, and a reason to reach out. Every opportunity comes with the exact signal that triggered it, a confidence score, and a Signal-prepared outreach draft — so you reach the right buyer at the right moment.",
   },
   {
     q: "Do I need to sign up to see results?",
     a: "No. Enter your company URL above and we'll show you a sample of matched opportunities immediately — no account required. You only sign up when you want to act on them.",
   },
   {
-    q: "How quickly does SCOUT act on new signals?",
-    a: "Signals are detected and scored within minutes. SCOUT prepares outreach drafts within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
+    q: "How quickly does Signal act on new market signals?",
+    a: "Signals are detected and scored within minutes. Signal prepares outreach drafts within the hour. In Auto mode, approved actions are sent within 24 hours of signal detection.",
   },
 ];
 
@@ -46,14 +46,14 @@ const priorityNavLinks = [
   { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
   { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
   { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & HEIR" },
-  { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
+  { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "Prospecting, qualifying, and outreach" },
 ];
 
 const moreNavLinks = [
   { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
   { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
   { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, and quotes" },
-  { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot, GitHub, and CRM sync" },
+  { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot live · more CRMs soon" },
   { label: "Pricing", href: "/pricing", icon: BriefcaseBusiness, desc: "Plans and billing" },
 ];
 
@@ -104,12 +104,12 @@ export default function Header() {
   const signedInEmail = session?.user?.email;
 
   const accountLinks = [
-    { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your SCOUT workspace" },
+    { label: "Sign up", href: "/signup", icon: UserRound, desc: "Create your Signal workspace" },
     { label: "Sign in", href: "/login", icon: UserRound, desc: "Access your account" },
-    { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved SCOUT work" },
+    { label: "Workspace", href: "/profile", icon: BriefcaseBusiness, desc: "View saved Signal work" },
     { label: "Calendar", href: "/calendar", icon: BriefcaseBusiness, desc: "Schedule meetings and send invites" },
     { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "Manage RFPs and vendor docs" },
-    { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "Connect HubSpot and GitHub" },
+    { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "Connect HubSpot, GitHub, and your CRM" },
   ];
 
   return (
