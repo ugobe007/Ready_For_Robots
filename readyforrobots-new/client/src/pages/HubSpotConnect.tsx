@@ -267,7 +267,22 @@ export default function HubSpotConnect() {
                     Connect HubSpot automatically
                   </button>
                   {!setup.oauth_configured && (
-                    <p className="mt-2 text-xs text-amber-300/80">HubSpot OAuth is finishing rollout on the server — try again soon.</p>
+                    <p className="mt-2 text-xs leading-relaxed text-amber-300/85">
+                      HubSpot app not wired to the API yet. Create it with the HubSpot CLI (
+                      <code className="text-amber-200/90">hs project create</code> or upload{" "}
+                      <code className="text-amber-200/90">integrations/hubspot-scout-app</code>), copy Client ID / secret from{" "}
+                      <code className="text-amber-200/90">hs project open</code> → Auth, then set{" "}
+                      <code className="text-amber-200/90">HUBSPOT_CLIENT_ID</code> and{" "}
+                      <code className="text-amber-200/90">HUBSPOT_CLIENT_SECRET</code> on Fly.{" "}
+                      <a
+                        href="https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline text-amber-100"
+                      >
+                        HubSpot docs
+                      </a>
+                    </p>
                   )}
                 </div>
               )}
