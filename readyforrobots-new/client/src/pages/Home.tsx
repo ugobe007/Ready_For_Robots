@@ -291,17 +291,20 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
-              <p className="text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+              <div className="flex w-full justify-center">
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:brightness-110"
+                  style={{ color: "#34d399", fontFamily: "'Inter', system-ui, sans-serif" }}
+                >
+                  <FileText className="h-3 w-3 shrink-0" />
+                  2026 Automation Imperative Report
+                </button>
+              </div>
+              <p className="text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
                 No signup required · Free to start · Results in seconds
               </p>
-              <button
-                type="button"
-                onClick={() => setReportOpen(true)}
-                className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-white/35 transition-colors hover:text-teal-300/80"
-              >
-                <FileText className="h-3 w-3 shrink-0 opacity-70" />
-                2026 Automation Imperative Report
-              </button>
             </div>
           </div>
 
