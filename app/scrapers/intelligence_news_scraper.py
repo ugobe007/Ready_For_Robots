@@ -86,6 +86,30 @@ DISCOVERY_QUERIES = [
     "hospitality technology investment funding 2026",
     "hotel EVS cleaning staffing shortage crisis",
     
+    # Automotive service & parts
+    "automotive parts logistics automation deployment 2026",
+    "auto dealership service repair robot pilot 2026",
+    "parts assembly automation automotive plant 2026",
+    "automotive service logistics AMR 2026",
+
+    # Airport automation sub-verticals
+    "airport baggage handling robot deployment 2026",
+    "airport cleaning robot terminal automation 2026",
+    "airport food court service robot pilot 2026",
+    "airport wheelchair passenger assistance robot 2026",
+    "airport security patrol robot TSA 2026",
+    "airport resupply concession automation 2026",
+
+    # Healthcare subject-area automation (lab, pharmacy, patient, ICU)
+    "hospital lab AMR specimen delivery pilot 2026",
+    "pharmacy automation hospital medication robot 2026",
+    "patient transport robot hospital deployment 2026",
+    "ICU supply delivery robot healthcare 2026",
+    "emergency room logistics automation hospital 2026",
+    "senior care facility robotics staffing 2026",
+    "surgery center automation outpatient 2026",
+    "bulk medication picking hospital pharmacy 2026",
+
     # Manufacturing & packaging
     "end of line automation packaging line investment 2026",
     "pack out pack in automation CPG manufacturing 2026",

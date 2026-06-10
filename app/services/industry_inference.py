@@ -125,11 +125,14 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     ],
     "Healthcare": [
         "hospital", "healthcare", "health system", "clinic", "patient",
-        "senior living", "nursing home", "assisted living", "medical center",
+        "senior living", "senior care", "nursing home", "assisted living", "medical center",
         "skilled nursing", "memory care", "long-term care", "ltc",
         "elder care", "home health", "home care", "palliative care",
         "cedarhurst", "lifespire", "brookdale", "sunrise senior",
         "brightspring", "encompass health",
+        "hospital automation", "healthcare automation", "hospital resupply",
+        "hospital logistics", "outpatient", "out patient", "emergency room",
+        "icu", "intensive care", "rehabilitation", "rehab",
     ],
     "Medical Technology": [
         "laboratory", "lab automation", "clinical lab", "diagnostics lab",
@@ -137,7 +140,9 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "patient care", "specimen processing", "pathology", "iv compounding",
         "medication dispensing", "robotic surgery", "da vinci", "telepresence",
         "telehealth", "phlebotomy", "surgical", "surgery robot", "korea biomed",
-        "vitestro", "roen surgical", "surgerii"
+        "vitestro", "roen surgical", "surgerii",
+        "lab delivery", "pharmacy automation", "surgery center", "surgery automation",
+        "biomedical", "radiotherapy", "bulk medication", "medication picking",
     ],
     "Food Processing & Manufacturing": [
         "food processing", "food manufacturing", "meat processing",
@@ -182,6 +187,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "airport", "terminal", "aviation", "baggage handling", "boarding gate",
         "airport operations", "airport security", "airport shuttle",
         "airlines", "airline",
+        "airport automation", "airport cleaning", "airport resupply",
+        "airport service", "food court", "wheelchair", "tsa", "baggage",
         # Omit generic "metro", "transit", "transportation" — label city-mobility and unrelated articles.
     ],
     "Retail": [
@@ -245,6 +252,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "faraday future", "faraday",
         "robot and vehicle", "robot & vehicle", "vehicle deliveries", "eai robotics",
         "nvidia drive", "autonomous driving", "adas",
+        "automotive automation", "parts assembly", "parts logistics",
+        "parts resupply", "service automation", "service repair", "service logistics",
     ],
     "Media & Publishing": [
         "manufacturing dive", "motley fool", "new york times", "reuters",
@@ -327,6 +336,13 @@ def infer_industry_scores(text: str) -> Dict[str, int]:
         score = sum(1 for kw in keywords if kw in text_lower)
         if score > 0:
             scores[industry] = score
+    try:
+        from app.services.industry_sector_ontology import infer_industries_from_subject_automation
+
+        for industry, pts in infer_industries_from_subject_automation(text).items():
+            scores[industry] = scores.get(industry, 0) + pts
+    except Exception:
+        pass
     return scores
 
 

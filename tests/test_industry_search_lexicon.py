@@ -1,4 +1,5 @@
 """Industry search lexicon — sector sub-ontologies."""
+from app.services.industry_inference import infer_industry_scores
 from app.services.industry_search_lexicon import (
     canonical_industries_for_query,
     expand_search_terms,
@@ -6,7 +7,10 @@ from app.services.industry_search_lexicon import (
     lead_matches_search,
     text_matches_industry_search,
 )
-from app.services.industry_sector_ontology import match_ontology_query
+from app.services.industry_sector_ontology import (
+    match_ontology_query,
+    text_matches_subject_inference,
+)
 
 
 def test_restaurant_maps_to_food_service():
@@ -97,4 +101,53 @@ def test_typo_package_handling():
     assert text_matches_industry_search(
         "Distribution hub upgrades package handling robotics",
         "package handing",
+    )
+
+
+def test_lab_subject_inference_without_exact_phrase():
+    hay = "Regional health system pilots AMR for lab specimen runs between floors"
+    assert text_matches_subject_inference(hay, "lab automation")
+    assert lead_matches_search(
+        "lab automation",
+        industry="Healthcare",
+        signal_text=hay,
+    )
+
+
+def test_patient_subject_inference():
+    assert text_matches_subject_inference(
+        "Hospital deploys patient transport robots to reduce nurse walking time",
+        "patient automation",
+    )
+
+
+def test_airport_baggage_subject_inference():
+    assert text_matches_subject_inference(
+        "International terminal invests in baggage sortation robot pilot",
+        "airport baggage handling automation",
+    )
+    assert "Airports & Aviation" in canonical_industries_for_query("baggage handling")
+
+
+def test_automotive_parts_logistics():
+    assert lead_matches_search(
+        "parts logistics",
+        industry="Automotive & Manufacturing",
+        signal_text="OEM scales AMR fleet for spare parts logistics between plants",
+    )
+
+
+def test_infer_industry_scores_lab_robot_boost():
+    scores = infer_industry_scores("Hospital pilots delivery robot for clinical lab workflow")
+    assert scores.get("Healthcare", 0) >= 1 or scores.get("Medical Technology", 0) >= 1
+
+
+def test_pharmacy_and_icu_subjects():
+    assert text_matches_subject_inference(
+        "ICU nursing unit tests autonomous supply cart during night shift",
+        "icu automation",
+    )
+    assert text_matches_subject_inference(
+        "Central pharmacy robot deployment reduces cart-fill labor",
+        "pharmacy automation",
     )

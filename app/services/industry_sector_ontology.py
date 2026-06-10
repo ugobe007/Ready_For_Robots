@@ -2,6 +2,10 @@
 Sector sub-ontologies for industry search, inference, and scraper discovery.
 
 Source of truth: app/data/industry_sector_ontology.json
+
+Subject + inference pattern: sub-ontologies may declare a primary ``subject`` (lab, patient,
+airport, …). Matching does not require the exact phrase "lab automation" — text containing
+the subject plus an inference anchor (automation, robot, AMR, …) is enough.
 """
 from __future__ import annotations
 
@@ -10,13 +14,39 @@ import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 _ONTOLOGY_PATH = Path(__file__).resolve().parent.parent / "data" / "industry_sector_ontology.json"
+
+_DEFAULT_INFERENCE_ANCHORS: Tuple[str, ...] = (
+    "automation",
+    "automated",
+    "robot",
+    "robotics",
+    "autonomous",
+    "amr",
+    "agv",
+    "cobot",
+    "deployment",
+    "deploys",
+    "deployed",
+    "pilot",
+    "pilots",
+)
 
 
 def normalize_term(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "").strip().lower())
+
+
+@dataclass
+class SubjectRef:
+    sector_id: str
+    sub_id: str
+    subject: str
+    modifiers: List[str]
+    canonical_industries: List[str]
+    terms: List[str]
 
 
 @dataclass
@@ -34,10 +64,41 @@ def load_sector_ontology() -> dict:
 
 
 @lru_cache(maxsize=1)
+def inference_anchors() -> Tuple[str, ...]:
+    raw = load_sector_ontology().get("inference_anchors") or []
+    anchors = [normalize_term(a) for a in raw if normalize_term(a)]
+    return tuple(anchors or _DEFAULT_INFERENCE_ANCHORS)
+
+
+@lru_cache(maxsize=1)
+def _subject_refs() -> List[SubjectRef]:
+    refs: List[SubjectRef] = []
+    for sector in load_sector_ontology().get("sectors", []):
+        sid = sector["id"]
+        canonical = list(sector.get("canonical_industries") or [])
+        for sub_id, sub in (sector.get("sub_ontologies") or {}).items():
+            subject = normalize_term(sub.get("subject") or "")
+            if not subject:
+                continue
+            refs.append(
+                SubjectRef(
+                    sector_id=sid,
+                    sub_id=sub_id,
+                    subject=subject,
+                    modifiers=[normalize_term(m) for m in (sub.get("modifiers") or []) if normalize_term(m)],
+                    canonical_industries=canonical,
+                    terms=[normalize_term(t) for t in (sub.get("terms") or []) if normalize_term(t)],
+                )
+            )
+    refs.sort(key=lambda r: len(r.subject), reverse=True)
+    return refs
+
+
+@lru_cache(maxsize=1)
 def _term_index() -> Dict[str, List[Tuple[str, str, str]]]:
     """
     normalized_term -> [(sector_id, sub_id, raw_term), ...]
-    Indexes root aliases, sub-ontology terms, and sector labels.
+    Indexes root aliases, sub-ontology terms, subjects, and sector labels.
     """
     index: Dict[str, List[Tuple[str, str, str]]] = {}
     data = load_sector_ontology()
@@ -57,6 +118,8 @@ def _term_index() -> Dict[str, List[Tuple[str, str, str]]]:
             _add(canonical, sid, "__canonical__")
         for sub_id, sub in (sector.get("sub_ontologies") or {}).items():
             _add(sub.get("label", ""), sid, sub_id)
+            if sub.get("subject"):
+                _add(sub["subject"], sid, sub_id)
             for term in sub.get("terms", []):
                 _add(term, sid, sub_id)
     return index
@@ -74,6 +137,101 @@ def _term_matches_query(term: str, query: str) -> bool:
     return False
 
 
+def _subject_in_text(subject: str, hay: str) -> bool:
+    if not subject or not hay:
+        return False
+    if " " in subject:
+        return subject in hay
+    if len(subject) <= 4:
+        return re.search(rf"\b{re.escape(subject)}\b", hay) is not None
+    return subject in hay
+
+
+def _has_inference_anchor(hay: str) -> bool:
+    return any(anchor in hay for anchor in inference_anchors())
+
+
+def _strip_inference_suffix(query: str) -> str:
+    q = normalize_term(query)
+    for anchor in inference_anchors():
+        suffix = f" {anchor}"
+        if q.endswith(suffix) and len(q) > len(suffix):
+            return q[: -len(suffix)].strip()
+    return q
+
+
+def resolve_subject_refs(query: str) -> List[SubjectRef]:
+    """Map a user query to subject-based sub-ontologies (longest subject wins)."""
+    q = _strip_inference_suffix(query)
+    if not q:
+        return []
+    matched: List[SubjectRef] = []
+    for ref in _subject_refs():
+        if _term_matches_query(ref.subject, q) or _term_matches_query(q, ref.subject):
+            matched.append(ref)
+    return matched
+
+
+def subject_inference_terms(query: str) -> List[str]:
+    """Expansion terms derived from subject + modifiers + anchors."""
+    refs = resolve_subject_refs(query)
+    if not refs:
+        return []
+    terms: List[str] = []
+    anchors = list(inference_anchors())
+    for ref in refs:
+        terms.append(ref.subject)
+        terms.extend(ref.modifiers)
+        terms.extend(ref.terms)
+        for mod in ref.modifiers:
+            terms.append(f"{ref.subject} {mod}")
+            for anchor in anchors:
+                terms.append(f"{ref.subject} {anchor}")
+                if mod:
+                    terms.append(f"{ref.subject} {mod} {anchor}")
+    return _dedupe_terms(terms)
+
+
+def text_matches_subject_inference(text: str, query: str) -> bool:
+    """
+    True when text contains a known subject from the query and an inference anchor
+    (automation, robot, AMR, …) — exact phrase like "lab automation" not required.
+    """
+    hay = normalize_term(text)
+    if not hay:
+        return False
+    refs = resolve_subject_refs(query)
+    if not refs:
+        return False
+    if not _has_inference_anchor(hay):
+        return False
+    for ref in refs:
+        if not _subject_in_text(ref.subject, hay):
+            continue
+        if ref.modifiers and any(mod in hay for mod in ref.modifiers):
+            return True
+        if any(term in hay for term in ref.terms):
+            return True
+        if _subject_in_text(ref.subject, hay):
+            return True
+    return False
+
+
+def infer_industries_from_subject_automation(text: str) -> Dict[str, int]:
+    """Boost canonical industries when subject + inference anchor appear in signal text."""
+    hay = normalize_term(text)
+    if not hay or not _has_inference_anchor(hay):
+        return {}
+    boosts: Dict[str, int] = {}
+    for ref in _subject_refs():
+        if not _subject_in_text(ref.subject, hay):
+            continue
+        weight = 2 if ref.modifiers and any(m in hay for m in ref.modifiers) else 1
+        for ind in ref.canonical_industries:
+            boosts[ind] = max(boosts.get(ind, 0), weight)
+    return boosts
+
+
 def _collect_sector_bundle(sector: dict) -> Tuple[List[str], List[str]]:
     """Return canonical labels (original case) + all sector expansion terms."""
     canonical: List[str] = list(sector.get("canonical_industries") or [])
@@ -83,6 +241,9 @@ def _collect_sector_bundle(sector: dict) -> Tuple[List[str], List[str]]:
     subs = sector.get("sub_ontologies") or {}
     for sub in subs.values():
         terms.append(sub.get("label", ""))
+        if sub.get("subject"):
+            terms.append(sub["subject"])
+            terms.extend(sub.get("modifiers") or [])
         terms.extend(sub.get("terms") or [])
     return canonical, terms
 
@@ -108,10 +269,19 @@ def match_ontology_query(query: str) -> OntologyMatch:
             else:
                 matched_sector_subs.setdefault(sector_id, set()).add(sub_id)
 
+    for ref in resolve_subject_refs(q):
+        matched_sector_subs.setdefault(ref.sector_id, set()).add(ref.sub_id)
+        direct_terms.append(ref.subject)
+        direct_terms.extend(ref.modifiers)
+        direct_terms.extend(ref.terms)
+
     for sector_id in sector_full_match:
         matched_sector_subs.setdefault(sector_id, set())
 
     if not matched_sector_subs:
+        subject_terms = subject_inference_terms(q)
+        if subject_terms:
+            return OntologyMatch(expansion_terms=_dedupe_terms([q, *subject_terms]))
         return OntologyMatch(expansion_terms=_dedupe_terms(direct_terms))
 
     canonical_out: List[str] = []
@@ -130,6 +300,7 @@ def match_ontology_query(query: str) -> OntologyMatch:
         canonical_out.extend(canonical)
         terms_out.extend(terms)
 
+    terms_out.extend(subject_inference_terms(q))
     return OntologyMatch(
         canonical_industries=_dedupe_canonical(canonical_out),
         expansion_terms=_dedupe_terms(terms_out),
@@ -155,13 +326,14 @@ def pipeline_diversity_industries() -> Tuple[str, ...]:
             if ind not in seen:
                 seen.add(ind)
                 out.append(ind)
-    # Keep preview rotation focused on buyer verticals reps search most.
     priority = (
         "Food Service",
         "Hospitality",
         "Logistics",
         "Healthcare",
-        "Manufacturing",
+        "Medical Technology",
+        "Airports & Aviation",
+        "Automotive & Manufacturing",
         "Retail",
         "Real Estate & Facilities",
     )
@@ -169,7 +341,7 @@ def pipeline_diversity_industries() -> Tuple[str, ...]:
     for ind in out:
         if ind not in ordered:
             ordered.append(ind)
-    return tuple(ordered[:8])
+    return tuple(ordered[:10])
 
 
 def _dedupe_terms(items: List[str]) -> List[str]:

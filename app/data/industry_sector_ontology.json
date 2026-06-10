@@ -1,5 +1,20 @@
 {
-  "version": 1,
+  "version": 2,
+  "inference_anchors": [
+    "automation",
+    "automated",
+    "robot",
+    "robotics",
+    "autonomous",
+    "amr",
+    "agv",
+    "cobot",
+    "deployment",
+    "deploys",
+    "deployed",
+    "pilot",
+    "pilots"
+  ],
   "sectors": [
     {
       "id": "manufacturing",
@@ -69,6 +84,90 @@
             "pick and place",
             "machine tending",
             "quality inspection"
+          ]
+        }
+      }
+    },
+    {
+      "id": "automotive",
+      "label": "Automotive",
+      "canonical_industries": [
+        "Automotive & Manufacturing",
+        "Automotive Dealerships",
+        "Logistics"
+      ],
+      "root_aliases": [
+        "automotive",
+        "automaker",
+        "auto plant",
+        "vehicle manufacturing",
+        "automotive automation"
+      ],
+      "sub_ontologies": {
+        "automotive_automation": {
+          "label": "Automotive Automation",
+          "subject": "automotive",
+          "modifiers": ["assembly", "production", "plant", "factory"],
+          "terms": [
+            "automotive automation",
+            "auto plant automation",
+            "vehicle assembly automation",
+            "automotive manufacturing robot"
+          ]
+        },
+        "parts_assembly": {
+          "label": "Parts Assembly",
+          "subject": "parts",
+          "modifiers": ["assembly", "subassembly", "line", "production"],
+          "terms": [
+            "parts assembly",
+            "parts assembly automation",
+            "component assembly",
+            "subassembly automation"
+          ]
+        },
+        "parts_logistics": {
+          "label": "Parts Logistics",
+          "subject": "parts",
+          "modifiers": ["logistics", "transport", "delivery", "warehouse", "distribution"],
+          "terms": [
+            "parts logistics",
+            "parts logistics automation",
+            "spare parts logistics",
+            "automotive parts distribution"
+          ]
+        },
+        "parts_resupply": {
+          "label": "Parts Resupply Automation",
+          "subject": "parts",
+          "modifiers": ["resupply", "replenishment", "restock", "supply"],
+          "terms": [
+            "parts resupply automation",
+            "parts replenishment",
+            "line-side replenishment",
+            "kitting automation"
+          ]
+        },
+        "service_automation": {
+          "label": "Service Automation",
+          "subject": "service",
+          "modifiers": ["repair", "maintenance", "dealership", "aftermarket", "bay"],
+          "terms": [
+            "service automation",
+            "service repair automation",
+            "automotive service robot",
+            "dealership service automation"
+          ]
+        },
+        "service_logistics": {
+          "label": "Service Logistics",
+          "subject": "service",
+          "modifiers": ["logistics", "parts delivery", "delivery", "transport"],
+          "terms": [
+            "service logistics",
+            "service logistics automation",
+            "service parts delivery",
+            "aftermarket logistics"
           ]
         }
       }
@@ -385,20 +484,184 @@
       "canonical_industries": ["Healthcare", "Medical Technology"],
       "root_aliases": [
         "healthcare",
+        "healthcare automation",
         "hospital",
         "hospitals",
         "health system",
         "clinical",
-        "senior living"
+        "senior living",
+        "senior care"
       ],
       "sub_ontologies": {
+        "hospital_automation": {
+          "label": "Hospital Automation",
+          "subject": "hospital",
+          "modifiers": ["operations", "logistics", "delivery", "resupply", "internal"],
+          "terms": [
+            "hospital automation",
+            "hospital resupply automation",
+            "hospital logistics automation",
+            "hospital internal delivery"
+          ]
+        },
+        "healthcare_automation": {
+          "label": "Healthcare Automation",
+          "subject": "healthcare",
+          "modifiers": ["delivery", "logistics", "operations", "system"],
+          "terms": [
+            "healthcare automation",
+            "health system automation",
+            "clinical automation"
+          ]
+        },
+        "senior_care": {
+          "label": "Senior Care Automation",
+          "subject": "senior care",
+          "modifiers": ["living", "assisted", "nursing", "memory care", "resident"],
+          "terms": [
+            "senior care automation",
+            "senior living automation",
+            "assisted living robot",
+            "nursing home automation"
+          ]
+        },
+        "patient_automation": {
+          "label": "Patient Automation",
+          "subject": "patient",
+          "modifiers": ["transport", "mobility", "care", "delivery", "room", "rounding"],
+          "terms": [
+            "patient automation",
+            "patient transport robot",
+            "patient mobility automation",
+            "patient care robot"
+          ]
+        },
+        "outpatient_automation": {
+          "label": "Outpatient Automation",
+          "subject": "outpatient",
+          "modifiers": ["clinic", "ambulatory", "surgery center", "same day"],
+          "terms": [
+            "out patient automation",
+            "outpatient automation",
+            "ambulatory care automation",
+            "outpatient clinic robot"
+          ]
+        },
+        "lab_automation": {
+          "label": "Lab Automation",
+          "subject": "lab",
+          "modifiers": ["delivery", "specimen", "clinical", "pathology", "diagnostics", "sample"],
+          "terms": [
+            "lab automation",
+            "lab delivery automation",
+            "laboratory automation",
+            "clinical lab automation",
+            "specimen transport robot"
+          ]
+        },
+        "icu_automation": {
+          "label": "ICU Automation",
+          "subject": "icu",
+          "modifiers": ["delivery", "supply", "medication", "critical care", "intensive care"],
+          "terms": [
+            "icu automation",
+            "intensive care automation",
+            "icu delivery robot",
+            "critical care logistics"
+          ]
+        },
+        "emergency_room": {
+          "label": "Emergency Room Automation",
+          "subject": "emergency room",
+          "modifiers": ["er", "ed", "trauma", "delivery", "supply"],
+          "terms": [
+            "emergency room automation",
+            "er automation",
+            "ed logistics robot",
+            "emergency department automation"
+          ]
+        },
+        "surgery_automation": {
+          "label": "Surgery Automation",
+          "subject": "surgery",
+          "modifiers": ["robot", "suite", "or", "operating room", "surgical"],
+          "terms": [
+            "surgery automation",
+            "surgical automation",
+            "operating room automation",
+            "surgery center automation",
+            "robotic surgery"
+          ]
+        },
+        "surgery_center": {
+          "label": "Surgery Center Automation",
+          "subject": "surgery center",
+          "modifiers": ["asc", "ambulatory surgery", "same-day", "supply"],
+          "terms": [
+            "surgery center automation",
+            "ambulatory surgery center automation",
+            "asc automation"
+          ]
+        },
+        "pharmacy_automation": {
+          "label": "Pharmacy Automation",
+          "subject": "pharmacy",
+          "modifiers": ["hospital", "central", "iv", "compounding", "dispensing", "medication"],
+          "terms": [
+            "pharmacy automation",
+            "hospital pharmacy automation",
+            "medication dispensing robot",
+            "iv compounding automation"
+          ]
+        },
+        "bulk_medication_picking": {
+          "label": "Bulk Medication Picking",
+          "subject": "medication",
+          "modifiers": ["picking", "dispensing", "bulk", "unit dose", "cart fill"],
+          "terms": [
+            "bulk medication picking automation",
+            "medication picking robot",
+            "unit dose automation",
+            "cart fill automation"
+          ]
+        },
+        "biomedical_automation": {
+          "label": "Biomedical Automation",
+          "subject": "biomedical",
+          "modifiers": ["engineering", "equipment", "device", "clinical engineering"],
+          "terms": [
+            "biomedical automation",
+            "clinical engineering robotics",
+            "biomedical equipment delivery"
+          ]
+        },
+        "radiotherapy_automation": {
+          "label": "Radiotherapy Automation",
+          "subject": "radiotherapy",
+          "modifiers": ["oncology", "radiation", "treatment", "therapy"],
+          "terms": [
+            "radiotherapy automation",
+            "radiation therapy automation",
+            "oncology automation robot"
+          ]
+        },
+        "rehabilitation_automation": {
+          "label": "Rehabilitation Automation",
+          "subject": "rehabilitation",
+          "modifiers": ["rehab", "physical therapy", "pt", "recovery", "mobility"],
+          "terms": [
+            "rehabilitation automation",
+            "rehab robot",
+            "physical therapy automation",
+            "recovery robotics"
+          ]
+        },
         "clinical_ops": {
           "label": "Clinical Operations",
           "terms": [
             "hospital logistics",
             "internal delivery",
             "specimen transport",
-            "pharmacy automation",
             "medication delivery",
             "nursing support robot"
           ]
@@ -419,8 +682,106 @@
       "id": "airports",
       "label": "Airports & Aviation",
       "canonical_industries": ["Airports & Aviation"],
-      "root_aliases": ["airport", "airports", "aviation", "terminal", "airline"],
+      "root_aliases": [
+        "airport",
+        "airports",
+        "aviation",
+        "terminal",
+        "airline",
+        "airport automation"
+      ],
       "sub_ontologies": {
+        "airport_automation": {
+          "label": "Airport Automation",
+          "subject": "airport",
+          "modifiers": ["terminal", "operations", "passenger", "gate"],
+          "terms": [
+            "airport automation",
+            "terminal automation",
+            "airport operations robot"
+          ]
+        },
+        "airport_cleaning": {
+          "label": "Airport Cleaning Automation",
+          "subject": "airport",
+          "modifiers": ["cleaning", "custodial", "floor care", "scrubber", "evs"],
+          "terms": [
+            "airport cleaning automation",
+            "terminal cleaning robot",
+            "airport floor scrubber"
+          ]
+        },
+        "airport_resupply": {
+          "label": "Airport Resupply Automation",
+          "subject": "airport",
+          "modifiers": ["resupply", "restock", "supply", "replenishment", "concession"],
+          "terms": [
+            "airport resupply automation",
+            "terminal resupply robot",
+            "concession restocking automation"
+          ]
+        },
+        "airport_security": {
+          "label": "Airport Security Automation",
+          "subject": "airport",
+          "modifiers": ["security", "patrol", "screening", "surveillance"],
+          "terms": [
+            "airport security automation",
+            "security patrol robot",
+            "terminal security robot"
+          ]
+        },
+        "airport_tsa": {
+          "label": "Airport TSA Automation",
+          "subject": "tsa",
+          "modifiers": ["screening", "checkpoint", "security", "queue"],
+          "terms": [
+            "airport tsa automation",
+            "tsa screening automation",
+            "checkpoint automation airport"
+          ]
+        },
+        "airport_service": {
+          "label": "Airport Service Automation",
+          "subject": "airport",
+          "modifiers": ["service", "passenger assistance", "concierge", "wayfinding"],
+          "terms": [
+            "airport service automation",
+            "passenger service robot",
+            "terminal concierge robot"
+          ]
+        },
+        "airport_food_court": {
+          "label": "Airport Food Court Automation",
+          "subject": "food court",
+          "modifiers": ["airport", "concession", "terminal dining", "restaurant"],
+          "terms": [
+            "airport food court automation",
+            "terminal food service robot",
+            "airport concession automation"
+          ]
+        },
+        "airport_wheelchair": {
+          "label": "Airport Wheelchair Automation",
+          "subject": "wheelchair",
+          "modifiers": ["airport", "passenger", "mobility", "prm", "accessibility"],
+          "terms": [
+            "airport wheelchair automation",
+            "wheelchair escort robot",
+            "prm assistance robot airport"
+          ]
+        },
+        "baggage_handling": {
+          "label": "Airport Baggage Handling Automation",
+          "subject": "baggage",
+          "modifiers": ["handling", "sortation", "claim", "transfer", "bhs"],
+          "terms": [
+            "airport baggage handling automation",
+            "baggage handling robot",
+            "bhs automation",
+            "baggage sortation robot"
+          ]
+        },
         "terminal_ops": {
           "label": "Terminal Operations",
           "terms": [

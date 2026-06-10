@@ -4,13 +4,26 @@
  */
 import ontology from "@ontology";
 
-type SubOntology = { label?: string; terms?: string[] };
+type SubOntology = {
+  label?: string;
+  subject?: string;
+  modifiers?: string[];
+  terms?: string[];
+};
 type Sector = {
   id: string;
   label?: string;
   canonical_industries?: string[];
   root_aliases?: string[];
   sub_ontologies?: Record<string, SubOntology>;
+};
+
+type SubjectRef = {
+  sectorId: string;
+  subId: string;
+  subject: string;
+  modifiers: string[];
+  terms: string[];
 };
 
 const QUERY_ALIASES: Record<string, string> = {
@@ -23,13 +36,43 @@ const QUERY_ALIASES: Record<string, string> = {
   janitorial: "janitorial automation",
   housekeeping: "housekeeping automation",
   hotel: "hotel automation",
+  "out patient": "outpatient",
+  er: "emergency room",
+  ed: "emergency room",
 };
+
+const INFERENCE_ANCHORS: string[] = (
+  (ontology as { inference_anchors?: string[] }).inference_anchors ?? [
+    "automation", "automated", "robot", "robotics", "autonomous", "amr", "agv", "cobot",
+    "deployment", "deploys", "deployed", "pilot", "pilots",
+  ]
+).map((a) => normalizeTerm(a));
 
 type TermRef = { sectorId: string; subId: string; raw: string };
 
 function normalizeTerm(text: string): string {
   return (text || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
+
+function buildSubjectRefs(): SubjectRef[] {
+  const refs: SubjectRef[] = [];
+  for (const sector of (ontology.sectors ?? []) as Sector[]) {
+    for (const [subId, sub] of Object.entries(sector.sub_ontologies ?? {})) {
+      const subject = normalizeTerm(sub.subject ?? "");
+      if (!subject) continue;
+      refs.push({
+        sectorId: sector.id,
+        subId,
+        subject,
+        modifiers: (sub.modifiers ?? []).map((m) => normalizeTerm(m)).filter(Boolean),
+        terms: (sub.terms ?? []).map((t) => normalizeTerm(t)).filter(Boolean),
+      });
+    }
+  }
+  return refs.sort((a, b) => b.subject.length - a.subject.length);
+}
+
+const SUBJECT_REFS = buildSubjectRefs();
 
 function buildTermIndex(): Map<string, TermRef[]> {
   const index = new Map<string, TermRef[]>();
@@ -47,6 +90,7 @@ function buildTermIndex(): Map<string, TermRef[]> {
     for (const canonical of sector.canonical_industries ?? []) add(canonical, sector.id, "__canonical__");
     for (const [subId, sub] of Object.entries(sector.sub_ontologies ?? {})) {
       add(sub.label ?? "", sector.id, subId);
+      if (sub.subject) add(sub.subject, sector.id, subId);
       for (const term of sub.terms ?? []) add(term, sector.id, subId);
     }
   }
@@ -78,6 +122,51 @@ function resolveQuery(query: string): string {
   return QUERY_ALIASES[q] ?? q;
 }
 
+function stripInferenceSuffix(query: string): string {
+  let q = normalizeTerm(query);
+  for (const anchor of INFERENCE_ANCHORS) {
+    const suffix = ` ${anchor}`;
+    if (q.endsWith(suffix) && q.length > suffix.length) {
+      q = q.slice(0, -suffix.length).trim();
+    }
+  }
+  return q;
+}
+
+function resolveSubjectRefs(query: string): SubjectRef[] {
+  const q = stripInferenceSuffix(resolveQuery(query));
+  if (!q) return [];
+  return SUBJECT_REFS.filter(
+    (ref) => termMatchesQuery(ref.subject, q) || termMatchesQuery(q, ref.subject),
+  );
+}
+
+function subjectInText(subject: string, hay: string): boolean {
+  if (!subject || !hay) return false;
+  if (subject.includes(" ")) return hay.includes(subject);
+  if (subject.length <= 4) {
+    return new RegExp(`\\b${subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(hay);
+  }
+  return hay.includes(subject);
+}
+
+function hasInferenceAnchor(hay: string): boolean {
+  return INFERENCE_ANCHORS.some((anchor) => hay.includes(anchor));
+}
+
+function textMatchesSubjectInference(text: string, query: string): boolean {
+  const hay = normalizeTerm(text);
+  if (!hay || !hasInferenceAnchor(hay)) return false;
+  const refs = resolveSubjectRefs(query);
+  if (!refs.length) return false;
+  return refs.some((ref) => {
+    if (!subjectInText(ref.subject, hay)) return false;
+    if (ref.modifiers.some((mod) => hay.includes(mod))) return true;
+    if (ref.terms.some((term) => hay.includes(term))) return true;
+    return subjectInText(ref.subject, hay);
+  });
+}
+
 interface OntologyMatch {
   canonicalIndustries: string[];
   expansionTerms: string[];
@@ -106,6 +195,13 @@ function matchOntologyQuery(query: string): OntologyMatch {
     }
   }
 
+  for (const ref of resolveSubjectRefs(q)) {
+    const subs = matchedSectorSubs.get(ref.sectorId) ?? new Set<string>();
+    subs.add(ref.subId);
+    matchedSectorSubs.set(ref.sectorId, subs);
+    directTerms.push(ref.subject, ...ref.modifiers, ...ref.terms);
+  }
+
   for (const sectorId of sectorFullMatch) {
     if (!matchedSectorSubs.has(sectorId)) matchedSectorSubs.set(sectorId, new Set());
   }
@@ -122,7 +218,7 @@ function matchOntologyQuery(query: string): OntologyMatch {
     canonicalIndustries.push(...(sector.canonical_industries ?? []));
     expansionTerms.push(sector.label ?? "", ...(sector.root_aliases ?? []));
     for (const sub of Object.values(sector.sub_ontologies ?? {})) {
-      expansionTerms.push(sub.label ?? "", ...(sub.terms ?? []));
+      expansionTerms.push(sub.label ?? "", ...(sub.subject ? [sub.subject] : []), ...(sub.modifiers ?? []), ...(sub.terms ?? []));
     }
   }
 
@@ -151,7 +247,8 @@ export function textMatchesIndustrySearch(text: string, query: string): boolean 
   if (!q) return true;
   const hay = (text || "").toLowerCase();
   if (hay.includes(q)) return true;
-  return expandSearchTerms(q).some((term) => hay.includes(term));
+  if (expandSearchTerms(q).some((term) => hay.includes(term))) return true;
+  return textMatchesSubjectInference(hay, q);
 }
 
 export function dealMatchesIndustrySearch(

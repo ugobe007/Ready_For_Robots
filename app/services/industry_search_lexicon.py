@@ -13,6 +13,7 @@ from app.services.industry_sector_ontology import (
     match_ontology_query,
     normalize_term,
     pipeline_diversity_industries,
+    text_matches_subject_inference,
 )
 
 # Common search typos / shorthand → ontology lookup key
@@ -28,6 +29,9 @@ _QUERY_ALIASES = {
     "janitorial": "janitorial automation",
     "housekeeping": "housekeeping automation",
     "hotel": "hotel automation",
+    "out patient": "outpatient",
+    "er": "emergency room",
+    "ed": "emergency room",
 }
 
 
@@ -90,7 +94,7 @@ def text_matches_industry_search(text: str, query: str) -> bool:
     for term in expand_search_terms(q):
         if term in hay:
             return True
-    return False
+    return text_matches_subject_inference(hay, q)
 
 
 def lead_matches_search(
