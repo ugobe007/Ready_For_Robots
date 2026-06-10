@@ -459,6 +459,43 @@ def rectify_and_enrich_crm_task(self, limit=100, hours_since_scraped=48):
         db.close()
 
 
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=180)
+def lead_secondary_pass_task(
+    self,
+    limit: int = 120,
+    min_score: float = 15.0,
+    use_llm: bool = True,
+    rescore: bool = True,
+):
+    """
+    Second-pass rescue batch — fill missing website, industry, contacts, CRM fields,
+    and inference dossiers on leads already in the corpus (decoupled from scrapers).
+    """
+    from app.services.lead_secondary_pass import run_secondary_pass_batch
+
+    db = get_db()
+    try:
+        stats = run_secondary_pass_batch(
+            db,
+            limit=limit,
+            min_score=min_score,
+            use_llm=use_llm,
+            rescore=rescore,
+        )
+        logger.info(
+            "Lead secondary pass: %d candidates, %d fields filled, %d errors",
+            stats.get("candidates", 0),
+            stats.get("fields_filled_total", 0),
+            stats.get("errors", 0),
+        )
+        return stats
+    except Exception as exc:
+        logger.error("lead_secondary_pass_task failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_rss_scraper_task(self, urls=None, industry=None):
     from app.scrapers.news_scraper import NewsScraper

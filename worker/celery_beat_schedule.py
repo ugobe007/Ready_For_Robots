@@ -182,6 +182,14 @@ CELERYBEAT_SCHEDULE = {
         'kwargs': {'limit': 150, 'hours_since_scraped': 48},
     },
 
+    # ── SECONDARY LOGIC (rescue pass) ── Gap-driven backfill before daily rescore
+    # Mirrors Pythh batch-platform-daily: website, industry, contacts, CRM, inference QA.
+    'lead-secondary-pass-daily': {
+        'task': 'worker.tasks.lead_secondary_pass_task',
+        'schedule': crontab(hour=5, minute=0),  # 5:00am UTC — before 6am rescore
+        'kwargs': {'limit': 120, 'min_score': 15.0, 'use_llm': True, 'rescore': True},
+    },
+
     # ── CLEANUP ── Remove old/junk leads weekly
     'cleanup-junk-leads': {
         'task': 'worker.tasks.cleanup_junk_leads_task',
