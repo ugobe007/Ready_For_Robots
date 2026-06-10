@@ -1,9 +1,11 @@
 """
-Secondary logic — decoupled rescue passes for missing sales-lead fields.
+Secondary logic — five-pillar second pass (decoupled from primary scrapers).
 
-Primary ingestion (scrapers) writes companies + signals quickly. This module runs
-afterward (scheduled batch) to backfill website, industry, contacts, CRM descriptors,
-inference dossiers, and agent QA — analogous to Pythh's batch-platform-daily.yml.
+  1. Missing data    — lead_gap_audit selects candidates
+  2. Optimize data   — rescue passes fill/normalize fields
+  3. Quality gate    — rectification (junk vs sales lead)
+  4. Additional data — agent QA, signal backfill, inference dossier
+  5. Opportunity rank — lead_secondary_assessment stamps sales_opportunity_rank
 """
 from __future__ import annotations
 
@@ -29,6 +31,10 @@ from app.services.lead_gap_audit import (
     ledger_cooldown_ok,
     select_gap_repair_candidates,
     stamp_ledger_entry,
+)
+from app.services.lead_secondary_assessment import (
+    PASS_VALUE_ASSESSMENT,
+    run_value_assessment_pass,
 )
 
 logger = logging.getLogger(__name__)
@@ -87,19 +93,27 @@ def _run_industry_rescue(company: Company, signals: List[Signal], db: Session) -
 
 
 def _run_contact_rescue(company: Company, db: Session) -> tuple[str, List[str]]:
-    from app.services.lead_enrichment import enrich_company_and_contact
+    from app.services.lead_enrichment import enrich_company_contact_with_fallback
 
-    before = db.query(Contact).filter(Contact.company_id == company.id).count()
-    enrich_company_and_contact(company, acct=None, sleep_s=0.4, use_apollo=True)
-    db.add(company)
-    db.commit()
-    after = db.query(Contact).filter(Contact.company_id == company.id).count()
-    if after > before:
-        return "filled", ["contact"]
-    if any(
+    before_email = any(
         (c.email or "").strip()
-        for c in db.query(Contact).filter(Contact.company_id == company.id).limit(5)
-    ):
+        for c in db.query(Contact).filter(Contact.company_id == company.id).limit(10)
+    )
+    meta_before = (company.crm_metadata or {}).get("outreach_email")
+
+    out = enrich_company_contact_with_fallback(
+        company, db, sleep_s=0.4, use_apollo=True
+    )
+    email = out.get("email")
+    source = out.get("email_source")
+
+    if out.get("contact_persisted"):
+        return "filled", ["contact"]
+    if email and source == "domain_inferred":
+        return "filled", ["contact", "outreach_email"]
+    if email and not meta_before and not before_email:
+        return "filled", ["outreach_email"]
+    if email or before_email or meta_before:
         return "skipped", []
     return "failed", []
 
@@ -232,6 +246,25 @@ def run_rescue_passes_for_company(
         contacts,
         overall_score=report.overall_score,
     )
+
+    # Pillar 5 — always rank opportunity value after rescue + quality passes
+    assessment, opportunity_rank = run_value_assessment_pass(
+        company,
+        signals,
+        contacts,
+        pass_outcomes=outcomes,
+        fields_filled=fields_filled,
+    )
+    stamp_ledger_entry(
+        company,
+        PASS_VALUE_ASSESSMENT,
+        status="filled",
+        fields_filled=["secondary_assessment", "sales_opportunity_rank"],
+    )
+    db.add(company)
+    db.commit()
+
+    quality = assessment.get("pillars", {}).get("quality_gate", {})
     return {
         "company_id": report.company_id,
         "company_name": report.company_name,
@@ -239,6 +272,12 @@ def run_rescue_passes_for_company(
         "fields_filled": fields_filled,
         "gaps_before": report.gaps,
         "gaps_after": refreshed.gaps,
+        "is_sales_lead": quality.get("is_sales_lead"),
+        "quality_recommendation": quality.get("recommendation"),
+        "sales_opportunity_rank": opportunity_rank,
+        "lead_value_score": assessment.get("pillars", {}).get("opportunity_rank", {}).get(
+            "lead_value_score"
+        ),
     }
 
 
@@ -296,3 +335,37 @@ def run_secondary_pass_batch(
         "rescore_queued": rescored == -1,
         "sample": results[:15],
     }
+
+
+def run_secondary_pass_batch_and_refresh_caches(
+    *,
+    limit: int = DEFAULT_SECONDARY_LIMIT,
+    min_score: float = 15.0,
+    use_llm: bool = True,
+    rescore: bool = True,
+) -> Dict[str, Any]:
+    """Background job: secondary rescue batch (optional cache refresh is lightweight)."""
+    from app.database import SessionLocal
+    from app.services.public_surface_cache import hydrate_public_surface_caches
+
+    db = SessionLocal()
+    try:
+        stats = run_secondary_pass_batch(
+            db,
+            limit=limit,
+            min_score=min_score,
+            use_llm=use_llm,
+            rescore=rescore,
+        )
+    finally:
+        db.close()
+
+    try:
+        hydrate_public_surface_caches()
+        stats["cache_refresh"] = "ok"
+    except Exception as exc:
+        logger.warning("Secondary pass cache hydrate failed: %s", exc)
+        stats["cache_refresh"] = f"failed: {exc}"
+
+    logger.info("Secondary pass batch complete: %s", stats)
+    return stats

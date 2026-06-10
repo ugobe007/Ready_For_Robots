@@ -1,8 +1,12 @@
 """
-Lead gap audit — detect missing fields on sales leads for secondary rescue passes.
+Lead gap audit — pillar 1 of secondary logic: find missing sales-lead data.
 
-Mirrors the Pythh pattern: primary ingestion writes fast; a decoupled second pass
-fills website, industry, contacts, CRM descriptors, and inference dossiers before scoring.
+Secondary pipeline (decoupled from scrapers):
+  1. Missing data   — this module (gaps + candidate ranking)
+  2. Optimize data  — rescue passes normalize industry, identity, CRM fields
+  3. Quality gate   — rectifier + classify_lead (junk vs sales lead)
+  4. Additional data — agent QA, ontology, procurement/timing cues
+  5. Opportunity rank — lead_secondary_assessment (value of data for the sale)
 """
 from __future__ import annotations
 
@@ -79,6 +83,9 @@ def _has_verified_email(contacts: Sequence[Contact]) -> bool:
 
 
 def _has_decision_maker(contacts: Sequence[Contact], crm_meta: dict) -> bool:
+    outreach = (crm_meta.get("outreach_email") or "").strip()
+    if outreach and "@" in outreach:
+        return True
     if _has_verified_email(contacts):
         return True
     for c in contacts or []:

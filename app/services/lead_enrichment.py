@@ -9,9 +9,12 @@ import logging
 import os
 import re
 import socket
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 
 from app.models.company import Company
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 from app.models.crm import CrmAccount
 from app.services.apollo_client import (
     ApolloAPIError,
@@ -226,16 +229,64 @@ def _verify_zerobounce(email: str, api_key: str) -> tuple[bool, str]:
     return False, f"zerobounce_{status or 'invalid'}"
 
 
+def persist_outreach_contact(
+    company: Company,
+    db: "Session",
+    *,
+    email: str,
+    source: str,
+    title: str | None = None,
+) -> bool:
+    """
+    Write a Contact row + crm_metadata.outreach_email when waterfall finds an address.
+    Returns True if a new contact row was created.
+    """
+    from app.models.contact import Contact
+
+    email = (email or "").strip().lower()
+    if not email or not _EMAIL_RE.match(email):
+        return False
+
+    existing = (
+        db.query(Contact.id)
+        .filter(Contact.company_id == company.id, Contact.email == email)
+        .first()
+    )
+    created = False
+    if not existing:
+        role_title = title or ("Apollo prospect" if source == "apollo" else "Role inbox")
+        db.add(
+            Contact(
+                company_id=company.id,
+                first_name="Outreach",
+                last_name="",
+                title=role_title,
+                email=email,
+                confidence_score=70 if source == "apollo" else 45,
+            )
+        )
+        created = True
+
+    meta = dict(company.crm_metadata or {})
+    meta["outreach_email"] = email
+    meta["outreach_email_source"] = source
+    company.crm_metadata = meta
+    db.add(company)
+    return created
+
+
 def enrich_company_and_contact(
     company: Company,
     acct: CrmAccount | None = None,
     *,
     sleep_s: float = 0.75,
     use_apollo: bool = True,
+    db: "Session | None" = None,
+    persist_contact: bool = False,
 ) -> dict[str, Any]:
     """
     Full enrichment pass: website → contact email waterfall.
-    Mutates company/acct in place; caller commits.
+    Mutates company/acct in place; caller commits when persist_contact is False.
     """
     out: dict[str, Any] = {
         "company_id": company.id,
@@ -244,6 +295,7 @@ def enrich_company_and_contact(
         "website_after": company.website,
         "email": None,
         "email_source": None,
+        "contact_persisted": False,
     }
 
     if not company.website:
@@ -255,4 +307,30 @@ def enrich_company_and_contact(
     email, source = resolve_outreach_email(company, acct, use_apollo=use_apollo)
     out["email"] = email
     out["email_source"] = source
+
+    if email and persist_contact and db is not None:
+        out["contact_persisted"] = persist_outreach_contact(
+            company, db, email=email, source=source
+        )
+
+    return out
+
+
+def enrich_company_contact_with_fallback(
+    company: Company,
+    db: "Session",
+    *,
+    sleep_s: float = 0.5,
+    use_apollo: bool = True,
+) -> dict[str, Any]:
+    """Website lookup + Apollo + role-inbox fallback; always persists when email found."""
+    out = enrich_company_and_contact(
+        company,
+        acct=None,
+        sleep_s=sleep_s,
+        use_apollo=use_apollo,
+        db=db,
+        persist_contact=True,
+    )
+    db.commit()
     return out

@@ -38,6 +38,17 @@ def test_audit_skips_website_when_present():
     assert "industry" not in report.gaps
 
 
+def test_audit_skips_contact_when_outreach_email_in_metadata():
+    signals = [SimpleNamespace(source_url="seed_v3", signal_text="Acme expands")]
+    report = audit_company_gaps(
+        _company(crm_metadata={"outreach_email": "operations@acme.example"}),
+        signals,
+        [],
+        overall_score=70.0,
+    )
+    assert "contact" not in report.gaps
+
+
 def test_stamp_ledger_entry_persists_on_crm_metadata():
     company = _company(crm_metadata={"lead_inference": {"specific_problem": "Labor gap"}})
     stamp_ledger_entry(company, "website_rescue", status="filled", fields_filled=["website"])

@@ -3,9 +3,29 @@ from unittest.mock import MagicMock, patch
 
 from app.services.lead_enrichment import (
     infer_sales_email,
+    persist_outreach_contact,
     resolve_outreach_email,
     verify_email_deliverable,
 )
+
+
+def test_persist_outreach_contact_writes_row_and_metadata():
+    company = MagicMock()
+    company.id = 42
+    company.crm_metadata = {}
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = None
+
+    created = persist_outreach_contact(
+        company,
+        db,
+        email="operations@acme.com",
+        source="domain_inferred",
+    )
+    assert created is True
+    assert company.crm_metadata["outreach_email"] == "operations@acme.com"
+    assert company.crm_metadata["outreach_email_source"] == "domain_inferred"
+    db.add.assert_called()
 
 
 def test_infer_sales_email():
