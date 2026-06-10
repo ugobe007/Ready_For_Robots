@@ -78,6 +78,11 @@ def main():
         default=None,
         help='Max queries to run (default: all). Use 20 for quick ~3 min run.'
     )
+    parser.add_argument(
+        '--no-secondary-pass',
+        action='store_true',
+        help='Skip five-pillar secondary logic on newly discovered leads',
+    )
     
     args = parser.parse_args()
     
@@ -88,6 +93,9 @@ def main():
     logger.info(f"Articles per query: {args.limit}")
     logger.info("="*60)
     
+    if args.no_secondary_pass:
+        os.environ["SECONDARY_PASS_AFTER_SCRAPE"] = "0"
+
     db = SessionLocal()
     scraper = IntelligenceNewsScraper(db=db)
     
@@ -112,6 +120,13 @@ def main():
                 print(f"  Phase failures (by phase): {pf}")
             print("="*60)
             
+            sp = stats.get("secondary_pass") or {}
+            if sp:
+                print(f"  Secondary pass processed: {sp.get('processed', 0)}")
+                print(f"  Fields filled:          {sp.get('fields_filled_total', 0)}")
+                if sp.get("errors"):
+                    print(f"  Secondary errors:       {sp.get('errors')}")
+
             if stats['companies_discovered'] > 0:
                 print(f"\n✨ SUCCESS! Found {stats['companies_discovered']} new leads")
                 print(f"💰 Value: ${stats['companies_discovered'] * 100:,} saved")

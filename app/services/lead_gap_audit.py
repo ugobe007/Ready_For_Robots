@@ -175,6 +175,15 @@ def audit_company_gaps(
         priority += 8
     priority += min(sig_count, 5) * 2
 
+    # Never secondary-processed leads get priority over stale complete rows.
+    if not ledger:
+        priority += 30
+    elif not any(
+        isinstance(ledger.get(k), dict) and ledger[k].get("last_run")
+        for k in GAP_TO_PASS.values()
+    ):
+        priority += 20
+
     return LeadGapReport(
         company_id=int(company.id),
         company_name=company.name or "",

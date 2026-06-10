@@ -10,13 +10,14 @@ Secondary logic — five-pillar second pass (decoupled from primary scrapers).
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
 from app.models.company import Company
 from app.models.contact import Contact
 from app.models.signal import Signal
+from app.services.lead_filter import pick_primary_score
 from app.services.lead_gap_audit import (
     PASS_AGENT_QA,
     PASS_CONTACT,
@@ -41,6 +42,18 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_SECONDARY_LIMIT = 120
 MAX_SECONDARY_LIMIT = 300
+
+# Full pillar sweep for brand-new scraper leads (before nightly gap batch).
+ONBOARDING_PASSES = [
+    PASS_RECTIFY,
+    PASS_WEBSITE,
+    PASS_INDUSTRY,
+    PASS_CRM,
+    PASS_INFERENCE,
+    PASS_CONTACT,
+    PASS_SIGNALS,
+    PASS_AGENT_QA,
+]
 
 
 def _load_company_bundle(db: Session, company_id: int):
@@ -278,6 +291,112 @@ def run_rescue_passes_for_company(
         "lead_value_score": assessment.get("pillars", {}).get("opportunity_rank", {}).get(
             "lead_value_score"
         ),
+    }
+
+
+def _merge_onboarding_passes(report: LeadGapReport, *, onboarding: bool) -> LeadGapReport:
+    """Ensure new scraper leads get the full secondary pillar sweep."""
+    if not onboarding:
+        return report
+    merged = list(dict.fromkeys([*report.passes, *ONBOARDING_PASSES]))
+    report.passes = merged
+    return report
+
+
+def run_secondary_pass_for_company_ids(
+    db: Session,
+    company_ids: Sequence[int],
+    *,
+    use_llm: bool = True,
+    rescore: bool = True,
+    cooldown_hours: int = 0,
+    onboarding: bool = True,
+) -> Dict[str, Any]:
+    """
+    Run secondary logic on explicit company IDs (e.g. fresh scraper discoveries).
+    Skips min_score gate; uses cooldown_hours=0 by default for first-pass completeness.
+    """
+    from app.models.score import Score
+
+    ids = [int(i) for i in company_ids if i]
+    if not ids:
+        return {
+            "candidates": 0,
+            "processed": 0,
+            "fields_filled_total": 0,
+            "errors": 0,
+            "rescore_queued": False,
+            "sample": [],
+        }
+
+    results: List[Dict[str, Any]] = []
+    filled_total = 0
+    errors = 0
+
+    for cid in ids:
+        company, signals, contacts = _load_company_bundle(db, cid)
+        if not company or not signals:
+            results.append({"company_id": cid, "skipped": True, "reason": "missing company or signals"})
+            continue
+        score_row = pick_primary_score(company.scores)
+        overall = float(score_row.overall_intent_score or 0) if score_row else 0.0
+        report = audit_company_gaps(company, signals, contacts, overall_score=overall)
+        report = _merge_onboarding_passes(report, onboarding=onboarding)
+        try:
+            row = run_rescue_passes_for_company(
+                db,
+                report,
+                use_llm=use_llm,
+                cooldown_hours=cooldown_hours,
+            )
+            results.append(row)
+            filled_total += len(row.get("fields_filled") or [])
+        except Exception as exc:
+            errors += 1
+            db.rollback()
+            logger.warning("Secondary onboarding failed for company %s: %s", cid, exc)
+            results.append({"company_id": cid, "error": str(exc)[:200]})
+
+    rescored = False
+    if rescore and results:
+        try:
+            from worker.celery_worker import celery_app
+
+            celery_app.send_task("worker.tasks.rescore_all_companies_task")
+            rescored = True
+        except Exception as exc:
+            logger.warning("Onboarding rescore queue failed, trying in-process: %s", exc)
+            try:
+                from app.services.scoring_engine import compute_scores
+
+                for cid in ids:
+                    company = db.query(Company).filter(Company.id == cid).first()
+                    if not company:
+                        continue
+                    signals = db.query(Signal).filter(Signal.company_id == company.id).all()
+                    score_data = compute_scores(company, signals)
+                    score = db.query(Score).filter(Score.company_id == company.id).first()
+                    if not score:
+                        score = Score(company_id=company.id)
+                        db.add(score)
+                    score.overall_intent_score = score_data.get("overall_intent_score", 0)
+                    score.automation_score = score_data.get("automation_score", 0)
+                    score.labor_pain_score = score_data.get("labor_pain_score", 0)
+                    score.expansion_score = score_data.get("expansion_score", 0)
+                    score.robotics_fit_score = score_data.get("robotics_fit_score", 0)
+                db.commit()
+                rescored = True
+            except Exception as exc2:
+                logger.warning("In-process onboarding rescore failed: %s", exc2)
+
+    return {
+        "candidates": len(ids),
+        "processed": len(results),
+        "fields_filled_total": filled_total,
+        "errors": errors,
+        "rescore_queued": rescored,
+        "onboarding": onboarding,
+        "sample": results[:15],
     }
 
 

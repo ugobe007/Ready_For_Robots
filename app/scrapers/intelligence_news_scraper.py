@@ -26,6 +26,7 @@ Usage:
     scraper.enrich_existing_companies()  # Enrich companies already in DB
 """
 import logging
+import os
 import random
 import re
 import ssl
@@ -774,11 +775,16 @@ class IntelligenceNewsScraper:
             "queries_run": 0,
             "websites_enriched": 0,
             "contacts_enriched": 0,
+            "new_company_ids": [],
+            "secondary_pass": None,
             # Per-phase failure counts (pythh-style: one phase blows, others still run)
             "phase_failures": {},
             "last_phase_errors": [],  # capped trail for debugging
         }
         self._website_lookup_attempted: set[int] = set()
+        self._run_secondary_after_scrape = os.getenv(
+            "SECONDARY_PASS_AFTER_SCRAPE", "1"
+        ).strip().lower() not in ("0", "false", "no")
     
     # ══════════════════════════════════════════════════════════════════════════
     # PUBLIC API
@@ -825,6 +831,7 @@ class IntelligenceNewsScraper:
             time.sleep(self.DELAY)
 
         self._enrich_missing_websites_batch(limit=100)
+        self._run_secondary_pass_for_new_leads()
         self._print_stats()
         return self.stats
     
@@ -1380,9 +1387,48 @@ class IntelligenceNewsScraper:
         self.db.refresh(company)
         
         self.stats["companies_discovered"] += 1
+        self.stats["new_company_ids"].append(company.id)
         logger.info(f"  ✨ NEW LEAD: {name} ({industry})")
         self._maybe_enrich_website(company)
         return company
+
+    def _run_secondary_pass_for_new_leads(self) -> None:
+        """Five-pillar secondary logic on leads created during this discovery run."""
+        if not self._run_secondary_after_scrape:
+            return
+        ids = list(dict.fromkeys(self.stats.get("new_company_ids") or []))
+        if not ids:
+            return
+        use_llm = os.getenv("SECONDARY_PASS_USE_LLM", "1").strip().lower() not in (
+            "0",
+            "false",
+            "no",
+        )
+        logger.info(
+            "🔧 Running secondary logic on %s new lead(s) (onboarding passes)...",
+            len(ids),
+        )
+        try:
+            from app.services.lead_secondary_pass import run_secondary_pass_for_company_ids
+
+            stats = run_secondary_pass_for_company_ids(
+                self.db,
+                ids,
+                use_llm=use_llm,
+                rescore=True,
+                cooldown_hours=0,
+                onboarding=True,
+            )
+            self.stats["secondary_pass"] = stats
+            logger.info(
+                "Secondary pass complete: processed=%s fields_filled=%s errors=%s",
+                stats.get("processed"),
+                stats.get("fields_filled_total"),
+                stats.get("errors"),
+            )
+        except Exception as exc:
+            self._record_phase_failure("secondary_pass", exc, f"ids={ids[:8]}")
+            logger.warning("Secondary pass after scrape failed: %s", exc)
 
     def _maybe_enrich_website(self, company: Company) -> None:
         """DuckDuckGo website lookup — once per company per scraper run."""
