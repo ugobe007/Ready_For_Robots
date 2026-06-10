@@ -190,6 +190,19 @@ CELERYBEAT_SCHEDULE = {
         'kwargs': {'limit': 120, 'min_score': 15.0, 'use_llm': True, 'rescore': True},
     },
 
+    # ── HUMANOID SECONDARY (spec gaps + cited deployment news) ──
+    'humanoid-secondary-pass-daily': {
+        'task': 'worker.tasks.humanoid_secondary_pass_task',
+        'schedule': crontab(hour=5, minute=30),  # 5:30am UTC — after lead secondary pass
+        'kwargs': {
+            'limit': 40,
+            'sparse_threshold_pct': 85.0,
+            'use_llm_scrape': True,
+            'persist_deployment_news': True,
+            'deployment_query_cap': 24,
+        },
+    },
+
     # ── CLEANUP ── Remove old/junk leads weekly
     'cleanup-junk-leads': {
         'task': 'worker.tasks.cleanup_junk_leads_task',

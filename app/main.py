@@ -43,6 +43,7 @@ from app.api.waitlist import router as waitlist_router
 from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_lead_ops import router as admin_lead_ops_router
+from app.api.admin_humanoid_ops import router as admin_humanoid_ops_router
 from app.api.admin_partners import router as admin_partners_router
 from app.api.social_posts import router as social_posts_router
 from app.api.linkedin import router as linkedin_router
@@ -126,6 +127,7 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
 def _run_startup() -> None:
     _start_scheduled_scraper()
     _start_scheduled_secondary_pass()
+    _start_scheduled_humanoid_secondary_pass()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -293,6 +295,7 @@ app.include_router(admin_extended_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_users_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_lead_ops_router, prefix="/api/admin", tags=["admin"])
+app.include_router(admin_humanoid_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
 app.include_router(social_posts_router, prefix="/api/social", tags=["social"])
 app.include_router(linkedin_router, prefix="/api/linkedin", tags=["linkedin"])
@@ -497,6 +500,84 @@ def _start_scheduled_secondary_pass():
         "In-app scheduled secondary pass thread started (every %s hours, first run in %s min)",
         os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"),
         os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"),
+    )
+
+
+def _scheduled_humanoid_secondary_pass_loop():
+    """Daily humanoid benchmark secondary pass on Fly (SKIP_CELERY=1)."""
+    from app.api.scraper_control import _run_humanoid_secondary_pass_sync
+
+    first_delay_min = int(os.getenv("HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "90"))
+    interval_hours = float(os.getenv("HUMANOID_SECONDARY_PASS_EVERY_HOURS", "24"))
+    if interval_hours <= 0:
+        return
+    limit = int(os.getenv("HUMANOID_SECONDARY_PASS_LIMIT", "40"))
+    sparse_pct = float(os.getenv("HUMANOID_SECONDARY_PASS_SPARSE_PCT", "85"))
+    use_llm = os.getenv("HUMANOID_SECONDARY_PASS_USE_LLM", "1").strip().lower() not in (
+        "0", "false", "no"
+    )
+    persist_news = os.getenv("HUMANOID_SECONDARY_PASS_PERSIST_NEWS", "1").strip().lower() not in (
+        "0", "false", "no"
+    )
+    news_queries = int(os.getenv("HUMANOID_SECONDARY_PASS_NEWS_QUERIES", "24"))
+
+    time.sleep(max(60, first_delay_min * 60))
+    while True:
+        try:
+            logger.info("Scheduled humanoid secondary pass starting (limit=%s)", limit)
+            result = _run_humanoid_secondary_pass_sync(
+                limit=limit,
+                sparse_threshold_pct=sparse_pct,
+                use_llm_scrape=use_llm,
+                persist_deployment_news=persist_news,
+                deployment_query_cap=news_queries,
+            )
+            if result.get("status") == "skipped":
+                logger.info("Humanoid secondary pass skipped: %s", result.get("reason"))
+            else:
+                logger.info(
+                    "Humanoid secondary pass finished: processed=%s robots_updated=%s",
+                    result.get("processed"),
+                    (result.get("deployment_news") or {}).get("robots_updated"),
+                )
+        except Exception as exc:
+            logger.exception("Scheduled humanoid secondary pass failed: %s", exc)
+        time.sleep(max(3600, int(interval_hours * 3600)))
+
+
+def _start_scheduled_humanoid_secondary_pass():
+    """Start daily humanoid secondary pass when Celery Beat is not on this machine."""
+    if os.getenv("ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info(
+            "In-app scheduled humanoid secondary pass disabled "
+            "(ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS=0)"
+        )
+        return
+
+    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
+    if has_broker and not skip_celery:
+        logger.info(
+            "In-app humanoid secondary pass skipped: Celery Beat runs humanoid-secondary-pass-daily"
+        )
+        return
+
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS", "").lower() in ("1", "true", "yes")
+        or skip_celery
+    )
+    if not enabled:
+        return
+
+    t = threading.Thread(target=_scheduled_humanoid_secondary_pass_loop, daemon=True)
+    t.start()
+    logger.info(
+        "In-app scheduled humanoid secondary pass thread started (every %s hours, first run in %s min)",
+        os.getenv("HUMANOID_SECONDARY_PASS_EVERY_HOURS", "24"),
+        os.getenv("HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "90"),
     )
 
 

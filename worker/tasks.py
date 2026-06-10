@@ -496,6 +496,42 @@ def lead_secondary_pass_task(
         db.close()
 
 
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=180)
+def humanoid_secondary_pass_task(
+    self,
+    limit: int = 40,
+    sparse_threshold_pct: float = 85.0,
+    use_llm_scrape: bool = True,
+    persist_deployment_news: bool = True,
+    deployment_query_cap: int = 24,
+):
+    """Humanoid benchmark secondary pass — spec gaps, cited news, capability rank."""
+    from app.services.humanoid_secondary_pass import run_humanoid_secondary_pass_batch
+
+    db = get_db()
+    try:
+        stats = run_humanoid_secondary_pass_batch(
+            db,
+            limit=limit,
+            sparse_threshold_pct=sparse_threshold_pct,
+            use_llm_scrape=use_llm_scrape,
+            persist_deployment_news=persist_deployment_news,
+            deployment_query_cap=deployment_query_cap,
+        )
+        logger.info(
+            "Humanoid secondary pass: %d candidates, %d processed, %d errors",
+            stats.get("candidates", 0),
+            stats.get("processed", 0),
+            stats.get("errors", 0),
+        )
+        return stats
+    except Exception as exc:
+        logger.error("humanoid_secondary_pass_task failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_rss_scraper_task(self, urls=None, industry=None):
     from app.scrapers.news_scraper import NewsScraper

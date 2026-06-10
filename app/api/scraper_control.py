@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api/scraper", tags=["scraper-control"])
 _log = logging.getLogger(__name__)
 
 _secondary_pass_lock = threading.Lock()
+_humanoid_secondary_pass_lock = threading.Lock()
 
 
 def _run_secondary_pass_sync(
@@ -63,6 +64,52 @@ def _run_secondary_pass_sync(
         raise
     finally:
         _secondary_pass_lock.release()
+
+
+def _run_humanoid_secondary_pass_sync(
+    *,
+    limit: int = 40,
+    sparse_threshold_pct: float = 85.0,
+    use_llm_scrape: bool = True,
+    persist_deployment_news: bool = True,
+    deployment_query_cap: int = 24,
+) -> Dict[str, Any]:
+    """Run humanoid five-pillar secondary pass in-process (Fly / cron HTTP)."""
+    if not _humanoid_secondary_pass_lock.acquire(blocking=False):
+        _log.info("Humanoid secondary pass skipped: another run is in progress")
+        return {"status": "skipped", "reason": "already_running"}
+
+    try:
+        from app.services.humanoid_secondary_pass import (
+            run_humanoid_secondary_pass_batch_and_refresh_caches,
+        )
+
+        _log.info(
+            "Humanoid secondary pass starting (limit=%s sparse_pct=%s use_llm=%s)",
+            limit,
+            sparse_threshold_pct,
+            use_llm_scrape,
+        )
+        stats = run_humanoid_secondary_pass_batch_and_refresh_caches(
+            limit=limit,
+            sparse_threshold_pct=sparse_threshold_pct,
+            use_llm_scrape=use_llm_scrape,
+            persist_deployment_news=persist_deployment_news,
+            deployment_query_cap=deployment_query_cap,
+        )
+        _log.info(
+            "Humanoid secondary pass finished: candidates=%s processed=%s errors=%s news_updated=%s",
+            stats.get("candidates"),
+            stats.get("processed"),
+            stats.get("errors"),
+            (stats.get("deployment_news") or {}).get("robots_updated"),
+        )
+        return {"status": "completed", **stats}
+    except Exception as exc:
+        _log.exception("Humanoid secondary pass failed: %s", exc)
+        raise
+    finally:
+        _humanoid_secondary_pass_lock.release()
 
 
 def _run_intelligence_scraper_sync(
@@ -157,6 +204,39 @@ async def cron_run_secondary_pass(
         "message": f"Secondary pass running in background (limit={limit})",
         "limit": limit,
         "min_score": min_score,
+    }
+
+
+@router.get("/cron/run-humanoid-secondary-pass")
+async def cron_run_humanoid_secondary_pass(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+    limit: int = Query(40, ge=1, le=80),
+    sparse_pct: float = Query(85.0, ge=0.0, le=100.0),
+    use_llm: bool = Query(True),
+    persist_news: bool = Query(True),
+    news_queries: int = Query(24, ge=4, le=60),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for humanoid benchmark secondary logic (spec gaps + cited news).
+    GET /api/scraper/cron/run-humanoid-secondary-pass?token=YOUR_SECRET
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    background_tasks.add_task(
+        _run_humanoid_secondary_pass_sync,
+        limit=limit,
+        sparse_threshold_pct=sparse_pct,
+        use_llm_scrape=use_llm,
+        persist_deployment_news=persist_news,
+        deployment_query_cap=news_queries,
+    )
+    return {
+        "status": "started",
+        "message": f"Humanoid secondary pass running in background (limit={limit})",
+        "limit": limit,
+        "sparse_pct": sparse_pct,
     }
 
 

@@ -38,6 +38,13 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES = "60"
   SECONDARY_PASS_LIMIT = "120"
   SECONDARY_PASS_MIN_SCORE = "15"
+  # Humanoid benchmark secondary pass (spec backfill + cited news evidence)
+  ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS = "1"
+  HUMANOID_SECONDARY_PASS_EVERY_HOURS = "24"
+  HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES = "90"
+  HUMANOID_SECONDARY_PASS_LIMIT = "40"
+  HUMANOID_SECONDARY_PASS_SPARSE_PCT = "85"
+  HUMANOID_SECONDARY_PASS_NEWS_QUERIES = "24"
 
 [http_service]
   internal_port = 8080

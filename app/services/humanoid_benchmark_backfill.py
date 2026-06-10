@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -28,9 +28,12 @@ PRIORITY_SLUGS = (
     "unitree-r1",
     "figure-02",
     "figure-01",
+    "figure-03",
     "agility-digit",
+    "agility-digit-2",
     "boston-dynamics-atlas",
     "apptronik-apollo",
+    "tesla-optimus-gen1",
     "tesla-optimus-gen2",
 )
 
@@ -162,6 +165,79 @@ def backfill_humanoid_specs(db: Session, *, sparse_heif_below: float = 1.2) -> d
 
     db.commit()
     return {"scanned": len(rows), "updated": updated, "skipped": skipped}
+
+
+def backfill_sparse_humanoids(
+    db: Session,
+    *,
+    slugs: Optional[List[str]] = None,
+    rescore: bool = True,
+) -> dict:
+    """Backfill seed/catalog specs for specific slugs (secondary-pass rescue)."""
+    if not slugs:
+        return {"updated": 0, "skipped": 0}
+
+    updated = 0
+    skipped = 0
+    now = datetime.now(timezone.utc)
+
+    for slug in slugs:
+        row = db.execute(
+            text("""
+                SELECT model_slug, name, vendor, status, specs, heif_total
+                FROM humanoid_benchmarks WHERE model_slug = :slug
+            """),
+            {"slug": slug},
+        ).mappings().first()
+        if not row:
+            skipped += 1
+            continue
+
+        existing_specs = dict(row["specs"] or {})
+        seed_specs = SEED_SPECS_BY_SLUG.get(slug) or {}
+        catalog_specs = _CATALOG_SPECS_BY_SLUG.get(slug) or {}
+        if not seed_specs and not catalog_specs:
+            skipped += 1
+            continue
+
+        merged = _merge_specs(existing_specs, catalog_specs, seed_specs)
+        merged = specs_for_storage(merged, slug)
+        if merged == existing_specs and not rescore:
+            skipped += 1
+            continue
+
+        scores = compute_scores(
+            scoring_specs(merged),
+            status=row["status"] or "research",
+            vendor=row["vendor"] or "",
+        )
+        db.execute(
+            text("""
+                UPDATE humanoid_benchmarks SET
+                    specs = cast(:specs as jsonb),
+                    score_mobility = :score_mobility,
+                    score_manipulation = :score_manipulation,
+                    score_autonomy = :score_autonomy,
+                    score_safety = :score_safety,
+                    score_endurance = :score_endurance,
+                    score_market_readiness = :score_market_readiness,
+                    score_total = :score_total,
+                    heif_mobility = :heif_mobility,
+                    heif_manipulation = :heif_manipulation,
+                    heif_cognition = :heif_cognition,
+                    heif_safety = :heif_safety,
+                    heif_data_pipeline = :heif_data_pipeline,
+                    heif_production = :heif_production,
+                    heif_total = :heif_total,
+                    updated_at = :now
+                WHERE model_slug = :slug
+            """),
+            {"specs": json.dumps(merged), "slug": slug, "now": now, **scores},
+        )
+        updated += 1
+
+    db.commit()
+    return {"updated": updated, "skipped": skipped, "slugs": slugs}
 
 
 def repair_humanoid_index(db: Session) -> dict:
