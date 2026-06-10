@@ -330,6 +330,18 @@ function HubSpotCtaLink({
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
+function filterDealsByQuery(deals: Deal[], query: string): Deal[] {
+  const q = query.trim().toLowerCase();
+  if (!q || q === "all") return deals;
+  return deals.filter((d) => {
+    const haystack = [d.industry, d.company, d.signal, d.location, d.signalType]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+}
+
 function PipelineMetric({
   label,
   value,
@@ -342,15 +354,15 @@ function PipelineMetric({
   color: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/28">{label}</p>
-        <span className="h-2 w-2 rounded-full" style={{ background: color, boxShadow: `0 0 18px ${color}66` }} />
+    <div className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(255,255,255,0.03)" }}>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">{label}</p>
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 12px ${color}66` }} />
       </div>
-      <p className="font-mono text-2xl font-bold leading-none" style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>
+      <p className="font-mono text-xl font-bold leading-none" style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>
         {value}
       </p>
-      <p className="mt-2 text-[11px] leading-relaxed text-white/35">{sub}</p>
+      <p className="mt-1 text-[10px] leading-snug text-white/35">{sub}</p>
     </div>
   );
 }
@@ -625,15 +637,14 @@ export default function Pipeline() {
   }, [session?.access_token, isAdmin]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
-  const resolvedIndustryFilter = industryQuery.trim() || filter;
-  const filtered = !resolvedIndustryFilter || resolvedIndustryFilter === "All"
-    ? deals
-    : deals.filter((d) =>
-        String(d.industry || "")
-          .toLowerCase()
-          .includes(resolvedIndustryFilter.toLowerCase()),
-      );
-  const selected = deals.find((d) => d.id === selectedId) ?? null;
+  const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
+  const hasActiveSearch = Boolean(activeSearchQuery);
+  const filtered = filterDealsByQuery(deals, activeSearchQuery);
+  const effectiveSelectedId =
+    selectedId != null && filtered.some((d) => d.id === selectedId)
+      ? selectedId
+      : (filtered[0]?.id ?? null);
+  const selected = filtered.find((d) => d.id === effectiveSelectedId) ?? null;
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
   const moveStage = (id: number, direction: 1 | -1) => {
@@ -978,6 +989,8 @@ export default function Pipeline() {
   const hotDeals = summary?.hot ?? (loadingSummary ? undefined : filtered.filter((d) => d.score >= 85).length);
   const warmDeals = summary?.warm ?? (loadingSummary ? undefined : filtered.filter((d) => d.score >= 65 && d.score < 85).length);
   const visibleDeals = filtered.length;
+  const filteredHot = filtered.filter((d) => d.score >= 85).length;
+  const filteredWarm = filtered.filter((d) => d.score >= 65 && d.score < 85).length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
@@ -997,26 +1010,6 @@ export default function Pipeline() {
           {!loadingLeads && !loadErr && filtered.length === 0 && (
             <div className="rounded-lg border border-violet-400/25 bg-violet-400/8 px-3 py-2 text-xs text-violet-100/85">
               Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
-            </div>
-          )}
-          {!isAdmin && entitlements && entitlements.plan !== "paid" && (
-            <div
-              className="rounded-xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              style={{ borderColor: "rgba(255,176,0,0.25)", background: "rgba(255,176,0,0.06)" }}
-            >
-              <p className="text-[11px] leading-relaxed text-white/65">
-                {entitlements.plan === "anonymous"
-                  ? `Showing ${entitlements.visible_count} preview leads. Create a free account for ${PIPELINE_LIMIT_FREE} leads and ${entitlements.saved_limit ?? 5} SCOUT workspaces.`
-                  : `Free plan: ${entitlements.visible_count}/${entitlements.pipeline_limit} pipeline leads · ${entitlements.saved_limit ?? 5} saved workspaces. Upgrade for ${PIPELINE_LIMIT_PAID} leads and HubSpot sync on /integrations.`}
-              </p>
-              <Link
-                href={entitlements.plan === "anonymous" ? "/signup?next=%2Fpipeline" : "/pricing"}
-                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold"
-                style={{ color: "#0d0520", background: "#FFB000" }}
-              >
-                {entitlements.plan === "anonymous" ? "Sign up free" : "Upgrade"}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
             </div>
           )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
@@ -1048,7 +1041,7 @@ export default function Pipeline() {
                   setFilter("All");
                 }}
                 list="pipeline-industries"
-                placeholder="Filter by industry..."
+                placeholder="Search industry, company, or signal…"
                 className="w-full rounded-xl border border-white/10 bg-white/[0.035] py-2.5 pl-9 pr-9 text-xs font-semibold text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
               />
               {industryQuery && (
@@ -1068,7 +1061,7 @@ export default function Pipeline() {
             </div>
           </div>
 
-          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             <PipelineMetric
               label={isAdmin ? "Database total" : "Market watchlist"}
               value={formatMetric(dbTotal)}
@@ -1094,7 +1087,9 @@ export default function Pipeline() {
               value={formatMetric(visibleDeals)}
               sub={isAdmin
                 ? `${formatMetric(queuedActivations)} SCOUT activations queued`
-                : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
+                : hasActiveSearch
+                  ? `${formatMetric(filteredHot)} hot · ${formatMetric(filteredWarm)} warm matching search`
+                  : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
               color="#a78bfa"
             />
           </section>
@@ -1507,7 +1502,7 @@ export default function Pipeline() {
                     ) : (
                       <div className="flex flex-col gap-0.5 mb-2">
                         {stageDeals.map((deal) => {
-                          const isSelected = deal.id === selectedId;
+                          const isSelected = deal.id === effectiveSelectedId;
                           return (
                             <button
                               key={deal.id}
@@ -1600,7 +1595,7 @@ export default function Pipeline() {
                     ) : (
                       <div className="flex flex-col gap-0.5 mb-2">
                         {bucketDeals.map((deal) => {
-                          const isSelected = deal.id === selectedId;
+                          const isSelected = deal.id === effectiveSelectedId;
                           const tier = userTierBadge(deal);
                           return (
                             <button
@@ -2120,9 +2115,11 @@ export default function Pipeline() {
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
                   <p className="text-sm text-white/25">
-                    {isAdmin
-                      ? "Select a deal to review signal detail and Cal outreach"
-                      : "Select a lead to review signals, research, and SCOUT scoring"}
+                    {hasActiveSearch && filtered.length === 0
+                      ? `No leads match "${activeSearchQuery}". Try another industry, company, or signal.`
+                      : isAdmin
+                        ? "Select a deal to review signal detail and Cal outreach"
+                        : "Select a lead to review signals, research, and SCOUT scoring"}
                   </p>
                 </div>
               )}
