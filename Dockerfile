@@ -15,6 +15,8 @@ COPY readyforrobots-new/package.json readyforrobots-new/pnpm-lock.yaml ./
 COPY readyforrobots-new/patches ./patches
 RUN pnpm install --frozen-lockfile
 COPY readyforrobots-new/ ./
+# Vite @ontology alias resolves to ../app/data/ relative to readyforrobots-new/
+COPY app/data/industry_sector_ontology.json /app/data/industry_sector_ontology.json
 RUN pnpm run build
 # Vite client output: /rfr/dist/public/
 
