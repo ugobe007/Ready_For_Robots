@@ -32,6 +32,12 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   SUPABASE_URL = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
   # Web machine: API only — Celery workers compete for Supabase pool slots on 1024MB.
   SKIP_CELERY = "1"
+  # In-app scheduler (daemon thread) — secondary pass runs daily without Celery Beat
+  ENABLE_SCHEDULED_SECONDARY_PASS = "1"
+  SECONDARY_PASS_EVERY_HOURS = "24"
+  SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES = "60"
+  SECONDARY_PASS_LIMIT = "120"
+  SECONDARY_PASS_MIN_SCORE = "15"
 
 [http_service]
   internal_port = 8080

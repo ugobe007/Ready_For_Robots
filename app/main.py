@@ -125,6 +125,7 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
 
 def _run_startup() -> None:
     _start_scheduled_scraper()
+    _start_scheduled_secondary_pass()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -430,6 +431,74 @@ def _start_scheduled_scraper():
     t = threading.Thread(target=_scheduled_scraper_loop, daemon=True)
     t.start()
     logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
+
+
+def _scheduled_secondary_pass_loop():
+    """Daily secondary logic on Fly when Celery Beat is not running (SKIP_CELERY=1)."""
+    from app.api.scraper_control import _run_secondary_pass_sync
+
+    first_delay_min = int(os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"))
+    interval_hours = float(os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"))
+    if interval_hours <= 0:
+        return
+    limit = int(os.getenv("SECONDARY_PASS_LIMIT", "120"))
+    min_score = float(os.getenv("SECONDARY_PASS_MIN_SCORE", "15"))
+    use_llm = os.getenv("SECONDARY_PASS_USE_LLM", "1").strip().lower() not in ("0", "false", "no")
+    rescore = os.getenv("SECONDARY_PASS_RESCORE", "1").strip().lower() not in ("0", "false", "no")
+
+    time.sleep(max(60, first_delay_min * 60))
+    while True:
+        try:
+            logger.info("Scheduled secondary pass starting (in-app thread, limit=%s)", limit)
+            result = _run_secondary_pass_sync(
+                limit=limit,
+                min_score=min_score,
+                use_llm=use_llm,
+                rescore=rescore,
+            )
+            if result.get("status") == "skipped":
+                logger.info("Scheduled secondary pass skipped: %s", result.get("reason"))
+            else:
+                logger.info(
+                    "Scheduled secondary pass finished: processed=%s fields_filled=%s",
+                    result.get("processed"),
+                    result.get("fields_filled_total"),
+                )
+        except Exception as exc:
+            logger.exception("Scheduled secondary pass failed: %s", exc)
+        time.sleep(max(3600, int(interval_hours * 3600)))
+
+
+def _start_scheduled_secondary_pass():
+    """Start daily secondary pass when Celery Beat is not on this machine."""
+    if os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "1").strip().lower() in ("0", "false", "no"):
+        logger.info("In-app scheduled secondary pass disabled (ENABLE_SCHEDULED_SECONDARY_PASS=0)")
+        return
+
+    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
+    if has_broker and not skip_celery:
+        logger.info(
+            "In-app scheduled secondary pass skipped: Celery Beat runs lead-secondary-pass-daily"
+        )
+        return
+
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "").lower() in ("1", "true", "yes")
+        or skip_celery
+    )
+    if not enabled:
+        return
+
+    t = threading.Thread(target=_scheduled_secondary_pass_loop, daemon=True)
+    t.start()
+    logger.info(
+        "In-app scheduled secondary pass thread started (every %s hours, first run in %s min)",
+        os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"),
+        os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"),
+    )
+
 
 # ── Static frontend (Vite SPA build → static/) ────────────────────────────
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")

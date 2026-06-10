@@ -1,6 +1,10 @@
 """
 Scraper control API - Manual trigger and monitoring
 """
+import logging
+import os
+import threading
+
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
@@ -11,6 +15,54 @@ from app.models.company import Company
 from app.models.signal import Signal
 
 router = APIRouter(prefix="/api/scraper", tags=["scraper-control"])
+_log = logging.getLogger(__name__)
+
+_secondary_pass_lock = threading.Lock()
+
+
+def _run_secondary_pass_sync(
+    *,
+    limit: int = 120,
+    min_score: float = 15.0,
+    use_llm: bool = True,
+    rescore: bool = True,
+) -> Dict[str, Any]:
+    """
+    Run the five-pillar secondary pass in-process (Fly web machine / cron HTTP).
+    Serialized with a lock so cron + in-app scheduler cannot overlap.
+    """
+    if not _secondary_pass_lock.acquire(blocking=False):
+        _log.info("Secondary pass skipped: another run is in progress")
+        return {"status": "skipped", "reason": "already_running"}
+
+    try:
+        from app.services.lead_secondary_pass import run_secondary_pass_batch_and_refresh_caches
+
+        _log.info(
+            "Secondary pass starting (limit=%s min_score=%s use_llm=%s)",
+            limit,
+            min_score,
+            use_llm,
+        )
+        stats = run_secondary_pass_batch_and_refresh_caches(
+            limit=limit,
+            min_score=min_score,
+            use_llm=use_llm,
+            rescore=rescore,
+        )
+        _log.info(
+            "Secondary pass finished: candidates=%s processed=%s fields_filled=%s errors=%s",
+            stats.get("candidates"),
+            stats.get("processed"),
+            stats.get("fields_filled_total"),
+            stats.get("errors"),
+        )
+        return {"status": "completed", **stats}
+    except Exception as exc:
+        _log.exception("Secondary pass failed: %s", exc)
+        raise
+    finally:
+        _secondary_pass_lock.release()
 
 
 def _run_intelligence_scraper_sync(
@@ -74,6 +126,38 @@ async def cron_run_intelligence(
         enrich=True,
     )
     return {"status": "started", "message": "Quick scrape running (20 queries)"}
+
+
+@router.get("/cron/run-secondary-pass")
+async def cron_run_secondary_pass(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+    limit: int = Query(120, ge=1, le=300),
+    min_score: float = Query(15.0, ge=0.0, le=100.0),
+    use_llm: bool = Query(True),
+    rescore: bool = Query(True),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for automatic secondary logic (gap audit → rescue → rank).
+    GET /api/scraper/cron/run-secondary-pass?token=YOUR_SECRET
+    Schedule daily ~05:00 UTC on cron-job.org (or rely on in-app scheduler on Fly).
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    background_tasks.add_task(
+        _run_secondary_pass_sync,
+        limit=limit,
+        min_score=min_score,
+        use_llm=use_llm,
+        rescore=rescore,
+    )
+    return {
+        "status": "started",
+        "message": f"Secondary pass running in background (limit={limit})",
+        "limit": limit,
+        "min_score": min_score,
+    }
 
 
 def _run_content_surfaces_refresh_sync(*, newsletter_force: bool = False) -> Dict[str, Any]:

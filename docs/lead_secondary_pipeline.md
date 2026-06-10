@@ -64,7 +64,19 @@ Stored on each lead as `crm_metadata.secondary_assessment` after every secondary
 | `ontology_gaps` | `agent_qa` | Rich facts, ontology candidates |
 | *(always)* | `value_assessment` | `secondary_assessment` + rank |
 
-## Schedule (UTC)
+## Automatic execution (production)
+
+Fly runs **`SKIP_CELERY=1`** on the web machine, so Celery Beat alone does not fire jobs. Secondary logic is automatic via:
+
+| Mechanism | When | Config |
+|-----------|------|--------|
+| **In-app scheduler** | Every 24h, first run 60m after deploy | `ENABLE_SCHEDULED_SECONDARY_PASS=1` in `fly.toml` |
+| **Cron HTTP** (backup) | External cron hits API | `GET /api/scraper/cron/run-secondary-pass?token=$SCRAPER_CRON_TOKEN` |
+| **Celery Beat** | 05:00 UTC daily | Only when worker + beat run (`SKIP_CELERY` unset) |
+
+In-app thread: `app/main.py` → `_scheduled_secondary_pass_loop` → `_run_secondary_pass_sync`.
+
+## Schedule (UTC, Celery worker deployments)
 
 ```
 02:30  rectify-crm-nightly
@@ -82,6 +94,9 @@ PYTHONPATH=. python3 scripts/run_lead_secondary_pass.py --limit 25 --no-rescore
 
 curl -X POST "https://ready-2-robot.fly.dev/api/admin/leads/secondary-pass?limit=50" \
   -H "X-Admin-Key: $ADMIN_KEY"
+
+# Cron (cron-job.org) — daily 05:00 UTC backup trigger
+curl "https://ready-2-robot.fly.dev/api/scraper/cron/run-secondary-pass?token=$SCRAPER_CRON_TOKEN&limit=120"
 ```
 
 ## Code touchpoints
