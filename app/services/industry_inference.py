@@ -98,6 +98,10 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "warehouse", "logistics", "fulfillment", "distribution", "supply chain",
         "3pl", "third party logistics", "fulfillment center", "fulfillment centre",
         "cold storage", "freight", "shipping",
+        "warehouse automation", "warehouse logistics", "intra logistics", "intralogistics",
+        "micro logistics", "light logistics", "package handling", "package automation",
+        "parcel sorting", "sortation", "goods to person", "goods-to-person", "cross dock",
+        "grocery logistics", "grocery distribution", "grocery fulfillment",
         # Omit bare "delivery" — matches almost any supply-chain headline and pollutes other verticals.
     ],
     # Do not use generic "property management" — STR/Airbnb robot deployments often mention it
@@ -105,10 +109,19 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Hospitality": [
         "hotel", "resort", "hospitality", "lodging", "motel", "inn",
         "housekeeping", "guest services",
+        "hospitality automation", "hotel automation", "front desk automation",
+        "room service automation", "house cleaning automation", "housekeeping automation",
+        "concierge robot", "check-in automation", "linen delivery",
     ],
     "Food Service": [
-        "restaurant", "food service", "kitchen", "dining", "qsr",
-        "fast food", "cafe", "chain restaurant", "franchise"
+        "restaurant", "restaurants", "food service", "foodservice", "kitchen", "dining", "qsr",
+        "fast food", "fast casual", "cafe", "chain restaurant", "franchise",
+        "food prep", "food preparation", "food delivery", "food robot", "food robotics",
+        "kitchen robot", "kitchen automation", "server robot", "serving robot",
+        "ghost kitchen", "dark kitchen", "commercial kitchen", "back of house",
+        "cafeteria", "catering", "dining room", "table service", "drive-thru",
+        "drive through", "mcdonald", "starbucks", "chipotle", "yum brands",
+        "compass group", "aramark", "sodexo", "darden", "dine brands",
     ],
     "Healthcare": [
         "hospital", "healthcare", "health system", "clinic", "patient",
@@ -148,7 +161,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "tyson", "jbs usa", "smithfield", "hormel",
         "packaging line", "shrink wrap", "stretch wrap", "case packing",
         "palletizer", "depalletizer", "end of line", "end-of-line",
-        "pack out", "pack in", "pack-out", "pack-in",
+        "end of line automation", "pack out", "pack in", "pack-out", "pack-in",
+        "package handling", "package automation", "packaging automation",
     ],
     "Contract Manufacturing": [
         "contract manufacturer", "contract manufacturing", "contract packager",
@@ -175,6 +189,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "shelf scanning", "inventory robot", "click-and-collect", "micro-fulfillment",
         "retail fulfillment", "retail automation", "cashier", "checkout",
         "brick and mortar", "big box",
+        "grocery pick and pack", "grocery fulfillment automation", "food picking",
+        "order picking", "automated picking", "dark store",
         # Omit bare "store" — substring false positives ("restore", "bookstore" as noise, etc.).
     ],
     "Apparel & Textiles": [
@@ -207,6 +223,10 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "building services", "janitorial", "facility services",
         "corporate office", "corporate offices", "office building", "headquarters",
         "office campus", "office tower", "corporate campus",
+        "janitorial automation", "commercial cleaning automation", "cleaning robot",
+        "floor scrubber", "autonomous cleaning", "building automation",
+        "building maintenance automation", "landscape automation", "grounds maintenance",
+        "mowing robot", "facilities automation",
         # Omit bare "enterprise" — matches generic B2B / software copy unrelated to facilities.
     ],
     "Automotive Dealerships": [

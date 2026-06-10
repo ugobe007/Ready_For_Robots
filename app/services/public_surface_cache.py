@@ -81,6 +81,7 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
         _current_rotation_slot,
         _summary_for_homepage,
         build_public_leads_list,
+        build_public_pipeline_feed,
         hydrate_pipeline_feed_cache,
     )
     from app.services.content_surfaces import KEY_PIPELINE_FEED
@@ -106,7 +107,7 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
         write_public_cache(db, key, leads)
         stats[f"leads_{limit}_{tier or 'all'}"] = len(leads)
 
-    pipeline_leads = build_public_leads_list(db, limit=PIPELINE_FEED_LIMIT)
+    pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)
     pipeline_feed = {
         "leads": pipeline_leads,
         "summary": _summary_for_homepage(summary_exclude),

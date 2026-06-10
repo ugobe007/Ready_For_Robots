@@ -58,7 +58,14 @@ export function industryCategory(industry?: string | null): IndustryCategory {
   if (["manufacturing", "manufacturer", "automotive", "factory"].some((term) => tokens.has(term))) {
     return "manufacturing";
   }
-  if (["restaurant", "restaurants", "qsr", "food service", "foodservice", "food"].some((term) => tokens.has(term))) {
+  if (
+    [
+      "restaurant", "restaurants", "qsr", "food service", "foodservice", "food",
+      "food prep", "food preparation", "food delivery", "food robot", "kitchen",
+      "kitchen robot", "ghost kitchen", "dark kitchen", "catering", "cafeteria",
+      "fast food", "fast casual", "dining",
+    ].some((term) => tokens.has(term))
+  ) {
     return "food_service";
   }
   return "general";

@@ -1,0 +1,437 @@
+{
+  "version": 1,
+  "sectors": [
+    {
+      "id": "manufacturing",
+      "label": "Manufacturing",
+      "canonical_industries": [
+        "Manufacturing",
+        "Automotive & Manufacturing",
+        "Contract Manufacturing",
+        "CPG & Consumer Goods",
+        "Food Processing & Manufacturing"
+      ],
+      "root_aliases": [
+        "manufacturing",
+        "manufacture",
+        "factory",
+        "plant",
+        "production",
+        "industrial automation"
+      ],
+      "sub_ontologies": {
+        "end_of_line_automation": {
+          "label": "End of Line Automation",
+          "terms": [
+            "end of line automation",
+            "end-of-line automation",
+            "eol automation",
+            "end of line",
+            "end-of-line",
+            "palletizer",
+            "depalletizer",
+            "case packing",
+            "case erector",
+            "case packer",
+            "shrink wrap",
+            "stretch wrap",
+            "wrapping automation"
+          ]
+        },
+        "packaging_automation": {
+          "label": "Packaging Automation",
+          "terms": [
+            "pack out",
+            "pack in",
+            "pack-out",
+            "pack-in",
+            "package handling",
+            "package automation",
+            "packaging automation",
+            "packaging line",
+            "packing line",
+            "carton erector",
+            "carton sealer",
+            "labeling automation",
+            "sortation"
+          ]
+        },
+        "production_automation": {
+          "label": "Production Automation",
+          "terms": [
+            "production automation",
+            "assembly automation",
+            "assembly line",
+            "manufacturing automation",
+            "factory automation",
+            "cobot",
+            "collaborative robot",
+            "pick and place",
+            "machine tending",
+            "quality inspection"
+          ]
+        }
+      }
+    },
+    {
+      "id": "logistics",
+      "label": "Logistics",
+      "canonical_industries": ["Logistics", "Retail"],
+      "root_aliases": [
+        "logistics",
+        "supply chain",
+        "distribution",
+        "fulfillment",
+        "3pl",
+        "third party logistics"
+      ],
+      "sub_ontologies": {
+        "warehouse_logistics": {
+          "label": "Warehouse Logistics",
+          "terms": [
+            "warehouse logistics",
+            "warehouse automation",
+            "warehouse robot",
+            "wms automation",
+            "distribution center",
+            "fulfillment center",
+            "fulfillment centre",
+            "dc automation",
+            "cold storage automation"
+          ]
+        },
+        "intra_logistics": {
+          "label": "Intra Logistics",
+          "terms": [
+            "intra logistics",
+            "intra-logistics",
+            "in-plant logistics",
+            "internal logistics",
+            "intralogistics",
+            "material flow",
+            "material handling",
+            "goods to person",
+            "goods-to-person",
+            "gtp",
+            "amr fleet",
+            "agv fleet",
+            "mobile robot fleet"
+          ]
+        },
+        "micro_light_logistics": {
+          "label": "Micro & Light Logistics",
+          "terms": [
+            "micro logistics",
+            "light logistics",
+            "last mile logistics",
+            "last-mile logistics",
+            "on-demand logistics",
+            "urban logistics",
+            "curbside delivery",
+            "parcel locker",
+            "sort center"
+          ]
+        },
+        "package_handling": {
+          "label": "Package Handling",
+          "terms": [
+            "package handling",
+            "parcel handling",
+            "parcel sorting",
+            "sortation",
+            "conveyor automation",
+            "cross dock",
+            "cross-dock",
+            "tote handling",
+            "bin handling",
+            "pallet transport",
+            "pallet shuttle"
+          ]
+        }
+      }
+    },
+    {
+      "id": "grocery_retail",
+      "label": "Grocery & Retail Fulfillment",
+      "canonical_industries": ["Retail", "Logistics", "Food Service"],
+      "root_aliases": [
+        "grocery",
+        "supermarket",
+        "retail fulfillment",
+        "e-grocery",
+        "e grocery",
+        "grocery retail"
+      ],
+      "sub_ontologies": {
+        "grocery_logistics": {
+          "label": "Grocery Logistics",
+          "terms": [
+            "grocery logistics",
+            "grocery distribution",
+            "grocery warehouse",
+            "grocery supply chain",
+            "perishable logistics",
+            "fresh logistics",
+            "grocery dc"
+          ]
+        },
+        "grocery_fulfillment": {
+          "label": "Grocery Fulfillment Automation",
+          "terms": [
+            "grocery pick and pack",
+            "grocery fulfillment automation",
+            "grocery fulfillment",
+            "micro fulfillment",
+            "micro-fulfillment",
+            "dark store",
+            "automated grocery",
+            "click and collect",
+            "click-and-collect",
+            "curbside pickup automation"
+          ]
+        },
+        "food_picking": {
+          "label": "Food Picking",
+          "terms": [
+            "food picking",
+            "order picking",
+            "pick and pack",
+            "automated picking",
+            "e-grocery picking",
+            "grocery picking",
+            "item picking",
+            "piece picking",
+            "tote picking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "food_service",
+      "label": "Food Service",
+      "canonical_industries": ["Food Service", "Food & Beverage", "Hospitality"],
+      "root_aliases": [
+        "restaurant",
+        "restaurants",
+        "food service",
+        "foodservice",
+        "qsr",
+        "fast food",
+        "fast casual",
+        "dining",
+        "catering",
+        "cafeteria"
+      ],
+      "sub_ontologies": {
+        "kitchen_ops": {
+          "label": "Kitchen Operations",
+          "terms": [
+            "food prep",
+            "food preparation",
+            "kitchen automation",
+            "kitchen robot",
+            "commercial kitchen",
+            "back of house",
+            "ghost kitchen",
+            "dark kitchen",
+            "prep robot",
+            "cooking automation"
+          ]
+        },
+        "food_delivery": {
+          "label": "Food Delivery",
+          "terms": [
+            "food delivery",
+            "meal delivery",
+            "delivery robot",
+            "runner robot",
+            "table service",
+            "room service",
+            "food runner",
+            "last mile food"
+          ]
+        },
+        "food_robotics": {
+          "label": "Food Robotics",
+          "terms": [
+            "food robot",
+            "food robotics",
+            "serving robot",
+            "server robot",
+            "bear robotics",
+            "miso robotics",
+            "service robot restaurant"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hospitality",
+      "label": "Hospitality",
+      "canonical_industries": ["Hospitality", "Casinos & Gaming", "Cruise Lines"],
+      "root_aliases": [
+        "hospitality",
+        "hotel",
+        "hotels",
+        "resort",
+        "resorts",
+        "lodging",
+        "casino",
+        "casino resort"
+      ],
+      "sub_ontologies": {
+        "hospitality_automation": {
+          "label": "Hospitality Automation",
+          "terms": [
+            "hospitality automation",
+            "hotel automation",
+            "property operations automation",
+            "resort automation",
+            "guest experience automation"
+          ]
+        },
+        "front_desk": {
+          "label": "Front Desk Automation",
+          "terms": [
+            "front desk automation",
+            "check-in automation",
+            "concierge robot",
+            "reception robot",
+            "guest check-in robot",
+            "lobby automation"
+          ]
+        },
+        "room_service": {
+          "label": "Room Service Automation",
+          "terms": [
+            "room service automation",
+            "in-room dining robot",
+            "hotel delivery robot",
+            "room delivery robot",
+            "amenity delivery",
+            "guest room delivery"
+          ]
+        },
+        "housekeeping": {
+          "label": "Housekeeping Automation",
+          "terms": [
+            "house cleaning automation",
+            "housekeeping automation",
+            "housekeeping robot",
+            "evs automation",
+            "linen delivery",
+            "laundry automation",
+            "guest room cleaning"
+          ]
+        }
+      }
+    },
+    {
+      "id": "facilities",
+      "label": "Facilities & Building Services",
+      "canonical_industries": ["Real Estate & Facilities", "Hospitality", "Healthcare"],
+      "root_aliases": [
+        "facilities",
+        "facility services",
+        "facilities management",
+        "property management",
+        "building services",
+        "commercial real estate"
+      ],
+      "sub_ontologies": {
+        "janitorial_cleaning": {
+          "label": "Janitorial & Commercial Cleaning",
+          "terms": [
+            "janitorial automation",
+            "commercial cleaning automation",
+            "autonomous cleaning",
+            "floor scrubber",
+            "floor scrubbing robot",
+            "scrubber dryer",
+            "sweeping robot",
+            "cleaning robot",
+            "custodial automation"
+          ]
+        },
+        "building_maintenance": {
+          "label": "Building Maintenance Automation",
+          "terms": [
+            "building automation",
+            "building maintenance automation",
+            "facilities automation",
+            "hvac robotics",
+            "building operations",
+            "smart building robotics",
+            "maintenance robot"
+          ]
+        },
+        "landscape": {
+          "label": "Landscape Automation",
+          "terms": [
+            "landscape automation",
+            "grounds maintenance",
+            "mowing robot",
+            "outdoor maintenance",
+            "lawn mowing robot",
+            "landscaping robot",
+            "snow removal robot"
+          ]
+        }
+      }
+    },
+    {
+      "id": "healthcare",
+      "label": "Healthcare",
+      "canonical_industries": ["Healthcare", "Medical Technology"],
+      "root_aliases": [
+        "healthcare",
+        "hospital",
+        "hospitals",
+        "health system",
+        "clinical",
+        "senior living"
+      ],
+      "sub_ontologies": {
+        "clinical_ops": {
+          "label": "Clinical Operations",
+          "terms": [
+            "hospital logistics",
+            "internal delivery",
+            "specimen transport",
+            "pharmacy automation",
+            "medication delivery",
+            "nursing support robot"
+          ]
+        },
+        "environmental_services": {
+          "label": "Healthcare EVS",
+          "terms": [
+            "hospital evs",
+            "disinfection robot",
+            "uv-c robot",
+            "healthcare cleaning robot",
+            "infection control automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "airports",
+      "label": "Airports & Aviation",
+      "canonical_industries": ["Airports & Aviation"],
+      "root_aliases": ["airport", "airports", "aviation", "terminal", "airline"],
+      "sub_ontologies": {
+        "terminal_ops": {
+          "label": "Terminal Operations",
+          "terms": [
+            "baggage handling",
+            "terminal cleaning",
+            "airport logistics",
+            "concession delivery",
+            "gate operations"
+          ]
+        }
+      }
+    }
+  ]
+}

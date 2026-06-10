@@ -4,7 +4,7 @@
  * Violet palette: #0d0520 bg · #7c3aed accent · cream text
  * Design: Linear/Raycast-inspired — dense, inline, data-forward
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { fetchWithTimeout, getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
+import { dealMatchesIndustrySearch } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -331,15 +332,35 @@ const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | nul
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
 function filterDealsByQuery(deals: Deal[], query: string): Deal[] {
-  const q = query.trim().toLowerCase();
-  if (!q || q === "all") return deals;
-  return deals.filter((d) => {
-    const haystack = [d.industry, d.company, d.signal, d.location, d.signalType]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(q);
-  });
+  const q = query.trim();
+  if (!q || q.toLowerCase() === "all") return deals;
+  return deals.filter((d) =>
+    dealMatchesIndustrySearch(
+      { industry: d.industry, company: d.company, signal: d.signal, location: d.location },
+      q,
+    ),
+  );
+}
+
+async function fetchLeadsBySearch(base: string, query: string, headers?: HeadersInit): Promise<Deal[]> {
+  const params = new URLSearchParams({ search: query, limit: "25", tier: "HOT" });
+  const res = await fetchWithTimeout(
+    `${base}/api/leads?${params}`,
+    liveFetchInit({ headers }),
+    12_000,
+  );
+  if (!res.ok) return [];
+  const rows = (await res.json()) as ApiLead[];
+  if (!Array.isArray(rows)) return [];
+  const mapped: Deal[] = [];
+  for (const row of rows) {
+    try {
+      mapped.push(mapApiLeadToDeal(row) as Deal);
+    } catch {
+      /* skip malformed row */
+    }
+  }
+  return mapped;
 }
 
 function PipelineMetric({
@@ -390,6 +411,9 @@ export default function Pipeline() {
   const [timingNote, setTimingNote] = useState("");
   const [cadenceNote, setCadenceNote] = useState("");
   const [loadErr, setLoadErr] = useState("");
+  const [serverSearchDeals, setServerSearchDeals] = useState<Deal[]>([]);
+  const [serverSearchLoading, setServerSearchLoading] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activationErr, setActivationErr] = useState("");
   // SCOUT bulk outreach state
   const [scoutStats, setScoutStats] = useState<{
@@ -476,18 +500,49 @@ export default function Pipeline() {
           if (payload.summary && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)) {
             setSummary(payload.summary);
           }
-          if (rows.length > 0) {
+          const mapRows = (apiRows: ApiLead[]) => {
             const mapped: Deal[] = [];
-            for (const row of rows) {
+            for (const row of apiRows) {
               try {
                 mapped.push(mapApiLeadToDeal(row) as Deal);
               } catch {
                 /* skip malformed pipeline row */
               }
             }
+            return mapped;
+          };
+
+          if (rows.length > 0) {
+            const mapped = mapRows(rows);
             setDeals(mapped);
             setSelectedId((prev) => (prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null));
             setMarketSnippet(marketSnippetFromDeals(mapped));
+          } else if (payload.summary && ((payload.summary.hot ?? 0) > 0 || (payload.summary.total ?? 0) > 0)) {
+            try {
+              const fallbackRes = await fetchWithTimeout(
+                `${base}/api/leads?limit=25&tier=HOT`,
+                liveFetchInit({ headers }),
+                12_000,
+              );
+              if (fallbackRes.ok) {
+                const fallbackRows = (await fallbackRes.json()) as ApiLead[];
+                const mapped = mapRows(Array.isArray(fallbackRows) ? fallbackRows : []);
+                if (mapped.length > 0) {
+                  setDeals(mapped);
+                  setSelectedId(mapped[0]?.id ?? null);
+                  setMarketSnippet(marketSnippetFromDeals(mapped));
+                } else {
+                  setDeals([]);
+                  setSelectedId(null);
+                }
+              } else {
+                setDeals([]);
+                setSelectedId(null);
+              }
+            } catch {
+              setDeals([]);
+              setSelectedId(null);
+            }
           } else {
             setDeals([]);
             setSelectedId(null);
@@ -520,8 +575,6 @@ export default function Pipeline() {
 
     return () => {
       cancelled = true;
-      setLoadingLeads(false);
-      setLoadingSummary(false);
     };
   }, [session?.access_token]);
 
@@ -636,10 +689,42 @@ export default function Pipeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.access_token, isAdmin]);
 
+  useEffect(() => {
+    const q = industryQuery.trim() || (filter !== "All" ? filter : "");
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!q || q.toLowerCase() === "all") {
+      setServerSearchDeals([]);
+      setServerSearchLoading(false);
+      return;
+    }
+    const localHits = filterDealsByQuery(deals, q);
+    if (localHits.length > 0) {
+      setServerSearchDeals([]);
+      setServerSearchLoading(false);
+      return;
+    }
+    setServerSearchLoading(true);
+    searchDebounceRef.current = setTimeout(() => {
+      const base = getApiBase();
+      const headers = session?.access_token ? authHeader(session.access_token) : undefined;
+      void fetchLeadsBySearch(base, q, headers)
+        .then((rows) => setServerSearchDeals(rows))
+        .catch(() => setServerSearchDeals([]))
+        .finally(() => setServerSearchLoading(false));
+    }, 350);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [industryQuery, filter, deals, session?.access_token]);
+
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
-  const filtered = filterDealsByQuery(deals, activeSearchQuery);
+  const localFiltered = filterDealsByQuery(deals, activeSearchQuery);
+  const filtered =
+    hasActiveSearch && localFiltered.length === 0 && serverSearchDeals.length > 0
+      ? serverSearchDeals
+      : localFiltered;
   const effectiveSelectedId =
     selectedId != null && filtered.some((d) => d.id === selectedId)
       ? selectedId
@@ -1007,7 +1092,7 @@ export default function Pipeline() {
               {loadErr}
             </div>
           )}
-          {!loadingLeads && !loadErr && filtered.length === 0 && (
+          {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
             <div className="rounded-lg border border-violet-400/25 bg-violet-400/8 px-3 py-2 text-xs text-violet-100/85">
               Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
             </div>
@@ -1470,10 +1555,12 @@ export default function Pipeline() {
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
-              {loadingLeads && filtered.length === 0 ? (
+              {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/8 px-6 py-12 text-center">
                   <RefreshCw className="mx-auto h-6 w-6 animate-spin text-white/20" />
-                  <p className="mt-3 text-sm text-white/35">Loading sales pipeline…</p>
+                  <p className="mt-3 text-sm text-white/35">
+                    {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
+                  </p>
                 </div>
               ) : isAdmin ? (
               STAGES.map((stage) => {
@@ -2115,8 +2202,8 @@ export default function Pipeline() {
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
                   <p className="text-sm text-white/25">
-                    {hasActiveSearch && filtered.length === 0
-                      ? `No leads match "${activeSearchQuery}". Try another industry, company, or signal.`
+                    {hasActiveSearch && filtered.length === 0 && !serverSearchLoading
+                      ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? "Select a deal to review signal detail and Cal outreach"
                         : "Select a lead to review signals, research, and SCOUT scoring"}

@@ -73,6 +73,7 @@ _REGION_WORDS = {
 
 _SECTOR_OBJECTS = {
     "hospitality", "restaurant", "restaurants", "qsr", "logistics", "3pl",
+    "foodservice", "catering", "cafeteria", "kitchen", "kitchens",
     "manufacturers", "manufacturer", "retailers", "retailer", "hotels",
     "hotel", "healthcare", "hospitals", "hospital", "airports", "airport",
     "operators", "operator", "robotics", "robots",

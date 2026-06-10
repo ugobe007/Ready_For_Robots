@@ -49,6 +49,13 @@ from app.services.lead_filter import (
 )
 from app.services.signal_ranker import compute_weighted_score, compute_lead_aggregate_signal_score
 from app.services.industry_inference import effective_industry_for_lead, infer_industry_from_text
+from app.services.industry_search_lexicon import (
+    PIPELINE_DIVERSITY_INDUSTRIES,
+    canonical_industries_for_query,
+    industry_label_matches_query,
+    lead_matches_search,
+    text_matches_industry_search,
+)
 from app.services.scoring_public import get_scoring_system_public
 from app.services.automation_profile import get_automation_profile_for_response
 from app.services.lead_value import compute_lead_value
@@ -1134,6 +1141,146 @@ def build_public_leads_list(
     ]
 
 
+def _lead_row_matches_industry_filter(row, industry: str) -> bool:
+    if industry_label_matches_query(row.industry or "", industry):
+        return True
+    name = getattr(row, "name", "") or ""
+    if text_matches_industry_search(name, industry):
+        return True
+    for canonical in canonical_industries_for_query(industry):
+        if canonical.lower() in (row.industry or "").lower():
+            return True
+    return False
+
+
+def _company_matches_industry_filter(c: Company, industry: str) -> bool:
+    ind = effective_industry_for_lead(c.name, c.industry, c.signals)
+    if industry_label_matches_query(ind, industry):
+        return True
+    sig_text = " ".join(
+        (getattr(s, "signal_text", None) or "") for s in (c.signals or [])[:8]
+    )
+    return lead_matches_search(
+        industry,
+        industry=ind,
+        company_name=c.name or "",
+        signal_text=sig_text,
+    )
+
+
+def _fetch_staged_by_industries(
+    db: Session,
+    industries: List[str],
+    *,
+    limit: int,
+    exclude_ids: Optional[set] = None,
+) -> list:
+    """Top scored leads for canonical industries (food service, etc.)."""
+    exclude_ids = exclude_ids or set()
+    candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 20, 120))
+    rows = _lead_rows_query_limited(db, candidate_limit).all()
+    staged = []
+    for row in rows:
+        if row.id in exclude_ids:
+            continue
+        if not any(
+            industry_label_matches_query(row.industry or "", ind)
+            or _lead_row_matches_industry_filter(row, ind)
+            for ind in industries
+        ):
+            continue
+        junk, junk_reason = _row_is_junk(row.name)
+        if junk:
+            continue
+        pri = _row_priority(row)
+        if pri.tier not in ("HOT", "WARM"):
+            continue
+        staged.append((row.id, pri.score))
+
+    staged.sort(key=lambda x: x[1], reverse=True)
+    ids = [sid for sid, _ in staged[: max(limit * 3, limit)]]
+    if not ids:
+        return []
+
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+    out = []
+    for cid in ids:
+        c = company_map.get(cid)
+        if not c:
+            continue
+        if not any(_company_matches_industry_filter(c, ind) for ind in industries):
+            continue
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        if junk:
+            continue
+        out.append((c, junk, junk_reason, pri))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT) -> list:
+    """
+    Pipeline preview with vertical diversity — ensures food service / hospitality
+    appear in the rotated slice when those leads exist in the corpus.
+    """
+    base = build_public_leads_list(db, limit=limit)
+    base_ids = {int(l["id"]) for l in base if l.get("id")}
+
+    def _has_vertical(leads: list, vertical: str) -> bool:
+        return any(
+            industry_label_matches_query(l.get("industry") or "", vertical)
+            for l in leads
+        )
+
+    inject: list = []
+    for vertical in PIPELINE_DIVERSITY_INDUSTRIES:
+        if _has_vertical(base, vertical):
+            continue
+        extra = _fetch_staged_by_industries(
+            db, [vertical], limit=2, exclude_ids=base_ids | {c.id for c, *_ in inject}
+        )
+        inject.extend(extra)
+
+    if not inject:
+        return base[:limit]
+
+    merged_ids = [c.id for c, *_ in inject] + [l["id"] for l in base]
+    seen: set = set()
+    ordered_ids = []
+    for i in merged_ids:
+        if i in seen:
+            continue
+        seen.add(i)
+        ordered_ids.append(i)
+
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ordered_ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+    out = []
+    for cid in ordered_ids:
+        c = company_map.get(cid)
+        if not c:
+            continue
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        if junk:
+            continue
+        out.append(_fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True))
+        if len(out) >= limit:
+            break
+    return out
+
+
 def hydrate_pipeline_feed_cache(feed: dict) -> None:
     """Seed L1 for GET /api/leads/pipeline after durable refresh or hydrate."""
     if not feed or not isinstance(feed, dict):
@@ -1222,7 +1369,8 @@ def get_leads(
     min_score: float      = Query(0.0,   description="Min overall score 0-100"),
     max_score: float      = Query(100.0, description="Max overall score 0-100"),
     tier: Optional[str]   = Query(None,  description="HOT | WARM | COLD"),
-    industry: Optional[str] = Query(None, description="Partial industry match"),
+    industry: Optional[str] = Query(None, description="Industry/vertical search (lexicon: restaurant, food robot, …)"),
+    search: Optional[str] = Query(None, description="Alias for industry — same lexicon-backed filter"),
     signal_type: Optional[str] = Query(None, description="Must have this signal type"),
     exclude_junk: bool    = Query(True,  description="Hide junk-named leads"),
     limit: int            = Query(
@@ -1239,13 +1387,15 @@ def get_leads(
     # Clamp so cached JS / bookmarked ?limit=150 does not 422 while policy stays ≤50 rows.
     limit = min(max(limit, 1), LEADS_PUBLIC_MAX)
 
+    industry_filter = (search or industry or "").strip() or None
+
     from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
 
     maybe_schedule_public_cache_refresh()
 
     # L1 (in-process): fast, per-machine, lost on restart.
     # L2 (Supabase):   persistent, shared across all machines — survives deploys.
-    _cache_key = f"{min_score}|{max_score}|{tier}|{industry}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
+    _cache_key = f"{min_score}|{max_score}|{tier}|{industry_filter}|{signal_type}|{exclude_junk}|{limit}|{sort}|{rotation_slot}"
 
     _cached = _LEADS_LIST_CACHE.get(_cache_key)
     if _cached is not None:
@@ -1253,7 +1403,7 @@ def get_leads(
         return _data
 
     public_key = _public_leads_durable_key(
-        min_score, max_score, tier, industry, signal_type, exclude_junk, limit, sort, rotation_slot
+        min_score, max_score, tier, industry_filter, signal_type, exclude_junk, limit, sort, rotation_slot
     )
     if public_key:
         from app.services.public_surface_cache import read_public_cache, schedule_public_cache_refresh
@@ -1320,9 +1470,8 @@ def get_leads(
                     continue
                 if max_score is not None and float(row.overall_score or 0) > max_score:
                     continue
-                if industry:
-                    ind = (row.industry or "")
-                    if industry.lower() not in ind.lower():
+                if industry_filter:
+                    if not _lead_row_matches_industry_filter(row, industry_filter):
                         continue
                 if signal_type:
                     hot = int(getattr(row, "hot_hits", 0) or 0)
@@ -1386,6 +1535,10 @@ def get_leads(
                 staged.append((c, junk, junk_reason, pri))
 
             staged = dedupe_staged_lead_tuples(staged)
+            if industry_filter:
+                staged = [
+                    t for t in staged if _company_matches_industry_filter(t[0], industry_filter)
+                ]
             slot = rotation_slot if rotation_slot is not None else _current_rotation_slot()
             staged = _rotate_staged_leads(staged, limit, slot=slot)
 
@@ -1931,6 +2084,34 @@ def leads_pipeline_feed(
         return _finish(cached)
 
     schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
+
+    from app.db_timeout import run_db
+
+    def _live_pipeline_feed() -> dict:
+        from app.database import SessionLocal
+
+        with SessionLocal() as live_db:
+            leads = build_public_pipeline_feed(live_db, limit=PIPELINE_FEED_LIMIT)
+            summary_raw = _compute_pipeline_summary(live_db, True)
+            return {
+                "leads": leads,
+                "summary": _summary_for_homepage(summary_raw),
+                "summary_raw": summary_raw,
+                "rotation_slot": _current_rotation_slot(),
+                "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
+                "built_at": datetime.now(timezone.utc).isoformat(),
+                "cache_pending": False,
+                "live_fallback": True,
+            }
+
+    try:
+        live = run_db(_live_pipeline_feed, timeout_sec=18, label="leads/pipeline-live")
+        if live and (live.get("leads") or []):
+            hydrate_pipeline_feed_cache(live)
+            return _finish(live)
+    except TimeoutError:
+        logger.warning("leads/pipeline live fallback timed out")
+
     empty = _empty_summary_payload()
     return _finish({"summary": empty, "leads": [], "cache_pending": True})
 

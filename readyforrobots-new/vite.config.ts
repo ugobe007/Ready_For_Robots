@@ -233,6 +233,7 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      "@ontology": path.resolve(import.meta.dirname, "..", "app", "data", "industry_sector_ontology.json"),
     },
   },
   envDir: path.resolve(import.meta.dirname),
@@ -257,6 +258,7 @@ export default defineConfig({
     fs: {
       strict: true,
       deny: ["**/.*"],
+      allow: [path.resolve(import.meta.dirname, "..", "app", "data")],
     },
   },
 });

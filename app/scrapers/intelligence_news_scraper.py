@@ -86,6 +86,29 @@ DISCOVERY_QUERIES = [
     "hospitality technology investment funding 2026",
     "hotel EVS cleaning staffing shortage crisis",
     
+    # Manufacturing & packaging
+    "end of line automation packaging line investment 2026",
+    "pack out pack in automation CPG manufacturing 2026",
+    "package handling automation warehouse manufacturing 2026",
+    "factory automation cobot deployment manufacturing 2026",
+
+    # Logistics sub-verticals
+    "intra logistics AMR deployment warehouse 2026",
+    "micro fulfillment light logistics automation 2026",
+    "warehouse automation sortation robotics investment 2026",
+    "grocery logistics distribution automation 2026",
+    "grocery pick and pack fulfillment automation 2026",
+
+    # Facilities & cleaning
+    "commercial cleaning robot janitorial automation 2026",
+    "building maintenance automation facilities robotics 2026",
+    "landscape automation grounds maintenance robot 2026",
+
+    # Hospitality automation
+    "hotel automation front desk robot pilot 2026",
+    "room service robot hotel delivery automation 2026",
+    "housekeeping cleaning robot hotel resort 2026",
+
     # Food Service
     "restaurant automation kitchen robot deployment 2026",
     "restaurant chain expansion new locations 2026",
@@ -93,6 +116,14 @@ DISCOVERY_QUERIES = [
     "fast food automation investment technology 2026",
     "restaurant delivery robot pilot program 2026",
     "food service worker shortage wage pressure 2026",
+    "food prep automation kitchen robot restaurant 2026",
+    "food delivery robot restaurant hotel pilot 2026",
+    "food robot serving robot restaurant deployment 2026",
+    "ghost kitchen dark kitchen automation robotics 2026",
+    "commercial kitchen back of house robot automation",
+    "cafeteria catering food service robot staffing shortage",
+    "fast casual restaurant labor shortage automation capex",
+    "bear robotics miso robotics restaurant deployment 2026",
     
     # Healthcare & Senior Living
     "hospital EVS housekeeping staffing shortage 2026",

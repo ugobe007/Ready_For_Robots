@@ -67,6 +67,8 @@ celerybeat.pid
 
 # Runtime cache (newsletter edition, etc.)
 data/
+!app/data/
+!app/data/industry_sector_ontology.json
 
 # Coverage
 .coverage
