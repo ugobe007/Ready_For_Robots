@@ -47,6 +47,11 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   HUMANOID_SECONDARY_PASS_NEWS_QUERIES = "24"
   # Nightly in-app job runs leads then humanoids in one serialized pipeline
   SECONDARY_PIPELINE_RUN_HUMANOIDS = "1"
+  # Weekly purge, name normalize, quality decision log export
+  ENABLE_SCHEDULED_DATA_QUALITY = "1"
+  DATA_QUALITY_EVERY_HOURS = "168"
+  DATA_QUALITY_FIRST_RUN_DELAY_HOURS = "12"
+  QUALITY_LOG_EXPORT_LIMIT = "2500"
 
 [http_service]
   internal_port = 8080

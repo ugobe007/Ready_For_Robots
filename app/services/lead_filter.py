@@ -1597,6 +1597,10 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     If junk is True, priority tier will be 'COLD' with no reasons.
     """
     name = getattr(company, "name", None)
+    if getattr(company, "is_internal", True) is False:
+        return True, "quarantined (failed rectification)", PriorityResult(
+            "COLD", 0.0, ["quarantined"]
+        )
     junk, junk_reason = is_junk(name)
     if junk:
         return True, junk_reason, PriorityResult("COLD", 0.0, [junk_reason])

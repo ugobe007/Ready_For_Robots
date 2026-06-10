@@ -316,8 +316,6 @@ def run_secondary_pass_for_company_ids(
     Run secondary logic on explicit company IDs (e.g. fresh scraper discoveries).
     Skips min_score gate; uses cooldown_hours=0 by default for first-pass completeness.
     """
-    from app.models.score import Score
-
     ids = [int(i) for i in company_ids if i]
     if not ids:
         return {
@@ -357,44 +355,19 @@ def run_secondary_pass_for_company_ids(
             logger.warning("Secondary onboarding failed for company %s: %s", cid, exc)
             results.append({"company_id": cid, "error": str(exc)[:200]})
 
-    rescored = False
+    rescore_info: Dict[str, Any] = {"mode": "none", "updated": 0}
     if rescore and results:
-        try:
-            from worker.celery_worker import celery_app
+        from app.services.lead_rescore import queue_or_inline_rescore
 
-            celery_app.send_task("worker.tasks.rescore_all_companies_task")
-            rescored = True
-        except Exception as exc:
-            logger.warning("Onboarding rescore queue failed, trying in-process: %s", exc)
-            try:
-                from app.services.scoring_engine import compute_scores
-
-                for cid in ids:
-                    company = db.query(Company).filter(Company.id == cid).first()
-                    if not company:
-                        continue
-                    signals = db.query(Signal).filter(Signal.company_id == company.id).all()
-                    score_data = compute_scores(company, signals)
-                    score = db.query(Score).filter(Score.company_id == company.id).first()
-                    if not score:
-                        score = Score(company_id=company.id)
-                        db.add(score)
-                    score.overall_intent_score = score_data.get("overall_intent_score", 0)
-                    score.automation_score = score_data.get("automation_score", 0)
-                    score.labor_pain_score = score_data.get("labor_pain_score", 0)
-                    score.expansion_score = score_data.get("expansion_score", 0)
-                    score.robotics_fit_score = score_data.get("robotics_fit_score", 0)
-                db.commit()
-                rescored = True
-            except Exception as exc2:
-                logger.warning("In-process onboarding rescore failed: %s", exc2)
+        rescore_info = queue_or_inline_rescore(db, ids)
 
     return {
         "candidates": len(ids),
         "processed": len(results),
         "fields_filled_total": filled_total,
         "errors": errors,
-        "rescore_queued": rescored,
+        "rescore": rescore_info,
+        "rescore_queued": rescore_info.get("mode") == "celery",
         "onboarding": onboarding,
         "sample": results[:15],
     }
@@ -436,43 +409,20 @@ def run_secondary_pass_batch(
             if len(results) < 30:
                 results.append({"company_id": report.company_id, "error": str(exc)[:200]})
 
-    rescored = False
+    rescore_info: Dict[str, Any] = {"mode": "none", "updated": 0}
     if rescore and results:
-        try:
-            from worker.celery_worker import celery_app
+        from app.services.lead_rescore import queue_or_inline_rescore
 
-            celery_app.send_task("worker.tasks.rescore_all_companies_task")
-            rescored = True
-        except Exception as exc:
-            logger.warning("Secondary batch rescore queue failed, trying in-process: %s", exc)
-            try:
-                from app.models.company import Company
-                from app.models.score import Score
-                from app.services.scoring_engine import compute_scores
-
-                for company in db.query(Company).filter(Company.id.in_([r["company_id"] for r in results if r.get("company_id")])).all():
-                    signals = db.query(Signal).filter(Signal.company_id == company.id).all()
-                    score_data = compute_scores(company, signals)
-                    score = db.query(Score).filter(Score.company_id == company.id).first()
-                    if not score:
-                        score = Score(company_id=company.id)
-                        db.add(score)
-                    score.overall_intent_score = score_data.get("overall_intent_score", 0)
-                    score.automation_score = score_data.get("automation_score", 0)
-                    score.labor_pain_score = score_data.get("labor_pain_score", 0)
-                    score.expansion_score = score_data.get("expansion_score", 0)
-                    score.robotics_fit_score = score_data.get("robotics_fit_score", 0)
-                db.commit()
-                rescored = True
-            except Exception as exc2:
-                logger.warning("In-process rescore after secondary pass failed: %s", exc2)
+        ids = [r["company_id"] for r in results if r.get("company_id")]
+        rescore_info = queue_or_inline_rescore(db, ids)
 
     return {
         "candidates": len(candidates),
         "processed": len(results),
         "fields_filled_total": filled_total,
         "errors": errors,
-        "rescore_queued": rescored,
+        "rescore": rescore_info,
+        "rescore_queued": rescore_info.get("mode") == "celery",
         "sample": results[:15],
     }
 

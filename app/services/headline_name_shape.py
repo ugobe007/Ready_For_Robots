@@ -77,6 +77,13 @@ _GENERIC_SINGLES = frozenset({
     "global", "local", "national", "regional", "international",
 })
 
+# Single-token headline extractions (verbs, wire tails, section labels)
+_HEADLINE_FRAGMENT_SINGLES = frozenset({
+    "steering", "shares", "quality", "recruiting", "workforce", "earnings",
+    "reservations", "distribution", "leveraging", "emerges", "cracked",
+    "special", "leading",
+})
+
 _GENERIC_PLURALS = frozenset({
     "retailers", "nurses", "women", "robots", "experts",
     "workers", "operators", "managers", "systems",
@@ -222,6 +229,15 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
 
     if len(words) == 1 and name_lower in _GENERIC_SINGLES:
         return False, "generic abstract single word"
+
+    if len(words) == 1 and name_lower in _HEADLINE_FRAGMENT_SINGLES:
+        return False, "single-word headline fragment"
+
+    if re.search(r"\boks$", name_lower):
+        return False, "headline verb conjugation (OKs)"
+
+    if re.search(r"\b(plant|emerges|cracked|workforce|earnings)\s*$", name_lower):
+        return False, "trailing headline noun/verb stub"
 
     if name_lower.startswith("some ") or name_lower.startswith("can "):
         return False, "question/list opener"

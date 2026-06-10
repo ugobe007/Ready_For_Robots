@@ -299,6 +299,42 @@ async def cron_refresh_content_surfaces(
     }
 
 
+def _run_data_quality_job_sync(*, apply: bool = True) -> Dict[str, Any]:
+    from app.services.scheduled_data_quality import run_weekly_data_quality_job
+
+    return run_weekly_data_quality_job(apply=apply)
+
+
+@router.get("/data-quality/status")
+async def data_quality_job_status() -> Dict[str, Any]:
+    """Last weekly data-quality run (purge, normalize, decision log export)."""
+    from app.services.scheduled_data_quality import get_data_quality_job_status
+
+    return get_data_quality_job_status()
+
+
+@router.get("/cron/run-data-quality")
+async def cron_run_data_quality(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    apply: bool = Query(True, description="Apply purge/normalize (false = dry-run export only)"),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for weekly data quality (purge junk, normalize names, export log).
+    GET /api/scraper/cron/run-data-quality?token=YOUR_SCRAPER_CRON_TOKEN
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    background_tasks.add_task(_run_data_quality_job_sync, apply=apply)
+    return {
+        "status": "started",
+        "message": "Weekly data quality job started (purge, normalize, quality log export).",
+        "apply": apply,
+    }
+
+
 @router.post("/run-intelligence")
 async def run_intelligence_scraper(
     background_tasks: BackgroundTasks,

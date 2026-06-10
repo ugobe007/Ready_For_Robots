@@ -140,6 +140,7 @@ def _run_startup() -> None:
     _configure_logging()
     _start_scheduled_scraper()
     _start_scheduled_secondary_pipeline()
+    _start_scheduled_data_quality()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -519,6 +520,62 @@ def _start_scheduled_secondary_pipeline():
         "In-app scheduled secondary pipeline thread started (every %s hours, first run in %s min)",
         os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"),
         os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"),
+    )
+
+
+def _scheduled_data_quality_loop():
+    """Weekly purge + normalize + quality decision log export."""
+    from app.services.scheduled_data_quality import run_weekly_data_quality_job
+
+    first_delay_hours = float(os.getenv("DATA_QUALITY_FIRST_RUN_DELAY_HOURS", "12"))
+    interval_hours = float(os.getenv("DATA_QUALITY_EVERY_HOURS", "168"))
+    if interval_hours <= 0:
+        return
+
+    print(
+        f"[data-quality] scheduler armed first_run_hours={first_delay_hours} "
+        f"interval_hours={interval_hours}",
+        flush=True,
+    )
+    time.sleep(max(3600, int(first_delay_hours * 3600)))
+    while True:
+        try:
+            logger.info("Scheduled weekly data quality job starting")
+            result = run_weekly_data_quality_job(apply=True)
+            logger.info(
+                "Scheduled data quality finished: status=%s purged=%s log_rows=%s",
+                result.get("status"),
+                result.get("purge_deleted"),
+                result.get("quality_log_rows"),
+            )
+        except Exception as exc:
+            logger.exception("Scheduled data quality job failed: %s", exc)
+        time.sleep(max(3600, int(interval_hours * 3600)))
+
+
+def _start_scheduled_data_quality():
+    if os.getenv("ENABLE_SCHEDULED_DATA_QUALITY", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app scheduled data quality disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_DATA_QUALITY", "").lower() in ("1", "true", "yes")
+        or os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_data_quality_loop,
+        daemon=True,
+        name="data-quality-weekly",
+    )
+    t.start()
+    print("[data-quality] weekly scheduler thread started", flush=True)
+    logger.info(
+        "In-app weekly data quality thread started (every %s hours)",
+        os.getenv("DATA_QUALITY_EVERY_HOURS", "168"),
     )
 
 

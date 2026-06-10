@@ -336,6 +336,13 @@ def quarantine(company: "Company", db: "Session", reason: str = "") -> None:
     try:
         company.is_internal = False
         db.commit()
+        if company.name:
+            from app.services.scraper_blocklist import add_to_blocklist
+
+            add_to_blocklist(
+                company.name,
+                reason=f"rectifier:{(reason or 'failed')[:120]}",
+            )
         logger.info(
             "Rectifier: quarantined company %d (%r) — %s",
             company.id, company.name, reason or "failed rectification",

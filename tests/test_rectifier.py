@@ -162,6 +162,21 @@ def test_quarantine_sets_is_internal_false():
     db.commit.assert_called_once()
 
 
+def test_quarantine_adds_blocklist_entry(monkeypatch):
+    company = make_company("Steering")
+    db = MagicMock()
+    blocklist = MagicMock()
+    monkeypatch.setattr(
+        "app.services.scraper_blocklist.add_to_blocklist",
+        blocklist,
+    )
+    quarantine(company, db, reason="headline fragment")
+    blocklist.assert_called_once_with(
+        "Steering",
+        reason="rectifier:headline fragment",
+    )
+
+
 def test_quarantine_leaves_company_is_internal_false():
     """Even when db interaction is mocked, is_internal should be set before commit."""
     company = make_company("Germany")

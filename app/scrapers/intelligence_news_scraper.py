@@ -776,6 +776,7 @@ class IntelligenceNewsScraper:
             "websites_enriched": 0,
             "contacts_enriched": 0,
             "new_company_ids": [],
+            "enriched_company_ids": [],
             "secondary_pass": None,
             # Per-phase failure counts (pythh-style: one phase blows, others still run)
             "phase_failures": {},
@@ -1355,6 +1356,8 @@ class IntelligenceNewsScraper:
         
         if existing:
             self.stats["companies_enriched"] += 1
+            if existing.id not in self.stats["new_company_ids"]:
+                self.stats["enriched_company_ids"].append(existing.id)
             # Update industry if we have better info
             if existing.industry == "Unknown" and context_text:
                 industry = self._infer_industry(context_text)
@@ -1393,41 +1396,71 @@ class IntelligenceNewsScraper:
         return company
 
     def _run_secondary_pass_for_new_leads(self) -> None:
-        """Five-pillar secondary logic on leads created during this discovery run."""
+        """Five-pillar secondary logic on leads touched during this discovery run."""
         if not self._run_secondary_after_scrape:
             return
-        ids = list(dict.fromkeys(self.stats.get("new_company_ids") or []))
-        if not ids:
+        new_ids = list(dict.fromkeys(self.stats.get("new_company_ids") or []))
+        enriched_cap = int(os.getenv("SECONDARY_PASS_ENRICHED_CAP", "40"))
+        enriched_ids = [
+            i
+            for i in dict.fromkeys(self.stats.get("enriched_company_ids") or [])
+            if i not in new_ids
+        ][:enriched_cap]
+        if not new_ids and not enriched_ids:
             return
         use_llm = os.getenv("SECONDARY_PASS_USE_LLM", "1").strip().lower() not in (
             "0",
             "false",
             "no",
         )
-        logger.info(
-            "🔧 Running secondary logic on %s new lead(s) (onboarding passes)...",
-            len(ids),
-        )
+        combined_stats: Dict = {}
         try:
             from app.services.lead_secondary_pass import run_secondary_pass_for_company_ids
+            from app.services.public_surface_cache import hydrate_public_surface_caches
 
-            stats = run_secondary_pass_for_company_ids(
-                self.db,
-                ids,
-                use_llm=use_llm,
-                rescore=True,
-                cooldown_hours=0,
-                onboarding=True,
-            )
-            self.stats["secondary_pass"] = stats
+            if new_ids:
+                logger.info(
+                    "🔧 Secondary onboarding on %s new lead(s)...",
+                    len(new_ids),
+                )
+                combined_stats["new"] = run_secondary_pass_for_company_ids(
+                    self.db,
+                    new_ids,
+                    use_llm=use_llm,
+                    rescore=True,
+                    cooldown_hours=0,
+                    onboarding=True,
+                )
+            if enriched_ids:
+                logger.info(
+                    "🔧 Secondary gap repair on %s enriched lead(s)...",
+                    len(enriched_ids),
+                )
+                combined_stats["enriched"] = run_secondary_pass_for_company_ids(
+                    self.db,
+                    enriched_ids,
+                    use_llm=use_llm,
+                    rescore=True,
+                    cooldown_hours=0,
+                    onboarding=False,
+                )
+            self.stats["secondary_pass"] = combined_stats
+            try:
+                hydrate_public_surface_caches()
+                combined_stats["cache_refresh"] = "ok"
+            except Exception as cache_exc:
+                combined_stats["cache_refresh"] = f"failed: {cache_exc}"
             logger.info(
-                "Secondary pass complete: processed=%s fields_filled=%s errors=%s",
-                stats.get("processed"),
-                stats.get("fields_filled_total"),
-                stats.get("errors"),
+                "Secondary pass complete: new=%s enriched=%s",
+                (combined_stats.get("new") or {}).get("processed"),
+                (combined_stats.get("enriched") or {}).get("processed"),
             )
         except Exception as exc:
-            self._record_phase_failure("secondary_pass", exc, f"ids={ids[:8]}")
+            self._record_phase_failure(
+                "secondary_pass",
+                exc,
+                f"new={new_ids[:5]} enriched={enriched_ids[:5]}",
+            )
             logger.warning("Secondary pass after scrape failed: %s", exc)
 
     def _maybe_enrich_website(self, company: Company) -> None:

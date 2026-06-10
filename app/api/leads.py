@@ -280,6 +280,11 @@ def _primary_score_subquery(db: Session):
     )
 
 
+def _public_leads_only(query):
+    """Exclude quarantined companies (rectifier sets is_internal=False)."""
+    return query.filter(Company.is_internal.is_(True))
+
+
 def _lead_rows_query(db: Session):
     """Lightweight aggregate query used by both list and summary endpoints."""
     hot_hits = func.sum(
@@ -291,7 +296,7 @@ def _lead_rows_query(db: Session):
 
     ps = _primary_score_subquery(db)
 
-    return (
+    q = (
         db.query(
             Company.id.label("id"),
             Company.name.label("name"),
@@ -321,6 +326,7 @@ def _lead_rows_query(db: Session):
             Score.overall_intent_score,
         )
     )
+    return _public_leads_only(q)
 
 
 # Cap how many grouped company rows we load for summaries / homepage (not full-table scans).
@@ -383,9 +389,11 @@ def _lead_rows_query_limited(db: Session, limit: int):
     ps = _primary_score_subquery(db)
 
     top_ids_sq = (
-        db.query(Company.id.label("company_id"))
-        .outerjoin(ps, ps.c.company_id == Company.id)
-        .outerjoin(Score, Score.id == ps.c.score_id)
+        _public_leads_only(
+            db.query(Company.id.label("company_id"))
+            .outerjoin(ps, ps.c.company_id == Company.id)
+            .outerjoin(Score, Score.id == ps.c.score_id)
+        )
         .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
         .limit(lim)
         .subquery()

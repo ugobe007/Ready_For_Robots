@@ -422,6 +422,12 @@ def is_valid_lead(
     if frag:
         return False, frag_reason
 
+    from app.services.headline_name_shape import passes_headline_name_shape
+
+    ok_shape, shape_reason = passes_headline_name_shape(name)
+    if not ok_shape:
+        return False, f"headline shape: {shape_reason}"
+
     # Single-word names must be allowlisted or look like real brands (not "port", "home")
     tokens = re.findall(r"[a-zA-Z&]+", name)
     if len(tokens) == 1:
