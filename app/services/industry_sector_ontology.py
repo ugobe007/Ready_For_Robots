@@ -130,11 +130,29 @@ def _term_matches_query(term: str, query: str) -> bool:
         return False
     if term == query:
         return True
+    # Very short ontology keys must match exactly (avoids "er" ⊂ "center", "ed" ⊂ "red").
+    if len(term) <= 3 or len(query) <= 3:
+        return False
     if len(query) >= 4 and query in term:
         return True
     if len(term) >= 4 and term in query:
         return True
     return False
+
+
+def term_in_text(term: str, hay: str) -> bool:
+    """Match expansion term in haystack without short-token substring false positives."""
+    t = normalize_term(term)
+    h = normalize_term(hay)
+    if not t or not h:
+        return False
+    if t in h and " " in t:
+        return True
+    if len(t) <= 4:
+        return re.search(rf"\b{re.escape(t)}\b", h) is not None
+    if len(t) >= 8:
+        return t in h
+    return re.search(rf"\b{re.escape(t)}\b", h) is not None
 
 
 def _subject_in_text(subject: str, hay: str) -> bool:
@@ -152,11 +170,16 @@ def _has_inference_anchor(hay: str) -> bool:
 
 
 def _strip_inference_suffix(query: str) -> str:
+    """Drop trailing inference anchor only when the prefix is a known subject or multi-word."""
     q = normalize_term(query)
+    subjects = {ref.subject for ref in _subject_refs()}
     for anchor in inference_anchors():
         suffix = f" {anchor}"
-        if q.endswith(suffix) and len(q) > len(suffix):
-            return q[: -len(suffix)].strip()
+        if not q.endswith(suffix) or len(q) <= len(suffix):
+            continue
+        prefix = q[: -len(suffix)].strip()
+        if prefix in subjects or " " in prefix:
+            return prefix
     return q
 
 
@@ -248,6 +271,22 @@ def _collect_sector_bundle(sector: dict) -> Tuple[List[str], List[str]]:
     return canonical, terms
 
 
+def _collect_matched_sub_terms(sector: dict, sub_ids: Set[str]) -> List[str]:
+    """Terms from matched sub-ontologies only — avoids cross-sub-ontology bleed."""
+    terms: List[str] = []
+    subs = sector.get("sub_ontologies") or {}
+    for sub_id in sub_ids:
+        if sub_id in ("__root__", "__sector__", "__canonical__"):
+            continue
+        sub = subs.get(sub_id) or {}
+        terms.append(sub.get("label", ""))
+        if sub.get("subject"):
+            terms.append(sub["subject"])
+            terms.extend(sub.get("modifiers") or [])
+        terms.extend(sub.get("terms") or [])
+    return terms
+
+
 def match_ontology_query(query: str) -> OntologyMatch:
     q = normalize_term(query)
     if not q:
@@ -296,9 +335,14 @@ def match_ontology_query(query: str) -> OntologyMatch:
         sector_ids.append(sid)
         sub_ids = matched_sector_subs[sid]
         sub_ids_out.extend(sorted(sub_ids))
-        canonical, terms = _collect_sector_bundle(sector)
+        canonical, _all_terms = _collect_sector_bundle(sector)
         canonical_out.extend(canonical)
-        terms_out.extend(terms)
+        specific_subs = {s for s in sub_ids if s not in ("__root__", "__sector__", "__canonical__")}
+        if sid in sector_full_match or not specific_subs:
+            terms_out.extend(_all_terms)
+        else:
+            terms_out.extend(_collect_matched_sub_terms(sector, sub_ids))
+            terms_out.extend(sector.get("root_aliases") or [])
 
     terms_out.extend(subject_inference_terms(q))
     return OntologyMatch(
@@ -334,8 +378,12 @@ def pipeline_diversity_industries() -> Tuple[str, ...]:
         "Medical Technology",
         "Airports & Aviation",
         "Automotive & Manufacturing",
+        "Datacenters",
+        "Food Processing & Manufacturing",
         "Retail",
         "Real Estate & Facilities",
+        "Defense",
+        "Energy & Utilities",
     )
     ordered = [p for p in priority if p in seen]
     for ind in out:

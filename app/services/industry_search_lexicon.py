@@ -13,6 +13,8 @@ from app.services.industry_sector_ontology import (
     match_ontology_query,
     normalize_term,
     pipeline_diversity_industries,
+    resolve_subject_refs,
+    term_in_text,
     text_matches_subject_inference,
 )
 
@@ -91,13 +93,23 @@ def text_matches_industry_search(text: str, query: str) -> bool:
     """Match query against free text (signals, company name) using ontology."""
     if not query:
         return True
-    hay = (text or "").lower()
+    hay = normalize_term(text)
     q = _resolve_query(query)
-    if q in hay:
+    if not hay:
+        return False
+    if term_in_text(q, hay):
         return True
-    for term in expand_search_terms(q):
-        if term in hay:
+    subject_refs = resolve_subject_refs(q)
+    if subject_refs and text_matches_subject_inference(hay, q):
+        return True
+    match = match_ontology_query(q)
+    for term in match.expansion_terms:
+        if term_in_text(term, hay):
+            if subject_refs:
+                return text_matches_subject_inference(hay, q)
             return True
+    if subject_refs:
+        return False
     return text_matches_subject_inference(hay, q)
 
 

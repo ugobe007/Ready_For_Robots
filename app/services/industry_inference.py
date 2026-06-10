@@ -36,6 +36,43 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "seagull software": "Datacenters",
     "blinkops": "Datacenters",
     "velaris": "Datacenters",
+    "microsoft": "Datacenters",
+    "corning": "Datacenters",
+    "softbank": "Datacenters",
+    # Casinos / hospitality (often mislabeled Healthcare from F&B/housekeeping signals)
+    "caesars entertainment": "Casinos & Gaming",
+    "boyd gaming": "Casinos & Gaming",
+    "las vegas sands": "Hospitality",
+    "wynn resorts": "Hospitality",
+    "mgm resorts": "Casinos & Gaming",
+    "penn entertainment": "Hospitality",
+    "hard rock international": "Hospitality",
+    "wyndham hotels": "Hospitality",
+    "wyndham hotels & resorts": "Hospitality",
+    "accor hotels": "Hospitality",
+    "accor": "Hospitality",
+    "marina bay sands": "Hospitality",
+    "choice hotels": "Hospitality",
+    "abm industries": "Real Estate & Facilities",
+    "united airlines": "Airports & Aviation",
+    "carnival corporation": "Cruise Lines",
+    "norwegian cruise line": "Cruise Lines",
+    # Food service / airline catering
+    "gate gourmet": "Food Service",
+    "lsg sky chefs": "Food Service",
+    "hmshost": "Food Service",
+    "compass group": "Food Service",
+    "aramark": "Food Service",
+    "sodexo": "Food Service",
+    "yum! brands": "Food Service",
+    "yum brands": "Food Service",
+    "cracker barrel": "Food Service",
+    "red lobster": "Food Service",
+    "mcdonald's": "Food Service",
+    "mcdonalds": "Food Service",
+    "starbucks": "Food Service",
+    "shake shack": "Food Service",
+    "foxconn": "Automotive & Manufacturing",
     # Healthcare / senior living
     "cedarhurst": "Healthcare",
     "lifespire": "Healthcare",
@@ -339,6 +376,17 @@ def should_skip_industry_reinfer_for_company_name(name: Optional[str]) -> bool:
     return False
 
 
+_BOUNDARY_KEYWORDS = frozenset({
+    "defense", "defence", "military", "dod", "army", "navy", "lab", "grid", "icu", "ed", "er",
+})
+
+
+def _keyword_in_text(kw: str, text_lower: str) -> bool:
+    if kw in _BOUNDARY_KEYWORDS:
+        return re.search(rf"\b{re.escape(kw)}\b", text_lower) is not None
+    return kw in text_lower
+
+
 def infer_industry_scores(text: str) -> Dict[str, int]:
     """
     Keyword hit counts per industry label (used by infer + disambiguation).
@@ -353,7 +401,7 @@ def infer_industry_scores(text: str) -> Dict[str, int]:
             return {ind: 10**6}
     scores: Dict[str, int] = {}
     for industry, keywords in INDUSTRY_KEYWORDS.items():
-        score = sum(1 for kw in keywords if kw in text_lower)
+        score = sum(1 for kw in keywords if _keyword_in_text(kw, text_lower))
         if score > 0:
             scores[industry] = score
     try:

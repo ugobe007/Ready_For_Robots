@@ -1141,11 +1141,12 @@ def build_public_leads_list(
     ]
 
 
-def _lead_row_matches_industry_filter(row, industry: str) -> bool:
+def _lead_row_matches_industry_filter(row, industry: str, *, signal_text: str = "") -> bool:
     if industry_label_matches_query(row.industry or "", industry):
         return True
     name = getattr(row, "name", "") or ""
-    if text_matches_industry_search(name, industry):
+    blob = " ".join([name, signal_text or getattr(row, "signal_text", "") or ""])
+    if text_matches_industry_search(blob, industry):
         return True
     for canonical in canonical_industries_for_query(industry):
         if canonical.lower() in (row.industry or "").lower():
@@ -1461,7 +1462,8 @@ def get_leads(
         from app.database import SessionLocal
 
         with SessionLocal() as live_db:
-            candidate_limit = min(LEADS_SQL_POOL_CAP, max(limit * 4, 50))
+            pool_cap = 2000 if industry_filter else LEADS_SQL_POOL_CAP
+            candidate_limit = min(pool_cap, max(limit * 40, 200) if industry_filter else max(limit * 4, 50))
             rows = _lead_rows_query_limited(live_db, candidate_limit).all()
 
             results = []
@@ -1470,8 +1472,10 @@ def get_leads(
                     continue
                 if max_score is not None and float(row.overall_score or 0) > max_score:
                     continue
-                if industry_filter:
-                    if not _lead_row_matches_industry_filter(row, industry_filter):
+                if industry_filter and not industry_label_matches_query(row.industry or "", industry_filter):
+                    # Defer signal-text lexicon match to staged pass (_company_matches_industry_filter).
+                    name = getattr(row, "name", "") or ""
+                    if not text_matches_industry_search(name, industry_filter):
                         continue
                 if signal_type:
                     hot = int(getattr(row, "hot_hits", 0) or 0)

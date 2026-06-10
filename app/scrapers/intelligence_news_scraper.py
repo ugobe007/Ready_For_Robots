@@ -88,14 +88,25 @@ DISCOVERY_QUERIES = [
     
     # Specialty verticals — car wash, datacenter, laundry, truck stop, energy, defense
     "car wash automation tunnel conveyor investment 2026",
+    "express car wash chain robotics labor shortage 2026",
+    "car wash operator conveyor tunnel automation capex 2026",
     "data center automation maintenance robot deployment 2026",
+    "hyperscale data center facility robot inspection 2026",
     "commercial laundry automation linen plant robotics 2026",
+    "industrial linen plant flatwork automation investment 2026",
     "truck stop travel center automation food service 2026",
+    "Pilot Flying J travel plaza automation robotics 2026",
+    "Love's Travel Stops food service robot pilot 2026",
     "energy storage facility automation grid robotics 2026",
+    "battery storage BESS facility automation deployment 2026",
+    "utility substation inspection robot grid modernization 2026",
     "defense logistics automation military warehouse robot 2026",
+    "military base warehouse AMR sustainment logistics 2026",
     "auto dealership service automation robot pilot 2026",
     "quick serve restaurant QSR kitchen automation 2026",
     "food processing plant automation robotics investment 2026",
+    "grocery dark store pack out automation micro fulfillment 2026",
+    "retail micro fulfillment center pack out robotics 2026",
 
     # Automotive service & parts
     "automotive parts logistics automation deployment 2026",

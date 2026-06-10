@@ -21,7 +21,7 @@ def test_restaurant_maps_to_food_service():
 
 def test_food_robot_expansion():
     terms = expand_search_terms("food robot")
-    assert "kitchen robot" in terms
+    assert "food robotics" in terms
     assert "serving robot" in terms
 
 
@@ -200,4 +200,32 @@ def test_food_processing_and_truck_stop():
     assert text_matches_subject_inference(
         "Highway travel center tests delivery robot for truck stop food court",
         "truck stop automation",
+    )
+
+
+def test_lab_does_not_match_collaboration_substring():
+    assert not text_matches_industry_search(
+        "Siemens partnership creates customisable collaborative manufacturing capability",
+        "lab",
+    )
+
+
+def test_datacenter_query_not_every_hospitality_signal():
+    assert not text_matches_industry_search(
+        "Caesars F&B and housekeeping vacancy rate hits 34% during peak season",
+        "data center automation",
+    )
+
+
+def test_restaurant_still_matches_food_service_signal():
+    assert text_matches_industry_search(
+        "Regional QSR operator expands back of house kitchen automation pilot",
+        "restaurant",
+    )
+
+
+def test_pack_out_still_matches_manufacturing_line():
+    assert text_matches_industry_search(
+        "CPG brand adds pack-out automation on new bottling line",
+        "pack out",
     )
