@@ -56,23 +56,27 @@ def enrich_pipeline_leads_with_agent(
 
 @router.post("/leads/secondary-pass")
 def run_lead_secondary_pass(
-    background_tasks: BackgroundTasks,
     limit: int = Query(120, ge=1, le=300),
     min_score: float = Query(15.0, ge=0.0, le=100.0),
     use_llm: bool = Query(True),
     rescore: bool = Query(True),
 ):
-    from app.services.lead_secondary_pass import run_secondary_pass_batch_and_refresh_caches
+    from app.services.secondary_pass_runner import (
+        get_secondary_pass_status,
+        run_leads_secondary_pass_sync,
+        start_secondary_job_in_thread,
+    )
 
-    background_tasks.add_task(
-        run_secondary_pass_batch_and_refresh_caches,
+    result = start_secondary_job_in_thread(
+        run_leads_secondary_pass_sync,
+        job_kind="leads",
         limit=limit,
         min_score=min_score,
         use_llm=use_llm,
         rescore=rescore,
     )
     return {
-        "status": "started",
+        **result,
         "limit": limit,
         "min_score": min_score,
         "use_llm": use_llm,
@@ -81,4 +85,6 @@ def run_lead_secondary_pass(
             f"Secondary rescue pass processing up to {limit} gap-ranked leads — "
             "website, contacts (Apollo + role inbox), CRM, inference, rectification."
         ),
+        "status_url": "/api/scraper/secondary-pass/status",
+        "current": get_secondary_pass_status(),
     }

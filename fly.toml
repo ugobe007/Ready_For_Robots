@@ -45,6 +45,8 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   HUMANOID_SECONDARY_PASS_LIMIT = "40"
   HUMANOID_SECONDARY_PASS_SPARSE_PCT = "85"
   HUMANOID_SECONDARY_PASS_NEWS_QUERIES = "24"
+  # Nightly in-app job runs leads then humanoids in one serialized pipeline
+  SECONDARY_PIPELINE_RUN_HUMANOIDS = "1"
 
 [http_service]
   internal_port = 8080

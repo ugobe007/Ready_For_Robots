@@ -124,10 +124,22 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def _configure_logging() -> None:
+    """Ensure app loggers and secondary-pass prints appear in Fly logs."""
+    level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+    if not logging.getLogger().handlers:
+        logging.basicConfig(
+            level=level,
+            format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        )
+    logging.getLogger("app").setLevel(level)
+
+
 def _run_startup() -> None:
+    _configure_logging()
     _start_scheduled_scraper()
-    _start_scheduled_secondary_pass()
-    _start_scheduled_humanoid_secondary_pass()
+    _start_scheduled_secondary_pipeline()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -436,148 +448,77 @@ def _start_scheduled_scraper():
     logger.info("In-app scheduled scraper thread started (every %s hours)", os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
 
 
-def _scheduled_secondary_pass_loop():
-    """Daily secondary logic on Fly when Celery Beat is not running (SKIP_CELERY=1)."""
-    from app.api.scraper_control import _run_secondary_pass_sync
+def _scheduled_secondary_pipeline_loop():
+    """Daily leads → humanoids secondary pipeline on Fly (SKIP_CELERY=1)."""
+    from app.api.scraper_control import _run_full_secondary_pipeline_sync
 
     first_delay_min = int(os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"))
     interval_hours = float(os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"))
     if interval_hours <= 0:
         return
-    limit = int(os.getenv("SECONDARY_PASS_LIMIT", "120"))
-    min_score = float(os.getenv("SECONDARY_PASS_MIN_SCORE", "15"))
-    use_llm = os.getenv("SECONDARY_PASS_USE_LLM", "1").strip().lower() not in ("0", "false", "no")
-    rescore = os.getenv("SECONDARY_PASS_RESCORE", "1").strip().lower() not in ("0", "false", "no")
 
+    print(
+        f"[secondary-pass] scheduler armed first_run_min={first_delay_min} "
+        f"interval_hours={interval_hours}",
+        flush=True,
+    )
     time.sleep(max(60, first_delay_min * 60))
     while True:
         try:
-            logger.info("Scheduled secondary pass starting (in-app thread, limit=%s)", limit)
-            result = _run_secondary_pass_sync(
-                limit=limit,
-                min_score=min_score,
-                use_llm=use_llm,
-                rescore=rescore,
-            )
+            logger.info("Scheduled secondary pipeline starting (leads then humanoids)")
+            result = _run_full_secondary_pipeline_sync()
             if result.get("status") == "skipped":
-                logger.info("Scheduled secondary pass skipped: %s", result.get("reason"))
+                logger.info("Scheduled secondary pipeline skipped: %s", result.get("reason"))
             else:
+                leads = result.get("leads") or {}
+                humanoids = result.get("humanoids") or {}
                 logger.info(
-                    "Scheduled secondary pass finished: processed=%s fields_filled=%s",
-                    result.get("processed"),
-                    result.get("fields_filled_total"),
+                    "Scheduled secondary pipeline finished: leads_processed=%s "
+                    "humanoids_processed=%s",
+                    leads.get("processed"),
+                    humanoids.get("processed"),
                 )
         except Exception as exc:
-            logger.exception("Scheduled secondary pass failed: %s", exc)
+            logger.exception("Scheduled secondary pipeline failed: %s", exc)
         time.sleep(max(3600, int(interval_hours * 3600)))
 
 
-def _start_scheduled_secondary_pass():
-    """Start daily secondary pass when Celery Beat is not on this machine."""
-    if os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "1").strip().lower() in ("0", "false", "no"):
-        logger.info("In-app scheduled secondary pass disabled (ENABLE_SCHEDULED_SECONDARY_PASS=0)")
+def _start_scheduled_secondary_pipeline():
+    """Start daily secondary pipeline when Celery Beat is not on this machine."""
+    leads_off = os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "1").strip().lower() in (
+        "0", "false", "no"
+    )
+    humanoids_off = os.getenv("ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS", "1").strip().lower() in (
+        "0", "false", "no"
+    )
+    if leads_off and humanoids_off:
+        logger.info("In-app scheduled secondary pipeline disabled")
         return
 
     skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
     has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
     if has_broker and not skip_celery:
         logger.info(
-            "In-app scheduled secondary pass skipped: Celery Beat runs lead-secondary-pass-daily"
+            "In-app scheduled secondary pipeline skipped: Celery Beat runs secondary tasks"
         )
         return
 
     enabled = (
         os.getenv("FLY_APP_NAME")
         or os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "").lower() in ("1", "true", "yes")
-        or skip_celery
-    )
-    if not enabled:
-        return
-
-    t = threading.Thread(target=_scheduled_secondary_pass_loop, daemon=True)
-    t.start()
-    logger.info(
-        "In-app scheduled secondary pass thread started (every %s hours, first run in %s min)",
-        os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"),
-        os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"),
-    )
-
-
-def _scheduled_humanoid_secondary_pass_loop():
-    """Daily humanoid benchmark secondary pass on Fly (SKIP_CELERY=1)."""
-    from app.api.scraper_control import _run_humanoid_secondary_pass_sync
-
-    first_delay_min = int(os.getenv("HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "90"))
-    interval_hours = float(os.getenv("HUMANOID_SECONDARY_PASS_EVERY_HOURS", "24"))
-    if interval_hours <= 0:
-        return
-    limit = int(os.getenv("HUMANOID_SECONDARY_PASS_LIMIT", "40"))
-    sparse_pct = float(os.getenv("HUMANOID_SECONDARY_PASS_SPARSE_PCT", "85"))
-    use_llm = os.getenv("HUMANOID_SECONDARY_PASS_USE_LLM", "1").strip().lower() not in (
-        "0", "false", "no"
-    )
-    persist_news = os.getenv("HUMANOID_SECONDARY_PASS_PERSIST_NEWS", "1").strip().lower() not in (
-        "0", "false", "no"
-    )
-    news_queries = int(os.getenv("HUMANOID_SECONDARY_PASS_NEWS_QUERIES", "24"))
-
-    time.sleep(max(60, first_delay_min * 60))
-    while True:
-        try:
-            logger.info("Scheduled humanoid secondary pass starting (limit=%s)", limit)
-            result = _run_humanoid_secondary_pass_sync(
-                limit=limit,
-                sparse_threshold_pct=sparse_pct,
-                use_llm_scrape=use_llm,
-                persist_deployment_news=persist_news,
-                deployment_query_cap=news_queries,
-            )
-            if result.get("status") == "skipped":
-                logger.info("Humanoid secondary pass skipped: %s", result.get("reason"))
-            else:
-                logger.info(
-                    "Humanoid secondary pass finished: processed=%s robots_updated=%s",
-                    result.get("processed"),
-                    (result.get("deployment_news") or {}).get("robots_updated"),
-                )
-        except Exception as exc:
-            logger.exception("Scheduled humanoid secondary pass failed: %s", exc)
-        time.sleep(max(3600, int(interval_hours * 3600)))
-
-
-def _start_scheduled_humanoid_secondary_pass():
-    """Start daily humanoid secondary pass when Celery Beat is not on this machine."""
-    if os.getenv("ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS", "1").strip().lower() in (
-        "0", "false", "no"
-    ):
-        logger.info(
-            "In-app scheduled humanoid secondary pass disabled "
-            "(ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS=0)"
-        )
-        return
-
-    skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
-    has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
-    if has_broker and not skip_celery:
-        logger.info(
-            "In-app humanoid secondary pass skipped: Celery Beat runs humanoid-secondary-pass-daily"
-        )
-        return
-
-    enabled = (
-        os.getenv("FLY_APP_NAME")
         or os.getenv("ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS", "").lower() in ("1", "true", "yes")
         or skip_celery
     )
     if not enabled:
         return
 
-    t = threading.Thread(target=_scheduled_humanoid_secondary_pass_loop, daemon=True)
+    t = threading.Thread(target=_scheduled_secondary_pipeline_loop, daemon=True, name="secondary-pipeline")
     t.start()
+    print("[secondary-pass] scheduler thread started", flush=True)
     logger.info(
-        "In-app scheduled humanoid secondary pass thread started (every %s hours, first run in %s min)",
-        os.getenv("HUMANOID_SECONDARY_PASS_EVERY_HOURS", "24"),
-        os.getenv("HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "90"),
+        "In-app scheduled secondary pipeline thread started (every %s hours, first run in %s min)",
+        os.getenv("SECONDARY_PASS_EVERY_HOURS", "24"),
+        os.getenv("SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES", "60"),
     )
 
 
