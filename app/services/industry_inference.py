@@ -78,6 +78,8 @@ INDUSTRY_TIE_PRIORITY: Tuple[str, ...] = (
     "Medical Technology",
     "Healthcare",
     "Logistics",
+    "Defense",
+    "Energy & Utilities",
     "Food Processing & Manufacturing",
     "CPG & Consumer Goods",
     "Contract Manufacturing",
@@ -117,11 +119,13 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "restaurant", "restaurants", "food service", "foodservice", "kitchen", "dining", "qsr",
         "fast food", "fast casual", "cafe", "chain restaurant", "franchise",
         "food prep", "food preparation", "food delivery", "food robot", "food robotics",
+        "quick serve", "quick serve automation", "qsr automation",
         "kitchen robot", "kitchen automation", "server robot", "serving robot",
         "ghost kitchen", "dark kitchen", "commercial kitchen", "back of house",
         "cafeteria", "catering", "dining room", "table service", "drive-thru",
         "drive through", "mcdonald", "starbucks", "chipotle", "yum brands",
         "compass group", "aramark", "sodexo", "darden", "dine brands",
+        "truck stop", "truckstop", "travel center", "travel plaza",
     ],
     "Healthcare": [
         "hospital", "healthcare", "health system", "clinic", "patient",
@@ -144,8 +148,20 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "lab delivery", "pharmacy automation", "surgery center", "surgery automation",
         "biomedical", "radiotherapy", "bulk medication", "medication picking",
     ],
+    "Defense": [
+        "defense", "defence", "military", "dod", "department of defense",
+        "army", "navy", "air force", "warfighter", "national defense",
+        "defense automation", "defense logistics", "military logistics",
+        "defense robotics", "autonomous logistics", "ugv", "unmanned ground",
+    ],
+    "Energy & Utilities": [
+        "energy storage", "battery storage", "bess", "grid scale storage",
+        "grid automation", "power grid", "smart grid", "substation",
+        "utility", "utilities", "energy automation", "transmission automation",
+    ],
     "Food Processing & Manufacturing": [
-        "food processing", "food manufacturing", "meat processing",
+        "food processing", "food manufacturing", "food processing automation",
+        "meat processing",
         "bakery", "produce processing", "food packaging", "food safety",
         "food sorting", "food preparation", "cooking automation",
         "robotic chef", "robotic kitchen",
@@ -181,6 +197,7 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Datacenters": [
         "datacenter", "data center", "hyperscale", "cloud infrastructure",
         "colocation", "server farm", "datacenter operations", "datacenter maintenance",
+        "data center automation", "datacenter automation", "datacenter robot",
         # Omit bare "server" — substring-matches "food server", unrelated IT mentions.
     ],
     "Airports & Aviation": [
@@ -237,7 +254,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         # Omit bare "enterprise" — matches generic B2B / software copy unrelated to facilities.
     ],
     "Automotive Dealerships": [
-        "dealership", "auto dealer", "car dealer", "automotive retail"
+        "dealership", "auto dealer", "car dealer", "automotive retail",
+        "auto dealership automation", "dealership automation", "car dealership robot",
     ],
     "Automotive & Manufacturing": [
         "automotive", "automaker", "auto manufacturer", "car company", "vehicle manufacturer",
@@ -263,11 +281,13 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
     "Laundry & Linen Services": [
         "laundry", "linen", "commercial laundry", "industrial laundry",
         "uniform cleaning", "linen service", "laundry service", "laundromat",
-        "textile cleaning", "flatwork", "wash dry fold"
+        "textile cleaning", "flatwork", "wash dry fold",
+        "commercial laundry automation", "laundry automation", "linen automation",
     ],
     "Car Wash": [
         "car wash", "carwash", "express wash", "tunnel wash", "conveyor wash",
-        "automated car wash", "car wash chain", "quick wash"
+        "automated car wash", "car wash chain", "quick wash",
+        "car wash automation", "carwash robot",
     ],
 }
 

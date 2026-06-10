@@ -32,6 +32,10 @@ _QUERY_ALIASES = {
     "out patient": "outpatient",
     "er": "emergency room",
     "ed": "emergency room",
+    "datacenter": "data center",
+    "qsr": "quick serve",
+    "carwash": "car wash",
+    "truckstop": "truck stop",
 }
 
 

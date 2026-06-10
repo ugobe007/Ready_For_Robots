@@ -39,6 +39,10 @@ const QUERY_ALIASES: Record<string, string> = {
   "out patient": "outpatient",
   er: "emergency room",
   ed: "emergency room",
+  datacenter: "data center",
+  qsr: "quick serve",
+  carwash: "car wash",
+  truckstop: "truck stop",
 };
 
 const INFERENCE_ANCHORS: string[] = (

@@ -86,6 +86,17 @@ DISCOVERY_QUERIES = [
     "hospitality technology investment funding 2026",
     "hotel EVS cleaning staffing shortage crisis",
     
+    # Specialty verticals — car wash, datacenter, laundry, truck stop, energy, defense
+    "car wash automation tunnel conveyor investment 2026",
+    "data center automation maintenance robot deployment 2026",
+    "commercial laundry automation linen plant robotics 2026",
+    "truck stop travel center automation food service 2026",
+    "energy storage facility automation grid robotics 2026",
+    "defense logistics automation military warehouse robot 2026",
+    "auto dealership service automation robot pilot 2026",
+    "quick serve restaurant QSR kitchen automation 2026",
+    "food processing plant automation robotics investment 2026",
+
     # Automotive service & parts
     "automotive parts logistics automation deployment 2026",
     "auto dealership service repair robot pilot 2026",

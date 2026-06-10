@@ -85,6 +85,17 @@
             "machine tending",
             "quality inspection"
           ]
+        },
+        "food_processing_automation": {
+          "label": "Food Processing Automation",
+          "subject": "food processing",
+          "modifiers": ["plant", "factory", "packaging", "sorting", "prep", "manufacturing"],
+          "terms": [
+            "food processing automation",
+            "food plant automation",
+            "food manufacturing robot",
+            "food factory automation"
+          ]
         }
       }
     },
@@ -168,6 +179,17 @@
             "service logistics automation",
             "service parts delivery",
             "aftermarket logistics"
+          ]
+        },
+        "dealership_automation": {
+          "label": "Auto Dealership Automation",
+          "subject": "dealership",
+          "modifiers": ["auto dealership", "car dealer", "showroom", "service bay", "sales floor"],
+          "terms": [
+            "auto dealership automation",
+            "dealership automation",
+            "car dealership robot",
+            "automotive retail automation"
           ]
         }
       }
@@ -361,6 +383,17 @@
             "miso robotics",
             "service robot restaurant"
           ]
+        },
+        "quick_serve": {
+          "label": "Quick Serve Automation",
+          "subject": "quick serve",
+          "modifiers": ["qsr", "fast food", "fast casual", "drive-thru", "drive thru", "counter service"],
+          "terms": [
+            "quick serve automation",
+            "qsr automation",
+            "fast food automation",
+            "quick service restaurant automation"
+          ]
         }
       }
     },
@@ -440,6 +473,8 @@
       "sub_ontologies": {
         "janitorial_cleaning": {
           "label": "Janitorial & Commercial Cleaning",
+          "subject": "commercial cleaning",
+          "modifiers": ["janitorial", "custodial", "floor care", "night cleaning", "contract cleaning"],
           "terms": [
             "janitorial automation",
             "commercial cleaning automation",
@@ -450,6 +485,18 @@
             "sweeping robot",
             "cleaning robot",
             "custodial automation"
+          ]
+        },
+        "commercial_laundry": {
+          "label": "Commercial Laundry Automation",
+          "subject": "laundry",
+          "modifiers": ["commercial laundry", "industrial laundry", "linen", "flatwork", "uniform", "hospitality laundry"],
+          "terms": [
+            "commercial laundry automation",
+            "industrial laundry automation",
+            "laundry automation",
+            "linen automation",
+            "wash floor automation"
           ]
         },
         "building_maintenance": {
@@ -790,6 +837,152 @@
             "airport logistics",
             "concession delivery",
             "gate operations"
+          ]
+        }
+      }
+    },
+    {
+      "id": "datacenters",
+      "label": "Datacenters",
+      "canonical_industries": ["Datacenters"],
+      "root_aliases": [
+        "datacenter",
+        "data center",
+        "data centres",
+        "hyperscale",
+        "colocation",
+        "colo"
+      ],
+      "sub_ontologies": {
+        "datacenter_automation": {
+          "label": "Data Center Automation",
+          "subject": "data center",
+          "modifiers": ["datacenter", "server farm", "hyperscale", "colo", "facility operations", "maintenance"],
+          "terms": [
+            "data center automation",
+            "datacenter automation",
+            "data centre automation",
+            "server farm robotics",
+            "datacenter maintenance robot"
+          ]
+        }
+      }
+    },
+    {
+      "id": "car_wash",
+      "label": "Car Wash",
+      "canonical_industries": ["Car Wash", "Automotive Dealerships"],
+      "root_aliases": ["car wash", "carwash", "express wash", "tunnel wash"],
+      "sub_ontologies": {
+        "car_wash_automation": {
+          "label": "Car Wash Automation",
+          "subject": "car wash",
+          "modifiers": ["tunnel", "conveyor", "express", "self-serve", "fleet wash", "carwash"],
+          "terms": [
+            "car wash automation",
+            "automated car wash",
+            "carwash robot",
+            "tunnel wash automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "truck_stop",
+      "label": "Truck Stop & Travel Center",
+      "canonical_industries": ["Food Service", "Logistics", "Hospitality"],
+      "root_aliases": [
+        "truck stop",
+        "truckstop",
+        "travel center",
+        "travel plaza",
+        "highway services"
+      ],
+      "sub_ontologies": {
+        "truck_stop_automation": {
+          "label": "Truck Stop Automation",
+          "subject": "truck stop",
+          "modifiers": ["travel center", "fuel stop", "fleet services", "highway", "pilot", "loves", "ta petro"],
+          "terms": [
+            "truck stop automation",
+            "travel center automation",
+            "truckstop robot",
+            "highway travel plaza automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "energy_utilities",
+      "label": "Energy & Utilities",
+      "canonical_industries": ["Energy & Utilities", "Logistics"],
+      "root_aliases": [
+        "energy",
+        "utilities",
+        "utility",
+        "power grid",
+        "grid",
+        "energy storage"
+      ],
+      "sub_ontologies": {
+        "energy_storage": {
+          "label": "Energy Storage Automation",
+          "subject": "energy storage",
+          "modifiers": ["battery", "bess", "grid scale", "storage facility", "lithium", "megapack"],
+          "terms": [
+            "energy storage automation",
+            "battery storage automation",
+            "bess automation",
+            "grid scale storage robot"
+          ]
+        },
+        "grid_automation": {
+          "label": "Grid Automation",
+          "subject": "grid",
+          "modifiers": ["power grid", "substation", "transmission", "distribution", "utility", "smart grid"],
+          "terms": [
+            "grid automation",
+            "power grid automation",
+            "substation automation",
+            "utility grid robotics",
+            "smart grid automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "defense",
+      "label": "Defense",
+      "canonical_industries": ["Defense", "Logistics"],
+      "root_aliases": [
+        "defense",
+        "defence",
+        "military",
+        "dod",
+        "warfighter",
+        "national security"
+      ],
+      "sub_ontologies": {
+        "defense_automation": {
+          "label": "Defense Automation",
+          "subject": "defense",
+          "modifiers": ["military", "army", "navy", "air force", "warfighter", "autonomous systems", "ugv", "uav"],
+          "terms": [
+            "defense automation",
+            "military automation",
+            "defense robotics",
+            "autonomous defense systems"
+          ]
+        },
+        "defense_logistics": {
+          "label": "Defense Logistics Automation",
+          "subject": "defense",
+          "modifiers": ["logistics", "supply", "resupply", "sustainment", "warehouse", "distribution", "material handling"],
+          "terms": [
+            "defense logistics automation",
+            "military logistics robot",
+            "defense supply chain automation",
+            "sustainment automation"
           ]
         }
       }

@@ -151,3 +151,53 @@ def test_pharmacy_and_icu_subjects():
         "Central pharmacy robot deployment reduces cart-fill labor",
         "pharmacy automation",
     )
+
+
+def test_datacenter_subject_inference():
+    assert text_matches_subject_inference(
+        "Hyperscale operator pilots maintenance robot inside new data center hall",
+        "data center automation",
+    )
+    assert "Datacenters" in canonical_industries_for_query("datacenter automation")
+
+
+def test_car_wash_and_laundry_subjects():
+    assert text_matches_subject_inference(
+        "National car wash chain deploys tunnel automation upgrade across 40 sites",
+        "car wash automation",
+    )
+    assert text_matches_subject_inference(
+        "Commercial laundry operator adds robotic flatwork handling line",
+        "commercial laundry automation",
+    )
+
+
+def test_defense_logistics_and_grid():
+    assert lead_matches_search(
+        "defense logistics",
+        industry="Defense",
+        signal_text="Army base tests AMR fleet for defense logistics sustainment lanes",
+    )
+    assert text_matches_subject_inference(
+        "Utility pilots substation inspection robot for grid modernization program",
+        "grid automation",
+    )
+
+
+def test_quick_serve_and_dealership():
+    assert text_matches_subject_inference(
+        "QSR chain pilots kitchen robot across quick serve drive-thru locations",
+        "quick serve automation",
+    )
+    assert "Automotive Dealerships" in canonical_industries_for_query("auto dealership automation")
+
+
+def test_food_processing_and_truck_stop():
+    assert text_matches_subject_inference(
+        "Protein processor invests in food processing robot line for packaging hall",
+        "food processing automation",
+    )
+    assert text_matches_subject_inference(
+        "Highway travel center tests delivery robot for truck stop food court",
+        "truck stop automation",
+    )
