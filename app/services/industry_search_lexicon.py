@@ -9,7 +9,9 @@ from __future__ import annotations
 import re
 from typing import List
 
+from app.services.industry_inference import known_industry_for_company_name
 from app.services.industry_sector_ontology import (
+    load_sector_ontology,
     match_ontology_query,
     normalize_term,
     pipeline_diversity_industries,
@@ -75,6 +77,29 @@ def canonical_industries_for_query(query: str) -> List[str]:
     return match_ontology_query(q).canonical_industries
 
 
+def sql_signal_terms_for_query(query: str, *, max_terms: int = 14) -> List[str]:
+    """
+    Compact term list for signal-text SQL ILIKE — sector roots + canonical labels only.
+    Avoids matching unrelated rows via broad sub-ontology phrases (e.g. food delivery → logistics).
+    """
+    q = _resolve_query(query)
+    if not q:
+        return []
+    match = match_ontology_query(q)
+    terms = [q]
+    raw = normalize_search_query(query)
+    if raw and raw != q:
+        terms.append(raw)
+    canon_set = {c.lower() for c in match.canonical_industries}
+    for sector in load_sector_ontology().get("sectors", []):
+        sector_canon = sector.get("canonical_industries") or []
+        if not any((c or "").lower() in canon_set for c in sector_canon):
+            continue
+        terms.extend(sector.get("root_aliases") or [])
+        terms.extend(sector_canon)
+    return _dedupe(terms)[:max_terms]
+
+
 def industry_label_matches_query(industry: str, query: str) -> bool:
     """True if stored industry matches user search via sector ontology."""
     if not query:
@@ -114,7 +139,10 @@ def text_matches_industry_search(text: str, query: str) -> bool:
             return True
     if subject_refs:
         return False
-    return text_matches_subject_inference(hay, q)
+    for canonical in match.canonical_industries:
+        if term_in_text(normalize_term(canonical), hay):
+            return True
+    return False
 
 
 def lead_matches_search(
@@ -129,6 +157,9 @@ def lead_matches_search(
     if not q:
         return True
     if industry_label_matches_query(industry, q):
+        return True
+    known = known_industry_for_company_name(company_name)
+    if known and industry_label_matches_query(known, q):
         return True
     blob = " ".join([company_name, signal_text, location]).lower()
     return text_matches_industry_search(blob, q)

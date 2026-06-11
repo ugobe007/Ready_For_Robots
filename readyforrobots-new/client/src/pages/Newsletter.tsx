@@ -7,7 +7,9 @@ import {
   getApiBase,
   liveFetchInit,
   publicFetchInit,
+  readSurfaceCache,
   readSessionCache,
+  writeSurfaceCache,
   writeSessionCache,
 } from "@/lib/apiBase";
 import { cleanScrapedText, leadPreviewSentences } from "@/lib/text";
@@ -118,6 +120,8 @@ const AMBER = "#FFB000";
 const PURPLE = "#a78bfa";
 const NEWSLETTER_SESSION_KEY = "newsletter_edition_v1";
 const NEWSLETTER_SESSION_TTL_MS = 30 * 60 * 1000;
+const NEWSLETTER_BENCH_KEY = "newsletter_humanoid_report_v1";
+const NEWSLETTER_BENCH_TTL_MS = 30 * 60 * 1000;
 
 /** Supabase-style surface — accent rail, tight padding, clear border */
 function NlSurface({
@@ -248,7 +252,9 @@ export default function Newsletter() {
     let cancelled = false;
     let retryTimer: number | undefined;
 
-    const cached = readSessionCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS);
+    const cached =
+      readSurfaceCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS)?.data
+      ?? readSessionCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS);
     if (cached?.latestEdition && (cached.topStories?.length ?? 0) > 0) {
       setEdition(cached);
       setLoadStatus("ready");
@@ -260,7 +266,7 @@ export default function Newsletter() {
       if (storyCount > 0) {
         setEdition(data);
         setLoadStatus("ready");
-        writeSessionCache(NEWSLETTER_SESSION_KEY, data);
+        writeSurfaceCache(NEWSLETTER_SESSION_KEY, data);
         return true;
       }
       return false;
@@ -324,7 +330,8 @@ export default function Newsletter() {
   const brief = edition?.industryBrief;
 
   // ── Benchmark report state (deferred — newsletter stories paint first) ───
-  const [benchReport, setBenchReport] = useState<Record<string, unknown> | null>(null);
+  const benchCached = readSurfaceCache<Record<string, unknown>>(NEWSLETTER_BENCH_KEY, NEWSLETTER_BENCH_TTL_MS);
+  const [benchReport, setBenchReport] = useState<Record<string, unknown> | null>(benchCached?.data ?? null);
   useEffect(() => {
     if (loadStatus !== "ready") return;
     const timer = window.setTimeout(() => {
@@ -335,11 +342,15 @@ export default function Newsletter() {
         { publicCache: true },
       )
         .then((r) => (r.ok ? r.json() : null))
-        .then((d) => (d?.report ? setBenchReport(d.report) : null))
+        .then((d) => {
+          if (!d?.report) return;
+          setBenchReport(d.report);
+          writeSurfaceCache(NEWSLETTER_BENCH_KEY, d.report);
+        })
         .catch(() => null);
-    }, 400);
+    }, benchCached?.data ? 0 : 400);
     return () => window.clearTimeout(timer);
-  }, [loadStatus]);
+  }, [loadStatus, benchCached?.data]);
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
   const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "Buying signals, deployment moves, funding events, and strategic hires — curated daily for robotics sales teams.";
   const macroItems = (brief?.macro_trends || []).slice(0, 4);

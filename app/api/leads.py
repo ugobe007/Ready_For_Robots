@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, case, and_
+from sqlalchemy import func, case, and_, or_, exists
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
@@ -56,6 +56,8 @@ from app.services.industry_inference import (
 from app.services.industry_search_lexicon import (
     PIPELINE_DIVERSITY_INDUSTRIES,
     canonical_industries_for_query,
+    expand_search_terms,
+    sql_signal_terms_for_query,
     industry_label_matches_query,
     lead_matches_search,
     text_matches_industry_search,
@@ -339,6 +341,7 @@ _PIPELINE_SUMMARY_ROW_CAP = int(os.getenv("PIPELINE_SUMMARY_ROW_CAP", "2000"))
 # Public list endpoint: never return more than this; pool rotates on the pipeline cache clock.
 LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
+LEADS_INDUSTRY_SEARCH_POOL_CAP = 400
 
 LEADS_ROTATION_SEC = PIPELINE_LEADS_ROTATION_SEC
 PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
@@ -444,6 +447,98 @@ def _lead_rows_query_limited(db: Session, limit: int):
             Score.overall_intent_score,
         )
         .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+    )
+
+
+def _industry_search_sql_filter(query: str):
+    """SQL OR filter for ontology-backed vertical search (industry, name, signals)."""
+    clauses = []
+    seen: set[str] = set()
+    for canonical in canonical_industries_for_query(query):
+        key = (canonical or "").strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Company.industry.ilike(f"%{canonical}%"))
+    for term in expand_search_terms(query):
+        t = (term or "").strip()
+        if len(t) < 4:
+            continue
+        key = t.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Company.name.ilike(f"%{t}%"))
+        clauses.append(Company.industry.ilike(f"%{t}%"))
+    if not clauses:
+        return None
+    return or_(*clauses)
+
+
+def _lead_rows_query_industry_search(db: Session, query: str, limit: int):
+    """
+    Companies matching a vertical search via SQL — not limited to global top-N by score.
+    """
+    lim = max(50, min(int(limit), LEADS_INDUSTRY_SEARCH_POOL_CAP))
+    sql_filter = _industry_search_sql_filter(query)
+    signal_terms = [
+        t for t in sql_signal_terms_for_query(query) if len((t or "").strip()) >= 4
+    ]
+
+    match_filter = sql_filter
+    if signal_terms:
+        sig_ors = [Signal.signal_text.ilike(f"%{t}%") for t in signal_terms]
+        sig_exists = (
+            exists()
+            .where(and_(Signal.company_id == Company.id, or_(*sig_ors)))
+            .correlate(Company)
+        )
+        match_filter = or_(sql_filter, sig_exists) if sql_filter is not None else sig_exists
+    if match_filter is None:
+        return db.query(Company.id).filter(Company.id == -1)
+
+    ps = _primary_score_subquery(db)
+    hot_hits = func.sum(
+        case((Signal.signal_type.in_(_SQL_HOT_TYPES), 1), else_=0)
+    ).label("hot_hits")
+    warm_hits = func.sum(
+        case((Signal.signal_type.in_(_SQL_WARM_TYPES), 1), else_=0)
+    ).label("warm_hits")
+
+    return (
+        _public_leads_only(
+            db.query(
+                Company.id.label("id"),
+                Company.name.label("name"),
+                Company.website.label("website"),
+                Company.industry.label("industry"),
+                Company.employee_estimate.label("employee_estimate"),
+                Company.location_city.label("location_city"),
+                Company.location_state.label("location_state"),
+                Company.source.label("source"),
+                func.coalesce(Score.overall_intent_score, 0).label("overall_score"),
+                func.count(Signal.id).label("signal_count"),
+                hot_hits,
+                warm_hits,
+            )
+        )
+        .outerjoin(ps, ps.c.company_id == Company.id)
+        .outerjoin(Score, Score.id == ps.c.score_id)
+        .outerjoin(Signal, Signal.company_id == Company.id)
+        .filter(match_filter)
+        .group_by(
+            Company.id,
+            Company.name,
+            Company.website,
+            Company.industry,
+            Company.employee_estimate,
+            Company.location_city,
+            Company.location_state,
+            Company.source,
+            Score.overall_intent_score,
+        )
+        .order_by(func.coalesce(Score.overall_intent_score, 0).desc())
+        .limit(lim)
     )
 
 
@@ -735,6 +830,8 @@ def _fmt_pipeline_card(
     junk: bool,
     junk_reason: str,
     pri,
+    *,
+    fast: bool = False,
 ) -> dict:
     """Lightweight row for /pipeline list — detail loads via GET /api/leads/by-id/{id}."""
     s = pick_primary_score(c.scores)
@@ -747,16 +844,19 @@ def _fmt_pipeline_card(
     overall = round(float(s.overall_intent_score) if s else 0.0, 1)
     share_summary = ""
     if sigs:
-        try:
-            from app.services.lead_sales_copy import preview_sentences
+        if fast and sig:
+            share_summary = format_signal_for_sales(sig.signal_text)[:320]
+        else:
+            try:
+                from app.services.lead_sales_copy import preview_sentences
 
-            _blurb, full = _build_share_blurb(
-                c, pri, sigs[:3], industry_for_copy=industry_display, automation_profile=None
-            )
-            share_summary = preview_sentences(full or _blurb, max_sentences=2, max_chars=320)
-        except Exception:
-            if sig:
-                share_summary = format_signal_for_sales(sig.signal_text)[:320]
+                _blurb, full = _build_share_blurb(
+                    c, pri, sigs[:3], industry_for_copy=industry_display, automation_profile=None
+                )
+                share_summary = preview_sentences(full or _blurb, max_sentences=2, max_chars=320)
+            except Exception:
+                if sig:
+                    share_summary = format_signal_for_sales(sig.signal_text)[:320]
     payload = {
         "id": c.id,
         "company_name": c.name,
@@ -1232,14 +1332,19 @@ def _row_matches_industry_search(row, query: str) -> bool:
 
 
 def _lead_row_matches_industry_filter(row, industry: str, *, signal_text: str = "") -> bool:
-    if industry_label_matches_query(row.industry or "", industry):
-        return True
     name = getattr(row, "name", "") or ""
+    raw_ind = (getattr(row, "industry", None) or "").strip()
+    known = known_industry_for_company_name(name)
+    eff_ind = known or raw_ind
+    if industry_label_matches_query(eff_ind, industry):
+        return True
     blob = " ".join([name, signal_text or getattr(row, "signal_text", "") or ""])
     if text_matches_industry_search(blob, industry):
         return True
     for canonical in canonical_industries_for_query(industry):
-        if canonical.lower() in (row.industry or "").lower():
+        c = canonical.lower()
+        low = (eff_ind or "").lower()
+        if c in low or low in c:
             return True
     return False
 
@@ -1630,12 +1735,20 @@ def get_leads(
         from app.database import SessionLocal
 
         with SessionLocal() as live_db:
-            pool_cap = 5000 if industry_filter else LEADS_SQL_POOL_CAP
-            candidate_limit = min(
-                pool_cap,
-                max(limit * 80, 500) if industry_filter else max(limit * 4, 50),
-            )
-            rows = _lead_rows_query_limited(live_db, candidate_limit).all()
+            if industry_filter:
+                candidate_limit = min(
+                    LEADS_INDUSTRY_SEARCH_POOL_CAP,
+                    max(limit * 8, 80),
+                )
+                rows = _lead_rows_query_industry_search(
+                    live_db, industry_filter, candidate_limit
+                ).all()
+            else:
+                candidate_limit = min(
+                    LEADS_SQL_POOL_CAP,
+                    max(limit * 4, 50),
+                )
+                rows = _lead_rows_query_limited(live_db, candidate_limit).all()
 
             results = []
             for row in rows:
@@ -1681,7 +1794,7 @@ def get_leads(
             else:
                 results.sort(key=lambda x: x["priority_score"], reverse=True)
 
-            pre_limit = min(250, max(limit * 5, 80))
+            pre_limit = limit if industry_filter else min(250, max(limit * 5, 80))
             results = results[:pre_limit]
 
             if not results:
@@ -1701,23 +1814,44 @@ def get_leads(
                 c = company_map.get(r["id"])
                 if not c:
                     continue
-                junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-                if junk and exclude_junk:
-                    continue
-                staged.append((c, junk, junk_reason, pri))
+                if industry_filter:
+                    from types import SimpleNamespace
+
+                    junk = bool(r.get("is_junk"))
+                    junk_reason = r.get("junk_reason") or ""
+                    if junk and exclude_junk:
+                        continue
+                    if not _company_matches_industry_filter(c, industry_filter):
+                        continue
+                    pri = SimpleNamespace(
+                        tier=r.get("priority_tier") or "COLD",
+                        score=float(r.get("priority_score") or 0),
+                        reasons=r.get("priority_reasons") or [],
+                    )
+                    staged.append((c, junk, junk_reason, pri))
+                else:
+                    junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+                    if junk and exclude_junk:
+                        continue
+                    staged.append((c, junk, junk_reason, pri))
 
             staged = dedupe_staged_lead_tuples(staged)
             if industry_filter:
-                staged = [
-                    t for t in staged if _company_matches_industry_filter(t[0], industry_filter)
-                ]
-            slot = rotation_slot if rotation_slot is not None else _current_rotation_slot()
-            staged = _rotate_staged_leads(staged, limit, slot=slot)
+                staged = staged[:limit]
+            else:
+                slot = rotation_slot if rotation_slot is not None else _current_rotation_slot()
+                staged = _rotate_staged_leads(staged, limit, slot=slot)
 
-            result = [
-                _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
-                for c, junk, junk_reason, pri in staged
-            ]
+            if industry_filter:
+                result = [
+                    _fmt_pipeline_card(c, junk, junk_reason, pri, fast=True)
+                    for c, junk, junk_reason, pri in staged
+                ]
+            else:
+                result = [
+                    _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
+                    for c, junk, junk_reason, pri in staged
+                ]
             _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), result)
             threading.Thread(
                 target=_db_cache_write,

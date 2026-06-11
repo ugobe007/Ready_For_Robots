@@ -5,6 +5,7 @@ from app.services.industry_search_lexicon import (
     expand_search_terms,
     industry_label_matches_query,
     lead_matches_search,
+    sql_signal_terms_for_query,
     text_matches_industry_search,
 )
 from app.services.industry_sector_ontology import (
@@ -239,3 +240,27 @@ def test_pack_out_still_matches_manufacturing_line():
         "CPG brand adds pack-out automation on new bottling line",
         "pack out",
     )
+
+
+def test_lead_matches_search_known_restaurant_brand():
+    assert lead_matches_search(
+        "restaurant",
+        industry="Unknown",
+        company_name="Chipotle",
+        signal_text="expands automation pilot",
+    )
+
+
+def test_lead_matches_search_mcdonalds_without_restaurant_in_signals():
+    assert lead_matches_search(
+        "restaurant",
+        industry="New",
+        company_name="McDonalds",
+        signal_text="kitchen equipment upgrade",
+    )
+
+
+def test_sql_signal_terms_avoids_broad_logistics_phrases():
+    terms = sql_signal_terms_for_query("restaurant")
+    assert "restaurant" in terms
+    assert "food delivery" not in terms

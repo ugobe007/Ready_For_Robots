@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  fetchWithTimeout,
+  getApiBase,
+  publicFetchInit,
+  readSurfaceCache,
+  writeSurfaceCache,
+} from "@/lib/apiBase";
 
 export type DimRationale = {
   label: string;
@@ -126,6 +132,12 @@ export type HumanoidIntelligenceReportData = {
   top_ranked: TopRobot[];
 };
 
+const HUMANOID_INTEL_CACHE_TTL_MS = 30 * 60 * 1000;
+
+function intelligenceCacheKey(topN: number): string {
+  return `humanoid_intelligence_v1_${topN}`;
+}
+
 export function isValidHumanoidReport(data: unknown): data is HumanoidIntelligenceReportData {
   if (!data || typeof data !== "object") return false;
   const r = data as HumanoidIntelligenceReportData;
@@ -133,15 +145,38 @@ export function isValidHumanoidReport(data: unknown): data is HumanoidIntelligen
 }
 
 export function useHumanoidIntelligenceReport(topN = 12) {
-  const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = intelligenceCacheKey(topN);
+  const cachedEntry = readSurfaceCache<HumanoidIntelligenceReportData>(
+    cacheKey,
+    HUMANOID_INTEL_CACHE_TTL_MS,
+  );
+  const [report, setReport] = useState<HumanoidIntelligenceReportData | null>(
+    cachedEntry?.data && isValidHumanoidReport(cachedEntry.data) ? cachedEntry.data : null,
+  );
+  const [loading, setLoading] = useState(!report);
   const [error, setError] = useState<string | null>(null);
   const api = getApiBase();
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    fetch(`${api}/api/humanoid/intelligence-report?top_n=${topN}`, liveFetchInit())
+    let cancelled = false;
+    const freshCache = readSurfaceCache<HumanoidIntelligenceReportData>(
+      cacheKey,
+      HUMANOID_INTEL_CACHE_TTL_MS,
+    );
+    const paintedFromCache = Boolean(
+      freshCache?.data && isValidHumanoidReport(freshCache.data),
+    );
+    if (!paintedFromCache) {
+      setLoading(true);
+      setError(null);
+    }
+
+    void fetchWithTimeout(
+      `${api}/api/humanoid/intelligence-report?top_n=${topN}`,
+      publicFetchInit(),
+      10_000,
+      { publicCache: true },
+    )
       .then(async (r) => {
         if (!r.ok) {
           const body = await r.json().catch(() => ({}));
@@ -150,20 +185,34 @@ export function useHumanoidIntelligenceReport(topN = 12) {
         return r.json();
       })
       .then((d) => {
+        if (cancelled) return;
         const payload = d?.report;
         if (!isValidHumanoidReport(payload)) {
-          setReport(null);
-          setError("Report data was empty or incomplete.");
+          if (!paintedFromCache) {
+            setReport(null);
+            setError("Report data was empty or incomplete.");
+          }
           return;
         }
         setReport(payload);
+        setError(null);
+        writeSurfaceCache(cacheKey, payload);
       })
       .catch((e) => {
-        setReport(null);
-        setError(e instanceof Error ? e.message : "Could not load report");
+        if (cancelled) return;
+        if (!paintedFromCache) {
+          setReport(null);
+          setError(e instanceof Error ? e.message : "Could not load report");
+        }
       })
-      .finally(() => setLoading(false));
-  }, [api, topN]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [api, topN, cacheKey]);
 
   return { report, loading, error };
 }

@@ -7,7 +7,13 @@ import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
 import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  fetchWithTimeout,
+  getApiBase,
+  publicFetchInit,
+  readSurfaceCache,
+  writeSurfaceCache,
+} from "@/lib/apiBase";
 import { useHumanoidIntelligenceReport } from "@/lib/humanoidIntelligenceReport";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -94,6 +100,8 @@ const INDEX_LABELS: Record<(typeof INDEX_DIMS)[number], string> = {
 const INDEX_COLORS = HEIF_COLORS;
 
 const TEAL = "#03DAC5";
+const ROBOTS_SURFACE_KEY = "humanoid_robots_v1";
+const ROBOTS_SURFACE_TTL_MS = 30 * 60 * 1000;
 
 function heifValue(robot: RobotRow, dim: (typeof HEIF_DIMS)[number]): number {
   const key = `heif_${dim}` as keyof RobotRow;
@@ -375,8 +383,9 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
 }
 
 export default function Robots() {
-  const [robots, setRobots] = useState<RobotRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedRobots = readSurfaceCache<RobotRow[]>(ROBOTS_SURFACE_KEY, ROBOTS_SURFACE_TTL_MS);
+  const [robots, setRobots] = useState<RobotRow[]>(cachedRobots?.data ?? []);
+  const [loading, setLoading] = useState(!(cachedRobots?.data?.length));
   const [filter, setFilter] = useState<"all" | "available" | "pilot" | "research">("all");
   const [sortDim, setSortDim] = useState<string>("total");
   const api = getApiBase();
@@ -388,12 +397,37 @@ export default function Robots() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`${api}/api/humanoid/robots`, liveFetchInit())
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((d) => setRobots(d.robots ?? []))
-      .catch(() => setRobots([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const paintedFromCache = Boolean(cachedRobots?.data?.length);
+    if (!paintedFromCache) setLoading(true);
+
+    void fetchWithTimeout(
+      `${api}/api/humanoid/robots`,
+      publicFetchInit(),
+      10_000,
+      { publicCache: true },
+    )
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        if (cancelled) return;
+        const rows = (d.robots ?? []) as RobotRow[];
+        setRobots(rows);
+        if (rows.length) writeSurfaceCache(ROBOTS_SURFACE_KEY, rows);
+      })
+      .catch(() => {
+        if (cancelled || paintedFromCache) return;
+        setRobots([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [api]);
 
   const filtered = robots

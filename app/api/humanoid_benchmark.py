@@ -21,7 +21,7 @@ import time
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -91,6 +91,28 @@ def _enrich_robot_scores(row: dict) -> dict:
 _ROBOTS_LIST_CACHE: dict = {"ts": 0.0, "payload": None}
 _ROBOTS_LIST_TTL_SEC = 300
 _REPORT_MEM_CACHE: dict = {}
+
+_LIST_SPEC_KEYS = frozenset({
+    "top_speed_mps",
+    "payload_kg",
+    "battery_life_h",
+    "charge_time_h",
+    "height_cm",
+    "weight_kg",
+    "finger_count",
+    "price_usd",
+    "can_climb_stairs",
+    "has_sdk",
+    "ai_stack",
+})
+
+
+def _slim_robot_for_list(robot: dict) -> dict:
+    """Drop heavy nested blobs (sources, deployment news) from list API payloads."""
+    out = dict(robot)
+    specs = dict(robot.get("specs") or {})
+    out["specs"] = {k: specs[k] for k in _LIST_SPEC_KEYS if k in specs}
+    return out
 
 
 def _seed_robots_payload() -> list[dict]:
@@ -172,8 +194,9 @@ def _require_admin(db: Session = Depends(get_db)):
 # ── Public endpoints ──────────────────────────────────────────────────────────
 
 @router.get("/robots")
-def list_robots():
+def list_robots(response: Response):
     """Return all humanoid robots ordered by total benchmark score."""
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
     now = time.monotonic()
     cached = _ROBOTS_LIST_CACHE.get("payload")
     if cached is not None and now - _ROBOTS_LIST_CACHE["ts"] < _ROBOTS_LIST_TTL_SEC:
@@ -182,9 +205,10 @@ def list_robots():
     try:
         robots = run_db(_fetch_robots_from_db, timeout_sec=12, label="humanoid/robots")
         if robots:
+            slim = [_slim_robot_for_list(r) for r in robots]
             _ROBOTS_LIST_CACHE["ts"] = now
-            _ROBOTS_LIST_CACHE["payload"] = robots
-            return {"robots": robots}
+            _ROBOTS_LIST_CACHE["payload"] = slim
+            return {"robots": slim}
     except TimeoutError:
         logger.warning("humanoid/robots DB timed out — serving cache or seed fallback")
     except Exception as exc:
@@ -192,7 +216,7 @@ def list_robots():
 
     if cached:
         return {"robots": cached, "stale": True}
-    return {"robots": _seed_robots_payload(), "stale": True, "source": "seed"}
+    return {"robots": [_slim_robot_for_list(r) for r in _seed_robots_payload()], "stale": True, "source": "seed"}
 
 
 @router.get("/robots/{slug}")
@@ -704,7 +728,7 @@ def set_humanoid_report_mem_cache(data: dict) -> None:
 
 
 @router.get("/report")
-def get_report(db: Session = Depends(get_db)):
+def get_report(response: Response, db: Session = Depends(get_db)):
     """
     Benchmark report — L1 → durable cache only; background refresh every 2 hours.
     """
@@ -715,6 +739,7 @@ def get_report(db: Session = Depends(get_db)):
         schedule_public_cache_refresh,
     )
 
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=7200"
     maybe_schedule_public_cache_refresh()
 
     mem = _REPORT_MEM_CACHE.get("payload")
@@ -747,6 +772,7 @@ def get_deployment_report(db: Session = Depends(get_db)):
 
 @router.get("/intelligence-report")
 def get_intelligence_report(
+    response: Response,
     top_n: int = Query(12, ge=5, le=25, description="How many top robots to explain in depth"),
 ):
     """
@@ -759,6 +785,7 @@ def get_intelligence_report(
         schedule_public_cache_refresh,
     )
 
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=7200"
     maybe_schedule_public_cache_refresh()
 
     cached = read_public_cache(KEY_HUMANOID_INTELLIGENCE, stale_ok=True)
