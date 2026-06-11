@@ -21,7 +21,7 @@ export function cleanScrapedText(raw: string | null | undefined): string {
     .replace(/\bahref=https?:\/\/[^\s>]+/gi, "")
     .replace(/\b(?:target|rel|class|style|title)=["'][^"']*["']/gi, "")
     .replace(/https?:\/\/[^\s"'<>]+/gi, "")
-    .replace(/\b(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s"'<>]*)?/gi, "")
+    .replace(/\bwww\.[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s"'<>]*)?/gi, "")
     .replace(/\b(?:ca|cc|ved|usg)=[^\s"'<>]+/gi, "")
     .replace(/<[^>]+>/g, "")
     .replace(/(^|\s)>+/g, " ")

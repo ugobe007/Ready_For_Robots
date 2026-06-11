@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence
 
 from app.services.crm_extractor import _extract_timing
@@ -21,6 +22,43 @@ _RE_WITHIN_WEEKS = re.compile(
 _RE_DAYS = re.compile(r"(?i)\b(\d{1,3})\s*(?:-|to)\s*(\d{1,3})?\s*days?\b")
 _RE_THIS_NEXT = re.compile(r"(?i)\b(this|next)\s+(quarter|year|fiscal\s+year|half)\b")
 _RE_Q = re.compile(r"\b(Q[1-4])\s*(20\d{2})?\b", re.I)
+_RE_YEAR = re.compile(r"\b(20\d{2})\b")
+
+# Sales outreach: ignore calendar mentions more than ~24 months out.
+_MAX_TIMING_YEAR_OFFSET = 2
+
+
+def _current_year() -> int:
+    return datetime.now(timezone.utc).year
+
+
+def _timing_horizon_acceptable(label: str) -> bool:
+    """Reject bare or embedded years too far out for rep outreach windows."""
+    lab = (label or "").strip()
+    if not lab:
+        return False
+    if re.fullmatch(r"20\d{2}", lab, re.I):
+        return int(lab) <= _current_year() + _MAX_TIMING_YEAR_OFFSET
+    m = _RE_YEAR.search(lab)
+    if m:
+        return int(m.group(1)) <= _current_year() + _MAX_TIMING_YEAR_OFFSET
+    return True
+
+
+def _days_for_year_reference(year: int) -> tuple[Optional[int], Optional[int]]:
+    """Map a near-term calendar year to an outreach day range from today."""
+    now = datetime.now(timezone.utc)
+    if year < now.year:
+        return 30, 120
+    if year == now.year:
+        end = datetime(year, 12, 31, tzinfo=timezone.utc)
+        days_left = max(30, (end - now).days)
+        return max(14, days_left // 3), days_left
+    if year == now.year + 1:
+        return 120, 365
+    if year == now.year + 2:
+        return 240, 540
+    return None, None
 
 
 @dataclass
@@ -42,6 +80,20 @@ def _timing_from_extracted_label(label: str, *, confidence: float = 0.85) -> Pro
     day_min: Optional[int] = None
     day_max: Optional[int] = None
 
+    if re.fullmatch(r"20\d{2}", lab, re.I):
+        year = int(lab)
+        day_min, day_max = _days_for_year_reference(year)
+        phrase_year = f"targeting {year}"
+        if day_min and day_max:
+            return ProjectTiming(
+                label=phrase_year,
+                display_phrase=f"Outreach window aligns with {phrase_year} (roughly {day_min}–{day_max} days).",
+                source="extracted",
+                confidence=confidence,
+                day_min=day_min,
+                day_max=day_max,
+            )
+
     m = _RE_WITHIN_MONTHS.search(lab)
     if m:
         months = int(m.group(1))
@@ -59,10 +111,14 @@ def _timing_from_extracted_label(label: str, *, confidence: float = 0.85) -> Pro
             day_min, day_max = 90, 365
         elif _RE_Q.search(lab):
             day_min, day_max = 60, 180
+        else:
+            ym = _RE_YEAR.search(lab)
+            if ym:
+                day_min, day_max = _days_for_year_reference(int(ym.group(1)))
 
-    phrase = f"The timing of the project looks like {lab}."
+    phrase = f"Outreach window looks like {lab}."
     if day_min and day_max:
-        phrase = f"The timing of the project is {lab} (roughly {day_min}–{day_max} days)."
+        phrase = f"Outreach window is {lab} (roughly {day_min}–{day_max} days)."
 
     return ProjectTiming(
         label=lab,
@@ -174,8 +230,10 @@ def resolve_project_timing(
     blob = (signal_blob or "").strip()
     if blob:
         extracted = _extract_timing([(blob, "")])
-        if extracted:
-            return _timing_from_extracted_label(extracted[0].label, confidence=extracted[0].confidence)
+        for hit in extracted:
+            if not _timing_horizon_acceptable(hit.label):
+                continue
+            return _timing_from_extracted_label(hit.label, confidence=hit.confidence)
 
         m = _RE_DAYS.search(blob)
         if m:

@@ -201,6 +201,29 @@ _TIMING_PATTERNS = [
 ]
 
 
+def _timing_display_label(m: re.Match) -> str:
+    """Human-readable timing label — keep phrase context, not bare years."""
+    g0 = (m.group(0) or "").strip().rstrip(".")
+    g1 = (m.group(1) or "").strip() if m.lastindex and m.lastindex >= 1 else ""
+    if g1 and re.fullmatch(r"20\d{2}", g1, re.I):
+        return g0
+    if g1 and re.fullmatch(r"Q[1-4]\s*20\d{2}", g1, re.I):
+        return re.sub(r"\s+", " ", g1.upper())
+    if g1 and re.fullmatch(r"H[12]\s*20\d{2}", g1, re.I):
+        return re.sub(r"\s+", " ", g1.upper())
+    if g1 and re.fullmatch(r"(spring|summer|fall|winter|autumn)\s+20\d{2}", g1, re.I):
+        return g1.title()
+    if g1 and re.fullmatch(r"this\s+(quarter|year|fiscal\s+year|half)", g1, re.I):
+        return g1.title()
+    if g1 and re.fullmatch(r"next\s+(quarter|year|fiscal\s+year|half)", g1, re.I):
+        return g1.title()
+    if g1 and re.fullmatch(r"\d+\s+(months?|weeks?|years?)", g1, re.I):
+        return g1.lower()
+    if g1:
+        return g1 if len(g1) <= 48 else g0
+    return g0
+
+
 def _extract_timing(signal_texts: List[tuple[str, str]]) -> List[TimingSignal]:
     found: List[TimingSignal] = []
     seen_labels: set = set()
@@ -208,8 +231,7 @@ def _extract_timing(signal_texts: List[tuple[str, str]]) -> List[TimingSignal]:
     for text, _url in signal_texts:
         for pattern, conf in _TIMING_PATTERNS:
             for m in pattern.finditer(text):
-                label = m.group(1) if m.lastindex and m.lastindex >= 1 else m.group(0)
-                label = label.strip().upper() if label else m.group(0)
+                label = _timing_display_label(m)
                 if label in seen_labels:
                     continue
                 seen_labels.add(label)

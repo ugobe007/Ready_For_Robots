@@ -76,6 +76,26 @@ function highlightTerms(text: string, extraTerms: string[] = []) {
   });
 }
 
+function isBrokenTimingLabel(label: string): boolean {
+  const t = label.trim();
+  if (!t) return true;
+  if (/^20\d{2}$/.test(t)) return true;
+  if (/^\d{1,4}$/.test(t)) return true;
+  return false;
+}
+
+function humanizeReason(text: string): string {
+  const t = text.trim();
+  if (!t) return "";
+  if (/[a-z]/.test(t) && /[A-Z]/.test(t) && !t.includes(" ")) return t;
+  if (t.includes("_")) {
+    return t
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return t;
+}
+
 function parseShareSummary(summary: string): ParsedSummary {
   const raw = (summary || "").trim();
   if (!raw) return { opener: "", drivers: "", schedule: "", robotFit: "" };
@@ -106,11 +126,14 @@ function parseShareSummary(summary: string): ParsedSummary {
 }
 
 function signalLine(lead: HomepageLeadRow): string {
-  const label = lead.signals?.[0]?.signal_label;
-  const text = cleanAndClampText(lead.signals?.[0]?.display_text, 120);
-  if (label && text) return `${label} · ${text}`;
-  if (text) return text;
-  return cleanAndClampText(lead.industry, 80) || "Buying signal detected";
+  for (const sig of lead.signals || []) {
+    const raw = sig.display_text || sig.raw_text || "";
+    const text = leadPreviewSentences(raw, 2, 280) || cleanAndClampText(raw, 280);
+    if (!text || text.length < 18) continue;
+    const label = sig.signal_label?.trim();
+    return label ? `${label}: ${text}` : text;
+  }
+  return cleanAndClampText(lead.industry, 100) || "Automation buying signal detected";
 }
 
 function whySalesLeadLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
@@ -134,7 +157,10 @@ function driversLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
     .filter((label): label is string => Boolean(label));
   const unique = [...new Set(labels)].slice(0, 4);
   if (unique.length) return unique.join(" · ");
-  const reasons = (lead.priority_reasons || []).filter(Boolean).slice(0, 3);
+  const reasons = (lead.priority_reasons || [])
+    .map((r) => humanizeReason(String(r)))
+    .filter((r) => r && !/quarantined|junk|false positive|buyer opportunity gate/i.test(r))
+    .slice(0, 3);
   if (reasons.length) return reasons.join(" · ");
   return "Automation intent, operational pressure, and deployment signals in the corpus.";
 }
@@ -142,13 +168,13 @@ function driversLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
 function scheduleLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
   const pt = lead.project_timing;
   if (pt?.day_min != null && pt?.day_max != null) {
-    const label = pt.label ? ` (${pt.label})` : "";
+    const label = pt.label && !isBrokenTimingLabel(pt.label) ? ` (${pt.label})` : "";
     return `Outreach window: ${pt.day_min}–${pt.day_max} days${label}.`;
   }
-  if (pt?.label) {
-    return `Project timing: ${pt.label}.`;
+  if (pt?.label && !isBrokenTimingLabel(pt.label)) {
+    return `Outreach window: ${pt.label}.`;
   }
-  if (parsed.schedule) return parsed.schedule;
+  if (parsed.schedule && !isBrokenTimingLabel(parsed.schedule)) return parsed.schedule;
   const tier = (lead.priority_tier || "WARM").toUpperCase();
   if (tier === "HOT") {
     return "High-intent window — partner conversations often start within 60–90 days.";

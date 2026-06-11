@@ -32,6 +32,28 @@ def test_signal_blob_extracts_day_range():
     assert t.day_max == 60
 
 
+def test_far_future_year_falls_back_to_estimate():
+    t = resolve_project_timing(
+        tier="WARM",
+        signal_blob="White Castle plans full rollout in 2033 with automated kiosks.",
+        signal_types=["expansion"],
+    )
+    assert t.label != "2033"
+    assert "2033" not in (t.label or "")
+    assert t.day_min is not None and t.day_max is not None
+    assert t.source == "estimated"
+
+
+def test_near_term_year_gets_outreach_window():
+    t = resolve_project_timing(
+        tier="HOT",
+        signal_blob="Pilot targeted for Q3 2026 at the distribution center.",
+        signal_types=["pilot"],
+    )
+    assert "2026" in t.label or "Q3" in t.label
+    assert t.day_min is not None and t.day_max is not None
+
+
 def test_estimate_varies_by_signal_not_flat_hot_default():
     hot_rfp = resolve_project_timing(
         tier="HOT",

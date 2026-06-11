@@ -294,21 +294,11 @@ def _industry_pain(industry: str, automation_type: str, pain_point: str) -> str:
 
 
 def _headline_from_blob(signal_blob: str) -> str:
-    """Best-effort news headline from scraped signal text."""
-    raw = (signal_blob or "").replace("\n", " ").strip()
-    raw = re.sub(r"<[^>]+>", "", raw).strip()
-    if not raw or is_low_quality_sales_text(raw):
-        return ""
-    sentence = re.split(r"[.!?]\s+", raw)[0].strip()
-    if " - " in sentence:
-        sentence = sentence.split(" - ", 1)[0].strip()
-    if ": " in sentence and len(sentence) > 90:
-        lead, _sub = sentence.split(": ", 1)
-        if len(lead) >= 24:
-            sentence = lead.strip()
-    if len(sentence) > 160:
-        sentence = sentence[:160].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
-    return sentence if not is_low_quality_sales_text(sentence) else ""
+    """Best-effort news headline — one complete sentence, not a chopped fragment."""
+    excerpt = pick_primary_sentence(signal_blob, max_chars=220)
+    if excerpt and not is_low_quality_sales_text(excerpt):
+        return excerpt
+    return ""
 
 
 def _plain_triggers(signal_types: Sequence[str], limit: int = 3) -> List[str]:
@@ -317,7 +307,9 @@ def _plain_triggers(signal_types: Sequence[str], limit: int = 3) -> List[str]:
         key = (t or "").strip().lower()
         if not key:
             continue
-        label = _PLAIN_TRIGGERS.get(key) or key.replace("_", " ")
+        label = _PLAIN_TRIGGERS.get(key) or key.replace("_", " ").strip()
+        if label:
+            label = label[0].upper() + label[1:] if len(label) > 1 else label.upper()
         if label and label not in out:
             out.append(label)
         if len(out) >= limit:
@@ -339,17 +331,21 @@ def _human_buy_window(timing: ProjectTiming) -> str:
     dmin, dmax = timing.day_min, timing.day_max
     if dmin is not None and dmax is not None:
         if dmax <= 75:
-            return f"Vendor selection could move in the next {dmin}–{dmax} days."
+            return f"Outreach window: vendor selection could move in the next {dmin}–{dmax} days."
         if dmax <= 120:
-            return f"Partner conversations often start within {dmin}–{dmax} days."
-        return f"Build-out and evaluation cycles here typically run {dmin}–{dmax} days."
+            return f"Outreach window: partner conversations often start within {dmin}–{dmax} days."
+        return f"Outreach window: build-out and evaluation cycles typically run {dmin}–{dmax} days."
     label = (timing.label or "").lower()
+    if re.fullmatch(r"20\d{2}", label.strip()):
+        return ""
     if "procurement" in label or "rfp" in label:
-        return "Procurement activity suggests they're getting close to picking a vendor."
+        return "Outreach window: procurement activity suggests they are close to picking a vendor."
     if "deployment" in label or "pilot" in label:
-        return "They're already in deployment or pilot mode — timing is short."
+        return "Outreach window: deployment or pilot activity — timing is relatively short."
     if "high-intent" in label:
-        return "This account is in a high-intent window — outreach lands best before an RFP."
+        return "Outreach window: high-intent account — outreach lands best before an RFP."
+    if timing.label and not re.search(r"\b20(3[3-9]|[4-9]\d)\b", timing.label):
+        return f"Outreach window: {timing.label}."
     return ""
 
 

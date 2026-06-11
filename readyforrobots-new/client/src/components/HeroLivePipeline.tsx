@@ -31,7 +31,7 @@ export type HomepageLeadRow = {
     why_lead?: string[];
     specific_problem?: string;
   };
-  signals?: { display_text?: string; signal_label?: string; signal_type?: string }[];
+  signals?: { display_text?: string; raw_text?: string; signal_label?: string; signal_type?: string }[];
   score?: { overall_score?: number };
 };
 
