@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, Radio, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import {
@@ -119,44 +119,115 @@ const PURPLE = "#a78bfa";
 const NEWSLETTER_SESSION_KEY = "newsletter_edition_v1";
 const NEWSLETTER_SESSION_TTL_MS = 30 * 60 * 1000;
 
-/** Supabase-style section chrome — label + flow, no padded panels */
-function NlSection({
+/** Supabase-style surface — accent rail, tight padding, clear border */
+function NlSurface({
+  accent,
+  icon: Icon,
   kicker,
   title,
-  kickerColor = TEAL,
   action,
   children,
   className = "",
 }: {
+  accent: string;
+  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   kicker: string;
   title?: string;
-  kickerColor?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`border-b border-white/[0.08] pb-8 mb-8 last:border-b-0 ${className}`}>
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: kickerColor }}>{kicker}</p>
-          {title ? (
-            <h2 className="mt-1 text-base font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{title}</h2>
-          ) : null}
+    <section
+      className={`mb-5 overflow-hidden rounded-lg border border-white/[0.09] shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] ${className}`}
+      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)" }}
+    >
+      <div className="flex">
+        <div className="w-[3px] shrink-0" style={{ background: accent }} />
+        <div className="min-w-0 flex-1 p-4 lg:p-5">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.06] pb-3">
+            <div className="flex items-start gap-2.5">
+              {Icon ? (
+                <span
+                  className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border"
+                  style={{ borderColor: `${accent}44`, background: `${accent}14`, color: accent }}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+              ) : null}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: accent }}>{kicker}</p>
+                {title ? (
+                  <h2 className="mt-0.5 text-[15px] font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                    {title}
+                  </h2>
+                ) : null}
+              </div>
+            </div>
+            {action}
+          </div>
+          {children}
         </div>
-        {action}
       </div>
-      {children}
     </section>
   );
 }
 
-function NlDividerList({ children }: { children: React.ReactNode }) {
-  return <ul className="divide-y divide-white/[0.06]">{children}</ul>;
+function NlBadge({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+      style={{ color, background: `${color}18`, border: `1px solid ${color}33` }}
+    >
+      {label}
+    </span>
+  );
 }
 
-function NlRow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <li className={`py-3 first:pt-0 last:pb-0 ${className}`}>{children}</li>;
+function NlStatCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div className="border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p
+        className="mt-1 font-mono text-lg font-semibold leading-none"
+        style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function NlDataRow({
+  accent,
+  children,
+  className = "",
+}: {
+  accent?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <li
+      className={`group border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-white/[0.03] ${className}`}
+      style={accent ? { borderLeft: `2px solid ${accent}55` } : undefined}
+    >
+      {children}
+    </li>
+  );
+}
+
+function NlLink({ href, children, color = TEAL }: { href: string; children: React.ReactNode; color?: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80"
+      style={{ color }}
+    >
+      {children}
+      <ArrowRight className="h-3 w-3" />
+    </Link>
+  );
 }
 
 export default function Newsletter() {
@@ -280,274 +351,290 @@ export default function Newsletter() {
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
       <main className="flex-1 px-4 pb-20 pt-24 lg:px-6">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-5xl">
 
-          {/* ── Hero ─────────────────────────────────────────────────── */}
-          <header className="mb-8 border-b border-white/[0.08] pb-8">
-            <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: TEAL }}>
-              <span className="h-1 w-1 rounded-full" style={{ background: TEAL }} />
-              Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"} · {edition?.latestEdition?.date || "Updated daily"}
-            </p>
-            <h1 className="text-2xl font-semibold leading-snug text-white lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              {headline}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-white/55">{subheadline}</p>
+          <header
+            className="mb-6 overflow-hidden rounded-lg border border-white/[0.09]"
+            style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.06), rgba(124,58,237,0.05) 55%, rgba(255,176,0,0.03))" }}
+          >
+            <div className="flex">
+              <div className="w-[3px] shrink-0" style={{ background: TEAL }} />
+              <div className="flex-1 p-4 lg:p-6">
+                <p className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: TEAL }}>
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: TEAL }} />
+                  Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"}
+                </p>
+                <h1 className="text-2xl font-semibold leading-tight text-white lg:text-[1.75rem]" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  {headline}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">{subheadline}</p>
 
-            <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-white/40">
-              {[
-                { label: "Edition", value: edition?.latestEdition?.edition || "—" },
-                { label: "Updated", value: edition?.latestEdition?.date || "Daily" },
-                { label: "Hot leads", value: String(edition?.summary?.total_leads ?? stories.length) },
-                { label: "Stories", value: String(stories.length || (loadStatus === "loading" ? "…" : "—")) },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-baseline gap-2">
-                  <dt className="uppercase tracking-wider text-white/30">{label}</dt>
-                  <dd className="font-mono font-medium text-white/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</dd>
+                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/[0.08] bg-white/[0.08] md:grid-cols-4">
+                  <NlStatCell label="Edition" value={edition?.latestEdition?.edition || "—"} />
+                  <NlStatCell label="Updated" value={edition?.latestEdition?.date || "Daily"} accent={PURPLE} />
+                  <NlStatCell label="Hot leads" value={String(edition?.summary?.total_leads ?? stories.length)} accent={AMBER} />
+                  <NlStatCell label="Stories" value={String(stories.length || (loadStatus === "loading" ? "…" : "—"))} />
                 </div>
-              ))}
-            </dl>
 
-            <form onSubmit={subscribe} className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                placeholder="work email"
-                className="min-w-0 flex-1 border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/25"
-              />
-              <button
-                type="submit"
-                disabled={subStatus === "submitting"}
-                className="shrink-0 border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
-                style={{ color: AMBER, borderColor: `${AMBER}66` }}
-              >
-                {subStatus === "submitting" ? "Subscribing…" : "Subscribe"}
-              </button>
-            </form>
-            {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>Subscribed.</p>}
-            {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
+                <form onSubmit={subscribe} className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    placeholder="work email"
+                    className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-teal-400/40"
+                  />
+                  <button
+                    type="submit"
+                    disabled={subStatus === "submitting"}
+                    className="shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
+                    style={{ color: "#0d0520", background: AMBER }}
+                  >
+                    {subStatus === "submitting" ? "Subscribing…" : "Subscribe"}
+                  </button>
+                </form>
+                {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>Subscribed.</p>}
+                {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
+              </div>
+            </div>
           </header>
 
           {loadStatus === "loading" && (
-            <p className="mb-8 border-b border-white/[0.08] pb-8 text-sm text-white/45">
+            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-white/50">
               Loading today&apos;s brief… {loadSec > 3 ? `${loadSec}s` : ""}
-            </p>
+            </div>
           )}
 
           {loadStatus === "error" && (
-            <div className="mb-8 border-b border-white/[0.08] pb-8 text-sm text-white/45">
+            <div className="mb-5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-white/55">
               <p>Brief is refreshing — reload in a moment.</p>
-              <button type="button" onClick={() => window.location.reload()} className="mt-3 text-xs font-semibold" style={{ color: TEAL }}>
+              <button type="button" onClick={() => window.location.reload()} className="mt-2 text-xs font-semibold" style={{ color: TEAL }}>
                 Reload
               </button>
             </div>
           )}
 
           {brief?.executive_take && (
-            <NlSection kicker="AI market analysis" kickerColor={PURPLE}>
-              <p className="text-sm leading-relaxed text-white/70">{cleanScrapedText(brief.executive_take)}</p>
+            <NlSurface accent={PURPLE} icon={Sparkles} kicker="AI market analysis" title="Executive read">
+              <p className="text-sm leading-relaxed text-white/75">{cleanScrapedText(brief.executive_take)}</p>
 
-              {macroItems.length > 0 && (
-                <div className="mt-6">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Macro trends</p>
-                  <NlDividerList>
-                    {macroItems.map((item, i) => {
-                      const title = briefTextTitle(item);
-                      const detail = briefTextDetail(item);
-                      return (
-                        <NlRow key={i}>
-                          {title && <p className="text-sm font-medium text-white/90">{title}</p>}
-                          {detail && <p className="mt-1 text-sm leading-relaxed text-white/50">{detail}</p>}
-                        </NlRow>
-                      );
-                    })}
-                  </NlDividerList>
+              {(macroItems.length > 0 || stratItems.length > 0) && (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {macroItems.length > 0 && (
+                    <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
+                      <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+                        <TrendingUp className="h-3.5 w-3.5" style={{ color: TEAL }} />
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Macro trends</p>
+                      </div>
+                      <ul>
+                        {macroItems.map((item, i) => {
+                          const title = briefTextTitle(item);
+                          const detail = briefTextDetail(item);
+                          return (
+                            <NlDataRow key={i} accent={TEAL}>
+                              {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
+                            </NlDataRow>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                  {stratItems.length > 0 && (
+                    <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
+                      <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+                        <Radio className="h-3.5 w-3.5" style={{ color: AMBER }} />
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Strategic implications</p>
+                      </div>
+                      <ul>
+                        {stratItems.map((item, i) => {
+                          const title = briefTextTitle(item);
+                          const detail = briefTextDetail(item);
+                          return (
+                            <NlDataRow key={i} accent={AMBER}>
+                              {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
+                            </NlDataRow>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {stratItems.length > 0 && (
-                <div className="mt-6">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Strategic implications</p>
-                  <NlDividerList>
-                    {stratItems.map((item, i) => {
-                      const title = briefTextTitle(item);
-                      const detail = briefTextDetail(item);
-                      return (
-                        <NlRow key={i}>
-                          {title && <p className="text-sm font-medium text-white/90">{title}</p>}
-                          {detail && <p className="mt-1 text-sm leading-relaxed text-white/50">{detail}</p>}
-                        </NlRow>
-                      );
-                    })}
-                  </NlDividerList>
+              {(riskItems.length > 0 || watchItems.length > 0) && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {riskItems.length > 0 && (
+                    <div className="rounded-md border border-red-400/15 bg-red-400/[0.04] px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Risks</p>
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-white/55">
+                        {riskItems.map((r, i) => <li key={i}>{r}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {watchItems.length > 0 && (
+                    <div className="rounded-md border border-teal-400/15 bg-teal-400/[0.04] px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Watch next</p>
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-white/55">
+                        {watchItems.map((w, i) => <li key={i}>{w}</li>)}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {riskItems.length > 0 && (
-                <div className="mt-6">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-400/80">Risks to watch</p>
-                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/50">
-                    {riskItems.map((r, i) => (
-                      <li key={i}>{r}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {watchItems.length > 0 && (
-                <div className="mt-6">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Watch next</p>
-                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/50">
-                    {watchItems.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </NlSection>
+            </NlSurface>
           )}
 
           {researchFindings.length > 0 && (
-            <NlSection
-              kicker="SCOUT research findings"
-              title="Account changes worth actioning today"
-              kickerColor={AMBER}
-              action={(
-                <Link href="/pipeline" className="text-xs font-semibold text-white/45 hover:text-white/70">
-                  Pipeline <ArrowRight className="inline h-3 w-3" />
-                </Link>
-              )}
+            <NlSurface
+              accent={AMBER}
+              icon={Zap}
+              kicker="SCOUT research"
+              title="Account changes worth actioning"
+              action={<NlLink href="/pipeline" color={AMBER}>Pipeline</NlLink>}
             >
-              <NlDividerList>
+              <ul className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
                 {researchFindings.map((finding, index) => (
-                  <NlRow key={`${finding.company_id || finding.company}-${index}`}>
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                      <span className="text-sm font-medium text-white">{cleanScrapedText(finding.company) || "Lead"}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-white/35">
-                        {cleanScrapedText(finding.category) || "Research"}
-                        {finding.industry ? ` · ${cleanScrapedText(finding.industry)}` : ""}
-                      </span>
+                  <NlDataRow key={`${finding.company_id || finding.company}-${index}`} accent={AMBER}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-white">{cleanScrapedText(finding.company) || "Lead"}</span>
+                      <NlBadge label={cleanScrapedText(finding.category) || "Research"} color={AMBER} />
+                      {finding.industry && (
+                        <span className="text-[10px] text-white/35">{cleanScrapedText(finding.industry)}</span>
+                      )}
                     </div>
-                    <p className="mt-1 text-sm leading-relaxed text-white/55">
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/60">
                       {cleanScrapedText(finding.summary || finding.title)}
                     </p>
-                    <Link href={finding.pipeline_url || "/pipeline"} className="mt-2 inline-block text-xs font-semibold text-white/45 hover:text-white/70">
-                      {finding.action_label || "Open in pipeline"} →
-                    </Link>
-                  </NlRow>
+                    <div className="mt-2">
+                      <NlLink href={finding.pipeline_url || "/pipeline"} color={AMBER}>
+                        {finding.action_label || "Open in pipeline"}
+                      </NlLink>
+                    </div>
+                  </NlDataRow>
                 ))}
-              </NlDividerList>
-            </NlSection>
+              </ul>
+            </NlSurface>
           )}
 
           {benchReport && (
-            <NlSection
+            <NlSurface
+              accent={PURPLE}
+              icon={Bot}
               kicker="Robot intelligence benchmark"
               title={String(benchReport.title ?? "Humanoid robot benchmark")}
-              kickerColor={PURPLE}
-              action={(
-                <Link href="/robots" className="text-xs font-semibold text-white/45 hover:text-white/70">
-                  Full index <ArrowRight className="inline h-3 w-3" />
-                </Link>
-              )}
+              action={<NlLink href="/robots" color={PURPLE}>Full index</NlLink>}
             >
               {((benchReport.top_3 as Array<{ name: string; vendor: string; score: number; status: string }>) ?? []).length > 0 && (
-                <div className="mb-6">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Top ranked</p>
-                  <NlDividerList>
-                    {((benchReport.top_3 as Array<{ name: string; vendor: string; score: number; status: string }>) ?? []).map((r, i) => (
-                      <NlRow key={r.name}>
-                        <div className="flex items-baseline justify-between gap-4">
-                          <div>
-                            <span className="text-[10px] uppercase tracking-wider text-white/30 mr-2">
-                              {["1", "2", "3"][i]}
-                            </span>
-                            <span className="text-sm font-medium text-white">{r.name}</span>
-                            <span className="ml-2 text-sm text-white/40">{r.vendor}</span>
-                          </div>
-                          <span className="font-mono text-sm font-medium text-white/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                            {r.score}
-                          </span>
-                        </div>
-                      </NlRow>
-                    ))}
-                  </NlDividerList>
+                <div className="mb-4 grid gap-2 sm:grid-cols-3">
+                  {((benchReport.top_3 as Array<{ name: string; vendor: string; score: number; status: string }>) ?? []).map((r, i) => {
+                    const rankColor = i === 0 ? "#34d399" : i === 1 ? PURPLE : AMBER;
+                    return (
+                      <div
+                        key={r.name}
+                        className="rounded-md border border-white/[0.08] bg-black/20 px-3 py-3"
+                        style={{ borderTop: `2px solid ${rankColor}` }}
+                      >
+                        <p className="text-[9px] font-semibold uppercase tracking-widest text-white/35">
+                          {["Leader", "2nd", "3rd"][i]}
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-white">{r.name}</p>
+                        <p className="text-xs text-white/40">{r.vendor}</p>
+                        <p className="mt-2 font-mono text-2xl font-bold leading-none" style={{ color: rankColor, fontFamily: "'JetBrains Mono', monospace" }}>
+                          {r.score}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
               {((benchReport.key_findings as string[]) ?? []).length > 0 && (
-                <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Key findings</p>
-                  <ul className="space-y-2 text-sm leading-relaxed text-white/60">
+                <div className="rounded-md border border-white/[0.07] bg-black/15 px-3 py-3">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-white/40">Key findings</p>
+                  <ul className="space-y-2">
                     {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
-                      <li key={i}>{f}</li>
+                      <li key={i} className="flex gap-2 text-sm leading-relaxed text-white/65">
+                        <span className="mt-2 h-1 w-1 shrink-0 rounded-full" style={{ background: PURPLE }} />
+                        <span>{f}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              <p className="mt-4 text-xs text-white/35">
-                {String(benchReport.total_robots ?? 0)} robots scored · {String(benchReport.available_count ?? 0)} commercially available · {String(benchReport.pilot_count ?? 0)} in pilot
-              </p>
-            </NlSection>
+              <div className="mt-3 flex flex-wrap gap-3 text-[11px] font-mono text-white/40" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                <span>{String(benchReport.total_robots ?? 0)} scored</span>
+                <span>{String(benchReport.available_count ?? 0)} available</span>
+                <span>{String(benchReport.pilot_count ?? 0)} pilot</span>
+              </div>
+            </NlSurface>
           )}
 
           {loadStatus === "ready" && stories.length === 0 && (
-            <p className="mb-8 text-sm text-white/45">Stories are still syncing — reload in a moment.</p>
+            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-white/50">
+              Stories are still syncing — reload in a moment.
+            </div>
           )}
 
           {stories.length > 0 && (
-            <NlSection
-              kicker={`Signal intelligence · ${stories.length} accounts`}
-              title="Companies moving toward automation now"
-              action={(
-                <Link href="/pipeline" className="text-xs font-semibold text-white/45 hover:text-white/70">
-                  Pipeline <ArrowRight className="inline h-3 w-3" />
-                </Link>
-              )}
+            <NlSurface
+              accent={TEAL}
+              icon={BarChart3}
+              kicker={`Signal intelligence · ${stories.length}`}
+              title="Companies moving toward automation"
+              action={<NlLink href="/pipeline" color={TEAL}>Pipeline</NlLink>}
             >
-              <NlDividerList>
+              <div className="grid gap-3 lg:grid-cols-2">
                 {stories.map((story, index) => {
                   const bullets = signalBullets(story.fullText);
                   const color = tierColor(story.category);
-                  const meta = [story.economics, story.impact, story.roi]
-                    .map((chip) => cleanScrapedText(chip))
-                    .filter(Boolean)
-                    .join(" · ");
+                  const category = cleanScrapedText(story.category) || "Signal";
                   return (
-                    <NlRow key={`${story.company || story.headline || index}`}>
-                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <span className="text-sm font-medium text-white">{cleanScrapedText(story.company || story.headline)}</span>
-                        <span className="text-[10px] uppercase tracking-wider" style={{ color: `${color}cc` }}>
-                          {cleanScrapedText(story.category) || "Signal"}
-                        </span>
+                    <article
+                      key={`${story.company || story.headline || index}`}
+                      className="group flex flex-col rounded-md border border-white/[0.08] bg-black/20 p-3 transition-colors hover:border-white/[0.14] hover:bg-black/30"
+                      style={{ borderLeft: `3px solid ${color}` }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <NlBadge label={category} color={color} />
+                        {story.signalStrength ? (
+                          <span className="font-mono text-[10px] text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                            {story.signalStrength}/10
+                          </span>
+                        ) : null}
                       </div>
-                      <p className="mt-1.5 text-sm leading-relaxed text-white/55">
-                        {leadPreviewSentences(story.summary || story.snippet, 3, 480)
+                      <h3 className="text-sm font-semibold leading-snug text-white">
+                        {cleanScrapedText(story.company || story.headline)}
+                      </h3>
+                      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-white/55">
+                        {leadPreviewSentences(story.summary || story.snippet, 3, 420)
                           || "SCOUT is tracking automation signals for this account."}
                       </p>
                       {bullets.length > 0 && (
-                        <ul className="mt-2 space-y-1 text-sm text-white/45">
-                          {bullets.map((b, bi) => (
-                            <li key={bi}>{b}</li>
+                        <ul className="mt-2 space-y-1 border-t border-white/[0.06] pt-2 text-[11px] text-white/45">
+                          {bullets.slice(0, 2).map((b, bi) => (
+                            <li key={bi} className="flex gap-1.5">
+                              <span className="text-white/25">·</span>
+                              <span>{b}</span>
+                            </li>
                           ))}
                         </ul>
                       )}
-                      {meta && <p className="mt-2 text-xs text-white/35">{meta}</p>}
-                      <Link
-                        href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"}
-                        className="mt-2 inline-block text-xs font-semibold text-white/45 hover:text-white/70"
-                      >
-                        Open in pipeline →
-                      </Link>
-                    </NlRow>
+                      <div className="mt-2 pt-1">
+                        <NlLink href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"} color={color}>
+                          Open in pipeline
+                        </NlLink>
+                      </div>
+                    </article>
                   );
                 })}
-              </NlDividerList>
-            </NlSection>
+              </div>
+            </NlSurface>
           )}
 
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/[0.08] pt-6 text-sm text-white/40">
+          <div className="mt-6 flex flex-wrap gap-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
               Activate SCOUT from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
