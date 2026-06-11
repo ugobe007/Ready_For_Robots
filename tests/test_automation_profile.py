@@ -54,6 +54,39 @@ def test_logistics_amr_signals():
     assert "sortation" in p.application_areas
 
 
+def test_food_service_kiosk_prunes_logistics_defaults():
+    p = infer_automation_profile(
+        industry="Food Service",
+        company_name="White Castle",
+        signals=[
+            {
+                "signal_type": "expansion",
+                "raw_text": "White Castle to set up 1,000 automated kiosks to sell sliders",
+            },
+        ],
+    )
+    assert "humanoid" in p.robot_categories
+    assert "cobot" in p.robot_categories
+    assert "food_prep_automation" in p.application_areas
+    assert "amr_amr_forklift" not in p.robot_categories
+    assert "agv" not in p.robot_categories
+
+
+def test_aviation_humanoid_baggage_signal():
+    p = infer_automation_profile(
+        industry="Airports & Aviation",
+        company_name="Japan Airlines",
+        signals=[
+            {
+                "signal_type": "news",
+                "raw_text": "Soon, humanoid robots will handle your baggage and clean aircraft at Tokyo Haneda Airport",
+            },
+        ],
+    )
+    assert "humanoid" in p.robot_categories
+    assert "luggage_delivery" in p.application_areas
+
+
 def test_cobot_keyword_sets_collaboration():
     p = infer_automation_profile(
         industry="Manufacturing",

@@ -149,6 +149,10 @@ def _infer_robot_types_from_text(text: str) -> List[str]:
         inferred.append("service")
     if any(kw in lower for kw in ["bartender", "beverage", "drink"]):
         inferred.append("bartender")
+    if any(kw in lower for kw in ["humanoid", "biped"]):
+        inferred.append("humanoid")
+    if any(kw in lower for kw in ["kiosk", "robot chef", "robotic chef", "automated kitchen", "flippy"]):
+        inferred.append("kitchen_automation")
     return list(dict.fromkeys(inferred))  # dedupe preserving order
 
 

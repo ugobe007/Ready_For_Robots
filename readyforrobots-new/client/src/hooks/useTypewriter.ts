@@ -37,10 +37,15 @@ export function useSequentialTypewriter(
   segments: string[],
   speed = 48,
   gapMs = 600,
+  startDelayMs = gapMs,
 ) {
   const [segmentIdx, setSegmentIdx] = useState(0);
   const active = segments[segmentIdx] ?? "";
-  const { displayed, done } = useTypewriter(active, speed, segmentIdx === 0 ? 120 : gapMs);
+  const { displayed, done } = useTypewriter(
+    active,
+    speed,
+    segmentIdx === 0 ? startDelayMs : gapMs,
+  );
 
   useEffect(() => {
     setSegmentIdx(0);

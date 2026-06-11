@@ -102,12 +102,12 @@ _INDUSTRY_SEEDS: Dict[str, Dict[str, Set[str]]] = {
     },
     "food service": {
         "deployment": {"food_prep_kitchen", "hospitality_back_of_house"},
-        "robots": {"cobot", "service_robot", "amr_amr_forklift"},
-        "apps": {"food_prep_automation", "material_handling", "food_delivery_mobile"},
+        "robots": {"cobot", "service_robot", "humanoid"},
+        "apps": {"food_prep_automation", "food_delivery_mobile"},
     },
     "restaurant": {
         "deployment": {"food_prep_kitchen"},
-        "robots": {"cobot", "service_robot"},
+        "robots": {"cobot", "service_robot", "humanoid"},
         "apps": {"food_prep_automation", "food_delivery_mobile"},
     },
     "logistics": {
@@ -155,6 +155,16 @@ _INDUSTRY_SEEDS: Dict[str, Dict[str, Set[str]]] = {
         "robots": {"mining_heavy_robot", "articulated_industrial_arm"},
         "apps": {"material_handling", "inspection_vision"},
     },
+    "aviation": {
+        "deployment": {"logistics_warehouse", "hospitality_guest_facing"},
+        "robots": {"humanoid", "mobile_manipulator", "service_robot", "amr_amr_forklift"},
+        "apps": {"luggage_delivery", "housekeeping_support", "material_handling", "inspection_vision"},
+    },
+    "airport": {
+        "deployment": {"logistics_warehouse", "hospitality_guest_facing"},
+        "robots": {"humanoid", "mobile_manipulator", "service_robot", "amr_amr_forklift"},
+        "apps": {"luggage_delivery", "housekeeping_support", "material_handling"},
+    },
 }
 
 _DEFAULT_SEED = {
@@ -185,8 +195,45 @@ _TEXT_KEYWORDS: List[tuple[str, str, str]] = [
     (r"\bpack\s*out\b|\bpack\s*in\b|\bpackaging\b", "", "packaging"),
     (r"\broom\s+service\b|\bluggage\b|\bhousekeeping\b", "service_robot", "room_service_delivery"),
     (r"\bhumanoid\b", "humanoid", ""),
+    (r"\bbaggage\s+handling\b|\bhandle\s+(?:your\s+)?baggage\b", "humanoid", "luggage_delivery"),
+    (r"\bclean\s+aircraft\b|\baircraft\s+clean", "service_robot", "housekeeping_support"),
+    (r"\b(robotic|automated)\s+chef\b|\brobot\s+chef\b|\bautomated\s+kitchen\b|\bflippy\b", "cobot", "food_prep_automation"),
+    (r"\bautomated\s+kiosk\b|\bkiosk\b|\brestaurant\s+in\s+a\s+box\b", "service_robot", "food_prep_automation"),
     (r"\bscara\b", "scara", ""),
 ]
+
+
+def _is_food_service_industry(industry: str) -> bool:
+    """QSR / restaurant operators — not CPG manufacturing (food & beverage plants)."""
+    low = (industry or "").lower()
+    return any(k in low for k in ("food service", "restaurant", "qsr", "fast casual"))
+
+
+def _prune_misfit_robot_categories(
+    robots: Set[str],
+    apps: Set[str],
+    *,
+    industry: str,
+    blob: str,
+) -> None:
+    """Drop warehouse/logistics robot forms when signals point at kitchen, kiosk, or guest service."""
+    food_context = _is_food_service_industry(industry) or bool(
+        re.search(r"\b(restaurant|kiosk|kitchen|slider|qsr|dining|chef)\b", blob, re.I)
+    )
+    logistics_blob = bool(
+        re.search(r"\b(amr|agv|warehouse|forklift|distribution\s+center|fulfillment)\b", blob, re.I)
+    )
+    logistics_ind = any(k in (industry or "").lower() for k in ("logistics", "warehouse", "fulfillment"))
+
+    if food_context and not logistics_blob and not logistics_ind:
+        robots.discard("amr_amr_forklift")
+        robots.discard("agv")
+        robots.discard("articulated_industrial_arm")
+        apps.discard("material_handling")
+        if re.search(r"\b(kiosk|chef|kitchen|automated|automation|robot|slider)\b", blob, re.I):
+            robots.add("humanoid")
+            robots.add("cobot")
+            apps.add("food_prep_automation")
 
 
 def _normalize_industry(industry: Optional[str]) -> str:
@@ -242,6 +289,8 @@ def infer_automation_profile(
                 robots.add(rcat)
             if app:
                 apps.add(app)
+
+    _prune_misfit_robot_categories(robots, apps, industry=ind, blob=blob)
 
     # Collaboration heuristic
     collab = "mixed — confirm on site visit"

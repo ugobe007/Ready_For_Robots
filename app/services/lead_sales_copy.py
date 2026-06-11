@@ -53,6 +53,8 @@ _INDUSTRY_PAIN: dict[str, str] = {
     "food & beverage": "packaging throughput and labor on the line",
     "casino": "housekeeping labor and high-traffic facility coverage",
     "gaming": "facility service consistency and labor pressure",
+    "aviation": "baggage handling staffing and terminal service gaps",
+    "airport": "baggage handling staffing and terminal service gaps",
 }
 
 _JUNK_DISPLAY_RE = re.compile(
@@ -125,6 +127,71 @@ def is_low_quality_sales_text(text: Optional[str]) -> bool:
     return False
 
 
+def _is_food_service_context(industry: str, blob: str) -> bool:
+    ind = (industry or "").lower()
+    if any(k in ind for k in ("food service", "restaurant", "qsr", "fast casual")):
+        return True
+    return bool(re.search(r"\b(restaurant|kiosk|kitchen|slider|qsr|dining|chef)\b", blob, re.I))
+
+
+def _strip_logistics_unless_relevant(types: List[str], *, industry: str, blob: str) -> List[str]:
+    """Drop AMR/AGV labels when signals point at kitchen, kiosk, or guest service — not warehouses."""
+    ind = (industry or "").lower()
+    if any(k in ind for k in ("logistics", "warehouse", "fulfillment", "distribution")):
+        return types
+    if re.search(r"\b(amr|agv|warehouse|forklift|distribution\s+center|fulfillment)\b", blob, re.I):
+        return types
+    return [t for t in types if "amr" not in t.lower() and "agv" not in t.lower()]
+
+
+def _prioritize_robot_opportunities(
+    types: List[str],
+    *,
+    signal_blob: str = "",
+    industry: str = "",
+) -> List[str]:
+    """Surface signal-relevant robot forms ahead of generic industry defaults."""
+    blob = (signal_blob or "").lower()
+    humanoid_signal = bool(re.search(r"\bhumanoid\b", blob))
+    baggage_signal = bool(re.search(r"\bbaggage\b|\bluggage\b", blob))
+    cleaning_signal = bool(re.search(r"\bclean(?:ing)?\s+aircraft\b|\baircraft\s+clean", blob))
+    kiosk_signal = bool(re.search(r"\bkiosk\b", blob))
+    kitchen_signal = bool(
+        re.search(r"\b(chef|kitchen|robotic\s+chef|automated\s+kitchen|flippy)\b", blob)
+    )
+    food_service = _is_food_service_context(industry, blob)
+
+    def rank(label: str) -> tuple[int, int]:
+        low = label.lower()
+        if humanoid_signal and "humanoid" in low:
+            return (0, 0)
+        if food_service and kiosk_signal and "humanoid" in low:
+            return (1, 0)
+        if kitchen_signal and ("chef" in low or "kitchen" in low):
+            return (2, 0)
+        if food_service and kiosk_signal and ("chef" in low or "kitchen" in low):
+            return (2, 1)
+        if kiosk_signal and "kiosk" in low:
+            return (3, 0)
+        if cleaning_signal and "clean" in low:
+            return (4, 0)
+        if baggage_signal and ("humanoid" in low or "mobile manipulator" in low or "luggage" in low):
+            return (5, 0)
+        if "humanoid" in low:
+            return (6, 0)
+        if "service robot" in low or "cleaning" in low:
+            return (7, 0)
+        if "mobile manipulator" in low:
+            return (8, 0)
+        if "amr" in low or "agv" in low:
+            return (12, 0)
+        if "industrial" in low or "cobot" in low:
+            return (10, 0)
+        return (9, 0)
+
+    return sorted(types, key=rank)
+
+
 def humanize_robot_types(
     automation_profile: Optional[dict],
     *,
@@ -142,38 +209,69 @@ def humanize_robot_types(
             seen.add(key)
             out.append(label)
 
+    def add_cleaning(label: str = "cleaning robots") -> None:
+        out[:] = [x for x in out if "clean" not in x.lower() and "housekeeping" not in x.lower()]
+        seen.difference_update(
+            {k for k in seen if "clean" in k or "housekeeping" in k}
+        )
+        add(label)
+
+    blob = (signal_blob or "").lower()
+    ind = (industry or "").lower()
+    if re.search(
+        r"\b(robotic|automated)\s+chef\b|\brobot\s+chef\b|\bautomated\s+kitchen\b|\bflippy\b",
+        blob,
+    ):
+        add("robotic chefs / automated kitchen systems")
+    if re.search(r"\bautomated\s+kiosk\b|\bkiosk\b", blob):
+        add("automated restaurant kiosks")
+    if re.search(r"\bhumanoid\b", blob):
+        add("humanoid robots")
+    elif _is_food_service_context(industry, blob) and re.search(
+        r"\b(kiosk|automated|automation|slider)\b", blob
+    ):
+        add("humanoid robots")
+        add("robotic chefs / automated kitchen systems")
+    if re.search(r"\b(amr|autonomous mobile)\b", blob):
+        add("mobile robots (AMRs)")
+    if re.search(r"\bpick[-\s]?and[-\s]?place\b", blob):
+        add("pick-and-place robots")
+    if re.search(r"\bclean\s+aircraft\b|\baircraft\s+clean", blob):
+        add_cleaning("cleaning / housekeeping robots")
+    elif re.search(r"\b(clean|scrub|housekeeping|floor)\b", blob):
+        add_cleaning("cleaning robots")
+    if re.search(r"\b(room service|delivery robot|concierge)\b", blob):
+        add("service robots")
+    if re.search(r"\b(cobot|collaborative)\b", blob):
+        add("collaborative robots (cobots)")
+    if re.search(r"\bbaggage\b|\bluggage\b", blob):
+        add("mobile manipulators")
+
     for cat in profile.get("robot_categories") or []:
         add(ROBOT_CATEGORY_LABELS.get(cat, cat.replace("_", " ")))
 
     for app in profile.get("application_areas") or []:
         hint = APPLICATION_ROBOT_HINTS.get(app)
-        if hint:
+        if not hint:
+            continue
+        if "clean" in hint.lower() or "housekeeping" in hint.lower():
+            add_cleaning(hint)
+        else:
             add(hint)
 
-    blob = (signal_blob or "").lower()
-    if re.search(r"\bhumanoid\b", blob):
-        add("humanoid robots")
-    if re.search(r"\b(amr|autonomous mobile)\b", blob):
-        add("mobile robots (AMRs)")
-    if re.search(r"\bpick[-\s]?and[-\s]?place\b", blob):
-        add("pick-and-place robots")
-    if re.search(r"\b(clean|scrub|housekeeping|floor)\b", blob):
-        add("cleaning robots")
-    if re.search(r"\b(room service|delivery robot|concierge)\b", blob):
-        add("service robots")
-    if re.search(r"\b(cobot|collaborative)\b", blob):
-        add("collaborative robots (cobots)")
-
     if not out:
-        ind = (industry or "").lower()
         for key, seeds in (
+            ("aviation", ["humanoid robots", "mobile manipulators", "cleaning robots"]),
+            ("airport", ["humanoid robots", "mobile manipulators", "cleaning robots"]),
             ("logistics", ["mobile robots (AMRs)"]),
             ("warehouse", ["mobile robots (AMRs)", "pick-and-place robots"]),
             ("manufacturing", ["collaborative robots (cobots)", "industrial robotic arms"]),
             ("hospitality", ["service robots", "cleaning robots"]),
             ("hotel", ["service robots", "cleaning robots"]),
             ("healthcare", ["mobile robots (AMRs)", "service robots"]),
-            ("food", ["kitchen automation robots", "pick-and-place robots"]),
+            ("food service", ["humanoid robots", "robotic chefs / automated kitchen systems", "service robots"]),
+            ("restaurant", ["humanoid robots", "robotic chefs / automated kitchen systems", "service robots"]),
+            ("food", ["humanoid robots", "robotic chefs / automated kitchen systems", "kitchen automation robots"]),
         ):
             if key in ind:
                 for s in seeds:
@@ -181,7 +279,8 @@ def humanize_robot_types(
                 break
     if not out:
         add("automation robots (confirm on discovery)")
-    return out[:5]
+    out = _strip_logistics_unless_relevant(out, industry=industry, blob=blob)
+    return _prioritize_robot_opportunities(out, signal_blob=signal_blob, industry=industry)[:5]
 
 
 def _industry_pain(industry: str, automation_type: str, pain_point: str) -> str:
@@ -257,11 +356,12 @@ def _human_buy_window(timing: ProjectTiming) -> str:
 def _robot_fit_clause(robot_types: List[str]) -> str:
     if not robot_types:
         return ""
-    primary = robot_types[0]
-    if len(robot_types) == 1:
-        return f"Good fit for {primary}."
-    secondary = robot_types[1]
-    return f"Good fit for {primary} and {secondary}."
+    types = robot_types[:3]
+    if len(types) == 1:
+        return f"Good fit for {types[0]}."
+    if len(types) == 2:
+        return f"Good fit for {types[0]} and {types[1]}."
+    return f"Good fit for {types[0]}, {types[1]}, and {types[2]}."
 
 
 def _decision_maker_clause(crm_meta: Optional[dict]) -> str:

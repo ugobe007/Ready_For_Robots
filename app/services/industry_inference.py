@@ -72,6 +72,9 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "mcdonalds": "Food Service",
     "starbucks": "Food Service",
     "shake shack": "Food Service",
+    "white castle": "Food Service",
+    "chipotle": "Food Service",
+    "sweetgreen": "Food Service",
     "foxconn": "Automotive & Manufacturing",
     # Healthcare / senior living
     "cedarhurst": "Healthcare",

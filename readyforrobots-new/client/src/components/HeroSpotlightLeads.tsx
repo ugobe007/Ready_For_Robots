@@ -10,8 +10,9 @@ import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { useSequentialTypewriter } from "@/hooks/useTypewriter";
 import type { HomepageLeadRow } from "@/components/HeroLivePipeline";
 
-const TYPE_SPEED_MS = 52;
-const SEGMENT_GAP_MS = 650;
+const TYPE_SPEED_MS = 95;
+const SEGMENT_GAP_MS = 1_500;
+const START_DELAY_MS = 900;
 const PAUSE_AFTER_MS = 15_000;
 const EMERALD = "#34d399";
 
@@ -173,7 +174,7 @@ export default function HeroSpotlightLeads() {
     return parts.filter(Boolean);
   }, [lead]);
 
-  const typed = useSequentialTypewriter(segments, TYPE_SPEED_MS, SEGMENT_GAP_MS);
+  const typed = useSequentialTypewriter(segments, TYPE_SPEED_MS, SEGMENT_GAP_MS, START_DELAY_MS);
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
   const tierColor = tierColors[tier] || tierColors.HOT;
 
