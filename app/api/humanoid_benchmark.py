@@ -397,10 +397,11 @@ def repair_humanoids(db: Session = Depends(get_db)):
 
 @router.post("/backfill-specs")
 def backfill_specs(db: Session = Depends(get_db)):
-    """Merge SEED_ROBOTS + catalog specs into sparse humanoid_benchmarks rows."""
+    """Sync catalog metadata and merge SEED_ROBOTS + catalog specs into sparse rows."""
+    catalog_sync = sync_product_urls_from_catalog(db)
     result = backfill_humanoid_specs(db)
     _ROBOTS_LIST_CACHE.clear()
-    return result
+    return {"catalog_sync": catalog_sync, **result}
 
 
 @router.post("/ensure-priority")

@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from app.services.humanoid_ai_stack import get_ai_stack, scoring_specs, specs_for_storage
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, upsert_humanoid_robot
 from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
-from app.services.humanoid_vendor_catalog import catalog_entries
+from app.services.humanoid_vendor_catalog import catalog_entries, sync_product_urls_from_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -303,5 +303,6 @@ def repair_humanoid_index(db: Session) -> dict:
 
     cleanup = cleanup_humanoid_benchmarks(db, dry_run=False)
     priority = ensure_priority_humanoids(db)
+    catalog_sync = sync_product_urls_from_catalog(db)
     backfill = backfill_humanoid_specs(db)
-    return {"cleanup": cleanup, "priority": priority, "backfill": backfill}
+    return {"cleanup": cleanup, "priority": priority, "catalog_sync": catalog_sync, "backfill": backfill}

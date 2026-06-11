@@ -396,24 +396,35 @@ def catalog_count() -> int:
 
 
 def sync_product_urls_from_catalog(db_session: Any) -> dict:
-    """Push curated catalog product_url values into humanoid_benchmarks."""
+    """Push curated catalog name, status, and product_url into humanoid_benchmarks."""
     from sqlalchemy import text
 
     updated = 0
     skipped = 0
     for entry in catalog_entries():
-        url = entry.get("product_url")
         slug = entry.get("model_slug")
-        if not url or not slug:
+        url = entry.get("product_url")
+        name = entry.get("name")
+        status = entry.get("status")
+        if not slug or not url:
             skipped += 1
             continue
         result = db_session.execute(
             text("""
                 UPDATE humanoid_benchmarks
-                SET product_url = :url, updated_at = NOW()
-                WHERE model_slug = :slug AND (product_url IS DISTINCT FROM :url)
+                SET
+                    name = :name,
+                    status = :status,
+                    product_url = :url,
+                    updated_at = NOW()
+                WHERE model_slug = :slug
+                  AND (
+                    name IS DISTINCT FROM :name
+                    OR status IS DISTINCT FROM :status
+                    OR product_url IS DISTINCT FROM :url
+                  )
             """),
-            {"url": url, "slug": slug},
+            {"url": url, "slug": slug, "name": name, "status": status},
         )
         if result.rowcount:
             updated += 1
