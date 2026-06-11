@@ -23,6 +23,9 @@ ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
     "bito lagertechnik",
     "ups", "dhl", "ibm", "3m", "sap", "bmw", "kfc", "cvs", "gm",
     "ge", "hp", "lg", "bp", "ab inbev", "jbs", "mcd",
+    # Single-token global brands — must not fail headline-victim heuristics
+    "apple", "boeing", "amazon", "google", "microsoft", "tesla", "fedex",
+    "costco", "walmart", "target", "sysco", "marriott", "hilton",
     # "Best X" companies — real brands that trigger the Best-listicle junk pattern
     "best buy", "best western", "best western hotels", "best western international",
     "best western plus",

@@ -72,6 +72,23 @@ def test_valid_companies_pass(name, signals):
     )
 
 
+@pytest.mark.parametrize("name,signals", [
+    (
+        "Apple",
+        ["Apple announces expanded robotics testing at its distribution network."],
+    ),
+    (
+        "Boeing",
+        ["Boeing will deploy collaborative robots on the 737 assembly line."],
+    ),
+])
+def test_allowlisted_single_word_brands_pass(name, signals):
+    company = make_company(name)
+    signal_objs = [make_signal(t) for t in signals]
+    result = validate(company, signal_objs)
+    assert result.passed is True, result.reason
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Failing cases: junk names that should be quarantined
 # ─────────────────────────────────────────────────────────────────────────────
@@ -112,6 +129,18 @@ def test_valid_companies_pass(name, signals):
     (
         "Global Outlook.",
         ["Global Outlook. reports on logistics trends."],
+    ),
+    (
+        "Lakeview East",
+        [
+            "Chicago delivery robot pilot program expansion opposed by majority of Lakeview East residents - CBS News.",
+        ],
+    ),
+    (
+        "Turning",
+        [
+            "Turning pilots into permanent operations: how airports are scaling robotics for the real world.",
+        ],
     ),
 ])
 def test_junk_names_fail(name, signals):

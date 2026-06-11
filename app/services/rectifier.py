@@ -206,6 +206,105 @@ def _check_signal_context(name: str, signal_texts: List[str]) -> tuple[bool, flo
     return True, 0.0, "entity mentioned but no strong context patterns matched"
 
 
+def _count_signal_roles(name: str, signal_texts: List[str]) -> dict[str, int]:
+    """Tally how signals reference the candidate name (org subject vs place/community)."""
+    if not signal_texts:
+        return {
+            "name_mentions": 0,
+            "place_hits": 0,
+            "person_hits": 0,
+            "org_hits": 0,
+            "community_hits": 0,
+        }
+
+    name_esc = _escape_for_re(name)
+    place_re = re.compile(
+        _PLACE_CONTEXT.pattern.replace("{name_escaped}", name_esc),
+        re.IGNORECASE,
+    )
+    person_re = re.compile(
+        _PERSON_CONTEXT.pattern.replace("{name_escaped}", name_esc),
+        re.IGNORECASE,
+    )
+    org_re = re.compile(
+        _ORG_SUBJECT.pattern.replace("{name_escaped}", name_esc),
+        re.IGNORECASE,
+    )
+    community_re = re.compile(
+        rf"\b{re.escape(name)}\s+"
+        r"(?:residents?|neighbors?|neighbours?|community|neighborhood|neighbourhood|"
+        r"voters?|homeowners?|tenants?)\b",
+        re.IGNORECASE,
+    )
+    majority_residents_re = re.compile(
+        rf"\bmajority\s+of\s+{re.escape(name)}\s+residents?\b",
+        re.IGNORECASE,
+    )
+
+    counts = {
+        "name_mentions": 0,
+        "place_hits": 0,
+        "person_hits": 0,
+        "org_hits": 0,
+        "community_hits": 0,
+    }
+    for text in signal_texts:
+        if re.search(re.escape(name), text, re.IGNORECASE):
+            counts["name_mentions"] += 1
+        if place_re.search(text):
+            counts["place_hits"] += 1
+        if person_re.search(text):
+            counts["person_hits"] += 1
+        if org_re.search(text):
+            counts["org_hits"] += 1
+        if community_re.search(text) or majority_residents_re.search(text):
+            counts["community_hits"] += 1
+    return counts
+
+
+def _check_buyer_entity_role(name: str, signal_texts: List[str]) -> tuple[bool, str]:
+    """
+    Decide whether signals support treating the name as a buyer org — not a
+    neighborhood, headline fragment, or other non-company extraction.
+    """
+    roles = _count_signal_roles(name, signal_texts)
+    if roles["community_hits"] >= 1:
+        return False, (
+            "entity referenced as community/place "
+            f"({roles['community_hits']} resident/neighborhood hit(s)), not a buyer org"
+        )
+
+    if not signal_texts:
+        return True, "no signals — buyer role neutral"
+
+    from app.services.known_brands import is_allowlisted_company_name
+
+    if is_allowlisted_company_name(name):
+        return True, "allowlisted brand — headline extraction check skipped"
+
+    headline_hits = 0
+    for text in signal_texts:
+        tc = classify((text or "")[:600])
+        if tc.entity_type == EntityType.ARTICLE_HEADLINE and tc.confidence >= 0.75:
+            headline_hits += 1
+
+    if (
+        roles["name_mentions"] >= 1
+        and roles["org_hits"] == 0
+        and headline_hits >= 1
+    ):
+        return False, (
+            "name scraped from article headline without org-action subject role "
+            f"({headline_hits} headline signal(s))"
+        )
+
+    return True, (
+        "buyer role ok "
+        f"(org={roles['org_hits']}, community={roles['community_hits']}, "
+        f"headline={headline_hits})"
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Check 3: Entity coherence across signals
 # ─────────────────────────────────────────────────────────────────────────────
@@ -294,6 +393,17 @@ def validate(company: "Company", signals: List["Signal"]) -> RectificationResult
             checks=checks,
         )
     running_confidence = min(0.95, running_confidence + boost2)
+
+    # ── Check 2b: buyer org vs place/headline extraction ───────────────────────
+    ok2b, note2b = _check_buyer_entity_role(name, signal_texts)
+    checks.append(f"[buyer_role] {note2b}")
+    if not ok2b:
+        return RectificationResult(
+            passed=False,
+            confidence=running_confidence,
+            reason=f"buyer entity role check failed: {note2b}",
+            checks=checks,
+        )
 
     # ── Check 3: entity coherence ─────────────────────────────────────────────
     ok3, boost3, note3 = _check_entity_coherence(name, signal_texts)
