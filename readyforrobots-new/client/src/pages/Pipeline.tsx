@@ -22,8 +22,8 @@ import {
   getApiBase,
   liveFetchInit,
   publicFetchInit,
-  readSessionCache,
-  writeSessionCache,
+  readSurfaceCache,
+  writeSurfaceCache,
 } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
@@ -314,11 +314,12 @@ type PipelineEntitlements = {
   upgrade_url: string;
 };
 
-const PIPELINE_LIMIT_FREE = 35;
+const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v1";
-const PIPELINE_SESSION_TTL_MS = 30 * 60 * 1000;
-const PIPELINE_TIMEOUT = 12_000;
+const PIPELINE_SESSION_KEY = "pipeline_feed_v2";
+const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+const PIPELINE_FRESH_MS = 90 * 1000;
+const PIPELINE_TIMEOUT = 8_000;
 
 type PipelineFeedPayload = {
   summary?: LeadSummary;
@@ -545,8 +546,8 @@ export default function Pipeline() {
       setMarketSnippet,
     };
 
-    const cached = readSessionCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS);
-    const paintedFromCache = cached ? applyPipelineFeed(cached, feedSetters) : false;
+    const cachedEntry = readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS);
+    const paintedFromCache = cachedEntry ? applyPipelineFeed(cachedEntry.data, feedSetters) : false;
     setLoadingLeads(!paintedFromCache);
     setLoadingSummary(!paintedFromCache);
 
@@ -561,7 +562,7 @@ export default function Pipeline() {
       if (!res.ok) throw new Error("Could not load pipeline");
       const payload = (await res.json()) as PipelineFeedPayload;
       if (cancelled) return;
-      writeSessionCache(PIPELINE_SESSION_KEY, payload);
+      writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
       const painted = applyPipelineFeed(payload, feedSetters);
       if (!painted && (payload.summary?.hot ?? 0) > 0) {
         setDeals([]);
@@ -601,10 +602,12 @@ export default function Pipeline() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Background entitlement refresh when auth resolves — no loading spinner.
+  // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
     const token = session?.access_token;
     if (!token) return;
+    const fresh = readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_FRESH_MS);
+    if (fresh?.data?.leads?.length) return;
     const base = getApiBase();
     let cancelled = false;
     void fetchWithTimeout(
@@ -616,7 +619,7 @@ export default function Pipeline() {
       .then(async (res) => {
         if (cancelled || !res.ok) return;
         const payload = (await res.json()) as PipelineFeedPayload;
-        writeSessionCache(PIPELINE_SESSION_KEY, payload);
+        writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
         applyPipelineFeed(payload, {
           setDeals,
           setSelectedId,
@@ -706,35 +709,40 @@ export default function Pipeline() {
     return () => { cancelled = true; };
   }, [session?.access_token]);
 
-  // Lazy detail enrichment when a slim pipeline row is selected.
+  // Lazy detail enrichment when a slim pipeline row is selected — deferred so list paint stays fast.
   useEffect(() => {
     if (!selectedId) return;
     const existing = deals.find((deal) => deal.id === selectedId);
     if (existing?.leadHighlights) return;
     const base = getApiBase();
     let cancelled = false;
-    (async () => {
-      setLoadingResearch(true);
-      try {
-        const response = await fetchWithTimeout(
-          `${base}/api/leads/by-id/${selectedId}`,
-          publicFetchInit(),
-          8_000,
-          { publicCache: true },
-        );
-        if (!response.ok) throw new Error(await response.text());
-        const lead = (await response.json()) as ApiLead;
-        const mapped = mapApiLeadToDeal(lead) as Deal;
-        if (!cancelled) {
-          setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setLoadingResearch(true);
+        try {
+          const response = await fetchWithTimeout(
+            `${base}/api/leads/by-id/${selectedId}`,
+            publicFetchInit(),
+            8_000,
+            { publicCache: true },
+          );
+          if (!response.ok) throw new Error(await response.text());
+          const lead = (await response.json()) as ApiLead;
+          const mapped = mapApiLeadToDeal(lead) as Deal;
+          if (!cancelled) {
+            setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+          }
+        } catch {
+          // Research is additive; keep the core pipeline usable if detail enrichment misses.
+        } finally {
+          if (!cancelled) setLoadingResearch(false);
         }
-      } catch {
-        // Research is additive; keep the core pipeline usable if detail enrichment misses.
-      } finally {
-        if (!cancelled) setLoadingResearch(false);
-      }
-    })();
-    return () => { cancelled = true; };
+      })();
+    }, 120);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   // Depend only on selectedId, not deals, to prevent re-firing on every deals update.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);

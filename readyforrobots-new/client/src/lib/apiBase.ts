@@ -126,6 +126,36 @@ export function writeSessionCache<T>(key: string, data: T): void {
   }
 }
 
+/** Session first, then localStorage — instant paint on repeat visits. */
+export function readSurfaceCache<T>(key: string, maxAgeMs: number): SessionCacheEntry<T> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    for (const store of [window.sessionStorage, window.localStorage]) {
+      const raw = store.getItem(`${SESSION_CACHE_PREFIX}${key}`);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as SessionCacheEntry<T>;
+      if (!parsed?.data || Date.now() - parsed.ts > maxAgeMs) continue;
+      return parsed;
+    }
+  } catch {
+    /* quota or private mode */
+  }
+  return null;
+}
+
+export function writeSurfaceCache<T>(key: string, data: T): void {
+  writeSessionCache(key, data);
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      `${SESSION_CACHE_PREFIX}${key}`,
+      JSON.stringify({ ts: Date.now(), data }),
+    );
+  } catch {
+    /* quota or private mode */
+  }
+}
+
 /** Abort slow proxy/API calls so pages can fall back instead of spinning forever. */
 export async function fetchWithTimeout(
   url: string,

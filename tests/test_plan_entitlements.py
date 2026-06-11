@@ -2,11 +2,14 @@ from app.services.plan_entitlements import (
     PLAN_ANONYMOUS,
     PLAN_FREE,
     PLAN_PAID,
+    PIPELINE_LIMIT_FREE,
+    PIPELINE_LIMIT_PAID,
     apply_pipeline_entitlements,
     pipeline_limit_for_plan,
     resolve_plan_tier,
     sanitize_lead_for_plan,
     saved_leads_limit_for_plan,
+    trim_pipeline_leads_by_tier,
 )
 
 
@@ -25,18 +28,57 @@ def test_resolve_plan_tier_paid_metadata():
 
 def test_pipeline_limits():
     assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 12
-    assert pipeline_limit_for_plan(PLAN_FREE) == 25
-    assert pipeline_limit_for_plan(PLAN_PAID) == 50
+    assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
+    assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
+    assert PIPELINE_LIMIT_FREE == 50
+
+
+def test_trim_pipeline_leads_by_tier_preserves_buckets():
+    leads = (
+        [{"id": i, "priority_tier": "HOT"} for i in range(20)]
+        + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(25)]
+        + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(18)]
+    )
+    trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_PAID)
+    assert len(trimmed) == 50
+    assert mix["hot"]["shown"] == 15
+    assert mix["warm"]["shown"] == 20
+    assert mix["monitoring"]["shown"] == 15
+    assert all(row["priority_tier"] == "HOT" for row in trimmed[:15])
+    assert all(row["priority_tier"] == "WARM" for row in trimmed[15:35])
+    assert all(row["priority_tier"] == "COLD" for row in trimmed[35:])
+
+
+def test_trim_pipeline_anonymous_preview_includes_all_tiers():
+    leads = (
+        [{"id": i, "priority_tier": "HOT"} for i in range(10)]
+        + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(10)]
+        + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(10)]
+    )
+    trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_ANONYMOUS)
+    assert len(trimmed) == 12
+    assert mix["warm"]["shown"] == 4
+    assert mix["monitoring"]["shown"] == 3
 
 
 def test_apply_pipeline_entitlements_trims_and_tags():
     feed = {
         "summary": {"hot": 40, "warm": 10, "total": 100},
-        "leads": [{"id": i, "company_name": f"C{i}", "share_summary": "secret"} for i in range(30)],
+        "leads": [
+            {"id": i, "company_name": f"C{i}", "priority_tier": "HOT", "share_summary": "secret"}
+            for i in range(20)
+        ]
+        + [
+            {"id": 100 + i, "company_name": f"W{i}", "priority_tier": "WARM", "share_summary": "secret"}
+            for i in range(20)
+        ],
     }
     out = apply_pipeline_entitlements(feed, PLAN_FREE)
-    assert len(out["leads"]) == 25
+    assert len(out["leads"]) == 35
     assert out["entitlements"]["plan"] == PLAN_FREE
+    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 15
+    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 20
+    assert out["entitlements"]["tier_mix"]["monitoring"]["shown"] == 0
     assert "share_summary" in out["leads"][0]
 
 

@@ -20,9 +20,19 @@ PLAN_PAID = "paid"
 # Pro/Premium unlock full pipeline + research; Starter is paid billing but free-tier caps until upgraded.
 PAID_PIPELINE_SLUGS = frozenset({"pro", "premium", "paid"})
 
+PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
+PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
+PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
+PIPELINE_TIERED_TOTAL = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
+
+# Anonymous preview shows every tier; signed-in free/paid get the full 15+20+15 mix.
 PIPELINE_LIMIT_ANONYMOUS = 12
-PIPELINE_LIMIT_FREE = 35
-PIPELINE_LIMIT_PAID = 50
+PIPELINE_ANON_HOT_SLOTS = 5
+PIPELINE_ANON_WARM_SLOTS = 4
+PIPELINE_ANON_MONITOR_SLOTS = 3
+
+PIPELINE_LIMIT_FREE = PIPELINE_TIERED_TOTAL
+PIPELINE_LIMIT_PAID = PIPELINE_TIERED_TOTAL
 SAVED_LEADS_LIMIT_FREE = 5
 
 
@@ -67,15 +77,71 @@ def saved_leads_limit_for_plan(plan: str) -> Optional[int]:
     return None
 
 
-def entitlements_payload(plan: str, *, visible_count: int) -> dict[str, Any]:
+def _tier_slots_for_plan(plan: str) -> tuple[int, int, int]:
+    if plan == PLAN_ANONYMOUS:
+        return PIPELINE_ANON_HOT_SLOTS, PIPELINE_ANON_WARM_SLOTS, PIPELINE_ANON_MONITOR_SLOTS
+    return PIPELINE_HOT_SLOTS, PIPELINE_WARM_SLOTS, PIPELINE_MONITOR_SLOTS
+
+
+def _lead_tier_key(row: dict[str, Any]) -> str:
+    tier = (row.get("priority_tier") or "").strip().upper()
+    if tier in ("HOT", "WARM", "COLD"):
+        return tier
+    score = row.get("score")
+    overall = 0.0
+    if isinstance(score, dict):
+        overall = float(score.get("overall_score") or 0)
+    elif score is not None:
+        overall = float(score)
+    if overall >= 85:
+        return "HOT"
+    if overall >= 65:
+        return "WARM"
+    return "COLD"
+
+
+def trim_pipeline_leads_by_tier(leads: list[dict[str, Any]], plan: str) -> tuple[list[dict[str, Any]], dict[str, dict[str, int]]]:
+    """Preserve HOT/WARM/monitoring buckets instead of truncating a flat HOT-first list."""
+    hot_n, warm_n, cold_n = _tier_slots_for_plan(plan)
+    hot: list[dict[str, Any]] = []
+    warm: list[dict[str, Any]] = []
+    cold: list[dict[str, Any]] = []
+    for row in leads:
+        bucket = _lead_tier_key(row)
+        if bucket == "HOT":
+            hot.append(row)
+        elif bucket == "WARM":
+            warm.append(row)
+        else:
+            cold.append(row)
+    trimmed_hot = hot[:hot_n]
+    trimmed_warm = warm[:warm_n]
+    trimmed_cold = cold[:cold_n]
+    tier_mix = {
+        "hot": {"shown": len(trimmed_hot), "cap": hot_n},
+        "warm": {"shown": len(trimmed_warm), "cap": warm_n},
+        "monitoring": {"shown": len(trimmed_cold), "cap": cold_n},
+    }
+    return trimmed_hot + trimmed_warm + trimmed_cold, tier_mix
+
+
+def entitlements_payload(
+    plan: str,
+    *,
+    visible_count: int,
+    tier_mix: Optional[dict[str, dict[str, int]]] = None,
+) -> dict[str, Any]:
     saved_limit = saved_leads_limit_for_plan(plan)
-    return {
+    payload: dict[str, Any] = {
         "plan": plan,
         "pipeline_limit": pipeline_limit_for_plan(plan),
         "visible_count": visible_count,
         "saved_limit": saved_limit,
         "upgrade_url": "/pricing",
     }
+    if tier_mix:
+        payload["tier_mix"] = tier_mix
+    return payload
 
 
 def _truncate(text: Optional[str], max_len: int) -> Optional[str]:
@@ -200,11 +266,11 @@ def apply_pipeline_entitlements(
     plan: str,
 ) -> dict[str, Any]:
     leads = list(feed.get("leads") or [])
-    limit = pipeline_limit_for_plan(plan)
-    trimmed = [sanitize_lead_for_plan(row, plan) for row in leads[:limit]]
+    tiered, tier_mix = trim_pipeline_leads_by_tier(leads, plan)
+    trimmed = [sanitize_lead_for_plan(row, plan) for row in tiered]
     out = dict(feed)
     out["leads"] = trimmed
-    out["entitlements"] = entitlements_payload(plan, visible_count=len(trimmed))
+    out["entitlements"] = entitlements_payload(plan, visible_count=len(trimmed), tier_mix=tier_mix)
     if plan == PLAN_ANONYMOUS and isinstance(out.get("summary"), dict):
         summary = dict(out["summary"])
         for key in ("warm", "cold", "watching"):
