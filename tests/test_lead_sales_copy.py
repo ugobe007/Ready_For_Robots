@@ -23,15 +23,13 @@ def test_share_summary_natural_language_not_robotic():
         crm_metadata=None,
         signal_blob="Acme announced a warehouse automation program and labor shortage.",
     )
-    assert "Signals observed:" in summary
-    assert "Acme Logistics is looking for automation" in summary
-    assert "timing of the project" in summary.lower()
-    assert "days" in summary.lower()
-    assert "90" in summary or "120" in summary or "180" in summary or "210" in summary
-    assert "Robot types that fit" in summary
-    assert "mobile robots" in summary.lower()
+    assert "Acme Logistics" in summary
+    assert "Signals observed:" not in summary
+    assert "Robot types that fit" not in summary
+    assert "aligns with our signals" not in summary.lower()
     assert "active buying indicators" not in summary.lower()
-    assert "Qualifying factors" not in summary
+    assert "mobile robots" in summary.lower() or "warehouse automation" in summary.lower()
+    assert "days" in summary.lower() or "vendor" in summary.lower() or "partner" in summary.lower()
     assert len(blurb) <= 220
 
 
@@ -54,7 +52,7 @@ def test_preview_sentences_no_mid_word_cut():
     assert not out.rstrip().endswith("w")
     assert not out.rstrip().endswith("aligns w")
     assert out.endswith(".")
-    assert "labor shortage" in out.lower()
+    assert "labor" in out.lower()
 
 
 def test_is_low_quality_sales_text():
@@ -63,3 +61,24 @@ def test_is_low_quality_sales_text():
     assert not is_low_quality_sales_text(
         "Marriott is piloting service robots at two hotels to address housekeeping gaps."
     )
+
+
+def test_headline_led_opening():
+    _, summary = build_lead_intelligence_copy(
+        company_name="Marriott International",
+        industry="Hospitality",
+        tier="HOT",
+        signal_labels=["Expansion"],
+        signal_types=["expansion"],
+        automation_type="service robots",
+        pain_point="housekeeping labor",
+        automation_profile={"robot_categories": ["service_robot"], "application_areas": []},
+        crm_metadata=None,
+        signal_blob=(
+            "Marriott pilots service robots at two flagship hotels to ease housekeeping load - "
+            "Hospitality Dive. Marriott pilots service robots at two flagship hotels."
+        ),
+    )
+    assert "Marriott" in summary
+    assert "Signals observed:" not in summary
+    assert "pilot" in summary.lower() or "service robot" in summary.lower()

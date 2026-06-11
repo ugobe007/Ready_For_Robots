@@ -1,15 +1,15 @@
 """
 Natural-language intelligence copy for sales leads (share_summary / share_blurb).
 
-Avoids robotic phrasing, raw scraper quotes, and database-style qualifiers.
+Rep-facing prose — grounded in evidence, plain English, no internal jargon.
 """
 from __future__ import annotations
 
 import re
-from typing import Any, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from app.services.lead_signal_display import pick_primary_sentence, strip_extraction_artifacts
-from app.services.lead_project_timing import resolve_project_timing
+from app.services.lead_project_timing import ProjectTiming, resolve_project_timing
 
 # Internal automation_profile ids → rep-friendly robot labels
 ROBOT_CATEGORY_LABELS: dict[str, str] = {
@@ -58,18 +58,30 @@ _INDUSTRY_PAIN: dict[str, str] = {
 _JUNK_DISPLAY_RE = re.compile(
     r"(?i)(qualifying factors|active buying indicators in our database|"
     r"signals detected on ready for robots|key evidence\s*—|"
+    r"aligns with our signals|signals observed|robot types that fit|"
     r"\[code\]|\[explanation\]|confidence:\s*\d|overall_intent=)",
 )
-_PCT_RE = re.compile(r"(\d{1,2})\s*(?:%|percent)", re.I)
-_POC_RE = re.compile(
-    r"(?i)\b(pilot|proof of concept|poc|trial)\b.*?"
-    r"(?:\d{1,2})\s*(?:-|to)\s*(?:\d{1,2})?\s*weeks?",
-)
-_INITIATIVE_RE = re.compile(
-    r"(?i)\b(automation (?:initiative|program|investment|rollout)|"
-    r"robotics (?:program|deployment)|digital transformation|"
-    r"warehouse automation (?:project|program))\b",
-)
+
+# Plain-English drivers — never expose internal signal taxonomy to reps.
+_PLAIN_TRIGGERS: dict[str, str] = {
+    "labor_shortage": "staffing pressure",
+    "expansion": "new locations or capacity growth",
+    "strategic_hire": "leadership moves driving new initiatives",
+    "capex": "capital budgets opening up",
+    "funding_round": "fresh investment to deploy",
+    "ma_activity": "M&A or portfolio moves",
+    "job_posting": "automation-related hiring",
+    "news": "public automation news",
+    "news_signal": "public automation news",
+    "automation_interest": "stated interest in automation",
+    "automation_intent": "active automation planning",
+    "labor_signal": "workforce strain",
+    "robot_installation": "robots already going in",
+    "rfp_posted": "vendor selection underway",
+    "budget_allocated": "budget set aside for automation",
+    "scale_expansion": "capacity expansion",
+    "automation_hiring": "automation hiring",
+}
 
 
 def preview_sentences(text: Optional[str], *, max_sentences: int = 3, max_chars: int = 520) -> str:
@@ -168,7 +180,7 @@ def humanize_robot_types(
                     add(s)
                 break
     if not out:
-        add("automation robots (type to confirm on discovery)")
+        add("automation robots (confirm on discovery)")
     return out[:5]
 
 
@@ -182,42 +194,74 @@ def _industry_pain(industry: str, automation_type: str, pain_point: str) -> str:
     return f"pressure on {automation_type}"
 
 
-def _initiative_clause(name: str, signal_blob: str, signal_types: Sequence[str]) -> str:
-    if _INITIATIVE_RE.search(signal_blob):
-        return (
-            f"The company has publicly discussed a new automation initiative in response."
-        )
-    st = {t.lower() for t in signal_types if t}
-    if st & {"capex", "funding_round", "robot_installation", "automation_hiring"}:
-        return (
-            f"{name} has announced capital or hiring moves that point to an active automation program."
-        )
-    if "expansion" in st or "scale_expansion" in st:
-        return f"{name} is expanding capacity, which typically pulls forward robotics evaluations."
+def _headline_from_blob(signal_blob: str) -> str:
+    """Best-effort news headline from scraped signal text."""
+    raw = (signal_blob or "").replace("\n", " ").strip()
+    raw = re.sub(r"<[^>]+>", "", raw).strip()
+    if not raw or is_low_quality_sales_text(raw):
+        return ""
+    sentence = re.split(r"[.!?]\s+", raw)[0].strip()
+    if " - " in sentence:
+        sentence = sentence.split(" - ", 1)[0].strip()
+    if ": " in sentence and len(sentence) > 90:
+        lead, _sub = sentence.split(": ", 1)
+        if len(lead) >= 24:
+            sentence = lead.strip()
+    if len(sentence) > 160:
+        sentence = sentence[:160].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
+    return sentence if not is_low_quality_sales_text(sentence) else ""
+
+
+def _plain_triggers(signal_types: Sequence[str], limit: int = 3) -> List[str]:
+    out: List[str] = []
+    for t in signal_types:
+        key = (t or "").strip().lower()
+        if not key:
+            continue
+        label = _PLAIN_TRIGGERS.get(key) or key.replace("_", " ")
+        if label and label not in out:
+            out.append(label)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _format_trigger_list(triggers: List[str]) -> str:
+    if not triggers:
+        return ""
+    if len(triggers) == 1:
+        return triggers[0]
+    if len(triggers) == 2:
+        return f"{triggers[0]} and {triggers[1]}"
+    return f"{triggers[0]}, {triggers[1]}, and {triggers[2]}"
+
+
+def _human_buy_window(timing: ProjectTiming) -> str:
+    dmin, dmax = timing.day_min, timing.day_max
+    if dmin is not None and dmax is not None:
+        if dmax <= 75:
+            return f"Vendor selection could move in the next {dmin}–{dmax} days."
+        if dmax <= 120:
+            return f"Partner conversations often start within {dmin}–{dmax} days."
+        return f"Build-out and evaluation cycles here typically run {dmin}–{dmax} days."
+    label = (timing.label or "").lower()
+    if "procurement" in label or "rfp" in label:
+        return "Procurement activity suggests they're getting close to picking a vendor."
+    if "deployment" in label or "pilot" in label:
+        return "They're already in deployment or pilot mode — timing is short."
+    if "high-intent" in label:
+        return "This account is in a high-intent window — outreach lands best before an RFP."
     return ""
 
 
-def _timing_clause(
-    tier: str,
-    crm_meta: Optional[dict],
-    *,
-    signal_blob: str = "",
-    signal_types: Optional[Sequence[str]] = None,
-    procurement_hints: Optional[Sequence[str]] = None,
-    intent_score: float = 0,
-    procurement_strength: float = 0,
-) -> str:
-    timing = resolve_project_timing(
-        tier=tier,
-        crm_metadata=crm_meta,
-        lead_inference=(crm_meta or {}).get("lead_inference") if isinstance(crm_meta, dict) else None,
-        signal_blob=signal_blob,
-        signal_types=signal_types,
-        procurement_hints=procurement_hints,
-        intent_score=intent_score,
-        procurement_strength=procurement_strength,
-    )
-    return timing.display_phrase
+def _robot_fit_clause(robot_types: List[str]) -> str:
+    if not robot_types:
+        return ""
+    primary = robot_types[0]
+    if len(robot_types) == 1:
+        return f"Good fit for {primary}."
+    secondary = robot_types[1]
+    return f"Good fit for {primary} and {secondary}."
 
 
 def _decision_maker_clause(crm_meta: Optional[dict]) -> str:
@@ -240,31 +284,34 @@ def _decision_maker_clause(crm_meta: Optional[dict]) -> str:
     if not parts:
         return ""
     if len(parts) == 1:
-        return f"Key decision makers to engage include {parts[0]}."
-    return f"Key decision makers include {parts[0]} and {parts[1]}."
+        return f"Worth engaging {parts[0]}."
+    return f"Worth engaging {parts[0]} and {parts[1]}."
 
 
-def _poc_clause(name: str, signal_blob: str) -> str:
-    if not _POC_RE.search(signal_blob) and "pilot" not in signal_blob.lower():
-        return (
-            f"{name} often runs proof-of-concept trials for two to three weeks "
-            f"(eight-hour shifts) before scaling — confirm savings targets on the discovery call."
-        )
-    pct = _PCT_RE.search(signal_blob)
-    savings = f"{pct.group(1)}%" if pct else "double-digit"
+def _opening_sentence(
+    *,
+    name: str,
+    industry: str,
+    automation_type: str,
+    pain: str,
+    signal_blob: str,
+) -> str:
+    headline = _headline_from_blob(signal_blob)
+    if headline:
+        if name.lower() in headline.lower():
+            return headline if headline.endswith((".", "!", "?")) else headline + "."
+        return f"{name}: {headline.rstrip('.')}."
+    excerpt = pick_primary_sentence(signal_blob, max_chars=200)
+    if excerpt and not is_low_quality_sales_text(excerpt):
+        if name.lower() in excerpt.lower():
+            return excerpt if excerpt.endswith((".", "!", "?")) else excerpt + "."
+        return f"{name} — {excerpt.rstrip('.')}."
+
+    ind_clause = f" ({industry})" if industry else ""
     return (
-        f"{name} runs PoC trials for two to three weeks with eight-hour shifts, "
-        f"with an expectation of saving about {savings} in costs while improving operational workflows."
+        f"{name}{ind_clause} is moving on {automation_type} "
+        f"as {pain}."
     )
-
-
-def _signals_observed_phrase(labels: List[str]) -> str:
-    if not labels:
-        return "automation interest"
-    cleaned = [lb.lower() for lb in labels[:4]]
-    if len(cleaned) == 1:
-        return cleaned[0]
-    return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
 
 
 def build_lead_intelligence_copy(
@@ -288,23 +335,13 @@ def build_lead_intelligence_copy(
     """
     name = (company_name or "This company").strip()
     ind = industry if industry and industry.lower() not in ("unknown", "other", "new") else ""
-    observed = _signals_observed_phrase(signal_labels)
     pain = _industry_pain(ind, automation_type, pain_point)
+    triggers = _plain_triggers(signal_types or [], limit=3)
+    trigger_phrase = _format_trigger_list(triggers)
 
     robot_types = humanize_robot_types(
         automation_profile, industry=ind or industry, signal_blob=signal_blob
     )
-    robots_str = ", ".join(robot_types[:3])
-
-    sentences: List[str] = []
-
-    sentences.append(
-        f"Signals observed: {observed}. {name} is looking for automation to help with {pain}."
-    )
-
-    initiative = _initiative_clause(name, signal_blob, signal_types or [])
-    if initiative:
-        sentences.append(initiative)
 
     project_timing = resolve_project_timing(
         tier=tier,
@@ -316,23 +353,37 @@ def build_lead_intelligence_copy(
         intent_score=intent_score,
         procurement_strength=procurement_strength,
     )
-    sentences.append(project_timing.display_phrase)
 
-    sentences.append(f"Robot types that fit this account: {robots_str}.")
+    sentences: List[str] = []
+    sentences.append(
+        _opening_sentence(
+            name=name,
+            industry=ind,
+            automation_type=automation_type,
+            pain=pain,
+            signal_blob=signal_blob,
+        )
+    )
+
+    if trigger_phrase:
+        opener = sentences[0].lower()
+        if trigger_phrase.split()[0] not in opener:
+            sentences.append(f"What's driving it: {trigger_phrase}.")
+
+    buy_window = _human_buy_window(project_timing)
+    if buy_window:
+        sentences.append(buy_window)
+
+    robot_clause = _robot_fit_clause(robot_types[:3])
+    if robot_clause:
+        sentences.append(robot_clause)
 
     dm = _decision_maker_clause(crm_metadata)
     if dm:
         sentences.append(dm)
 
-    sentences.append(_poc_clause(name, signal_blob))
-
     summary = " ".join(sentences)
-    window_short = project_timing.label
-    if project_timing.day_min is not None and project_timing.day_max is not None:
-        window_short = f"{project_timing.day_min}–{project_timing.day_max} days"
-    blurb = (
-        f"{name}: {observed}. {robots_str}. "
-        f"Window: {window_short}. Ready For Robots."
-    )
-    blurb_cut = blurb[:220].rsplit(" ", 1)[0] if len(blurb) > 220 else blurb
-    return blurb_cut.rstrip(",;:"), summary
+    blurb = preview_sentences(summary, max_sentences=2, max_chars=220)
+    if not blurb:
+        blurb = f"{name}: {automation_type}. Ready For Robots."
+    return blurb, summary

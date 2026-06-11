@@ -742,8 +742,17 @@ def _fmt_pipeline_card(
         industry_display = "New"
     overall = round(float(s.overall_intent_score) if s else 0.0, 1)
     share_summary = ""
-    if sig:
-        share_summary = format_signal_for_sales(sig.signal_text)[:320]
+    if sigs:
+        try:
+            from app.services.lead_sales_copy import preview_sentences
+
+            _blurb, full = _build_share_blurb(
+                c, pri, sigs[:3], industry_for_copy=industry_display, automation_profile=None
+            )
+            share_summary = preview_sentences(full or _blurb, max_sentences=2, max_chars=320)
+        except Exception:
+            if sig:
+                share_summary = format_signal_for_sales(sig.signal_text)[:320]
     payload = {
         "id": c.id,
         "company_name": c.name,
