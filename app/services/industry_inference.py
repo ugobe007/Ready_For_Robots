@@ -102,6 +102,14 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "cathay pacific": "Airports & Aviation",
     "air france": "Airports & Aviation",
     "klm royal dutch airlines": "Airports & Aviation",
+    # Big-box / home improvement retail (signal noise often cites unrelated vendors)
+    "home depot": "Retail",
+    "the home depot": "Retail",
+    "lowe's": "Retail",
+    "lowes": "Retail",
+    "walmart": "Retail",
+    "costco": "Retail",
+    "target corporation": "Retail",
 }
 
 # Company name looks like a passenger airline (not an automaker).
@@ -387,18 +395,36 @@ def _keyword_in_text(kw: str, text_lower: str) -> bool:
     return kw in text_lower
 
 
-def infer_industry_scores(text: str) -> Dict[str, int]:
+def known_industry_for_company_name(company_name: Optional[str]) -> Optional[str]:
+    """Map company name to curated industry — never scan unrelated signal text."""
+    low = (company_name or "").strip().lower()
+    if not low:
+        return None
+    for key in sorted(KNOWN_COMPANY_INDUSTRY.keys(), key=len, reverse=True):
+        if key in low:
+            return KNOWN_COMPANY_INDUSTRY[key]
+    return None
+
+
+def infer_industry_scores(text: str, *, company_name: Optional[str] = None) -> Dict[str, int]:
     """
     Keyword hit counts per industry label (used by infer + disambiguation).
-    KNOWN_COMPANY_INDUSTRY matches return a single dominant bucket.
+
+    When ``company_name`` is set, KNOWN_COMPANY_INDUSTRY applies to the name only
+    (prevents e.g. SoftBank mentions in Home Depot headlines → Datacenters).
     """
     if not (text and text.strip()):
         return {}
     text_lower = text.lower()
-    for key in sorted(KNOWN_COMPANY_INDUSTRY.keys(), key=len, reverse=True):
-        if key in text_lower:
-            ind = KNOWN_COMPANY_INDUSTRY[key]
-            return {ind: 10**6}
+    if company_name:
+        known = known_industry_for_company_name(company_name)
+        if known:
+            return {known: 10**6}
+    else:
+        for key in sorted(KNOWN_COMPANY_INDUSTRY.keys(), key=len, reverse=True):
+            if key in text_lower:
+                ind = KNOWN_COMPANY_INDUSTRY[key]
+                return {ind: 10**6}
     scores: Dict[str, int] = {}
     for industry, keywords in INDUSTRY_KEYWORDS.items():
         score = sum(1 for kw in keywords if _keyword_in_text(kw, text_lower))
@@ -503,7 +529,11 @@ def effective_industry_for_lead(
     stored = (stored_industry or "").strip()
     blob = " ".join([name, signal_blob, stored])
 
-    scores = infer_industry_scores(blob)
+    known = known_industry_for_company_name(name)
+    if known:
+        return known
+
+    scores = infer_industry_scores(blob, company_name=name)
     inferred = _pick_industry_from_scores(scores)
 
     tl_all = blob.lower()

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from app.services.industry_inference import (
     effective_industry_for_lead,
     infer_industry_from_text,
+    known_industry_for_company_name,
     should_skip_industry_reinfer_for_company_name,
 )
 
@@ -66,6 +67,19 @@ def test_japan_airlines_not_automotive_despite_robot_manufacturing_signal():
 
 def test_known_airline_alias_infers_aviation():
     assert infer_industry_from_text("Japan Airlines fleet expansion") == "Airports & Aviation"
+
+
+def test_home_depot_retail_not_datacenters_from_softbank_signal_noise():
+    """Unrelated vendor names in headlines must not override the account vertical."""
+    assert known_industry_for_company_name("Home Depot") == "Retail"
+    sig = SimpleNamespace(
+        signal_text=(
+            "OpenAI funding round draws investment from Amazon, Nvidia, SoftBank - Yahoo Finance. "
+            "Home Depot acquires warehouse tech firm to boost fulfillment strategy."
+        )
+    )
+    eff = effective_industry_for_lead("Home Depot", "Food Service", [sig])
+    assert eff == "Retail"
 
 
 @pytest.mark.parametrize(
