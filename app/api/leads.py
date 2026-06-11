@@ -337,7 +337,10 @@ LEADS_PUBLIC_MAX = 50
 LEADS_SQL_POOL_CAP = 200
 
 LEADS_ROTATION_SEC = PIPELINE_LEADS_ROTATION_SEC
-PIPELINE_FEED_LIMIT = 50
+PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
+PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
+PIPELINE_MONITOR_SLOTS = int(os.getenv("PIPELINE_MONITOR_SLOTS", "15"))
+PIPELINE_FEED_LIMIT = PIPELINE_HOT_SLOTS + PIPELINE_WARM_SLOTS + PIPELINE_MONITOR_SLOTS
 
 # In-process cache for the public leads list (L1 — per machine, lost on restart).
 _LEADS_LIST_CACHE: dict[str, tuple[float, list]] = {}
@@ -1234,13 +1237,103 @@ def _fetch_staged_by_industries(
     return out
 
 
+def _fetch_staged_by_tier(
+    db: Session,
+    tier: str,
+    *,
+    limit: int,
+    exclude_ids: Optional[set] = None,
+    pool_cap: Optional[int] = None,
+) -> list:
+    """Top scored non-junk leads for a single priority tier (HOT / WARM / COLD)."""
+    exclude_ids = exclude_ids or set()
+    tier_u = (tier or "").upper()
+    if tier_u not in ("HOT", "WARM", "COLD"):
+        return []
+    if pool_cap is None:
+        if tier_u == "COLD":
+            # Monitoring leads score below the HOT/WARM band — scan the full public corpus.
+            public_n = (
+                db.query(Company.id)
+                .filter(Company.is_internal.is_(True))
+                .count()
+            )
+            pool_cap = min(5000, max(public_n, _PIPELINE_SUMMARY_ROW_CAP))
+        elif tier_u == "WARM":
+            pool_cap = min(_PIPELINE_SUMMARY_ROW_CAP, max(limit * 60, 800))
+        else:
+            pool_cap = min(2000, max(limit * 30, 200))
+    rows = _lead_rows_query_limited(db, pool_cap).all()
+    staged: list[tuple[int, float]] = []
+    for row in rows:
+        if row.id in exclude_ids:
+            continue
+        junk, _ = _row_is_junk(row.name)
+        if junk:
+            continue
+        score = float(row.overall_score or 0)
+        if tier_u == "COLD":
+            # Monitoring leads rank below HOT/WARM — classify in batches, do not pre-filter by fast tier.
+            staged.append((row.id, score))
+        else:
+            pri = _row_priority(row)
+            if pri.tier != tier_u:
+                continue
+            staged.append((row.id, pri.score))
+
+    staged.sort(key=lambda x: x[1], reverse=(tier_u != "COLD"))
+    if not staged:
+        return []
+
+    out = []
+    batch_size = max(limit * 8, 40)
+    for offset in range(0, len(staged), batch_size):
+        ids = [sid for sid, _ in staged[offset : offset + batch_size]]
+        companies = (
+            db.query(Company)
+            .options(joinedload(Company.scores), joinedload(Company.signals))
+            .filter(Company.id.in_(ids))
+            .all()
+        )
+        company_map = {c.id: c for c in companies}
+        for cid in ids:
+            c = company_map.get(cid)
+            if not c:
+                continue
+            junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+            if junk or pri.tier != tier_u:
+                continue
+            out.append((c, junk, junk_reason, pri))
+            if len(out) >= limit:
+                return out
+    return out
+
+
+def _staged_tuples_to_feed_rows(staged: list) -> list:
+    return [
+        _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
+        for c, junk, junk_reason, pri in staged
+    ]
+
+
 def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT) -> list:
     """
-    Pipeline preview with vertical diversity — ensures food service / hospitality
-    appear in the rotated slice when those leads exist in the corpus.
+    Tiered pipeline slice: HOT + WARM + monitoring (COLD) slots for /pipeline UI.
+    Vertical diversity fills gaps in HOT/WARM when a canonical industry is missing.
     """
-    base = build_public_leads_list(db, limit=limit)
-    base_ids = {int(l["id"]) for l in base if l.get("id")}
+    hot_n = min(PIPELINE_HOT_SLOTS, limit)
+    warm_n = min(PIPELINE_WARM_SLOTS, max(0, limit - hot_n))
+    cold_n = min(PIPELINE_MONITOR_SLOTS, max(0, limit - hot_n - warm_n))
+
+    exclude: set = set()
+    hot_staged = _fetch_staged_by_tier(db, "HOT", limit=hot_n, exclude_ids=exclude)
+    exclude.update(c.id for c, *_ in hot_staged)
+    warm_staged = _fetch_staged_by_tier(db, "WARM", limit=warm_n, exclude_ids=exclude)
+    exclude.update(c.id for c, *_ in warm_staged)
+    cold_staged = _fetch_staged_by_tier(db, "COLD", limit=cold_n, exclude_ids=exclude)
+
+    hot_rows = _staged_tuples_to_feed_rows(hot_staged)
+    warm_rows = _staged_tuples_to_feed_rows(warm_staged)
 
     def _has_vertical(leads: list, vertical: str) -> bool:
         return any(
@@ -1249,45 +1342,28 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
         )
 
     inject: list = []
+    combined_hot_warm = hot_rows + warm_rows
     for vertical in PIPELINE_DIVERSITY_INDUSTRIES:
-        if _has_vertical(base, vertical):
+        if _has_vertical(combined_hot_warm, vertical):
             continue
         extra = _fetch_staged_by_industries(
-            db, [vertical], limit=2, exclude_ids=base_ids | {c.id for c, *_ in inject}
+            db,
+            [vertical],
+            limit=1,
+            exclude_ids=exclude | {int(l["id"]) for l in combined_hot_warm if l.get("id")},
         )
         inject.extend(extra)
 
-    if not inject:
-        return base[:limit]
+    if inject:
+        inject_rows = [
+            r
+            for r in _staged_tuples_to_feed_rows(inject)
+            if (r.get("priority_tier") or "").upper() == "WARM"
+        ]
+        warm_rows = (inject_rows + warm_rows)[:warm_n]
 
-    merged_ids = [c.id for c, *_ in inject] + [l["id"] for l in base]
-    seen: set = set()
-    ordered_ids = []
-    for i in merged_ids:
-        if i in seen:
-            continue
-        seen.add(i)
-        ordered_ids.append(i)
-
-    companies = (
-        db.query(Company)
-        .options(joinedload(Company.scores), joinedload(Company.signals))
-        .filter(Company.id.in_(ordered_ids))
-        .all()
-    )
-    company_map = {c.id: c for c in companies}
-    out = []
-    for cid in ordered_ids:
-        c = company_map.get(cid)
-        if not c:
-            continue
-        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-        if junk:
-            continue
-        out.append(_fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True))
-        if len(out) >= limit:
-            break
-    return out
+    cold_rows = _staged_tuples_to_feed_rows(cold_staged)
+    return hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
 
 
 def hydrate_pipeline_feed_cache(feed: dict) -> None:

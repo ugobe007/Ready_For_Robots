@@ -52,6 +52,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   DATA_QUALITY_EVERY_HOURS = "168"
   DATA_QUALITY_FIRST_RUN_DELAY_HOURS = "12"
   QUALITY_LOG_EXPORT_LIMIT = "2500"
+  # Pipeline page tier slots (hot + warm + monitoring = 50 on paid)
+  PIPELINE_HOT_SLOTS = "15"
+  PIPELINE_WARM_SLOTS = "20"
+  PIPELINE_MONITOR_SLOTS = "15"
 
 [http_service]
   internal_port = 8080

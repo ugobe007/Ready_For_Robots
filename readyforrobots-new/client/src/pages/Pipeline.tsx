@@ -180,21 +180,33 @@ const STAGE_META: Record<Stage, { color: string; dot: string; label: string; des
 
 type UserBucket = "Hot Leads" | "Warm Leads" | "Monitoring";
 
+const PIPELINE_HOT_SLOTS = 15;
+const PIPELINE_WARM_SLOTS = 20;
+const PIPELINE_MONITOR_SLOTS = 15;
+
 const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 
-const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string }> = {
-  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities" },
-  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track" },
-  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SCOUT is watching" },
+const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
+  "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
+  "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
+  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SCOUT is watching", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
-const userBucketForDeal = (deal: Pick<Deal, "score">): UserBucket => {
+const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
+  const tier = (deal.priorityTier || "").toUpperCase();
+  if (tier === "HOT") return "Hot Leads";
+  if (tier === "WARM") return "Warm Leads";
+  if (tier === "COLD") return "Monitoring";
   if (deal.score >= 85) return "Hot Leads";
   if (deal.score >= 65) return "Warm Leads";
   return "Monitoring";
 };
 
-const userTierBadge = (deal: Pick<Deal, "score">) => {
+const userTierBadge = (deal: Pick<Deal, "score" | "priorityTier">) => {
+  const tier = (deal.priorityTier || "").toUpperCase();
+  if (tier === "HOT") return { label: "HOT", color: "#34d399" };
+  if (tier === "WARM") return { label: "WARM", color: "#FFB000" };
+  if (tier === "COLD") return { label: "MONITOR", color: "#a78bfa" };
   if (deal.score >= 85) return { label: "HOT", color: "#34d399" };
   if (deal.score >= 65) return { label: "WARM", color: "#FFB000" };
   return { label: "MONITOR", color: "#a78bfa" };
@@ -295,7 +307,7 @@ type PipelineEntitlements = {
   upgrade_url: string;
 };
 
-const PIPELINE_LIMIT_FREE = 25;
+const PIPELINE_LIMIT_FREE = 35;
 const PIPELINE_LIMIT_PAID = 50;
 const HUBSPOT_CONNECT_PATH = "/integrations/hubspot";
 const HUBSPOT_SIGNUP_PATH = `/signup?intent=hubspot&next=${encodeURIComponent("/integrations/hubspot")}`;
@@ -1095,7 +1107,7 @@ export default function Pipeline() {
                       ? `Preview ${entitlements?.pipeline_limit ?? 12} SCOUT-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SCOUT on your workspace.`
                       : panelPlan === "free"
                         ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
-                        : "Full SCOUT intelligence — live robot-ready leads ranked by buyer intent and timing."}
+                        : `${PIPELINE_HOT_SLOTS} hot · ${PIPELINE_WARM_SLOTS} warm · ${PIPELINE_MONITOR_SLOTS} monitoring — ranked by buyer intent and timing.`}
                 </p>
               </div>
             </div>
@@ -1652,10 +1664,13 @@ export default function Pipeline() {
                       <span className="text-xs font-bold" style={{ color: meta.color }}>{bucket}</span>
                       <span className="text-[10px] text-white/25 ml-0.5">— {meta.desc}</span>
                       <span
-                        className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
-                        style={{ color: meta.color, background: `${meta.color}15` }}
+                        className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
+                        style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
+                        {!hasActiveSearch && bucketDeals.length < meta.slotCap ? (
+                          <span className="text-white/25 font-normal"> / {meta.slotCap}</span>
+                        ) : null}
                       </span>
                     </div>
 
