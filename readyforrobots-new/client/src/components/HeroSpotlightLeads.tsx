@@ -6,6 +6,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { dedupeHomepageLeads } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { useSequentialTypewriter } from "@/hooks/useTypewriter";
 import type { HomepageLeadRow } from "@/components/HeroLivePipeline";
@@ -268,7 +269,9 @@ export default function HeroSpotlightLeads() {
         const raw = await r.text();
         if (raw.trimStart().startsWith("<")) return;
         const data = JSON.parse(raw) as { hotLeads?: HomepageLeadRow[] };
-        const rows = Array.isArray(data.hotLeads) ? data.hotLeads.filter((l) => l.company_name) : [];
+        const rows = dedupeHomepageLeads(
+          Array.isArray(data.hotLeads) ? data.hotLeads.filter((l) => l.company_name) : [],
+        );
         if (rows.length >= 2 && !cancelled) {
           setLeads(rows.slice(0, 10));
           setLive(true);
@@ -454,9 +457,9 @@ export default function HeroSpotlightLeads() {
         style={{ borderTop: "1px solid rgba(124,58,237,0.1)", background: "rgba(0,0,0,0.15)" }}
       >
         <div className="flex gap-1">
-          {leads.map((_, i) => (
+          {leads.map((item, i) => (
             <span
-              key={i}
+              key={item.id ?? i}
               className="h-1 rounded-full transition-all duration-300"
               style={{
                 width: i === idx % leads.length ? 16 : 6,

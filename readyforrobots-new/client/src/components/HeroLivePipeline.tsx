@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { dedupeHomepageLeads } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
 
@@ -115,7 +116,7 @@ export default function HeroLivePipeline() {
         const data = JSON.parse(raw) as { hotLeads?: HomepageLeadRow[] };
         const hl = data.hotLeads;
         if (Array.isArray(hl) && hl.length && !cancelled) {
-          setApiLeads(hl.slice(0, 3));
+          setApiLeads(dedupeHomepageLeads(hl).slice(0, 3));
         }
       } catch {
         /* keep fallback */

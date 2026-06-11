@@ -2076,7 +2076,44 @@ def _merge_homepage_payload(primary: dict, fallback: dict) -> dict:
         merged["summary"] = fallback["summary"]
     if fallback.get("hotLeads"):
         merged["hotLeads"] = fallback["hotLeads"]
-    return merged
+    return _homepage_response(merged)
+
+
+def _dedupe_homepage_leads(leads: list) -> list:
+    """One spotlight row per buyer — collapse duplicate DB rows / name variants."""
+    from app.services.company_domain import normalize_website_domain
+
+    seen_ids: set = set()
+    seen_names: set[str] = set()
+    seen_domains: set[str] = set()
+    out: list = []
+    for row in leads:
+        if not isinstance(row, dict):
+            continue
+        cid = row.get("id")
+        if cid is not None and cid in seen_ids:
+            continue
+        name_key = " ".join((row.get("company_name") or "").strip().lower().split())
+        dom = normalize_website_domain(row.get("website"))
+        if dom and dom in seen_domains:
+            continue
+        if name_key and name_key in seen_names:
+            continue
+        if cid is not None:
+            seen_ids.add(cid)
+        if dom:
+            seen_domains.add(dom)
+        if name_key:
+            seen_names.add(name_key)
+        out.append(row)
+    return out
+
+
+def _homepage_response(payload: dict) -> dict:
+    leads = payload.get("hotLeads")
+    if isinstance(leads, list) and len(leads) > 1:
+        return {**payload, "hotLeads": _dedupe_homepage_leads(leads)}
+    return payload
 
 
 def _score_tier_counts(db: Session):
@@ -2276,7 +2313,7 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
         tier_rank = 0 if pri.tier == "HOT" else 1
         return (tier_rank, -_latest_signal_ts(c))
 
-    chosen = sorted(chosen[:feed_limit], key=_pool_sort_key)
+    chosen = dedupe_companies_ordered(sorted(chosen[:feed_limit], key=_pool_sort_key))
 
     companies_needing_url = [c for c in chosen if not (c.website or "").strip()]
     llm_hints: dict = {}
@@ -2296,7 +2333,7 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
             )
         )
 
-    return {
+    return _homepage_response({
         "summary": summary,
         "hotLeads": hot_leads,
         "tierLegend": HOMEPAGE_TIER_LEGEND,
@@ -2305,13 +2342,13 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
             "warm_slots": warm_slots,
             "feed_limit": feed_limit,
             "rotation_period_sec": LEADS_ROTATION_SEC,
-            "rotation_slot": rot_slot,
             "rotation_day": str(now.date()),
             "rotation_hour_utc": hour,
             "rotation_minute_utc": now.minute,
+            "rotation_slot": rot_slot,
         },
         "scoringSystem": get_scoring_system_public(),
-    }
+    })
 
 
 def _schedule_homepage_background_refresh() -> None:
@@ -2424,18 +2461,20 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     if entry is not None:
         if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
             _schedule_homepage_background_refresh()
-        return entry["data"]
+        return _homepage_response(entry["data"])
 
     cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
     if cached is not None:
-        _set_homepage_cache(cached)
-        return cached
+        payload = _homepage_response(cached)
+        _set_homepage_cache(payload)
+        return payload
 
     fallback = _homepage_from_surface_caches()
     if fallback:
-        _set_homepage_cache(fallback)
+        payload = _homepage_response(fallback)
+        _set_homepage_cache(payload)
         schedule_public_cache_refresh(pipeline_only=True, reason="homepage_surface_fallback")
-        return fallback
+        return payload
 
     schedule_public_cache_refresh(force=True, pipeline_only=True, reason="homepage_miss")
     _schedule_homepage_live_bootstrap()
