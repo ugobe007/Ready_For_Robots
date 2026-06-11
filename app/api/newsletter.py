@@ -117,6 +117,44 @@ def _trim_edition(data: dict, limit: int) -> dict:
     return data
 
 
+_STORY_API_KEYS = frozenset({
+    "category", "company", "headline", "snippet", "summary", "roi", "economics",
+    "impact", "signalStrength", "company_id", "tier", "industry",
+})
+
+
+def _slim_story(story: dict) -> dict:
+    """Drop heavy newsletter fields (fullText HTML, duplicate blobs) from API responses."""
+    if not isinstance(story, dict):
+        return story
+    slim = {k: v for k, v in story.items() if k in _STORY_API_KEYS}
+    for text_key in ("summary", "snippet", "headline"):
+        val = slim.get(text_key)
+        if isinstance(val, str) and len(val) > 1200:
+            slim[text_key] = val[:1199].rstrip() + "…"
+    full = story.get("fullText")
+    if isinstance(full, str) and full.strip() and "summary" not in slim:
+        slim["summary"] = full[:1200].rstrip() + ("…" if len(full) > 1200 else "")
+    return slim
+
+
+def _slim_edition_for_api(data: dict, *, limit: int) -> dict:
+    trimmed = _trim_edition(data, limit)
+    stories = [_slim_story(s) for s in (trimmed.get("topStories") or [])]
+    out = {**trimmed, "topStories": stories}
+    findings = trimmed.get("researchFindings") or []
+    if isinstance(findings, list) and len(findings) > 8:
+        out["researchFindings"] = findings[:8]
+    brief = trimmed.get("industryBrief")
+    if isinstance(brief, dict):
+        out["industryBrief"] = {
+            k: (v[:6] if isinstance(v, list) else v)
+            for k, v in brief.items()
+            if k in ("executive_take", "macro_trends", "strategic_implications", "risks_and_unknowns", "watch_next")
+        }
+    return out
+
+
 def hydrate_newsletter_mem_cache(data: dict) -> None:
     if not (data.get("topStories") or []):
         return
@@ -149,7 +187,6 @@ def get_newsletter_edition(
     refresh: bool = Query(False, description="Force regeneration (bypass cache)"),
     authorization: Optional[str] = Header(None),
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
-    db: Session = Depends(get_db),
 ):
     """Daily newsletter — instant from library; never empty when archive exists."""
     from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
@@ -158,21 +195,27 @@ def get_newsletter_edition(
     maybe_schedule_public_cache_refresh()
 
     if refresh:
-        assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
-        data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=False)
-        write_cached_edition(data, db)
-        write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, data)
-        hydrate_newsletter_mem_cache(data)
-        return _trim_edition(data, limit)
+        from app.database import SessionLocal
+
+        db = SessionLocal()
+        try:
+            assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
+            data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=False)
+            write_cached_edition(data, db)
+            write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, data)
+            hydrate_newsletter_mem_cache(data)
+            return _slim_edition_for_api(data, limit=limit)
+        finally:
+            db.close()
 
     mem = _get_mem_cache()
     if mem and len(mem.get("topStories") or []) >= 1:
-        return _trim_edition(mem, limit)
+        return _slim_edition_for_api(mem, limit=limit)
 
-    edition = resolve_edition_for_serving(db, limit=limit)
+    edition = resolve_edition_for_serving(None, limit=limit)
     if len(edition.get("topStories") or []) >= 1:
         hydrate_newsletter_mem_cache(edition)
-    return edition
+    return _slim_edition_for_api(edition, limit=limit)
 
 
 def _warm_newsletter_cache_at_startup() -> None:

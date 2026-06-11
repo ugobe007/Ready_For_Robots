@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, Mail, Radio, Zap, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  fetchWithTimeout,
+  getApiBase,
+  liveFetchInit,
+  publicFetchInit,
+  readSessionCache,
+  writeSessionCache,
+} from "@/lib/apiBase";
 import { cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 
 type NewsletterStory = {
@@ -109,6 +116,8 @@ function tierColor(tier: string | undefined): string {
 const TEAL = "#03DAC5";
 const AMBER = "#FFB000";
 const PURPLE = "#a78bfa";
+const NEWSLETTER_SESSION_KEY = "newsletter_edition_v1";
+const NEWSLETTER_SESSION_TTL_MS = 30 * 60 * 1000;
 
 export default function Newsletter() {
   const [edition, setEdition] = useState<NewsletterEdition | null>(null);
@@ -127,50 +136,56 @@ export default function Newsletter() {
   useEffect(() => {
     let cancelled = false;
     let retryTimer: number | undefined;
-    let activeController: AbortController | null = null;
 
-    const load = (attempt: number) => {
-      activeController?.abort();
-      const controller = new AbortController();
-      activeController = controller;
-      const timeout = window.setTimeout(() => controller.abort(), 10_000);
-      fetch(`${getApiBase()}/api/newsletter/edition?limit=15`, liveFetchInit({
-        signal: controller.signal,
-      }))
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (cancelled) return;
-          const storyCount = Array.isArray(data?.topStories) ? data.topStories.length : 0;
-          if (data?.latestEdition && storyCount > 0) {
-            setEdition(data);
-            setLoadStatus("ready");
-            return;
-          }
-          if (attempt < 3) {
-            retryTimer = window.setTimeout(() => load(attempt + 1), 2500);
-            return;
-          }
-          if (data?.latestEdition) {
-            setEdition(data);
-          }
-          setLoadStatus(storyCount > 0 ? "ready" : "error");
-        })
-        .catch(() => {
-          if (cancelled) return;
-          if (attempt < 3) {
-            retryTimer = window.setTimeout(() => load(attempt + 1), 2500);
-            return;
-          }
-          setLoadStatus("error");
-        })
-        .finally(() => window.clearTimeout(timeout));
+    const cached = readSessionCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS);
+    if (cached?.latestEdition && (cached.topStories?.length ?? 0) > 0) {
+      setEdition(cached);
+      setLoadStatus("ready");
+    }
+
+    const applyEdition = (data: NewsletterEdition | null) => {
+      if (!data?.latestEdition) return false;
+      const storyCount = Array.isArray(data.topStories) ? data.topStories.length : 0;
+      if (storyCount > 0) {
+        setEdition(data);
+        setLoadStatus("ready");
+        writeSessionCache(NEWSLETTER_SESSION_KEY, data);
+        return true;
+      }
+      return false;
     };
 
-    load(0);
+    const load = async (attempt: number) => {
+      try {
+        const res = await fetchWithTimeout(
+          `${getApiBase()}/api/newsletter/edition?limit=15`,
+          publicFetchInit(),
+          8_000,
+          { publicCache: true },
+        );
+        if (cancelled) return;
+        const data = res.ok ? ((await res.json()) as NewsletterEdition) : null;
+        if (applyEdition(data)) return;
+        if (data?.latestEdition) setEdition(data);
+        if (attempt < 1) {
+          retryTimer = window.setTimeout(() => void load(attempt + 1), 1500);
+          return;
+        }
+        setLoadStatus((data?.topStories?.length ?? 0) > 0 ? "ready" : "error");
+      } catch {
+        if (cancelled) return;
+        if (attempt < 1) {
+          retryTimer = window.setTimeout(() => void load(attempt + 1), 1500);
+          return;
+        }
+        if (!cached?.topStories?.length) setLoadStatus("error");
+      }
+    };
+
+    void load(0);
 
     return () => {
       cancelled = true;
-      activeController?.abort();
       if (retryTimer) window.clearTimeout(retryTimer);
     };
   }, []);
@@ -197,14 +212,23 @@ export default function Newsletter() {
   const researchFindings = (edition?.researchFindings || []).slice(0, 6);
   const brief = edition?.industryBrief;
 
-  // ── Benchmark report state ──────────────────────────────────────────────
+  // ── Benchmark report state (deferred — newsletter stories paint first) ───
   const [benchReport, setBenchReport] = useState<Record<string, unknown> | null>(null);
   useEffect(() => {
-    fetch(`${getApiBase()}/api/humanoid/report`, liveFetchInit())
-      .then(r => r.ok ? r.json() : null)
-      .then(d => d?.report ? setBenchReport(d.report) : null)
-      .catch(() => null);
-  }, []);
+    if (loadStatus !== "ready") return;
+    const timer = window.setTimeout(() => {
+      void fetchWithTimeout(
+        `${getApiBase()}/api/humanoid/report`,
+        publicFetchInit(),
+        8_000,
+        { publicCache: true },
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => (d?.report ? setBenchReport(d.report) : null))
+        .catch(() => null);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [loadStatus]);
   const headline = cleanScrapedText(edition?.latestEdition?.headline) || "Daily robot demand intelligence.";
   const subheadline = cleanScrapedText(edition?.latestEdition?.subheadline) || "Buying signals, deployment moves, funding events, and strategic hires — curated daily for robotics sales teams.";
   const macroItems = (brief?.macro_trends || []).slice(0, 4);

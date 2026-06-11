@@ -87,16 +87,57 @@ export function liveFetchInit(overrides: RequestInit = {}): RequestInit {
   };
 }
 
+/** Public cached surfaces (pipeline, newsletter) — allow CDN/browser stale-while-revalidate. */
+export function publicFetchInit(overrides: RequestInit = {}): RequestInit {
+  const { headers: hdr, ...rest } = overrides;
+  return {
+    mode: "cors",
+    ...rest,
+    headers: { ...(hdr as Record<string, string>) },
+  };
+}
+
+const SESSION_CACHE_PREFIX = "rr_surface_v1:";
+
+export type SessionCacheEntry<T> = { ts: number; data: T };
+
+export function readSessionCache<T>(key: string, maxAgeMs: number): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(`${SESSION_CACHE_PREFIX}${key}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SessionCacheEntry<T>;
+    if (!parsed?.data || Date.now() - parsed.ts > maxAgeMs) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+export function writeSessionCache<T>(key: string, data: T): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      `${SESSION_CACHE_PREFIX}${key}`,
+      JSON.stringify({ ts: Date.now(), data }),
+    );
+  } catch {
+    /* quota or private mode */
+  }
+}
+
 /** Abort slow proxy/API calls so pages can fall back instead of spinning forever. */
 export async function fetchWithTimeout(
   url: string,
   init: RequestInit = {},
   timeoutMs = 8_000,
+  opts?: { publicCache?: boolean },
 ): Promise<Response> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const baseInit = opts?.publicCache ? publicFetchInit(init) : liveFetchInit(init);
   try {
-    return await fetch(url, { ...liveFetchInit(init), signal: ctrl.signal });
+    return await fetch(url, { ...baseInit, signal: ctrl.signal });
   } finally {
     clearTimeout(timer);
   }

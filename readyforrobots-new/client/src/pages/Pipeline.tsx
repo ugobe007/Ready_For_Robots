@@ -17,7 +17,14 @@ import ScoutActionBar from "@/components/ScoutActionBar";
 import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { fetchWithTimeout, getApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  fetchWithTimeout,
+  getApiBase,
+  liveFetchInit,
+  publicFetchInit,
+  readSessionCache,
+  writeSessionCache,
+} from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
@@ -309,6 +316,52 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 35;
 const PIPELINE_LIMIT_PAID = 50;
+const PIPELINE_SESSION_KEY = "pipeline_feed_v1";
+const PIPELINE_SESSION_TTL_MS = 30 * 60 * 1000;
+const PIPELINE_TIMEOUT = 12_000;
+
+type PipelineFeedPayload = {
+  summary?: LeadSummary;
+  leads?: ApiLead[];
+  entitlements?: PipelineEntitlements;
+};
+
+function mapPipelineRows(apiRows: ApiLead[]): Deal[] {
+  const mapped: Deal[] = [];
+  for (const row of apiRows) {
+    try {
+      mapped.push(mapApiLeadToDeal(row) as Deal);
+    } catch {
+      /* skip malformed pipeline row */
+    }
+  }
+  return mapped;
+}
+
+function applyPipelineFeed(
+  payload: PipelineFeedPayload,
+  setters: {
+    setDeals: (v: Deal[]) => void;
+    setSelectedId: (fn: (prev: number | null) => number | null) => void;
+    setSummary: (v: LeadSummary | null) => void;
+    setEntitlements: (v: PipelineEntitlements | null) => void;
+    setMarketSnippet: (v: MarketSnippet) => void;
+  },
+) {
+  const rows = Array.isArray(payload.leads) ? payload.leads : [];
+  if (payload.entitlements) setters.setEntitlements(payload.entitlements);
+  if (payload.summary && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)) {
+    setters.setSummary(payload.summary);
+  }
+  if (rows.length > 0) {
+    const mapped = mapPipelineRows(rows);
+    setters.setDeals(mapped);
+    setters.setSelectedId((prev) => (prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null));
+    setters.setMarketSnippet(marketSnippetFromDeals(mapped));
+    return true;
+  }
+  return false;
+}
 const HUBSPOT_CONNECT_PATH = "/integrations/hubspot";
 const HUBSPOT_SIGNUP_PATH = `/signup?intent=hubspot&next=${encodeURIComponent("/integrations/hubspot")}`;
 
@@ -482,77 +535,47 @@ export default function Pipeline() {
   useEffect(() => {
     const base = getApiBase();
     let cancelled = false;
-
-    setLoadingLeads(true);
-    setLoadingSummary(true);
     setLoadErr("");
 
-    const PIPELINE_TIMEOUT = 15_000;
-    const headers = session?.access_token ? authHeader(session.access_token) : undefined;
+    const feedSetters = {
+      setDeals,
+      setSelectedId,
+      setSummary,
+      setEntitlements,
+      setMarketSnippet,
+    };
 
-    void fetchWithTimeout(`${base}/api/leads/pipeline`, liveFetchInit({ headers }), PIPELINE_TIMEOUT)
-      .then(async (res) => {
+    const cached = readSessionCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS);
+    const paintedFromCache = cached ? applyPipelineFeed(cached, feedSetters) : false;
+    setLoadingLeads(!paintedFromCache);
+    setLoadingSummary(!paintedFromCache);
+
+    const loadPipeline = async (token?: string) => {
+      const headers = token ? authHeader(token) : undefined;
+      const res = await fetchWithTimeout(
+        `${base}/api/leads/pipeline`,
+        publicFetchInit({ headers }),
+        PIPELINE_TIMEOUT,
+        { publicCache: true },
+      );
+      if (!res.ok) throw new Error("Could not load pipeline");
+      const payload = (await res.json()) as PipelineFeedPayload;
+      if (cancelled) return;
+      writeSessionCache(PIPELINE_SESSION_KEY, payload);
+      const painted = applyPipelineFeed(payload, feedSetters);
+      if (!painted && (payload.summary?.hot ?? 0) > 0) {
+        setDeals([]);
+        setSelectedId(null);
+      } else if (!painted) {
+        setDeals([]);
+        setSelectedId(null);
+      }
+    };
+
+    void loadPipeline(session?.access_token)
+      .catch((e) => {
         if (cancelled) return;
-        try {
-          if (!res.ok) throw new Error("Could not load pipeline");
-          const payload = (await res.json()) as {
-            summary?: LeadSummary;
-            leads?: ApiLead[];
-            entitlements?: PipelineEntitlements;
-          };
-          const rows = Array.isArray(payload.leads) ? payload.leads : [];
-          if (payload.entitlements) setEntitlements(payload.entitlements);
-          if (payload.summary && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)) {
-            setSummary(payload.summary);
-          }
-          const mapRows = (apiRows: ApiLead[]) => {
-            const mapped: Deal[] = [];
-            for (const row of apiRows) {
-              try {
-                mapped.push(mapApiLeadToDeal(row) as Deal);
-              } catch {
-                /* skip malformed pipeline row */
-              }
-            }
-            return mapped;
-          };
-
-          if (rows.length > 0) {
-            const mapped = mapRows(rows);
-            setDeals(mapped);
-            setSelectedId((prev) => (prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null));
-            setMarketSnippet(marketSnippetFromDeals(mapped));
-          } else if (payload.summary && ((payload.summary.hot ?? 0) > 0 || (payload.summary.total ?? 0) > 0)) {
-            try {
-              const fallbackRes = await fetchWithTimeout(
-                `${base}/api/leads?limit=25&tier=HOT`,
-                liveFetchInit({ headers }),
-                12_000,
-              );
-              if (fallbackRes.ok) {
-                const fallbackRows = (await fallbackRes.json()) as ApiLead[];
-                const mapped = mapRows(Array.isArray(fallbackRows) ? fallbackRows : []);
-                if (mapped.length > 0) {
-                  setDeals(mapped);
-                  setSelectedId(mapped[0]?.id ?? null);
-                  setMarketSnippet(marketSnippetFromDeals(mapped));
-                } else {
-                  setDeals([]);
-                  setSelectedId(null);
-                }
-              } else {
-                setDeals([]);
-                setSelectedId(null);
-              }
-            } catch {
-              setDeals([]);
-              setSelectedId(null);
-            }
-          } else {
-            setDeals([]);
-            setSelectedId(null);
-          }
-        } catch (e) {
+        if (!paintedFromCache) {
           const aborted = e instanceof DOMException && e.name === "AbortError";
           setLoadErr(
             aborted
@@ -563,21 +586,46 @@ export default function Pipeline() {
           );
           setDeals([]);
           setSelectedId(null);
-        } finally {
-          if (!cancelled) {
-            setLoadingLeads(false);
-            setLoadingSummary(false);
-          }
         }
       })
-      .catch(() => {
+      .finally(() => {
         if (!cancelled) {
-          setLoadErr("Could not load pipeline");
           setLoadingLeads(false);
           setLoadingSummary(false);
         }
       });
 
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Background entitlement refresh when auth resolves — no loading spinner.
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) return;
+    const base = getApiBase();
+    let cancelled = false;
+    void fetchWithTimeout(
+      `${base}/api/leads/pipeline`,
+      publicFetchInit({ headers: authHeader(token) }),
+      PIPELINE_TIMEOUT,
+      { publicCache: true },
+    )
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const payload = (await res.json()) as PipelineFeedPayload;
+        writeSessionCache(PIPELINE_SESSION_KEY, payload);
+        applyPipelineFeed(payload, {
+          setDeals,
+          setSelectedId,
+          setSummary,
+          setEntitlements,
+          setMarketSnippet,
+        });
+      })
+      .catch(() => { /* keep cached/anonymous feed */ });
     return () => {
       cancelled = true;
     };
@@ -658,11 +706,11 @@ export default function Pipeline() {
     return () => { cancelled = true; };
   }, [session?.access_token]);
 
-  // Lazy detail enrichment when a lead is selected.
+  // Lazy detail enrichment when a slim pipeline row is selected.
   useEffect(() => {
     if (!selectedId) return;
     const existing = deals.find((deal) => deal.id === selectedId);
-    if (existing?.researchUpdates) return;
+    if (existing?.leadHighlights) return;
     const base = getApiBase();
     let cancelled = false;
     (async () => {
@@ -670,8 +718,9 @@ export default function Pipeline() {
       try {
         const response = await fetchWithTimeout(
           `${base}/api/leads/by-id/${selectedId}`,
-          {},
+          publicFetchInit(),
           8_000,
+          { publicCache: true },
         );
         if (!response.ok) throw new Error(await response.text());
         const lead = (await response.json()) as ApiLead;

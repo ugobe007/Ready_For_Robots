@@ -726,6 +726,49 @@ def _build_share_blurb(
     )
 
 
+def _fmt_pipeline_card(
+    c: Company,
+    junk: bool,
+    junk_reason: str,
+    pri,
+) -> dict:
+    """Lightweight row for /pipeline list — detail loads via GET /api/leads/by-id/{id}."""
+    s = pick_primary_score(c.scores)
+    sigs = c.signals or []
+    top = _dedup_top_signals(sigs, 1)
+    sig = top[0] if top else None
+    industry_display = effective_industry_for_lead(c.name, c.industry, c.signals)
+    if not industry_display or industry_display.lower() in ("unknown", "other"):
+        industry_display = "New"
+    overall = round(float(s.overall_intent_score) if s else 0.0, 1)
+    share_summary = ""
+    if sig:
+        share_summary = format_signal_for_sales(sig.signal_text)[:320]
+    payload = {
+        "id": c.id,
+        "company_name": c.name,
+        "industry": industry_display,
+        "location_city": c.location_city,
+        "location_state": c.location_state,
+        "priority_tier": pri.tier,
+        "priority_score": round(pri.score, 1),
+        "is_junk": junk,
+        "junk_reason": junk_reason,
+        "score": {"overall_score": overall},
+        "share_summary": share_summary or None,
+        "pipeline_slim": True,
+    }
+    if sig:
+        payload["signals"] = [
+            {
+                "signal_type": sig.signal_type,
+                "signal_label": _signal_label(sig.signal_type),
+                "display_text": format_signal_for_sales(sig.signal_text),
+            }
+        ]
+    return payload
+
+
 def _fmt_company(
     c: Company,
     junk: bool,
@@ -1309,7 +1352,12 @@ def _fetch_staged_by_tier(
     return out
 
 
-def _staged_tuples_to_feed_rows(staged: list) -> list:
+def _staged_tuples_to_feed_rows(staged: list, *, slim: bool = False) -> list:
+    if slim:
+        return [
+            _fmt_pipeline_card(c, junk, junk_reason, pri)
+            for c, junk, junk_reason, pri in staged
+        ]
     return [
         _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
         for c, junk, junk_reason, pri in staged
@@ -1332,8 +1380,8 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
     exclude.update(c.id for c, *_ in warm_staged)
     cold_staged = _fetch_staged_by_tier(db, "COLD", limit=cold_n, exclude_ids=exclude)
 
-    hot_rows = _staged_tuples_to_feed_rows(hot_staged)
-    warm_rows = _staged_tuples_to_feed_rows(warm_staged)
+    hot_rows = _staged_tuples_to_feed_rows(hot_staged, slim=True)
+    warm_rows = _staged_tuples_to_feed_rows(warm_staged, slim=True)
 
     def _has_vertical(leads: list, vertical: str) -> bool:
         return any(
@@ -1357,12 +1405,12 @@ def build_public_pipeline_feed(db: Session, *, limit: int = PIPELINE_FEED_LIMIT)
     if inject:
         inject_rows = [
             r
-            for r in _staged_tuples_to_feed_rows(inject)
+            for r in _staged_tuples_to_feed_rows(inject, slim=True)
             if (r.get("priority_tier") or "").upper() == "WARM"
         ]
         warm_rows = (inject_rows + warm_rows)[:warm_n]
 
-    cold_rows = _staged_tuples_to_feed_rows(cold_staged)
+    cold_rows = _staged_tuples_to_feed_rows(cold_staged, slim=True)
     return hot_rows[:hot_n] + warm_rows[:warm_n] + cold_rows[:cold_n]
 
 
@@ -2173,35 +2221,14 @@ def leads_pipeline_feed(
 
     schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
 
-    from app.db_timeout import run_db
-
-    def _live_pipeline_feed() -> dict:
-        from app.database import SessionLocal
-
-        with SessionLocal() as live_db:
-            leads = build_public_pipeline_feed(live_db, limit=PIPELINE_FEED_LIMIT)
-            summary_raw = _compute_pipeline_summary(live_db, True)
-            return {
-                "leads": leads,
-                "summary": _summary_for_homepage(summary_raw),
-                "summary_raw": summary_raw,
-                "rotation_slot": _current_rotation_slot(),
-                "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
-                "built_at": datetime.now(timezone.utc).isoformat(),
-                "cache_pending": False,
-                "live_fallback": True,
-            }
-
-    try:
-        live = run_db(_live_pipeline_feed, timeout_sec=18, label="leads/pipeline-live")
-        if live and (live.get("leads") or []):
-            hydrate_pipeline_feed_cache(live)
-            return _finish(live)
-    except TimeoutError:
-        logger.warning("leads/pipeline live fallback timed out")
-
     empty = _empty_summary_payload()
-    return _finish({"summary": empty, "leads": [], "cache_pending": True})
+    return _finish({
+        "summary": empty,
+        "leads": [],
+        "cache_pending": True,
+        "rotation_slot": _current_rotation_slot(),
+        "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
+    })
 
 
 @router.get("/homepage")

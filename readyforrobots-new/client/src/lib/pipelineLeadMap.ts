@@ -8,6 +8,7 @@ export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qu
 
 export interface ApiLead {
   id: number;
+  pipeline_slim?: boolean;
   company_name?: string;
   industry?: string | null;
   inferred_contact_email?: string | null;
