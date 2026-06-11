@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BarChart3, Mail, Radio, Zap, TrendingUp, AlertTriangle, Eye } from "lucide-react";
+import { ArrowRight, BarChart3, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import {
@@ -118,6 +118,46 @@ const AMBER = "#FFB000";
 const PURPLE = "#a78bfa";
 const NEWSLETTER_SESSION_KEY = "newsletter_edition_v1";
 const NEWSLETTER_SESSION_TTL_MS = 30 * 60 * 1000;
+
+/** Supabase-style section chrome — label + flow, no padded panels */
+function NlSection({
+  kicker,
+  title,
+  kickerColor = TEAL,
+  action,
+  children,
+  className = "",
+}: {
+  kicker: string;
+  title?: string;
+  kickerColor?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`border-b border-white/[0.08] pb-8 mb-8 last:border-b-0 ${className}`}>
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: kickerColor }}>{kicker}</p>
+          {title ? (
+            <h2 className="mt-1 text-base font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{title}</h2>
+          ) : null}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function NlDividerList({ children }: { children: React.ReactNode }) {
+  return <ul className="divide-y divide-white/[0.06]">{children}</ul>;
+}
+
+function NlRow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <li className={`py-3 first:pt-0 last:pb-0 ${className}`}>{children}</li>;
+}
 
 export default function Newsletter() {
   const [edition, setEdition] = useState<NewsletterEdition | null>(null);
@@ -239,359 +279,275 @@ export default function Newsletter() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
       <Header />
-      <main className="flex-1 px-4 pb-24 pt-28 lg:px-6">
-        <div className="mx-auto max-w-6xl">
+      <main className="flex-1 px-4 pb-20 pt-24 lg:px-6">
+        <div className="mx-auto max-w-3xl">
 
           {/* ── Hero ─────────────────────────────────────────────────── */}
-          <section
-            className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 p-6 lg:p-10"
-            style={{ background: "linear-gradient(135deg,rgba(3,218,197,0.07),rgba(124,58,237,0.07),rgba(255,176,0,0.04))" }}
-          >
-            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full blur-3xl" style={{ background: "rgba(3,218,197,0.10)" }} />
-            <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px] lg:items-end">
-              <div>
-                <p className="mb-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
-                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: TEAL }} />
-                  Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"} · {edition?.latestEdition?.date || "Updated daily"}
-                </p>
-                <h1 className="max-w-3xl text-3xl font-extrabold leading-tight text-white lg:text-5xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {headline}
-                </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
-                  {subheadline}
-                </p>
-              </div>
-              <form onSubmit={subscribe} className="rounded-2xl border border-white/10 p-5" style={{ background: "rgba(13,5,32,0.65)" }}>
-                <Mail className="mb-3 h-4 w-4" style={{ color: TEAL }} />
-                <p className="text-sm font-bold text-white">Subscribe free</p>
-                <p className="mt-1 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>Signal brief in your inbox when the edition updates.</p>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="work email"
-                  className="mt-4 w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
-                  style={{ background: "rgba(255,255,255,0.04)" }}
-                />
-                <button
-                  type="submit"
-                  disabled={subStatus === "submitting"}
-                  className="mt-3 w-full rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50"
-                  style={{ color: AMBER, border: `1.5px solid ${AMBER}`, background: "transparent" }}
-                >
-                  {subStatus === "submitting" ? "Subscribing…" : "Subscribe Free"}
-                </button>
-                {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>You're subscribed.</p>}
-                {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
-              </form>
-            </div>
-          </section>
+          <header className="mb-8 border-b border-white/[0.08] pb-8">
+            <p className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: TEAL }}>
+              <span className="h-1 w-1 rounded-full" style={{ background: TEAL }} />
+              Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"} · {edition?.latestEdition?.date || "Updated daily"}
+            </p>
+            <h1 className="text-2xl font-semibold leading-snug text-white lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              {headline}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-white/55">{subheadline}</p>
 
-          {/* ── Stats bar ────────────────────────────────────────────── */}
-          <section className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {[
-              { label: "Edition", value: edition?.latestEdition?.edition || "—" },
-              { label: "Updated", value: edition?.latestEdition?.date || "Daily" },
-              { label: "Hot leads", value: String(edition?.summary?.total_leads ?? stories.length), accent: AMBER },
-              { label: "Stories", value: String(stories.length || (loadStatus === "loading" ? "…" : "—")), accent: TEAL },
-            ].map(({ label, value, accent }) => (
-              <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">{label}</p>
-                <p className="mt-2 font-mono text-xl font-black" style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-              </div>
-            ))}
-          </section>
+            <dl className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-white/40">
+              {[
+                { label: "Edition", value: edition?.latestEdition?.edition || "—" },
+                { label: "Updated", value: edition?.latestEdition?.date || "Daily" },
+                { label: "Hot leads", value: String(edition?.summary?.total_leads ?? stories.length) },
+                { label: "Stories", value: String(stories.length || (loadStatus === "loading" ? "…" : "—")) },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-baseline gap-2">
+                  <dt className="uppercase tracking-wider text-white/30">{label}</dt>
+                  <dd className="font-mono font-medium text-white/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</dd>
+                </div>
+              ))}
+            </dl>
 
-          {/* ── Loading state ─────────────────────────────────────────── */}
+            <form onSubmit={subscribe} className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="work email"
+                className="min-w-0 flex-1 border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/25"
+              />
+              <button
+                type="submit"
+                disabled={subStatus === "submitting"}
+                className="shrink-0 border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
+                style={{ color: AMBER, borderColor: `${AMBER}66` }}
+              >
+                {subStatus === "submitting" ? "Subscribing…" : "Subscribe"}
+              </button>
+            </form>
+            {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>Subscribed.</p>}
+            {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
+          </header>
+
           {loadStatus === "loading" && (
-            <section className="mb-8 rounded-3xl border border-white/10 p-8 text-center" style={{ background: "rgba(255,255,255,0.025)" }}>
-              <div className="mx-auto mb-4 h-10 w-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${TEAL} transparent transparent transparent` }} />
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: TEAL }}>Building your intelligence brief</p>
-              <p className="text-sm text-white/40">Loading today&apos;s brief from the archive… {loadSec > 3 ? `${loadSec}s` : ""}</p>
-            </section>
+            <p className="mb-8 border-b border-white/[0.08] pb-8 text-sm text-white/45">
+              Loading today&apos;s brief… {loadSec > 3 ? `${loadSec}s` : ""}
+            </p>
           )}
 
           {loadStatus === "error" && (
-            <section className="mb-8 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.04)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: AMBER }}>Brief is refreshing</p>
-              <p className="text-sm text-white/40">SCOUT is rebuilding today&apos;s edition. Subscribe above, or reload in a moment for the full brief.</p>
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold"
-                style={{ color: TEAL, borderColor: "rgba(3,218,197,0.35)" }}
-              >
-                Reload page
+            <div className="mb-8 border-b border-white/[0.08] pb-8 text-sm text-white/45">
+              <p>Brief is refreshing — reload in a moment.</p>
+              <button type="button" onClick={() => window.location.reload()} className="mt-3 text-xs font-semibold" style={{ color: TEAL }}>
+                Reload
               </button>
-            </section>
+            </div>
           )}
 
-          {/* ── AI Executive Brief ───────────────────────────────────── */}
           {brief?.executive_take && (
-            <section className="mb-8 rounded-3xl border border-white/10 p-6 lg:p-8" style={{ background: "rgba(124,58,237,0.06)" }}>
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: PURPLE }}>AI market analysis</p>
-              <p className="text-base leading-relaxed text-white/75 lg:text-lg">{cleanScrapedText(brief.executive_take)}</p>
+            <NlSection kicker="AI market analysis" kickerColor={PURPLE}>
+              <p className="text-sm leading-relaxed text-white/70">{cleanScrapedText(brief.executive_take)}</p>
 
-              {/* Macro trends + Strategic implications side by side */}
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                {macroItems.length > 0 && (
-                  <div>
-                    <div className="mb-3 flex items-center gap-2">
-                      <TrendingUp className="h-3.5 w-3.5" style={{ color: TEAL }} />
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: TEAL }}>Macro trends</p>
-                    </div>
-                    <div className="space-y-2">
-                      {macroItems.map((item, i) => {
-                        const title = briefTextTitle(item);
-                        const detail = briefTextDetail(item);
-                        return (
-                          <div key={i} className="rounded-xl border border-white/8 p-3" style={{ background: "rgba(3,218,197,0.04)" }}>
-                            {title && <p className="text-sm font-semibold text-white">{title}</p>}
-                            {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {stratItems.length > 0 && (
-                  <div>
-                    <div className="mb-3 flex items-center gap-2">
-                      <Radio className="h-3.5 w-3.5" style={{ color: AMBER }} />
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: AMBER }}>Strategic implications</p>
-                    </div>
-                    <div className="space-y-2">
-                      {stratItems.map((item, i) => {
-                        const title = briefTextTitle(item);
-                        const detail = briefTextDetail(item);
-                        return (
-                          <div key={i} className="rounded-xl border border-white/8 p-3" style={{ background: "rgba(255,176,0,0.04)" }}>
-                            {title && <p className="text-xs font-bold uppercase tracking-wider" style={{ color: AMBER }}>{title}</p>}
-                            {detail && <p className="mt-1 text-xs leading-relaxed text-white/55">{detail}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Risks + Watch next */}
-              {(riskItems.length > 0 || watchItems.length > 0) && (
-                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {riskItems.length > 0 && (
-                    <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(248,113,113,0.04)" }}>
-                      <div className="mb-2 flex items-center gap-2">
-                        <AlertTriangle className="h-3.5 w-3.5 text-red-400/70" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-red-400/70">Risks to watch</p>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {riskItems.map((r, i) => (
-                          <li key={i} className="text-xs leading-relaxed text-white/45 before:mr-1.5 before:content-['·']">{r}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {watchItems.length > 0 && (
-                    <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(3,218,197,0.03)" }}>
-                      <div className="mb-2 flex items-center gap-2">
-                        <Eye className="h-3.5 w-3.5" style={{ color: TEAL }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: TEAL }}>Watch next</p>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {watchItems.map((w, i) => (
-                          <li key={i} className="text-xs leading-relaxed text-white/45 before:mr-1.5 before:content-['·']">{w}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+              {macroItems.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Macro trends</p>
+                  <NlDividerList>
+                    {macroItems.map((item, i) => {
+                      const title = briefTextTitle(item);
+                      const detail = briefTextDetail(item);
+                      return (
+                        <NlRow key={i}>
+                          {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                          {detail && <p className="mt-1 text-sm leading-relaxed text-white/50">{detail}</p>}
+                        </NlRow>
+                      );
+                    })}
+                  </NlDividerList>
                 </div>
               )}
-            </section>
+
+              {stratItems.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Strategic implications</p>
+                  <NlDividerList>
+                    {stratItems.map((item, i) => {
+                      const title = briefTextTitle(item);
+                      const detail = briefTextDetail(item);
+                      return (
+                        <NlRow key={i}>
+                          {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                          {detail && <p className="mt-1 text-sm leading-relaxed text-white/50">{detail}</p>}
+                        </NlRow>
+                      );
+                    })}
+                  </NlDividerList>
+                </div>
+              )}
+
+              {riskItems.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-400/80">Risks to watch</p>
+                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/50">
+                    {riskItems.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {watchItems.length > 0 && (
+                <div className="mt-6">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Watch next</p>
+                  <ul className="space-y-1.5 text-sm leading-relaxed text-white/50">
+                    {watchItems.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </NlSection>
           )}
 
-          {/* ── SCOUT research findings ───────────────────────────────── */}
           {researchFindings.length > 0 && (
-            <section className="mb-8 rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "rgba(255,176,0,0.04)" }}>
-              <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: AMBER }}>SCOUT research findings</p>
-                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Account changes worth actioning today</h2>
-                </div>
-                <Link href="/pipeline" className="inline-flex items-center gap-2 text-xs font-bold" style={{ color: AMBER }}>Open pipeline <ArrowRight className="h-3.5 w-3.5" /></Link>
-              </div>
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <NlSection
+              kicker="SCOUT research findings"
+              title="Account changes worth actioning today"
+              kickerColor={AMBER}
+              action={(
+                <Link href="/pipeline" className="text-xs font-semibold text-white/45 hover:text-white/70">
+                  Pipeline <ArrowRight className="inline h-3 w-3" />
+                </Link>
+              )}
+            >
+              <NlDividerList>
                 {researchFindings.map((finding, index) => (
-                  <article key={`${finding.company_id || finding.company}-${index}`} className="rounded-2xl border border-amber-300/12 p-4" style={{ background: "rgba(13,5,32,0.55)" }}>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="rounded-full border border-amber-300/22 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: AMBER, background: "rgba(255,176,0,0.06)" }}>
+                  <NlRow key={`${finding.company_id || finding.company}-${index}`}>
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <span className="text-sm font-medium text-white">{cleanScrapedText(finding.company) || "Lead"}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-white/35">
                         {cleanScrapedText(finding.category) || "Research"}
+                        {finding.industry ? ` · ${cleanScrapedText(finding.industry)}` : ""}
                       </span>
-                      {typeof finding.significance_score === "number" && (
-                        <span className="font-mono text-[11px] font-bold" style={{ color: AMBER }}>{Math.round(finding.significance_score * 100)} signal</span>
-                      )}
                     </div>
-                    <h3 className="text-sm font-bold text-white">{cleanScrapedText(finding.company) || "Lead"}</h3>
-                    <p className="mt-1.5 text-xs leading-relaxed" style={{ color: AMBER }}>{cleanScrapedText(finding.summary || finding.title)}</p>
-                    {finding.industry && <p className="mt-2 text-[11px] text-white/25">{cleanScrapedText(finding.industry)}</p>}
-                    <Link href={finding.pipeline_url || "/pipeline"} className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: AMBER }}>
-                      {finding.action_label || "Act now"} <Zap className="h-3 w-3" />
+                    <p className="mt-1 text-sm leading-relaxed text-white/55">
+                      {cleanScrapedText(finding.summary || finding.title)}
+                    </p>
+                    <Link href={finding.pipeline_url || "/pipeline"} className="mt-2 inline-block text-xs font-semibold text-white/45 hover:text-white/70">
+                      {finding.action_label || "Open in pipeline"} →
                     </Link>
-                  </article>
+                  </NlRow>
                 ))}
-              </div>
-            </section>
+              </NlDividerList>
+            </NlSection>
           )}
 
-          {/* ── Humanoid benchmark report ─────────────────────────────── */}
           {benchReport && (
-            <section className="mb-12">
-              <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#a78bfa" }}>Robot Intelligence · Benchmark</p>
-                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                    {String(benchReport.title ?? "Humanoid Robot Benchmark")}
-                  </h2>
-                </div>
-                <Link href="/robots" className="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white/70">
-                  Full index <ArrowRight className="h-3.5 w-3.5" />
+            <NlSection
+              kicker="Robot intelligence benchmark"
+              title={String(benchReport.title ?? "Humanoid robot benchmark")}
+              kickerColor={PURPLE}
+              action={(
+                <Link href="/robots" className="text-xs font-semibold text-white/45 hover:text-white/70">
+                  Full index <ArrowRight className="inline h-3 w-3" />
                 </Link>
-              </div>
-
-              {/* Top 3 */}
-              <div className="grid gap-3 sm:grid-cols-3 mb-5">
-                {((benchReport.top_3 as Array<{name: string; vendor: string; score: number; status: string}>) ?? []).map((r, i) => (
-                  <div key={r.name} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(124,58,237,0.06)" }}>
-                    <p className="text-[10px] text-white/30 mb-1">{["🥇 Leader", "🥈 2nd", "🥉 3rd"][i]}</p>
-                    <p className="font-bold text-white text-sm">{r.name}</p>
-                    <p className="text-[11px] text-white/40">{r.vendor}</p>
-                    <p className="text-2xl font-black mt-2" style={{ color: i === 0 ? "#34d399" : i === 1 ? "#a78bfa" : "#fbbf24" }}>{r.score}</p>
-                    <p className="text-[9px] text-white/25 uppercase tracking-wider">/ 100</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Key findings */}
-              <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.02)" }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">Key findings</p>
-                <ul className="space-y-2">
-                  {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[13px] text-white/55">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 bg-violet-400" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-4 pt-4 border-t border-white/7 flex flex-wrap gap-4 text-[11px] text-white/35">
-                  <span>{String(benchReport.total_robots ?? 0)} robots scored</span>
-                  <span>{String(benchReport.available_count ?? 0)} commercially available</span>
-                  <span>{String(benchReport.pilot_count ?? 0)} in pilot</span>
+              )}
+            >
+              {((benchReport.top_3 as Array<{ name: string; vendor: string; score: number; status: string }>) ?? []).length > 0 && (
+                <div className="mb-6">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Top ranked</p>
+                  <NlDividerList>
+                    {((benchReport.top_3 as Array<{ name: string; vendor: string; score: number; status: string }>) ?? []).map((r, i) => (
+                      <NlRow key={r.name}>
+                        <div className="flex items-baseline justify-between gap-4">
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wider text-white/30 mr-2">
+                              {["1", "2", "3"][i]}
+                            </span>
+                            <span className="text-sm font-medium text-white">{r.name}</span>
+                            <span className="ml-2 text-sm text-white/40">{r.vendor}</span>
+                          </div>
+                          <span className="font-mono text-sm font-medium text-white/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                            {r.score}
+                          </span>
+                        </div>
+                      </NlRow>
+                    ))}
+                  </NlDividerList>
                 </div>
-              </div>
-            </section>
+              )}
+
+              {((benchReport.key_findings as string[]) ?? []).length > 0 && (
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">Key findings</p>
+                  <ul className="space-y-2 text-sm leading-relaxed text-white/60">
+                    {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <p className="mt-4 text-xs text-white/35">
+                {String(benchReport.total_robots ?? 0)} robots scored · {String(benchReport.available_count ?? 0)} commercially available · {String(benchReport.pilot_count ?? 0)} in pilot
+              </p>
+            </NlSection>
           )}
 
           {loadStatus === "ready" && stories.length === 0 && (
-            <section className="mb-8 rounded-3xl border border-white/10 p-6 text-center" style={{ background: "rgba(255,176,0,0.04)" }}>
-              <p className="text-sm text-white/50">Today&apos;s signal stories are still syncing. The brief header loaded — reload in a moment for full accounts.</p>
-            </section>
+            <p className="mb-8 text-sm text-white/45">Stories are still syncing — reload in a moment.</p>
           )}
 
-          {/* ── Top stories ───────────────────────────────────────────── */}
           {stories.length > 0 && (
-            <>
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>Signal intelligence · {stories.length} accounts</p>
-                  <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Companies moving toward automation now</h2>
-                </div>
-                <Link href="/pipeline" className="hidden md:inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white/70">
-                  Full pipeline <ArrowRight className="h-3.5 w-3.5" />
+            <NlSection
+              kicker={`Signal intelligence · ${stories.length} accounts`}
+              title="Companies moving toward automation now"
+              action={(
+                <Link href="/pipeline" className="text-xs font-semibold text-white/45 hover:text-white/70">
+                  Pipeline <ArrowRight className="inline h-3 w-3" />
                 </Link>
-              </div>
-
-              <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              )}
+            >
+              <NlDividerList>
                 {stories.map((story, index) => {
                   const bullets = signalBullets(story.fullText);
                   const color = tierColor(story.category);
+                  const meta = [story.economics, story.impact, story.roi]
+                    .map((chip) => cleanScrapedText(chip))
+                    .filter(Boolean)
+                    .join(" · ");
                   return (
-                    <article
-                      key={`${story.company || story.headline || index}`}
-                      className="flex flex-col rounded-3xl border border-white/8 p-5 transition-colors hover:border-white/16"
-                      style={{ background: "rgba(255,255,255,0.025)" }}
-                    >
-                      {/* Header row */}
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <span
-                          className="inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest"
-                          style={{ color, borderColor: `${color}44`, background: `${color}0d` }}
-                        >
+                    <NlRow key={`${story.company || story.headline || index}`}>
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="text-sm font-medium text-white">{cleanScrapedText(story.company || story.headline)}</span>
+                        <span className="text-[10px] uppercase tracking-wider" style={{ color: `${color}cc` }}>
                           {cleanScrapedText(story.category) || "Signal"}
                         </span>
-                        {story.signalStrength && (
-                          <span className="font-mono text-xs font-bold text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                            {story.signalStrength}/10
-                          </span>
-                        )}
                       </div>
-
-                      {/* Company + headline */}
-                      <h2 className="text-lg font-extrabold leading-snug text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                        {cleanScrapedText(story.company || story.headline)}
-                      </h2>
-                      <p className="mt-2 text-sm leading-relaxed text-white/50">
-                        {leadPreviewSentences(
-                          story.summary || story.snippet,
-                          4,
-                          650,
-                        ) || "SCOUT is tracking automation signals for this account."}
+                      <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+                        {leadPreviewSentences(story.summary || story.snippet, 3, 480)
+                          || "SCOUT is tracking automation signals for this account."}
                       </p>
-
-                      {/* Signal evidence bullets */}
                       {bullets.length > 0 && (
-                        <ul className="mt-3 space-y-1.5">
+                        <ul className="mt-2 space-y-1 text-sm text-white/45">
                           {bullets.map((b, bi) => (
-                            <li key={bi} className="flex items-start gap-2 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
-                              <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: color }} />
-                              {b}
-                            </li>
+                            <li key={bi}>{b}</li>
                           ))}
                         </ul>
                       )}
-
-                      {/* Meta chips */}
-                      <div className="mt-auto pt-4 flex flex-wrap items-center gap-2">
-                        {[story.economics, story.impact].map((chip) => cleanScrapedText(chip)).filter(Boolean).map((chip) => (
-                          <span key={chip} className="rounded-lg border border-white/8 px-2.5 py-1 text-[11px] font-medium text-white/35" style={{ background: "rgba(13,5,32,0.5)" }}>
-                            {chip}
-                          </span>
-                        ))}
-                        {story.roi && (
-                          <span className="rounded-lg border px-2.5 py-1 text-[11px] font-bold" style={{ color, borderColor: `${color}33`, background: `${color}0a` }}>
-                            {cleanScrapedText(story.roi)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* CTA */}
-                      <div className="mt-3 border-t border-white/6 pt-3">
-                        <Link
-                          href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold transition-colors hover:opacity-80"
-                          style={{ color }}
-                        >
-                          Open in pipeline <ArrowRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
-                    </article>
+                      {meta && <p className="mt-2 text-xs text-white/35">{meta}</p>}
+                      <Link
+                        href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"}
+                        className="mt-2 inline-block text-xs font-semibold text-white/45 hover:text-white/70"
+                      >
+                        Open in pipeline →
+                      </Link>
+                    </NlRow>
                   );
                 })}
-              </section>
-            </>
+              </NlDividerList>
+            </NlSection>
           )}
 
-          {/* ── Footer CTA ───────────────────────────────────────────── */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-5 text-sm">
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/[0.08] pt-6 text-sm text-white/40">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
               Activate SCOUT from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
