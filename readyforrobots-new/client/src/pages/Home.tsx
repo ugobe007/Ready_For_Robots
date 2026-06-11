@@ -232,8 +232,8 @@ export default function Home() {
           style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }}
         />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-center">
+        <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] gap-10 xl:gap-12 items-center">
           <div className="min-w-0">
             {/* Live benchmark — product intelligence (links to /robots) */}
             <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>

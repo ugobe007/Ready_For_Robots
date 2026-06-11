@@ -39,7 +39,17 @@ const SCOUT_KEYWORDS = [
   "delivery",
   "buying signal",
   "Robot fit",
+  "Outreach",
+  "vendor selection",
+  "procurement",
 ];
+
+type ParsedSummary = {
+  opener: string;
+  drivers: string;
+  schedule: string;
+  robotFit: string;
+};
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -66,48 +76,33 @@ function highlightTerms(text: string, extraTerms: string[] = []) {
   });
 }
 
-const FALLBACK: HomepageLeadRow[] = [
-  {
-    id: -1,
-    company_name: "Lineage Logistics",
-    industry: "Logistics",
-    priority_tier: "HOT",
-    score: { overall_score: 84 },
-    share_summary:
-      "Lineage is expanding cold-chain capacity while labor stays tight across DC operations — a strong window for AMRs and pallet automation before the next RFP cycle.",
-    signals: [{ signal_label: "Expansion", display_text: "New distribution centers and automation CapEx signals." }],
-    robot_types_needed: ["AMR", "Palletizing"],
-  },
-  {
-    id: -2,
-    company_name: "Hyatt Hotels Corp.",
-    industry: "Hospitality",
-    priority_tier: "HOT",
-    score: { overall_score: 79 },
-    share_summary:
-      "Housekeeping labor pressure and multi-property expansion are pushing Hyatt toward service robots and back-of-house automation with near-term pilot budgets.",
-    signals: [{ signal_label: "Labor", display_text: "Staffing crisis and property expansion in key markets." }],
-    robot_types_needed: ["Service robot", "Delivery AMR"],
-  },
-  {
-    id: -3,
-    company_name: "Pepsi Beverage Co.",
-    industry: "Food Processing",
-    priority_tier: "WARM",
-    score: { overall_score: 71 },
-    share_summary:
-      "OSHA pressure on packaging lines plus CapEx mentions point to collaborative arms and line-side automation — buyer intent is building, not yet at fleet scale.",
-    signals: [{ signal_label: "Compliance", display_text: "OSHA citation and packaging line automation interest." }],
-    robot_types_needed: ["Collaborative arm"],
-  },
-];
+function parseShareSummary(summary: string): ParsedSummary {
+  const raw = (summary || "").trim();
+  if (!raw) return { opener: "", drivers: "", schedule: "", robotFit: "" };
 
-function leadWriteup(lead: HomepageLeadRow): string {
-  const summary = leadPreviewSentences(lead.share_summary, 3, 420);
-  if (summary) return summary;
-  const signal = cleanAndClampText(lead.signals?.[0]?.display_text, 200);
-  if (signal) return signal;
-  return cleanAndClampText(lead.core_need, 200) || "SCOUT scored high automation intent from live market signals.";
+  const sentences = raw.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+  let opener = sentences[0] || "";
+  let drivers = "";
+  let schedule = "";
+  let robotFit = "";
+
+  for (const sentence of sentences.slice(1)) {
+    if (/what'?s driving it/i.test(sentence)) {
+      drivers = sentence.replace(/^what'?s driving it:\s*/i, "").replace(/\.$/, "").trim();
+    } else if (/good fit for/i.test(sentence)) {
+      robotFit = sentence.replace(/^good fit for\s*/i, "").replace(/\.$/, "").trim();
+    } else if (/worth engaging/i.test(sentence)) {
+      /* decision-maker line — skip */
+    } else if (
+      /vendor selection|partner conversations|build-out|procurement|high-intent|evaluation cycles|timing of the project|roughly \d+/i.test(
+        sentence,
+      )
+    ) {
+      schedule = sentence.replace(/\.$/, "").trim();
+    }
+  }
+
+  return { opener, drivers, schedule, robotFit };
 }
 
 function signalLine(lead: HomepageLeadRow): string {
@@ -116,6 +111,56 @@ function signalLine(lead: HomepageLeadRow): string {
   if (label && text) return `${label} · ${text}`;
   if (text) return text;
   return cleanAndClampText(lead.industry, 80) || "Buying signal detected";
+}
+
+function whySalesLeadLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
+  const why = lead.lead_highlights?.why_lead?.find((item) => item && item.trim());
+  if (why) return cleanAndClampText(why, 280) || why;
+  if (parsed.opener) return parsed.opener;
+  const summary = leadPreviewSentences(lead.share_summary, 2, 320);
+  if (summary) return summary;
+  const problem = cleanAndClampText(lead.lead_highlights?.specific_problem, 220);
+  if (problem) return problem;
+  const need = cleanAndClampText(lead.core_need, 200);
+  if (need) return need;
+  const tier = (lead.priority_tier || "HOT").toUpperCase();
+  return `SCOUT classified this as a ${tier} lead from live automation intent signals.`;
+}
+
+function driversLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
+  if (parsed.drivers) return parsed.drivers;
+  const labels = (lead.signals || [])
+    .map((s) => s.signal_label?.trim())
+    .filter((label): label is string => Boolean(label));
+  const unique = [...new Set(labels)].slice(0, 4);
+  if (unique.length) return unique.join(" · ");
+  const reasons = (lead.priority_reasons || []).filter(Boolean).slice(0, 3);
+  if (reasons.length) return reasons.join(" · ");
+  return "Automation intent, operational pressure, and deployment signals in the corpus.";
+}
+
+function scheduleLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
+  const pt = lead.project_timing;
+  if (pt?.day_min != null && pt?.day_max != null) {
+    const label = pt.label ? ` (${pt.label})` : "";
+    return `Outreach window: ${pt.day_min}–${pt.day_max} days${label}.`;
+  }
+  if (pt?.label) {
+    return `Project timing: ${pt.label}.`;
+  }
+  if (parsed.schedule) return parsed.schedule;
+  const tier = (lead.priority_tier || "WARM").toUpperCase();
+  if (tier === "HOT") {
+    return "High-intent window — partner conversations often start within 60–90 days.";
+  }
+  return "Evaluation and vendor selection cycles typically run 90–210 days.";
+}
+
+function robotFitLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
+  const robots = (lead.robot_types_needed || []).slice(0, 3);
+  if (robots.length) return robots.join(" · ");
+  if (parsed.robotFit) return parsed.robotFit;
+  return "";
 }
 
 function scoreOf(lead: HomepageLeadRow): number | string {
@@ -128,6 +173,56 @@ const tierColors: Record<string, string> = {
   WARM: "#FFB000",
   COLD: "#a78bfa",
 };
+
+const FALLBACK: HomepageLeadRow[] = [
+  {
+    id: -1,
+    company_name: "Lineage Logistics",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    score: { overall_score: 84 },
+    share_summary:
+      "Lineage is expanding cold-chain capacity while labor stays tight across DC operations. What's driving it: public automation news, new locations or capacity growth, and fresh investment to deploy. Vendor selection could move in the next 60–90 days. Good fit for mobile robots (AMRs), palletizing robots, and pick-and-place robots.",
+    priority_reasons: ["Expansion signal", "Labor shortage", "CapEx intent"],
+    project_timing: { label: "vendor selection", day_min: 60, day_max: 90, source: "estimated" },
+    signals: [{ signal_label: "Expansion", display_text: "New distribution centers and automation CapEx signals." }],
+    robot_types_needed: ["Mobile robots (AMRs)", "Palletizing robots"],
+  },
+  {
+    id: -2,
+    company_name: "Hyatt Hotels Corp.",
+    industry: "Hospitality",
+    priority_tier: "HOT",
+    score: { overall_score: 79 },
+    share_summary:
+      "Hyatt is piloting service robots as housekeeping labor pressure builds across flagship properties. What's driving it: staffing pressure, new locations or capacity growth, and robots already going in. Partner conversations often start within 75–120 days. Good fit for service robots, cleaning robots, and delivery robots.",
+    priority_reasons: ["Labor shortage", "Pilot deployment"],
+    project_timing: { label: "pilot expansion", day_min: 75, day_max: 120, source: "estimated" },
+    signals: [{ signal_label: "Labor", display_text: "Staffing crisis and property expansion in key markets." }],
+    robot_types_needed: ["Service robots", "Cleaning robots"],
+  },
+  {
+    id: -3,
+    company_name: "White Castle",
+    industry: "Food Service",
+    priority_tier: "WARM",
+    score: { overall_score: 71 },
+    share_summary:
+      "White Castle to set up 1,000 automated kiosks to sell sliders. What's driving it: public automation news, new locations or capacity growth, and fresh investment to deploy. Build-out and evaluation cycles here typically run 90–210 days. Good fit for humanoid robots, robotic chefs / automated kitchen systems, and kitchen automation robots.",
+    priority_reasons: ["Expansion", "Automation intent"],
+    project_timing: { label: "rollout build-out", day_min: 90, day_max: 210, source: "estimated" },
+    signals: [{ signal_label: "Expansion", display_text: "Automated kiosk rollout and slider automation at scale." }],
+    robot_types_needed: ["Humanoid robots", "Robotic chefs / automated kitchen systems"],
+  },
+];
+
+const PANEL_SECTIONS = [
+  { label: "Signal", accent: "rgba(255,255,255,0.28)", boxed: false },
+  { label: "Why this is a sales lead", accent: "#a78bfa", boxed: true },
+  { label: "Key drivers", accent: "#FFB000", boxed: false },
+  { label: "Outreach window", accent: "#03DAC5", boxed: false },
+  { label: "Robot fit", accent: "#34d399", boxed: false },
+] as const;
 
 export default function HeroSpotlightLeads() {
   const [leads, setLeads] = useState<HomepageLeadRow[]>(FALLBACK);
@@ -163,16 +258,20 @@ export default function HeroSpotlightLeads() {
 
   const [pauseKey, setPauseKey] = useState(0);
 
+  const parsed = useMemo(() => parseShareSummary(lead?.share_summary || ""), [lead?.share_summary]);
+
   const segments = useMemo(() => {
     if (!lead) return [];
-    const robots = (lead.robot_types_needed || []).slice(0, 3).join(" · ");
     const parts = [
       signalLine(lead),
-      leadWriteup(lead),
+      whySalesLeadLine(lead, parsed),
+      driversLine(lead, parsed),
+      scheduleLine(lead, parsed),
     ];
-    if (robots) parts.push(`Robot fit: ${robots}`);
+    const fit = robotFitLine(lead, parsed);
+    if (fit) parts.push(fit);
     return parts.filter(Boolean);
-  }, [lead]);
+  }, [lead, parsed]);
 
   const typed = useSequentialTypewriter(segments, TYPE_SPEED_MS, SEGMENT_GAP_MS, START_DELAY_MS);
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
@@ -181,8 +280,9 @@ export default function HeroSpotlightLeads() {
   const highlightExtras = useMemo(() => {
     const signalLabel = lead?.signals?.[0]?.signal_label || "";
     const robots = lead?.robot_types_needed || [];
-    return [signalLabel, tier, ...robots].filter(Boolean) as string[];
-  }, [lead, tier]);
+    const drivers = driversLine(lead || ({} as HomepageLeadRow), parsed).split(/[·,]/).map((s) => s.trim());
+    return [signalLabel, tier, ...robots, ...drivers].filter(Boolean) as string[];
+  }, [lead, parsed, tier]);
 
   useEffect(() => {
     if (!typed.allDone || leads.length < 2) return undefined;
@@ -199,7 +299,7 @@ export default function HeroSpotlightLeads() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden w-full min-h-[420px]"
+      className="flex flex-col overflow-hidden w-full min-h-[540px]"
       style={{
         background: "#130d2a",
         border: "1px solid rgba(124,58,237,0.2)",
@@ -266,48 +366,60 @@ export default function HeroSpotlightLeads() {
         </div>
       </div>
 
-      {/* Typed content — top to bottom */}
-      <div className="flex-1 flex flex-col gap-3 px-4 py-4 min-h-[200px]">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
-            Signal
-          </p>
-          <p className="text-[12px] leading-relaxed text-white/70 min-h-[2.5rem]">
-            {highlightTerms(typed.segments[0] || "", highlightExtras)}
-            {typed.segmentIdx === 0 && !typed.allDone && (
-              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
-            )}
-          </p>
-        </div>
-
-        <div
-          className="rounded-md px-3 py-3 flex-1"
-          style={{
-            background: "rgba(124,58,237,0.06)",
-            border: "1px solid rgba(124,58,237,0.15)",
-          }}
-        >
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-2 rfr-scout-wordmark" style={{ color: "#a78bfa" }}>
-            Why SCOUT ranked this lead
-          </p>
-          <p className="text-[12px] leading-relaxed text-white/75 min-h-[4.5rem]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-            {highlightTerms(typed.segments[1] || (typed.segmentIdx >= 1 ? "" : ""), highlightExtras)}
-            {typed.segmentIdx === 1 && !typed.allDone && (
-              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
-            )}
-          </p>
-        </div>
-
-        {segments.length > 2 && (
-          <div>
-            <p className="text-[11px] text-white/45 min-h-[1.25rem]">
-              {highlightTerms(typed.segments[2] || "", highlightExtras)}
-              {typed.segmentIdx === 2 && !typed.allDone && (
-                <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
+      {/* Typed content — structured sections */}
+      <div className="flex-1 flex flex-col gap-2.5 px-4 py-3.5 min-h-[320px] overflow-y-auto">
+        {PANEL_SECTIONS.map((section, sectionIdx) => {
+          if (sectionIdx >= segments.length) return null;
+          const text = typed.segments[sectionIdx] || "";
+          const isActive = typed.segmentIdx === sectionIdx && !typed.allDone;
+          const body = (
+            <p
+              className="text-[12px] leading-relaxed text-white/75"
+              style={{ fontFamily: sectionIdx === 1 ? "'Inter', system-ui, sans-serif" : undefined }}
+            >
+              {highlightTerms(text, highlightExtras)}
+              {isActive && (
+                <span
+                  className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse"
+                  style={{ background: EMERALD }}
+                />
               )}
             </p>
-          </div>
-        )}
+          );
+
+          if (section.boxed) {
+            return (
+              <div
+                key={section.label}
+                className="rounded-md px-3 py-2.5"
+                style={{
+                  background: "rgba(124,58,237,0.06)",
+                  border: "1px solid rgba(124,58,237,0.15)",
+                }}
+              >
+                <p
+                  className="text-[10px] font-bold uppercase tracking-widest mb-1.5 rfr-scout-wordmark"
+                  style={{ color: section.accent }}
+                >
+                  {section.label}
+                </p>
+                {body}
+              </div>
+            );
+          }
+
+          return (
+            <div key={section.label}>
+              <p
+                className="text-[10px] font-bold uppercase tracking-widest mb-1"
+                style={{ color: section.accent }}
+              >
+                {section.label}
+              </p>
+              {body}
+            </div>
+          );
+        })}
       </div>
 
       {/* Rotation indicator */}

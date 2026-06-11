@@ -18,6 +18,19 @@ export type HomepageLeadRow = {
   share_summary?: string | null;
   share_blurb?: string | null;
   robot_types_needed?: string[];
+  priority_reasons?: string[];
+  project_timing?: {
+    label?: string;
+    display_phrase?: string;
+    day_min?: number;
+    day_max?: number;
+    source?: string;
+    confidence?: number;
+  };
+  lead_highlights?: {
+    why_lead?: string[];
+    specific_problem?: string;
+  };
   signals?: { display_text?: string; signal_label?: string; signal_type?: string }[];
   score?: { overall_score?: number };
 };
