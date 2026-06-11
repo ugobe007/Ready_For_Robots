@@ -200,8 +200,8 @@ function robotFitLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
   return "";
 }
 
-function scoreOf(lead: HomepageLeadRow): number | string {
-  const v = lead.score?.overall_score;
+function scoreOf(lead: HomepageLeadRow | undefined): number | string {
+  const v = lead?.score?.overall_score;
   return v != null ? Math.round(Number(v)) : "—";
 }
 
@@ -286,7 +286,8 @@ export default function HeroSpotlightLeads() {
 
   const pool =
     leads.length >= 2 ? leads : panelMode === "demo" ? FALLBACK : [];
-  const lead = pool[idx % Math.max(pool.length, 1)];
+  const lead =
+    pool.length > 0 ? pool[idx % pool.length] : undefined;
   const leadCycleKey = `${idx}:${lead?.id ?? ""}:${lead?.company_name ?? ""}`;
   leadCycleKeyRef.current = leadCycleKey;
 
@@ -338,7 +339,10 @@ export default function HeroSpotlightLeads() {
 
   const [pauseKey, setPauseKey] = useState(0);
 
-  const parsed = useMemo(() => parseShareSummary(lead?.share_summary || ""), [lead?.share_summary]);
+  const parsed = useMemo(
+    () => parseShareSummary(lead?.share_summary || ""),
+    [lead?.share_summary],
+  );
 
   const segments = useMemo(() => {
     if (!lead) return [];
@@ -358,7 +362,7 @@ export default function HeroSpotlightLeads() {
     TYPE_SPEED_MS,
     SEGMENT_GAP_MS,
     START_DELAY_MS,
-    leadCycleKey,
+    lead ? leadCycleKey : "loading",
   );
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
   const tierColor = tierColors[tier] || tierColors.HOT;
