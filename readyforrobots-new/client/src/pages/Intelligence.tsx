@@ -66,7 +66,7 @@ function IntelligenceFlow() {
       <div className="relative mb-8 flex items-center justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>Live intelligence loop</p>
-          <p className="mt-2 text-sm text-white/45">SCOUT turns market noise into action.</p>
+          <p className="mt-2 text-sm text-white/45">SIGNAL turns market noise into action.</p>
         </div>
         <span className="border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.35)", background: "rgba(255,176,0,0.06)", borderRadius: 8 }}>
           Running
@@ -185,7 +185,7 @@ export default function Intelligence() {
                 Robot Demand Signals, Ranked
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/48">
-                The same engine that powers <span style={{ color: "#FFB000", fontWeight: 800 }}>SCOUT</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
+                The same engine that powers <span style={{ color: "#FFB000", fontWeight: 800 }}>SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
               </p>
               <div className="mt-8 grid max-w-xl grid-cols-3 gap-px overflow-hidden border border-white/8" style={{ background: "rgba(255,255,255,0.08)", borderRadius: 16 }}>
                 {signalStats.map(([value, label]) => (
@@ -203,7 +203,7 @@ export default function Intelligence() {
                   Explore robot signals <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: "#FFB000" }}>
-                  Activate SCOUT <Zap className="h-4 w-4" />
+                  Activate SIGNAL <Zap className="h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function Intelligence() {
                   We score the buyer first, then match it to the robot sales motion.
                 </h2>
                 <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/45">
-                  SCOUT does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
+                  SIGNAL does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
                 </p>
                 <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden border border-white/8" style={{ background: "rgba(255,255,255,0.08)", borderRadius: 14 }}>
                   {[
@@ -329,7 +329,7 @@ export default function Intelligence() {
           <section className="mb-14 grid grid-cols-1 gap-4 lg:grid-cols-4">
             {[
               { icon: Search, title: "Source", copy: "Industry news, job posts, filings, earnings calls, permits, and trade signals." },
-              { icon: Radio, title: "Signal", copy: "SCOUT identifies the public clues that point to automation readiness." },
+              { icon: Radio, title: "Signal", copy: "SIGNAL identifies the public clues that point to automation readiness." },
               { icon: BarChart3, title: "Rank", copy: "Scores prioritize timing, pain intensity, fit, and deal motion." },
               { icon: Building2, title: "Identify", copy: "Sales leads and partnership opportunities become next actions." },
             ].map((item) => {
@@ -368,7 +368,7 @@ export default function Intelligence() {
               <form onSubmit={subscribe} className="border border-white/8 p-5" style={{ background: "rgba(13,5,32,0.55)", borderRadius: 16 }}>
                 <Mail className="mb-4 h-5 w-5" style={{ color: "#03DAC5" }} />
                 <p className="mb-2 text-sm font-bold text-white">Subscribe free</p>
-                <p className="mb-4 text-xs leading-relaxed text-white/35">Buying signals, deployment stories, ROI benchmarks, and SCOUT activation prompts.</p>
+                <p className="mb-4 text-xs leading-relaxed text-white/35">Buying signals, deployment stories, ROI benchmarks, and SIGNAL activation prompts.</p>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -388,7 +388,7 @@ export default function Intelligence() {
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5 text-sm">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: "#FFB000" }}>
-              Activate SCOUT from live intelligence <Send className="h-4 w-4" />
+              Activate SIGNAL from live intelligence <Send className="h-4 w-4" />
             </Link>
             <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/50 hover:text-white/80">
               Browse signal types <ArrowRight className="h-4 w-4" />

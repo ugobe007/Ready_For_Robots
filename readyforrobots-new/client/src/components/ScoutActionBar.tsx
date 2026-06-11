@@ -1,5 +1,5 @@
 /**
- * ScoutActionBar — fixed 4-button bar: [Run SCOUT] [Activate SCOUT] [Track SCOUT] [TEST]
+ * ScoutActionBar — fixed 4-button bar: [Run SIGNAL] [Activate SIGNAL] [Track SIGNAL] [TEST]
  * Sits at the top of any panel that manages Cal outreach.
  * Also owns the TEST diagnostic modal.
  */
@@ -144,7 +144,7 @@ export default function ScoutActionBar({
         className="flex items-center gap-2 flex-wrap px-4 py-3 border-b border-white/8"
         style={{ background: "rgba(124,58,237,0.06)" }}
       >
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mr-2" style={{ color: "#a78bfa" }}>SCOUT</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mr-2" style={{ color: "#a78bfa" }}>SIGNAL</span>
 
         {/* Step 1 — Draft */}
         <button
@@ -224,7 +224,7 @@ export default function ScoutActionBar({
                 <FlaskConical className="h-5 w-5" style={{ color: "#a78bfa" }} />
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Workflow Diagnostic</p>
-                  <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>SCOUT / Cal Outreach Health</p>
+                  <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>SIGNAL / Cal Outreach Health</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export default function ScoutActionBar({
                     <li className="text-[11px] text-white/55">
                       <span className="font-semibold text-white/75">2. Sales Console</span> — Go to{" "}
                       <a href="/sales-console" className="text-violet-300 underline underline-offset-2">/sales-console</a>{" "}
-                      to see all captured replies in your SCOUT workflow queue.
+                      to see all captured replies in your SIGNAL workflow queue.
                     </li>
                     <li className="text-[11px] text-white/55">
                       <span className="font-semibold text-white/75">3. Resend Dashboard</span> — Open{" "}

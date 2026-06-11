@@ -145,7 +145,7 @@ export default function HeroLivePipeline() {
               <p className="text-sm font-semibold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                 Live pipeline
               </p>
-              <p className="rfr-scout-wordmark text-[9px] text-violet-200/80 truncate">SCOUT spotlight</p>
+              <p className="rfr-scout-wordmark text-[9px] text-violet-200/80 truncate">SIGNAL spotlight</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -222,7 +222,7 @@ export default function HeroLivePipeline() {
                 {open && (
                   <div className="px-4 pb-4 border-t border-white/6 bg-violet-950/40">
                     <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5 rfr-scout-wordmark text-violet-300/90 pt-3">
-                      Why SCOUT surfaced this
+                      Why SIGNAL surfaced this
                     </p>
                     <p className="text-sm text-white/60 leading-relaxed">{heroSubline(lead)}</p>
                     {lead.robot_types_needed && lead.robot_types_needed.length > 0 && (

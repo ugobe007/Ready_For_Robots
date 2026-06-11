@@ -195,7 +195,7 @@ export default function Crm() {
         : "",
       settings?.scout_meeting_preference ? `Scheduling preference: ${settings.scout_meeting_preference}` : "",
     ].filter(Boolean);
-    return pieces.length ? `\n\nSCOUT style memory:\n${pieces.join("\n")}` : "";
+    return pieces.length ? `\n\nSIGNAL style memory:\n${pieces.join("\n")}` : "";
   };
 
   const toggleTrait = (id: string) => {
@@ -234,7 +234,7 @@ export default function Crm() {
       setSuggestions(Array.isArray(result.suggestions) ? result.suggestions : []);
       setAccounts((prev) => prev.map((a) => (a.id === selectedAccount.id ? { ...a, outreach_stage: "draft_ready", outreach_draft: result.outreach_draft } : a)));
       setStyleApproved(false);
-      setMsg(result.checkpoint || "SCOUT drafted this for review.");
+      setMsg(result.checkpoint || "SIGNAL drafted this for review.");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Could not draft outreach");
     } finally {
@@ -343,7 +343,7 @@ export default function Crm() {
               CRM · Buyer outreach workspace
             </h1>
             <p className="text-xs text-white/40">
-              Review, edit, approve, and send buyer outreach through SCOUT. Replies come back to CRM and your inbox.
+              Review, edit, approve, and send buyer outreach through SIGNAL. Replies come back to CRM and your inbox.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -510,7 +510,7 @@ export default function Crm() {
                 </label>
               </div>
               <label className="mt-3 block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">SCOUT style memory</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">SIGNAL style memory</span>
                 <textarea
                   value={styleInstruction}
                   onChange={(e) => {
@@ -518,7 +518,7 @@ export default function Crm() {
                     setStyleApproved(false);
                   }}
                   rows={4}
-                  placeholder="Tell SCOUT how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
+                  placeholder="Tell SIGNAL how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
                   className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-white/25"
                 />
               </label>
@@ -570,15 +570,15 @@ export default function Crm() {
               </div>
               {!styleApproved && (
                 <p className="mt-2 text-[11px] text-white/35">
-                  Approve the draft first. This confirms the message and teaches SCOUT the format and style to reuse.
+                  Approve the draft first. This confirms the message and teaches SIGNAL the format and style to reuse.
                 </p>
               )}
             </div>
             <aside className="rounded-xl border border-white/10 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
               <div className="mb-5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 p-3">
-                <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">SCOUT workflow intelligence</p>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">SIGNAL workflow intelligence</p>
                 <p className="mt-2 text-sm font-bold text-white">
-                  {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SCOUT activity on this account."}
+                  {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/55">
                   <span>Priority: {selectedAccount.workflow_intelligence?.priority_score ?? "—"}</span>
@@ -609,11 +609,11 @@ export default function Crm() {
                 <li><span className="font-bold text-white/80">2. Draft review:</span> user checks recipient, subject, and body before approval.</li>
                 <li><span className="font-bold text-white/80">3. Send approval:</span> outreach sends via Ready For Robots only after this action unless Auto is enabled.</li>
                 <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies route back into CRM and move the account to replied.</li>
-                <li><span className="font-bold text-white/80">5. User follow-up:</span> SCOUT tracks the workflow and notifies you based on Profile settings.</li>
+                <li><span className="font-bold text-white/80">5. User follow-up:</span> SIGNAL tracks the workflow and notifies you based on Profile settings.</li>
               </ol>
               {suggestions.length > 0 && (
                 <div className="mt-5 border-t border-white/10 pt-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">SCOUT background ideas</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/30">SIGNAL background ideas</p>
                   <div className="mt-3 space-y-3">
                     {suggestions.map((item) => (
                       <div key={item.trigger} className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">

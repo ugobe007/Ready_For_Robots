@@ -62,7 +62,7 @@ const marketplaceTeaserFeatures = [
   {
     icon: Users,
     title: "Buyer & vendor profiles",
-    desc: "Publish your organization, decision makers, and procurement workflow so SCOUT can route the right documents to the right team.",
+    desc: "Publish your organization, decision makers, and procurement workflow so SIGNAL can route the right documents to the right team.",
     preview: [
       { label: "Buy-side", value: "Regional hospital system · warehouse AMR rollout" },
       { label: "Vendor", value: "Mobile robot OEM · logistics deployments" },
@@ -427,7 +427,7 @@ export default function Marketplace() {
           Profiles, RFPs, proposals, quotes, invoices, and connections
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
-          Build the buy-side RFP workflow and the vendor-side document exchange. SCOUT can use this context to route official proposals, specs, quotes, invoices, and PO milestones between both sides of the marketplace.
+          Build the buy-side RFP workflow and the vendor-side document exchange. SIGNAL can use this context to route official proposals, specs, quotes, invoices, and PO milestones between both sides of the marketplace.
         </p>
         {message && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{message}</p>}
         {busy && <p className="mt-4 text-xs text-white/35">Working...</p>}
@@ -538,7 +538,7 @@ function MarketplaceTeaser() {
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/45">
           Ready For Robots connects buy-side automation teams with robot vendors through structured RFPs, shared materials,
-          and official commercial documents. SCOUT uses this context to route proposals, specs, and PO milestones between both sides.
+          and official commercial documents. SIGNAL uses this context to route proposals, specs, and PO milestones between both sides.
         </p>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">

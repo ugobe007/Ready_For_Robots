@@ -312,7 +312,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Live SCOUT leads — right column */}
+          {/* Live SIGNAL leads — right column */}
           <div className="hidden lg:block">
             <HeroSpotlightLeads />
           </div>

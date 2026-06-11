@@ -95,7 +95,7 @@ def _try_send_welcome(email: str) -> dict:
                 "You'll get robotics buying signals, deployment stories, vendor movement, "
                 "and ROI benchmarks from ReadyForRobots.\n\n"
                 "Start exploring live signals here: https://readyforrobots.com/signals\n"
-                "Activate SCOUT here: https://readyforrobots.com/results?url=\n"
+                "Activate SIGNAL here: https://readyforrobots.com/results?url=\n"
             ),
         )
         return {"sent": True, **result}

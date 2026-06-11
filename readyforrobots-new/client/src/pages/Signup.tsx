@@ -53,7 +53,7 @@ export default function Signup() {
     }
     if (hubspotIntent && !fullName.trim()) {
       setStatus("error");
-      setErrMsg("Enter your full name so SCOUT can authenticate your HubSpot workspace.");
+      setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
     }
     persistFullName();
@@ -71,7 +71,7 @@ export default function Signup() {
     if (!email.trim() || !supabase) return;
     if (hubspotIntent && !fullName.trim()) {
       setStatus("error");
-      setErrMsg("Enter your full name so SCOUT can authenticate your HubSpot workspace.");
+      setErrMsg("Enter your full name so SIGNAL can authenticate your HubSpot workspace.");
       return;
     }
     persistFullName();
@@ -103,17 +103,17 @@ export default function Signup() {
             </span>
           </Link>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: "#FFB000" }}>
-            {hubspotIntent ? "HubSpot + SCOUT workspace" : "Create your SCOUT workspace"}
+            {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Create your SIGNAL workspace"}
           </p>
           <h1 className="max-w-xl text-4xl font-black leading-tight text-white md:text-5xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
             {hubspotIntent
-              ? "Sign up, then SCOUT links HubSpot automatically."
+              ? "Sign up, then SIGNAL links HubSpot automatically."
               : "Turn robot demand signals into a working pipeline."}
           </h1>
           <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/48">
             {hubspotIntent
-              ? "Use your work email and full name. After signup, SCOUT provisions the HubSpot API connection and MCP bridge — no manual app setup."
-              : "Save matched leads, review signal context, and let SCOUT prioritize the workflow from signal to outreach."}
+              ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
+              : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
           </p>
         </div>
 

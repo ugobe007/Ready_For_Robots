@@ -4,7 +4,7 @@
  * Violet palette: #0d0520 bg · #7c3aed accent · cream text
  * Design: Linear/Raycast-inspired — dense, inline, data-forward
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
@@ -196,7 +196,7 @@ const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
   "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
   "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
-  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SCOUT is watching", slotCap: PIPELINE_MONITOR_SLOTS },
+  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
@@ -251,15 +251,15 @@ const activationSourceLabel = (sourceUrl?: string | null) =>
   cleanAndClampText(sourceUrl, 96) || "No source URL captured";
 
 const activationLeadText = (lead: ScoutActivationLead) =>
-  cleanAndClampText(lead.signal || lead.action, 160) || "Lead queued for SCOUT evaluation.";
+  cleanAndClampText(lead.signal || lead.action, 160) || "Lead queued for SIGNAL evaluation.";
 
 const formatMetric = (value?: number) =>
   typeof value === "number" ? new Intl.NumberFormat("en-US").format(value) : "—";
 
 const DEFAULT_MARKET_SNIPPET: MarketSnippet = {
   label: "Market movement",
-  headline: "SCOUT is watching live buyer signals",
-  detail: "As the pipeline loads, SCOUT is looking for expansion, labor, budget, procurement, deployment, and partnership signals that indicate robot demand is moving.",
+  headline: "SIGNAL is watching live buyer signals",
+  detail: "As the pipeline loads, SIGNAL is looking for expansion, labor, budget, procurement, deployment, and partnership signals that indicate robot demand is moving.",
   color: "#FFB000",
 };
 
@@ -286,20 +286,20 @@ const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
   if (deal.score >= 85) {
     return {
       headline: "High-confidence opportunity",
-      detail: "SCOUT rates timing, signal strength, and industry fit as strong — worth prioritizing now.",
+      detail: "SIGNAL rates timing, signal strength, and industry fit as strong — worth prioritizing now.",
       color: "#34d399",
     };
   }
   if (deal.score >= 65) {
     return {
       headline: "Meaningful buying pressure",
-      detail: "SCOUT sees real automation intent. Qualify and monitor before full outreach.",
+      detail: "SIGNAL sees real automation intent. Qualify and monitor before full outreach.",
       color: "#FFB000",
     };
   }
   return {
-    headline: "Early signal — SCOUT is watching",
-    detail: "Activity is building. SCOUT will flag when corroboration strengthens the case.",
+    headline: "Early signal — SIGNAL is watching",
+    detail: "Activity is building. SIGNAL will flag when corroboration strengthens the case.",
     color: "#a78bfa",
   };
 };
@@ -396,6 +396,21 @@ function HubSpotCtaLink({
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
+const SEARCH_TERM_ALIASES: Record<string, string[]> = {
+  restaurant: ["restaurant", "restaurants", "food service", "qsr", "fast food", "fast casual", "dining", "kitchen", "catering", "foodservice"],
+  hospitality: ["hospitality", "hotel", "housekeeping", "room service"],
+  logistics: ["logistics", "warehouse", "fulfillment", "distribution", "3pl"],
+  manufacturing: ["manufacturing", "factory", "packaging", "assembly"],
+};
+
+function dealMatchesSearchQuery(deal: Deal, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const blob = `${deal.company} ${deal.industry} ${deal.signal || ""} ${deal.shareSummary || ""}`.toLowerCase();
+  const terms = SEARCH_TERM_ALIASES[q] || [q];
+  return terms.some((term) => blob.includes(term));
+}
+
 async function fetchLeadsBySearch(base: string, query: string, headers?: HeadersInit): Promise<Deal[]> {
   const params = new URLSearchParams({
     search: query,
@@ -474,7 +489,7 @@ export default function Pipeline() {
   const [serverSearchLoading, setServerSearchLoading] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activationErr, setActivationErr] = useState("");
-  // SCOUT bulk outreach state
+  // SIGNAL bulk outreach state
   const [scoutStats, setScoutStats] = useState<{
     total: number; drafted: number; sent: number; opened: number; clicked: number; replied: number;
   } | null>(null);
@@ -691,7 +706,7 @@ export default function Pipeline() {
         }
       } catch (e) {
         if (admin) {
-          setActivationErr(e instanceof Error ? e.message : "Could not load SCOUT activations");
+          setActivationErr(e instanceof Error ? e.message : "Could not load SIGNAL activations");
         }
         setActivations([]);
       } finally {
@@ -747,7 +762,7 @@ export default function Pipeline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
-  // Load SCOUT stats once when authenticated admin
+  // Load SIGNAL stats once when authenticated admin
   useEffect(() => {
     if (session?.access_token && isAdmin) void loadScoutStats();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -779,7 +794,17 @@ export default function Pipeline() {
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
-  const filtered = hasActiveSearch ? serverSearchDeals : deals;
+  const clientSearchMatches = useMemo(
+    () => (hasActiveSearch ? deals.filter((d) => dealMatchesSearchQuery(d, activeSearchQuery)) : deals),
+    [deals, hasActiveSearch, activeSearchQuery],
+  );
+  const filtered = hasActiveSearch
+    ? serverSearchDeals.length > 0
+      ? serverSearchDeals
+      : serverSearchLoading
+        ? []
+        : clientSearchMatches
+    : deals;
   const effectiveSelectedId =
     selectedId != null && filtered.some((d) => d.id === selectedId)
       ? selectedId
@@ -845,9 +870,9 @@ export default function Pipeline() {
         throw new Error(errText);
       }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
-      toast.success("SCOUT saved this lead to your workspace.");
+      toast.success("SIGNAL saved this lead to your workspace.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save lead with SCOUT");
+      toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
     } finally {
       setAdvancingLeadId(null);
     }
@@ -924,7 +949,7 @@ export default function Pipeline() {
         toast.success("Lead captured in CRM. Cal is ready when you approve send.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not advance lead with SCOUT");
+      toast.error(e instanceof Error ? e.message : "Could not advance lead with SIGNAL");
     } finally {
       setAdvancingLeadId(null);
     }
@@ -932,7 +957,7 @@ export default function Pipeline() {
 
   const controlActivation = async (action: "pause" | "resume" | "update_plan") => {
     if (!selectedActivation || !session?.access_token) {
-      toast.info("Sign in to control SCOUT activity.");
+      toast.info("Sign in to control SIGNAL activity.");
       return;
     }
     setActivationControlBusy(true);
@@ -954,9 +979,9 @@ export default function Pipeline() {
       const updated = (await response.json()) as ScoutActivation;
       setActivations((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
       setSelectedActivationId(updated.id);
-      toast.success(action === "pause" ? "SCOUT paused for review." : action === "resume" ? "SCOUT resumed in approval-gated mode." : "SCOUT plan updated.");
+      toast.success(action === "pause" ? "SIGNAL paused for review." : action === "resume" ? "SIGNAL resumed in approval-gated mode." : "SIGNAL plan updated.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not update SCOUT activity");
+      toast.error(e instanceof Error ? e.message : "Could not update SIGNAL activity");
     } finally {
       setActivationControlBusy(false);
     }
@@ -1117,9 +1142,9 @@ export default function Pipeline() {
             : d,
         ),
       );
-      toast.success("SCOUT developed this lead — inference, brief, and Cal draft are ready.");
+      toast.success("SIGNAL developed this lead — inference, brief, and Cal draft are ready.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "SCOUT could not develop this lead");
+      toast.error(e instanceof Error ? e.message : "SIGNAL could not develop this lead");
     } finally {
       setDevelopingLeadId(null);
     }
@@ -1155,7 +1180,7 @@ export default function Pipeline() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SCOUT</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SIGNAL</p>
                 <h1 className="font-extrabold text-white text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                 </h1>
@@ -1163,7 +1188,7 @@ export default function Pipeline() {
                   {isAdmin
                     ? "Authoritative database counts up top. Cal outreach controls below."
                     : panelPlan === "anonymous"
-                      ? `Preview ${entitlements?.pipeline_limit ?? 12} SCOUT-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SCOUT on your workspace.`
+                      ? `Preview ${entitlements?.pipeline_limit ?? 12} SIGNAL-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SIGNAL on your workspace.`
                       : panelPlan === "free"
                         ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
                         : `${PIPELINE_HOT_SLOTS} hot · ${PIPELINE_WARM_SLOTS} warm · ${PIPELINE_MONITOR_SLOTS} monitoring — ranked by buyer intent and timing.`}
@@ -1226,7 +1251,7 @@ export default function Pipeline() {
               label={isAdmin ? "Working slice" : "In this view"}
               value={formatMetric(visibleDeals)}
               sub={isAdmin
-                ? `${formatMetric(queuedActivations)} SCOUT activations queued`
+                ? `${formatMetric(queuedActivations)} SIGNAL activations queued`
                 : hasActiveSearch
                   ? `${formatMetric(filteredHot)} hot · ${formatMetric(filteredWarm)} warm matching search`
                   : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
@@ -1268,14 +1293,14 @@ export default function Pipeline() {
             </div>
           </section>
 
-          {/* ── SCOUT activation queue (admin only) ── */}
+          {/* ── SIGNAL activation queue (admin only) ── */}
           {isAdmin && (
           <div className="rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
             <div className="flex flex-col xl:flex-row">
               <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-white/8">
                 <div className="px-4 py-3 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>SCOUT Queue</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>SIGNAL Queue</p>
                     <p className="text-xs text-white/35 mt-1">Recent sales activations from Results</p>
                   </div>
                   <span className="text-[10px] text-white/30">{loadingActivations ? "Loading…" : `${activations.length} active`}</span>
@@ -1288,7 +1313,7 @@ export default function Pipeline() {
                 <div className="px-2 pb-3 flex xl:flex-col gap-2 overflow-x-auto">
                   {activations.length === 0 && !loadingActivations ? (
                     <div className="m-2 rounded-xl border border-dashed border-white/8 px-4 py-4 text-center">
-                      <p className="text-xs font-semibold text-white/45">No SCOUT activations yet</p>
+                      <p className="text-xs font-semibold text-white/45">No SIGNAL activations yet</p>
                       <p className="text-[11px] text-white/25 mt-1">Activate leads from the Results page and they will appear here.</p>
                     </div>
                   ) : (
@@ -1389,7 +1414,7 @@ export default function Pipeline() {
                         </div>
                         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/30">Work plan</p>
                         <p className="break-words text-sm text-white/55 leading-relaxed">
-                          {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SCOUT will evaluate the selected leads and prepare Cal outreach."}
+                          {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SIGNAL will evaluate the selected leads and prepare Cal outreach."}
                         </p>
                         {((selectedActivation.workPlan?.steps || []).length > 0
                           || selectedActivation.workPlan?.deck_strategy
@@ -1462,12 +1487,12 @@ export default function Pipeline() {
                           <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-200/80 hover:text-amber-100 [&::-webkit-details-marker]:hidden">
                             <span className="inline-flex items-center gap-1.5">
                               <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
-                              Adjust SCOUT
+                              Adjust SIGNAL
                             </span>
                           </summary>
                           <div className="border-t border-amber-400/15 px-3 py-3">
                             <p className="text-xs leading-relaxed text-white/45">
-                              Pause SCOUT or change Cal&apos;s message, timing, and cadence before any outbound step.
+                              Pause SIGNAL or change Cal&apos;s message, timing, and cadence before any outbound step.
                             </p>
                             <div className="mt-3 grid gap-2">
                               <textarea
@@ -1499,7 +1524,7 @@ export default function Pipeline() {
                                 disabled={activationControlBusy}
                                 className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-sm font-bold text-amber-100 disabled:opacity-50"
                               >
-                                Pause SCOUT
+                                Pause SIGNAL
                               </button>
                               <button
                                 type="button"
@@ -1550,15 +1575,15 @@ export default function Pipeline() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-white/8 px-4 py-6 text-center">
-                    <p className="text-sm font-semibold text-white/40">SCOUT activity will appear here</p>
-                    <p className="text-[11px] text-white/25 mt-1">Use Activate SCOUT on Results to create the first work queue item.</p>
+                    <p className="text-sm font-semibold text-white/40">SIGNAL activity will appear here</p>
+                    <p className="text-[11px] text-white/25 mt-1">Use Activate SIGNAL on Results to create the first work queue item.</p>
                     <Link
                       href="/results?url="
                       className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
                       style={{ color: "#FFB000", borderColor: "#FFB000" }}
                     >
                       <Target className="h-3.5 w-3.5" />
-                      Activate SCOUT
+                      Activate SIGNAL
                     </Link>
                   </div>
                 )}
@@ -1567,7 +1592,7 @@ export default function Pipeline() {
           </div>
           )}
 
-          {/* ── SCOUT stats strip (admin only) ── */}
+          {/* ── SIGNAL stats strip (admin only) ── */}
           {isAdmin && session?.access_token && scoutStats && (
             <div className="flex items-center gap-3 flex-wrap text-[11px] text-white/40 px-1">
               <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#a78bfa" }}>Cal</span>
@@ -1879,7 +1904,7 @@ export default function Pipeline() {
                       return (
                         <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-white/62">
                           <Zap className="h-3 w-3 shrink-0" style={{ color: verdict.color }} />
-                          <span className="font-semibold text-white/78">SCOUT · {verdict.headline}</span>
+                          <span className="font-semibold text-white/78">SIGNAL · {verdict.headline}</span>
                           <span className="text-white/40">—</span>
                           <span>{verdict.detail}</span>
                         </p>
@@ -1916,7 +1941,7 @@ export default function Pipeline() {
                         className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
                         aria-expanded={intelligenceOpen}
                       >
-                        <span className={panelSectionLabel}>SCOUT intelligence</span>
+                        <span className={panelSectionLabel}>SIGNAL intelligence</span>
                         {!intelligenceOpen && (
                           <span className="flex-1 min-w-0 text-[11px] leading-snug text-white/65 truncate">
                             {cleanAndClampText(
@@ -1979,7 +2004,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-violet-200/75">
-                              Sign up free to unlock full SCOUT research and connect to Hubspot.
+                              Sign up free to unlock full SIGNAL research and connect to Hubspot.
                             </p>
                           )}
                           {panelPlan !== "anonymous" && (
@@ -2007,7 +2032,7 @@ export default function Pipeline() {
                       className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
                       aria-expanded={researchOpen}
                     >
-                      <span className={panelSectionLabel}>SCOUT research</span>
+                      <span className={panelSectionLabel}>SIGNAL research</span>
                       {!researchOpen && (
                         <span className="flex-1 min-w-0 text-[11px] text-white/55 truncate">
                           {(selected.researchUpdates || []).length > 0
@@ -2029,7 +2054,7 @@ export default function Pipeline() {
                           </p>
                         )}
                         {loadingResearch && !selected.researchUpdates ? (
-                          <p className="text-[11px] leading-relaxed text-white/55">SCOUT is loading cited updates…</p>
+                          <p className="text-[11px] leading-relaxed text-white/55">SIGNAL is loading cited updates…</p>
                         ) : (selected.researchUpdates || []).length > 0 ? (
                           <div className="space-y-2">
                             {(selected.researchUpdates || []).slice(0, 3).map((update) => (
@@ -2056,7 +2081,7 @@ export default function Pipeline() {
                           </div>
                         ) : (
                           <p className="text-[11px] leading-relaxed text-white/55">
-                            SCOUT will add cited updates when fresh signals arrive for this account.
+                            SIGNAL will add cited updates when fresh signals arrive for this account.
                           </p>
                         )}
                       </div>
@@ -2123,7 +2148,7 @@ export default function Pipeline() {
                     ) : (
                       <div className="rounded-lg border border-dashed border-white/10 px-3 py-4">
                         <p className="text-[11px] leading-relaxed text-white/35 mb-3">
-                          No Cal draft yet. Run SCOUT on this lead to refresh inference and generate outreach.
+                          No Cal draft yet. Run SIGNAL on this lead to refresh inference and generate outreach.
                         </p>
                         <button
                           type="button"
@@ -2136,7 +2161,7 @@ export default function Pipeline() {
                             ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                             : <Zap className="h-3.5 w-3.5" />
                           }
-                          {developingLeadId === selected.id ? "SCOUT developing…" : "Develop lead with SCOUT"}
+                          {developingLeadId === selected.id ? "SIGNAL developing…" : "Develop lead with SIGNAL"}
                         </button>
                       </div>
                     )}
@@ -2149,7 +2174,7 @@ export default function Pipeline() {
                         className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg py-2 text-[10px] font-semibold border transition-all disabled:opacity-50"
                         style={{ borderColor: "rgba(3,218,197,0.2)", color: "rgba(3,218,197,0.85)" }}
                       >
-                        {developingLeadId === selected.id ? "Refreshing…" : "Re-run SCOUT development"}
+                        {developingLeadId === selected.id ? "Refreshing…" : "Re-run SIGNAL development"}
                       </button>
                     )}
 
@@ -2195,7 +2220,7 @@ export default function Pipeline() {
                             ? <RefreshCw className="h-4 w-4 animate-spin" />
                             : <Zap className="h-4 w-4" />
                           }
-                          {advancingLeadId === selected.id ? "Saving…" : "Save to SCOUT workspace"}
+                          {advancingLeadId === selected.id ? "Saving…" : "Save to SIGNAL workspace"}
                         </button>
                       ) : (
                         <Link
@@ -2203,7 +2228,7 @@ export default function Pipeline() {
                           className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110"
                           style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
                         >
-                          Activate SCOUT — free
+                          Activate SIGNAL — free
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       )}
@@ -2264,7 +2289,7 @@ export default function Pipeline() {
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? "Select a deal to review signal detail and Cal outreach"
-                        : "Select a lead to review signals, research, and SCOUT scoring"}
+                        : "Select a lead to review signals, research, and SIGNAL scoring"}
                   </p>
                 </div>
               )}

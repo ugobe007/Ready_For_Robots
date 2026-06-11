@@ -1,5 +1,5 @@
 /**
- * SCOUT chat shell — provides openChat() for Header / mobile drawer.
+ * SIGNAL chat shell — provides openChat() for Header / mobile drawer.
  * Full LLM + history lives in FastAPI `/api/scout/*`; this UI is a lightweight placeholder until wired.
  */
 import { createContext, useCallback, useContext, useState } from "react";
@@ -24,7 +24,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" style={{ color: "#FFB000" }} />
-            <span className="text-sm font-semibold text-white">SCOUT</span>
+            <span className="text-sm font-semibold text-white">SIGNAL</span>
           </div>
           <button
             type="button"
@@ -37,7 +37,7 @@ function ScoutPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="p-5 text-sm text-white/60 leading-relaxed">
           <p className="mb-3">
-            SCOUT can scan your URL, match prospective sales leads, and queue follow-up plans from the results page. Use{" "}
+            SIGNAL can scan your URL, match prospective sales leads, and queue follow-up plans from the results page. Use{" "}
             <strong className="text-white/80">Activate Pipeline</strong> or{" "}
             <strong className="text-white/80">Scan URL</strong> to start.
           </p>
@@ -72,7 +72,7 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
           }}
         >
           <MessageSquare className="h-4 w-4" />
-          Talk to SCOUT
+          Talk to SIGNAL
           <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#FFB000" }} />
         </button>
       )}

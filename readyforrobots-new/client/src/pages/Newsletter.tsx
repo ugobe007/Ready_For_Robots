@@ -490,7 +490,7 @@ export default function Newsletter() {
             <NlSurface
               accent={AMBER}
               icon={Zap}
-              kicker="SCOUT research"
+              kicker="SIGNAL research"
               title="Account changes worth actioning"
               action={<NlLink href="/pipeline" color={AMBER}>Pipeline</NlLink>}
             >
@@ -610,7 +610,7 @@ export default function Newsletter() {
                       </h3>
                       <p className="mt-1.5 flex-1 text-xs leading-relaxed text-white/55">
                         {leadPreviewSentences(story.summary || story.snippet, 3, 420)
-                          || "SCOUT is tracking automation signals for this account."}
+                          || "SIGNAL is tracking automation signals for this account."}
                       </p>
                       {bullets.length > 0 && (
                         <ul className="mt-2 space-y-1 border-t border-white/[0.06] pt-2 text-[11px] text-white/45">
@@ -636,7 +636,7 @@ export default function Newsletter() {
 
           <div className="mt-6 flex flex-wrap gap-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
-              Activate SCOUT from today&apos;s brief <Zap className="h-4 w-4" />
+              Activate SIGNAL from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
             <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/40 hover:text-white/70">
               Live signals <BarChart3 className="h-4 w-4" />

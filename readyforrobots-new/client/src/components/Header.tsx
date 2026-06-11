@@ -2,7 +2,7 @@
  * Header — ReadyForRobots
  * Floating nav · transparent · desktop links + mobile slide-in drawer
  * Color system: #0d0520 bg · #7c3aed purple (brand) · #03DAC5 teal (action/live/CTA)
- * Mobile drawer: full-height slide-in from right, includes SCOUT chat entry
+ * Mobile drawer: full-height slide-in from right, includes SIGNAL chat entry
  */
 import { useState, useEffect } from "react";
 import { Menu, X, Zap, LayoutDashboard, Radio, HelpCircle, UserRound, BriefcaseBusiness, ChevronRight, ChevronDown, Newspaper, ClipboardList, LogOut } from "lucide-react"; // eslint-disable-line @typescript-eslint/no-unused-vars

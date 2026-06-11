@@ -1,5 +1,5 @@
 /**
- * Hero right panel — live SCOUT-ranked sales leads with typewriter reveal.
+ * Hero right panel — live SIGNAL-ranked sales leads with typewriter reveal.
  * Palette aligned with ScoutWorkflowAnimation (#130d2a shell, purple/teal accents).
  */
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -16,7 +16,7 @@ const START_DELAY_MS = 900;
 const PAUSE_AFTER_MS = 15_000;
 const EMERALD = "#34d399";
 
-const SCOUT_KEYWORDS = [
+const SIGNAL_KEYWORDS = [
   "AMR",
   "AGV",
   "CapEx",
@@ -57,7 +57,7 @@ function escapeRegex(value: string): string {
 
 function highlightTerms(text: string, extraTerms: string[] = []) {
   if (!text) return null;
-  const terms = [...new Set([...SCOUT_KEYWORDS, ...extraTerms].filter((t) => t && t.length > 1))].sort(
+  const terms = [...new Set([...SIGNAL_KEYWORDS, ...extraTerms].filter((t) => t && t.length > 1))].sort(
     (a, b) => b.length - a.length,
   );
   if (!terms.length) return text;
@@ -147,7 +147,7 @@ function whySalesLeadLine(lead: HomepageLeadRow, parsed: ParsedSummary): string 
   const need = cleanAndClampText(lead.core_need, 200);
   if (need) return need;
   const tier = (lead.priority_tier || "HOT").toUpperCase();
-  return `SCOUT classified this as a ${tier} lead from live automation intent signals.`;
+  return `SIGNAL classified this as a ${tier} lead from live automation intent signals.`;
 }
 
 function driversLine(lead: HomepageLeadRow, parsed: ParsedSummary): string {
@@ -350,7 +350,7 @@ export default function HeroSpotlightLeads() {
           <span className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
           <span className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
         </div>
-        <span className="rfr-scout-wordmark text-[10px] text-white/40">scout · live leads</span>
+        <span className="rfr-scout-wordmark text-[10px] text-white/40">signal · live leads</span>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
           <span className="text-[11px] font-bold" style={{ color: "#03DAC5" }}>

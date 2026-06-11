@@ -217,6 +217,16 @@ def test_datacenter_query_not_every_hospitality_signal():
     )
 
 
+def test_row_matches_industry_search_uses_known_company_industry():
+    from types import SimpleNamespace
+    from app.api.leads import _row_matches_industry_search
+
+    row = SimpleNamespace(name="White Castle", industry="Unknown")
+    assert _row_matches_industry_search(row, "restaurant")
+    row2 = SimpleNamespace(name="Lineage Logistics", industry="Logistics")
+    assert not _row_matches_industry_search(row2, "restaurant")
+
+
 def test_restaurant_still_matches_food_service_signal():
     assert text_matches_industry_search(
         "Regional QSR operator expands back of house kitchen automation pilot",

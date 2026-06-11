@@ -36,6 +36,10 @@ _QUERY_ALIASES = {
     "ed": "emergency room",
     "datacenter": "data center",
     "qsr": "quick serve",
+    "restaurants": "restaurant",
+    "dining": "restaurant",
+    "fast food": "restaurant",
+    "fast casual": "restaurant",
     "carwash": "car wash",
     "truckstop": "truck stop",
 }

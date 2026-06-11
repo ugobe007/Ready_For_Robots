@@ -48,7 +48,11 @@ from app.services.lead_filter import (
     SIGNAL_TYPES_WARM,
 )
 from app.services.signal_ranker import compute_weighted_score, compute_lead_aggregate_signal_score
-from app.services.industry_inference import effective_industry_for_lead, infer_industry_from_text
+from app.services.industry_inference import (
+    effective_industry_for_lead,
+    infer_industry_from_text,
+    known_industry_for_company_name,
+)
 from app.services.industry_search_lexicon import (
     PIPELINE_DIVERSITY_INDUSTRIES,
     canonical_industries_for_query,
@@ -102,7 +106,7 @@ def _send_report_email(email: str) -> dict:
                 "and 437 detected buying signals.\n\n"
                 "Read the report online here:\n"
                 "https://readyforrobots.com/intelligence\n\n"
-                "You can also activate SCOUT against live sales leads here:\n"
+                "You can also activate SIGNAL against live sales leads here:\n"
                 "https://readyforrobots.com/results?url=\n"
             ),
         )
@@ -1204,6 +1208,29 @@ def build_public_leads_list(
     ]
 
 
+def _row_matches_industry_search(row, query: str) -> bool:
+    """Fast filter for search queries — uses known company industry + ontology."""
+    name = (getattr(row, "name", None) or "").strip()
+    raw_ind = (getattr(row, "industry", None) or "").strip()
+    known = known_industry_for_company_name(name)
+    eff_ind = known or raw_ind
+    if industry_label_matches_query(eff_ind, query):
+        return True
+    if text_matches_industry_search(name, query):
+        return True
+    for canonical in canonical_industries_for_query(query):
+        c = canonical.lower()
+        low = (eff_ind or "").lower()
+        if c in low or low in c:
+            return True
+    return lead_matches_search(
+        query,
+        industry=eff_ind,
+        company_name=name,
+        signal_text="",
+    )
+
+
 def _lead_row_matches_industry_filter(row, industry: str, *, signal_text: str = "") -> bool:
     if industry_label_matches_query(row.industry or "", industry):
         return True
@@ -1603,8 +1630,11 @@ def get_leads(
         from app.database import SessionLocal
 
         with SessionLocal() as live_db:
-            pool_cap = 2000 if industry_filter else LEADS_SQL_POOL_CAP
-            candidate_limit = min(pool_cap, max(limit * 40, 200) if industry_filter else max(limit * 4, 50))
+            pool_cap = 5000 if industry_filter else LEADS_SQL_POOL_CAP
+            candidate_limit = min(
+                pool_cap,
+                max(limit * 80, 500) if industry_filter else max(limit * 4, 50),
+            )
             rows = _lead_rows_query_limited(live_db, candidate_limit).all()
 
             results = []
@@ -1613,11 +1643,8 @@ def get_leads(
                     continue
                 if max_score is not None and float(row.overall_score or 0) > max_score:
                     continue
-                if industry_filter and not industry_label_matches_query(row.industry or "", industry_filter):
-                    # Defer signal-text lexicon match to staged pass (_company_matches_industry_filter).
-                    name = getattr(row, "name", "") or ""
-                    if not text_matches_industry_search(name, industry_filter):
-                        continue
+                if industry_filter and not _row_matches_industry_search(row, industry_filter):
+                    continue
                 if signal_type:
                     hot = int(getattr(row, "hot_hits", 0) or 0)
                     warm = int(getattr(row, "warm_hits", 0) or 0)

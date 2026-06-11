@@ -782,7 +782,7 @@ export default function Admin() {
       const res = await adminFetch("/api/admin/scout/bulk-activate", { method: "POST", body: JSON.stringify({ limit: 200, tier_filter: "all", dry_run: false }) });
       const data = await res.json().catch(() => ({})) as { activated?: number; skipped?: number; errors?: number };
       if (!res.ok) throw new Error((data as { detail?: string }).detail || "Activation failed.");
-      setMessage(`SCOUT activated ${data.activated ?? 0} prospects · ${data.skipped ?? 0} already active · ${data.errors ?? 0} errors.`);
+      setMessage(`SIGNAL activated ${data.activated ?? 0} prospects · ${data.skipped ?? 0} already active · ${data.errors ?? 0} errors.`);
       await loadScoutStatus();
     } catch (err) { setError(err instanceof Error ? err.message : "Activation failed."); }
     finally { setActionBusy(""); }
@@ -802,7 +802,7 @@ export default function Admin() {
         totalErrors += data.errors ?? 0;
         if (batchSent === 0) break;
       }
-      setMessage(`SCOUT sent ${totalSent} emails · ${totalErrors} errors.`);
+      setMessage(`SIGNAL sent ${totalSent} emails · ${totalErrors} errors.`);
       await loadScoutStatus();
     } catch (err) { setError(err instanceof Error ? err.message : "Send failed."); }
     finally { setActionBusy(""); }
@@ -888,7 +888,7 @@ export default function Admin() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
-            <p className="mt-0.5 text-[11px] text-white/35">Run SCOUT from the bar below · Cal queue scrolls under daily brief</p>
+            <p className="mt-0.5 text-[11px] text-white/35">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-xl border border-white/10 p-1">
@@ -976,7 +976,7 @@ export default function Admin() {
                 <h2 className="text-base font-extrabold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   Cal outreach queue
                 </h2>
-                <p className="text-[11px] text-white/40">Draft &amp; send from SCOUT bar above · expand a row for preview</p>
+                <p className="text-[11px] text-white/40">Draft &amp; send from SIGNAL bar above · expand a row for preview</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1279,7 +1279,7 @@ export default function Admin() {
             <AdminCard label="Users" value={formatNumber(userStats?.total_users)} sub={`${formatNumber(userStats?.active_users)} active in 7 days`} />
             <AdminCard label="Saved Companies" value={formatNumber(userStats?.total_saved)} sub="Buyer accounts tracking leads" />
             <AdminCard label="Reports" value={formatNumber(userStats?.total_reports)} sub={`${formatNumber(userStats?.total_lists)} saved lists`} />
-            <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SCOUT · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
+            <AdminCard label="Captured Leads" value={formatNumber((userStats?.waitlist_signups || 0) + (userStats?.newsletter_subscribers || 0))} sub={`${formatNumber(userStats?.waitlist_signups)} SIGNAL · ${formatNumber(userStats?.newsletter_subscribers)} newsletter`} />
           </div>
         </section>
 

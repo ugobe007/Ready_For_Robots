@@ -101,7 +101,7 @@ export default function Login() {
           <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "'Sora', system-ui" }}>
             ReadyForRobots
           </h1>
-          <p className="text-xs text-white/40 mt-1">Sign in to work with SCOUT</p>
+          <p className="text-xs text-white/40 mt-1">Sign in to work with SIGNAL</p>
         </div>
 
         {status === "sent" ? (

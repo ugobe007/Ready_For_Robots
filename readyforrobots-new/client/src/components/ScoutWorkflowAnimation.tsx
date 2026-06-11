@@ -1,5 +1,5 @@
 /**
- * ScoutWorkflowAnimation — SCOUT pipeline visualization (Identify → Develop → Connect).
+ * ScoutWorkflowAnimation — SIGNAL pipeline visualization (Identify → Develop → Connect).
  * Ported from rfr_cursor_package/frontend/components/ScoutWorkflowAnimation.tsx
  */
 import { useEffect, useRef, useState } from "react";
@@ -203,7 +203,7 @@ export default function ScoutWorkflowAnimation({
               <span className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
               <span className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
             </div>
-            <span className="rfr-scout-wordmark text-[10px] text-white/40">scout · live pipeline</span>
+            <span className="rfr-scout-wordmark text-[10px] text-white/40">signal · live pipeline</span>
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
               <span className="text-[11px] font-bold" style={{ color: "#03DAC5" }}>
@@ -454,7 +454,7 @@ export default function ScoutWorkflowAnimation({
             borderTop: "1px solid rgba(124,58,237,0.15)",
           }}
         >
-          <span className="rfr-scout-wordmark text-[9px] text-white/30">scout · {STAGE_LABELS[stage].toLowerCase()}</span>
+          <span className="rfr-scout-wordmark text-[9px] text-white/30">signal · {STAGE_LABELS[stage].toLowerCase()}</span>
           <span className="text-[10px] text-white/25">
             {(cycleIdx % CYCLES.length) + 1} / {CYCLES.length} opportunities
           </span>

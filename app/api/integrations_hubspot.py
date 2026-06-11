@@ -208,7 +208,7 @@ def hubspot_status(
             "message": (
                 "HubSpot is connected for this workspace."
                 if configured
-                else "Connect HubSpot to push SCOUT-qualified leads automatically."
+                else "Connect HubSpot to push SIGNAL-qualified leads automatically."
             ),
             "connect_url": "/integrations/hubspot",
         }

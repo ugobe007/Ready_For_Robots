@@ -116,7 +116,7 @@ export default function Profile() {
         scout_background_briefing_enabled: saved.scout_background_briefing_enabled ?? true,
       });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to save SCOUT settings");
+      setErr(e instanceof Error ? e.message : "Failed to save SIGNAL settings");
     } finally {
       setSavingSettings(false);
     }
@@ -168,7 +168,7 @@ export default function Profile() {
         <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
           Your workspace
         </h1>
-        <p className="text-xs text-white/40 mb-6">Same data as before — powered by SCOUT + FastAPI.</p>
+        <p className="text-xs text-white/40 mb-6">Same data as before — powered by SIGNAL + FastAPI.</p>
         {err && <p className="text-sm text-red-300 mb-4 border border-red-500/30 rounded p-2">{err}</p>}
         <div className="rounded-xl border border-white/10 p-4 space-y-2 mb-6" style={{ background: "rgba(255,255,255,0.03)" }}>
           <p className="text-[10px] uppercase tracking-widest text-white/30">Signed in as</p>
@@ -209,7 +209,7 @@ export default function Profile() {
               className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
             />
             <p className="text-[11px] text-white/35">
-              {savingSettings ? "Saving communication settings..." : "Outreach sends from the ReadyForRobots domain. Replies route back into your SCOUT workflow and can be forwarded here."}
+              {savingSettings ? "Saving communication settings..." : "Outreach sends from the ReadyForRobots domain. Replies route back into your SIGNAL workflow and can be forwarded here."}
             </p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function Profile() {
           <div>
             <p className="text-[10px] uppercase tracking-widest text-white/30">Outreach preferences</p>
             <p className="mt-1 text-xs leading-relaxed text-white/45">
-              Tell SCOUT how you want to sound in outreach — tone, preferred next step, and who should be copied.
+              Tell SIGNAL how you want to sound in outreach — tone, preferred next step, and who should be copied.
             </p>
           </div>
           <label className="block">
@@ -301,7 +301,7 @@ export default function Profile() {
             className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25"
           />
           <label className="flex items-center justify-between gap-3 text-xs text-white/55">
-            Let SCOUT brief me with next-best-action ideas from replies, no response, new research, and customer tone
+            Let SIGNAL brief me with next-best-action ideas from replies, no response, new research, and customer tone
             <input
               type="checkbox"
               checked={settings.scout_background_briefing_enabled}
@@ -312,7 +312,7 @@ export default function Profile() {
         <div className="rounded-xl border border-white/10 mb-4 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
           <p className="text-[10px] uppercase tracking-widest text-white/30">HubSpot sync</p>
           <p className="mt-1 text-xs leading-relaxed text-white/45">
-            Choose auto-sync for all saved leads or pick specific accounts to push into HubSpot via SCOUT.
+            Choose auto-sync for all saved leads or pick specific accounts to push into HubSpot via SIGNAL.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link

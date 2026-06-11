@@ -38,7 +38,7 @@ const STEPS: {
   },
   {
     num: "03",
-    title: "SCOUT Drafts",
+    title: "SIGNAL Drafts",
     tag: "Trigger-aware outreach",
     icon: FileText,
     accent: "#FFB000",
@@ -76,7 +76,7 @@ const CYCLE_MS = 2200;
 type Props = {
   variant?: "hero" | "rail" | "compact";
   className?: string;
-  /** When set, highlights sync to SCOUT in motion (no independent cycling). */
+  /** When set, highlights sync to SIGNAL in motion (no independent cycling). */
   workflowStage?: ScoutWorkflowStage;
   /** Flat list inside ScoutHeroShowcase — no nested card chrome. */
   embedded?: boolean;
@@ -194,7 +194,7 @@ export default function ScoutPipelineDiagram({
 
   if (embedded) {
     return (
-      <div className={`w-full h-full flex flex-col ${className}`} aria-label="SCOUT five-step pipeline">
+      <div className={`w-full h-full flex flex-col ${className}`} aria-label="SIGNAL five-step pipeline">
         <style>{`
           @keyframes scout-pipeline-pop {
             0%, 100% { transform: scale(1); }
@@ -210,7 +210,7 @@ export default function ScoutPipelineDiagram({
   return (
     <div
       className={`w-full ${rail ? "max-w-[220px]" : "max-w-md lg:max-w-lg"} ${className}`}
-      aria-label="SCOUT five-step pipeline: detect, score, draft, review, advance"
+      aria-label="SIGNAL five-step pipeline: detect, score, draft, review, advance"
     >
       <style>{`
         @keyframes scout-pipeline-pop {
@@ -242,7 +242,7 @@ export default function ScoutPipelineDiagram({
             className="text-[9px] font-bold uppercase tracking-[0.2em]"
             style={{ color: "rgba(255,255,255,0.45)", fontFamily: "JetBrains Mono, monospace" }}
           >
-            {rail ? "5 stages" : "scout · 5-stage engine"}
+            {rail ? "5 stages" : "signal · 5-stage engine"}
           </span>
           {synced ? (
             <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#03DAC5" }}>

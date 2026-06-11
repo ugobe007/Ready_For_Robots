@@ -1,6 +1,6 @@
 /**
  * How It Works — ReadyForRobots
- * Hero: SCOUT in motion + synced 5-step rail. Process: Supabase-style inline prose.
+ * Hero: SIGNAL in motion + synced 5-step rail. Process: Supabase-style inline prose.
  */
 
 import Header from "@/components/Header";
@@ -94,7 +94,7 @@ const DIV = () => (
   </div>
 );
 
-const SCOUT_CTA_STYLE = {
+const SIGNAL_CTA_STYLE = {
   color: "#FFB000",
   border: "1.5px solid #FFB000",
   background: "transparent",
@@ -122,7 +122,7 @@ export default function HowItWorks() {
     <div className="min-h-screen" style={{ backgroundColor: "#0d0520", color: "#f0eaff" }}>
       <Header />
 
-      {/* ── Hero: live SCOUT + synced rail ── */}
+      {/* ── Hero: live SIGNAL + synced rail ── */}
       <section className="relative overflow-hidden" style={{ paddingTop: "112px" }}>
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16">
@@ -151,7 +151,7 @@ export default function HowItWorks() {
                 <Link
                   href="/results?url="
                   className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                  style={SCOUT_CTA_STYLE}
+                  style={SIGNAL_CTA_STYLE}
                 >
                   Activate Signal <Zap size={15} />
                 </Link>
@@ -445,7 +445,7 @@ export default function HowItWorks() {
             <Link
               href="/results?url="
               className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-              style={SCOUT_CTA_STYLE}
+              style={SIGNAL_CTA_STYLE}
             >
               Activate Signal <ArrowRight size={15} />
             </Link>

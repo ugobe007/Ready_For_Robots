@@ -93,7 +93,7 @@ export default function Inbox() {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Operator inbox</p>
             <h1 className="mt-2 text-4xl font-black">Replies</h1>
             <p className="mt-2 max-w-2xl text-sm text-white/55">
-              Buyer and robot-company replies land here before you decide whether SCOUT should respond or you should take over.
+              Buyer and robot-company replies land here before you decide whether SIGNAL should respond or you should take over.
             </p>
           </div>
           <button onClick={() => void loadInbox()} disabled={busy} className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 disabled:opacity-50">

@@ -1,5 +1,5 @@
 /**
- * ScoutHeroShowcase — single unified shell: 5-step rail + live SCOUT demo.
+ * ScoutHeroShowcase — single unified shell: 5-step rail + live SIGNAL demo.
  */
 import { useState } from "react";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
@@ -40,7 +40,7 @@ export default function ScoutHeroShowcase() {
           className="text-[10px] font-bold uppercase tracking-[0.2em]"
           style={{ color: "rgba(255,255,255,0.45)", fontFamily: "JetBrains Mono, monospace" }}
         >
-          scout · pipeline
+          signal · pipeline
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />

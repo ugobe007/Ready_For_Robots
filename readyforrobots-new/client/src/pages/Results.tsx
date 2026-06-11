@@ -1,6 +1,6 @@
 /**
  * Results — ReadyForRobots
- * URL request → scan → matched prospect cards → SCOUT activation.
+ * URL request → scan → matched prospect cards → SIGNAL activation.
  */
 import { useEffect, useState } from "react";
 import {
@@ -40,7 +40,7 @@ const SCAN_STEPS = [
   "Loading pre-scored prospective sales leads…",
   "Matching fit, timing, and buying signals from the pipeline…",
   "Explaining why each lead is relevant…",
-  "Preparing SCOUT follow-up plans…",
+  "Preparing SIGNAL follow-up plans…",
 ];
 
 type ApiLead = {
@@ -128,13 +128,13 @@ const MATERIAL_OPTIONS: Array<{
   {
     id: "upload",
     title: "Upload sales deck",
-    desc: "Give SCOUT your current presentation so follow-up uses your actual positioning.",
+    desc: "Give SIGNAL your current presentation so follow-up uses your actual positioning.",
     icon: UploadCloud,
   },
   {
     id: "suggest",
     title: "Suggest deck strategy",
-    desc: "SCOUT proposes a deck format, proof points, and ROI story for you to implement.",
+    desc: "SIGNAL proposes a deck format, proof points, and ROI story for you to implement.",
     icon: Presentation,
   },
   {
@@ -146,9 +146,9 @@ const MATERIAL_OPTIONS: Array<{
 ];
 
 const SCOPE_OPTIONS: Array<{ id: ScopeChoice; title: string; desc: string }> = [
-  { id: "all", title: "Activate all leads", desc: "SCOUT works every matched lead in this results set." },
-  { id: "selected", title: "Use selected leads", desc: "Only the leads you checked below move into SCOUT activation." },
-  { id: "top", title: "Let SCOUT prioritize", desc: "SCOUT starts with the strongest three leads by score and signal quality." },
+  { id: "all", title: "Activate all leads", desc: "SIGNAL works every matched lead in this results set." },
+  { id: "selected", title: "Use selected leads", desc: "Only the leads you checked below move into SIGNAL activation." },
+  { id: "top", title: "Let SIGNAL prioritize", desc: "SIGNAL starts with the strongest three leads by score and signal quality." },
 ];
 
 const MODE_OPTIONS: Array<{
@@ -157,9 +157,9 @@ const MODE_OPTIONS: Array<{
   desc: string;
   gated: boolean;
 }> = [
-  { id: "manual", title: "Manual", desc: "SCOUT evaluates leads and prepares strategy plus draft outreach for your review.", gated: false },
-  { id: "assisted", title: "Assisted", desc: "SCOUT drafts outreach, asks before sending, then tracks replies.", gated: true },
-  { id: "autopilot", title: "Autopilot", desc: "SCOUT sends approved messages, follows up, and escalates technical questions when needed.", gated: true },
+  { id: "manual", title: "Manual", desc: "SIGNAL evaluates leads and prepares strategy plus draft outreach for your review.", gated: false },
+  { id: "assisted", title: "Assisted", desc: "SIGNAL drafts outreach, asks before sending, then tracks replies.", gated: true },
+  { id: "autopilot", title: "Autopilot", desc: "SIGNAL sends approved messages, follows up, and escalates technical questions when needed.", gated: true },
 ];
 
 function normalizeUrl(raw: string): string {
@@ -225,7 +225,7 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
       70,
   );
   const firstSignal = lead.signals?.[0];
-  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.key_signals?.[0] || lead.share_summary || "") || "SCOUT found a sales-fit pattern worth reviewing.";
+  const signal = cleanScrapedText(firstSignal?.display_text || firstSignal?.raw_text || lead.key_signals?.[0] || lead.share_summary || "") || "SIGNAL found a sales-fit pattern worth reviewing.";
   const signalType = firstSignal?.signal_label || titleize(firstSignal?.signal_type || "buying_signal");
   const company = lead.company_name || `Matched Lead ${index + 1}`;
   const stage = lead.priority_tier ? `${lead.priority_tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal";
@@ -283,7 +283,7 @@ type ScoutProspectRow = {
 function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
   const score = Math.round(row.match_score ?? row.score ?? 70);
   const company = row.company || `Matched Lead ${index + 1}`;
-  const signal = cleanScrapedText(row.signal || "") || "SCOUT matched this account to your URL profile.";
+  const signal = cleanScrapedText(row.signal || "") || "SIGNAL matched this account to your URL profile.";
   const signalType = titleize((row.signalType || "buying_signal").replace(/_/g, " "));
   const prospect: Prospect = {
     id: String(row.id ?? `${company}-${index}`),
@@ -301,7 +301,7 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
     scoreReason: [
       `${score}/100 match score`,
       row.tier ? `${row.tier} priority` : "",
-      "matched via SCOUT scan-for-results",
+      "matched via SIGNAL scan-for-results",
     ].filter(Boolean).join(" · "),
     draft: "",
     stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
@@ -463,7 +463,7 @@ export default function Results() {
         if (!cancelled) {
           setUsingFallback(true);
           setProspects(fallbackProspects);
-          toast.info("Using sample matches while SCOUT reloads the URL-specific matcher.");
+          toast.info("Using sample matches while SIGNAL reloads the URL-specific matcher.");
         }
       } finally {
         if (!cancelled) {
@@ -522,7 +522,7 @@ export default function Results() {
   async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
     if (!session?.access_token) {
       const next = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/results";
-      toast.info("Sign up or sign in before SCOUT can save leads to CRM or prepare outbound work.");
+      toast.info("Sign up or sign in before SIGNAL can save leads to CRM or prepare outbound work.");
       window.location.href = `/signup?next=${encodeURIComponent(next)}`;
       return;
     }
@@ -531,7 +531,7 @@ export default function Results() {
     const material = overrides.material ?? materialChoice;
     const ids = activationIdsForScope(scope);
     if (!ids.length) {
-      toast.error("Select at least one lead for SCOUT.");
+      toast.error("Select at least one lead for SIGNAL.");
       return;
     }
     setScopeChoice(scope);
@@ -572,9 +572,9 @@ export default function Results() {
       setActivationId(Number(activation.id) || null);
       setActivatedIds(new Set(ids));
       setChoosingScout(false);
-      toast.success(`SCOUT review queue #${activation.id} created. Leads are saved to CRM and waiting for your approval.`);
+      toast.success(`SIGNAL review queue #${activation.id} created. Leads are saved to CRM and waiting for your approval.`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not activate SCOUT.");
+      toast.error(error instanceof Error ? error.message : "Could not activate SIGNAL.");
     } finally {
       setActivatingScout(false);
     }
@@ -599,10 +599,10 @@ export default function Results() {
                   Activate Pipeline
                 </p>
                 <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Give SCOUT a URL first.
+                  Give SIGNAL a URL first.
                 </h1>
                 <p className="text-sm text-white/45 max-w-xl mb-8">
-                  Paste your robot, company, or product URL. SCOUT will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
+                  Paste your robot, company, or product URL. SIGNAL will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
                 </p>
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
                   <input
@@ -661,7 +661,7 @@ export default function Results() {
                     Your matched pipeline
                   </h1>
                   <p className="text-sm text-white/40 mt-2">
-                    Based on <span className="text-white/60 font-medium">{submittedUrl}</span>. Select the leads you want SCOUT to develop.
+                    Based on <span className="text-white/60 font-medium">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
                   </p>
                 </div>
                 <button
@@ -670,7 +670,7 @@ export default function Results() {
                   className="inline-flex items-center justify-center gap-2.5 rounded-2xl border px-6 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
                   style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
                 >
-                  <Bot className="h-4 w-4" /> Activate SCOUT
+                  <Bot className="h-4 w-4" /> Activate SIGNAL
                 </button>
               </div>
 
@@ -681,10 +681,10 @@ export default function Results() {
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
                         <p className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                          Activate SCOUT sales motion
+                          Activate SIGNAL sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/48">
-                          Choose materials, lead scope, and operating mode. SCOUT will save leads to CRM and prepare the workflow before any outbound messages or follow-ups.
+                          Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM and prepare the workflow before any outbound messages or follow-ups.
                         </p>
                       </div>
                     </div>
@@ -810,7 +810,7 @@ export default function Results() {
                     </div>
 
                     <div>
-                      <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SCOUT starts with</p>
+                      <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SIGNAL starts with</p>
                       <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-white/48 md:grid-cols-4">
                         <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-violet-200" /> Lead evaluation</span>
                         <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-sky-200" /> Sales strategy</span>
@@ -827,7 +827,7 @@ export default function Results() {
                         className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all hover:bg-amber-400/6 disabled:cursor-not-allowed disabled:opacity-60"
                         style={{ color: "#FFB000", borderColor: "#FFB000", background: "transparent" }}
                       >
-                        {activatingScout ? "Creating activation..." : "Start SCOUT activation"} <Send className="h-3.5 w-3.5" />
+                        {activatingScout ? "Creating activation..." : "Start SIGNAL activation"} <Send className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
@@ -849,10 +849,10 @@ export default function Results() {
 
               {activatedCount > 0 && (
                 <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
-                  <p className="text-sm font-bold text-emerald-300 mb-1">SCOUT review queue created</p>
+                  <p className="text-sm font-bold text-emerald-300 mb-1">SIGNAL review queue created</p>
                   <p className="text-xs text-white/45">
                     {activationId ? `Activation #${activationId}: ` : ""}
-                    Leads were saved to CRM. Review SCOUT&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
+                    Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
                   </p>
                 </div>
               )}
@@ -961,7 +961,7 @@ export default function Results() {
 
                       {isActive && (
                         <div className="mx-6 mb-4 rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(52,211,153,0.05)" }}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SCOUT follow-up plan</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SIGNAL follow-up plan</p>
                           <p className="text-xs text-white/45 leading-relaxed">
                             Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
                           </p>

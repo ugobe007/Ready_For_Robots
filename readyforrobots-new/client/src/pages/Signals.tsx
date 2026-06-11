@@ -254,7 +254,7 @@ function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySigna
     firstSignal?.text ||
     lead.share_summary ||
     lead.gtm?.suggested_motion ||
-    "SCOUT found a scored automation opportunity worth reviewing.";
+    "SIGNAL found a scored automation opportunity worth reviewing.";
   return {
     id: String(lead.id ?? `${lead.company_name || "lead"}-${index}`),
     leadId: typeof lead.id === "number" ? lead.id : undefined,
@@ -262,7 +262,7 @@ function mapLeadToLiveSignal(lead: ApiLead, index: number): LiveOpportunitySigna
     type,
     text:
       leadPreviewSentences(lead.share_summary || String(text), 3, 480) ||
-      "SCOUT found a scored automation opportunity worth reviewing.",
+      "SIGNAL found a scored automation opportunity worth reviewing.",
     score: leadScore(lead),
     track,
     time: index < 3 ? `${Math.max(index * 4 + 2, 2)}m ago` : "live",
@@ -330,13 +330,13 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: MARKET_COLORS.emeraldBright }}>
-            SCOUT market radar
+            SIGNAL market radar
           </p>
           <h2 className="text-3xl font-extrabold leading-tight text-white md:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
             Live Robot Demand Radar
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
-            SCOUT turns live sales leads into signal-strength bars. The bars rebalance as the featured opportunity changes.
+            SIGNAL turns live sales leads into signal-strength bars. The bars rebalance as the featured opportunity changes.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
