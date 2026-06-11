@@ -2,11 +2,21 @@
  * Hero right panel — live SIGNAL-ranked sales leads with typewriter reveal.
  * Palette aligned with ScoutWorkflowAnimation (#130d2a shell, purple/teal accents).
  */
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { dedupeHomepageLeads } from "@/lib/homepageLeads";
+import {
+  fetchWithTimeout,
+  getApiBase,
+  publicFetchInit,
+  readSurfaceCache,
+  writeSurfaceCache,
+} from "@/lib/apiBase";
+import {
+  dedupeHomepageLeads,
+  HOMEPAGE_SPOTLIGHT_CACHE_KEY,
+  HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS,
+} from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { useSequentialTypewriter } from "@/hooks/useTypewriter";
 import type { HomepageLeadRow } from "@/components/HeroLivePipeline";
@@ -251,38 +261,71 @@ const PANEL_SECTIONS = [
   { label: "Robot fit", accent: "#34d399", boxed: false },
 ] as const;
 
-export default function HeroSpotlightLeads() {
-  const [leads, setLeads] = useState<HomepageLeadRow[]>(FALLBACK);
-  const [idx, setIdx] = useState(0);
-  const [live, setLive] = useState(false);
-  const [fade, setFade] = useState(false);
+function initialSpotlightLeads(): HomepageLeadRow[] {
+  const cached = readSurfaceCache<HomepageLeadRow[]>(
+    HOMEPAGE_SPOTLIGHT_CACHE_KEY,
+    HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS,
+  );
+  const rows = dedupeHomepageLeads(cached?.data);
+  return rows.length >= 2 ? rows.slice(0, 10) : [];
+}
 
-  const lead = leads[idx % leads.length];
+export default function HeroSpotlightLeads() {
+  const bootLeads = initialSpotlightLeads();
+  const [leads, setLeads] = useState<HomepageLeadRow[]>(bootLeads);
+  const [useDemo, setUseDemo] = useState(bootLeads.length < 2);
+  const [idx, setIdx] = useState(0);
+  const [live, setLive] = useState(bootLeads.length >= 2);
+  const [fade, setFade] = useState(false);
+  const pendingLeadsRef = useRef<HomepageLeadRow[] | null>(null);
+  const typedAllDoneRef = useRef(false);
+
+  const pool = leads.length >= 2 ? leads : useDemo ? FALLBACK : [];
+  const lead = pool[idx % Math.max(pool.length, 1)];
+  const leadCycleKey = `${idx}:${lead?.id ?? ""}:${lead?.company_name ?? ""}`;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const base = getApiBase();
-        const r = await fetch(`${base}/api/leads/homepage`, liveFetchInit());
+        const r = await fetchWithTimeout(
+          `${base}/api/leads/homepage`,
+          publicFetchInit(),
+          12_000,
+          { publicCache: true },
+        );
         if (!r.ok || cancelled) return;
-        const raw = await r.text();
-        if (raw.trimStart().startsWith("<")) return;
-        const data = JSON.parse(raw) as { hotLeads?: HomepageLeadRow[] };
+        const data = (await r.json()) as { hotLeads?: HomepageLeadRow[] };
         const rows = dedupeHomepageLeads(
           Array.isArray(data.hotLeads) ? data.hotLeads.filter((l) => l.company_name) : [],
-        );
-        if (rows.length >= 2 && !cancelled) {
-          setLeads(rows.slice(0, 10));
+        ).slice(0, 10);
+        if (rows.length < 2 || cancelled) {
+          if (!leads.length && !cancelled) setUseDemo(true);
+          return;
+        }
+        writeSurfaceCache(HOMEPAGE_SPOTLIGHT_CACHE_KEY, rows);
+        if (!leads.length) {
+          setLeads(rows);
           setLive(true);
+          setUseDemo(false);
+          return;
+        }
+        pendingLeadsRef.current = rows;
+        setLive(true);
+        if (typedAllDoneRef.current && !cancelled) {
+          setLeads(rows);
+          pendingLeadsRef.current = null;
+          setUseDemo(false);
         }
       } catch {
-        /* fallback */
+        if (!leads.length && !cancelled) setUseDemo(true);
       }
     })();
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [pauseKey, setPauseKey] = useState(0);
@@ -302,7 +345,14 @@ export default function HeroSpotlightLeads() {
     return parts.filter(Boolean);
   }, [lead, parsed]);
 
-  const typed = useSequentialTypewriter(segments, TYPE_SPEED_MS, SEGMENT_GAP_MS, START_DELAY_MS);
+  const typed = useSequentialTypewriter(
+    segments,
+    TYPE_SPEED_MS,
+    SEGMENT_GAP_MS,
+    START_DELAY_MS,
+    leadCycleKey,
+  );
+  typedAllDoneRef.current = typed.allDone;
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
   const tierColor = tierColors[tier] || tierColors.HOT;
 
@@ -314,17 +364,31 @@ export default function HeroSpotlightLeads() {
   }, [lead, parsed, tier]);
 
   useEffect(() => {
-    if (!typed.allDone || leads.length < 2) return undefined;
+    if (!typed.allDone || pool.length < 2) return undefined;
     const timer = window.setTimeout(() => {
       setFade(true);
       window.setTimeout(() => {
-        setIdx((i) => (i + 1) % leads.length);
+        if (pendingLeadsRef.current) {
+          setLeads(pendingLeadsRef.current);
+          pendingLeadsRef.current = null;
+          setUseDemo(false);
+          setIdx(0);
+        } else {
+          setIdx((i) => (i + 1) % pool.length);
+        }
         setFade(false);
         setPauseKey((k) => k + 1);
       }, 320);
     }, PAUSE_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [typed.allDone, leads.length, pauseKey]);
+  }, [typed.allDone, pool.length, pauseKey, leadCycleKey]);
+
+  useEffect(() => {
+    if (!typed.allDone || !pendingLeadsRef.current || idx !== 0) return;
+    setLeads(pendingLeadsRef.current);
+    pendingLeadsRef.current = null;
+    setUseDemo(false);
+  }, [typed.allDone, idx]);
 
   return (
     <div
@@ -373,7 +437,7 @@ export default function HeroSpotlightLeads() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              {lead?.company_name}
+              {lead?.company_name || (pool.length ? "—" : "Loading live leads…")}
             </p>
             <p className="text-[11px] text-white/35 mt-0.5 truncate">{lead?.industry || "Market signal"}</p>
           </div>
@@ -397,9 +461,15 @@ export default function HeroSpotlightLeads() {
 
       {/* Typed content — structured sections */}
       <div className="flex-1 flex flex-col gap-2.5 px-4 py-3.5 min-h-[320px] overflow-y-auto">
+        {pool.length === 0 ? (
+          <p className="text-[12px] text-white/40 leading-relaxed">Syncing live sales leads from SIGNAL…</p>
+        ) : null}
         {PANEL_SECTIONS.map((section, sectionIdx) => {
           if (sectionIdx >= segments.length) return null;
-          const text = typed.segments[sectionIdx] || "";
+          const text =
+            typed.allDone && segments[sectionIdx]
+              ? segments[sectionIdx]
+              : typed.segments[sectionIdx] || "";
           const isActive = typed.segmentIdx === sectionIdx && !typed.allDone;
           const body = (
             <p
@@ -457,19 +527,19 @@ export default function HeroSpotlightLeads() {
         style={{ borderTop: "1px solid rgba(124,58,237,0.1)", background: "rgba(0,0,0,0.15)" }}
       >
         <div className="flex gap-1">
-          {leads.map((item, i) => (
+          {pool.map((item, i) => (
             <span
               key={item.id ?? i}
               className="h-1 rounded-full transition-all duration-300"
               style={{
-                width: i === idx % leads.length ? 16 : 6,
-                background: i === idx % leads.length ? "#03DAC5" : "rgba(255,255,255,0.15)",
+                width: i === idx % pool.length ? 16 : 6,
+                background: i === idx % pool.length ? "#03DAC5" : "rgba(255,255,255,0.15)",
               }}
             />
           ))}
         </div>
         <span className="text-[10px] text-white/25">
-          {live ? "API" : "Demo"} · {(idx % leads.length) + 1}/{leads.length}
+          {live ? "API" : useDemo ? "Demo" : "…"} · {pool.length ? `${(idx % pool.length) + 1}/${pool.length}` : "—"}
         </span>
       </div>
 

@@ -1,3 +1,6 @@
+export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v1";
+export const HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS = 30 * 60 * 1000;
+
 /** Collapse duplicate buyer rows for homepage spotlight / sales panel rotation. */
 export function dedupeHomepageLeads<
   T extends { id?: number; company_name?: string; website?: string | null },
