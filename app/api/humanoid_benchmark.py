@@ -236,6 +236,77 @@ def get_spec_gaps(
     return report
 
 
+@router.get("/gaps/plan")
+def get_humanoid_data_plan(
+    db: Session = Depends(get_db),
+    slug: str = Query(..., description="model_slug for gap logic plan"),
+):
+    """
+    Per-robot data gap plan: what's missing, why it blocks HEIF, and how to find it.
+    Does not mutate the database (read-only plan).
+    """
+    from app.services.humanoid_gap_engine import build_humanoid_data_plan
+    from app.services.humanoid_spec_gaps import analyze_robot_gaps
+
+    row = db.execute(
+        text("""
+            SELECT model_slug, name, vendor, status, product_url, specs, sources,
+                   heif_total, score_total, last_scraped_at
+            FROM humanoid_benchmarks WHERE model_slug = :slug
+        """),
+        {"slug": slug},
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Robot not found")
+    row_dict = dict(row)
+    return build_humanoid_data_plan(row_dict, analyze_robot_gaps(row_dict))
+
+
+@router.post("/gap-engine/run")
+def run_humanoid_gap_engine(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    limit: int = Query(15, ge=1, le=80),
+    sparse_threshold_pct: float = Query(85.0, ge=0, le=100),
+    slug: Optional[str] = Query(None, description="Run for one robot only"),
+    plan_only: bool = Query(False, description="Build plans only — no scrape/rescore"),
+    use_llm: bool = Query(True),
+):
+    """
+    Second pass: logic engine plans missing data per robot, finds it, rescoring HEIF.
+    """
+    from app.services.humanoid_gap_engine import (
+        run_humanoid_gap_engine_batch,
+        run_humanoid_gap_engine_for_slug,
+    )
+
+    if slug:
+        return run_humanoid_gap_engine_for_slug(
+            db, slug, use_llm_scrape=use_llm, plan_only=plan_only,
+        )
+
+    def _batch() -> None:
+        batch_db = SessionLocal()
+        try:
+            run_humanoid_gap_engine_batch(
+                batch_db,
+                limit=limit,
+                sparse_threshold_pct=sparse_threshold_pct,
+                use_llm_scrape=use_llm,
+                plan_only=plan_only,
+            )
+        finally:
+            batch_db.close()
+
+    background_tasks.add_task(_batch)
+    return {
+        "status": "started",
+        "limit": limit,
+        "plan_only": plan_only,
+        "message": "Humanoid gap engine batch started in background.",
+    }
+
+
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 
 @router.post("/seed")

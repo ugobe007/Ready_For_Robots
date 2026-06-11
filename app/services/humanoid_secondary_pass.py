@@ -247,70 +247,42 @@ def run_rescue_passes_for_humanoid(
     use_llm_scrape: bool = True,
     run_deployment_scan: bool = True,
 ) -> Dict[str, Any]:
+    """Delegate to gap logic engine: plan → find data → rescore."""
+    from app.services.humanoid_gap_engine import execute_humanoid_data_plan, build_humanoid_data_plan
+
     slug = candidate["model_slug"]
     row = _fetch_robot_row(db, slug)
     if not row:
         return {"model_slug": slug, "skipped": True, "reason": "not_found"}
 
     gap_before = analyze_robot_gaps(row)
-    outcomes: Dict[str, str] = {}
-    filled: List[str] = []
-
-    # Pillar 2a: catalog/seed backfill for missing scoring fields
-    if gap_before.get("missing_scoring_fields") or gap_before.get("missing_row_fields"):
-        try:
-            from app.services.humanoid_benchmark_backfill import backfill_sparse_humanoids
-
-            stats = backfill_sparse_humanoids(db, slugs=[slug], rescore=True)
-            if stats.get("updated"):
-                outcomes[PASS_BACKFILL] = "filled"
-                filled.append("specs_backfill")
-            else:
-                outcomes[PASS_BACKFILL] = "skipped"
-        except Exception as exc:
-            db.rollback()
-            outcomes[PASS_BACKFILL] = "failed"
-            logger.warning("Humanoid backfill failed %s: %s", slug, exc)
+    plan = build_humanoid_data_plan(row, gap_before)
+    engine_result = execute_humanoid_data_plan(
+        db,
+        row,
+        plan,
+        use_llm_scrape=use_llm_scrape,
+        run_deployment_scan=run_deployment_scan,
+    )
 
     row = _fetch_robot_row(db, slug) or row
-
-    # Pillar 2b: news search + LLM spec extraction with cited article URLs
-    if use_llm_scrape and (gap_before.get("missing_scoring_fields") or not row.get("sources")):
-        try:
-            from app.services.humanoid_scraper import scrape_and_score_robot
-
-            result = scrape_and_score_robot(db, slug)
-            if result.get("error"):
-                outcomes[PASS_SCRAPE] = "failed"
-            elif result.get("sources_found", 0) > 0:
-                outcomes[PASS_SCRAPE] = "filled"
-                filled.extend(["specs", "sources"])
-            else:
-                outcomes[PASS_SCRAPE] = "skipped"
-        except Exception as exc:
-            db.rollback()
-            outcomes[PASS_SCRAPE] = "error"
-            logger.warning("Humanoid scrape failed %s: %s", slug, exc)
-
-    row = _fetch_robot_row(db, slug) or row
-    news_articles: List[dict] = []
-
-    # Pillar 4: deployment / press-release evidence (batch-level scan runs once outside loop)
-    if run_deployment_scan:
-        outcomes[PASS_DEPLOYMENT_NEWS] = "deferred_batch"
-
-    # Pillar 3: quality gate
-    quality = _quality_verdict(row)
-    outcomes[PASS_QUALITY] = "passed" if quality["is_valid_humanoid"] else "failed"
-
     gap_after = analyze_robot_gaps(row)
     news_level = news_evidence_level_from_sources(row.get("sources") or [])
+    quality = _quality_verdict(row)
+    outcomes = dict(engine_result.get("step_outcomes") or {})
+    outcomes[PASS_QUALITY] = "passed" if quality["is_valid_humanoid"] else "failed"
+    if run_deployment_scan:
+        outcomes.setdefault(PASS_DEPLOYMENT_NEWS, "deferred_batch")
+    outcomes[PASS_BACKFILL] = outcomes.get("seed_catalog_merge", "skipped")
+    outcomes[PASS_SCRAPE] = outcomes.get("news_llm_scrape", "skipped")
+    outcomes[PASS_ASSESSMENT] = outcomes.get("rescore", "ok")
+
     assessment = build_humanoid_assessment(
         row,
         gap_after,
         pass_outcomes=outcomes,
-        fields_filled=filled,
-        news_articles=news_articles,
+        fields_filled=engine_result.get("fields_filled"),
+        news_articles=[],
     )
     _stamp_humanoid_assessment(db, slug, assessment)
 
@@ -318,12 +290,16 @@ def run_rescue_passes_for_humanoid(
         "model_slug": slug,
         "name": row.get("name"),
         "vendor": row.get("vendor"),
+        "plan_summary": plan.get("summary"),
+        "action_plan": plan.get("action_plan"),
         "pass_outcomes": outcomes,
-        "fields_filled": filled,
-        "gaps_before": gap_before.get("missing_scoring_fields"),
-        "gaps_after": gap_after.get("missing_scoring_fields"),
-        "spec_fill_before": gap_before.get("spec_fill_pct"),
-        "spec_fill_after": gap_after.get("spec_fill_pct"),
+        "fields_filled": engine_result.get("fields_filled"),
+        "gaps_before": engine_result.get("gaps_before"),
+        "gaps_after": engine_result.get("gaps_after"),
+        "spec_fill_before": engine_result.get("spec_fill_before"),
+        "spec_fill_after": engine_result.get("spec_fill_after"),
+        "scores_before": engine_result.get("scores_before"),
+        "scores_after": engine_result.get("scores_after"),
         "capability_confidence_rank": assessment["pillars"][PILLAR_RANK]["capability_confidence_rank"],
         "cited_sources": len(assessment["pillars"][PILLAR_ADDITIONAL]["cited_sources"]),
         "is_valid_humanoid": quality["is_valid_humanoid"],

@@ -997,28 +997,42 @@ SEED_ROBOTS: list[dict] = [
 
 # ── Scraper ──────────────────────────────────────────────────────────────────
 
-def _search_robot_specs(robot_name: str, vendor: str) -> list[dict]:
+def _search_robot_specs(
+    robot_name: str,
+    vendor: str,
+    *,
+    search_queries: Optional[list[str]] = None,
+) -> list[dict]:
     """Search for recent spec articles using configured news/SERP APIs."""
     results: list[dict] = []
+    seen_urls: set[str] = set()
+
+    queries = [q.strip() for q in (search_queries or []) if q and q.strip()]
+    if not queries:
+        queries = [f"{vendor} {robot_name} humanoid robot specifications 2025 2026"]
 
     gnews_key = os.environ.get("GNEWS_API_KEY")
     if gnews_key:
-        try:
-            query = f"{vendor} {robot_name} humanoid robot specifications 2025 2026"
-            r = requests.get(
-                "https://gnews.io/api/v4/search",
-                params={"q": query, "lang": "en", "max": 5, "apikey": gnews_key},
-                timeout=10,
-            )
-            if r.ok:
-                for art in r.json().get("articles", []):
-                    results.append({
-                        "url": art.get("url"),
-                        "title": art.get("title"),
-                        "scraped_at": datetime.now(timezone.utc).isoformat(),
-                    })
-        except Exception as exc:
-            logger.warning("GNews search failed for %s: %s", robot_name, exc)
+        for query in queries[:5]:
+            try:
+                r = requests.get(
+                    "https://gnews.io/api/v4/search",
+                    params={"q": query, "lang": "en", "max": 5, "apikey": gnews_key},
+                    timeout=10,
+                )
+                if r.ok:
+                    for art in r.json().get("articles", []):
+                        url = art.get("url")
+                        if not url or url in seen_urls:
+                            continue
+                        seen_urls.add(url)
+                        results.append({
+                            "url": url,
+                            "title": art.get("title"),
+                            "scraped_at": datetime.now(timezone.utc).isoformat(),
+                        })
+            except Exception as exc:
+                logger.warning("GNews search failed for %s (%s): %s", robot_name, query[:60], exc)
 
     return results
 
@@ -1070,7 +1084,13 @@ Return ONLY the JSON object, no explanation."""
     return {}
 
 
-def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
+def scrape_and_score_robot(
+    db_session: Any,
+    model_slug: str,
+    *,
+    missing_fields: Optional[list[str]] = None,
+    search_queries: Optional[list[str]] = None,
+) -> dict:
     """
     Scrape fresh spec data for one robot, merge with existing, recompute scores.
     Returns the updated row dict.
@@ -1089,16 +1109,25 @@ def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
     vendor = row["vendor"]
     existing_specs = dict(row["specs"] or {})
 
-    # Search for recent articles
-    articles = _search_robot_specs(robot_name, vendor)
+    # Search for recent articles (gap engine may pass field-targeted queries)
+    articles = _search_robot_specs(robot_name, vendor, search_queries=search_queries)
 
     # Try to extract updated specs via LLM
     fresh_specs = _extract_specs_with_llm(robot_name, vendor, articles)
 
-    # Merge: fresh data wins over seeded data
+    # Merge: fresh data wins over seeded data; track which gaps were filled
     from app.services.humanoid_ai_stack import scoring_specs, specs_for_storage
+    from app.services.humanoid_spec_gaps import spec_field_missing, scoring_field_defs
 
-    merged_specs = {**existing_specs, **{k: v for k, v in fresh_specs.items() if v is not None}}
+    kind_by_field = {f.name: f.kind for f in scoring_field_defs()}
+    fields_filled: list[str] = []
+    merge_layer = {k: v for k, v in fresh_specs.items() if v is not None}
+    for key, val in merge_layer.items():
+        kind = kind_by_field.get(key, "numeric")
+        if spec_field_missing(existing_specs, key, kind):
+            fields_filled.append(key)
+
+    merged_specs = {**existing_specs, **merge_layer}
     merged_specs = specs_for_storage(merged_specs, model_slug)
 
     # Recompute scores
@@ -1139,7 +1168,13 @@ def scrape_and_score_robot(db_session: Any, model_slug: str) -> dict:
         },
     )
     db_session.commit()
-    return {"slug": model_slug, "scores": scores, "sources_found": len(articles)}
+    return {
+        "slug": model_slug,
+        "scores": scores,
+        "sources_found": len(articles),
+        "fields_filled": fields_filled,
+        "missing_fields_requested": list(missing_fields or []),
+    }
 
 
 def seed_robots(db_session: Any) -> dict:

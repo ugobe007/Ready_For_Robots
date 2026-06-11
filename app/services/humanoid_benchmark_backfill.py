@@ -240,6 +240,63 @@ def backfill_sparse_humanoids(
     return {"updated": updated, "skipped": skipped, "slugs": slugs}
 
 
+def rescore_humanoid(db: Session, slug: str) -> dict:
+    """Recompute HEIF + legacy scores from current specs (no spec merge)."""
+    row = db.execute(
+        text("""
+            SELECT model_slug, vendor, status, specs, heif_total, score_total
+            FROM humanoid_benchmarks WHERE model_slug = :slug
+        """),
+        {"slug": slug},
+    ).mappings().first()
+    if not row:
+        return {"updated": False, "reason": "not_found"}
+
+    specs = specs_for_storage(dict(row["specs"] or {}), slug)
+    scores = compute_scores(
+        scoring_specs(specs),
+        status=row["status"] or "research",
+        vendor=row["vendor"] or "",
+    )
+    before_heif = float(row["heif_total"] or 0)
+    after_heif = float(scores["heif_total"])
+    if abs(after_heif - before_heif) < 0.01 and row["score_total"] == scores["score_total"]:
+        return {"updated": False, "slug": slug, "heif_total": after_heif}
+
+    now = datetime.now(timezone.utc)
+    db.execute(
+        text("""
+            UPDATE humanoid_benchmarks SET
+                specs = cast(:specs as jsonb),
+                score_mobility = :score_mobility,
+                score_manipulation = :score_manipulation,
+                score_autonomy = :score_autonomy,
+                score_safety = :score_safety,
+                score_endurance = :score_endurance,
+                score_market_readiness = :score_market_readiness,
+                score_total = :score_total,
+                heif_mobility = :heif_mobility,
+                heif_manipulation = :heif_manipulation,
+                heif_cognition = :heif_cognition,
+                heif_safety = :heif_safety,
+                heif_data_pipeline = :heif_data_pipeline,
+                heif_production = :heif_production,
+                heif_total = :heif_total,
+                updated_at = :now
+            WHERE model_slug = :slug
+        """),
+        {"specs": json.dumps(specs), "slug": slug, "now": now, **scores},
+    )
+    db.commit()
+    return {
+        "updated": True,
+        "slug": slug,
+        "heif_before": before_heif,
+        "heif_after": after_heif,
+        "score_total": scores["score_total"],
+    }
+
+
 def repair_humanoid_index(db: Session) -> dict:
     """Cleanup junk rows, ensure Unitree/flagships, backfill specs."""
     from app.services.humanoid_catalog_cleanup import cleanup_humanoid_benchmarks
