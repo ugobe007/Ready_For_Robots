@@ -1,8 +1,8 @@
 /**
- * Hero right panel — live SCOUT-ranked sales leads with typewriter reveal and 10s rotation.
+ * Hero right panel — live SCOUT-ranked sales leads with typewriter reveal.
  * Palette aligned with ScoutWorkflowAnimation (#130d2a shell, purple/teal accents).
  */
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -10,7 +10,60 @@ import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { useSequentialTypewriter } from "@/hooks/useTypewriter";
 import type { HomepageLeadRow } from "@/components/HeroLivePipeline";
 
-const ROTATE_MS = 10_000;
+const TYPE_SPEED_MS = 52;
+const SEGMENT_GAP_MS = 650;
+const PAUSE_AFTER_MS = 15_000;
+const EMERALD = "#34d399";
+
+const SCOUT_KEYWORDS = [
+  "AMR",
+  "AGV",
+  "CapEx",
+  "OSHA",
+  "RFP",
+  "automation",
+  "labor",
+  "expansion",
+  "pilot",
+  "warehouse",
+  "humanoid",
+  "cobot",
+  "palletizing",
+  "compliance",
+  "staffing",
+  "distribution",
+  "fleet scale",
+  "service robot",
+  "collaborative arm",
+  "delivery",
+  "buying signal",
+  "Robot fit",
+];
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightTerms(text: string, extraTerms: string[] = []) {
+  if (!text) return null;
+  const terms = [...new Set([...SCOUT_KEYWORDS, ...extraTerms].filter((t) => t && t.length > 1))].sort(
+    (a, b) => b.length - a.length,
+  );
+  if (!terms.length) return text;
+
+  const re = new RegExp(`(${terms.map(escapeRegex).join("|")})`, "gi");
+  const parts = text.split(re);
+
+  return parts.map((part, i) => {
+    const hit = terms.some((t) => t.toLowerCase() === part.toLowerCase());
+    if (!hit) return <Fragment key={i}>{part}</Fragment>;
+    return (
+      <span key={i} style={{ color: EMERALD, fontWeight: 600 }}>
+        {part}
+      </span>
+    );
+  });
+}
 
 const FALLBACK: HomepageLeadRow[] = [
   {
@@ -107,17 +160,7 @@ export default function HeroSpotlightLeads() {
     };
   }, []);
 
-  useEffect(() => {
-    if (leads.length < 2) return undefined;
-    const timer = window.setInterval(() => {
-      setFade(true);
-      window.setTimeout(() => {
-        setIdx((i) => (i + 1) % leads.length);
-        setFade(false);
-      }, 320);
-    }, ROTATE_MS);
-    return () => window.clearInterval(timer);
-  }, [leads.length]);
+  const [pauseKey, setPauseKey] = useState(0);
 
   const segments = useMemo(() => {
     if (!lead) return [];
@@ -130,9 +173,28 @@ export default function HeroSpotlightLeads() {
     return parts.filter(Boolean);
   }, [lead]);
 
-  const typed = useSequentialTypewriter(segments, 22, 240);
+  const typed = useSequentialTypewriter(segments, TYPE_SPEED_MS, SEGMENT_GAP_MS);
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
   const tierColor = tierColors[tier] || tierColors.HOT;
+
+  const highlightExtras = useMemo(() => {
+    const signalLabel = lead?.signals?.[0]?.signal_label || "";
+    const robots = lead?.robot_types_needed || [];
+    return [signalLabel, tier, ...robots].filter(Boolean) as string[];
+  }, [lead, tier]);
+
+  useEffect(() => {
+    if (!typed.allDone || leads.length < 2) return undefined;
+    const timer = window.setTimeout(() => {
+      setFade(true);
+      window.setTimeout(() => {
+        setIdx((i) => (i + 1) % leads.length);
+        setFade(false);
+        setPauseKey((k) => k + 1);
+      }, 320);
+    }, PAUSE_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [typed.allDone, leads.length, pauseKey]);
 
   return (
     <div
@@ -210,9 +272,9 @@ export default function HeroSpotlightLeads() {
             Signal
           </p>
           <p className="text-[12px] leading-relaxed text-white/70 min-h-[2.5rem]">
-            {typed.segments[0] || ""}
+            {highlightTerms(typed.segments[0] || "", highlightExtras)}
             {typed.segmentIdx === 0 && !typed.allDone && (
-              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: "#03DAC5" }} />
+              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
             )}
           </p>
         </div>
@@ -228,9 +290,9 @@ export default function HeroSpotlightLeads() {
             Why SCOUT ranked this lead
           </p>
           <p className="text-[12px] leading-relaxed text-white/75 min-h-[4.5rem]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-            {typed.segments[1] || (typed.segmentIdx >= 1 ? "" : "")}
+            {highlightTerms(typed.segments[1] || (typed.segmentIdx >= 1 ? "" : ""), highlightExtras)}
             {typed.segmentIdx === 1 && !typed.allDone && (
-              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: "#03DAC5" }} />
+              <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
             )}
           </p>
         </div>
@@ -238,9 +300,9 @@ export default function HeroSpotlightLeads() {
         {segments.length > 2 && (
           <div>
             <p className="text-[11px] text-white/45 min-h-[1.25rem]">
-              {typed.segments[2] || ""}
+              {highlightTerms(typed.segments[2] || "", highlightExtras)}
               {typed.segmentIdx === 2 && !typed.allDone && (
-                <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: "#FFB000" }} />
+                <span className="inline-block w-[6px] h-[1em] ml-0.5 align-middle animate-pulse" style={{ background: EMERALD }} />
               )}
             </p>
           </div>

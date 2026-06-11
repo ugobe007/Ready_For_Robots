@@ -35,8 +35,8 @@ export function useTypewriter(text: string, speed = 28, startDelay = 200) {
 /** Types each segment in order; advances when prior segment completes. */
 export function useSequentialTypewriter(
   segments: string[],
-  speed = 26,
-  gapMs = 280,
+  speed = 48,
+  gapMs = 600,
 ) {
   const [segmentIdx, setSegmentIdx] = useState(0);
   const active = segments[segmentIdx] ?? "";
