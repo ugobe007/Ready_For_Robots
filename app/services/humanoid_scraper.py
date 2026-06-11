@@ -72,6 +72,18 @@ HEIF_RESEARCH_BY_VENDOR: Dict[str, Dict[str, float]] = {
         "mobility": 2.5, "manipulation": 2.5, "cognition": 2.0,
         "safety": 2.5, "data_pipeline": 2.0, "production": 3.0,
     },
+    "neura robotics": {
+        "mobility": 3.0, "manipulation": 3.0, "cognition": 3.5,
+        "safety": 2.5, "data_pipeline": 3.5, "production": 3.5,
+    },
+    "hexagon robotics": {
+        "mobility": 3.0, "manipulation": 3.0, "cognition": 3.5,
+        "safety": 3.0, "data_pipeline": 4.0, "production": 2.5,
+    },
+    "rainbow robotics": {
+        "mobility": 2.5, "manipulation": 3.0, "cognition": 2.0,
+        "safety": 2.0, "data_pipeline": 3.0, "production": 3.0,
+    },
 }
 
 
@@ -92,6 +104,12 @@ def _normalize_vendor(vendor: str) -> str:
         return "boston dynamics"
     if "engineai" in v or "engine ai" in v:
         return "engineai"
+    if "neura" in v:
+        return "neura robotics"
+    if "hexagon" in v:
+        return "hexagon robotics"
+    if "rainbow" in v:
+        return "rainbow robotics"
     return v
 
 

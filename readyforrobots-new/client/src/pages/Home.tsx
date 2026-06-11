@@ -9,7 +9,8 @@ import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Targe
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
-import ScoutWorkflowAnimation from "@/components/ScoutWorkflowAnimation";
+import HeroSpotlightLeads from "@/components/HeroSpotlightLeads";
+import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -311,9 +312,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SCOUT Workflow Animation — right column */}
+          {/* Live SCOUT leads — right column */}
           <div className="hidden lg:block">
-            <ScoutWorkflowAnimation />
+            <HeroSpotlightLeads />
           </div>
           </div>
         </div>
@@ -390,6 +391,8 @@ export default function Home() {
 
       {/* ── PIPELINE PREVIEW ── */}
       <PipelinePreview />
+
+      <HumanoidDailyRecap className="py-8 border-t border-white/6" />
 
       <HumanoidBenchmarkMarquee compact />
 

@@ -538,7 +538,8 @@ def scan_humanoid_deployment_news(
         "Agility Robotics", "Figure AI", "Reflex Robotics", "Apptronik",
         "EngineAI", "Persona AI", "Sanctuary AI", "Unitree Robotics",
         "UBTECH Robotics", "Agibot (Zhiyuan Robotics)", "1X Technologies",
-        "Boston Dynamics", "Neura Robotics", "Deep Robotics", "Fourier Robotics",
+        "Boston Dynamics", "Neura Robotics", "Hexagon Robotics", "Rainbow Robotics",
+        "Deep Robotics", "Fourier Robotics",
     ]
     priority_review = []
     for pv in priority_vendors:
