@@ -405,7 +405,7 @@ def seed_robot_companies():
             "market_entry_wave": "wave_3",
             "entry_priority": "high",
             "funding_stage": "startup",
-            "website": "https://www.engineai.com",
+            "website": "https://en.engineai.com.cn/",
             "trade_shows": [],
             "partnership_stage": "exploring",
             "lead_score": 89,

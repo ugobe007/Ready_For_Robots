@@ -19,7 +19,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { fetchWithTimeout, getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
-import { dealMatchesIndustrySearch } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -331,23 +330,17 @@ function HubSpotCtaLink({
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
-function filterDealsByQuery(deals: Deal[], query: string): Deal[] {
-  const q = query.trim();
-  if (!q || q.toLowerCase() === "all") return deals;
-  return deals.filter((d) =>
-    dealMatchesIndustrySearch(
-      { industry: d.industry, company: d.company, signal: d.signal, location: d.location },
-      q,
-    ),
-  );
-}
-
 async function fetchLeadsBySearch(base: string, query: string, headers?: HeadersInit): Promise<Deal[]> {
-  const params = new URLSearchParams({ search: query, limit: "25", tier: "HOT" });
+  const params = new URLSearchParams({
+    search: query,
+    limit: String(PIPELINE_LIMIT_PAID),
+    sort: "score",
+    exclude_junk: "true",
+  });
   const res = await fetchWithTimeout(
     `${base}/api/leads?${params}`,
     liveFetchInit({ headers }),
-    12_000,
+    30_000,
   );
   if (!res.ok) return [];
   const rows = (await res.json()) as ApiLead[];
@@ -697,13 +690,8 @@ export default function Pipeline() {
       setServerSearchLoading(false);
       return;
     }
-    const localHits = filterDealsByQuery(deals, q);
-    if (localHits.length > 0) {
-      setServerSearchDeals([]);
-      setServerSearchLoading(false);
-      return;
-    }
     setServerSearchLoading(true);
+    setServerSearchDeals([]);
     searchDebounceRef.current = setTimeout(() => {
       const base = getApiBase();
       const headers = session?.access_token ? authHeader(session.access_token) : undefined;
@@ -715,16 +703,12 @@ export default function Pipeline() {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
-  }, [industryQuery, filter, deals, session?.access_token]);
+  }, [industryQuery, filter, session?.access_token]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
-  const localFiltered = filterDealsByQuery(deals, activeSearchQuery);
-  const filtered =
-    hasActiveSearch && localFiltered.length === 0 && serverSearchDeals.length > 0
-      ? serverSearchDeals
-      : localFiltered;
+  const filtered = hasActiveSearch ? serverSearchDeals : deals;
   const effectiveSelectedId =
     selectedId != null && filtered.some((d) => d.id === selectedId)
       ? selectedId
