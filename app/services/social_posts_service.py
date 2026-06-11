@@ -485,6 +485,20 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
 
 # ── Main generator ────────────────────────────────────────────────────────────
 
+def _brief_for_social_posts(db: Session) -> Dict[str, Any]:
+    """Industry brief for posts 3–4 without blocking HTTP on OpenAI."""
+    from app.services.industry_brief_service import _read_cache
+    from app.services.newsletter_service import _heuristic_industry_brief, _read_industry_brief_stale
+
+    cached = _read_cache(cache_hours=1.5)
+    if cached and (cached.get("executive_take") or cached.get("macro_trends")):
+        return cached
+    stale = _read_industry_brief_stale()
+    if stale:
+        return stale
+    return _heuristic_industry_brief(db, days=1)
+
+
 def generate_daily_posts(
     db: Session,
     exclude_ids: Optional[List[int]] = None,
@@ -495,8 +509,6 @@ def generate_daily_posts(
     exclude_ids: company IDs to skip (already-posted leads).
     trend_offset: rotate which macro trend is used for post #4.
     """
-    from app.services.industry_brief_service import build_industry_brief_payload
-
     now = datetime.now(timezone.utc)
 
     # Merge caller-provided excludes with 7-day history
@@ -568,8 +580,8 @@ def generate_daily_posts(
             if len(selected) >= 2:
                 break
 
-    # Industry brief for insight + trend posts
-    brief = build_industry_brief_payload(db, days=1, analytics=None, use_cache=True, force_refresh=False)
+    # Industry brief for insight + trend posts (never block on OpenAI during refresh)
+    brief = _brief_for_social_posts(db)
     executive_take = brief.get("executive_take", "") or ""
     macro_trends = brief.get("macro_trends") or []
 

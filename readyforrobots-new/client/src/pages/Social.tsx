@@ -6,9 +6,53 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import { getApiBase, getDirectApiBase, liveFetchInit } from "@/lib/apiBase";
 
-/** Social generation can exceed Vercel proxy limits — call Fly directly from marketing site. */
-const API = typeof window !== "undefined" ? getDirectApiBase() : getApiBase();
 const SOCIAL_FETCH_MS = 150_000;
+const SOCIAL_REFRESH_MS = 150_000;
+
+function socialApiBases(): string[] {
+  if (typeof window === "undefined") return [getApiBase()];
+  const h = window.location.hostname.toLowerCase();
+  if (h === "readyforrobots.com" || h === "www.readyforrobots.com" || h.endsWith(".readyforrobots.com")) {
+    // Same-origin proxy first (reliable CORS); Fly direct if proxy times out.
+    return [getApiBase(), getDirectApiBase()];
+  }
+  return [getApiBase()];
+}
+
+/** Primary API base for LinkedIn OAuth (must match redirect / return_to host). */
+const API = getApiBase();
+
+async function socialPostFetch(
+  path: string,
+  init: RequestInit = {},
+  timeoutMs = SOCIAL_FETCH_MS,
+): Promise<Response> {
+  const bases = socialApiBases();
+  let lastErr: Error | null = null;
+  for (let i = 0; i < bases.length; i++) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(`${bases[i]}${path}`, liveFetchInit({ ...init, signal: controller.signal }));
+      if (i < bases.length - 1 && (res.status === 502 || res.status === 503 || res.status === 504)) {
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastErr =
+        e instanceof Error && e.name === "AbortError"
+          ? new Error("Request timed out — generation can take up to a minute. Try again.")
+          : e instanceof Error
+            ? e
+            : new Error("Request failed");
+      if (i < bases.length - 1) continue;
+      throw lastErr;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+  throw lastErr || new Error("Request failed");
+}
 
 type PostType = "hot_lead" | "signal_alert" | "industry_insight" | "market_trend" | "thought_leadership";
 
@@ -381,16 +425,11 @@ export default function Social() {
   };
 
   const fetchPosts = useCallback(async () => {
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), SOCIAL_FETCH_MS);
     try {
       setLoading(true);
       setError(null);
       setCacheStatus(null);
-      const res = await fetch(
-        `${API}/api/social/daily-posts`,
-        liveFetchInit({ signal: controller.signal }),
-      );
+      const res = await socialPostFetch("/api/social/daily-posts");
       if (!res.ok) {
         const detail = await res.text().catch(() => "");
         throw new Error(detail.slice(0, 160) || `API error ${res.status}`);
@@ -403,15 +442,8 @@ export default function Social() {
       );
       applyData(data);
     } catch (e) {
-      const msg =
-        e instanceof Error && e.name === "AbortError"
-          ? "Request timed out — try again in a minute (cache may still be warming)"
-          : e instanceof Error
-            ? e.message
-            : "Failed to load";
-      setError(msg);
+      setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
-      window.clearTimeout(timer);
       setLoading(false);
     }
   }, []);
@@ -440,19 +472,34 @@ export default function Social() {
       setError(null);
       const leadIds = currentCompanyIds.filter((id) => id != null);
       if (leadIds.length > 0) {
-        await fetch(`${API}/api/social/daily-posts/mark-posted`, {
+        await socialPostFetch(
+          "/api/social/daily-posts/mark-posted",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ company_ids: leadIds }),
+          },
+          30_000,
+        );
+      }
+      const res = await socialPostFetch(
+        "/api/social/daily-posts/refresh",
+        {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ company_ids: leadIds }),
-        });
+          body: JSON.stringify({ exclude_ids: leadIds, trend_offset: currentTrendOffset + 1 }),
+        },
+        SOCIAL_REFRESH_MS,
+      );
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(detail.slice(0, 160) || `API error ${res.status}`);
       }
-      const res = await fetch(`${API}/api/social/daily-posts/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exclude_ids: leadIds, trend_offset: currentTrendOffset + 1 }),
-      });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      applyData(await res.json());
+      const data = await res.json();
+      if (!data.posts?.length) {
+        throw new Error("No posts returned — try again in a minute.");
+      }
+      applyData(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
@@ -582,7 +629,13 @@ export default function Social() {
           </div>
         )}
 
-        {(loading || refreshing) && (
+        {refreshing && (
+          <div className="mb-4 p-3 border border-violet-800/60 rounded-xl bg-violet-950/20 text-xs text-violet-300 font-mono">
+            Generating a fresh batch — usually takes 30–60 seconds. Your current posts stay visible below.
+          </div>
+        )}
+
+        {loading && !posts?.length && (
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="border border-neutral-800 rounded-xl h-48 animate-pulse bg-neutral-900/40" />
@@ -599,8 +652,8 @@ export default function Social() {
           </div>
         )}
 
-        {!loading && !refreshing && !error && posts && (
-          <div className="space-y-6">
+        {!loading && !error && posts && posts.length > 0 && (
+          <div className={`space-y-6 ${refreshing ? "opacity-60 pointer-events-none" : ""}`}>
             {posts.map((post, i) => (
               <PostCard
                 key={`${post.company_id || post.type}-${i}`}
