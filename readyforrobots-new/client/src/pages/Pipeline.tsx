@@ -724,8 +724,10 @@ export default function Pipeline() {
         );
         if (!response.ok) throw new Error(await response.text());
         const lead = (await response.json()) as ApiLead;
-        const mapped = mapApiLeadToDeal(lead);
-        if (!cancelled) setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+        const mapped = mapApiLeadToDeal(lead) as Deal;
+        if (!cancelled) {
+          setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+        }
       } catch {
         // Research is additive; keep the core pipeline usable if detail enrichment misses.
       } finally {

@@ -480,7 +480,11 @@ export default function Social() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ company_ids: [post.company_id], post_types: [post.type] }),
     });
-    setPostedIds((prev) => new Set([...prev, post.company_id!]));
+    setPostedIds((prev) => {
+      const next = new Set(prev);
+      next.add(post.company_id!);
+      return next;
+    });
   };
 
   const postedCount = postedIds.size;

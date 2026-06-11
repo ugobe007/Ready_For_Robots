@@ -54,6 +54,7 @@ type ApiLead = {
   priority_score?: number;
   priority_reasons?: string[];
   share_summary?: string | null;
+  robot_types_needed?: string[];
   score?: {
     overall_score?: number;
     lead_value_score?: number;
