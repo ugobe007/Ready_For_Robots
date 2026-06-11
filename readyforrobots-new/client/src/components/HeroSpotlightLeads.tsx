@@ -273,16 +273,22 @@ function initialSpotlightLeads(): HomepageLeadRow[] {
 export default function HeroSpotlightLeads() {
   const bootLeads = initialSpotlightLeads();
   const [leads, setLeads] = useState<HomepageLeadRow[]>(bootLeads);
-  const [useDemo, setUseDemo] = useState(bootLeads.length < 2);
+  /** loading = waiting for API; live = API/cache rows; demo = static fallback only after fetch miss */
+  const [panelMode, setPanelMode] = useState<"loading" | "live" | "demo">(
+    bootLeads.length >= 2 ? "live" : "loading",
+  );
   const [idx, setIdx] = useState(0);
-  const [live, setLive] = useState(bootLeads.length >= 2);
   const [fade, setFade] = useState(false);
   const pendingLeadsRef = useRef<HomepageLeadRow[] | null>(null);
-  const typedAllDoneRef = useRef(false);
+  const leadCycleKeyRef = useRef("");
+  const panelModeRef = useRef(panelMode);
+  panelModeRef.current = panelMode;
 
-  const pool = leads.length >= 2 ? leads : useDemo ? FALLBACK : [];
+  const pool =
+    leads.length >= 2 ? leads : panelMode === "demo" ? FALLBACK : [];
   const lead = pool[idx % Math.max(pool.length, 1)];
   const leadCycleKey = `${idx}:${lead?.id ?? ""}:${lead?.company_name ?? ""}`;
+  leadCycleKeyRef.current = leadCycleKey;
 
   useEffect(() => {
     let cancelled = false;
@@ -301,25 +307,27 @@ export default function HeroSpotlightLeads() {
           Array.isArray(data.hotLeads) ? data.hotLeads.filter((l) => l.company_name) : [],
         ).slice(0, 10);
         if (rows.length < 2 || cancelled) {
-          if (!leads.length && !cancelled) setUseDemo(true);
+          if (panelModeRef.current === "loading" && !cancelled) {
+            setPanelMode("demo");
+          }
           return;
         }
         writeSurfaceCache(HOMEPAGE_SPOTLIGHT_CACHE_KEY, rows);
-        if (!leads.length) {
-          setLeads(rows);
-          setLive(true);
-          setUseDemo(false);
+        if (panelModeRef.current === "loading" || leads.length < 2) {
+          if (!cancelled) {
+            setLeads(rows);
+            setPanelMode("live");
+            setIdx(0);
+          }
           return;
         }
-        pendingLeadsRef.current = rows;
-        setLive(true);
-        if (typedAllDoneRef.current && !cancelled) {
-          setLeads(rows);
-          pendingLeadsRef.current = null;
-          setUseDemo(false);
+        if (!cancelled) {
+          pendingLeadsRef.current = rows;
         }
       } catch {
-        if (!leads.length && !cancelled) setUseDemo(true);
+        if (panelModeRef.current === "loading" && !cancelled) {
+          setPanelMode("demo");
+        }
       }
     })();
     return () => {
@@ -352,7 +360,6 @@ export default function HeroSpotlightLeads() {
     START_DELAY_MS,
     leadCycleKey,
   );
-  typedAllDoneRef.current = typed.allDone;
   const tier = (lead?.priority_tier || "HOT").toUpperCase();
   const tierColor = tierColors[tier] || tierColors.HOT;
 
@@ -364,14 +371,20 @@ export default function HeroSpotlightLeads() {
   }, [lead, parsed, tier]);
 
   useEffect(() => {
-    if (!typed.allDone || pool.length < 2) return undefined;
+    if (!typed.allDone || pool.length < 2 || segments.length < 1) return undefined;
+    const cycleKey = leadCycleKey;
     const timer = window.setTimeout(() => {
+      if (leadCycleKeyRef.current !== cycleKey) return;
       setFade(true);
       window.setTimeout(() => {
+        if (leadCycleKeyRef.current !== cycleKey) {
+          setFade(false);
+          return;
+        }
         if (pendingLeadsRef.current) {
           setLeads(pendingLeadsRef.current);
           pendingLeadsRef.current = null;
-          setUseDemo(false);
+          setPanelMode("live");
           setIdx(0);
         } else {
           setIdx((i) => (i + 1) % pool.length);
@@ -381,14 +394,7 @@ export default function HeroSpotlightLeads() {
       }, 320);
     }, PAUSE_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [typed.allDone, pool.length, pauseKey, leadCycleKey]);
-
-  useEffect(() => {
-    if (!typed.allDone || !pendingLeadsRef.current || idx !== 0) return;
-    setLeads(pendingLeadsRef.current);
-    pendingLeadsRef.current = null;
-    setUseDemo(false);
-  }, [typed.allDone, idx]);
+  }, [typed.allDone, pauseKey, leadCycleKey, pool.length, segments.length]);
 
   return (
     <div
@@ -539,7 +545,8 @@ export default function HeroSpotlightLeads() {
           ))}
         </div>
         <span className="text-[10px] text-white/25">
-          {live ? "API" : useDemo ? "Demo" : "…"} · {pool.length ? `${(idx % pool.length) + 1}/${pool.length}` : "—"}
+          {panelMode === "live" ? "API" : panelMode === "demo" ? "Demo" : "…"} ·{" "}
+          {pool.length ? `${(idx % pool.length) + 1}/${pool.length}` : "—"}
         </span>
       </div>
 

@@ -59,7 +59,8 @@ export function useSequentialTypewriter(
     return () => window.clearTimeout(t);
   }, [done, segmentIdx, segments.length, gapMs]);
 
-  const allDone = done && segmentIdx >= segments.length - 1;
+  const allDone =
+    segments.length > 0 && done && segmentIdx >= segments.length - 1;
   const completed = segments.slice(0, segmentIdx);
   const current = displayed;
 
