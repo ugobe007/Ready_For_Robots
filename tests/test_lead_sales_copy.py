@@ -64,6 +64,22 @@ def test_is_low_quality_sales_text():
     )
 
 
+def test_japan_airlines_generic_automation_avoids_cleaning_robots():
+    blob = (
+        "Japan Airlines invests in robot automation to improve ground operations "
+        "and reduce labor costs across Haneda Airport."
+    )
+    profile = infer_automation_profile(
+        industry="Airports & Aviation",
+        company_name="Japan Airlines",
+        signals=[{"signal_type": "automation_interest", "raw_text": blob}],
+    ).to_dict()
+    types = humanize_robot_types(profile, industry="Airports & Aviation", signal_blob=blob)
+    joined = " ".join(types).lower()
+    assert "humanoid" in joined or "baggage" in joined or "mobile manipulator" in joined
+    assert "clean" not in joined
+
+
 def test_japan_airlines_humanoid_surfaces_in_robot_fit():
     blob = (
         "Soon, humanoid robots will handle your baggage, clean aircraft at Tokyo Haneda Airport. "

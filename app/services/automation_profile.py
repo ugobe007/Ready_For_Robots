@@ -157,13 +157,18 @@ _INDUSTRY_SEEDS: Dict[str, Dict[str, Set[str]]] = {
     },
     "aviation": {
         "deployment": {"logistics_warehouse", "hospitality_guest_facing"},
-        "robots": {"humanoid", "mobile_manipulator", "service_robot", "amr_amr_forklift"},
-        "apps": {"luggage_delivery", "housekeeping_support", "material_handling", "inspection_vision"},
+        "robots": {"humanoid", "mobile_manipulator", "service_robot"},
+        "apps": {"luggage_delivery", "material_handling", "inspection_vision"},
+    },
+    "airline": {
+        "deployment": {"logistics_warehouse", "hospitality_guest_facing"},
+        "robots": {"humanoid", "mobile_manipulator", "service_robot"},
+        "apps": {"luggage_delivery", "material_handling", "inspection_vision"},
     },
     "airport": {
         "deployment": {"logistics_warehouse", "hospitality_guest_facing"},
-        "robots": {"humanoid", "mobile_manipulator", "service_robot", "amr_amr_forklift"},
-        "apps": {"luggage_delivery", "housekeeping_support", "material_handling"},
+        "robots": {"humanoid", "mobile_manipulator", "service_robot"},
+        "apps": {"luggage_delivery", "material_handling", "inspection_vision"},
     },
 }
 
@@ -196,7 +201,7 @@ _TEXT_KEYWORDS: List[tuple[str, str, str]] = [
     (r"\broom\s+service\b|\bluggage\b|\bhousekeeping\b", "service_robot", "room_service_delivery"),
     (r"\bhumanoid\b", "humanoid", ""),
     (r"\bbaggage\s+handling\b|\bhandle\s+(?:your\s+)?baggage\b", "humanoid", "luggage_delivery"),
-    (r"\bclean\s+aircraft\b|\baircraft\s+clean", "service_robot", "housekeeping_support"),
+    (r"\bclean(?:ing)?\s+aircraft\b|\baircraft\s+clean|\bcabin\s+clean", "service_robot", "housekeeping_support"),
     (r"\b(robotic|automated)\s+chef\b|\brobot\s+chef\b|\bautomated\s+kitchen\b|\bflippy\b", "cobot", "food_prep_automation"),
     (r"\bautomated\s+kiosk\b|\bkiosk\b|\brestaurant\s+in\s+a\s+box\b", "service_robot", "food_prep_automation"),
     (r"\bscara\b", "scara", ""),

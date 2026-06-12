@@ -54,8 +54,27 @@ _INDUSTRY_PAIN: dict[str, str] = {
     "casino": "housekeeping labor and high-traffic facility coverage",
     "gaming": "facility service consistency and labor pressure",
     "aviation": "baggage handling staffing and terminal service gaps",
+    "airline": "baggage handling staffing and ground-operations labor",
     "airport": "baggage handling staffing and terminal service gaps",
 }
+
+_CLEANING_SIGNAL_RE = re.compile(
+    r"\b("
+    r"clean(?:ing)?\s+aircraft|aircraft\s+clean|clean\s+cabin|cabin\s+clean|"
+    r"housekeeping|floor\s+scrub|autonomous\s+scrubber|cleaning\s+robot|"
+    r"disinfect(?:ion)?\s+robot|uv[-\s]?c\s+robot"
+    r")\b",
+    re.I,
+)
+
+
+def _is_aviation_context(industry: str) -> bool:
+    low = (industry or "").lower()
+    return any(k in low for k in ("aviation", "airline", "airport"))
+
+
+def _cleaning_signal_present(blob: str) -> bool:
+    return bool(_CLEANING_SIGNAL_RE.search(blob or ""))
 
 _JUNK_DISPLAY_RE = re.compile(
     r"(?i)(qualifying factors|active buying indicators in our database|"
@@ -154,7 +173,7 @@ def _prioritize_robot_opportunities(
     blob = (signal_blob or "").lower()
     humanoid_signal = bool(re.search(r"\bhumanoid\b", blob))
     baggage_signal = bool(re.search(r"\bbaggage\b|\bluggage\b", blob))
-    cleaning_signal = bool(re.search(r"\bclean(?:ing)?\s+aircraft\b|\baircraft\s+clean", blob))
+    cleaning_signal = _cleaning_signal_present(blob)
     kiosk_signal = bool(re.search(r"\bkiosk\b", blob))
     kitchen_signal = bool(
         re.search(r"\b(chef|kitchen|robotic\s+chef|automated\s+kitchen|flippy)\b", blob)
@@ -173,14 +192,18 @@ def _prioritize_robot_opportunities(
             return (2, 1)
         if kiosk_signal and "kiosk" in low:
             return (3, 0)
-        if cleaning_signal and "clean" in low:
+        if baggage_signal and ("humanoid" in low or "mobile manipulator" in low or "luggage" in low or "baggage" in low):
             return (4, 0)
-        if baggage_signal and ("humanoid" in low or "mobile manipulator" in low or "luggage" in low):
+        if cleaning_signal and "clean" in low:
             return (5, 0)
         if "humanoid" in low:
             return (6, 0)
-        if "service robot" in low or "cleaning" in low:
+        if "baggage" in low:
+            return (6, 0)
+        if "service robot" in low:
             return (7, 0)
+        if "cleaning" in low:
+            return (14, 0)
         if "mobile manipulator" in low:
             return (8, 0)
         if "amr" in low or "agv" in low:
@@ -236,16 +259,16 @@ def humanize_robot_types(
         add("mobile robots (AMRs)")
     if re.search(r"\bpick[-\s]?and[-\s]?place\b", blob):
         add("pick-and-place robots")
-    if re.search(r"\bclean\s+aircraft\b|\baircraft\s+clean", blob):
+    if _cleaning_signal_present(blob):
         add_cleaning("cleaning / housekeeping robots")
-    elif re.search(r"\b(clean|scrub|housekeeping|floor)\b", blob):
-        add_cleaning("cleaning robots")
     if re.search(r"\b(room service|delivery robot|concierge)\b", blob):
         add("service robots")
     if re.search(r"\b(cobot|collaborative)\b", blob):
         add("collaborative robots (cobots)")
     if re.search(r"\bbaggage\b|\bluggage\b", blob):
         add("mobile manipulators")
+        if _is_aviation_context(industry):
+            add("baggage handling robots")
 
     for cat in profile.get("robot_categories") or []:
         add(ROBOT_CATEGORY_LABELS.get(cat, cat.replace("_", " ")))
@@ -255,14 +278,16 @@ def humanize_robot_types(
         if not hint:
             continue
         if "clean" in hint.lower() or "housekeeping" in hint.lower():
-            add_cleaning(hint)
+            if _cleaning_signal_present(blob):
+                add_cleaning(hint)
         else:
             add(hint)
 
     if not out:
         for key, seeds in (
-            ("aviation", ["humanoid robots", "mobile manipulators", "cleaning robots"]),
-            ("airport", ["humanoid robots", "mobile manipulators", "cleaning robots"]),
+            ("aviation", ["humanoid robots", "baggage handling robots", "mobile manipulators"]),
+            ("airline", ["humanoid robots", "baggage handling robots", "mobile manipulators"]),
+            ("airport", ["humanoid robots", "baggage handling robots", "mobile manipulators"]),
             ("logistics", ["mobile robots (AMRs)"]),
             ("warehouse", ["mobile robots (AMRs)", "pick-and-place robots"]),
             ("manufacturing", ["collaborative robots (cobots)", "industrial robotic arms"]),

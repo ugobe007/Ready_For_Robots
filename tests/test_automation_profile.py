@@ -85,6 +85,7 @@ def test_aviation_humanoid_baggage_signal():
     )
     assert "humanoid" in p.robot_categories
     assert "luggage_delivery" in p.application_areas
+    assert "housekeeping_support" in p.application_areas
 
 
 def test_cobot_keyword_sets_collaboration():

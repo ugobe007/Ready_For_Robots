@@ -84,6 +84,9 @@ _INDUSTRY_AUTOMATION_CONTEXT = {
     "restaurant": ("kitchen automation and front-of-house robots", "staff turnover and order accuracy"),
     "manufacturing": ("collaborative robots (cobots), welding automation, and assembly systems", "labor costs and quality control"),
     "food & beverage": ("packaging automation and processing robots", "labor costs and production throughput"),
+    "aviation": ("humanoid baggage handlers, ground support automation, and terminal logistics robots", "baggage handling staffing and ground-operations labor"),
+    "airline": ("humanoid baggage handlers, ground support automation, and terminal logistics robots", "baggage handling staffing and ground-operations labor"),
+    "airport": ("humanoid baggage handlers, terminal logistics robots, and passenger-service automation", "baggage handling staffing and terminal service gaps"),
 }
 
 def _industry_automation_context(industry: str) -> tuple:
