@@ -67,7 +67,7 @@ _SENTENCE_WORDS = frozenset({
     "delivers", "delivery", "releases", "continues", "anticipates",
     "anticipate", "increase", "increases", "reveal", "reveals",
     "access", "policy", "act", "could", "brace", "braces",
-    "lag", "lags", "industry",
+    "lag", "lags", "industry", "approved", "approval",
     "here", "there", "five", "six", "seven", "eight", "nine", "ten",
 })
 
@@ -109,8 +109,8 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
         return False, "contains question mark (headline)"
     if re.search(r"\.{3,}", name) or "..." in name:
         return False, "truncated headline ellipsis"
-    if re.match(r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]", name):
-        return False, "editorial deck opener"
+    if re.match(r"(?i)^inside\s+", name_lower):
+        return False, "editorial inside opener"
 
     if not any(c.isupper() for c in name):
         return False, "no uppercase letter (not a proper noun)"

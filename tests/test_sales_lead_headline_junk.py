@@ -12,6 +12,8 @@ from app.services.lead_name_gate import check_lead_name
         "Nabisco is looking to automate its logistics pipeline",
         "Mondelez is looking to automate warehouse operations",
         "Sysco plans to automate distribution centers nationwide",
+        "Inside Amazon's $536M Robotic Warehouse Where Humans",
+        "Domino's distribution center approved",
     ],
 )
 def test_sentence_leads_are_junk(name: str):

@@ -130,6 +130,9 @@ _JUNK_SUBSTRINGS = [
     # Headline / slide fragments (arrow bullets, FYI asides) scraped as company.name
     "-->",
     "fyi-->",
+    "where humans",
+    "distribution center approved",
+    "fulfillment center approved",
     "essential benefits",
     # Headline verb fragments
     "war just picked", "retail war",
@@ -903,8 +906,16 @@ _JUNK_PATTERNS = [
     # "New MIT Mecalux" — news-deck collaboration line (university + partner), not a company row
     r"(?i)^new\s+(mit|harvard|stanford|berkeley|cmu|caltech|yale|princeton|columbia|cornell|"
     r"gatech|georgia tech|ucla|usc|nyu|duke|northwestern|oxford|cambridge)\s+\S",
-    # "Inside Alaska Airlines…" — magazine-style deck (needs ≥3 words; avoids "Inside Out")
-    r"(?i)^inside\s+[A-Z]\w+\s+[A-Z]",
+    # "Inside Alaska Airlines…" / "Inside Amazon's $536M…" — magazine-style article decks
+    r"(?i)^inside\s+",
+    # Truncated investigative headline tails
+    r"(?i)\s+where\s+(humans|robots|workers|people|machines|ai)\s*$",
+    # Possessive brand + facility approval headline (not a legal entity name)
+    r"(?i)^[\w'’]+'s\s+(distribution|fulfillment|warehouse|sorting|manufacturing)\s+"
+    r"(center|centre|plant|facility)\b",
+    r"(?i)\b(distribution|fulfillment)\s+center\s+approved\b",
+    # Dollar-denominated article titles scraped as company.name
+    r"(?i)^inside\s+.*\$\d",
     # Rhetorical or survey-style titles scraped as names
     r"(?i)\?{2,}\s*$",  # two+ trailing ? (clickbait / deck uncertainty)
     r"\?\s*$",
