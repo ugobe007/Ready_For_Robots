@@ -72,6 +72,7 @@ from app.services.lead_sales_copy import humanize_robot_types
 from app.services.company_url_openai import resolve_homepage_urls_for_companies
 from app.services.company_domain import (
     dedupe_companies_ordered,
+    dedupe_lead_payloads_ordered,
     dedupe_staged_lead_tuples,
     normalize_website_domain,
     pick_canonical_company,
@@ -2081,32 +2082,10 @@ def _merge_homepage_payload(primary: dict, fallback: dict) -> dict:
 
 def _dedupe_homepage_leads(leads: list) -> list:
     """One spotlight row per buyer — collapse duplicate DB rows / name variants."""
-    from app.services.company_domain import normalize_website_domain
-
-    seen_ids: set = set()
-    seen_names: set[str] = set()
-    seen_domains: set[str] = set()
-    out: list = []
-    for row in leads:
-        if not isinstance(row, dict):
-            continue
-        cid = row.get("id")
-        if cid is not None and cid in seen_ids:
-            continue
-        name_key = " ".join((row.get("company_name") or "").strip().lower().split())
-        dom = normalize_website_domain(row.get("website"))
-        if dom and dom in seen_domains:
-            continue
-        if name_key and name_key in seen_names:
-            continue
-        if cid is not None:
-            seen_ids.add(cid)
-        if dom:
-            seen_domains.add(dom)
-        if name_key:
-            seen_names.add(name_key)
-        out.append(row)
-    return out
+    if not isinstance(leads, list):
+        return []
+    rows = [r for r in leads if isinstance(r, dict)]
+    return dedupe_lead_payloads_ordered(rows)
 
 
 def _homepage_response(payload: dict) -> dict:

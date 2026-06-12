@@ -4,10 +4,28 @@ represent the same legal entity (same registrable domain, different company IDs)
 """
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple
+import re
+from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
 from app.services.lead_filter import pick_primary_score
+
+_LEGAL_SUFFIX_RE = re.compile(
+    r"(?i)(?:,?\s*(?:inc\.?|llc\.?|ltd\.?|corp\.?|corporation|co\.?|plc\.?|gmbh|bv|nv|ag|sa|srl))"
+    r"|(?:\s+(?:international|holdings|group|enterprises))$"
+)
+
+# Registrable domain → canonical buyer name key (lowercase, collapsed)
+_DOMAIN_ENTITY_NAME_KEYS: Dict[str, str] = {
+    "jal.co.jp": "japan airlines",
+    "choicehotels.com": "choice hotels",
+}
+
+# Alternate display names → canonical buyer name key
+_NAME_ENTITY_ALIASES: Dict[str, str] = {
+    "jal": "japan airlines",
+    "japan airline": "japan airlines",
+}
 
 
 def normalize_website_domain(website: Optional[str]) -> Optional[str]:
@@ -88,53 +106,99 @@ def pick_canonical_company(peers: List[Any]) -> Optional[Any]:
     return max(peers, key=company_rank_for_canonical)
 
 
+def normalize_company_name_key(name: Optional[str]) -> str:
+    """Collapse legal suffixes and airline/airlines variants for entity dedupe."""
+    s = (name or "").strip().lower()
+    if not s:
+        return ""
+    s = re.sub(r"[^\w\s&'-]", " ", s)
+    s = " ".join(s.split())
+    s = _LEGAL_SUFFIX_RE.sub("", s).strip()
+    s = re.sub(r"\bairline\b", "airlines", s)
+    s = " ".join(s.split())
+    return _NAME_ENTITY_ALIASES.get(s, s)
+
+
+def company_entity_dedupe_keys(
+    name: Optional[str],
+    website: Optional[str] = None,
+    *,
+    website_domain: Optional[str] = None,
+) -> Set[str]:
+    """
+    Stable keys for spotting the same buyer across duplicate DB rows.
+    Matches exact domains, normalized names, and known brand domains (e.g. jal.co.jp).
+    """
+    keys: Set[str] = set()
+    name_key = normalize_company_name_key(name)
+    if name_key:
+        keys.add(f"name:{name_key}")
+    dom = normalize_website_domain(website) or (
+        str(website_domain).strip().lower() if website_domain else None
+    )
+    if dom:
+        keys.add(f"dom:{dom}")
+        mapped = _DOMAIN_ENTITY_NAME_KEYS.get(dom)
+        if mapped:
+            keys.add(f"name:{mapped}")
+    return keys
+
+
+def _dedupe_by_entity_keys(items: List[Any], key_fn) -> List[Any]:
+    seen: Set[str] = set()
+    out: List[Any] = []
+    for item in items:
+        keys = key_fn(item)
+        if keys and seen.intersection(keys):
+            continue
+        if keys:
+            seen.update(keys)
+        out.append(item)
+    return out
+
+
 def dedupe_companies_ordered(companies: List[Any]) -> List[Any]:
     """
     First occurrence wins (caller controls order — typically score/recency).
-    Skips later rows with the same normalized domain or same normalized display name.
+    Skips later rows that resolve to the same buyer entity (domain, name variants, brand aliases).
     """
-    seen_names: set[str] = set()
-    seen_domains: set[str] = set()
-    out: List[Any] = []
-    for c in companies:
-        raw = (c.name or "").strip()
-        name_key = " ".join(raw.lower().split()) if raw else ""
-        dom = normalize_website_domain(getattr(c, "website", None)) or getattr(
-            c, "website_domain", None
+
+    def _keys(c: Any) -> Set[str]:
+        return company_entity_dedupe_keys(
+            getattr(c, "name", None),
+            getattr(c, "website", None),
+            website_domain=getattr(c, "website_domain", None),
         )
-        if dom and dom in seen_domains:
-            continue
-        if name_key and name_key in seen_names:
-            continue
-        if dom:
-            seen_domains.add(dom)
-        if name_key:
-            seen_names.add(name_key)
-        out.append(c)
-    return out
+
+    return _dedupe_by_entity_keys(companies, _keys)
 
 
 def dedupe_staged_lead_tuples(
-    staged: List[Tuple[Company, bool, str, Any]],
-) -> List[Tuple[Company, bool, str, Any]]:
+    staged: List[Tuple[Any, bool, str, Any]],
+) -> List[Tuple[Any, bool, str, Any]]:
     """Same dedupe as dedupe_companies_ordered but keeps (company, junk, junk_reason, pri) rows."""
-    seen_names: set[str] = set()
-    seen_domains: set[str] = set()
-    out: List[Tuple[Company, bool, str, Any]] = []
-    for item in staged:
+
+    def _keys(item: Tuple[Any, bool, str, Any]) -> Set[str]:
         c = item[0]
-        raw = (c.name or "").strip()
-        name_key = " ".join(raw.lower().split()) if raw else ""
-        dom = normalize_website_domain(getattr(c, "website", None)) or getattr(
-            c, "website_domain", None
+        return company_entity_dedupe_keys(
+            getattr(c, "name", None),
+            getattr(c, "website", None),
+            website_domain=getattr(c, "website_domain", None),
         )
-        if dom and dom in seen_domains:
-            continue
-        if name_key and name_key in seen_names:
-            continue
-        if dom:
-            seen_domains.add(dom)
-        if name_key:
-            seen_names.add(name_key)
-        out.append(item)
-    return out
+
+    return _dedupe_by_entity_keys(staged, _keys)
+
+
+def dedupe_lead_payloads_ordered(leads: List[dict]) -> List[dict]:
+    """Dedupe API-shaped lead dicts (homepage hotLeads, cached surfaces)."""
+
+    def _keys(row: dict) -> Set[str]:
+        if not isinstance(row, dict):
+            return set()
+        return company_entity_dedupe_keys(
+            row.get("company_name"),
+            row.get("website"),
+            website_domain=row.get("website_domain"),
+        )
+
+    return _dedupe_by_entity_keys(leads, _keys)

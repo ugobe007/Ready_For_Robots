@@ -60,15 +60,64 @@ function extractLeadPreviews(data) {
     .filter(Boolean);
 }
 
-/** One card per buyer name — duplicate DB rows (same company ingested twice) collapse for UI. */
+const DOMAIN_ENTITY_NAME_KEYS = {
+  'jal.co.jp': 'japan airlines',
+  'choicehotels.com': 'choice hotels',
+};
+const NAME_ENTITY_ALIASES = {
+  jal: 'japan airlines',
+  'japan airline': 'japan airlines',
+};
+
+function normalizeWebsiteDomain(website) {
+  const raw = String(website || '').trim().toLowerCase();
+  if (!raw) return '';
+  try {
+    const host = raw.includes('://') ? new URL(raw).hostname : raw.split('/')[0].split('?')[0];
+    return host.replace(/^www\./, '');
+  } catch {
+    return raw.replace(/^www\./, '').split('/')[0].split('?')[0];
+  }
+}
+
+function normalizeCompanyNameKey(name) {
+  let s = String(name || '').trim().toLowerCase();
+  if (!s) return '';
+  s = s.replace(/[^\w\s&'-]/g, ' ').replace(/\s+/g, ' ').trim();
+  s = s
+    .replace(
+      /(?:,?\s*(?:inc\.?|llc\.?|ltd\.?|corp\.?|corporation|co\.?|plc\.?|gmbh|bv|nv|ag|sa|srl)|\s+(?:international|holdings|group|enterprises))$/gi,
+      '',
+    )
+    .trim();
+  s = s.replace(/\bairline\b/g, 'airlines').replace(/\s+/g, ' ').trim();
+  return NAME_ENTITY_ALIASES[s] || s;
+}
+
+function companyEntityDedupeKeys(lead) {
+  const keys = new Set();
+  const nameKey = normalizeCompanyNameKey(lead?.company_name);
+  if (nameKey) keys.add(`name:${nameKey}`);
+  const dom = normalizeWebsiteDomain(lead?.website) || String(lead?.website_domain || '').trim().toLowerCase();
+  if (dom) {
+    keys.add(`dom:${dom}`);
+    const mapped = DOMAIN_ENTITY_NAME_KEYS[dom];
+    if (mapped) keys.add(`name:${mapped}`);
+  }
+  return keys;
+}
+
+/** One card per buyer — collapse duplicate DB rows, name variants, and known brand domains. */
 function dedupeHomepageLeads(leads) {
   if (!Array.isArray(leads)) return [];
   const seen = new Set();
   return leads.filter((l) => {
-    const k = (l.company_name || '').trim().toLowerCase().replace(/\s+/g, ' ');
-    if (!k) return true;
-    if (seen.has(k)) return false;
-    seen.add(k);
+    const keys = companyEntityDedupeKeys(l);
+    if (!keys.size) return Boolean(l?.company_name || l?.id != null);
+    for (const key of keys) {
+      if (seen.has(key)) return false;
+    }
+    for (const key of keys) seen.add(key);
     return true;
   });
 }
