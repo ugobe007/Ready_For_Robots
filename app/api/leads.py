@@ -1864,8 +1864,11 @@ def get_leads(
 
 
 @router.get("/by-id/{company_id}")
-def get_lead_by_id(company_id: int, db: Session = Depends(get_db)):
+def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(get_db)):
     """Single lead payload (same shape as list rows) — for modals / deep links when `automation_profile` is needed."""
+    # Newsletter/homepage deep links hit this repeatedly; allow short browser/CDN caching
+    # with stale-while-revalidate so repeat clicks resolve near-instantly.
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
     c = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
