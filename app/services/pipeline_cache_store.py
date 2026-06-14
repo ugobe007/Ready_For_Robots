@@ -168,7 +168,7 @@ def cache_write(db: Session, cache_key: str, data: Any, *, ttl_minutes: int = 15
                     expires_at = EXCLUDED.expires_at
                 """
             ),
-            {"k": cache_key, "d": json.dumps(data), "e": expires.isoformat()},
+            {"k": cache_key, "d": json.dumps(data, default=str), "e": expires.isoformat()},
         )
         db.commit()
     except Exception as exc:
