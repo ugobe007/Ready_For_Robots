@@ -10,6 +10,7 @@ GET  /api/humanoid/linkedin-post        — generate LinkedIn post text (public)
 POST /api/humanoid/discover            — discover + AI-score humanoid companies (admin)
 POST /api/humanoid/seed                 — seed known robots (admin)
 POST /api/humanoid/scrape/{slug}        — scrape + rescore one robot (admin)
+POST /api/humanoid/apply-verified-specs — apply fetch-verified specs + rescore (token)
 POST /api/humanoid/deployment-news       — scan news for deployment/trial evidence (admin)
 GET  /api/humanoid/cron/scrape-all      — cron trigger for weekly auto-scrape
 """
@@ -21,14 +22,19 @@ import time
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.database import SessionLocal, get_db
 from app.db_timeout import run_db
-from app.services.humanoid_ai_stack import enrich_robot_with_ai_stack, resolve_ai_stack, scoring_specs
+from app.services.humanoid_ai_stack import (
+    enrich_robot_with_ai_stack,
+    resolve_ai_stack,
+    scoring_specs,
+    specs_for_storage,
+)
 from app.services.humanoid_scraper import SEED_ROBOTS, compute_scores, seed_robots, scrape_and_score_robot
 from app.services.humanoid_spec_gaps import SEED_SPECS_BY_SLUG
 from app.services.humanoid_benchmark_backfill import (
@@ -428,6 +434,125 @@ def scrape_one(slug: str, db: Session = Depends(get_db)):
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
+
+_VERIFIED_FIELD_KINDS: dict[str, str] = {}
+
+
+def _verified_field_kinds() -> dict[str, str]:
+    if not _VERIFIED_FIELD_KINDS:
+        from app.services.humanoid_spec_gaps import SCORING_SPEC_FIELDS, METADATA_SPEC_FIELDS
+        _VERIFIED_FIELD_KINDS.update({f: k for f, _dims, k in SCORING_SPEC_FIELDS})
+        _VERIFIED_FIELD_KINDS.update({f: k for f, k in METADATA_SPEC_FIELDS})
+    return _VERIFIED_FIELD_KINDS
+
+
+def _coerce_verified(val, kind: str):
+    if val is None:
+        return None
+    if kind == "bool":
+        if isinstance(val, bool):
+            return val
+        return str(val).strip().lower() in ("true", "yes", "1")
+    if kind == "numeric":
+        if isinstance(val, (int, float)):
+            return val
+        import re as _re
+        m = _re.search(r"-?\d[\d,]*\.?\d*", str(val))
+        return float(m.group().replace(",", "")) if m else None
+    return val
+
+
+@router.post("/apply-verified-specs")
+def apply_verified_specs(
+    body: dict = Body(...),
+    token: str = Query("", description="SCRAPER_CRON_TOKEN secret"),
+    db: Session = Depends(get_db),
+):
+    """
+    Apply externally fetch-verified specs (merge missing-only) + rescore + record provenance.
+
+    Token-protected (SCRAPER_CRON_TOKEN). Only fills fields currently null/empty — never
+    overwrites existing values. Body shape:
+      {"items": [{"slug": "...", "specs": {field: value},
+                  "evidence": {field: {"url": "...", "quote": "..."}}}]}
+    """
+    import json as _json
+
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    kind_by_field = _verified_field_kinds()
+    items = body.get("items") or []
+    if not isinstance(items, list):
+        raise HTTPException(status_code=400, detail="body.items must be a list")
+
+    now = datetime.now(timezone.utc)
+    results: list[dict] = []
+    for item in items:
+        slug = (item or {}).get("slug")
+        in_specs = (item or {}).get("specs") or {}
+        evidence = (item or {}).get("evidence") or {}
+        if not slug:
+            continue
+        row = db.execute(
+            text("SELECT name, vendor, status, specs, sources, score_total, heif_total "
+                 "FROM humanoid_benchmarks WHERE model_slug = :s"),
+            {"s": slug},
+        ).mappings().first()
+        if not row:
+            results.append({"slug": slug, "error": "not found"})
+            continue
+        existing = dict(row["specs"] or {})
+        merge: dict = {}
+        rejected: list[str] = []
+        for field, val in in_specs.items():
+            if field not in kind_by_field:
+                rejected.append(field)
+                continue
+            cv = _coerce_verified(val, kind_by_field[field])
+            if cv is not None and existing.get(field) in (None, ""):
+                merge[field] = cv
+        if not merge:
+            results.append({"slug": slug, "filled": [], "rejected": rejected, "note": "nothing to fill"})
+            continue
+        merged = specs_for_storage({**existing, **merge}, slug)
+        scores = compute_scores(scoring_specs(merged), status=row["status"], vendor=row["vendor"])
+        prov = list(row["sources"] or []) + [{
+            "method": "fetch_verify",
+            "scraped_at": now.isoformat(),
+            "fields": list(merge.keys()),
+            "evidence": {f: evidence.get(f) for f in merge},
+        }]
+        db.execute(
+            text(
+                "UPDATE humanoid_benchmarks SET specs = cast(:specs as jsonb), "
+                "sources = cast(:sources as jsonb), last_scraped_at = :now, updated_at = :now, "
+                "score_mobility=:score_mobility, score_manipulation=:score_manipulation, "
+                "score_autonomy=:score_autonomy, score_safety=:score_safety, "
+                "score_endurance=:score_endurance, score_market_readiness=:score_market_readiness, "
+                "score_total=:score_total, heif_mobility=:heif_mobility, heif_manipulation=:heif_manipulation, "
+                "heif_cognition=:heif_cognition, heif_safety=:heif_safety, heif_data_pipeline=:heif_data_pipeline, "
+                "heif_production=:heif_production, heif_total=:heif_total WHERE model_slug = :slug"
+            ),
+            {"specs": _json.dumps(merged), "sources": _json.dumps(prov[-30:]),
+             "now": now, "slug": slug, **scores},
+        )
+        db.commit()
+        results.append({
+            "slug": slug,
+            "filled": list(merge.keys()),
+            "rejected": rejected,
+            "score_total": [row["score_total"], scores["score_total"]],
+            "heif_total": [row["heif_total"], scores["heif_total"]],
+        })
+    _ROBOTS_LIST_CACHE.clear()
+    return {
+        "applied": sum(1 for r in results if r.get("filled")),
+        "robots": len(results),
+        "results": results,
+    }
 
 
 @router.post("/scrape-all")
