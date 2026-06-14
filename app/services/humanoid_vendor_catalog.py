@@ -32,8 +32,8 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Sanctuary Phoenix", "vendor": "Sanctuary AI", "model_slug": "sanctuary-phoenix", "product_url": "https://www.sanctuary.ai", "status": "pilot", "country": "Canada", "specs": {"has_dexterous_hands": True, "finger_count": 5, "autonomy_level": "semi", "has_sdk": True, "has_api": True, "has_estop": True, "force_limited_joints": True, "commercial_deployments": 10, "has_support_sla": True}},
     {"name": "Agibot A2", "vendor": "Agibot (Zhiyuan Robotics)", "model_slug": "agibot-a2", "product_url": "https://agibot.com", "vendor_url": "https://www.agibot.com", "vendor_name_cn": "智元机器人", "robot_name_cn": "远征A2", "vendor_aliases": "AgiBot|智元机器人|Zhiyuan Robotics|Zhiyuan", "robot_aliases": "AgiBot A2|远征A2|Yuanzheng A2", "status": "available", "country": "China"},
     {"name": "Agibot G5", "vendor": "Agibot (Zhiyuan Robotics)", "model_slug": "agibot-g5", "product_url": "https://agibot.com", "status": "pilot", "country": "China"},
-    {"name": "UBTECH Walker X", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-x", "product_url": "https://www.ubtrobot.com/en/", "status": "available", "country": "China"},
-    {"name": "UBTECH Walker S", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-s", "product_url": "https://www.ubtrobot.com/en/", "status": "pilot", "country": "China"},
+    {"name": "UBTECH Walker X", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-x", "product_url": "https://www.ubtrobot.com/en/", "vendor_url": "https://www.ubtrobot.com", "vendor_name_cn": "优必选", "robot_name_cn": "Walker X", "vendor_aliases": "UBTECH|优必选|UBTECH Robotics|UBTech", "robot_aliases": "Walker X|UBTECH Walker X", "status": "available", "country": "China"},
+    {"name": "UBTECH Walker S", "vendor": "UBTECH Robotics", "model_slug": "ubtech-walker-s", "product_url": "https://www.ubtrobot.com/en/", "vendor_url": "https://www.ubtrobot.com", "vendor_name_cn": "优必选", "robot_name_cn": "Walker S", "vendor_aliases": "UBTECH|优必选|UBTECH Robotics|UBTech", "robot_aliases": "Walker S|Walker S1|Walker S2|UBTECH Walker S", "status": "pilot", "country": "China"},
     {"name": "Generalist GEN-1", "vendor": "Generalist AI", "model_slug": "generalist-gen1", "product_url": "https://generalistai.com/", "status": "research", "country": "USA", "specs": {"has_dexterous_hands": True, "finger_count": 5, "can_navigate_rough_terrain": True, "autonomy_level": "semi", "has_estop": True, "force_limited_joints": True, "commercial_deployments": 0}},
     {"name": "Galaxea Kengo", "vendor": "Galaxea Dynamics", "model_slug": "galaxea-kengo", "product_url": "https://humanoid.guide/welcome-kengo/", "status": "research", "country": "China", "specs": {"height_cm": 170, "weight_kg": 65, "has_dexterous_hands": True, "finger_count": 5, "can_climb_stairs": True, "can_navigate_rough_terrain": True, "autonomy_level": "semi", "has_estop": True, "force_limited_joints": True, "has_sdk": True, "has_api": True, "commercial_deployments": 0}},
     {"name": "Foundation Phantom", "vendor": "Foundation Future Industries", "model_slug": "foundation-phantom", "product_url": "https://foundation.bot/", "status": "research", "country": "USA", "specs": {"has_dexterous_hands": True, "finger_count": 5, "can_navigate_rough_terrain": True, "autonomy_level": "semi", "has_estop": True, "force_limited_joints": True, "commercial_deployments": 0}},
@@ -108,7 +108,7 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "PAL Robotics TALOS", "vendor": "PAL Robotics", "model_slug": "pal-talos", "product_url": "https://pal-robotics.com", "status": "research", "country": "Spain"},
     {"name": "PAL Robotics REEM-C", "vendor": "PAL Robotics", "model_slug": "pal-reem-c", "product_url": "https://pal-robotics.com", "status": "research", "country": "Spain"},
     {"name": "Engineered Arts Ameca", "vendor": "Engineered Arts", "model_slug": "engineered-arts-ameca", "product_url": "https://engineeredarts.com", "status": "available", "country": "UK"},
-    {"name": "Reflex Humanoid", "vendor": "Reflex Robotics", "model_slug": "reflex-humanoid", "product_url": "https://reflexrobotics.com", "status": "pilot", "country": "USA"},
+    {"name": "Reflex Humanoid", "vendor": "Reflex Robotics", "model_slug": "reflex-humanoid", "product_url": "https://www.reflexrobotics.com", "vendor_url": "https://www.reflexrobotics.com", "vendor_aliases": "Reflex|Reflex Robotics", "robot_aliases": "Reflex|Reflex Humanoid", "verification_status": "VERIFIED", "status": "pilot", "country": "USA"},
     {"name": "MenteeBot", "vendor": "Mentee Robotics", "model_slug": "mentee-bot", "product_url": "https://www.menteebot.com", "status": "pilot", "country": "Israel"},
     {"name": "Persona AI Gen1", "vendor": "Persona AI", "model_slug": "persona-ai-gen1", "product_url": "https://persona.ai", "status": "pilot", "country": "USA", "specs": {"has_dexterous_hands": True, "finger_count": 5, "payload_kg": 5.0, "autonomy_level": "semi", "commercial_deployments": 5, "has_sdk": False, "has_api": False, "has_estop": True, "force_limited_joints": True}},
     {"name": "Xiaomi CyberOne", "vendor": "Xiaomi", "model_slug": "xiaomi-cyberone", "product_url": "https://www.mi.com", "status": "research", "country": "China"},
@@ -154,14 +154,14 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "LimX Oli", "vendor": "LimX Dynamics", "model_slug": "limx-oli", "product_url": "https://www.limxdynamics.com/en", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 2}},
     {"name": "LimX TRON 2", "vendor": "LimX Dynamics", "model_slug": "limx-tron2", "product_url": "https://www.limxdynamics.com/en", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 2}},
     {"name": "Kepler Forerunner K2", "vendor": "Kepler", "model_slug": "kepler-k2", "product_url": "https://www.gotokepler.com/home", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "commercial_deployments": 3}},
-    {"name": "Booster T1", "vendor": "Booster Robotics", "model_slug": "booster-t1", "product_url": "https://booster.tech", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "commercial_deployments": 2}},
+    {"name": "Booster T1", "vendor": "Booster Robotics", "model_slug": "booster-t1", "product_url": "https://www.booster.tech", "vendor_url": "https://www.booster.tech", "vendor_name_cn": "加速进化", "robot_name_cn": "T1", "vendor_aliases": "Booster|加速进化|Booster Robotics", "robot_aliases": "Booster T1|T1", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "commercial_deployments": 2}},
     {"name": "Matrix Robotics MATRIX-3", "vendor": "Matrix Robotics", "model_slug": "matrix-3", "product_url": "https://matrixrobotics.ai", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "finger_count": 27, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 1, "force_limited_joints": True, "has_estop": True}},
     {"name": "MagicLab MagicBot Gen1", "vendor": "MagicLab", "model_slug": "magiclab-humanoid", "vendor_url": "https://www.magiclab.top", "vendor_name_cn": "魔法原子", "robot_name_cn": "小麦 Gen1", "vendor_aliases": "Magic Lab|魔法原子|MagicLab Robotics", "robot_aliases": "MagicBot Gen1|小麦 Gen1", "status": "research", "country": "China"},
     {"name": "Spirit AI Xiao Mo", "vendor": "Spirit AI", "model_slug": "spirit-ai-humanoid", "vendor_url": "https://www.spirit-ai.com", "vendor_name_cn": "千寻智能", "robot_name_cn": "小墨", "vendor_aliases": "千寻智能|SpiritAI|Qianxun Intelligence", "robot_aliases": "Xiao Mo|小墨", "status": "research", "country": "China"},
     {"name": "DroidUp Humanoid", "vendor": "DroidUp", "model_slug": "droidup-humanoid", "status": "research", "country": "China"},
     {"name": "Origin Dynamics Humanoid", "vendor": "Origin Dynamics", "model_slug": "origin-dynamics-humanoid", "status": "research", "country": "China"},
-    {"name": "PNDbotics Adam", "vendor": "PNDbotics", "model_slug": "pndbotics-adam", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "status": "pilot", "country": "China"},
-    {"name": "Noetix N2", "vendor": "Noetix Robotics", "model_slug": "noetix-n2", "product_url": "https://noetixrobotics.com/en", "vendor_url": "https://noetixrobotics.com", "robot_name_cn": "N2", "vendor_aliases": "Noetix|Noetix Robotics|Noetix Robotics (Beijing) Technology", "robot_aliases": "N2|N2 Athlete|Noetix N2", "verification_status": "VERIFIED", "status": "pilot", "country": "China"},
+    {"name": "PNDbotics Adam", "vendor": "PNDbotics", "model_slug": "pndbotics-adam", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "vendor_url": "https://www.pndbotics.com", "vendor_aliases": "PNDbotics|PND Robotics", "robot_aliases": "Adam|PNDbotics Adam", "verification_status": "VERIFIED", "status": "pilot", "country": "China"},
+    {"name": "Noetix N2", "vendor": "Noetix Robotics", "model_slug": "noetix-n2", "product_url": "https://noetixrobotics.com/en", "vendor_url": "https://noetixrobotics.com", "vendor_name_cn": None, "robot_name_cn": "N2", "vendor_aliases": "Noetix|Noetix Robotics|Noetix Robotics (Beijing) Technology", "robot_aliases": "N2|N2 Athlete|Noetix N2", "verification_status": "VERIFIED", "authoritative": ["vendor_name_cn"], "status": "pilot", "country": "China"},
     {"name": "Qinglong (OpenLoong)", "vendor": "Qinglong Bot", "model_slug": "qinglong-humanoid", "vendor_url": "https://www.openloong.org.cn", "vendor_name_cn": "青龙机器人", "robot_name_cn": "青龙", "github_url": "https://github.com/loongOpen", "vendor_aliases": "青龙机器人|Qinglong|QingLoong|OpenLoong|Open Loong|开放原子开源社区", "robot_aliases": "青龙|Qinglong|QingLoong|OpenLoong|开源青龙", "status": "research", "country": "China"},
     {"name": "Tianqing Robotics Humanoid", "vendor": "Tianqing Robotics", "model_slug": "tianqing-humanoid", "status": "research", "country": "China"},
     {"name": "Elephant Robotics Humanoid", "vendor": "Elephant Robotics", "model_slug": "elephant-humanoid", "status": "research", "country": "China"},
@@ -220,12 +220,12 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "HIT Robot Group Humanoid", "vendor": "HIT Robot Group", "model_slug": "hit-humanoid", "status": "research", "country": "China"},
     {"name": "Suzhou Pangolin Humanoid", "vendor": "Pangolin Robot", "model_slug": "pangolin-humanoid", "status": "research", "country": "China"},
     {"name": "Elephant Paxini Humanoid", "vendor": "Elephant Paxini", "model_slug": "elephant-paxini-humanoid", "status": "research", "country": "China"},
-    {"name": "Clone Alpha", "vendor": "Clone Robotics", "model_slug": "clone-alpha", "product_url": "https://clonerobotics.com/", "status": "research", "country": "Poland"},
+    {"name": "Clone Alpha", "vendor": "Clone Robotics", "model_slug": "clone-alpha", "product_url": "https://clonerobotics.com/", "vendor_url": "https://clonerobotics.com", "vendor_aliases": "Clone|Clone Robotics", "robot_aliases": "Clone Alpha|Clone|Neoclone", "verification_status": "VERIFIED", "status": "research", "country": "Poland"},
     {"name": "Halodi Eve", "vendor": "Halodi Robotics", "model_slug": "halodi-eve", "status": "research", "country": "Norway"},
     {"name": "Shadow Dexterous Hand Platform", "vendor": "Shadow Robot Company", "model_slug": "shadow-hand-platform", "product_url": "https://www.shadowrobot.com/dexterous-hand-series/", "status": "research", "country": "UK"},
     {"name": "IHMC Atlas Research", "vendor": "IHMC Robotics", "model_slug": "ihmc-atlas", "status": "research", "country": "USA"},
     {"name": "NASA Valkyrie", "vendor": "NASA Johnson", "model_slug": "nasa-valkyrie", "product_url": "https://www.nasa.gov/technology/r5/", "status": "research", "country": "USA"},
-    {"name": "DLR TORO", "vendor": "DLR", "model_slug": "dlr-toro", "status": "research", "country": "Germany"},
+    {"name": "DLR TORO", "vendor": "DLR", "model_slug": "dlr-toro", "product_url": "https://www.dlr.de/en/rm/research/robotic-systems/humanoids/toro", "vendor_url": "https://www.dlr.de", "humanoid_guide_url": "https://ieeexplore.ieee.org/document/7041461", "vendor_aliases": "DLR|German Aerospace Center|Deutsches Zentrum für Luft- und Raumfahrt", "robot_aliases": "TORO|Torque-controlled humanoid Robot", "verification_status": "VERIFIED", "status": "research", "country": "Germany", "specs": {"height_cm": 174, "weight_kg": 76, "payload_kg": 10.0, "top_speed_mps": 0.5, "force_limited_joints": True, "autonomy_level": "research", "commercial_deployments": 0}},
     {"name": "DLR Rollin' Justin", "vendor": "DLR", "model_slug": "dlr-justin", "status": "research", "country": "Germany"},
     {"name": "Kawasaki Kaleido", "vendor": "Kawasaki Robotics", "model_slug": "kawasaki-kaleido", "product_url": "https://kawasakirobotics.com/", "status": "research", "country": "Japan"},
     {"name": "Honda Avatar", "vendor": "Honda R&D", "model_slug": "honda-avatar", "status": "research", "country": "Japan"},
@@ -344,15 +344,15 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Galbot G2", "vendor": "Galbot", "model_slug": "galbot-g2", "status": "pilot", "country": "China"},
     {"name": "Robotera STAR2", "vendor": "Robotera (星动纪元)", "model_slug": "robotera-star2", "product_url": "https://www.robotera.com", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "has_sdk": True, "commercial_deployments": 3}},
     {"name": "Kepler Forerunner K1", "vendor": "Kepler", "model_slug": "kepler-k1", "product_url": "https://www.gotokepler.com/home", "status": "research", "country": "China"},
-    {"name": "Booster K1", "vendor": "Booster Robotics", "model_slug": "booster-k1", "product_url": "https://booster.tech", "status": "research", "country": "China"},
-    {"name": "PNDbotics Adam U", "vendor": "PNDbotics", "model_slug": "pndbotics-adam-u", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "status": "pilot", "country": "China"},
+    {"name": "Booster K1", "vendor": "Booster Robotics", "model_slug": "booster-k1", "product_url": "https://www.booster.tech", "vendor_url": "https://www.booster.tech", "vendor_name_cn": "加速进化", "robot_name_cn": "K1", "vendor_aliases": "Booster|加速进化|Booster Robotics", "robot_aliases": "Booster K1|K1", "status": "research", "country": "China"},
+    {"name": "PNDbotics Adam U", "vendor": "PNDbotics", "model_slug": "pndbotics-adam-u", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "vendor_url": "https://www.pndbotics.com", "vendor_aliases": "PNDbotics|PND Robotics", "robot_aliases": "Adam U|PNDbotics Adam U", "verification_status": "VERIFIED", "status": "pilot", "country": "China"},
     {"name": "Noetix E1", "vendor": "Noetix Robotics", "model_slug": "noetix-e1", "product_url": "https://noetixrobotics.com/en", "vendor_url": "https://noetixrobotics.com", "robot_name_cn": "E1", "vendor_aliases": "Noetix|Noetix Robotics|Noetix Robotics (Beijing) Technology", "robot_aliases": "E1|E1 Geek Vanguard|Noetix E1", "verification_status": "VERIFIED", "status": "research", "country": "China"},
     {"name": "EngineAI SA01", "vendor": "EngineAI", "model_slug": "engineai-sa01", "product_url": "https://en.engineai.com.cn/", "status": "research", "country": "China"},
     {"name": "Fourier N1", "vendor": "Fourier Robotics", "model_slug": "fourier-n1", "product_url": "https://www.fftai.com", "status": "research", "country": "China"},
     {"name": "Neura MAiRA", "vendor": "Neura Robotics", "model_slug": "neura-maira", "product_url": "https://neura-robotics.com/products/maira/", "status": "pilot", "country": "Germany"},
     {"name": "PAL Robotics ARI", "vendor": "PAL Robotics", "model_slug": "pal-ari", "product_url": "https://pal-robotics.com/robot/ari/", "status": "research", "country": "Spain"},
     {"name": "Engineered Arts Mesmer", "vendor": "Engineered Arts", "model_slug": "engineered-arts-mesmer", "status": "available", "country": "UK"},
-    {"name": "Reflex Gen2", "vendor": "Reflex Robotics", "model_slug": "reflex-gen2", "product_url": "https://reflexrobotics.com/", "status": "pilot", "country": "USA"},
+    {"name": "Reflex Gen2", "vendor": "Reflex Robotics", "model_slug": "reflex-gen2", "product_url": "https://www.reflexrobotics.com", "vendor_url": "https://www.reflexrobotics.com", "vendor_aliases": "Reflex|Reflex Robotics", "robot_aliases": "Reflex Gen2|Gen2", "verification_status": "VERIFIED", "status": "pilot", "country": "USA"},
     {"name": "MenteeBot Pro", "vendor": "Mentee Robotics", "model_slug": "mentee-bot-pro", "status": "pilot", "country": "Israel"},
     {"name": "Persona AI Gen2", "vendor": "Persona AI", "model_slug": "persona-ai-gen2", "product_url": "https://persona.ai", "status": "pilot", "country": "USA"},
 ]
@@ -389,6 +389,21 @@ def normalize_catalog_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     for field in ENTITY_FIELDS:
         out.setdefault(field, None)
     return out
+
+
+def _authoritative_fields(entry: Dict[str, Any]) -> frozenset:
+    """Entity fields the catalog owns outright — written verbatim, including None.
+
+    Set ``"authoritative": True`` on an entry to make the catalog win for every
+    entity field (use to scrub stale/wrong data), or pass a list of specific
+    field names. Default is fill-only (COALESCE) so enrichment data is preserved.
+    """
+    auth = entry.get("authoritative")
+    if auth is True:
+        return frozenset(ENTITY_FIELDS)
+    if isinstance(auth, (list, tuple, set)):
+        return frozenset(f for f in auth if f in ENTITY_FIELDS)
+    return frozenset()
 
 
 def catalog_entries() -> List[Dict[str, Any]]:
@@ -434,11 +449,16 @@ def sync_product_urls_from_catalog(db_session: Any) -> dict:
             **{f: entry.get(f) for f in ENTITY_FIELDS},
         }
         # Build SET / WHERE from ENTITY_FIELDS so new entity fields auto-sync.
+        # Authoritative fields are written verbatim (catalog wins, including NULL)
+        # so the catalog can scrub stale/wrong data; others are fill-only (COALESCE).
+        auth = _authoritative_fields(entry)
         entity_set = ",\n                    ".join(
-            f"{f} = COALESCE(:{f}, {f})" for f in ENTITY_FIELDS
+            (f"{f} = :{f}" if f in auth else f"{f} = COALESCE(:{f}, {f})")
+            for f in ENTITY_FIELDS
         )
         entity_diff = "".join(
-            f"\n                    OR (:{f} IS NOT NULL AND {f} IS DISTINCT FROM :{f})"
+            (f"\n                    OR {f} IS DISTINCT FROM :{f}" if f in auth
+             else f"\n                    OR (:{f} IS NOT NULL AND {f} IS DISTINCT FROM :{f})")
             for f in ENTITY_FIELDS
         )
         result = db_session.execute(
