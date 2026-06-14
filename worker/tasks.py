@@ -57,11 +57,14 @@ def run_hotel_scraper_task(self, urls=None):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_job_scraper_task(self, urls=None, industry=None):
-    from app.scrapers.job_board_scraper import JobBoardScraper
-    urls = urls or get_urls("job_board", industry=industry)
+    from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
+
+    max_urls = int(os.getenv("JOB_SCRAPER_MAX_URLS_PER_RUN", "18"))
+    urls = (urls or get_urls("job_board", industry=industry))[:max_urls]
     db = get_db()
     try:
-        scraper = JobBoardScraper(db=db)
+        scraper = EnhancedJobBoardScraper()
+        scraper.db = db
         scraper.run(urls)
         logger.info("Job scraper completed for %d URLs", len(urls))
     except Exception as exc:
@@ -73,11 +76,13 @@ def run_job_scraper_task(self, urls=None, industry=None):
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def run_news_scraper_task(self, queries=None, industry=None):
-    from app.scrapers.news_scraper import NewsScraper
-    queries = queries or get_news_queries(industry=industry)
+    from app.scrapers.news_scraper_enhanced import EnhancedNewsScraper
+
+    max_queries = int(os.getenv("NEWS_SCRAPER_MAX_QUERIES_PER_RUN", "30"))
+    queries = (queries or get_news_queries(industry=industry))[:max_queries]
     db = get_db()
     try:
-        scraper = NewsScraper(db=db)
+        scraper = EnhancedNewsScraper(db=db)
         scraper.run_intent_queries(queries=queries)
         logger.info("News scraper completed for %d queries", len(queries))
     except Exception as exc:
@@ -471,12 +476,10 @@ def lead_secondary_pass_task(
     Second-pass rescue batch — fill missing website, industry, contacts, CRM fields,
     and inference dossiers on leads already in the corpus (decoupled from scrapers).
     """
-    from app.services.lead_secondary_pass import run_secondary_pass_batch
+    from app.services.lead_secondary_pass import run_secondary_pass_batch_and_refresh_caches
 
-    db = get_db()
     try:
-        stats = run_secondary_pass_batch(
-            db,
+        stats = run_secondary_pass_batch_and_refresh_caches(
             limit=limit,
             min_score=min_score,
             use_llm=use_llm,
@@ -492,8 +495,6 @@ def lead_secondary_pass_task(
     except Exception as exc:
         logger.error("lead_secondary_pass_task failed: %s", exc)
         raise self.retry(exc=exc)
-    finally:
-        db.close()
 
 
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=180)
@@ -506,12 +507,10 @@ def humanoid_secondary_pass_task(
     deployment_query_cap: int = 24,
 ):
     """Humanoid benchmark secondary pass — spec gaps, cited news, capability rank."""
-    from app.services.humanoid_secondary_pass import run_humanoid_secondary_pass_batch
+    from app.services.humanoid_secondary_pass import run_humanoid_secondary_pass_batch_and_refresh_caches
 
-    db = get_db()
     try:
-        stats = run_humanoid_secondary_pass_batch(
-            db,
+        stats = run_humanoid_secondary_pass_batch_and_refresh_caches(
             limit=limit,
             sparse_threshold_pct=sparse_threshold_pct,
             use_llm_scrape=use_llm_scrape,
@@ -528,8 +527,6 @@ def humanoid_secondary_pass_task(
     except Exception as exc:
         logger.error("humanoid_secondary_pass_task failed: %s", exc)
         raise self.retry(exc=exc)
-    finally:
-        db.close()
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
@@ -551,11 +548,13 @@ def run_rss_scraper_task(self, urls=None, industry=None):
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
 def run_serp_scraper_task(self, queries=None):
     """Run targeted SERP-style expansion/automation queries."""
-    from app.scrapers.serp_scraper import SerpScraper, EXPANSION_QUERIES
-    active_queries = queries or EXPANSION_QUERIES
+    from app.scrapers.serp_scraper_enhanced import EnhancedSerpScraper, EXPANSION_QUERIES
+
+    max_queries = int(os.getenv("SERP_SCRAPER_MAX_QUERIES_PER_RUN", "24"))
+    active_queries = (queries or EXPANSION_QUERIES)[:max_queries]
     db = get_db()
     try:
-        scraper = SerpScraper(db=db)
+        scraper = EnhancedSerpScraper(db=db)
         scraper.run(queries=active_queries)
         logger.info("SERP scraper completed for %d queries", len(active_queries))
     except Exception as exc:
@@ -648,14 +647,15 @@ def incremental_newsletter_update_task(self):
     otherwise rolls edition metadata forward from the library.
     """
     from app.services.newsletter_library import build_daily_newsletter_edition
-    from app.services.newsletter_service import NEWSLETTER_PIPELINE_CACHE_KEY, write_cached_edition
-    from app.services.public_surface_cache import hydrate_public_surface_caches, write_public_cache
+    from app.services.newsletter_service import write_cached_edition
+    from app.services.newsletter_snapshot import publish_api_snapshot
+    from app.services.public_surface_cache import hydrate_public_surface_caches
 
     db = get_db()
     try:
         edition = build_daily_newsletter_edition(db, limit=15, force=False, skip_openai_brief=False)
         write_cached_edition(edition, db)
-        write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, edition)
+        publish_api_snapshot(db, edition, limit=15)
         hydrate_public_surface_caches()
         meta = edition.get("_meta") or {}
         logger.info(
@@ -669,6 +669,99 @@ def incremental_newsletter_update_task(self):
         }
     except Exception as exc:
         logger.error("Incremental newsletter update failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+def _newsletter_publish_window_open() -> bool:
+    """True only at 6:00am America/Los_Angeles (handles PST/PDT via 13+14 UTC cron)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    la = datetime.now(ZoneInfo("America/Los_Angeles"))
+    return la.hour == 6 and la.minute < 10
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=180)
+def publish_newsletter_daily_task(self):
+    """
+    Daily newsletter publish — 6:00 America/Los_Angeles.
+    Full rebuild + API snapshot; GET /api/newsletter/edition serves read-only.
+    """
+    if not _newsletter_publish_window_open():
+        logger.info("Newsletter daily publish skipped (outside 6am Pacific window)")
+        return {"skipped": True, "reason": "outside_6am_pacific"}
+
+    from app.services.newsletter_library import build_daily_newsletter_edition
+    from app.services.newsletter_service import write_cached_edition
+    from app.services.newsletter_snapshot import get_newsletter_mem_cache, publish_api_snapshot
+    from app.services.public_surface_cache import hydrate_public_surface_caches
+
+    cached = get_newsletter_mem_cache()
+    if cached:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        gen = (cached.get("summary") or {}).get("generated_at")
+        if gen:
+            try:
+                gen_dt = datetime.fromisoformat(str(gen).replace("Z", "+00:00"))
+                la_today = datetime.now(ZoneInfo("America/Los_Angeles")).date()
+                if gen_dt.astimezone(ZoneInfo("America/Los_Angeles")).date() == la_today:
+                    logger.info("Newsletter daily publish skipped (already published today)")
+                    return {"skipped": True, "reason": "already_published_today"}
+            except Exception:
+                pass
+
+    db = get_db()
+    try:
+        edition = build_daily_newsletter_edition(db, limit=15, force=True, skip_openai_brief=False)
+        write_cached_edition(edition, db)
+        publish_api_snapshot(db, edition, limit=15)
+        from app.services.public_surface_cache import refresh_pipeline_surface_caches
+
+        pipeline_stats = refresh_pipeline_surface_caches(db)
+        hydrate_public_surface_caches()
+        meta = edition.get("_meta") or {}
+        logger.info(
+            "Daily newsletter published: mode=%s stories=%d homepage_leads=%d",
+            meta.get("update_mode"),
+            len(edition.get("topStories") or []),
+            pipeline_stats.get("homepage_hot_leads", 0),
+        )
+        return {
+            "update_mode": meta.get("update_mode"),
+            "stories": len(edition.get("topStories") or []),
+            "published_at": (edition.get("summary") or {}).get("generated_at"),
+            "homepage_rotation_day": pipeline_stats.get("homepage_rotation_day"),
+        }
+    except Exception as exc:
+        logger.error("Daily newsletter publish failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def refresh_robots_page_surfaces_task(self):
+    """
+    Rebuild /robots page snapshots every 3 hours — robot list + HEIR intelligence report.
+    GET handlers serve read-only from durable cache + L1.
+    """
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_robots_page_surface_caches,
+    )
+
+    db = get_db()
+    try:
+        stats = refresh_robots_page_surface_caches(db)
+        hydrate_public_surface_caches()
+        logger.info("Robots page surface caches refreshed: %s", stats)
+        return stats
+    except Exception as exc:
+        logger.error("Robots page surface cache refresh failed: %s", exc)
         raise self.retry(exc=exc)
     finally:
         db.close()

@@ -67,8 +67,39 @@ ACTION_TRIGGERS: Tuple[Tuple[str, str, str], ...] = (
     ("acquisition", "partnership_signal", "ma_activity"),
     ("merger", "partnership_signal", "ma_activity"),
     ("acquires", "partnership_signal", "ma_activity"),
+    ("warehouse automation", "buyer_signal", "automation_interest"),
+    ("kitchen automation", "buyer_signal", "automation_interest"),
+    ("evaluate automation", "buyer_signal", "automation_interest"),
+    ("automation pilot", "buyer_signal", "pilot_success"),
+    ("proof of concept", "buyer_signal", "pilot_success"),
+    ("automation roadmap", "buyer_signal", "automation_interest"),
+    ("deploy robots", "buyer_signal", "robot_installation"),
+    ("robot deployment", "buyer_signal", "robot_installation"),
     ("automation", "buyer_signal", "automation_interest"),
     ("robot", "buyer_signal", "automation_interest"),
+)
+
+# Standalone tokens need procurement/costly-action or industry anchor context.
+_WEAK_STANDALONE_TRIGGERS = frozenset({"robot", "automation"})
+_PROCUREMENT_OR_DEPLOY_MARKERS: Tuple[str, ...] = (
+    "rfp",
+    "vendor",
+    "procurement",
+    "pilot",
+    "deploy",
+    "deployment",
+    "implement",
+    "install",
+    "evaluate",
+    "proof of concept",
+    "warehouse",
+    "hotel",
+    "hospital",
+    "airport",
+    "manufacturing",
+    "logistics",
+    "fulfillment",
+    "restaurant",
 )
 
 # Category B: modality → weight contribution (certainty)
@@ -472,6 +503,14 @@ def extract_drafts_from_clause(
     drafts: List[SignalDraft] = []
 
     for matched, internal, rfr, start in _find_triggers(lower):
+        token = matched.strip().lower()
+        if token in _WEAK_STANDALONE_TRIGGERS:
+            has_context = (
+                _costly_bonus(lower) > 0
+                or any(m in lower for m in _PROCUREMENT_OR_DEPLOY_MARKERS)
+            )
+            if not has_context:
+                continue
         neg, neg_note = _negation_before(lower, start)
         if neg and internal == "fundraising_signal":
             drafts.append(

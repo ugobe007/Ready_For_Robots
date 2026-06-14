@@ -79,8 +79,13 @@ from app.services.company_domain import (
 )
 from app.services.outreach_email_inference import infer_outreach_emails
 from app.services.pipeline_cache_policy import (
+    HOMEPAGE_SPOTLIGHT_ROTATION_SEC,
     PIPELINE_LEADS_ROTATION_SEC,
     PUBLIC_CACHE_TTL_MINUTES,
+)
+from app.services.homepage_rotation import (
+    homepage_spotlight_mix_meta,
+    homepage_spotlight_seeds,
 )
 
 router = APIRouter()
@@ -697,15 +702,8 @@ def _rotate_staged_leads(staged: list, limit: int, *, slot: Optional[int] = None
 
 
 def _spotlight_rotation_seeds(now: datetime) -> tuple[int, int, int]:
-    """
-    Deterministic seeds for HOT vs WARM circular picks on the homepage spotlight.
-    Changes every LEADS_ROTATION_SEC (default 30 minutes, aligned with cache rebuild).
-    """
-    day_o = int(now.date().toordinal())
-    slot = _current_rotation_slot(now)
-    h_seed = day_o * 7919 + slot * 9176 + 203
-    w_seed = day_o * 9283 + slot * 5843 + 411
-    return h_seed, w_seed, slot
+    """Daily Pacific edition seeds for homepage spotlight (see homepage_rotation)."""
+    return homepage_spotlight_seeds(now)
 
 
 def _signal_label(signal_type: str) -> str:
@@ -1947,7 +1945,7 @@ def post_lead_rep_feedback(
 # clients do not block on a slow rebuild. Cold miss (empty cache) still runs
 # synchronously. Each Fly machine has its own RAM cache; stale serving avoids
 # thundering herds when TTLs expire.
-_HOMEPAGE_CACHE_TTL = float(PIPELINE_LEADS_ROTATION_SEC * 2)
+_HOMEPAGE_CACHE_TTL = float(HOMEPAGE_SPOTLIGHT_ROTATION_SEC * 2)
 _homepage_cache: dict = {}
 _homepage_build_lock = threading.Lock()
 _homepage_bg_refresh_lock = threading.Lock()
@@ -2178,7 +2176,7 @@ def _compute_pipeline_summary(db: Session, exclude_junk: bool) -> dict:
 
 
 def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> dict:
-    """Homepage: capped SQL slice (50 scored rows) + spotlight (≤50 leads), 5-minute rotation."""
+    """Homepage: capped SQL slice (50 scored rows) + spotlight (≤50 leads), daily rotation."""
     rows = _lead_rows_query_limited(db, min(_PIPELINE_SUMMARY_ROW_CAP, 500)).all()
     total, hot, warm, cold, junk_count, by_industry, total_signals = _aggregate_lead_rows(
         rows, exclude_junk=True
@@ -2209,7 +2207,7 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
 
     if not ordered_ids:
         now = datetime.now(timezone.utc)
-        slot = int(now.timestamp() // LEADS_ROTATION_SEC)
+        mix = homepage_spotlight_mix_meta(now)
         return {
             "summary": summary,
             "hotLeads": [],
@@ -2218,11 +2216,7 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
                 "hot_slots": 35,
                 "warm_slots": 15,
                 "feed_limit": 50,
-                "rotation_period_sec": LEADS_ROTATION_SEC,
-                "rotation_slot": slot,
-                "rotation_day": str(now.date()),
-                "rotation_hour_utc": now.hour,
-                "rotation_minute_utc": now.minute,
+                **mix,
             },
             "scoringSystem": get_scoring_system_public(),
         }
@@ -2265,8 +2259,8 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
     hot_slots = 35
     warm_slots = 15
     now = datetime.now(timezone.utc)
-    h_seed, w_seed, rot_slot = _spotlight_rotation_seeds(now)
-    hour = now.hour
+    h_seed, w_seed, _rot_slot = _spotlight_rotation_seeds(now)
+    mix = homepage_spotlight_mix_meta(now)
 
     chosen: List[Company] = []
     used_ids: set = set()
@@ -2320,11 +2314,7 @@ def _build_homepage_payload(db: Session, *, resolve_llm_urls: bool = True) -> di
             "hot_slots": hot_slots,
             "warm_slots": warm_slots,
             "feed_limit": feed_limit,
-            "rotation_period_sec": LEADS_ROTATION_SEC,
-            "rotation_day": str(now.date()),
-            "rotation_hour_utc": hour,
-            "rotation_minute_utc": now.minute,
-            "rotation_slot": rot_slot,
+            **mix,
         },
         "scoringSystem": get_scoring_system_public(),
     })
@@ -2422,8 +2412,8 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
     Batched endpoint for homepage: summary + spotlight leads.
 
-    Serves L1 → durable cache only. Background workers refresh every 30 minutes (configurable);
-    never blocks on a cold DB query during HTTP.
+    Serves L1 → durable cache only. Spotlight lead mix rotates daily at 6am Pacific;
+    background workers refresh summary counts on the usual 30-minute cadence.
     """
     from app.services.public_surface_cache import (
         KEY_HOMEPAGE,
@@ -2433,7 +2423,7 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
         schedule_public_cache_refresh,
     )
 
-    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=86400"
     maybe_schedule_public_cache_refresh()
 
     entry = _homepage_cache.get("v1")

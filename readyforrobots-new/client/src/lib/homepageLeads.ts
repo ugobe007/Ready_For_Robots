@@ -1,5 +1,6 @@
-export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v1";
-export const HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS = 30 * 60 * 1000;
+export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v2";
+/** Match server daily edition — rolls at 6am America/Los_Angeles. */
+export const HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 const DOMAIN_ENTITY_NAME_KEYS: Record<string, string> = {
   "jal.co.jp": "japan airlines",

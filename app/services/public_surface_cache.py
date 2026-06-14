@@ -19,7 +19,7 @@ from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.newsletter_service import NEWSLETTER_PIPELINE_CACHE_KEY
+from app.services.newsletter_service import NEWSLETTER_API_SNAPSHOT_KEY, NEWSLETTER_PIPELINE_CACHE_KEY
 from app.services.pipeline_cache_store import cache_read_safe, cache_write
 
 logger = logging.getLogger(__name__)
@@ -86,13 +86,19 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
     )
     from app.services.content_surfaces import KEY_PIPELINE_FEED
 
+    from app.services.homepage_rotation import homepage_rotation_day, homepage_rotation_slot
+
     stats: dict[str, Any] = {}
     rotation_slot = _current_rotation_slot()
+    homepage_day = homepage_rotation_day()
+    homepage_slot = homepage_rotation_slot()
 
     homepage = _build_homepage_payload(db)
     write_public_cache(db, KEY_HOMEPAGE, homepage)
     stats["homepage_hot_leads"] = len(homepage.get("hotLeads") or [])
     stats["rotation_slot"] = rotation_slot
+    stats["homepage_rotation_day"] = str(homepage_day)
+    stats["homepage_rotation_slot"] = homepage_slot
 
     summary_exclude = _compute_pipeline_summary(db, True)
     write_public_cache(db, KEY_SUMMARY_EXCLUDE_JUNK, summary_exclude)
@@ -137,10 +143,30 @@ def refresh_social_posts_surface_cache(db: Session) -> dict[str, Any]:
     return stats
 
 
+def refresh_robots_page_surface_caches(db: Session) -> dict[str, Any]:
+    """/robots page — humanoid list + HEIR intelligence + benchmark summary (3h TTL)."""
+    from app.api.humanoid_benchmark import build_humanoid_report_payload, set_humanoid_report_mem_cache
+    from app.services.content_surfaces import refresh_intelligence_surface
+    from app.services.humanoid_robots_snapshot import publish_robots_list_snapshot
+
+    stats = dict(publish_robots_list_snapshot(db))
+    stats.update(refresh_intelligence_surface(db))
+    from app.services.humanoid_robots_snapshot import ROBOTS_PAGE_CACHE_TTL_MINUTES
+    from app.services.pipeline_cache_store import cache_write
+
+    report = build_humanoid_report_payload(db)
+    cache_write(db, KEY_HUMANOID_REPORT, report, ttl_minutes=ROBOTS_PAGE_CACHE_TTL_MINUTES)
+    set_humanoid_report_mem_cache(report)
+    stats["humanoid_report_robots"] = (report.get("report") or {}).get("total_robots", 0)
+    logger.info("Robots page surface caches refreshed: %s", stats)
+    return stats
+
+
 def refresh_newsletter_surface_cache(db: Session, *, force: bool = False) -> dict[str, Any]:
     """Newsletter edition — incremental unless force=True (morning full rebuild)."""
     from app.services.newsletter_library import build_daily_newsletter_edition
     from app.services.newsletter_service import write_cached_edition
+    from app.services.newsletter_snapshot import publish_api_snapshot
 
     edition = build_daily_newsletter_edition(
         db,
@@ -149,7 +175,7 @@ def refresh_newsletter_surface_cache(db: Session, *, force: bool = False) -> dic
         skip_openai_brief=not force,
     )
     write_cached_edition(edition, db)
-    write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, edition)
+    publish_api_snapshot(db, edition, limit=15)
     meta = edition.get("_meta") or {}
     stats = {
         "newsletter_stories": len(edition.get("topStories") or []),
@@ -168,26 +194,34 @@ def hydrate_public_surface_caches() -> None:
     """Load durable caches into in-process L1 — no DB rebuild."""
     from app.api.humanoid_benchmark import set_humanoid_report_mem_cache
     from app.api.leads import hydrate_leads_public_caches
-    from app.api.newsletter import hydrate_newsletter_mem_cache
+    from app.services.newsletter_snapshot import (
+        hydrate_newsletter_mem_cache,
+        slim_edition_for_api,
+    )
 
     hydrated = 0
 
-    newsletter = read_public_cache(NEWSLETTER_PIPELINE_CACHE_KEY)
-    if newsletter and (newsletter.get("topStories") or []):
-        hydrate_newsletter_mem_cache(newsletter)
+    snapshot = read_public_cache(NEWSLETTER_API_SNAPSHOT_KEY)
+    if snapshot and (snapshot.get("topStories") or []):
+        hydrate_newsletter_mem_cache(snapshot)
         hydrated += 1
     else:
-        from app.services.newsletter_library import load_library_latest, load_seed_edition
-
-        library = load_library_latest()
-        if library and (library.get("topStories") or []):
-            hydrate_newsletter_mem_cache(library)
+        newsletter = read_public_cache(NEWSLETTER_PIPELINE_CACHE_KEY)
+        if newsletter and (newsletter.get("topStories") or []):
+            hydrate_newsletter_mem_cache(slim_edition_for_api(newsletter, limit=15))
             hydrated += 1
         else:
-            seed = load_seed_edition()
-            if seed:
-                hydrate_newsletter_mem_cache(seed)
+            from app.services.newsletter_library import load_library_latest, load_seed_edition
+
+            library = load_library_latest()
+            if library and (library.get("topStories") or []):
+                hydrate_newsletter_mem_cache(slim_edition_for_api(library, limit=15))
                 hydrated += 1
+            else:
+                seed = load_seed_edition()
+                if seed:
+                    hydrate_newsletter_mem_cache(slim_edition_for_api(seed, limit=15))
+                    hydrated += 1
 
     homepage = read_public_cache(KEY_HOMEPAGE)
     if homepage:
@@ -225,6 +259,22 @@ def hydrate_public_surface_caches() -> None:
         set_humanoid_report_mem_cache(report)
         hydrated += 1
 
+    from app.services.content_surfaces import KEY_HUMANOID_INTELLIGENCE, KEY_HUMANOID_ROBOTS_LIST
+    from app.services.humanoid_robots_snapshot import (
+        hydrate_intelligence_mem_cache,
+        hydrate_robots_list_mem_cache,
+    )
+
+    robots_list = read_public_cache(KEY_HUMANOID_ROBOTS_LIST)
+    if robots_list and (robots_list.get("robots") or []):
+        hydrate_robots_list_mem_cache(robots_list)
+        hydrated += 1
+
+    intelligence = read_public_cache(KEY_HUMANOID_INTELLIGENCE)
+    if intelligence and intelligence.get("report"):
+        hydrate_intelligence_mem_cache(intelligence)
+        hydrated += 1
+
     logger.info("Public surface L1 hydrated from durable cache (%d surfaces)", hydrated)
 
 
@@ -259,6 +309,30 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
         db.close()
         with _refresh_lock:
             _refresh_in_progress = False
+
+
+def schedule_robots_page_cache_refresh(*, reason: str = "") -> None:
+    """Background rebuild of /robots snapshots — never blocks HTTP."""
+    label = reason or "scheduled"
+
+    def _job() -> None:
+        from app.database import SessionLocal
+
+        logger.info("Robots page cache refresh started (%s)", label)
+        db = SessionLocal()
+        try:
+            refresh_robots_page_surface_caches(db)
+            hydrate_public_surface_caches()
+        except Exception as exc:
+            logger.warning("Robots page cache refresh failed: %s", exc)
+        finally:
+            db.close()
+
+    threading.Thread(
+        target=_job,
+        daemon=True,
+        name=f"robots-cache-refresh-{label[:24]}",
+    ).start()
 
 
 def schedule_public_cache_refresh(
@@ -320,3 +394,46 @@ def start_public_cache_refresh_loop() -> None:
         PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
         PUBLIC_CACHE_TTL_MINUTES,
     )
+    start_homepage_daily_rotation_loop()
+
+
+_homepage_daily_loop_started = False
+
+
+def start_homepage_daily_rotation_loop() -> None:
+    """Force a pipeline cache rebuild when the Pacific spotlight edition day rolls."""
+    global _homepage_daily_loop_started
+    if _homepage_daily_loop_started:
+        return
+    _homepage_daily_loop_started = True
+
+    def _loop() -> None:
+        from app.services.homepage_rotation import homepage_rotation_day
+
+        time.sleep(90)
+        last_day = None
+        while True:
+            try:
+                today = homepage_rotation_day()
+                if last_day is not None and today != last_day:
+                    logger.info(
+                        "Homepage spotlight edition day rolled %s → %s; refreshing caches",
+                        last_day,
+                        today,
+                    )
+                    schedule_public_cache_refresh(
+                        force=True,
+                        pipeline_only=True,
+                        reason="homepage_daily_rotation",
+                    )
+                last_day = today
+            except Exception as exc:
+                logger.warning("Homepage daily rotation check failed: %s", exc)
+            time.sleep(int(os.getenv("HOMEPAGE_DAILY_ROTATION_CHECK_SEC", "300")))
+
+    threading.Thread(
+        target=_loop,
+        daemon=True,
+        name="homepage-daily-rotation-loop",
+    ).start()
+    logger.info("Homepage daily rotation loop started (6am %s edition day)", os.getenv("HOMEPAGE_SPOTLIGHT_TZ", "America/Los_Angeles"))

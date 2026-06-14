@@ -147,3 +147,13 @@ export function liveFetchInit(overrides = {}) {
     headers: { 'Cache-Control': 'no-cache', ...(hdr || {}) },
   };
 }
+
+/** Public cached surfaces (newsletter, pipeline) — allow CDN/browser cache. */
+export function publicFetchInit(overrides = {}) {
+  const { headers: hdr, ...rest } = overrides;
+  return {
+    mode: 'cors',
+    ...rest,
+    headers: { ...(hdr || {}) },
+  };
+}

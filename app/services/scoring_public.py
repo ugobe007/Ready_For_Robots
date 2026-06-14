@@ -125,7 +125,7 @@ def get_scoring_system_public() -> Dict[str, Any]:
             },
         },
         "spotlight_selection": {
-            "note": "Homepage picks 3 Hot + 2 Warm from eligible companies, sorted by newest signal time then composite; daily/hourly rotation avoids stale dominance.",
+            "note": "Homepage picks 35 Hot + 15 Warm from eligible companies; edition rotates daily at 6am Pacific.",
             "endpoint": "GET /api/leads/homepage",
         },
     }

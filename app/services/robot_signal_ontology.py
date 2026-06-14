@@ -140,10 +140,29 @@ def load_robot_signal_ontology() -> OntologyFeatures:
     )
 
 
+# Industry commentary / survey decks — not buyer-direct triggers.
+_EDITORIAL_TRIGGER_RE = re.compile(
+    r"(?:^this article|^companies should|^the industry should|^explores how|"
+    r"^according to (?:analysts|experts|survey)|\d+% of .{0,40} (?:have|plan|already)|"
+    r"should consider accelerating|article explores|survey found|market report)",
+    re.I,
+)
+
+# High-fit verticals where pain vocabulary alone is a valid labor signal.
+_HIGH_FIT_INDUSTRY_RE = re.compile(
+    r"\b(?:hotels?|hospitality|warehouses?|logistics|fulfillment|distribution\s+centers?|"
+    r"restaurants?|food\s+service|airports?|airlines?|hospitals?|healthcare|manufacturing|"
+    r"cold\s+storage|3pl)\b",
+    re.I,
+)
+
+
 def _phrase_matches(text_norm: str, phrases: Iterable[str]) -> tuple[str, ...]:
     matches: list[str] = []
     for phrase in phrases:
         if not phrase:
+            continue
+        if _EDITORIAL_TRIGGER_RE.search(phrase):
             continue
         left = r"\b" if phrase[0].isalnum() else ""
         right = r"\b" if phrase[-1].isalnum() else ""
@@ -203,7 +222,7 @@ def signal_types_from_ontology_matches(text: str, db: Optional[Any] = None) -> l
         if maps_to:
             add(maps_to.replace("-", "_"))
 
-    # Trigger expressions are exact-match, high-confidence rules.
+    # Trigger expressions are exact-match, high-confidence rules (editorial filtered at match time).
     if matches.trigger_expressions:
         add("automation_intent")
     if matches.job_title_signals:
@@ -226,10 +245,11 @@ def signal_types_from_ontology_matches(text: str, db: Optional[Any] = None) -> l
         else:
             add("automation_interest")
 
-    # Pain words require another evidence class or source-aware scoring can add a
-    # small boost later. This prevents one weak word like "manual" from becoming
-    # a standalone sales signal.
-    if matches.pain_words and (matches.buying_phrases or matches.trigger_expressions or matches.job_title_signals):
+    pain_with_evidence = (
+        matches.buying_phrases or matches.trigger_expressions or matches.job_title_signals
+    )
+    pain_in_high_fit = len(matches.pain_words) >= 2 and _HIGH_FIT_INDUSTRY_RE.search(text)
+    if matches.pain_words and (pain_with_evidence or pain_in_high_fit):
         if any(word in {"injuries", "hazardous", "safety", "osha", "fatigue"} for word in matches.pain_words):
             add("safety_incident")
         elif any(word in {"bottleneck", "bottlenecks", "capacity", "throughput"} for word in matches.pain_words):

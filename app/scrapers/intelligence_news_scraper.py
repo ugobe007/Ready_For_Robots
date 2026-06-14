@@ -783,9 +783,15 @@ class IntelligenceNewsScraper:
             "last_phase_errors": [],  # capped trail for debugging
         }
         self._website_lookup_attempted: set[int] = set()
+        self._company_signal_counts: dict[int, int] = {}
+        self._seen_signal_keys: set[tuple[int, str]] = set()
         self._run_secondary_after_scrape = os.getenv(
             "SECONDARY_PASS_AFTER_SCRAPE", "1"
         ).strip().lower() not in ("0", "false", "no")
+
+    def _reset_signal_run_cache(self) -> None:
+        self._company_signal_counts.clear()
+        self._seen_signal_keys.clear()
     
     # ══════════════════════════════════════════════════════════════════════════
     # PUBLIC API
@@ -807,6 +813,7 @@ class IntelligenceNewsScraper:
         Returns: stats dict with discoveries
         """
         logger.info("🎣 Starting lead discovery from news...")
+        self._reset_signal_run_cache()
         if max_queries:
             # Shuffle so short runs hit diverse industries (not just first 20 = warehouse heavy)
             shuffled = DISCOVERY_QUERIES.copy()
@@ -1091,6 +1098,11 @@ class IntelligenceNewsScraper:
                         signal_type,
                         e,
                     )
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                self._record_phase_failure("article_commit", e, article_ref)
     
     def _enrich_company(self, company: Company):
         """Search news for specific company and add new signals."""
@@ -1509,33 +1521,23 @@ class IntelligenceNewsScraper:
         query: str
     ):
         """Create a signal for a company (with deduplication)."""
-        # Check for duplicate
-        existing = (
-            self.db.query(Signal)
-            .filter(
-                Signal.company_id == company.id,
-                Signal.signal_text == text
-            )
-            .first()
-        )
-        
-        if existing:
-            return  # Skip duplicates
-        
+        dedupe_key = (company.id, text)
+        if dedupe_key in self._seen_signal_keys:
+            return
+        self._seen_signal_keys.add(dedupe_key)
+
         # Score the signal using inference engine
         strength = self._score_signal(text, company.name, company.industry)
-        
-        # Skip weak signals (0.02 allows more new leads; was 0.03)
-        company_signal_count = self.db.query(Signal).filter(Signal.company_id == company.id).count()
+
+        company_signal_count = self._company_signal_counts.get(company.id, 0)
         if strength < 0.02:
-            # Ensure every new company gets at least one signal so the lead is usable
             if company_signal_count == 0:
                 strength = 0.1
             else:
                 return
         elif company_signal_count == 0 and strength < 0.05:
-            strength = max(strength, 0.1)  # floor for first signal on new lead
-        
+            strength = max(strength, 0.1)
+
         signal = Signal(
             company_id=company.id,
             signal_type=signal_type,
@@ -1543,10 +1545,9 @@ class IntelligenceNewsScraper:
             signal_strength=min(strength, 1.0),
             source_url=url or "",
         )
-        
+
         self.db.add(signal)
-        self.db.commit()
-        
+        self._company_signal_counts[company.id] = company_signal_count + 1
         self.stats["signals_created"] += 1
         logger.debug(f"  📡 {signal_type} signal: {company.name} (strength={strength:.2f})")
     

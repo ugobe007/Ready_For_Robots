@@ -118,8 +118,8 @@ function tierColor(tier: string | undefined): string {
 const TEAL = "#03DAC5";
 const AMBER = "#FFB000";
 const PURPLE = "#a78bfa";
-const NEWSLETTER_SESSION_KEY = "newsletter_edition_v1";
-const NEWSLETTER_SESSION_TTL_MS = 30 * 60 * 1000;
+const NEWSLETTER_SESSION_KEY = "newsletter_edition_v2";
+const NEWSLETTER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_BENCH_KEY = "newsletter_humanoid_report_v1";
 const NEWSLETTER_BENCH_TTL_MS = 30 * 60 * 1000;
 
@@ -255,7 +255,8 @@ export default function Newsletter() {
     const cached =
       readSurfaceCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS)?.data
       ?? readSessionCache<NewsletterEdition>(NEWSLETTER_SESSION_KEY, NEWSLETTER_SESSION_TTL_MS);
-    if (cached?.latestEdition && (cached.topStories?.length ?? 0) > 0) {
+    const hasCachedStories = (cached?.topStories?.length ?? 0) > 0;
+    if (cached?.latestEdition && hasCachedStories) {
       setEdition(cached);
       setLoadStatus("ready");
     }
@@ -299,7 +300,9 @@ export default function Newsletter() {
       }
     };
 
-    void load(0);
+    if (!hasCachedStories) {
+      void load(0);
+    }
 
     return () => {
       cancelled = true;

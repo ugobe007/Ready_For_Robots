@@ -20,6 +20,9 @@ from app.services.lead_filter import classify_lead, pick_primary_score
 from app.services.industry_brief_service import build_industry_brief_payload
 
 NEWSLETTER_PIPELINE_CACHE_KEY = "newsletter:edition:v2"
+NEWSLETTER_API_SNAPSHOT_KEY = "public:newsletter:api:v1"
+# Daily edition — keep durable cache through the full publish cycle (not 30m pipeline TTL).
+NEWSLETTER_SNAPSHOT_TTL_MINUTES = int(os.getenv("NEWSLETTER_SNAPSHOT_TTL_MINUTES", "1440"))
 
 # ── Fix 1: Robot vendor exclusion ─────────────────────────────────────────────
 # Delegates to the canonical vendor list maintained in robot_vendor_names.py.
@@ -677,9 +680,8 @@ def write_cached_edition(data: Dict[str, Any], db: Optional[Session] = None) -> 
     if db is not None:
         try:
             from app.services.pipeline_cache_store import cache_write
-            from app.services.public_surface_cache import PUBLIC_CACHE_TTL_MINUTES
 
-            cache_write(db, NEWSLETTER_PIPELINE_CACHE_KEY, data, ttl_minutes=PUBLIC_CACHE_TTL_MINUTES)
+            cache_write(db, NEWSLETTER_PIPELINE_CACHE_KEY, data, ttl_minutes=NEWSLETTER_SNAPSHOT_TTL_MINUTES)
         except Exception:
             pass
 

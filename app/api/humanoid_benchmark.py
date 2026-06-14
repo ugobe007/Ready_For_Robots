@@ -195,28 +195,11 @@ def _require_admin(db: Session = Depends(get_db)):
 
 @router.get("/robots")
 def list_robots(response: Response):
-    """Return all humanoid robots ordered by total benchmark score."""
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
-    now = time.monotonic()
-    cached = _ROBOTS_LIST_CACHE.get("payload")
-    if cached is not None and now - _ROBOTS_LIST_CACHE["ts"] < _ROBOTS_LIST_TTL_SEC:
-        return {"robots": cached}
+    """Return all humanoid robots — pre-built snapshot (refreshed every 3 hours)."""
+    from app.services.humanoid_robots_snapshot import serve_robots_list
 
-    try:
-        robots = run_db(_fetch_robots_from_db, timeout_sec=12, label="humanoid/robots")
-        if robots:
-            slim = [_slim_robot_for_list(r) for r in robots]
-            _ROBOTS_LIST_CACHE["ts"] = now
-            _ROBOTS_LIST_CACHE["payload"] = slim
-            return {"robots": slim}
-    except TimeoutError:
-        logger.warning("humanoid/robots DB timed out — serving cache or seed fallback")
-    except Exception as exc:
-        logger.warning("humanoid/robots DB failed: %s", exc)
-
-    if cached:
-        return {"robots": cached, "stale": True}
-    return {"robots": [_slim_robot_for_list(r) for r in _seed_robots_payload()], "stale": True, "source": "seed"}
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=10800, stale-while-revalidate=86400"
+    return serve_robots_list()
 
 
 @router.get("/robots/{slug}")
@@ -729,18 +712,10 @@ def set_humanoid_report_mem_cache(data: dict) -> None:
 
 @router.get("/report")
 def get_report(response: Response, db: Session = Depends(get_db)):
-    """
-    Benchmark report — L1 → durable cache only; background refresh every 2 hours.
-    """
-    from app.services.public_surface_cache import (
-        KEY_HUMANOID_REPORT,
-        maybe_schedule_public_cache_refresh,
-        read_public_cache,
-        schedule_public_cache_refresh,
-    )
+    """Benchmark report — L1 → durable cache only (3h robots-page refresh)."""
+    from app.services.public_surface_cache import KEY_HUMANOID_REPORT, read_public_cache
 
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=7200"
-    maybe_schedule_public_cache_refresh()
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=10800, stale-while-revalidate=86400"
 
     mem = _REPORT_MEM_CACHE.get("payload")
     if mem is not None:
@@ -751,7 +726,6 @@ def get_report(response: Response, db: Session = Depends(get_db)):
         set_humanoid_report_mem_cache(cached)
         return cached
 
-    schedule_public_cache_refresh(pipeline_only=True, reason="humanoid_miss")
     return {"report": None, "generated_at": datetime.now(timezone.utc).isoformat(), "cache_pending": True}
 
 
@@ -775,30 +749,11 @@ def get_intelligence_report(
     response: Response,
     top_n: int = Query(12, ge=5, le=25, description="How many top robots to explain in depth"),
 ):
-    """
-    Why top-ranked humanoids score high — pre-built cache only (background refresh every 2h).
-    """
-    from app.services.content_surfaces import KEY_HUMANOID_INTELLIGENCE
-    from app.services.public_surface_cache import (
-        maybe_schedule_public_cache_refresh,
-        read_public_cache,
-        schedule_public_cache_refresh,
-    )
+    """HEIR intelligence report — pre-built snapshot only (refreshed every 3 hours)."""
+    from app.services.humanoid_robots_snapshot import serve_intelligence_report
 
-    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=7200"
-    maybe_schedule_public_cache_refresh()
-
-    cached = read_public_cache(KEY_HUMANOID_INTELLIGENCE, stale_ok=True)
-    if cached and cached.get("report"):
-        return cached
-
-    schedule_public_cache_refresh(pipeline_only=False, reason="intelligence_miss")
-    return {
-        "report": None,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "cache_pending": True,
-        "message": "Intelligence report is being generated in the background. Retry in 1–2 minutes.",
-    }
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=10800, stale-while-revalidate=86400"
+    return serve_intelligence_report()
 
 
 def _intelligence_pdf_response(pdf_bytes: bytes, filename: str) -> StreamingResponse:

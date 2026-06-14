@@ -132,10 +132,10 @@ export type HumanoidIntelligenceReportData = {
   top_ranked: TopRobot[];
 };
 
-const HUMANOID_INTEL_CACHE_TTL_MS = 30 * 60 * 1000;
+const HUMANOID_INTEL_CACHE_TTL_MS = 3 * 60 * 60 * 1000;
 
 function intelligenceCacheKey(topN: number): string {
-  return `humanoid_intelligence_v1_${topN}`;
+  return `humanoid_intelligence_v2_${topN}`;
 }
 
 export function isValidHumanoidReport(data: unknown): data is HumanoidIntelligenceReportData {
@@ -169,6 +169,8 @@ export function useHumanoidIntelligenceReport(topN = 12) {
     if (!paintedFromCache) {
       setLoading(true);
       setError(null);
+    } else {
+      return;
     }
 
     void fetchWithTimeout(

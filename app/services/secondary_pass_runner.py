@@ -239,20 +239,27 @@ def run_full_secondary_pipeline_sync(
         if use_llm and not _llm_available():
             use_llm = False
 
-        _emit("pipeline_leads_start", limit=lim)
-        leads_result = run_secondary_pass_batch_and_refresh_caches(
-            limit=lim,
-            min_score=min_score,
-            use_llm=use_llm,
-            rescore=rescore,
+        leads_off = os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "1").strip().lower() in (
+            "0", "false", "no"
         )
-        leads_result = {"status": "completed", **leads_result}
-        _emit(
-            "pipeline_leads_done",
-            processed=leads_result.get("processed"),
-            fields_filled=leads_result.get("fields_filled_total"),
-            errors=leads_result.get("errors"),
-        )
+        if leads_off:
+            leads_result = {"status": "skipped", "reason": "ENABLE_SCHEDULED_SECONDARY_PASS=0"}
+            _emit("pipeline_leads_skipped", reason=leads_result["reason"])
+        else:
+            _emit("pipeline_leads_start", limit=lim)
+            leads_result = run_secondary_pass_batch_and_refresh_caches(
+                limit=lim,
+                min_score=min_score,
+                use_llm=use_llm,
+                rescore=rescore,
+            )
+            leads_result = {"status": "completed", **leads_result}
+            _emit(
+                "pipeline_leads_done",
+                processed=leads_result.get("processed"),
+                fields_filled=leads_result.get("fields_filled_total"),
+                errors=leads_result.get("errors"),
+            )
 
         if os.getenv("SECONDARY_PIPELINE_RUN_HUMANOIDS", "1").strip().lower() not in (
             "0", "false", "no"

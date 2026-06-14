@@ -236,6 +236,16 @@ def run_rescue_passes_for_company(
                 )
                 db.add(company)
                 db.commit()
+            if pass_name == PASS_RECTIFY and status == "failed":
+                return {
+                    "company_id": report.company_id,
+                    "company_name": report.company_name,
+                    "quarantined": True,
+                    "pass_outcomes": outcomes,
+                    "fields_filled": fields_filled,
+                    "gaps_before": report.gaps,
+                    "quality_recommendation": "quarantine",
+                }
             # Refresh bundle after mutating passes
             company, signals, contacts = _load_company_bundle(db, report.company_id)
             if not company:

@@ -225,15 +225,25 @@ CELERYBEAT_SCHEDULE = {
         'task': 'worker.tasks.daily_scraper_report_task',
         'schedule': crontab(hour=8, minute=0),  # Daily at 8am UTC
     },
-    # ── PUBLIC SURFACES ── Pre-build newsletter + pipeline (6:15 UTC, after 6am rescore)
+    # ── NEWSLETTER DAILY PUBLISH ── 6:00am America/Los_Angeles (13/14 UTC; task guards LA hour)
+    'newsletter-daily-publish': {
+        'task': 'worker.tasks.publish_newsletter_daily_task',
+        'schedule': crontab(hour='13,14', minute=0),
+    },
+    # ── PUBLIC SURFACES ── Pipeline/homepage/humanoid (6:15 UTC, after 6am rescore)
     'public-surfaces-daily': {
-        'task': 'worker.tasks.refresh_public_surface_caches_task',
+        'task': 'worker.tasks.refresh_pipeline_caches_task',
         'schedule': crontab(hour=6, minute=15),
     },
     # ── PIPELINE SURFACES ── Homepage, summary, leads lists, humanoid — every 2 hours
     'public-pipeline-surfaces-2h': {
         'task': 'worker.tasks.refresh_pipeline_caches_task',
         'schedule': 7200.0,  # 2 hours
+    },
+    # ── ROBOTS PAGE ── Humanoid index list + HEIR intelligence snapshot every 3 hours
+    'robots-page-surfaces-3h': {
+        'task': 'worker.tasks.refresh_robots_page_surfaces_task',
+        'schedule': 10800.0,  # 3 hours
     },
     # ── NEWSLETTER INCREMENTAL ── After 9am intelligence scraper; skip if signals unchanged
     'newsletter-incremental': {

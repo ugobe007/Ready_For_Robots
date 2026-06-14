@@ -28,9 +28,10 @@ KEY_LEADS_18 = "public:leads:list:18:score:v2"
 KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v2"
 KEY_PIPELINE_FEED = "public:leads:pipeline:30:v1"
 KEY_HUMANOID_BENCHMARK_REPORT = "public:humanoid:report:v1"
+KEY_HUMANOID_ROBOTS_LIST = "public:humanoid:robots:v1"
 KEY_HUMANOID_INTELLIGENCE = "public:humanoid:intelligence:v1"
 KEY_HUMANOID_INTELLIGENCE_PDF = "public:humanoid:intelligence_pdf:weasyprint:v2"
-KEY_NEWSLETTER_EDITION = "public:newsletter:edition:v2"  # alias of newsletter durable key
+KEY_NEWSLETTER_EDITION = "public:newsletter:api:v1"  # pre-slimmed API snapshot (daily publish)
 KEY_SOCIAL_DAILY_POSTS = "public:social:daily_posts:v1"
 
 RefreshFn = Callable[[Session], dict[str, Any]]
@@ -60,7 +61,9 @@ def refresh_intelligence_surface(db: Session, *, top_n: int = 12) -> dict[str, A
         if not is_junk_humanoid_row(r["name"], r["vendor"], r["model_slug"])
     ]
     payload = build_humanoid_intelligence_report_payload(robots, top_n=top_n, db=db)
-    cache_write(db, KEY_HUMANOID_INTELLIGENCE, payload, ttl_minutes=120)
+    from app.services.humanoid_robots_snapshot import ROBOTS_PAGE_CACHE_TTL_MINUTES
+
+    cache_write(db, KEY_HUMANOID_INTELLIGENCE, payload, ttl_minutes=ROBOTS_PAGE_CACHE_TTL_MINUTES)
 
     pdf_stats: dict[str, Any] = {}
     if payload.get("report"):
@@ -75,7 +78,7 @@ def refresh_intelligence_surface(db: Session, *, top_n: int = 12) -> dict[str, A
                     "generated_at": payload.get("generated_at"),
                     "renderer": "fast",
                 },
-                ttl_minutes=120,
+                ttl_minutes=ROBOTS_PAGE_CACHE_TTL_MINUTES,
             )
             pdf_stats = {"pdf_bytes": len(pdf_bytes), "filename": filename}
         except Exception as exc:
@@ -104,6 +107,13 @@ def list_surfaces() -> list[ContentSurface]:
         ContentSurface("newsletter", NEWSLETTER_PIPELINE_CACHE_KEY, "Daily newsletter edition", lambda db: refresh_newsletter_surface_cache(db, force=False), ai_heavy=True),
         ContentSurface("social", KEY_SOCIAL_DAILY_POSTS, "Content Studio daily posts", refresh_social_posts_surface_cache, ttl_minutes=240),
         ContentSurface("humanoid_benchmark", KEY_HUMANOID_BENCHMARK_REPORT, "Robots index HEIF table", refresh_pipeline_surface_caches),
+        ContentSurface(
+            "humanoid_robots_list",
+            KEY_HUMANOID_ROBOTS_LIST,
+            "/robots humanoid index list",
+            lambda db: __import__("app.services.humanoid_robots_snapshot", fromlist=["publish_robots_list_snapshot"]).publish_robots_list_snapshot(db),
+            ttl_minutes=180,
+        ),
         ContentSurface(
             "humanoid_intelligence",
             KEY_HUMANOID_INTELLIGENCE,

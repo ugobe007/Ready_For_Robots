@@ -175,7 +175,7 @@ def classify_signals_with_fallback(
             seen.add(s)
             merged.append(s)
     if merged:
-        return reconcile_signal_types_for_text(text, merged)
+        return _filter_vendor_story_signals(text, reconcile_signal_types_for_text(text, merged))
 
     # Fallback: high-value keyword triggers
     lower = text.lower()
@@ -190,11 +190,49 @@ def classify_signals_with_fallback(
         fallback.append("labor_shortage")
     if any(kw in lower for kw in ["expansion", "new facility", "new warehouse", "opening"]):
         fallback.append("expansion")
-    if any(kw in lower for kw in ["robot", "automation", "AMR", "AGV", "cobot"]):
+    if any(
+        kw in lower
+        for kw in [
+            "evaluate automation",
+            "automation pilot",
+            "proof of concept",
+            "vendor selection",
+            "rfp",
+            "deploy robots",
+            "robot deployment",
+            "warehouse automation",
+            "amr",
+            "agv",
+            "cobot",
+        ]
+    ):
         fallback.append("automation_interest")
     if fallback:
-        return reconcile_signal_types_for_text(text, fallback)
+        return _filter_vendor_story_signals(text, reconcile_signal_types_for_text(text, fallback))
     return ["news"]
+
+
+def _filter_vendor_story_signals(text: str, signals: List[str]) -> List[str]:
+    """Drop weak buyer tags when text is clearly vendor/funding PR, not end-buyer intent."""
+    from app.services.lead_filter import SELLER_OR_PUBLISHER_CONTEXT_RE
+
+    if not signals or not SELLER_OR_PUBLISHER_CONTEXT_RE.search(text):
+        return signals
+    buyer_direct = {
+        "vendor_selection",
+        "pilot_success",
+        "rfp_posted",
+        "labor_shortage",
+        "expansion",
+        "capex",
+        "strategic_hire",
+        "robot_installation",
+        "warehouse_throughput",
+        "production_capacity",
+    }
+    if any(s in buyer_direct for s in signals):
+        return [s for s in signals if s not in ("automation_interest", "automation_intent", "funding_round")]
+    return []
 
 
 def primary_signal_type_for_text(

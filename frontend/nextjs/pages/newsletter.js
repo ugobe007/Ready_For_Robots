@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import { getApiBase, liveFetchInit } from '../lib/apiBase';
+import { getApiBase, liveFetchInit, publicFetchInit } from '../lib/apiBase';
 import IndustryBriefBlock from '../components/IndustryBriefBlock';
 import RrSiteLayout from '../components/RrSiteLayout';
 
@@ -144,6 +144,31 @@ function CopyStoryButton({ story, buttonId, socialMode = false }) {
 }
 
 const API_BASE = getApiBase();
+const NEWSLETTER_CACHE_KEY = 'newsletter_edition_v2';
+const NEWSLETTER_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function readNewsletterCache() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(NEWSLETTER_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.savedAt || !parsed?.data) return null;
+    if (Date.now() - parsed.savedAt > NEWSLETTER_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeNewsletterCache(data) {
+  if (typeof window === 'undefined' || !data?.topStories?.length) return;
+  try {
+    localStorage.setItem(NEWSLETTER_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch {
+    /* ignore quota */
+  }
+}
 
 // Fallback edition when API returns empty
 const FALLBACK_EDITION = {
@@ -308,13 +333,23 @@ export default function Newsletter() {
   }, []);
 
   useEffect(() => {
+    const cached = readNewsletterCache();
+    if (cached?.latestEdition && (cached.topStories?.length ?? 0) > 0) {
+      setEdition(cached.latestEdition);
+      setTopStories(cached.topStories);
+      if (cached.industryBrief) setIndustryBrief(cached.industryBrief);
+      setLoading(false);
+      return;
+    }
+
     const fetchEdition = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/newsletter/edition?limit=8`, liveFetchInit());
+        const res = await fetch(`${API_BASE}/api/newsletter/edition?limit=8`, publicFetchInit());
         const data = await res.json();
         if (data?.latestEdition) setEdition(data.latestEdition);
         if (data?.topStories?.length > 0) setTopStories(data.topStories);
         if (data?.industryBrief) setIndustryBrief(data.industryBrief);
+        if (data?.topStories?.length > 0) writeNewsletterCache(data);
       } catch (err) {
         console.error('Newsletter fetch:', err);
       } finally {

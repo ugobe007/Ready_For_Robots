@@ -124,7 +124,11 @@ def preview_sentences(text: Optional[str], *, max_sentences: int = 3, max_chars:
             break
         out.append(part)
     if not out:
-        return preview_sentences(t, max_sentences=1, max_chars=max_chars)
+        first = parts[0]
+        if len(first) <= max_chars:
+            return first if first.endswith((".", "!", "?")) else first + "."
+        cut = first[: max_chars - 1].rsplit(" ", 1)[0]
+        return (cut or first[:max_chars]).rstrip(",;:") + "…"
     joined = " ".join(out)
     if not joined.endswith((".", "!", "?")):
         joined += "."

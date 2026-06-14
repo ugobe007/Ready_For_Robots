@@ -100,8 +100,8 @@ const INDEX_LABELS: Record<(typeof INDEX_DIMS)[number], string> = {
 const INDEX_COLORS = HEIF_COLORS;
 
 const TEAL = "#03DAC5";
-const ROBOTS_SURFACE_KEY = "humanoid_robots_v1";
-const ROBOTS_SURFACE_TTL_MS = 30 * 60 * 1000;
+const ROBOTS_SURFACE_KEY = "humanoid_robots_v2";
+const ROBOTS_SURFACE_TTL_MS = 3 * 60 * 60 * 1000;
 
 function heifValue(robot: RobotRow, dim: (typeof HEIF_DIMS)[number]): number {
   const key = `heif_${dim}` as keyof RobotRow;
@@ -400,6 +400,7 @@ export default function Robots() {
     let cancelled = false;
     const paintedFromCache = Boolean(cachedRobots?.data?.length);
     if (!paintedFromCache) setLoading(true);
+    if (paintedFromCache) return;
 
     void fetchWithTimeout(
       `${api}/api/humanoid/robots`,

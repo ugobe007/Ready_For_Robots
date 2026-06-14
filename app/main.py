@@ -178,11 +178,13 @@ def _run_startup() -> None:
         import time
         time.sleep(5)
         try:
+            from app.services.content_surfaces import KEY_HUMANOID_ROBOTS_LIST
             from app.services.public_surface_cache import (
                 KEY_HOMEPAGE,
                 hydrate_public_surface_caches,
                 read_public_cache,
                 schedule_public_cache_refresh,
+                schedule_robots_page_cache_refresh,
                 start_public_cache_refresh_loop,
             )
 
@@ -194,6 +196,10 @@ def _run_startup() -> None:
             homepage = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
             if not homepage or not (homepage.get("hotLeads") or []):
                 schedule_public_cache_refresh(force=True, reason="bootstrap_empty")
+
+            robots_snap = read_public_cache(KEY_HUMANOID_ROBOTS_LIST, stale_ok=True)
+            if not robots_snap or not (robots_snap.get("robots") or []):
+                schedule_robots_page_cache_refresh(reason="bootstrap_empty")
         except Exception as exc:
             logger.warning("Public surface hydration failed: %s", exc)
 

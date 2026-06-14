@@ -3,13 +3,11 @@ Newsletter API
 ==============
 GET /api/newsletter/edition
 
-Serves the daily pre-built newsletter from durable cache + library archive.
-The bundled seed library guarantees instant story content on cold deploy; the
-morning agent (6:15 UTC) refreshes when lead/signal fingerprints change.
+Serves a pre-built daily snapshot from durable cache + in-process L1.
+The morning publish job (6:00 America/Los_Angeles) rebuilds the edition once;
+GET never runs DB generation or OpenAI on the request path.
 """
 import logging
-import os
-import time
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Response
@@ -26,17 +24,17 @@ from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.newsletter_library import (
     build_daily_newsletter_edition,
     load_seed_edition,
-    resolve_edition_for_serving,
 )
-from app.services.newsletter_service import (
-    NEWSLETTER_PIPELINE_CACHE_KEY,
-    write_cached_edition,
+from app.services.newsletter_service import write_cached_edition
+from app.services.newsletter_snapshot import (
+    hydrate_newsletter_mem_cache,
+    get_newsletter_mem_cache,
+    publish_api_snapshot,
+    serve_api_snapshot,
+    slim_edition_for_api,
 )
-from app.services.public_surface_cache import read_public_cache, write_public_cache
 
 router = APIRouter()
-
-_edition_mem_cache: dict = {}
 
 
 class NewsletterSubscribeIn(BaseModel):
@@ -103,77 +101,12 @@ def _try_send_welcome(email: str) -> dict:
         return {"sent": False, "reason": str(exc)}
 
 
-def _strategic_brief_days() -> int:
-    try:
-        return max(1, int(os.getenv("NEWSLETTER_STRATEGIC_BRIEF_DAYS", "7")))
-    except ValueError:
-        return 7
-
-
-def _trim_edition(data: dict, limit: int) -> dict:
-    stories = data.get("topStories") or []
-    if len(stories) > limit:
-        return {**data, "topStories": stories[:limit]}
-    return data
-
-
-_STORY_API_KEYS = frozenset({
-    "category", "company", "headline", "snippet", "summary", "roi", "economics",
-    "impact", "signalStrength", "company_id", "tier", "industry",
-})
-
-
-def _slim_story(story: dict) -> dict:
-    """Drop heavy newsletter fields (fullText HTML, duplicate blobs) from API responses."""
-    if not isinstance(story, dict):
-        return story
-    slim = {k: v for k, v in story.items() if k in _STORY_API_KEYS}
-    for text_key in ("summary", "snippet", "headline"):
-        val = slim.get(text_key)
-        if isinstance(val, str) and len(val) > 1200:
-            slim[text_key] = val[:1199].rstrip() + "…"
-    full = story.get("fullText")
-    if isinstance(full, str) and full.strip() and "summary" not in slim:
-        slim["summary"] = full[:1200].rstrip() + ("…" if len(full) > 1200 else "")
-    return slim
-
-
-def _slim_edition_for_api(data: dict, *, limit: int) -> dict:
-    trimmed = _trim_edition(data, limit)
-    stories = [_slim_story(s) for s in (trimmed.get("topStories") or [])]
-    out = {**trimmed, "topStories": stories}
-    findings = trimmed.get("researchFindings") or []
-    if isinstance(findings, list) and len(findings) > 8:
-        out["researchFindings"] = findings[:8]
-    brief = trimmed.get("industryBrief")
-    if isinstance(brief, dict):
-        out["industryBrief"] = {
-            k: (v[:6] if isinstance(v, list) else v)
-            for k, v in brief.items()
-            if k in ("executive_take", "macro_trends", "strategic_implications", "risks_and_unknowns", "watch_next")
-        }
-    return out
-
-
-def hydrate_newsletter_mem_cache(data: dict) -> None:
-    if not (data.get("topStories") or []):
-        return
-    _edition_mem_cache["v1"] = {"ts": time.monotonic(), "data": data}
-
-
-def _get_mem_cache() -> Optional[dict]:
-    entry = _edition_mem_cache.get("v1")
-    if entry:
-        return entry["data"]
-    return None
-
-
 def _install_seed_if_empty() -> None:
-    if _get_mem_cache():
+    if get_newsletter_mem_cache():
         return
     seed = load_seed_edition()
     if seed:
-        hydrate_newsletter_mem_cache(seed)
+        hydrate_newsletter_mem_cache(slim_edition_for_api(seed, limit=15))
         _log.info("Newsletter seed library loaded into L1 (%d stories)", len(seed.get("topStories") or []))
 
 
@@ -188,11 +121,8 @@ def get_newsletter_edition(
     authorization: Optional[str] = Header(None),
     x_newsletter_regen_key: Optional[str] = Header(None, alias="X-Newsletter-Regen-Key"),
 ):
-    """Daily newsletter — instant from library; never empty when archive exists."""
-    from app.services.public_surface_cache import maybe_schedule_public_cache_refresh
-
-    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
-    maybe_schedule_public_cache_refresh()
+    """Daily newsletter — instant from pre-built snapshot; never rebuilds on page load."""
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
 
     if refresh:
         from app.database import SessionLocal
@@ -202,31 +132,22 @@ def get_newsletter_edition(
             assert_newsletter_regen_allowed(authorization, x_newsletter_regen_key)
             data = build_daily_newsletter_edition(db, limit=limit, force=True, skip_openai_brief=False)
             write_cached_edition(data, db)
-            write_public_cache(db, NEWSLETTER_PIPELINE_CACHE_KEY, data)
-            hydrate_newsletter_mem_cache(data)
-            return _slim_edition_for_api(data, limit=limit)
+            return publish_api_snapshot(db, data, limit=limit)
         finally:
             db.close()
 
-    mem = _get_mem_cache()
-    if mem and len(mem.get("topStories") or []) >= 1:
-        return _slim_edition_for_api(mem, limit=limit)
-
-    edition = resolve_edition_for_serving(None, limit=limit)
-    if len(edition.get("topStories") or []) >= 1:
-        hydrate_newsletter_mem_cache(edition)
-    return _slim_edition_for_api(edition, limit=limit)
+    return serve_api_snapshot(limit=limit)
 
 
 def _warm_newsletter_cache_at_startup() -> None:
-    """Hydrate newsletter L1 from library + durable cache."""
+    """Hydrate newsletter L1 from API snapshot + durable cache."""
     def _warm() -> None:
         try:
             _install_seed_if_empty()
             from app.services.public_surface_cache import hydrate_public_surface_caches
 
             hydrate_public_surface_caches()
-            edition = _get_mem_cache()
+            edition = get_newsletter_mem_cache()
             if edition:
                 _log.info(
                     "Newsletter L1 ready (%d stories, served_from=%s)",
