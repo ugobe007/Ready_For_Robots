@@ -1590,7 +1590,7 @@ def hydrate_leads_public_caches(
 
 def _empty_homepage_payload() -> dict:
     now = datetime.now(timezone.utc)
-    slot = int(now.timestamp() // LEADS_ROTATION_SEC)
+    mix = homepage_spotlight_mix_meta(now)
     return {
         "summary": {
             "total": 0,
@@ -1607,11 +1607,7 @@ def _empty_homepage_payload() -> dict:
             "hot_slots": 35,
             "warm_slots": 15,
             "feed_limit": 50,
-            "rotation_period_sec": LEADS_ROTATION_SEC,
-            "rotation_slot": slot,
-            "rotation_day": str(now.date()),
-            "rotation_hour_utc": now.hour,
-            "rotation_minute_utc": now.minute,
+            **mix,
         },
         "scoringSystem": get_scoring_system_public(),
         "cache_pending": True,
@@ -2007,7 +2003,16 @@ def _homepage_from_surface_caches() -> Optional[dict]:
     for key in _HOMEPAGE_LEGACY_KEYS:
         legacy = blobs.get(key)
         if legacy and (legacy.get("hotLeads") or []):
-            return legacy
+            payload = {**legacy}
+            mix = homepage_spotlight_mix_meta()
+            payload["spotlightMix"] = {
+                **(legacy.get("spotlightMix") or {}),
+                "hot_slots": 35,
+                "warm_slots": 15,
+                "feed_limit": 50,
+                **mix,
+            }
+            return payload
 
     from app.services.content_surfaces import KEY_SUMMARY_EXCLUDE_JUNK
 
@@ -2428,9 +2433,12 @@ def leads_homepage(response: Response, db: Session = Depends(get_db)):
 
     entry = _homepage_cache.get("v1")
     if entry is not None:
-        if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
-            _schedule_homepage_background_refresh()
-        return _homepage_response(entry["data"])
+        mix = (entry.get("data") or {}).get("spotlightMix") or {}
+        if mix.get("rotation_timezone"):
+            if time.monotonic() - entry["ts"] >= PUBLIC_CACHE_REVALIDATE_SEC:
+                _schedule_homepage_background_refresh()
+            return _homepage_response(entry["data"])
+        _homepage_cache.pop("v1", None)
 
     cached = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
     if cached is not None:

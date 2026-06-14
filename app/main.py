@@ -195,7 +195,11 @@ def _run_startup() -> None:
 
             homepage = read_public_cache(KEY_HOMEPAGE, stale_ok=True)
             if not homepage or not (homepage.get("hotLeads") or []):
-                schedule_public_cache_refresh(force=True, reason="bootstrap_empty")
+                schedule_public_cache_refresh(
+                    force=True,
+                    pipeline_only=True,
+                    reason="bootstrap_empty",
+                )
 
             robots_snap = read_public_cache(KEY_HUMANOID_ROBOTS_LIST, stale_ok=True)
             if not robots_snap or not (robots_snap.get("robots") or []):
