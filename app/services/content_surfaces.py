@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 # Cache keys (pipeline_cache_store)
-KEY_HOMEPAGE = "public:homepage:v2"
+KEY_HOMEPAGE = "public:homepage:v3"
 KEY_SUMMARY_EXCLUDE_JUNK = "public:summary:exclude_junk:true:v1"
 KEY_SUMMARY_INCLUDE_JUNK = "public:summary:exclude_junk:false:v1"
 KEY_LEADS_50 = "public:leads:list:50:score:v2"

@@ -1957,7 +1957,7 @@ def _set_homepage_cache(data: dict) -> None:
 
 
 # Pre-v2 durable keys — still served when v2 caches are cold after a key bump.
-_HOMEPAGE_LEGACY_KEYS = ("public:homepage:v1",)
+_HOMEPAGE_LEGACY_KEYS = ("public:homepage:v1", "public:homepage:v2")
 _LEADS_LIST_LEGACY_KEYS = (
     "public:leads:list:12:hot:score:v1",
     "public:leads:list:18:score:v1",
