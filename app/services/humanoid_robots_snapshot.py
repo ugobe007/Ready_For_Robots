@@ -57,6 +57,8 @@ def fetch_robots_list_rows(db: Session) -> List[dict]:
     rows = db.execute(
         text("""
             SELECT id, name, vendor, model_slug, product_url, image_url, status,
+                   country, vendor_name_cn, robot_name_cn, vendor_url,
+                   humanoid_guide_url, github_url, verification_status,
                    specs, score_mobility, score_manipulation, score_autonomy,
                    score_safety, score_endurance, score_market_readiness,
                    score_total,

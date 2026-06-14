@@ -157,7 +157,7 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Matrix Robotics MATRIX-3", "vendor": "Matrix Robotics", "model_slug": "matrix-3", "product_url": "https://matrixrobotics.ai", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "finger_count": 27, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 1, "force_limited_joints": True, "has_estop": True}},
     {"name": "MagicLab Humanoid", "vendor": "MagicLab", "model_slug": "magiclab-humanoid", "status": "research", "country": "China"},
     {"name": "Spirit AI Humanoid", "vendor": "Spirit AI", "model_slug": "spirit-ai-humanoid", "status": "research", "country": "China"},
-    {"name": "Stardust Intelligence", "vendor": "Stardust Intelligence", "model_slug": "stardust-humanoid", "status": "research", "country": "China"},
+    {"name": "Stardust Humanoid", "vendor": "Stardust Intelligence", "model_slug": "stardust-humanoid", "status": "research", "country": "China", "vendor_name_cn": "星尘智能", "vendor_url": "https://stardust.ai", "verification_status": "PARTIAL"},
     {"name": "DroidUp Humanoid", "vendor": "DroidUp", "model_slug": "droidup-humanoid", "status": "research", "country": "China"},
     {"name": "Origin Dynamics Humanoid", "vendor": "Origin Dynamics", "model_slug": "origin-dynamics-humanoid", "status": "research", "country": "China"},
     {"name": "PNDbotics Adam", "vendor": "PNDbotics", "model_slug": "pndbotics-adam", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "status": "pilot", "country": "China"},
@@ -176,12 +176,11 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Realman Humanoid", "vendor": "Realman Robotics", "model_slug": "realman-humanoid", "product_url": "https://www.realman-robotics.com/", "status": "research", "country": "China"},
     {"name": "JAKA Humanoid", "vendor": "JAKA Robotics", "model_slug": "jaka-humanoid", "status": "research", "country": "China"},
     {"name": "Han's Humanoid", "vendor": "Han's Robot", "model_slug": "hans-humanoid", "status": "research", "country": "China"},
-    {"name": "STEP Humanoid", "vendor": "STEP Robotics", "model_slug": "step-humanoid", "status": "research", "country": "China"},
-    {"name": "Ti5 Humanoid", "vendor": "Ti5 Robot", "model_slug": "ti5-humanoid", "status": "research", "country": "China"},
+    {"name": "STEP Humanoid", "vendor": "STEP Robotics", "model_slug": "step-humanoid", "status": "research", "country": "China", "verification_status": "NEEDS_VERIFICATION"},
+    {"name": "Ti5 Humanoid", "vendor": "Ti5 Robot", "model_slug": "ti5-humanoid", "status": "research", "country": "China", "vendor_name_cn": "钛虎机器人", "verification_status": "NEEDS_VERIFICATION"},
     {"name": "Paxini Humanoid", "vendor": "Paxini Robotics", "model_slug": "paxini-humanoid", "status": "research", "country": "China"},
     {"name": "Rhino Robotics Humanoid", "vendor": "Rhino Robotics", "model_slug": "rhino-humanoid", "status": "research", "country": "China"},
     {"name": "Giant.AI Humanoid", "vendor": "Giant.AI", "model_slug": "giant-ai-humanoid", "status": "research", "country": "China"},
-    {"name": "Humanoid Robot (HR)", "vendor": "Humanoid Robot Corp", "model_slug": "humanoid-robot-corp", "status": "research", "country": "China"},
     {"name": "Xiaomi CyberOne Pro", "vendor": "Xiaomi Robotics", "model_slug": "xiaomi-cyberone-pro", "status": "research", "country": "China"},
     {"name": "Chery Mornine", "vendor": "Chery Robotics", "model_slug": "chery-mornine", "product_url": "https://www.cheryinternational.com", "status": "pilot", "country": "China"},
     {"name": "Haier Humanoid", "vendor": "Haier Robotics", "model_slug": "haier-humanoid", "status": "research", "country": "China"},
@@ -365,6 +364,18 @@ def slugify(text: str) -> str:
     return s[:80] or "humanoid"
 
 
+# Entity-resolution fields synced into humanoid_benchmarks (besides name/status/product_url).
+ENTITY_FIELDS = (
+    "country",
+    "vendor_name_cn",
+    "robot_name_cn",
+    "vendor_url",
+    "humanoid_guide_url",
+    "github_url",
+    "verification_status",
+)
+
+
 def normalize_catalog_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     """Ensure model_slug and default fields exist."""
     out = dict(entry)
@@ -373,7 +384,8 @@ def normalize_catalog_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
     out.setdefault("status", "research")
     out.setdefault("specs", {})
     out.setdefault("product_url", None)
-    out.setdefault("country", None)
+    for field in ENTITY_FIELDS:
+        out.setdefault(field, None)
     return out
 
 
@@ -395,39 +407,68 @@ def catalog_count() -> int:
 
 
 def sync_product_urls_from_catalog(db_session: Any) -> dict:
-    """Push curated catalog name, status, and product_url into humanoid_benchmarks."""
+    """Push curated catalog identity + entity-resolution fields into humanoid_benchmarks.
+
+    Writes name/status/product_url plus the entity-resolution columns (country,
+    Chinese names, vendor/guide/github URLs, verification_status). Unlike the old
+    behavior, rows without a product_url are still synced so NEEDS_VERIFICATION /
+    PARTIAL entities keep their native names and candidate URLs.
+    """
     from sqlalchemy import text
 
     updated = 0
     skipped = 0
     for entry in catalog_entries():
         slug = entry.get("model_slug")
-        url = entry.get("product_url")
-        name = entry.get("name")
-        status = entry.get("status")
-        if not slug or not url:
+        if not slug:
             skipped += 1
             continue
+        params = {
+            "slug": slug,
+            "name": entry.get("name"),
+            "status": entry.get("status"),
+            "url": entry.get("product_url"),
+            **{f: entry.get(f) for f in ENTITY_FIELDS},
+        }
         result = db_session.execute(
             text("""
                 UPDATE humanoid_benchmarks
                 SET
                     name = :name,
                     status = :status,
-                    product_url = :url,
+                    product_url = COALESCE(:url, product_url),
+                    country = COALESCE(:country, country),
+                    vendor_name_cn = COALESCE(:vendor_name_cn, vendor_name_cn),
+                    robot_name_cn = COALESCE(:robot_name_cn, robot_name_cn),
+                    vendor_url = COALESCE(:vendor_url, vendor_url),
+                    humanoid_guide_url = COALESCE(:humanoid_guide_url, humanoid_guide_url),
+                    github_url = COALESCE(:github_url, github_url),
+                    verification_status = COALESCE(:verification_status, verification_status),
                     updated_at = NOW()
                 WHERE model_slug = :slug
                   AND (
                     name IS DISTINCT FROM :name
                     OR status IS DISTINCT FROM :status
-                    OR product_url IS DISTINCT FROM :url
+                    OR (:url IS NOT NULL AND product_url IS DISTINCT FROM :url)
+                    OR (:country IS NOT NULL AND country IS DISTINCT FROM :country)
+                    OR (:vendor_name_cn IS NOT NULL AND vendor_name_cn IS DISTINCT FROM :vendor_name_cn)
+                    OR (:robot_name_cn IS NOT NULL AND robot_name_cn IS DISTINCT FROM :robot_name_cn)
+                    OR (:vendor_url IS NOT NULL AND vendor_url IS DISTINCT FROM :vendor_url)
+                    OR (:humanoid_guide_url IS NOT NULL AND humanoid_guide_url IS DISTINCT FROM :humanoid_guide_url)
+                    OR (:github_url IS NOT NULL AND github_url IS DISTINCT FROM :github_url)
+                    OR (:verification_status IS NOT NULL AND verification_status IS DISTINCT FROM :verification_status)
                   )
             """),
-            {"url": url, "slug": slug, "name": name, "status": status},
+            params,
         )
         if result.rowcount:
             updated += 1
         else:
             skipped += 1
     db_session.commit()
-    return {"updated": updated, "skipped": skipped, "catalog_urls": sum(1 for e in catalog_entries() if e.get("product_url"))}
+    return {
+        "updated": updated,
+        "skipped": skipped,
+        "catalog_urls": sum(1 for e in catalog_entries() if e.get("product_url")),
+        "verification_tagged": sum(1 for e in catalog_entries() if e.get("verification_status")),
+    }

@@ -38,6 +38,9 @@ SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     "zhiyuan-lingxi",
     # Misnomer: Apptronik's robot is Apollo; "A2" belongs to Agibot (agibot-a2).
     "apptronik-a2",
+    # Generic placeholder that resolves to Humanoid (thehumanoid.ai) — already
+    # tracked as humanoid-hmnd01-alpha-bipedal / -wheeled. Not a distinct product.
+    "humanoid-robot-corp",
 }
 
 # Generic rows from robot_companies bridge ({Company} Humanoid).

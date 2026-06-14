@@ -287,6 +287,8 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Robot not found")
     out = _enrich_robot_scores(dict(row))
+    # product_url is the canonical robot URL; expose it under the entity-resolution name too.
+    out["robot_url"] = out.get("product_url")
     provenance = _spec_provenance(row.get("sources"))
     out["spec_provenance"] = provenance
     out.update(_data_confidence(provenance, out.get("specs") or {}, out.get("heif_total")))
