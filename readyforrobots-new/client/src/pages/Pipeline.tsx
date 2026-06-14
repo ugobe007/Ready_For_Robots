@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   fetchWithTimeout,
+  fetchWithTimeoutRetry,
   getApiBase,
   liveFetchInit,
   publicFetchInit,
@@ -549,9 +550,17 @@ export default function Pipeline() {
     connected: boolean;
     entitled: boolean;
   } | null>(null);
+  const [deepLinkLoadFailed, setDeepLinkLoadFailed] = useState(false);
+  const [deepLinkRetryNonce, setDeepLinkRetryNonce] = useState(0);
   const dealsRef = useRef(deals);
   dealsRef.current = deals;
   const deepLinkInflightRef = useRef<number | null>(null);
+
+  const retryDeepLink = () => {
+    deepLinkInflightRef.current = null;
+    setDeepLinkLoadFailed(false);
+    setDeepLinkRetryNonce((n) => n + 1);
+  };
 
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
@@ -663,11 +672,23 @@ export default function Pipeline() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setDeepLinkLoadFailed(false);
+  }, [deepLinkLeadId]);
+
+  useEffect(() => {
+    if (!deepLinkLeadId || loadingLeads) return;
+    const onOnline = () => retryDeepLink();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [deepLinkLeadId, loadingLeads]);
+
   // Deep link from newsletter / homepage (?lead=123 or legacy #123).
   useEffect(() => {
     if (!deepLinkLeadId || loadingLeads) return;
 
     setSelectedId(deepLinkLeadId);
+    setDeepLinkLoadFailed(false);
 
     if (dealsRef.current.some((d) => d.id === deepLinkLeadId)) {
       deepLinkInflightRef.current = null;
@@ -680,22 +701,23 @@ export default function Pipeline() {
     void (async () => {
       const base = getApiBase();
       try {
-        const response = await fetchWithTimeout(
+        const response = await fetchWithTimeoutRetry(
           `${base}/api/leads/by-id/${deepLinkLeadId}`,
           publicFetchInit(),
           12_000,
-          { publicCache: true },
+          { publicCache: true, retries: 2, retryDelayMs: 1200 },
         );
         if (cancelled) return;
         if (!response.ok) {
           deepLinkInflightRef.current = null;
-          toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
+          setDeepLinkLoadFailed(true);
           return;
         }
         const lead = (await response.json()) as ApiLead;
         const mapped = mapApiLeadToDeal(lead) as Deal;
         if (cancelled) return;
         deepLinkInflightRef.current = null;
+        setDeepLinkLoadFailed(false);
         setDeals((prev) => {
           if (prev.some((d) => d.id === deepLinkLeadId)) return prev;
           return [mapped, ...prev];
@@ -703,7 +725,7 @@ export default function Pipeline() {
       } catch {
         if (!cancelled) {
           deepLinkInflightRef.current = null;
-          toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
+          setDeepLinkLoadFailed(true);
         }
       }
     })();
@@ -714,7 +736,7 @@ export default function Pipeline() {
         deepLinkInflightRef.current = null;
       }
     };
-  }, [deepLinkLeadId, loadingLeads]);
+  }, [deepLinkLeadId, loadingLeads, deepLinkRetryNonce]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
@@ -2393,7 +2415,9 @@ export default function Pipeline() {
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
                   <p className="text-sm text-white/25">
-                    {pendingDeepLink
+                    {pendingDeepLink && deepLinkLoadFailed
+                      ? "Network interrupted while loading this lead."
+                      : pendingDeepLink
                       ? "Loading linked lead…"
                       : hasActiveSearch && filtered.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
@@ -2401,6 +2425,15 @@ export default function Pipeline() {
                         ? "Select a deal to review signal detail and Cal outreach"
                         : "Select a lead to review signals, research, and SIGNAL scoring"}
                   </p>
+                  {pendingDeepLink && deepLinkLoadFailed ? (
+                    <button
+                      type="button"
+                      onClick={retryDeepLink}
+                      className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-xs font-semibold text-white/70 transition-colors hover:border-white/25 hover:text-white"
+                    >
+                      Retry loading lead
+                    </button>
+                  ) : null}
                 </div>
               )}
             </div>

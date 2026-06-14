@@ -172,3 +172,32 @@ export async function fetchWithTimeout(
     clearTimeout(timer);
   }
 }
+
+/** Wi‑Fi/VPN changes and other browser network blips — safe to retry briefly. */
+export function isTransientFetchError(err: unknown): boolean {
+  if (err instanceof DOMException && err.name === "AbortError") return true;
+  if (err instanceof TypeError) return true;
+  const msg = err instanceof Error ? err.message : String(err);
+  return /network|failed to fetch|load failed|aborted|timeout/i.test(msg);
+}
+
+export async function fetchWithTimeoutRetry(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = 8_000,
+  opts?: { publicCache?: boolean; retries?: number; retryDelayMs?: number },
+): Promise<Response> {
+  const retries = opts?.retries ?? 2;
+  const retryDelayMs = opts?.retryDelayMs ?? 1200;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchWithTimeout(url, init, timeoutMs, opts);
+    } catch (err) {
+      lastErr = err;
+      if (attempt >= retries || !isTransientFetchError(err)) throw err;
+      await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs * (attempt + 1)));
+    }
+  }
+  throw lastErr;
+}
