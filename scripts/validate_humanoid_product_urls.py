@@ -18,28 +18,30 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 
 # slug -> (url, [terms that must appear in page text, any-of])
+# Round 2: user-supplied URLs (utm params stripped)
 CANDIDATES: dict[str, tuple[str, list[str]]] = {
-    # confirmed via web search
-    "neura-maira": ("https://neura-robotics.com/products/maira/", ["maira"]),
-    "pal-ari": ("https://pal-robotics.com/robot/ari/", ["ari"]),
-    "toyota-punyo": ("https://punyo.tech/", ["punyo"]),
-    "pndbotics-adam": ("https://wiki.pndbotics.com/en/robot/humanoid_robot/", ["adam"]),
-    "pndbotics-adam-u": ("https://pndbotics.com/", ["adam", "pnd"]),
-    "galbot-g1": ("https://www.galbot.com/", ["galbot"]),
-    "galbot-g2": ("https://www.galbot.com/", ["galbot"]),
-    # high-confidence vendor/product pages (validated by fetch)
-    "clone-alpha": ("https://clonerobotics.com/", ["clone"]),
-    "engineered-arts-mesmer": ("https://engineeredarts.com/robot/mesmer/", ["mesmer"]),
-    "mentee-bot-pro": ("https://www.menteebot.com/", ["mentee"]),
-    "reflex-gen2": ("https://reflexrobotics.com/", ["reflex"]),
-    "shadow-hand-platform": ("https://www.shadowrobot.com/dexterous-hand-series/", ["shadow", "hand"]),
-    "kawasaki-kaleido": ("https://kawasakirobotics.com/", ["kawasaki"]),
-    "leju-kuavo-3": ("https://www.lejurobotics.com/", ["leju", "kuavo"]),
-    "segway-humanoid": ("https://robotics.segway.com/", ["segway"]),
-    "apptronik-a2": ("https://apptronik.com/", ["apptronik"]),
-    "realman-humanoid": ("https://www.realman-robotics.com/", ["realman"]),
-    "noetix-n2": ("https://www.noetixrobotics.com/", ["noetix"]),
-    "noetix-e1": ("https://www.noetixrobotics.com/", ["noetix"]),
+    "galbot-g1": ("https://www.galbot.com", ["galbot"]),
+    "galbot-g2": ("https://www.galbot.com", ["galbot"]),
+    "pndbotics-adam-u": ("https://wiki.pndbotics.com/en/robot/humanoid_robot/", ["adam", "pnd"]),
+    "mentee-bot-pro": ("https://www.menteebot.com", ["mentee"]),
+    "noetix-n2": ("https://www.noetix.ai", ["noetix"]),
+    "noetix-e1": ("https://www.noetix.ai", ["noetix"]),
+    "leju-kuavo-3": ("https://www.lejurobot.com", ["leju", "kuavo"]),
+    "engineered-arts-mesmer": ("https://engineeredarts.co.uk/robot/mesmer/", ["mesmer"]),
+    "chery-mornine": ("https://www.cheryinternational.com", ["chery"]),
+    "estun-codroid": ("https://www.estun.com", ["estun"]),
+    "seer-humanoid": ("https://www.seer-robotics.ai", ["seer"]),
+    "syrius-humanoid": ("https://www.syriusrobotics.com", ["syrius"]),
+    "pangolin-humanoid": ("https://www.pangolin-robot.com", ["pangolin"]),
+    "xiaomi-cyberone-pro": ("https://www.mi.com/global/discover/article?id=1911", ["cyberone"]),
+    "nasa-valkyrie": ("https://www.nasa.gov/technology/r5/", ["valkyrie", "r5"]),
+    "dlr-toro": ("https://www.dlr.de/en/rm/research/expertise/robots-systems/humanoid-robots/toro", ["toro"]),
+    "dlr-justin": ("https://www.dlr.de/en/rm/research/expertise/robots-systems/humanoid-robots/rollin-justin", ["justin"]),
+    "honda-avatar": ("https://global.honda/en/innovation/avatarrobotics/", ["avatar"]),
+    "samsung-bot-handy": ("https://research.samsung.com/artificial-intelligence/robotics", ["robot"]),
+    "lg-cloi-suitbot": ("https://www.lg.com/global/business/cloi", ["cloi"]),
+    "softbank-pepper-next": ("https://www.softbankrobotics.com/emea/en/pepper", ["pepper"]),
+    "cloudminds-ginger-xr": ("https://www.cloudminds.com", ["cloudminds", "ginger"]),
 }
 
 
