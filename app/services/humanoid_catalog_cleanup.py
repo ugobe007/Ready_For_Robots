@@ -47,6 +47,8 @@ SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     # OpenLoong is the open-source project/community; the robot is 青龙/Qinglong,
     # tracked as qinglong-humanoid (OpenLoong terms folded into its aliases).
     "openloong-humanoid",
+    # "CyberOne Pro" is a media/naming variant — Xiaomi markets CyberOne (cyberone).
+    "xiaomi-cyberone-pro",
 }
 
 # Generic rows from robot_companies bridge ({Company} Humanoid).
