@@ -145,6 +145,11 @@ _FIELD_META: Dict[str, dict] = {
         "why": "Metadata for payload / facility planning.",
         "search_hint": "weight kg mass specifications",
     },
+    "peak_torque_nm": {
+        "label": "Peak joint torque (N·m)",
+        "why": "Actuator torque indicates joint strength for payload, dynamic motion, and force-limited safety design.",
+        "search_hint": "peak joint torque N·m actuator motor datasheet specifications",
+    },
 }
 
 _CATALOG_BY_SLUG: Dict[str, dict] = {

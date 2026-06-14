@@ -100,6 +100,7 @@ _LIST_SPEC_KEYS = frozenset({
     "height_cm",
     "weight_kg",
     "finger_count",
+    "peak_torque_nm",
     "price_usd",
     "can_climb_stairs",
     "has_sdk",

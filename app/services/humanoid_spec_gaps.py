@@ -41,6 +41,7 @@ SCORING_SPEC_FIELDS: List[tuple] = [
 METADATA_SPEC_FIELDS: List[tuple] = [
     ("height_cm", "numeric"),
     ("weight_kg", "numeric"),
+    ("peak_torque_nm", "numeric"),
 ]
 
 ROW_FIELDS = ("product_url", "sources", "last_scraped_at")

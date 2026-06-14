@@ -1081,7 +1081,8 @@ Extract any CONFIRMED specs and return ONLY a JSON object with these keys (omit 
 top_speed_mps, payload_kg, battery_life_h, charge_time_h, finger_count,
 can_climb_stairs (bool), can_navigate_rough_terrain (bool), can_run (bool),
 has_dexterous_hands (bool), has_estop (bool), price_usd,
-commercial_deployments (integer estimate), height_cm, weight_kg
+commercial_deployments (integer estimate), height_cm, weight_kg,
+peak_torque_nm (peak/max single-joint actuator torque in newton-metres; only the headline peak value)
 
 Return ONLY the JSON object, no explanation."""
 
