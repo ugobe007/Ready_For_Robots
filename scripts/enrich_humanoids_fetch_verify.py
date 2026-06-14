@@ -210,7 +210,22 @@ def fetch_page(url: str, max_chars: int = 9000) -> Optional[str]:
         return None
 
 
-def gather_sources(robot: dict, use_ddg: bool = True) -> list[dict]:
+def fetch_page_rendered(page, url: str, max_chars: int = 9000) -> Optional[str]:
+    """Render a JS-heavy page with a headless browser, then extract visible text."""
+    try:
+        page.goto(url, timeout=45000, wait_until="domcontentloaded")
+        try:
+            page.wait_for_load_state("networkidle", timeout=8000)
+        except Exception:
+            pass
+        text = html_to_text(page.content())
+        return text[:max_chars] if text else None
+    except Exception as exc:
+        print(f"      render failed {url}: {type(exc).__name__}")
+        return None
+
+
+def gather_sources(robot: dict, use_ddg: bool = True, render: bool = False) -> list[dict]:
     name, vendor = robot["name"], robot.get("vendor") or ""
     candidates: list[str] = []
     if robot.get("product_url"):
@@ -226,12 +241,35 @@ def gather_sources(robot: dict, use_ddg: bool = True) -> list[dict]:
                     candidates.append(u)
             time.sleep(1.0)
 
-    sources: list[dict] = []
+    urls = []
     seen = set()
     for url in candidates[:6]:
-        if url in seen:
-            continue
-        seen.add(url)
+        if url not in seen:
+            seen.add(url)
+            urls.append(url)
+
+    sources: list[dict] = []
+    if render:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            ctx = browser.new_context(user_agent=USER_AGENT)
+            try:
+                for url in urls:
+                    pg = ctx.new_page()
+                    text = fetch_page_rendered(pg, url)
+                    pg.close()
+                    if not text or len(text) <= 200:  # fallback to static fetch
+                        text = fetch_page(url)
+                    if text and len(text) > 200:
+                        sources.append({"url": url, "text": text})
+                    if len(sources) >= 4:
+                        break
+            finally:
+                browser.close()
+        return sources
+
+    for url in urls:
         text = fetch_page(url)
         if text and len(text) > 200:
             sources.append({"url": url, "text": text})
@@ -369,6 +407,8 @@ def main() -> None:
                     help="Comma-separated slugs; fetched fresh from the single endpoint")
     ap.add_argument("--url-map", type=str, default=None,
                     help="JSON file {slug: url}; scrape these exact URLs (override product_url)")
+    ap.add_argument("--render", action="store_true",
+                    help="Render pages with headless Chromium (for JS-only SPA sites)")
     ap.add_argument("--json", dest="json_path", type=str, default=None,
                     help="Write structured proposals (with evidence) to this JSON file")
     ap.add_argument("--apply-endpoint", type=str, default=None,
@@ -414,7 +454,7 @@ def main() -> None:
         if args.require_url and not robot.get("product_url"):
             continue
         print(f"--- {robot['vendor']} {robot['name']} ({slug}) — fill {g['spec_fill_pct']}% ---")
-        sources = gather_sources(robot, use_ddg=not args.no_ddg)
+        sources = gather_sources(robot, use_ddg=not args.no_ddg, render=args.render)
         print(f"      fetched {len(sources)} source page(s): "
               + ", ".join(s["url"][:60] for s in sources) if sources else "      no source pages found")
         if not sources:
