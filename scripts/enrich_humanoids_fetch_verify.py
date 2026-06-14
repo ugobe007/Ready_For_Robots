@@ -107,6 +107,25 @@ def load_robots() -> list[dict]:
     return rows or []
 
 
+def load_robot_single(slug: str) -> Optional[dict]:
+    """Fetch one robot from the single endpoint (fresh — bypasses 3h list snapshot)."""
+    resp = requests.get(f"{API_BASE}/robots/{slug}", timeout=30)
+    if not resp.ok:
+        return None
+    r = resp.json()
+    r = r.get("robot") if isinstance(r, dict) and "robot" in r else r
+    specs = r.get("specs") or {}
+    return {
+        "model_slug": r.get("model_slug"),
+        "name": r.get("name"),
+        "vendor": r.get("vendor"),
+        "status": r.get("status"),
+        "product_url": r.get("product_url"),
+        "specs": specs,
+        "spec_fill_pct": _fill_pct(specs),
+    }
+
+
 def _fill_pct(specs: dict) -> float:
     present = sum(1 for k in SCORING_KEYS if specs.get(k) not in (None, ""))
     return round(100 * present / len(SCORING_KEYS), 1)
@@ -334,6 +353,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=24)
     ap.add_argument("--slug", type=str, default=None)
+    ap.add_argument("--slugs", type=str, default=None,
+                    help="Comma-separated slugs; fetched fresh from the single endpoint")
     ap.add_argument("--json", dest="json_path", type=str, default=None,
                     help="Write structured proposals (with evidence) to this JSON file")
     ap.add_argument("--apply-endpoint", type=str, default=None,
@@ -350,7 +371,11 @@ def main() -> None:
     load_env()
     sys.path.insert(0, str(REPO_ROOT))
 
-    targets = sparsest_robots(args.limit, args.slug)
+    if args.slugs:
+        wanted = [s.strip() for s in args.slugs.split(",") if s.strip()]
+        targets = [r for r in (load_robot_single(s) for s in wanted) if r]
+    else:
+        targets = sparsest_robots(args.limit, args.slug)
     writing = bool(args.apply_endpoint)
     mode = f"APPLY via endpoint" if writing else "DRY RUN (no writes)"
     print(f"\n=== Humanoid fetch-verify enrichment — {mode} ===")
