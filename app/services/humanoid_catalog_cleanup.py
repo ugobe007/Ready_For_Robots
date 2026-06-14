@@ -36,6 +36,8 @@ SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     "halodi-eve",
     "ihmc-atlas",
     "zhiyuan-lingxi",
+    # Misnomer: Apptronik's robot is Apollo; "A2" belongs to Agibot (agibot-a2).
+    "apptronik-a2",
 }
 
 # Generic rows from robot_companies bridge ({Company} Humanoid).

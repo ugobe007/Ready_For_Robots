@@ -298,7 +298,6 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
         },
     },
     {"name": "Sanctuary M-Series", "vendor": "Sanctuary AI", "model_slug": "sanctuary-m-series", "product_url": "https://www.sanctuary.ai", "status": "research", "country": "Canada"},
-    {"name": "Apptronik A2", "vendor": "Apptronik", "model_slug": "apptronik-a2", "status": "research", "country": "USA"},
     {
         "name": "Agility Digit 2",
         "vendor": "Agility Robotics",

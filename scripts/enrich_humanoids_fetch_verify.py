@@ -310,8 +310,19 @@ def coerce(value: Any, kind: str) -> Any:
     return value
 
 
+def _host(url: str | None) -> str:
+    if not url:
+        return ""
+    try:
+        from urllib.parse import urlparse
+        return (urlparse(url).hostname or "").lower().lstrip("www.")
+    except Exception:
+        return ""
+
+
 def build_item(robot: dict, proposed: dict, sources: list[dict]) -> dict:
     """Build a clean, coerced, provenance-tagged item for review/apply."""
+    official_host = _host(robot.get("product_url"))
     specs: dict[str, Any] = {}
     evidence: dict[str, dict] = {}
     for field, info in proposed.items():
@@ -322,8 +333,9 @@ def build_item(robot: dict, proposed: dict, sources: list[dict]) -> dict:
             continue
         idx = info.get("source")
         url = sources[idx - 1]["url"] if isinstance(idx, int) and 1 <= idx <= len(sources) else None
+        tier = "official" if (official_host and _host(url) == official_host) else "third_party"
         specs[field] = val
-        evidence[field] = {"url": url, "quote": (info.get("quote") or "")[:200]}
+        evidence[field] = {"url": url, "quote": (info.get("quote") or "")[:200], "tier": tier}
     return {
         "slug": robot["model_slug"],
         "name": robot.get("name"),

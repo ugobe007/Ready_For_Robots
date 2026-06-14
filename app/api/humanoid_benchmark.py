@@ -210,6 +210,36 @@ def list_robots(response: Response):
     return serve_robots_list()
 
 
+def _provenance_host(url: str | None) -> str:
+    if not url:
+        return ""
+    try:
+        from urllib.parse import urlparse
+        return (urlparse(url).hostname or "").lower().removeprefix("www.")
+    except Exception:
+        return ""
+
+
+def _spec_provenance(sources: list | None) -> dict:
+    """Build {field: {url, quote, tier}} from fetch_verify provenance records (latest wins)."""
+    prov: dict[str, dict] = {}
+    for rec in sources or []:
+        if not isinstance(rec, dict):
+            continue
+        evidence = rec.get("evidence") or {}
+        if not isinstance(evidence, dict):
+            continue
+        for field, ev in evidence.items():
+            if not isinstance(ev, dict):
+                continue
+            prov[field] = {
+                "url": ev.get("url"),
+                "quote": ev.get("quote"),
+                "tier": ev.get("tier") or "third_party",
+            }
+    return prov
+
+
 @router.get("/robots/{slug}")
 def get_robot(slug: str, db: Session = Depends(get_db)):
     """Return a single robot with full specs and sources."""
@@ -219,7 +249,9 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
     ).mappings().first()
     if not row:
         raise HTTPException(status_code=404, detail="Robot not found")
-    return _enrich_robot_scores(dict(row))
+    out = _enrich_robot_scores(dict(row))
+    out["spec_provenance"] = _spec_provenance(row.get("sources"))
+    return out
 
 
 @router.get("/gaps")
@@ -497,7 +529,7 @@ def apply_verified_specs(
         if not slug:
             continue
         row = db.execute(
-            text("SELECT name, vendor, status, specs, sources, score_total, heif_total "
+            text("SELECT name, vendor, status, specs, sources, product_url, score_total, heif_total "
                  "FROM humanoid_benchmarks WHERE model_slug = :s"),
             {"s": slug},
         ).mappings().first()
@@ -519,11 +551,19 @@ def apply_verified_specs(
             continue
         merged = specs_for_storage({**existing, **merge}, slug)
         scores = compute_scores(scoring_specs(merged), status=row["status"], vendor=row["vendor"])
+        official_host = _provenance_host(row["product_url"])
+        ev_out = {}
+        for f in merge:
+            ev = dict(evidence.get(f) or {})
+            if "tier" not in ev:
+                ev_host = _provenance_host(ev.get("url"))
+                ev["tier"] = "official" if (official_host and ev_host == official_host) else "third_party"
+            ev_out[f] = ev
         prov = list(row["sources"] or []) + [{
             "method": "fetch_verify",
             "scraped_at": now.isoformat(),
             "fields": list(merge.keys()),
-            "evidence": {f: evidence.get(f) for f in merge},
+            "evidence": ev_out,
         }]
         db.execute(
             text(
