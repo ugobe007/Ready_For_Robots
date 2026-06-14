@@ -157,17 +157,32 @@ _HIGH_FIT_INDUSTRY_RE = re.compile(
 )
 
 
+# Ontology vocab is large and stable; compile each phrase/word pattern once and
+# reuse it process-wide. Without this, every scoring call rebuilt thousands of
+# regexes and thrashed Python's small internal re cache (512), adding ~tens of
+# seconds per lead — which tripped the deep-link client timeout.
+@lru_cache(maxsize=16384)
+def _phrase_pattern(phrase: str) -> Optional["re.Pattern[str]"]:
+    if not phrase or _EDITORIAL_TRIGGER_RE.search(phrase):
+        return None
+    left = r"\b" if phrase[0].isalnum() else ""
+    right = r"\b" if phrase[-1].isalnum() else ""
+    pattern = left + re.escape(phrase).replace(r"\ ", r"\s+") + right
+    return re.compile(pattern, re.I)
+
+
+@lru_cache(maxsize=16384)
+def _word_pattern(word: str) -> Optional["re.Pattern[str]"]:
+    if not word:
+        return None
+    return re.compile(r"\b" + re.escape(word) + r"\b", re.I)
+
+
 def _phrase_matches(text_norm: str, phrases: Iterable[str]) -> tuple[str, ...]:
     matches: list[str] = []
     for phrase in phrases:
-        if not phrase:
-            continue
-        if _EDITORIAL_TRIGGER_RE.search(phrase):
-            continue
-        left = r"\b" if phrase[0].isalnum() else ""
-        right = r"\b" if phrase[-1].isalnum() else ""
-        pattern = left + re.escape(phrase).replace(r"\ ", r"\s+") + right
-        if re.search(pattern, text_norm, re.I):
+        rx = _phrase_pattern(phrase)
+        if rx is not None and rx.search(text_norm):
             matches.append(phrase)
     return tuple(matches)
 
@@ -175,9 +190,8 @@ def _phrase_matches(text_norm: str, phrases: Iterable[str]) -> tuple[str, ...]:
 def _word_matches(text_norm: str, words: Iterable[str]) -> tuple[str, ...]:
     matches: list[str] = []
     for word in words:
-        if not word:
-            continue
-        if re.search(r"\b" + re.escape(word) + r"\b", text_norm, re.I):
+        rx = _word_pattern(word)
+        if rx is not None and rx.search(text_norm):
             matches.append(word)
     return tuple(matches)
 
