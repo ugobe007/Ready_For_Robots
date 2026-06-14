@@ -136,10 +136,26 @@ def get_learned_overlay(db: Optional[Session] = None) -> Dict[str, Any]:
     return data
 
 
+_EFFECTIVE_FEATURES_CACHE: tuple[tuple, "OntologyFeatures"] | None = None
+
+
 def load_effective_ontology_features(db: Optional[Session] = None) -> OntologyFeatures:
-    """Base Markdown ontology + learned terms from the enrichment agent."""
+    """Base Markdown ontology + learned terms from the enrichment agent.
+
+    The merge (normalize + dedup over the full vocab) is expensive and was rerun
+    on every signal-scoring call (~40x per lead). Memoize the merged result keyed
+    on the overlay's content version (``version`` + ``updated_at``) — stable for
+    the empty store and bumped on every overlay save — so this stays correct
+    (even on the ``db=None`` hot path, where each call builds a fresh empty
+    store) while eliminating the repeated rebuild.
+    """
+    global _EFFECTIVE_FEATURES_CACHE
     base = load_robot_signal_ontology()
     learned = get_learned_overlay(db)
+    cache_key = (learned.get("version"), learned.get("updated_at"))
+    cached = _EFFECTIVE_FEATURES_CACHE
+    if cached is not None and cached[0] == cache_key:
+        return cached[1]
     buckets = learned.get("buckets") if isinstance(learned.get("buckets"), dict) else {}
 
     def merge(base_tuple: tuple[str, ...], key: str) -> tuple[str, ...]:
@@ -154,7 +170,7 @@ def load_effective_ontology_features(db: Optional[Session] = None) -> OntologyFe
             out.append(n)
         return tuple(out)
 
-    return OntologyFeatures(
+    features = OntologyFeatures(
         pain_words=merge(base.pain_words, "pain_words"),
         buying_phrases=merge(base.buying_phrases, "buying_phrases"),
         trigger_expressions=merge(base.trigger_expressions, "trigger_expressions"),
@@ -165,6 +181,8 @@ def load_effective_ontology_features(db: Optional[Session] = None) -> OntologyFe
             base.regulatory_compliance_signals, "regulatory_compliance_signals"
         ),
     )
+    _EFFECTIVE_FEATURES_CACHE = (cache_key, features)
+    return features
 
 
 def match_word_shapes(text: str, shapes: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
