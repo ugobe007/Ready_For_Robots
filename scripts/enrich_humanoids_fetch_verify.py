@@ -355,6 +355,8 @@ def main() -> None:
     ap.add_argument("--slug", type=str, default=None)
     ap.add_argument("--slugs", type=str, default=None,
                     help="Comma-separated slugs; fetched fresh from the single endpoint")
+    ap.add_argument("--url-map", type=str, default=None,
+                    help="JSON file {slug: url}; scrape these exact URLs (override product_url)")
     ap.add_argument("--json", dest="json_path", type=str, default=None,
                     help="Write structured proposals (with evidence) to this JSON file")
     ap.add_argument("--apply-endpoint", type=str, default=None,
@@ -371,7 +373,18 @@ def main() -> None:
     load_env()
     sys.path.insert(0, str(REPO_ROOT))
 
-    if args.slugs:
+    if args.url_map:
+        import json as _json
+        url_map = _json.load(open(args.url_map))
+        targets = []
+        for slug, url in url_map.items():
+            r = load_robot_single(slug)
+            if not r:
+                print(f"  (skip {slug}: not found)")
+                continue
+            r["product_url"] = url  # override with user-supplied URL
+            targets.append(r)
+    elif args.slugs:
         wanted = [s.strip() for s in args.slugs.split(",") if s.strip()]
         targets = [r for r in (load_robot_single(s) for s in wanted) if r]
     else:
