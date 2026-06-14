@@ -4,7 +4,7 @@
  * Violet palette: #0d0520 bg · #7c3aed accent · cream text
  * Design: Linear/Raycast-inspired — dense, inline, data-forward
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
@@ -362,10 +362,21 @@ function mapPipelineRows(apiRows: ApiLead[]): Deal[] {
   return mapped;
 }
 
+function mergePipelineFeedDeals(mapped: Deal[], prev: Deal[]): Deal[] {
+  const deepLinkId =
+    typeof window !== "undefined"
+      ? resolvePipelineLeadId(window.location.search)
+      : null;
+  if (deepLinkId == null) return mapped;
+  const pinned = prev.find((d) => d.id === deepLinkId);
+  if (!pinned || mapped.some((d) => d.id === deepLinkId)) return mapped;
+  return [pinned, ...mapped];
+}
+
 function applyPipelineFeed(
   payload: PipelineFeedPayload,
   setters: {
-    setDeals: (v: Deal[]) => void;
+    setDeals: Dispatch<SetStateAction<Deal[]>>;
     setSelectedId: (fn: (prev: number | null) => number | null) => void;
     setSummary: (v: LeadSummary | null) => void;
     setEntitlements: (v: PipelineEntitlements | null) => void;
@@ -379,7 +390,7 @@ function applyPipelineFeed(
   }
   if (rows.length > 0) {
     const mapped = mapPipelineRows(rows);
-    setters.setDeals(mapped);
+    setters.setDeals((prev) => mergePipelineFeedDeals(mapped, prev));
     const deepLinkId =
       typeof window !== "undefined"
         ? resolvePipelineLeadId(window.location.search)
@@ -538,7 +549,9 @@ export default function Pipeline() {
     connected: boolean;
     entitled: boolean;
   } | null>(null);
-  const deepLinkFetchRef = useRef<number | null>(null);
+  const dealsRef = useRef(deals);
+  dealsRef.current = deals;
+  const deepLinkInflightRef = useRef<number | null>(null);
 
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
@@ -656,13 +669,13 @@ export default function Pipeline() {
 
     setSelectedId(deepLinkLeadId);
 
-    if (deals.some((d) => d.id === deepLinkLeadId)) {
-      deepLinkFetchRef.current = deepLinkLeadId;
+    if (dealsRef.current.some((d) => d.id === deepLinkLeadId)) {
+      deepLinkInflightRef.current = null;
       return;
     }
-    if (deepLinkFetchRef.current === deepLinkLeadId) return;
+    if (deepLinkInflightRef.current === deepLinkLeadId) return;
 
-    deepLinkFetchRef.current = deepLinkLeadId;
+    deepLinkInflightRef.current = deepLinkLeadId;
     let cancelled = false;
     void (async () => {
       const base = getApiBase();
@@ -673,17 +686,23 @@ export default function Pipeline() {
           12_000,
           { publicCache: true },
         );
-        if (!response.ok || cancelled) return;
+        if (cancelled) return;
+        if (!response.ok) {
+          deepLinkInflightRef.current = null;
+          toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
+          return;
+        }
         const lead = (await response.json()) as ApiLead;
         const mapped = mapApiLeadToDeal(lead) as Deal;
         if (cancelled) return;
+        deepLinkInflightRef.current = null;
         setDeals((prev) => {
           if (prev.some((d) => d.id === deepLinkLeadId)) return prev;
           return [mapped, ...prev];
         });
       } catch {
         if (!cancelled) {
-          deepLinkFetchRef.current = null;
+          deepLinkInflightRef.current = null;
           toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
         }
       }
@@ -691,8 +710,11 @@ export default function Pipeline() {
 
     return () => {
       cancelled = true;
+      if (deepLinkInflightRef.current === deepLinkLeadId) {
+        deepLinkInflightRef.current = null;
+      }
     };
-  }, [deepLinkLeadId, loadingLeads, deals]);
+  }, [deepLinkLeadId, loadingLeads]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
@@ -822,7 +844,12 @@ export default function Pipeline() {
           const lead = (await response.json()) as ApiLead;
           const mapped = mapApiLeadToDeal(lead) as Deal;
           if (!cancelled) {
-            setDeals((prev) => prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal)));
+            setDeals((prev) => {
+              if (prev.some((deal) => deal.id === selectedId)) {
+                return prev.map((deal) => (deal.id === selectedId ? { ...deal, ...mapped } : deal));
+              }
+              return [mapped, ...prev];
+            });
           }
         } catch {
           // Research is additive; keep the core pipeline usable if detail enrichment misses.
