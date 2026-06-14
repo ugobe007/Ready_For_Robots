@@ -14,7 +14,7 @@ import {
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import ScoutActionBar from "@/components/ScoutActionBar";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -319,15 +319,21 @@ const PIPELINE_LIMIT_PAID = 50;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v2";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 
-/** Newsletter/homepage deep links use ?lead= or legacy #id — resolve once on load. */
-function parsePipelineLeadIdFromUrl(): number | null {
-  if (typeof window === "undefined") return null;
-  const params = new URLSearchParams(window.location.search);
+function parsePipelineLeadIdFromSearch(search: string): number | null {
+  const params = new URLSearchParams(search);
   const leadParam = params.get("lead");
   if (leadParam) {
     const id = Number.parseInt(leadParam, 10);
     if (Number.isFinite(id) && id > 0) return id;
   }
+  return null;
+}
+
+/** Newsletter/homepage deep links use ?lead= or legacy #id. */
+function resolvePipelineLeadId(search: string): number | null {
+  const fromSearch = parsePipelineLeadIdFromSearch(search);
+  if (fromSearch != null) return fromSearch;
+  if (typeof window === "undefined") return null;
   const hash = window.location.hash.replace(/^#/, "").trim();
   if (hash) {
     const id = Number.parseInt(hash, 10);
@@ -374,7 +380,14 @@ function applyPipelineFeed(
   if (rows.length > 0) {
     const mapped = mapPipelineRows(rows);
     setters.setDeals(mapped);
-    setters.setSelectedId((prev) => (prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null));
+    const deepLinkId =
+      typeof window !== "undefined"
+        ? resolvePipelineLeadId(window.location.search)
+        : null;
+    setters.setSelectedId((prev) => {
+      if (deepLinkId != null) return deepLinkId;
+      return prev && mapped.some((d) => d.id === prev) ? prev : mapped[0]?.id ?? null;
+    });
     setters.setMarketSnippet(marketSnippetFromDeals(mapped));
     return true;
   }
@@ -481,6 +494,8 @@ function PipelineMetric({
 
 export default function Pipeline() {
   const { session } = useAuth();
+  const search = useSearch();
+  const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
@@ -523,8 +538,7 @@ export default function Pipeline() {
     connected: boolean;
     entitled: boolean;
   } | null>(null);
-  const deepLinkLeadIdRef = useRef(parsePipelineLeadIdFromUrl());
-  const deepLinkResolvedRef = useRef(false);
+  const deepLinkFetchRef = useRef<number | null>(null);
 
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
@@ -638,20 +652,23 @@ export default function Pipeline() {
 
   // Deep link from newsletter / homepage (?lead=123 or legacy #123).
   useEffect(() => {
-    const targetId = deepLinkLeadIdRef.current;
-    if (!targetId || deepLinkResolvedRef.current || loadingLeads) return;
+    if (!deepLinkLeadId || loadingLeads) return;
 
-    deepLinkResolvedRef.current = true;
-    setSelectedId(targetId);
+    setSelectedId(deepLinkLeadId);
 
-    if (deals.some((d) => d.id === targetId)) return;
+    if (deals.some((d) => d.id === deepLinkLeadId)) {
+      deepLinkFetchRef.current = deepLinkLeadId;
+      return;
+    }
+    if (deepLinkFetchRef.current === deepLinkLeadId) return;
 
+    deepLinkFetchRef.current = deepLinkLeadId;
     let cancelled = false;
     void (async () => {
       const base = getApiBase();
       try {
         const response = await fetchWithTimeout(
-          `${base}/api/leads/by-id/${targetId}`,
+          `${base}/api/leads/by-id/${deepLinkLeadId}`,
           publicFetchInit(),
           12_000,
           { publicCache: true },
@@ -661,11 +678,12 @@ export default function Pipeline() {
         const mapped = mapApiLeadToDeal(lead) as Deal;
         if (cancelled) return;
         setDeals((prev) => {
-          if (prev.some((d) => d.id === targetId)) return prev;
+          if (prev.some((d) => d.id === deepLinkLeadId)) return prev;
           return [mapped, ...prev];
         });
       } catch {
         if (!cancelled) {
+          deepLinkFetchRef.current = null;
           toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
         }
       }
@@ -674,8 +692,7 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingLeads]);
+  }, [deepLinkLeadId, loadingLeads, deals]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
@@ -867,7 +884,7 @@ export default function Pipeline() {
     : deals;
   const pendingDeepLink =
     selectedId != null &&
-    deepLinkLeadIdRef.current === selectedId &&
+    deepLinkLeadId === selectedId &&
     !filtered.some((d) => d.id === selectedId);
   const effectiveSelectedId =
     selectedId != null && (filtered.some((d) => d.id === selectedId) || pendingDeepLink)
