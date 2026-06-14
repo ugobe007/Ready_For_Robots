@@ -72,7 +72,7 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
           }}
         >
           <MessageSquare className="h-4 w-4" />
-          Talk to SIGNAL
+          Signal
           <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#FFB000" }} />
         </button>
       )}

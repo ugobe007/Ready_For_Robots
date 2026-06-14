@@ -105,18 +105,10 @@ function signalBullets(fullText: string | undefined): string[] {
   return bullets;
 }
 
-function tierColor(tier: string | undefined): string {
-  if (!tier) return "#03DAC5";
-  const t = tier.toLowerCase();
-  if (t.includes("labor") || t.includes("shortage")) return "#f87171";
-  if (t.includes("fund") || t.includes("round")) return "#a78bfa";
-  if (t.includes("expansion") || t.includes("hire")) return "#FFB000";
-  if (t.includes("capex") || t.includes("budget")) return "#34d399";
-  return "#03DAC5";
-}
 
 const TEAL = "#03DAC5";
 const AMBER = "#FFB000";
+const EMERALD = "#34d399";
 const PURPLE = "#a78bfa";
 const NEWSLETTER_SESSION_KEY = "newsletter_edition_v2";
 const NEWSLETTER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -437,16 +429,16 @@ export default function Newsletter() {
                   {macroItems.length > 0 && (
                     <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
                       <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
-                        <TrendingUp className="h-3.5 w-3.5" style={{ color: TEAL }} />
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Macro trends</p>
+                        <TrendingUp className="h-3.5 w-3.5" style={{ color: EMERALD }} />
+                        <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: EMERALD }}>Macro trends</p>
                       </div>
                       <ul>
                         {macroItems.map((item, i) => {
                           const title = briefTextTitle(item);
                           const detail = briefTextDetail(item);
                           return (
-                            <NlDataRow key={i} accent={TEAL}>
-                              {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                            <NlDataRow key={i} accent={EMERALD}>
+                              {title && <p className="text-sm font-medium" style={{ color: EMERALD }}>{title}</p>}
                               {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
                             </NlDataRow>
                           );
@@ -458,7 +450,7 @@ export default function Newsletter() {
                     <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
                       <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
                         <Radio className="h-3.5 w-3.5" style={{ color: AMBER }} />
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Strategic implications</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: AMBER }}>Strategic implications</p>
                       </div>
                       <ul>
                         {stratItems.map((item, i) => {
@@ -466,7 +458,7 @@ export default function Newsletter() {
                           const detail = briefTextDetail(item);
                           return (
                             <NlDataRow key={i} accent={AMBER}>
-                              {title && <p className="text-sm font-medium text-white/90">{title}</p>}
+                              {title && <p className="text-sm font-medium" style={{ color: AMBER }}>{title}</p>}
                               {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
                             </NlDataRow>
                           );
@@ -565,9 +557,22 @@ export default function Newsletter() {
               )}
 
               {((benchReport.key_findings as string[]) ?? []).length > 0 && (
-                <div className="rounded-md border border-white/[0.07] bg-black/15 px-3 py-3">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-white/40">Key findings</p>
-                  <ul className="space-y-2">
+                <details className="group rounded-md border border-white/[0.07] bg-black/15">
+                  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-white/40 transition-colors hover:text-white/55 [&::-webkit-details-marker]:hidden">
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className="inline-block text-[10px] transition-transform group-open:rotate-90"
+                        style={{ color: PURPLE }}
+                      >
+                        ▸
+                      </span>
+                      Key findings
+                      <span className="font-mono normal-case tracking-normal text-white/30">
+                        ({((benchReport.key_findings as string[]) ?? []).length})
+                      </span>
+                    </span>
+                  </summary>
+                  <ul className="space-y-2 border-t border-white/[0.06] px-3 py-3">
                     {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
                       <li key={i} className="flex gap-2 text-sm leading-relaxed text-white/65">
                         <span className="mt-2 h-1 w-1 shrink-0 rounded-full" style={{ background: PURPLE }} />
@@ -575,7 +580,7 @@ export default function Newsletter() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </details>
               )}
 
               <div className="mt-3 flex flex-wrap gap-3 text-[11px] font-mono text-white/40" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -594,16 +599,16 @@ export default function Newsletter() {
 
           {stories.length > 0 && (
             <NlSurface
-              accent={TEAL}
+              accent={EMERALD}
               icon={BarChart3}
               kicker={`Signal intelligence · ${stories.length}`}
               title="Companies moving toward automation"
-              action={<NlLink href="/pipeline" color={TEAL}>Pipeline</NlLink>}
+              action={<NlLink href="/pipeline" color={EMERALD}>Pipeline</NlLink>}
             >
               <div className="grid gap-3 lg:grid-cols-2">
                 {stories.map((story, index) => {
                   const bullets = signalBullets(story.fullText);
-                  const color = tierColor(story.category);
+                  const color = index % 2 === 0 ? EMERALD : AMBER;
                   const category = cleanScrapedText(story.category) || "Signal";
                   return (
                     <article
@@ -619,13 +624,17 @@ export default function Newsletter() {
                           </span>
                         ) : null}
                       </div>
-                      <h3 className="text-sm font-semibold leading-snug text-white">
+                      <h3 className="text-sm font-semibold leading-snug">
                         {story.company_id ? (
-                          <Link href={`/pipeline?lead=${story.company_id}`} className="hover:text-teal-300 transition-colors">
+                          <Link
+                            href={`/pipeline?lead=${story.company_id}`}
+                            className="transition-opacity hover:opacity-85"
+                            style={{ color }}
+                          >
                             {cleanScrapedText(story.company || story.headline)}
                           </Link>
                         ) : (
-                          cleanScrapedText(story.company || story.headline)
+                          <span style={{ color }}>{cleanScrapedText(story.company || story.headline)}</span>
                         )}
                       </h3>
                       <p className="mt-1.5 flex-1 text-xs leading-relaxed text-white/55">
