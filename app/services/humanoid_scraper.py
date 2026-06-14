@@ -388,6 +388,8 @@ SEED_ROBOTS: list[dict] = [
             "height_cm": 127,
             "weight_kg": 35,
             "hot_swap_battery": False,
+            # Official: base G1 max knee-joint torque 90 N·m (G1 EDU = 120 N·m). unitree.com/g1
+            "peak_torque_nm": 90,
         },
     },
     {
@@ -419,6 +421,8 @@ SEED_ROBOTS: list[dict] = [
             "height_cm": 180,
             "weight_kg": 47,
             "hot_swap_battery": False,
+            # Official: H1 max joint torque 360 N·m (knee, self-developed M107 motor). unitree.com/h1
+            "peak_torque_nm": 360,
         },
     },
     {
