@@ -677,15 +677,16 @@ export default function Pipeline() {
   }, [deepLinkLeadId]);
 
   useEffect(() => {
-    if (!deepLinkLeadId || loadingLeads) return;
+    if (!deepLinkLeadId) return;
     const onOnline = () => retryDeepLink();
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
-  }, [deepLinkLeadId, loadingLeads]);
+  }, [deepLinkLeadId]);
 
   // Deep link from newsletter / homepage (?lead=123 or legacy #123).
+  // Fire immediately in parallel with the pipeline feed — do not wait for loadingLeads.
   useEffect(() => {
-    if (!deepLinkLeadId || loadingLeads) return;
+    if (!deepLinkLeadId) return;
 
     setSelectedId(deepLinkLeadId);
     setDeepLinkLoadFailed(false);
@@ -736,7 +737,7 @@ export default function Pipeline() {
         deepLinkInflightRef.current = null;
       }
     };
-  }, [deepLinkLeadId, loadingLeads, deepLinkRetryNonce]);
+  }, [deepLinkLeadId, deepLinkRetryNonce]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
@@ -848,6 +849,7 @@ export default function Pipeline() {
   // Lazy detail enrichment when a slim pipeline row is selected — deferred so list paint stays fast.
   useEffect(() => {
     if (!selectedId) return;
+    if (deepLinkInflightRef.current === selectedId) return;
     const existing = deals.find((deal) => deal.id === selectedId);
     if (existing?.leadHighlights) return;
     const base = getApiBase();
