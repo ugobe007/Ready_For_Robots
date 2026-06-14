@@ -367,6 +367,14 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           <div className="flex items-center gap-2 flex-wrap">
             <RobotNameLink name={robot.name} url={robot.product_url} />
             <StatusBadge status={robot.status} />
+            {specs?.total_dof != null ? (
+              <span
+                title={specs.dof_note != null ? String(specs.dof_note) : undefined}
+                className="text-[9px] font-bold uppercase tracking-wider text-cyan-300/80 bg-cyan-400/10 border border-cyan-400/25 rounded-full px-2 py-0.5"
+              >
+                {String(specs.total_dof)} DOF
+              </span>
+            ) : null}
           </div>
           <p className="text-[11px] text-white/35 mt-0.5">{robot.vendor}</p>
           {aiStack?.primary_model ? (
@@ -465,6 +473,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                 ["Height", specs.height_cm != null ? `${specs.height_cm} cm` : null, "height_cm"],
                 ["Weight", specs.weight_kg != null ? `${specs.weight_kg} kg` : null, "weight_kg"],
                 ["Fingers", specs.finger_count != null ? String(specs.finger_count) : null, "finger_count"],
+                ["DOF", specs.total_dof != null ? `${specs.total_dof}${specs.dof_note != null ? " *" : ""}` : null, "total_dof"],
                 ["Peak joint torque", specs.peak_torque_nm != null ? `${specs.peak_torque_nm} N·m` : (specs.peak_torque_note != null ? String(specs.peak_torque_note) : null), "peak_torque_nm"],
                 ["Price", specs.price_usd != null ? `$${Number(specs.price_usd).toLocaleString()}` : "undisclosed", "price_usd"],
                 ["Stair climbing", specs.can_climb_stairs != null ? (specs.can_climb_stairs ? "Yes" : "No") : null, "can_climb_stairs"],
@@ -479,7 +488,12 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                         <p className="text-[9px] text-white/30">{label}</p>
                         {prov ? <ProvBadge entry={prov} /> : null}
                       </div>
-                      <p className="text-[11px] font-semibold text-white/70">{String(value)}</p>
+                      <p
+                        className="text-[11px] font-semibold text-white/70"
+                        title={key === "total_dof" && specs.dof_note != null ? String(specs.dof_note) : undefined}
+                      >
+                        {String(value)}
+                      </p>
                     </div>
                   );
                 })}

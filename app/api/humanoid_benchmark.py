@@ -108,6 +108,8 @@ _LIST_SPEC_KEYS = frozenset({
     "finger_count",
     "peak_torque_nm",
     "peak_torque_note",
+    "total_dof",
+    "dof_note",
     "price_usd",
     "can_climb_stairs",
     "has_sdk",

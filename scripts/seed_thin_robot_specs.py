@@ -25,8 +25,8 @@ from app.services.humanoid_vendor_catalog import (
 # Slugs whose catalog `specs` should be merged + rescored. Entries with only
 # note-style specs (no scoreable fields) are skipped automatically.
 TARGETS = {
-    "ti5-yaoguang", "ubtech-walker-s", "xpeng-iron", "fourier-n1",
-    "kepler-k1", "kawasaki-kaleido",
+    "ti5-yaoguang", "ubtech-walker-s", "ubtech-walker-s2", "xpeng-iron",
+    "fourier-n1", "kepler-k1", "kawasaki-kaleido",
 }
 
 
