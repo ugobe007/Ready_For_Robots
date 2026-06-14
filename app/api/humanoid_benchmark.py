@@ -240,9 +240,46 @@ def _spec_provenance(sources: list | None) -> dict:
     return prov
 
 
+_CONFIDENCE_IGNORE_KEYS = frozenset({"ai_stack", "peak_torque_note"})
+
+
+def _data_confidence(provenance: dict, specs: dict, heif_total: float | None) -> dict:
+    """
+    Confidence in a robot's spec data, weighted across all populated fields.
+
+    Per-field weight: official source = 1.0, third-party source = 0.5, curated
+    seed/datasheet (no fetch-verify provenance) = 0.85. So a flagship on curated
+    data stays high; third-party-heavy robots are discounted. heif_total_adjusted
+    mildly scales HEIF by confidence WITHOUT mutating the canonical score.
+    """
+    tier_weight = {"official": 1.0, "third_party": 0.5}
+    populated = [
+        k for k, v in (specs or {}).items()
+        if k not in _CONFIDENCE_IGNORE_KEYS and v is not None and v != ""
+    ]
+    verified = [(provenance.get(k) or {}).get("tier") for k in populated]
+    verified_n = sum(1 for t in verified if t in tier_weight)
+    official_n = sum(1 for t in verified if t == "official")
+    if not populated:
+        return {"data_confidence": None, "confidence_label": "curated",
+                "verified_field_count": 0, "official_field_count": 0,
+                "heif_total_adjusted": heif_total}
+    total = sum(tier_weight.get(t, 0.85) for t in verified)
+    score = round(100 * total / len(populated))
+    if verified_n == 0:
+        label = "curated"
+    else:
+        label = "high" if score >= 80 else "medium" if score >= 60 else "low"
+    adjusted = (round(float(heif_total) * (0.7 + 0.3 * score / 100), 2)
+                if heif_total is not None else None)
+    return {"data_confidence": score, "confidence_label": label,
+            "verified_field_count": verified_n, "official_field_count": official_n,
+            "heif_total_adjusted": adjusted}
+
+
 @router.get("/robots/{slug}")
 def get_robot(slug: str, db: Session = Depends(get_db)):
-    """Return a single robot with full specs and sources."""
+    """Return a single robot with full specs, sources, and provenance confidence."""
     row = db.execute(
         text("SELECT * FROM humanoid_benchmarks WHERE model_slug = :slug"),
         {"slug": slug},
@@ -250,7 +287,9 @@ def get_robot(slug: str, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Robot not found")
     out = _enrich_robot_scores(dict(row))
-    out["spec_provenance"] = _spec_provenance(row.get("sources"))
+    provenance = _spec_provenance(row.get("sources"))
+    out["spec_provenance"] = provenance
+    out.update(_data_confidence(provenance, out.get("specs") or {}, out.get("heif_total")))
     return out
 
 

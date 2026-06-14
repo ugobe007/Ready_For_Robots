@@ -46,7 +46,21 @@ type RobotRow = {
   heif_total?: number;
   last_scraped_at?: string;
   ai_stack?: AiStack;
+  spec_provenance?: SpecProvenance;
+  data_confidence?: number | null;
+  confidence_label?: "high" | "medium" | "low" | "curated";
+  verified_field_count?: number;
+  official_field_count?: number;
+  heif_total_adjusted?: number | null;
 };
+
+type SpecProvenanceEntry = {
+  url?: string | null;
+  quote?: string | null;
+  tier: "official" | "third_party";
+};
+
+type SpecProvenance = Record<string, SpecProvenanceEntry>;
 
 type AiStack = {
   primary_model?: string;
@@ -171,6 +185,70 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function ProvBadge({ entry }: { entry: SpecProvenanceEntry }) {
+  const official = entry.tier === "official";
+  const color = official ? "#34d399" : "#fbbf24";
+  const bg = official ? "rgba(52,211,153,0.14)" : "rgba(251,191,36,0.14)";
+  const label = official ? "Official" : "3rd-party";
+  const tip = [label + " source", entry.url ?? "", entry.quote ? `"${entry.quote}"` : ""]
+    .filter(Boolean)
+    .join("\n");
+  const badge = (
+    <span
+      className="rounded px-1 py-0.5 text-[7px] font-bold uppercase tracking-wider cursor-help"
+      style={{ color, background: bg }}
+      title={tip}
+    >
+      {official ? "OFF" : "3P"}
+    </span>
+  );
+  if (!entry.url) return badge;
+  return (
+    <a href={entry.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+      {badge}
+    </a>
+  );
+}
+
+function ConfidenceChip({ robot }: { robot: RobotRow }) {
+  const label = robot.confidence_label;
+  if (!label) return null;
+  if (label === "curated") {
+    return (
+      <span
+        className="rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider"
+        style={{ color: "#93c5fd", background: "rgba(96,165,250,0.12)" }}
+        title="Specs from curated datasheets/seed data (no auto-verified fields yet)"
+      >
+        Curated
+      </span>
+    );
+  }
+  const color = label === "high" ? "#34d399" : label === "medium" ? "#fbbf24" : "#f87171";
+  const bg =
+    label === "high"
+      ? "rgba(52,211,153,0.12)"
+      : label === "medium"
+        ? "rgba(251,191,36,0.12)"
+        : "rgba(248,113,113,0.12)";
+  const tip = [
+    `Data confidence ${robot.data_confidence}/100 (${label})`,
+    `${robot.official_field_count}/${robot.verified_field_count} auto-verified fields from official sources`,
+    robot.heif_total_adjusted != null ? `Confidence-adjusted HEIF: ${robot.heif_total_adjusted}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return (
+    <span
+      className="rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider"
+      style={{ color, background: bg }}
+      title={tip}
+    >
+      {robot.data_confidence}% conf
+    </span>
+  );
+}
+
 function RobotNameLink({ name, url }: { name: string; url?: string }) {
   if (!url) {
     return <p className="font-bold text-white text-base leading-tight">{name}</p>;
@@ -236,9 +314,31 @@ function AiStackPanel({ stack }: { stack: AiStack }) {
 
 function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<Partial<RobotRow> | null>(null);
   const heifTotal = robot.heif_total ?? robot.score_total / 25;
   const specs = robot.specs;
   const aiStack = resolveAiStack(robot);
+  const provenance = detail?.spec_provenance ?? robot.spec_provenance ?? {};
+  const enriched: RobotRow = detail ? { ...robot, ...detail } : robot;
+
+  useEffect(() => {
+    if (!open || detail) return;
+    let cancelled = false;
+    void fetchWithTimeout(
+      `${getApiBase()}/api/humanoid/robots/${robot.model_slug}`,
+      publicFetchInit(),
+      10_000,
+      { publicCache: true },
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d) setDetail(d as Partial<RobotRow>);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, detail, robot.model_slug]);
 
   return (
     <div
@@ -352,28 +452,37 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Published specs</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Published specs</p>
+              <ConfidenceChip robot={enriched} />
+            </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {[
-                ["Top speed", specs.top_speed_mps != null ? `${specs.top_speed_mps} m/s` : null],
-                ["Payload", specs.payload_kg != null ? `${specs.payload_kg} kg` : null],
-                ["Battery", specs.battery_life_h != null ? `${specs.battery_life_h} h` : null],
-                ["Charge time", specs.charge_time_h != null ? `${specs.charge_time_h} h` : null],
-                ["Height", specs.height_cm != null ? `${specs.height_cm} cm` : null],
-                ["Weight", specs.weight_kg != null ? `${specs.weight_kg} kg` : null],
-                ["Fingers", specs.finger_count != null ? String(specs.finger_count) : null],
-                ["Peak joint torque", specs.peak_torque_nm != null ? `${specs.peak_torque_nm} N·m` : (specs.peak_torque_note != null ? String(specs.peak_torque_note) : null)],
-                ["Price", specs.price_usd != null ? `$${Number(specs.price_usd).toLocaleString()}` : "undisclosed"],
-                ["Stair climbing", specs.can_climb_stairs != null ? (specs.can_climb_stairs ? "Yes" : "No") : null],
-                ["SDK", specs.has_sdk != null ? (specs.has_sdk ? "Available" : "No") : null],
-              ]
+              {([
+                ["Top speed", specs.top_speed_mps != null ? `${specs.top_speed_mps} m/s` : null, "top_speed_mps"],
+                ["Payload", specs.payload_kg != null ? `${specs.payload_kg} kg` : null, "payload_kg"],
+                ["Battery", specs.battery_life_h != null ? `${specs.battery_life_h} h` : null, "battery_life_h"],
+                ["Charge time", specs.charge_time_h != null ? `${specs.charge_time_h} h` : null, "charge_time_h"],
+                ["Height", specs.height_cm != null ? `${specs.height_cm} cm` : null, "height_cm"],
+                ["Weight", specs.weight_kg != null ? `${specs.weight_kg} kg` : null, "weight_kg"],
+                ["Fingers", specs.finger_count != null ? String(specs.finger_count) : null, "finger_count"],
+                ["Peak joint torque", specs.peak_torque_nm != null ? `${specs.peak_torque_nm} N·m` : (specs.peak_torque_note != null ? String(specs.peak_torque_note) : null), "peak_torque_nm"],
+                ["Price", specs.price_usd != null ? `$${Number(specs.price_usd).toLocaleString()}` : "undisclosed", "price_usd"],
+                ["Stair climbing", specs.can_climb_stairs != null ? (specs.can_climb_stairs ? "Yes" : "No") : null, "can_climb_stairs"],
+                ["SDK", specs.has_sdk != null ? (specs.has_sdk ? "Available" : "No") : null, "has_sdk"],
+              ] as [string, string | null, string][])
                 .filter(([, v]) => v !== null)
-                .map(([label, value]) => (
-                  <div key={String(label)} className="rounded-lg px-2.5 py-1.5 bg-white/[0.03] border border-white/6">
-                    <p className="text-[9px] text-white/30 mb-0.5">{String(label)}</p>
-                    <p className="text-[11px] font-semibold text-white/70">{String(value)}</p>
-                  </div>
-                ))}
+                .map(([label, value, key]) => {
+                  const prov = provenance[key];
+                  return (
+                    <div key={label} className="rounded-lg px-2.5 py-1.5 bg-white/[0.03] border border-white/6">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <p className="text-[9px] text-white/30">{label}</p>
+                        {prov ? <ProvBadge entry={prov} /> : null}
+                      </div>
+                      <p className="text-[11px] font-semibold text-white/70">{String(value)}</p>
+                    </div>
+                  );
+                })}
             </div>
           </div>
           {aiStack ? <AiStackPanel stack={aiStack} /> : null}
