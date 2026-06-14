@@ -41,6 +41,9 @@ SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     # Generic placeholder that resolves to Humanoid (thehumanoid.ai) — already
     # tracked as humanoid-hmnd01-alpha-bipedal / -wheeled. Not a distinct product.
     "humanoid-robot-corp",
+    # Parent company (Stardust Intelligence) of the Astribot brand — the robot is
+    # Astribot S1 (astribot-s1), not a separate "Stardust Humanoid" product.
+    "stardust-humanoid",
 }
 
 # Generic rows from robot_companies bridge ({Company} Humanoid).

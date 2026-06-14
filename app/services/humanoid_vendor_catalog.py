@@ -145,7 +145,8 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Dexmate Vega", "vendor": "Dexmate", "model_slug": "dexmate-vega", "product_url": "https://www.dexmate.ai/product/vega", "status": "available", "country": "USA", "specs": {"top_speed_mps": 1.1, "payload_kg": 7.0, "battery_life_h": 10.0, "charge_time_h": 2.0, "has_dexterous_hands": True, "finger_count": 10, "can_climb_stairs": False, "can_navigate_rough_terrain": True, "can_run": False, "autonomy_level": "semi", "has_estop": True, "force_limited_joints": True, "collision_force_n": 150, "price_usd": 89999, "has_sdk": True, "has_api": True, "has_support_sla": True, "commercial_deployments": 10, "height_cm": 171, "weight_kg": 135, "hot_swap_battery": False}},
     {"name": "Eden Robot", "vendor": "Eden Robotics", "model_slug": "eden-robotics", "product_url": "https://edenrobotics.ai", "status": "pilot", "country": "USA", "specs": {"autonomy_level": "semi", "has_sdk": True, "has_api": True, "has_estop": True, "commercial_deployments": 1, "has_support_sla": True}},
     {"name": "Noble Machines", "vendor": "Noble Machines", "model_slug": "noble-machines", "product_url": "https://www.noblemachines.ai", "status": "pilot", "country": "USA", "specs": {"top_speed_mps": 0.8, "payload_kg": 23.0, "battery_life_h": 5.0, "can_climb_stairs": True, "can_navigate_rough_terrain": True, "can_run": False, "has_dexterous_hands": True, "finger_count": 5, "autonomy_level": "semi", "has_estop": True, "force_limited_joints": True, "has_sdk": True, "has_api": True, "commercial_deployments": 5, "has_support_sla": True}},
-    {"name": "Astribot S1", "vendor": "Astribot", "model_slug": "astribot-s1", "product_url": "https://www.astribot.com/en", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "finger_count": 5, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 5}},
+    {"name": "Astribot S1", "vendor": "Stardust Intelligence", "model_slug": "astribot-s1", "product_url": "https://www.astribot.com/en/product", "vendor_url": "https://www.astribot.com", "vendor_name_cn": "星尘智能", "verification_status": "VERIFIED", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "finger_count": 5, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 5}},
+    {"name": "Astribot T1", "vendor": "Stardust Intelligence", "model_slug": "astribot-t1", "product_url": "https://www.astribot.com/en/product", "vendor_url": "https://www.astribot.com", "vendor_name_cn": "星尘智能", "verification_status": "PARTIAL", "status": "research", "country": "China"},
     {"name": "Galbot G1", "vendor": "Galbot", "model_slug": "galbot-g1", "status": "pilot", "country": "China"},
     {"name": "Robotera STAR1", "vendor": "Robotera (星动纪元)", "model_slug": "robotera-star1", "product_url": "https://www.robotera.com", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "has_sdk": True, "commercial_deployments": 5}},
     {"name": "LimX TRON 1", "vendor": "LimX Dynamics", "model_slug": "limx-tron1", "product_url": "https://www.limxdynamics.com/en", "status": "pilot", "country": "China", "specs": {"autonomy_level": "research", "has_sdk": True, "has_api": True, "commercial_deployments": 3}},
@@ -157,7 +158,6 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "Matrix Robotics MATRIX-3", "vendor": "Matrix Robotics", "model_slug": "matrix-3", "product_url": "https://matrixrobotics.ai", "status": "pilot", "country": "China", "specs": {"has_dexterous_hands": True, "finger_count": 27, "autonomy_level": "semi", "has_sdk": True, "commercial_deployments": 1, "force_limited_joints": True, "has_estop": True}},
     {"name": "MagicLab Humanoid", "vendor": "MagicLab", "model_slug": "magiclab-humanoid", "status": "research", "country": "China"},
     {"name": "Spirit AI Humanoid", "vendor": "Spirit AI", "model_slug": "spirit-ai-humanoid", "status": "research", "country": "China"},
-    {"name": "Stardust Humanoid", "vendor": "Stardust Intelligence", "model_slug": "stardust-humanoid", "status": "research", "country": "China", "vendor_name_cn": "星尘智能", "vendor_url": "https://stardust.ai", "verification_status": "PARTIAL"},
     {"name": "DroidUp Humanoid", "vendor": "DroidUp", "model_slug": "droidup-humanoid", "status": "research", "country": "China"},
     {"name": "Origin Dynamics Humanoid", "vendor": "Origin Dynamics", "model_slug": "origin-dynamics-humanoid", "status": "research", "country": "China"},
     {"name": "PNDbotics Adam", "vendor": "PNDbotics", "model_slug": "pndbotics-adam", "product_url": "https://wiki.pndbotics.com/en/robot/humanoid_robot/", "status": "pilot", "country": "China"},
@@ -341,7 +341,7 @@ HUMANOID_CATALOG: List[Dict[str, Any]] = [
     {"name": "1X NEO Beta", "vendor": "1X Technologies", "model_slug": "1x-neo-beta", "status": "pilot", "country": "USA"},
     {"name": "Zhiyuan Lingxi", "vendor": "Zhiyuan Robotics", "model_slug": "zhiyuan-lingxi", "status": "pilot", "country": "China"},
     {"name": "Leju Kuavo 3", "vendor": "Leju Robotics", "model_slug": "leju-kuavo-3", "product_url": "https://www.lejurobot.com", "status": "pilot", "country": "China"},
-    {"name": "Astribot S2", "vendor": "Astribot", "model_slug": "astribot-s2", "product_url": "https://www.astribot.com/en", "status": "pilot", "country": "China"},
+    {"name": "Astribot S2", "vendor": "Stardust Intelligence", "model_slug": "astribot-s2", "product_url": "https://www.astribot.com/en/product", "vendor_url": "https://www.astribot.com", "vendor_name_cn": "星尘智能", "status": "research", "country": "China"},
     {"name": "Galbot G2", "vendor": "Galbot", "model_slug": "galbot-g2", "status": "pilot", "country": "China"},
     {"name": "Robotera STAR2", "vendor": "Robotera (星动纪元)", "model_slug": "robotera-star2", "product_url": "https://www.robotera.com", "status": "pilot", "country": "China", "specs": {"autonomy_level": "semi", "has_dexterous_hands": True, "has_sdk": True, "commercial_deployments": 3}},
     {"name": "Kepler Forerunner K1", "vendor": "Kepler", "model_slug": "kepler-k1", "product_url": "https://www.gotokepler.com/home", "status": "research", "country": "China"},
@@ -426,6 +426,7 @@ def sync_product_urls_from_catalog(db_session: Any) -> dict:
         params = {
             "slug": slug,
             "name": entry.get("name"),
+            "vendor": entry.get("vendor"),
             "status": entry.get("status"),
             "url": entry.get("product_url"),
             **{f: entry.get(f) for f in ENTITY_FIELDS},
@@ -435,6 +436,7 @@ def sync_product_urls_from_catalog(db_session: Any) -> dict:
                 UPDATE humanoid_benchmarks
                 SET
                     name = :name,
+                    vendor = COALESCE(:vendor, vendor),
                     status = :status,
                     product_url = COALESCE(:url, product_url),
                     country = COALESCE(:country, country),
@@ -448,6 +450,7 @@ def sync_product_urls_from_catalog(db_session: Any) -> dict:
                 WHERE model_slug = :slug
                   AND (
                     name IS DISTINCT FROM :name
+                    OR (:vendor IS NOT NULL AND vendor IS DISTINCT FROM :vendor)
                     OR status IS DISTINCT FROM :status
                     OR (:url IS NOT NULL AND product_url IS DISTINCT FROM :url)
                     OR (:country IS NOT NULL AND country IS DISTINCT FROM :country)
