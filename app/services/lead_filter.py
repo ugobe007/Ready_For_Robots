@@ -1001,6 +1001,7 @@ _JUNK_EXACT = frozenset({
     "europe", "asia", "africa", "latin america", "middle east",
     "north america", "south america", "southeast asia", "western europe",
     "eastern europe", "asia pacific",
+    "silicon valley",
     # News / syndicated (whole “name” is the outlet or a sector label)
     "business insider",
     "reuters",

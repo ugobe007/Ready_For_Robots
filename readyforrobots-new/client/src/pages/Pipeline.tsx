@@ -318,6 +318,23 @@ const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v2";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+
+/** Newsletter/homepage deep links use ?lead= or legacy #id — resolve once on load. */
+function parsePipelineLeadIdFromUrl(): number | null {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  const leadParam = params.get("lead");
+  if (leadParam) {
+    const id = Number.parseInt(leadParam, 10);
+    if (Number.isFinite(id) && id > 0) return id;
+  }
+  const hash = window.location.hash.replace(/^#/, "").trim();
+  if (hash) {
+    const id = Number.parseInt(hash, 10);
+    if (Number.isFinite(id) && id > 0) return id;
+  }
+  return null;
+}
 const PIPELINE_FRESH_MS = 90 * 1000;
 const PIPELINE_TIMEOUT = 8_000;
 
@@ -506,6 +523,8 @@ export default function Pipeline() {
     connected: boolean;
     entitled: boolean;
   } | null>(null);
+  const deepLinkLeadIdRef = useRef(parsePipelineLeadIdFromUrl());
+  const deepLinkResolvedRef = useRef(false);
 
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
@@ -616,6 +635,47 @@ export default function Pipeline() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Deep link from newsletter / homepage (?lead=123 or legacy #123).
+  useEffect(() => {
+    const targetId = deepLinkLeadIdRef.current;
+    if (!targetId || deepLinkResolvedRef.current || loadingLeads) return;
+
+    deepLinkResolvedRef.current = true;
+    setSelectedId(targetId);
+
+    if (deals.some((d) => d.id === targetId)) return;
+
+    let cancelled = false;
+    void (async () => {
+      const base = getApiBase();
+      try {
+        const response = await fetchWithTimeout(
+          `${base}/api/leads/by-id/${targetId}`,
+          publicFetchInit(),
+          12_000,
+          { publicCache: true },
+        );
+        if (!response.ok || cancelled) return;
+        const lead = (await response.json()) as ApiLead;
+        const mapped = mapApiLeadToDeal(lead) as Deal;
+        if (cancelled) return;
+        setDeals((prev) => {
+          if (prev.some((d) => d.id === targetId)) return prev;
+          return [mapped, ...prev];
+        });
+      } catch {
+        if (!cancelled) {
+          toast.error("Could not load that lead — it may be outside today's pipeline rotation.");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingLeads]);
 
   // Background entitlement refresh when auth resolves — skip if feed is already fresh.
   useEffect(() => {
@@ -805,8 +865,12 @@ export default function Pipeline() {
         ? []
         : clientSearchMatches
     : deals;
+  const pendingDeepLink =
+    selectedId != null &&
+    deepLinkLeadIdRef.current === selectedId &&
+    !filtered.some((d) => d.id === selectedId);
   const effectiveSelectedId =
-    selectedId != null && filtered.some((d) => d.id === selectedId)
+    selectedId != null && (filtered.some((d) => d.id === selectedId) || pendingDeepLink)
       ? selectedId
       : (filtered[0]?.id ?? null);
   const selected = filtered.find((d) => d.id === effectiveSelectedId) ?? null;
@@ -2285,7 +2349,9 @@ export default function Pipeline() {
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
                   <p className="text-sm text-white/25">
-                    {hasActiveSearch && filtered.length === 0 && !serverSearchLoading
+                    {pendingDeepLink
+                      ? "Loading linked lead…"
+                      : hasActiveSearch && filtered.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
                         ? "Select a deal to review signal detail and Cal outreach"

@@ -28,6 +28,7 @@ from app.services.lead_filter import (
         "VALUE CHAIN",
         "Logistics",
         "Digital Transformation",
+        "Silicon Valley",
     ],
 )
 def test_sector_phrases_are_junk(name):

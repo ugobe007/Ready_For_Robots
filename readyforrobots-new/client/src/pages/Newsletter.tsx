@@ -620,7 +620,13 @@ export default function Newsletter() {
                         ) : null}
                       </div>
                       <h3 className="text-sm font-semibold leading-snug text-white">
-                        {cleanScrapedText(story.company || story.headline)}
+                        {story.company_id ? (
+                          <Link href={`/pipeline?lead=${story.company_id}`} className="hover:text-teal-300 transition-colors">
+                            {cleanScrapedText(story.company || story.headline)}
+                          </Link>
+                        ) : (
+                          cleanScrapedText(story.company || story.headline)
+                        )}
                       </h3>
                       <p className="mt-1.5 flex-1 text-xs leading-relaxed text-white/55">
                         {leadPreviewSentences(story.summary || story.snippet, 3, 420)
@@ -637,7 +643,7 @@ export default function Newsletter() {
                         </ul>
                       )}
                       <div className="mt-2 pt-1">
-                        <NlLink href={story.company_id ? `/pipeline#${story.company_id}` : "/pipeline"} color={color}>
+                        <NlLink href={story.company_id ? `/pipeline?lead=${story.company_id}` : "/pipeline"} color={color}>
                           Open in pipeline
                         </NlLink>
                       </div>

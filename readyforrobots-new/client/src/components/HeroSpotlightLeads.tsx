@@ -447,7 +447,13 @@ export default function HeroSpotlightLeads() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              {lead?.company_name || (pool.length ? "—" : "Loading live leads…")}
+              {lead?.id ? (
+                <Link href={`/pipeline?lead=${lead.id}`} className="hover:text-teal-300 transition-colors">
+                  {lead.company_name || "—"}
+                </Link>
+              ) : (
+                lead?.company_name || (pool.length ? "—" : "Loading live leads…")
+              )}
             </p>
             <p className="text-[11px] text-white/35 mt-0.5 truncate">{lead?.industry || "Market signal"}</p>
           </div>
@@ -563,7 +569,7 @@ export default function HeroSpotlightLeads() {
         }}
       >
         <Link
-          href="/pipeline"
+          href={lead?.id ? `/pipeline?lead=${lead.id}` : "/pipeline"}
           className="text-[11px] font-bold flex items-center gap-1 transition-colors hover:text-white"
           style={{ color: "#03DAC5" }}
         >
