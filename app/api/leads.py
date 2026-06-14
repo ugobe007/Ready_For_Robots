@@ -1878,13 +1878,17 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
     if not c:
         raise HTTPException(status_code=404, detail="Lead not found")
     junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-    llm_hints = resolve_homepage_urls_for_companies([c]) if not (c.website or "").strip() else {}
+    # NOTE: do NOT resolve homepage URLs via LLM here. This endpoint is the
+    # newsletter/homepage deep-link hot path; a synchronous OpenAI call for
+    # website-less leads added ~80s latency and tripped the client timeout
+    # ("Network interrupted while loading this lead"). Homepage backfill happens
+    # during background enrichment instead.
     payload = _fmt_company(
         c,
         junk,
         junk_reason,
         pri,
-        llm_homepage_url=llm_hints.get(c.id),
+        llm_homepage_url=None,
         include_research=True,
         db=db,
     )
