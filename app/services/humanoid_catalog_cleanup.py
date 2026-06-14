@@ -44,6 +44,9 @@ SAME_ROBOT_DUPLICATE_SLUGS: Set[str] = {
     # Parent company (Stardust Intelligence) of the Astribot brand — the robot is
     # Astribot S1 (astribot-s1), not a separate "Stardust Humanoid" product.
     "stardust-humanoid",
+    # OpenLoong is the open-source project/community; the robot is 青龙/Qinglong,
+    # tracked as qinglong-humanoid (OpenLoong terms folded into its aliases).
+    "openloong-humanoid",
 }
 
 # Generic rows from robot_companies bridge ({Company} Humanoid).
