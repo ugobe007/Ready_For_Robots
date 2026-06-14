@@ -1863,12 +1863,67 @@ def get_leads(
         return []
 
 
+def _lead_snapshot_version(db: Session, company_id: int) -> Optional[str]:
+    """Cheap data-version fingerprint for a lead — one indexed round trip, no
+    signal/score hydration. Changes whenever the company row, its signals, or its
+    scores change, so a matching version means the stored rendered card is current.
+
+    ``companies.updated_at`` is bumped on signal mutation via ``db_events`` (the
+    automation_profile refresh), and signal/score inserts move the count/max keys —
+    together these cover every mutation that affects the rendered payload.
+    """
+    from sqlalchemy import text
+
+    row = db.execute(
+        text(
+            """
+            SELECT c.updated_at AS u,
+                   c.created_at AS cr,
+                   (SELECT count(*)        FROM signals s  WHERE s.company_id  = c.id) AS n_sig,
+                   (SELECT max(s.created_at) FROM signals s  WHERE s.company_id  = c.id) AS sig_max,
+                   (SELECT max(sc.id)      FROM scores  sc WHERE sc.company_id = c.id) AS score_max,
+                   (SELECT max(sc.last_calculated_at) FROM scores sc WHERE sc.company_id = c.id) AS score_at
+            FROM companies c
+            WHERE c.id = :id
+            """
+        ),
+        {"id": company_id},
+    ).fetchone()
+    if not row:
+        return None
+    return "|".join(
+        str(v) for v in (row.u, row.cr, row.n_sig, row.sig_max, row.score_max, row.score_at)
+    )
+
+
 @router.get("/by-id/{company_id}")
 def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(get_db)):
-    """Single lead payload (same shape as list rows) — for modals / deep links when `automation_profile` is needed."""
+    """Single lead payload (same shape as list rows) — for modals / deep links when `automation_profile` is needed.
+
+    Deep links (`?lead=<id>`) are a read of an already-ingested record, so this
+    serves a pre-rendered card from ``pipeline_cache_store`` and only rebuilds when
+    the lead's data version changes. The expensive per-signal ontology scoring and
+    derived rollups (lead value, GTM, project timing, share copy) are NOT recomputed
+    on every open — that recompute is what made signal-heavy leads take seconds and
+    caused a cold ~8s hit after each deploy.
+    """
+    from app.services.pipeline_cache_store import cache_read, cache_write
+
     # Newsletter/homepage deep links hit this repeatedly; allow short browser/CDN caching
     # with stale-while-revalidate so repeat clicks resolve near-instantly.
     response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=7200"
+
+    version = _lead_snapshot_version(db, company_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    cache_key = f"lead_card:{company_id}"
+    cached = cache_read(db, cache_key, stale_ok=True)
+    if isinstance(cached, dict) and cached.get("_snapshot_version") == version:
+        return cached
+
+    # Miss or stale → render once, persist, serve. Subsequent reads (and reads after
+    # a deploy/restart) hit the durable snapshot without touching the scoring code.
     c = (
         db.query(Company)
         .options(joinedload(Company.scores), joinedload(Company.signals))
@@ -1895,6 +1950,9 @@ def get_lead_by_id(company_id: int, response: Response, db: Session = Depends(ge
     er = _entity_resolution_payload(db, c)
     if er:
         payload["entity_resolution"] = er
+    payload["_snapshot_version"] = version
+    # Version-keyed correctness, so the TTL is just a GC backstop, not the freshness gate.
+    cache_write(db, cache_key, payload, ttl_minutes=10080)
     return payload
 
 
