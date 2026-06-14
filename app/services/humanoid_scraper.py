@@ -640,6 +640,9 @@ SEED_ROBOTS: list[dict] = [
             "height_cm": 172,
             "weight_kg": 57,
             "hot_swap_battery": False,
+            # No clean per-joint N·m datasheet: knees use linear actuators (force, not torque).
+            # Largest rotary actuator = 180 N·m (Tesla AI Day 2022 actuator portfolio: 20/110/180 N·m).
+            "peak_torque_note": "180 N·m max rotary actuator (knees linear)",
         },
     },
     {
@@ -671,6 +674,8 @@ SEED_ROBOTS: list[dict] = [
             "height_cm": 150,
             "weight_kg": 89,
             "hot_swap_battery": False,
+            # Boston Dynamics publishes torque density, not per-joint N·m, for electric Atlas.
+            "peak_torque_note": "220 N·m/kg torque density (per-joint N·m undisclosed)",
         },
     },
     {

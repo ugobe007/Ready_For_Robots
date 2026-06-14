@@ -362,7 +362,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                 ["Height", specs.height_cm != null ? `${specs.height_cm} cm` : null],
                 ["Weight", specs.weight_kg != null ? `${specs.weight_kg} kg` : null],
                 ["Fingers", specs.finger_count != null ? String(specs.finger_count) : null],
-                ["Peak joint torque", specs.peak_torque_nm != null ? `${specs.peak_torque_nm} N·m` : null],
+                ["Peak joint torque", specs.peak_torque_nm != null ? `${specs.peak_torque_nm} N·m` : (specs.peak_torque_note != null ? String(specs.peak_torque_note) : null)],
                 ["Price", specs.price_usd != null ? `$${Number(specs.price_usd).toLocaleString()}` : "undisclosed"],
                 ["Stair climbing", specs.can_climb_stairs != null ? (specs.can_climb_stairs ? "Yes" : "No") : null],
                 ["SDK", specs.has_sdk != null ? (specs.has_sdk ? "Available" : "No") : null],
