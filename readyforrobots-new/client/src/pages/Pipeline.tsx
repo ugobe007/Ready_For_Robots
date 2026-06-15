@@ -1283,11 +1283,11 @@ export default function Pipeline() {
   };
 
   const dbTotal = summary?.companies_in_database ?? summary?.total ?? (loadingSummary ? undefined : filtered.length);
-  const hotDeals = summary?.hot ?? (loadingSummary ? undefined : filtered.filter((d) => d.score >= 85).length);
-  const warmDeals = summary?.warm ?? (loadingSummary ? undefined : filtered.filter((d) => d.score >= 65 && d.score < 85).length);
+  const hotDeals = summary?.hot ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length);
+  const warmDeals = summary?.warm ?? (loadingSummary ? undefined : filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length);
   const visibleDeals = filtered.length;
-  const filteredHot = filtered.filter((d) => d.score >= 85).length;
-  const filteredWarm = filtered.filter((d) => d.score >= 65 && d.score < 85).length;
+  const filteredHot = filtered.filter((d) => userBucketForDeal(d) === "Hot Leads").length;
+  const filteredWarm = filtered.filter((d) => userBucketForDeal(d) === "Warm Leads").length;
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
