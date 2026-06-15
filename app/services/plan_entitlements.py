@@ -271,9 +271,4 @@ def apply_pipeline_entitlements(
     out = dict(feed)
     out["leads"] = trimmed
     out["entitlements"] = entitlements_payload(plan, visible_count=len(trimmed), tier_mix=tier_mix)
-    if plan == PLAN_ANONYMOUS and isinstance(out.get("summary"), dict):
-        summary = dict(out["summary"])
-        for key in ("warm", "cold", "watching"):
-            summary.pop(key, None)
-        out["summary"] = summary
     return out
