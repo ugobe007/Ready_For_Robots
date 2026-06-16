@@ -317,7 +317,7 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v2";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v3";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 
 function parsePipelineLeadIdFromSearch(search: string): number | null {
@@ -370,8 +370,10 @@ function mergePipelineFeedDeals(mapped: Deal[], prev: Deal[]): Deal[] {
       : null;
   if (deepLinkId == null) return mapped;
   const pinned = prev.find((d) => d.id === deepLinkId);
-  if (!pinned || mapped.some((d) => d.id === deepLinkId)) return mapped;
-  return [pinned, ...mapped];
+  if (!pinned) return mapped;
+  const merged = mapped.map((d) => (d.id === deepLinkId ? { ...d, ...pinned } : d));
+  if (merged.some((d) => d.id === deepLinkId)) return merged;
+  return [pinned, ...merged];
 }
 
 function applyPipelineFeed(
@@ -691,10 +693,6 @@ export default function Pipeline() {
     setSelectedId(deepLinkLeadId);
     setDeepLinkLoadFailed(false);
 
-    if (dealsRef.current.some((d) => d.id === deepLinkLeadId)) {
-      deepLinkInflightRef.current = null;
-      return;
-    }
     if (deepLinkInflightRef.current === deepLinkLeadId) return;
 
     deepLinkInflightRef.current = deepLinkLeadId;
@@ -704,9 +702,9 @@ export default function Pipeline() {
       try {
         const response = await fetchWithTimeoutRetry(
           `${base}/api/leads/by-id/${deepLinkLeadId}`,
-          publicFetchInit(),
+          liveFetchInit(),
           12_000,
-          { publicCache: true, retries: 2, retryDelayMs: 1200 },
+          { retries: 2, retryDelayMs: 1200 },
         );
         if (cancelled) return;
         if (!response.ok) {
@@ -720,8 +718,11 @@ export default function Pipeline() {
         deepLinkInflightRef.current = null;
         setDeepLinkLoadFailed(false);
         setDeals((prev) => {
-          if (prev.some((d) => d.id === deepLinkLeadId)) return prev;
-          return [mapped, ...prev];
+          const mappedRow = mapped as Deal;
+          if (prev.some((d) => d.id === deepLinkLeadId)) {
+            return prev.map((d) => (d.id === deepLinkLeadId ? { ...d, ...mappedRow } : d));
+          }
+          return [mappedRow, ...prev];
         });
       } catch {
         if (!cancelled) {
@@ -846,12 +847,10 @@ export default function Pipeline() {
     return () => { cancelled = true; };
   }, [session?.access_token]);
 
-  // Lazy detail enrichment when a slim pipeline row is selected — deferred so list paint stays fast.
+  // Lazy detail enrichment — always refresh selected row from by-id (feed/session cache can be stale).
   useEffect(() => {
     if (!selectedId) return;
     if (deepLinkInflightRef.current === selectedId) return;
-    const existing = deals.find((deal) => deal.id === selectedId);
-    if (existing?.leadHighlights) return;
     const base = getApiBase();
     let cancelled = false;
     const timer = window.setTimeout(() => {
@@ -860,9 +859,8 @@ export default function Pipeline() {
         try {
           const response = await fetchWithTimeout(
             `${base}/api/leads/by-id/${selectedId}`,
-            publicFetchInit(),
+            liveFetchInit(),
             8_000,
-            { publicCache: true },
           );
           if (!response.ok) throw new Error(await response.text());
           const lead = (await response.json()) as ApiLead;
