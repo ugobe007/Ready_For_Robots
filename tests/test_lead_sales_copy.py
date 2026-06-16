@@ -167,3 +167,31 @@ def test_headline_led_opening():
     assert "Marriott" in summary
     assert "Signals observed:" not in summary
     assert "pilot" in summary.lower() or "service robot" in summary.lower()
+
+
+def test_wire_expansion_headline_rewritten_not_pasted():
+    blob = (
+        "Q Casino opens Key Hotel as $75M expansion positions property for future competition - KCRG."
+    )
+    blurb, summary = build_lead_intelligence_copy(
+        company_name="Q Casino",
+        industry="Hospitality",
+        tier="WARM",
+        signal_labels=["Expansion"],
+        signal_types=["expansion"],
+        automation_type="facility expansion",
+        pain_point="housekeeping labor",
+        automation_profile={"robot_categories": ["service_robot"], "application_areas": []},
+        crm_metadata=None,
+        signal_blob=blob,
+    )
+    assert "positions property" not in summary.lower()
+    assert "Q Casino is opening Key Hotel as part of a $75M expansion." in summary
+    assert "What's driving it:" in summary
+    assert blurb.endswith(".")
+    assert "(est." not in blurb
+
+
+def test_wire_headline_fragment_is_low_quality():
+    wire = "Q Casino opens Key Hotel as $75M expansion positions property for future competition"
+    assert is_low_quality_sales_text(wire)

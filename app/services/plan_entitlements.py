@@ -153,6 +153,19 @@ def _truncate(text: Optional[str], max_len: int) -> Optional[str]:
     return t[: max_len - 1].rstrip() + "…"
 
 
+def _teaser_copy(value: Optional[str], max_len: int) -> Optional[str]:
+    """Clip rep-facing copy at sentence boundaries — never mid-word."""
+    from app.services.lead_sales_copy import preview_sentences
+
+    text = (value or "").strip()
+    if not text:
+        return None
+    clipped = preview_sentences(text, max_sentences=2, max_chars=max_len)
+    if clipped:
+        return clipped
+    return _truncate(text, max_len)
+
+
 def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
     """Return a copy of a pipeline lead row appropriate for the caller's plan."""
     row = deepcopy(lead)
@@ -166,8 +179,8 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
         return row
 
     # Anonymous preview — enough SCOUT context to excite signup without full workspace depth.
-    row["share_summary"] = _truncate(row.get("share_summary"), 240)
-    row["share_blurb"] = _truncate(row.get("share_blurb"), 160)
+    row["share_summary"] = _teaser_copy(row.get("share_summary"), 240)
+    row["share_blurb"] = _teaser_copy(row.get("share_blurb"), 160)
     highlights = row.get("lead_highlights")
     if isinstance(highlights, dict):
         teaser: dict[str, Any] = {}

@@ -83,6 +83,26 @@ _JUNK_DISPLAY_RE = re.compile(
     r"\[code\]|\[explanation\]|confidence:\s*\d|overall_intent=)",
 )
 
+# Wire/RSS headlines that read like SEO slugs, not rep-facing prose.
+_WIRE_HEADLINE_FRAGMENT_RE = re.compile(
+    r"(?i)"
+    r"(?:"
+    r"\bopens?\s+\w+.*\bas\s+\$?\d"
+    r"|\bexpansion\s+positions\b"
+    r"|\bpositions?\s+property\b"
+    r"|\bas\s+\$?\d+[mbk]?\b.*\bexpansion\b.*\b(for|to)\b"
+    r")",
+)
+
+_EXPANSION_OPENING_RE = re.compile(
+    r"(?i)^(?P<subject>.+?)\s+opens?\s+(?P<target>.+?)\s+as\s+(?:a\s+)?"
+    r"(?P<amount>\$[\d,.]+[MBK]?|\d+(?:\.\d+)?\s*(?:million|billion))\s+expansion",
+)
+
+_NEWS_ATTRIBUTION_TAIL_RE = re.compile(
+    r"\s*[-–—]\s*(?:[A-Za-z0-9][\w.]*\s*)+$"
+)
+
 # Plain-English drivers — never expose internal signal taxonomy to reps.
 _PLAIN_TRIGGERS: dict[str, str] = {
     "labor_shortage": "staffing pressure",
@@ -147,7 +167,27 @@ def is_low_quality_sales_text(text: Optional[str]) -> bool:
     alpha = sum(1 for c in t if c.isalpha())
     if alpha < 12:
         return True
+    if _WIRE_HEADLINE_FRAGMENT_RE.search(t):
+        return True
     return False
+
+
+def _strip_news_attribution(text: str) -> str:
+    return _NEWS_ATTRIBUTION_TAIL_RE.sub("", text).strip()
+
+
+def _rewrite_expansion_headline(name: str, headline: str) -> str:
+    """Turn wire-style 'Co opens X as $N expansion…' into rep-readable prose."""
+    clean = _strip_news_attribution(strip_extraction_artifacts(headline))
+    match = _EXPANSION_OPENING_RE.match(clean)
+    if not match:
+        return ""
+    subject = match.group("subject").strip()
+    target = match.group("target").strip()
+    amount = match.group("amount").strip()
+    if name.lower() not in subject.lower() and subject.lower() not in name.lower():
+        return ""
+    return f"{name} is opening {target} as part of a {amount} expansion."
 
 
 def _is_food_service_context(industry: str, blob: str) -> bool:
@@ -423,10 +463,18 @@ def _opening_sentence(
 ) -> str:
     headline = _headline_from_blob(signal_blob)
     if headline:
-        if name.lower() in headline.lower():
-            return headline if headline.endswith((".", "!", "?")) else headline + "."
-        return f"{name}: {headline.rstrip('.')}."
+        rewritten = _rewrite_expansion_headline(name, headline)
+        if rewritten:
+            return rewritten
+        if not is_low_quality_sales_text(headline):
+            if name.lower() in headline.lower():
+                return headline if headline.endswith((".", "!", "?")) else headline + "."
+            return f"{name}: {headline.rstrip('.')}."
     excerpt = pick_primary_sentence(signal_blob, max_chars=200)
+    if excerpt:
+        rewritten = _rewrite_expansion_headline(name, excerpt)
+        if rewritten:
+            return rewritten
     if excerpt and not is_low_quality_sales_text(excerpt):
         if name.lower() in excerpt.lower():
             return excerpt if excerpt.endswith((".", "!", "?")) else excerpt + "."
