@@ -58,10 +58,15 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   PIPELINE_MONITOR_SLOTS = "15"
   # Defer heavy cache rebuild after deploy so /api/leads/pipeline stays responsive.
   PUBLIC_CACHE_STARTUP_DELAY_SEC = "300"
-  # Social warm-up waits until after startup delay — avoids CPU pile-up with pipeline refresh.
+  # Web machine: skip social interval rebuilds (worker runs them).
   SKIP_SOCIAL_INTERVAL_REFRESH = "1"
 
+[processes]
+  web = "bash /code/scripts/start_web.sh"
+  worker = "bash /code/scripts/start_worker.sh"
+
 [http_service]
+  processes = ["web"]
   internal_port = 8080
   force_https = true
   auto_stop_machines = false
@@ -76,6 +81,13 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
     timeout = "5s"
 
 [[vm]]
+  processes = ["web"]
+  memory = "1024mb"
+  cpu_kind = "shared"
+  cpus = 2
+
+[[vm]]
+  processes = ["worker"]
   memory = "1024mb"
   cpu_kind = "shared"
   cpus = 2

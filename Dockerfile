@@ -58,5 +58,5 @@ COPY --from=frontend /rfr/dist/public ./static/
 
 EXPOSE 8080
 
-# Start all services: app + celery worker + celery beat
-CMD ["bash", "/code/scripts/start_all.sh"]
+# Fly [processes] override per machine; default CMD is API-only web.
+CMD ["bash", "/code/scripts/start_web.sh"]

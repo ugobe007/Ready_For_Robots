@@ -318,6 +318,12 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
 
 def schedule_robots_page_cache_refresh(*, reason: str = "") -> None:
     """Background rebuild of /robots snapshots — never blocks HTTP."""
+    from app.runtime_role import is_web_process
+
+    if is_web_process():
+        logger.debug("Robots cache refresh skipped on web process (%s)", reason or "scheduled")
+        return
+
     label = reason or "scheduled"
 
     def _job() -> None:
@@ -348,6 +354,12 @@ def schedule_public_cache_refresh(
     reason: str = "",
 ) -> None:
     """Single-flight background cache rebuild — never blocks HTTP."""
+    from app.runtime_role import is_web_process
+
+    if is_web_process():
+        logger.debug("Cache refresh skipped on web process (%s)", reason or "scheduled")
+        return
+
     global _refresh_in_progress
 
     with _refresh_lock:
@@ -370,6 +382,11 @@ def schedule_public_cache_refresh(
 
 def maybe_schedule_public_cache_refresh(*, force: bool = False) -> None:
     """Called from GET handlers — refresh in background when cache age exceeds revalidate window."""
+    from app.runtime_role import is_web_process
+
+    if is_web_process():
+        return
+
     if force:
         schedule_public_cache_refresh(force=True, reason="forced")
         return

@@ -136,16 +136,7 @@ def _configure_logging() -> None:
     logging.getLogger("app").setLevel(level)
 
 
-def _run_startup() -> None:
-    _configure_logging()
-    _start_scheduled_scraper()
-    _start_scheduled_secondary_pipeline()
-    _start_scheduled_data_quality()
-
-    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
-        logger.info("Startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
-        return
-
+def _ensure_cache_table_async() -> None:
     def _ensure_cache_table() -> None:
         import time
         time.sleep(3)
@@ -164,15 +155,61 @@ def _run_startup() -> None:
 
     threading.Thread(target=_ensure_cache_table, daemon=True, name="cache-table-ensure").start()
 
-    def _staggered_warm(label: str, fn, delay_sec: float) -> None:
-        def _run() -> None:
-            import time
-            time.sleep(delay_sec)
-            try:
-                fn()
-            except Exception as exc:
-                logger.warning("%s warm-up failed: %s", label, exc)
-        threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
+
+def _staggered_warm(label: str, fn, delay_sec: float) -> None:
+    def _run() -> None:
+        import time
+        time.sleep(delay_sec)
+        try:
+            fn()
+        except Exception as exc:
+            logger.warning("%s warm-up failed: %s", label, exc)
+    threading.Thread(target=_run, daemon=True, name=f"warm-{label}").start()
+
+
+def _run_web_startup() -> None:
+    """API machine: hydrate L1 caches only — never run rebuild loops or schedulers."""
+    from app.runtime_role import is_web_process
+
+    if not is_web_process():
+        return
+
+    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
+        logger.info("Web startup cache hydrate disabled (DISABLE_STARTUP_CACHE_WARM)")
+        return
+
+    _ensure_cache_table_async()
+
+    def _hydrate_l1_only() -> None:
+        import time
+        time.sleep(2)
+        try:
+            from app.services.public_surface_cache import hydrate_public_surface_caches
+
+            hydrate_public_surface_caches()
+            logger.info("Web: public surface L1 hydration complete (read-only)")
+        except Exception as exc:
+            logger.warning("Web cache hydration failed: %s", exc)
+
+    threading.Thread(target=_hydrate_l1_only, daemon=True, name="public-surface-hydrate").start()
+
+
+def _run_worker_startup() -> None:
+    """Worker machine: schedulers, cache refresh loops, and warm-ups."""
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        return
+
+    _start_scheduled_scraper()
+    _start_scheduled_secondary_pipeline()
+    _start_scheduled_data_quality()
+
+    if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
+        logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
+        return
+
+    _ensure_cache_table_async()
 
     def _hydrate_public_caches() -> None:
         import time
@@ -189,7 +226,7 @@ def _run_startup() -> None:
             )
 
             hydrate_public_surface_caches()
-            logger.info("Public surface L1 hydration complete")
+            logger.info("Worker: public surface L1 hydration complete")
 
             start_public_cache_refresh_loop()
 
@@ -205,7 +242,7 @@ def _run_startup() -> None:
             if not robots_snap or not (robots_snap.get("robots") or []):
                 schedule_robots_page_cache_refresh(reason="bootstrap_empty")
         except Exception as exc:
-            logger.warning("Public surface hydration failed: %s", exc)
+            logger.warning("Worker public surface hydration failed: %s", exc)
 
     threading.Thread(target=_hydrate_public_caches, daemon=True, name="public-surface-hydrate").start()
 
@@ -223,9 +260,35 @@ def _run_startup() -> None:
         finally:
             db.close()
 
-    _staggered_warm("social-posts", _warm_social_posts, 300)
-    _staggered_warm("robot-ready", lambda: __import__("app.api.robot_ready", fromlist=["warm_robot_ready_candidate_cache"]).warm_robot_ready_candidate_cache(), 30)
-    _staggered_warm("admin-snapshot", lambda: __import__("app.services.admin_snapshot", fromlist=["warm_admin_snapshot_cache"]).warm_admin_snapshot_cache(), 60)
+    _staggered_warm("social-posts", _warm_social_posts, 60)
+    _staggered_warm(
+        "robot-ready",
+        lambda: __import__(
+            "app.api.robot_ready",
+            fromlist=["warm_robot_ready_candidate_cache"],
+        ).warm_robot_ready_candidate_cache(),
+        30,
+    )
+    _staggered_warm(
+        "admin-snapshot",
+        lambda: __import__(
+            "app.services.admin_snapshot",
+            fromlist=["warm_admin_snapshot_cache"],
+        ).warm_admin_snapshot_cache(),
+        90,
+    )
+
+
+def _run_startup() -> None:
+    _configure_logging()
+    from app.runtime_role import is_worker_process
+
+    if is_worker_process():
+        logger.info("Process role=worker — starting background jobs")
+        _run_worker_startup()
+    else:
+        logger.info("Process role=web — API-only startup")
+        _run_web_startup()
 
 
 @asynccontextmanager
@@ -429,10 +492,12 @@ def _scheduled_scraper_loop():
 
 
 def _start_scheduled_scraper():
-    """Start the in-app scraper loop when Celery Beat is not running (Fly API-only mode)."""
-    # Beat + worker own the schedule when Celery actually starts (`scripts/start_all.sh` without
-    # SKIP_CELERY). On Fly the web machine sets SKIP_CELERY=1 while REDIS_URL may still be set for
-    # optional task queueing — skipping the in-app loop in that case leaves *no* scheduled scraper.
+    """Start the in-app scraper loop when Celery Beat is not running (worker machine)."""
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app scheduled scraper skipped on web process")
+        return
     skip_celery = os.getenv("SKIP_CELERY", "").strip().lower() in ("1", "true", "yes")
     has_broker = bool(os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL"))
     if has_broker and not skip_celery:
@@ -442,7 +507,7 @@ def _start_scheduled_scraper():
         return
     if skip_celery and has_broker:
         logger.info(
-            "In-app scheduled scraper enabled: SKIP_CELERY=1 (web machine has no Beat/worker)"
+            "In-app scheduled scraper enabled: SKIP_CELERY=1 (dedicated worker machine)"
         )
     enabled = (
         os.getenv("FLY_APP_NAME")
@@ -495,7 +560,13 @@ def _scheduled_secondary_pipeline_loop():
 
 
 def _start_scheduled_secondary_pipeline():
-    """Start daily secondary pipeline when Celery Beat is not on this machine."""
+    """Start daily secondary pipeline on the worker machine."""
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app scheduled secondary pipeline skipped on web process")
+        return
+
     leads_off = os.getenv("ENABLE_SCHEDULED_SECONDARY_PASS", "1").strip().lower() in (
         "0", "false", "no"
     )
@@ -564,6 +635,12 @@ def _scheduled_data_quality_loop():
 
 
 def _start_scheduled_data_quality():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app scheduled data quality skipped on web process")
+        return
+
     if os.getenv("ENABLE_SCHEDULED_DATA_QUALITY", "1").strip().lower() in (
         "0", "false", "no"
     ):
