@@ -27,6 +27,7 @@ import {
   writeSurfaceCache,
 } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
+import { dealMatchesIndustrySearch } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -445,19 +446,16 @@ function HubSpotCtaLink({
 const panelPlanFor = (isAdmin: boolean, entitlements: PipelineEntitlements | null): PipelineEntitlements["plan"] =>
   isAdmin ? "paid" : (entitlements?.plan ?? "anonymous");
 
-const SEARCH_TERM_ALIASES: Record<string, string[]> = {
-  restaurant: ["restaurant", "restaurants", "food service", "qsr", "fast food", "fast casual", "dining", "kitchen", "catering", "foodservice"],
-  hospitality: ["hospitality", "hotel", "housekeeping", "room service"],
-  logistics: ["logistics", "warehouse", "fulfillment", "distribution", "3pl"],
-  manufacturing: ["manufacturing", "factory", "packaging", "assembly"],
-};
-
 function dealMatchesSearchQuery(deal: Deal, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const blob = `${deal.company} ${deal.industry} ${deal.signal || ""} ${deal.shareSummary || ""}`.toLowerCase();
-  const terms = SEARCH_TERM_ALIASES[q] || [q];
-  return terms.some((term) => blob.includes(term));
+  return dealMatchesIndustrySearch(
+    {
+      industry: deal.industry,
+      company: deal.company,
+      signal: deal.signal,
+      location: deal.location,
+    },
+    query,
+  );
 }
 
 async function fetchLeadsBySearch(base: string, query: string, headers?: HeadersInit): Promise<Deal[]> {
@@ -467,10 +465,11 @@ async function fetchLeadsBySearch(base: string, query: string, headers?: Headers
     sort: "score",
     exclude_junk: "true",
   });
-  const res = await fetchWithTimeout(
+  const res = await fetchWithTimeoutRetry(
     `${base}/api/leads?${params}`,
     liveFetchInit({ headers }),
-    30_000,
+    35_000,
+    { retries: 2, retryDelayMs: 1000 },
   );
   if (!res.ok) return [];
   const rows = (await res.json()) as ApiLead[];
@@ -916,7 +915,10 @@ export default function Pipeline() {
       const headers = session?.access_token ? authHeader(session.access_token) : undefined;
       void fetchLeadsBySearch(base, q, headers)
         .then((rows) => setServerSearchDeals(rows))
-        .catch(() => setServerSearchDeals([]))
+        .catch(() => {
+          setServerSearchDeals([]);
+          toast.error(`Pipeline search timed out for "${q}". Showing matches from the loaded slice — retry in a moment.`);
+        })
         .finally(() => setServerSearchLoading(false));
     }, 350);
     return () => {
@@ -931,13 +933,11 @@ export default function Pipeline() {
     () => (hasActiveSearch ? deals.filter((d) => dealMatchesSearchQuery(d, activeSearchQuery)) : deals),
     [deals, hasActiveSearch, activeSearchQuery],
   );
-  const filtered = hasActiveSearch
-    ? serverSearchDeals.length > 0
-      ? serverSearchDeals
-      : serverSearchLoading
-        ? []
-        : clientSearchMatches
-    : deals;
+  const filtered = useMemo(() => {
+    if (!hasActiveSearch) return deals;
+    if (serverSearchDeals.length > 0) return serverSearchDeals;
+    return clientSearchMatches;
+  }, [deals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&

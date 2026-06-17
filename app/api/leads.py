@@ -1832,6 +1832,29 @@ def get_leads(
 
             staged = dedupe_staged_lead_tuples(staged)
             if industry_filter:
+                food_query = (industry_filter or "").strip().lower()
+                if food_query in (
+                    "restaurant", "restaurants", "qsr", "fast food", "fast casual",
+                    "dining", "foodservice", "food service", "food robot",
+                ):
+
+                    def _restaurant_rank(company: Company) -> int:
+                        ind = (
+                            effective_industry_for_lead(company.name, company.industry, company.signals)
+                            or ""
+                        ).lower()
+                        if "food service" in ind or "food & beverage" in ind:
+                            return 0
+                        if "hospitality" in ind:
+                            return 1
+                        return 2
+
+                    staged.sort(
+                        key=lambda t: (
+                            _restaurant_rank(t[0]),
+                            -float(getattr(t[3], "score", 0) or 0),
+                        )
+                    )
                 staged = staged[:limit]
             else:
                 slot = rotation_slot if rotation_slot is not None else _current_rotation_slot()
@@ -1857,7 +1880,8 @@ def get_leads(
             return result
 
     try:
-        return run_db(_live_query, timeout_sec=22, label="leads/list")
+        timeout_sec = 35 if industry_filter else 22
+        return run_db(_live_query, timeout_sec=timeout_sec, label="leads/list")
     except TimeoutError:
         logger.error("leads/list DB timed out — returning empty list")
         return []

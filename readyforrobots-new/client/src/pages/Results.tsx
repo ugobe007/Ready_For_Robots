@@ -27,7 +27,7 @@ import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
 import { useAuth } from "@/contexts/AuthContext";
 import { BUYER_SIGNAL_EXPLANATION, OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
@@ -425,16 +425,21 @@ export default function Results() {
             return "prospect";
           }
         })();
-        const scoutRes = await fetch(`${getApiBase()}/api/scout/scan-for-results`, liveFetchInit({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            company_url: submittedUrl,
-            fingerprint: scoutFingerprint(),
-            robot_name: host,
-            limit: 8,
-          }),
-        }));
+        const scoutRes = await fetchWithTimeoutRetry(
+          `${getApiBase()}/api/scout/scan-for-results`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              company_url: submittedUrl,
+              fingerprint: scoutFingerprint(),
+              robot_name: host,
+              limit: 8,
+            }),
+          },
+          25_000,
+          { retries: 1, retryDelayMs: 800 },
+        );
         if (scoutRes.ok) {
           const scoutData = await scoutRes.json() as { prospects?: ScoutProspectRow[] };
           const rows = Array.isArray(scoutData.prospects) ? scoutData.prospects : [];
@@ -444,14 +449,19 @@ export default function Results() {
             return;
           }
         }
-        const response = await fetch(`${getApiBase()}/api/robot-ready/submit`, liveFetchInit({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            robot_name: host,
-            url: submittedUrl,
-          }),
-        }));
+        const response = await fetchWithTimeoutRetry(
+          `${getApiBase()}/api/robot-ready/submit`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              robot_name: host,
+              url: submittedUrl,
+            }),
+          },
+          25_000,
+          { retries: 1, retryDelayMs: 800 },
+        );
         if (!response.ok) throw new Error(`Scan failed with ${response.status}`);
         const data = await response.json() as RobotReadyResponse;
         const matches = Array.isArray(data.matched_companies) ? data.matched_companies : [];
@@ -463,7 +473,7 @@ export default function Results() {
         if (!cancelled) {
           setUsingFallback(true);
           setProspects(fallbackProspects);
-          toast.info("Using sample matches while SIGNAL reloads the URL-specific matcher.");
+          toast.info("SIGNAL could not reach the matcher in time — showing sample leads while the API recovers.");
         }
       } finally {
         if (!cancelled) {

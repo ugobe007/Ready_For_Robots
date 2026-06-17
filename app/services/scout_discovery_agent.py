@@ -531,6 +531,15 @@ def scan_company_in_pipeline(
     }
 
 
+def _timing_from_tier(tier: Optional[str]) -> str:
+    t = (tier or "").upper()
+    if t == "HOT":
+        return "Decision window: Now"
+    if t == "WARM":
+        return "Decision window: 1-3 months"
+    return "Decision window: 3-6 months"
+
+
 def scan_for_results(
     db: Session,
     *,
@@ -557,19 +566,10 @@ def scan_for_results(
     prospects: List[Dict[str, Any]] = []
     for m in matches[:limit]:
         cid = m.get("id")
-        brief_snippet = ""
-        timing = "60–90 days"
-        if cid:
-            try:
-                dev = develop_lead_brief(db, int(cid), refresh_inference=False, include_draft=False)
-                b = dev.get("brief") or {}
-                brief_snippet = b.get("share_summary") or m.get("value_proposition") or ""
-                timing = b.get("timing_label") or timing
-            except Exception:
-                brief_snippet = m.get("value_proposition") or ""
-
         sigs = m.get("signals") or []
         top_sig = sigs[0].get("display_text") if sigs else (m.get("key_signals") or [""])[0]
+        tier = m.get("priority_tier")
+        brief_snippet = m.get("value_proposition") or m.get("share_summary") or ""
         prospects.append(
             {
                 "id": str(cid) if cid else str(m.get("company_name", "")),
@@ -579,10 +579,10 @@ def scan_for_results(
                     p for p in (m.get("location_city"), m.get("location_state")) if p
                 ),
                 "score": round(m.get("match_score") or m.get("priority_score") or 0),
-                "tier": m.get("priority_tier"),
+                "tier": tier,
                 "signal": top_sig or "",
                 "signalType": (sigs[0].get("signal_type") if sigs else "news") or "news",
-                "timing": timing,
+                "timing": _timing_from_tier(tier),
                 "action": m.get("recommended_action") or "",
                 "relevance": brief_snippet[:280] if brief_snippet else m.get("value_proposition", ""),
                 "match_score": m.get("match_score"),
