@@ -153,7 +153,7 @@ export default function HowItWorks() {
                   className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
                   style={SIGNAL_CTA_STYLE}
                 >
-                  Activate Signal <Zap size={15} />
+                  Activate SIGNAL <Zap size={15} />
                 </Link>
                 <Link
                   href="/intelligence"
@@ -447,7 +447,7 @@ export default function HowItWorks() {
               className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
               style={SIGNAL_CTA_STYLE}
             >
-              Activate Signal <ArrowRight size={15} />
+              Activate SIGNAL <ArrowRight size={15} />
             </Link>
           </div>
         </div>

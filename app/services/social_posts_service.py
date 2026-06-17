@@ -177,6 +177,7 @@ def _parse_dt(s: str) -> datetime:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 SITE_URL = "https://readyforrobots.com"
+ACTIVATE_URL = f"{SITE_URL}/results?url="
 PIPELINE_URL = f"{SITE_URL}/pipeline"
 
 _INDUSTRY_HASHTAGS: Dict[str, List[str]] = {
@@ -316,7 +317,7 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
         f"{tw_hook}\n\n"
         f"Moving on {automation_type} ({trigger_phrase}). "
         f"Buying window: ~{buy_window}.\n\n"
-        f"SIGNAL automates robot sales to close → {PIPELINE_URL}"
+        f"Activate SIGNAL → {ACTIVATE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
@@ -338,7 +339,7 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
 
     li_cta = (
         f"\n\nSIGNAL discovers, develops, and helps close robot deals — end to end.\n"
-        f"👉 Activate your pipeline (free): {PIPELINE_URL}"
+        f"👉 Activate SIGNAL (free): {ACTIVATE_URL}"
     )
     li_hashtag_str = "\n\n" + _format_hashtags(hashtags)
 
@@ -379,7 +380,7 @@ def _build_industry_insight_post(executive_take: str) -> Dict:
     tw_core = (
         f"🧠 SIGNAL intel · automation buyers moving now\n\n"
         f"{tw_lead}\n\n"
-        f"Activate your pipeline → {PIPELINE_URL}"
+        f"Activate SIGNAL → {ACTIVATE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
@@ -391,7 +392,7 @@ def _build_industry_insight_post(executive_take: str) -> Dict:
         "The play for robotics vendors: companies under this pressure don't post an RFP first — "
         "they talk to whoever shows up with a concrete solution.\n\n"
         "SIGNAL automates robot sales to closure: discover → develop → close.\n\n"
-        f"👉 See today's ranked buyer list: {PIPELINE_URL}\n\n"
+        f"👉 See today's ranked buyers — Activate SIGNAL: {ACTIVATE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -419,7 +420,7 @@ def _build_market_trend_post(trend: Dict) -> Dict:
     tw_core = (
         f"📈 SIGNAL trend watch: {title}\n\n"
         f"{_first_n_sentences(detail, 2)}\n\n"
-        f"Who's acting on it → {PIPELINE_URL}"
+        f"Who's acting on it — Activate SIGNAL → {ACTIVATE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
@@ -429,7 +430,7 @@ def _build_market_trend_post(trend: Dict) -> Dict:
         f"{detail}\n\n"
         "When a trend hits multiple sectors at once, buyers move from \"someday\" to \"this quarter.\" "
         "SIGNAL shows which companies are already acting — not just reading the headlines.\n\n"
-        f"👉 Activate your pipeline: {PIPELINE_URL}\n\n"
+        f"👉 Activate SIGNAL: {ACTIVATE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -460,7 +461,7 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
     tw_core = (
         "🤖 The RFP is too late.\n\n"
         f"SIGNAL flagged {hot_count} high-intent buyers across {industries_str} today. "
-        f"Discover → develop → close → {PIPELINE_URL}"
+        f"Discover → develop → close → Activate SIGNAL: {ACTIVATE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
@@ -472,7 +473,7 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
         "vendor conversations are likely in the next 60–90 days.\n\n"
         "Early outreach shapes requirements. Late outreach competes on price in a crowded field.\n\n"
         "SIGNAL automates the robot sales process to closure — discovery, development, and deal advance in one workflow.\n\n"
-        f"👉 Activate your pipeline (free): {PIPELINE_URL}\n\n"
+        f"👉 Activate SIGNAL (free): {ACTIVATE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 

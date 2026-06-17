@@ -301,7 +301,7 @@ export default function Header() {
               <Zap className="h-4 w-4" strokeWidth={2.5} />
             </div>
             <div className="text-left flex-1">
-              <p className="text-sm font-bold leading-none" style={{ color: "#FFB000" }}>Activate Pipeline</p>
+              <p className="text-sm font-bold leading-none" style={{ color: "#FFB000" }}>Activate SIGNAL</p>
               <p className="text-[11px] text-white/40 mt-0.5">Scan your URL and match live opportunities</p>
             </div>
             <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#FFB000" }} />

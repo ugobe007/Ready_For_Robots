@@ -4,6 +4,7 @@
  * Inspired by: Linear, Vercel, Raycast
  */
 import { useState } from "react";
+import { Link } from "wouter";
 import { TrendingUp, Users, AlertTriangle, ChevronRight, ChevronDown, ArrowRight, Zap } from "lucide-react";
 
 const signals = [
@@ -200,13 +201,13 @@ export default function PipelinePreview() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-4">
           <p className="text-xs text-white/20">Showing 5 of 247 active opportunities</p>
-          <button
+          <Link
+            href="/results?url="
             className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: "#a78bfa" }}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            Build my pipeline
+            Activate SIGNAL
             <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>

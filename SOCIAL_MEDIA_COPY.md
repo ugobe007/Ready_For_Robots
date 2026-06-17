@@ -1,6 +1,6 @@
 # Ready For Robots — Social Media Copy (SIGNAL)
 
-Brand rule: **SIGNAL** everywhere users see it — never SCOUT. CTAs should drive action (`/pipeline`, Activate Pipeline).
+Brand rule: **SIGNAL** everywhere users see it — never SCOUT. Primary CTA: **Activate SIGNAL** → `/results?url=`
 
 ---
 
@@ -19,7 +19,7 @@ Today's example: hotel chain posts warehouse jobs + raises capital + hires new C
 
 **Perfect for:** AMR vendors, service robotics, industrial automation, integrators.
 
-👉 Activate your pipeline (free): https://readyforrobots.com/pipeline
+👉 Activate SIGNAL (free): https://readyforrobots.com/results?url=
 
 #Robotics #Automation #SIGNAL #ReadyForRobots
 
@@ -68,7 +68,7 @@ See `app/services/social_posts_service.py` — five daily formats:
 | Market trend | Trend + who's acting on it |
 | Thought leadership | "The RFP is too late" |
 
-All posts end with **Activate your pipeline** → `readyforrobots.com/pipeline`
+All posts end with **Activate SIGNAL** → `readyforrobots.com/results?url=`
 
 ---
 

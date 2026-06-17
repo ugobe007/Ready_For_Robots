@@ -285,7 +285,7 @@ export default function Home() {
                   style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
                 >
                   <Zap className="h-4.5 w-4.5" />
-                  Activate Pipeline
+                  Activate SIGNAL
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
@@ -909,14 +909,14 @@ export default function Home() {
             Robot sales automated to closure. HubSpot sync optional.
           </p>
 
-          {/* CTA — Activate Pipeline */}
+          {/* CTA — Activate SIGNAL */}
           <Link href="/results?url=">
             <button
               className="inline-flex items-center gap-3 text-base font-bold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
               style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
             >
               <Zap className="h-5 w-5" />
-              Activate Pipeline
+              Activate SIGNAL
               <ArrowRight className="h-4 w-4" />
             </button>
           </Link>

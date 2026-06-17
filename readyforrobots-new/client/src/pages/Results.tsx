@@ -589,14 +589,14 @@ export default function Results() {
           <div className="flex items-center gap-2 text-xs text-white/30 mb-8">
             <Link href="/" className="hover:text-white/60 transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-white/50">{submittedUrl ? `Results for ${submittedUrl}` : "Activate Pipeline"}</span>
+            <span className="text-white/50">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
           </div>
 
           {!submittedUrl && (
             <section className="py-16">
               <div className="rounded-3xl border border-amber-400/25 p-8 sm:p-10" style={{ background: "rgba(255,176,0,0.035)" }}>
                 <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
-                  Activate Pipeline
+                  Activate SIGNAL
                 </p>
                 <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                   Give SIGNAL a URL first.
