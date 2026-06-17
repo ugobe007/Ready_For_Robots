@@ -490,7 +490,7 @@ def _brief_for_social_posts(db: Session) -> Dict[str, Any]:
     from app.services.industry_brief_service import _read_cache
     from app.services.newsletter_service import _heuristic_industry_brief, _read_industry_brief_stale
 
-    cached = _read_cache(cache_hours=1.5)
+    cached = _read_cache(max_age_hours=1.5)
     if cached and (cached.get("executive_take") or cached.get("macro_trends")):
         return cached
     stale = _read_industry_brief_stale()

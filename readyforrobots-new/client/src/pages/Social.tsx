@@ -4,9 +4,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import { getApiBase, getDirectApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, liveFetchInit, readSurfaceCache, writeSurfaceCache } from "@/lib/apiBase";
 
-const SOCIAL_FETCH_MS = 150_000;
+const SOCIAL_SESSION_KEY = "social_daily_posts_v1";
+const SOCIAL_SESSION_TTL_MS = 4 * 60 * 60 * 1000;
+const SOCIAL_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
+const SOCIAL_FETCH_MS = 45_000;
 const SOCIAL_REFRESH_MS = 150_000;
 
 function socialApiBases(): string[] {
@@ -409,8 +412,16 @@ export default function Social() {
     message?: string;
   }) => {
     if (data.cache_pending) {
-      setPosts([]);
-      setError(data.message || "Content is being prepared in the background. Retry in a minute.");
+      if ((data.posts || []).length) {
+        setPosts(data.posts || []);
+        setCurrentCompanyIds(data.posted_company_ids || []);
+        setCurrentTrendOffset(data.trend_offset || 0);
+        setDate(data.date || "");
+        if (data.generated_at) {
+          setGeneratedAt(new Date(data.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+        }
+      }
+      setError(data.message || "Content is being prepared in the background. Retrying shortly.");
       return;
     }
     setPosts(data.posts || []);
@@ -424,9 +435,24 @@ export default function Social() {
     setPostedIds(new Set());
   };
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
+    const cachedEntry =
+      readSurfaceCache<{ posts?: SocialPost[]; date?: string; generated_at?: string }>(
+        SOCIAL_SESSION_KEY,
+        SOCIAL_SESSION_TTL_MS,
+      )
+      ?? readSurfaceCache<{ posts?: SocialPost[]; date?: string; generated_at?: string }>(
+        SOCIAL_SESSION_KEY,
+        SOCIAL_STALE_PAINT_MS,
+      );
+    if (cachedEntry?.data?.posts?.length) {
+      applyData(cachedEntry.data);
+      if (!silent) setLoading(false);
+    }
+
     try {
-      setLoading(true);
+      if (!silent && !cachedEntry?.data?.posts?.length) setLoading(true);
       setError(null);
       setCacheStatus(null);
       const res = await socialPostFetch("/api/social/daily-posts");
@@ -435,16 +461,26 @@ export default function Social() {
         throw new Error(detail.slice(0, 160) || `API error ${res.status}`);
       }
       const data = await res.json();
+      if ((data.posts || []).length) {
+        writeSurfaceCache(SOCIAL_SESSION_KEY, data);
+      }
       setCacheStatus(
         data.cache_status === "stale" || res.headers.get("X-Social-Cache") === "stale"
           ? "stale"
           : null,
       );
       applyData(data);
+      if (data.cache_pending) {
+        window.setTimeout(() => {
+          void fetchPosts({ silent: true });
+        }, 30_000);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      if (!cachedEntry?.data?.posts?.length) {
+        setError(e instanceof Error ? e.message : "Failed to load");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
