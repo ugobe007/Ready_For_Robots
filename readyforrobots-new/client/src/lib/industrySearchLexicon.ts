@@ -1,6 +1,6 @@
 /**
  * Client mirror of app/services/industry_search_lexicon.py
- * Source of truth: app/data/industry_sector_ontology.json
+ * Source of truth: app/data/industry_sector_ontology.json (vendored copy in client/src/lib for Vercel builds)
  */
 import ontology from "@ontology";
 

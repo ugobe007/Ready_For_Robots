@@ -18,7 +18,7 @@
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"],
-      "@ontology": ["../app/data/industry_sector_ontology.json"]
+      "@ontology": ["client/src/lib/industry_sector_ontology.json"]
     },
     "resolveJsonModule": true
   }

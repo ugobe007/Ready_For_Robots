@@ -233,7 +233,7 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-      "@ontology": path.resolve(import.meta.dirname, "..", "app", "data", "industry_sector_ontology.json"),
+      "@ontology": path.resolve(import.meta.dirname, "client", "src", "lib", "industry_sector_ontology.json"),
     },
   },
   envDir: path.resolve(import.meta.dirname),
