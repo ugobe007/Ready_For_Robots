@@ -51,44 +51,73 @@ def _cache_path() -> Path:
 
 SOCIAL_DAILY_POSTS_CACHE_KEY = "public:social:daily_posts:v1"
 _SOCIAL_CACHE_TTL_MINUTES = 240  # 4 hours — matches API cache window
+_mem_social_cache: Optional[Dict[str, Any]] = None
 
 
 def _history_path() -> Path:
     return _data_dir() / "social_posts_history.json"
 
 
+def _read_file_cache(max_age_hours: Optional[float]) -> Optional[Dict[str, Any]]:
+    """Fast local file read — never touches DB."""
+    p = _cache_path()
+    if not p.exists():
+        return None
+    try:
+        data = json.loads(p.read_text())
+        gen = data.get("generated_at")
+        if not gen:
+            return None
+        if max_age_hours is not None:
+            gen_dt = datetime.fromisoformat(str(gen).replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) - gen_dt > timedelta(hours=max_age_hours):
+                return None
+        return data if (data.get("posts") or []) else None
+    except Exception:
+        return None
+
+
 def read_cached_posts(max_age_hours: Optional[float] = 4.0) -> Optional[Dict[str, Any]]:
-    """Read cached daily posts (Postgres first, then local file). ``max_age_hours=None`` = any age."""
+    """Read cached daily posts (in-memory → file → Postgres). ``max_age_hours=None`` = any age."""
+    global _mem_social_cache
     from app.services.pipeline_cache_store import cache_read_safe
 
     stale_ok = max_age_hours is None
-    db_data = cache_read_safe(SOCIAL_DAILY_POSTS_CACHE_KEY, stale_ok=stale_ok)
+
+    if _mem_social_cache and (_mem_social_cache.get("posts") or []):
+        if stale_ok:
+            return _mem_social_cache
+        gen = _mem_social_cache.get("generated_at")
+        if gen:
+            gen_dt = datetime.fromisoformat(str(gen).replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) - gen_dt <= timedelta(hours=max_age_hours or 4.0):
+                return _mem_social_cache
+
+    file_data = _read_file_cache(None if stale_ok else max_age_hours)
+    if file_data:
+        _mem_social_cache = file_data
+        return file_data
+
+    db_data = cache_read_safe(SOCIAL_DAILY_POSTS_CACHE_KEY, stale_ok=stale_ok, timeout_sec=1.5)
     if db_data and (db_data.get("posts") or []):
         if max_age_hours is None:
+            _mem_social_cache = db_data
             return db_data
         gen = db_data.get("generated_at")
         if gen:
             gen_dt = datetime.fromisoformat(str(gen).replace("Z", "+00:00"))
             if datetime.now(timezone.utc) - gen_dt <= timedelta(hours=max_age_hours):
+                _mem_social_cache = db_data
                 return db_data
 
-    p = _cache_path()
-    if not p.exists():
-        return db_data if stale_ok and db_data else None
-    try:
-        data = json.loads(p.read_text())
-        gen = data.get("generated_at")
-        if not gen:
-            return db_data if stale_ok and db_data else None
-        gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
-        if max_age_hours is not None and datetime.now(timezone.utc) - gen_dt > timedelta(hours=max_age_hours):
-            return db_data if stale_ok and db_data else None
-        return data
-    except Exception:
-        return db_data if stale_ok and db_data else None
+    if stale_ok:
+        return file_data or db_data
+    return None
 
 
 def write_cached_posts(data: Dict[str, Any], db: Optional[Session] = None) -> None:
+    global _mem_social_cache
+    _mem_social_cache = data
     p = _cache_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(data, indent=2, default=str))

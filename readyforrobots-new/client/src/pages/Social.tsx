@@ -9,7 +9,8 @@ import { getApiBase, getDirectApiBase, liveFetchInit, readSurfaceCache, writeSur
 const SOCIAL_SESSION_KEY = "social_daily_posts_v1";
 const SOCIAL_SESSION_TTL_MS = 4 * 60 * 60 * 1000;
 const SOCIAL_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
-const SOCIAL_FETCH_MS = 45_000;
+const SOCIAL_FETCH_MS = 12_000;
+const SOCIAL_RETRY_MS = 8_000;
 const SOCIAL_REFRESH_MS = 150_000;
 
 function socialApiBases(): string[] {
@@ -280,7 +281,8 @@ export default function Social() {
   const [postedIds, setPostedIds] = useState<Set<number>>(new Set());
   const [currentCompanyIds, setCurrentCompanyIds] = useState<number[]>([]);
   const [currentTrendOffset, setCurrentTrendOffset] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [apiSlow, setApiSlow] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState("");
@@ -448,11 +450,15 @@ export default function Social() {
       );
     if (cachedEntry?.data?.posts?.length) {
       applyData(cachedEntry.data);
-      if (!silent) setLoading(false);
+      setLoading(false);
+      setApiSlow(false);
     }
 
     try {
-      if (!silent && !cachedEntry?.data?.posts?.length) setLoading(true);
+      if (!cachedEntry?.data?.posts?.length) {
+        setLoading(true);
+        setApiSlow(false);
+      }
       setError(null);
       setCacheStatus(null);
       const res = await socialPostFetch("/api/social/daily-posts");
@@ -470,17 +476,23 @@ export default function Social() {
           : null,
       );
       applyData(data);
+      setApiSlow(false);
       if (data.cache_pending) {
+        setApiSlow(true);
         window.setTimeout(() => {
           void fetchPosts({ silent: true });
-        }, 30_000);
+        }, SOCIAL_RETRY_MS);
       }
     } catch (e) {
       if (!cachedEntry?.data?.posts?.length) {
         setError(e instanceof Error ? e.message : "Failed to load");
+        setApiSlow(true);
+        window.setTimeout(() => {
+          void fetchPosts({ silent: true });
+        }, SOCIAL_RETRY_MS);
       }
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -595,6 +607,11 @@ export default function Social() {
               Showing cached posts while a fresh batch generates in the background.
             </p>
           )}
+          {apiSlow && !error && (
+            <p className="mt-2 text-xs text-amber-400/90 font-mono">
+              SIGNAL API is catching up — showing cached posts and retrying in the background.
+            </p>
+          )}
         </div>
 
         <div className="mb-6 p-4 border border-blue-900/60 rounded-xl bg-blue-950/20">
@@ -680,7 +697,7 @@ export default function Social() {
           </div>
         )}
 
-        {error && !loading && !refreshing && (
+        {error && !loading && !refreshing && !posts?.length && (
           <div className="border border-red-900 rounded-xl p-6 text-center">
             <p className="text-red-400 text-sm mb-3">Failed to load posts: {error}</p>
             <button type="button" onClick={fetchPosts} className="text-xs border border-neutral-700 px-3 py-1.5 rounded">

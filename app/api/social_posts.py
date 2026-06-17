@@ -56,11 +56,11 @@ class MarkPostedPayload(BaseModel):
 def get_daily_posts(
     response: Response,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
 ):
     """
     Returns today's 5 ready-to-post social media items (cached up to 4h).
     Each post includes `twitter` and `linkedin` text + `company_id` for tracking.
+    Read-only — no DB session on the request path.
     """
     response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
 

@@ -297,10 +297,11 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
             refresh_pipeline_surface_caches(db)
             if include_newsletter:
                 refresh_newsletter_surface_cache(db, force=False)
-            try:
-                refresh_social_posts_surface_cache(db)
-            except Exception as exc:
-                logger.warning("Social posts refresh skipped: %s", exc)
+            if os.getenv("SKIP_SOCIAL_INTERVAL_REFRESH", "").strip().lower() not in ("1", "true", "yes"):
+                try:
+                    refresh_social_posts_surface_cache(db)
+                except Exception as exc:
+                    logger.warning("Social posts refresh skipped: %s", exc)
             try:
                 refresh_intelligence_surface(db)
             except Exception as exc:
@@ -374,7 +375,8 @@ def maybe_schedule_public_cache_refresh(*, force: bool = False) -> None:
         return
     age = time.monotonic() - _last_refresh_monotonic
     if _last_refresh_monotonic == 0.0 or age >= PUBLIC_CACHE_REVALIDATE_SEC:
-        schedule_public_cache_refresh(reason="stale_revalidate")
+        # Pipeline surfaces only — never stack newsletter/social/intelligence on user traffic.
+        schedule_public_cache_refresh(pipeline_only=True, reason="stale_revalidate")
 
 
 def start_public_cache_refresh_loop() -> None:
@@ -399,7 +401,7 @@ def start_public_cache_refresh_loop() -> None:
                 len(feed.get("leads") or []),
             )
         else:
-            schedule_public_cache_refresh(force=False, reason="startup")
+            schedule_public_cache_refresh(pipeline_only=True, reason="startup")
         while True:
             time.sleep(PUBLIC_CACHE_REFRESH_INTERVAL_SEC)
             schedule_public_cache_refresh(pipeline_only=True, reason="interval")
