@@ -1,7 +1,9 @@
 # Static marketing site only — API runs on Fly.io (ready-2-robot.fly.dev).
 # Prevents Vercel Hobby 12-function limit from Python/Next/Express auto-detection.
 
-app/
+# Exclude Python backend; keep app/data for Vite @ontology import
+app/**
+!app/data/**
 worker/
 migrations/
 scripts/
