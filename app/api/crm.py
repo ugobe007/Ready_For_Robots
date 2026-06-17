@@ -529,9 +529,9 @@ def _response_suggestions(acct: CrmAccount, settings: Any) -> list[dict[str, str
     if settings and getattr(settings, "scout_background_briefing_enabled", True):
         suggestions.append(
             {
-                "trigger": "Background SCOUT brief",
+                "trigger": "Background SIGNAL brief",
                 "action": "Monitor replies, no-response timing, research updates, and tone; surface next-best-action ideas to the user.",
-            "why": "SCOUT monitors the workflow while Cal handles communication.",
+            "why": "SIGNAL monitors the workflow while Cal handles communication.",
             }
         )
     return suggestions
@@ -1134,7 +1134,7 @@ def send_account_outreach(
             "sent_at": now.isoformat(),
             "outreach_message_id": str(msg.id),
             "reply_to": effective_reply_to,
-            "reply_routing": "Replies return to SCOUT and notify/forward to the user." if not _inbound_missing else None,
+            "reply_routing": "Replies return to SIGNAL and notify/forward to the user." if not _inbound_missing else None,
         }
         if _inbound_missing:
             result["warning"] = (

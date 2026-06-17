@@ -43,12 +43,12 @@ ACTIVATION_STATUSES = [
 ]
 
 ACTIVATION_STATUS_META = {
-    "queued": "Queued for SCOUT evaluation.",
-    "evaluating": "SCOUT is evaluating lead fit and sales angles.",
+    "queued": "Queued for SIGNAL evaluation.",
+    "evaluating": "SIGNAL is evaluating lead fit and sales angles.",
     "drafted": "Strategy and Cal outreach drafts are ready.",
     "awaiting_approval": "Drafts are waiting for user approval.",
-    "paused": "User interrupted SCOUT to adjust Cal's message, timing, or cadence.",
-    "sent": "Cal has sent outreach and SCOUT is watching for replies.",
+    "paused": "User interrupted SIGNAL to adjust Cal's message, timing, or cadence.",
+    "sent": "Cal has sent outreach and SIGNAL is watching for replies.",
     "replied": "A lead has replied and needs attention.",
     "meeting_booked": "A meeting has been booked.",
 }
@@ -232,7 +232,7 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
         },
         "user_feedback_loop": {
             "next_checkpoint": "Review CRM accounts, approve or edit Cal drafts, then explicitly approve sending.",
-            "interrupt": "Pause SCOUT any time to change Cal's message, timing, or follow-up cadence.",
+            "interrupt": "Pause SIGNAL any time to change Cal's message, timing, or follow-up cadence.",
             "autopilot_guardrail": "Autopilot prepares work in the background, but Cal's outbound messages remain visible with interruption controls.",
         },
     }
@@ -247,7 +247,7 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
                 "Proof points, implementation path, and next meeting ask",
             ],
             "positioning": "Lead with measurable operating pressure first, then introduce robotics as the practical response.",
-            "next_output": "SCOUT should prepare a deck outline and ROI assumptions before Cal outreach approval.",
+            "next_output": "SIGNAL should prepare a deck outline and ROI assumptions before Cal outreach approval.",
         }
     return plan
 
@@ -413,7 +413,7 @@ def scout_create_activation(
     try:
         user_id = UUID(str(user["uid"]))
     except (TypeError, ValueError):
-        raise HTTPException(status_code=401, detail="Sign in before activating SCOUT") from None
+        raise HTTPException(status_code=401, detail="Sign in before activating SIGNAL") from None
     _ensure_profile(db, str(user_id), user.get("email") or "")
     team = _ensure_default_team(db, user_id, user.get("email") or "")
     sess.user_id = user_id
@@ -462,7 +462,7 @@ def scout_create_activation(
         activity_log=[
             {
                 "type": "evaluating",
-                "message": f"SCOUT is developing {len(leads)} lead(s): inference, sales brief, and Cal drafts.",
+                "message": f"SIGNAL is developing {len(leads)} lead(s): inference, sales brief, and Cal drafts.",
             },
             {
                 "type": "review_queue_created",
@@ -493,7 +493,7 @@ def scout_create_activation(
         db,
         sess.id,
         "scout",
-        f"SCOUT created an approval-gated review queue for {len(leads)} lead(s) in {body.mode()} mode.",
+        f"SIGNAL created an approval-gated review queue for {len(leads)} lead(s) in {body.mode()} mode.",
         "activateScout",
         {
             "activationId": activation.id,
@@ -701,10 +701,10 @@ def scout_control_activation(
     log = list(activation.activity_log or [])
     if body.action == "pause":
         activation.status = "paused"
-        log.append({"type": "paused", "message": "User interrupted SCOUT automation for review."})
+        log.append({"type": "paused", "message": "User interrupted SIGNAL automation for review."})
     elif body.action == "resume":
         activation.status = "awaiting_approval"
-        log.append({"type": "resumed", "message": "User resumed SCOUT review queue. Sends still require approval."})
+        log.append({"type": "resumed", "message": "User resumed SIGNAL review queue. Sends still require approval."})
     else:
         plan = dict(activation.work_plan or {})
         plan["user_adjustments"] = {

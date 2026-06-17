@@ -376,7 +376,7 @@ def _research_agent_findings(db: Session, *, limit: int = 5, days: int = 1) -> L
                 "significance_score": round(float(update.significance_score or 0), 3),
                 "pipeline_url": f"/pipeline?lead={company.id}",
                 "scout_url": "/results?url=",
-                "action_label": "Act on this finding with SCOUT",
+                "action_label": "Run this play in SIGNAL",
             }
         )
     return findings
@@ -697,7 +697,7 @@ def fallback_edition(limit: int = 8) -> Dict[str, Any]:
             "subheadline": "Buying signals and deployment moves curated for robotics sales teams.",
         },
         "industryBrief": {
-            "executive_take": "SCOUT is refreshing today's brief. Check back shortly for the full edition.",
+            "executive_take": "SIGNAL is refreshing today's brief. Check back shortly for the full edition.",
             "macro_trends": [],
             "strategic_implications": [],
             "risks_and_unknowns": [],

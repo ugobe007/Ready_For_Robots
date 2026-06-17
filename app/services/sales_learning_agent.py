@@ -158,7 +158,7 @@ def recommend_crm_next_action(db: Session, account: CrmAccount, events: list[Sal
         rationale.append("Cal has sent outreach but no reply is recorded yet.")
     if replied:
         score += 18.0
-        rationale.append("A reply exists, so SCOUT should keep momentum.")
+        rationale.append("A reply exists, so SIGNAL should keep momentum.")
     if stage in {"intro_sent", "supply_outreach_sent"}:
         rationale.append("The current stage is post-send; follow-up timing matters.")
     if not rationale:
@@ -249,7 +249,7 @@ def _scraper_guidance(
     if top_signal:
         guidance.append(f"Increase collection for `{top_signal['key']}` signals; they correlate with better sales progress.")
     if not guidance:
-        guidance.append("Run more outreach and reply capture so SCOUT can learn from actual sales outcomes.")
+        guidance.append("Run more outreach and reply capture so SIGNAL can learn from actual sales outcomes.")
     return guidance
 
 

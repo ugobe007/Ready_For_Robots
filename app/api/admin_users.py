@@ -222,7 +222,7 @@ def list_recent_activity(
         ).fetchall()
         activity.extend({
             "type": "waitlist_signup",
-            "label": "SCOUT signup",
+            "label": "SIGNAL signup",
             "actor": row.email,
             "detail": row.company or row.source or "Waitlist",
             "created_at": _iso(row.created_at),

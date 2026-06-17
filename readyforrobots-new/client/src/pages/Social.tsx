@@ -587,7 +587,8 @@ export default function Social() {
             </div>
           </div>
           <p className="text-sm text-white/55 max-w-2xl">
-            Five posts from today&apos;s hot leads and strategic insights. Edit, copy, share, or publish to LinkedIn.
+            Five SIGNAL-powered posts from today&apos;s hottest leads — built to grab attention and drive action.
+            Edit, copy, publish to LinkedIn, or post to X.
           </p>
           {cacheStatus === "stale" && (
             <p className="mt-2 text-xs text-amber-400/90 font-mono">

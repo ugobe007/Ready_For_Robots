@@ -177,6 +177,7 @@ def _parse_dt(s: str) -> datetime:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 SITE_URL = "https://readyforrobots.com"
+PIPELINE_URL = f"{SITE_URL}/pipeline"
 
 _INDUSTRY_HASHTAGS: Dict[str, List[str]] = {
     "logistics":       ["Logistics", "SupplyChain", "Automation"],
@@ -193,7 +194,7 @@ _INDUSTRY_HASHTAGS: Dict[str, List[str]] = {
     "construction":    ["Construction", "Robotics", "IndustrialAutomation"],
 }
 
-_BASE_HASHTAGS = ["Robotics", "Automation", "ReadyForRobots"]
+_BASE_HASHTAGS = ["Robotics", "Automation", "SIGNAL", "ReadyForRobots"]
 
 
 def _industry_hashtags(industry: str) -> List[str]:
@@ -304,18 +305,18 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
     score = (ps.overall_intent_score if ps else 0) or pri.score
 
     vendor_value = (
-        f"For robotics vendors and integrators: accounts like this often start "
-        f"evaluating partners within the next {buy_window}. "
-        f"A specific use case beats a generic pitch — especially before the RFP."
+        f"SIGNAL flagged this account — vendor conversations often start within {buy_window}. "
+        f"Reach out with a specific {automation_type} use case before the RFP, not after."
     )
 
     # ── Twitter ──────────────────────────────────────────────────────────────
     tw_tags = _format_hashtags(hashtags)
-    tw_hook = f"{emoji} {ind_display} | {name}"
+    tw_hook = f"{emoji} {name} · {ind_display}"
     tw_core = (
         f"{tw_hook}\n\n"
-        f"{name} is investing in {automation_type} as {pain_point}. "
-        f"Vendor conversations often start within {buy_window}."
+        f"Moving on {automation_type} ({trigger_phrase}). "
+        f"Buying window: ~{buy_window}.\n\n"
+        f"SIGNAL automates robot sales to close → {PIPELINE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
@@ -324,18 +325,21 @@ def _build_hot_lead_post(company: Company, pri, sigs: list, deduped: list, rank:
     li_hook = f"{emoji} {spotlight}: {name}"
 
     li_body = (
-        f"{name} ({ind_display}) is moving on automation — {automation_type} — "
-        f"because {pain_point}.\n\n"
-        f"What's happening now: {trigger_phrase}."
+        f"{name} ({ind_display}) is actively planning automation — {automation_type} — "
+        f"driven by {pain_point}.\n\n"
+        f"Right now: {trigger_phrase}."
     )
 
     li_headline = ""
     if headline:
-        li_headline = f"\n\nRecent headline: \"{headline}\""
+        li_headline = f"\n\nLatest signal: \"{headline}\""
 
     li_value = f"\n\n{vendor_value}"
 
-    li_cta = f"\n\nSee who's on today's automation buyer list → {SITE_URL}"
+    li_cta = (
+        f"\n\nSIGNAL discovers, develops, and helps close robot deals — end to end.\n"
+        f"👉 Activate your pipeline (free): {PIPELINE_URL}"
+    )
     li_hashtag_str = "\n\n" + _format_hashtags(hashtags)
 
     linkedin = (
@@ -367,24 +371,27 @@ def _build_industry_insight_post(executive_take: str) -> Dict:
     if not executive_take:
         return None
 
-    hashtags = ["Robotics", "AutomationTrends", "IndustrialAutomation", "ReadyForRobots"]
+    hashtags = ["Robotics", "AutomationTrends", "SIGNAL", "ReadyForRobots"]
 
     # Twitter: first 2 sentences + hashtags
     tw_lead = _first_n_sentences(executive_take, 2)
     tw_tags = _format_hashtags(hashtags)
-    tw_core = f"🧠 Industry Intelligence\n\n{tw_lead}"
+    tw_core = (
+        f"🧠 SIGNAL intel · automation buyers moving now\n\n"
+        f"{tw_lead}\n\n"
+        f"Activate your pipeline → {PIPELINE_URL}"
+    )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     # LinkedIn: full executive take + value framing
     linkedin = (
-        "🧠 What we're seeing in automation this week\n\n"
+        "🧠 What SIGNAL caught in automation this week\n\n"
         f"{executive_take}\n\n"
-        "The takeaway for vendors: companies under this kind of pressure don't announce "
-        "an RFP first — they talk to partners who show up with a concrete solution. "
-        "Ready For Robots surfaces those accounts daily so you can reach out while "
-        "the window is still open.\n\n"
-        f"See today's buyer list → {SITE_URL}/newsletter\n\n"
+        "The play for robotics vendors: companies under this pressure don't post an RFP first — "
+        "they talk to whoever shows up with a concrete solution.\n\n"
+        "SIGNAL automates robot sales to closure: discover → develop → close.\n\n"
+        f"👉 See today's ranked buyer list: {PIPELINE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -406,21 +413,23 @@ def _build_market_trend_post(trend: Dict) -> Dict:
     if not detail:
         return None
 
-    hashtags = ["AutomationTrends", "Robotics", "FutureOfWork", "ReadyForRobots"]
+    hashtags = ["AutomationTrends", "Robotics", "SIGNAL", "ReadyForRobots"]
 
     tw_tags = _format_hashtags(hashtags)
-    tw_core = f"📈 Market Trend: {title}\n\n{_first_n_sentences(detail, 2)}"
+    tw_core = (
+        f"📈 SIGNAL trend watch: {title}\n\n"
+        f"{_first_n_sentences(detail, 2)}\n\n"
+        f"Who's acting on it → {PIPELINE_URL}"
+    )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     linkedin = (
-        f"📈 Market trend: {title}\n\n"
+        f"📈 Market trend SIGNAL is tracking: {title}\n\n"
         f"{detail}\n\n"
-        "Why this matters if you sell robotics: when a trend shows up across multiple "
-        "sectors at once, buyers move from \"someday\" to \"this quarter.\" "
-        "Ready For Robots tracks which companies are actually acting on it — "
-        "not just reading about it.\n\n"
-        f"Read today's market brief → {SITE_URL}/newsletter\n\n"
+        "When a trend hits multiple sectors at once, buyers move from \"someday\" to \"this quarter.\" "
+        "SIGNAL shows which companies are already acting — not just reading the headlines.\n\n"
+        f"👉 Activate your pipeline: {PIPELINE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 
@@ -438,7 +447,7 @@ def _build_market_trend_post(trend: Dict) -> Dict:
 
 def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
     """Synthesize a broad insight from the day's top leads."""
-    hashtags = ["Robotics", "Automation", "ROI", "FutureOfWork", "ReadyForRobots"]
+    hashtags = ["Robotics", "Automation", "SIGNAL", "ReadyForRobots"]
 
     industries = list(dict.fromkeys([s.get("source_industry") or s.get("economics", "").split(" ·")[0].strip() for s in stories if s]))
     industries = [i for i in industries if i and i.lower() not in ("cross-sector", "strategic brief")][:3]
@@ -449,25 +458,21 @@ def _build_thought_leadership_post(stories: List[Dict]) -> Dict:
 
     tw_tags = _format_hashtags(hashtags)
     tw_core = (
-        "🤖 The automation buying window is getting shorter.\n\n"
-        f"Today's list includes {hot_count} high-intent accounts across {industries_str}. "
-        "The vendors who win are usually in the conversation before the RFP."
+        "🤖 The RFP is too late.\n\n"
+        f"SIGNAL flagged {hot_count} high-intent buyers across {industries_str} today. "
+        f"Discover → develop → close → {PIPELINE_URL}"
     )
     tw_core = _truncate_tweet(tw_core, max_chars=230 - len(tw_tags))
     twitter = f"{tw_core}\n\n{tw_tags}"
 
     linkedin = (
-        "🤖 Why early outreach beats waiting for the RFP\n\n"
-        f"Across {industries_str}, we're tracking a wave of companies actively planning "
-        f"automation investments — not just talking about them. {hot_count} accounts on "
-        "today's list are high-intent, meaning vendor conversations are likely in the "
-        "next 60–90 days.\n\n"
-        "The pattern is consistent: teams that reach out with a specific use case and ROI "
-        "story get in early. Teams that wait for the public RFP compete on price in a "
-        "crowded field.\n\n"
-        "Ready For Robots publishes that buyer list daily — ranked, sourced, and ready "
-        "for outreach.\n\n"
-        f"See today's list → {SITE_URL}\n\n"
+        "🤖 Stop waiting for the RFP. Start closing robot deals.\n\n"
+        f"Across {industries_str}, SIGNAL is tracking companies actively planning automation — "
+        f"not just talking about it. {hot_count} accounts on today's list are high-intent; "
+        "vendor conversations are likely in the next 60–90 days.\n\n"
+        "Early outreach shapes requirements. Late outreach competes on price in a crowded field.\n\n"
+        "SIGNAL automates the robot sales process to closure — discovery, development, and deal advance in one workflow.\n\n"
+        f"👉 Activate your pipeline (free): {PIPELINE_URL}\n\n"
         + _format_hashtags(hashtags)
     )
 

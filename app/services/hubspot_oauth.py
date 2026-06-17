@@ -93,7 +93,7 @@ def build_authorization_url(
 def _consume_oauth_state(db: Session, state: str) -> dict[str, Any]:
     payload = cache_read(db, f"{HUBSPOT_OAUTH_STATE_KEY}{state}", stale_ok=False)
     if not payload or not isinstance(payload, dict):
-        raise HubSpotError("Invalid or expired OAuth state — restart HubSpot connect from SCOUT")
+        raise HubSpotError("Invalid or expired OAuth state — restart HubSpot connect from SIGNAL")
     return payload
 
 

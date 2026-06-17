@@ -515,7 +515,7 @@ export default function Newsletter() {
                     </p>
                     <div className="mt-2">
                       <NlLink href={finding.pipeline_url || "/pipeline"} color={AMBER}>
-                        {finding.action_label || "Open in pipeline"}
+                        {finding.action_label || "Run in SIGNAL"}
                       </NlLink>
                     </div>
                   </NlDataRow>

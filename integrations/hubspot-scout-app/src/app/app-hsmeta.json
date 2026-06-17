@@ -2,8 +2,8 @@
   "uid": "scout_crm_sync",
   "type": "app",
   "config": {
-    "description": "SCOUT pushes qualified robot-demand leads from Ready For Robots into HubSpot CRM.",
-    "name": "SCOUT CRM Sync",
+    "description": "SIGNAL pushes qualified robot-demand leads from Ready For Robots into HubSpot CRM.",
+    "name": "SIGNAL CRM Sync",
     "distribution": "private",
     "auth": {
       "type": "oauth",

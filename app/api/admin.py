@@ -324,7 +324,7 @@ def daily_brief(db: Session = Depends(get_db)):
     add_step("Review unsent Cal drafts", unsent_drafted, "/admin#cal-outreach", "high")
     add_step("HOT leads not yet emailed", hot_unsent, "/admin#cal-outreach", "high")
     add_step("Sales actions need approval", needs_approval, "/sales-console", "high")
-    add_step("SCOUT drafts awaiting send", scout_drafted, "/admin#workflow", "medium")
+    add_step("SIGNAL drafts awaiting send", scout_drafted, "/admin#workflow", "medium")
     add_step("Research updates to review", research_pending, "/pipeline", "medium")
     if new_hot_warm > 0:
         add_step("New HOT/WARM companies today", new_hot_warm, "/pipeline", "medium")

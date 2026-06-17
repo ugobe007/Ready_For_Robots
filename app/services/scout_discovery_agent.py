@@ -630,7 +630,7 @@ def discovery_digest(
 
     cat = _CATEGORY_FILTERS.get(_category_key(robot_category) or "", {}).get("label") or "your focus"
     message = (
-        f"SCOUT surfaced {len(prospects)} live {cat} prospects. "
+        f"SIGNAL surfaced {len(prospects)} live {cat} prospects. "
         + " ".join(lines[:2])
         + " Ready to develop any of them in your pipeline?"
     )
@@ -737,7 +737,7 @@ def execute_activation(
         log.append(
             {
                 "type": "discovery_run",
-                "message": f"SCOUT developed {developed} lead(s): inference, brief, and Cal drafts ready for review.",
+                "message": f"SIGNAL developed {developed} lead(s): inference, brief, and Cal drafts ready for review.",
                 "developed": developed,
                 "errors": len(errors),
             }
@@ -762,7 +762,7 @@ def schedule_activation_run(activation_id: int, user_id: UUID, team_id: UUID) ->
                 return
             activation.status = "evaluating"
             log = list(activation.activity_log or [])
-            log.append({"type": "evaluating", "message": "SCOUT is running discovery and lead development."})
+            log.append({"type": "evaluating", "message": "SIGNAL is running discovery and lead development."})
             activation.activity_log = log
             db.commit()
             execute_activation(db, activation, team_id=team_id, owner_user_id=user_id)
