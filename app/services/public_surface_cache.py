@@ -402,7 +402,7 @@ def start_public_cache_refresh_loop() -> None:
             schedule_public_cache_refresh(force=False, reason="startup")
         while True:
             time.sleep(PUBLIC_CACHE_REFRESH_INTERVAL_SEC)
-            schedule_public_cache_refresh(reason="interval")
+            schedule_public_cache_refresh(pipeline_only=True, reason="interval")
 
     threading.Thread(target=_loop, daemon=True, name="public-cache-refresh-loop").start()
     logger.info(

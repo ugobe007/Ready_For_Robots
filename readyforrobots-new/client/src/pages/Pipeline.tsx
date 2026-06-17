@@ -197,7 +197,7 @@ const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
   "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
   "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
-  "Monitoring":  { color: "#a78bfa", dot: "#a78bfa", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
+  "Monitoring":  { color: "#7c3aed", dot: "#7c3aed", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
@@ -214,11 +214,14 @@ const userTierBadge = (deal: Pick<Deal, "score" | "priorityTier">) => {
   const tier = (deal.priorityTier || "").toUpperCase();
   if (tier === "HOT") return { label: "HOT", color: "#34d399" };
   if (tier === "WARM") return { label: "WARM", color: "#FFB000" };
-  if (tier === "COLD") return { label: "MONITOR", color: "#a78bfa" };
+  if (tier === "COLD") return { label: "MONITOR", color: "#7c3aed" };
   if (deal.score >= 85) return { label: "HOT", color: "#34d399" };
   if (deal.score >= 65) return { label: "WARM", color: "#FFB000" };
-  return { label: "MONITOR", color: "#a78bfa" };
+  return { label: "MONITOR", color: "#7c3aed" };
 };
+
+const dealTierColor = (deal: Pick<Deal, "score" | "priorityTier">) =>
+  USER_BUCKET_META[userBucketForDeal(deal)].color;
 
 const scoreColor = (s: number) =>
   s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#FFB000";
@@ -317,8 +320,10 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
-const PIPELINE_SESSION_KEY = "pipeline_feed_v3";
+const PIPELINE_SESSION_KEY = "pipeline_feed_v4";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+/** Stale paint while API revalidates — avoids blank page when Fly is slow. */
+const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
 
 function parsePipelineLeadIdFromSearch(search: string): number | null {
   const params = new URLSearchParams(search);
@@ -343,7 +348,7 @@ function resolvePipelineLeadId(search: string): number | null {
   return null;
 }
 const PIPELINE_FRESH_MS = 90 * 1000;
-const PIPELINE_TIMEOUT = 8_000;
+const PIPELINE_TIMEOUT = 15_000;
 
 type PipelineFeedPayload = {
   summary?: LeadSummary;
@@ -618,18 +623,20 @@ export default function Pipeline() {
       setMarketSnippet,
     };
 
-    const cachedEntry = readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS);
+    const cachedEntry =
+      readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_SESSION_TTL_MS)
+      ?? readSurfaceCache<PipelineFeedPayload>(PIPELINE_SESSION_KEY, PIPELINE_STALE_PAINT_MS);
     const paintedFromCache = cachedEntry ? applyPipelineFeed(cachedEntry.data, feedSetters) : false;
     setLoadingLeads(!paintedFromCache);
     setLoadingSummary(!paintedFromCache);
 
     const loadPipeline = async (token?: string) => {
       const headers = token ? authHeader(token) : undefined;
-      const res = await fetchWithTimeout(
+      const res = await fetchWithTimeoutRetry(
         `${base}/api/leads/pipeline`,
-        publicFetchInit({ headers }),
+        liveFetchInit({ headers }),
         PIPELINE_TIMEOUT,
-        { publicCache: true },
+        { retries: 3, retryDelayMs: 1500 },
       );
       if (!res.ok) throw new Error("Could not load pipeline");
       const payload = (await res.json()) as PipelineFeedPayload;
@@ -1911,9 +1918,9 @@ export default function Pipeline() {
                             >
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
-                                style={{ borderColor: scoreColor(deal.score), background: `${scoreColor(deal.score)}10` }}
+                                style={{ borderColor: dealTierColor(deal), background: `${dealTierColor(deal)}10` }}
                               >
-                                <span className="font-mono text-[10px] font-bold" style={{ color: scoreColor(deal.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                                <span className="font-mono text-[10px] font-bold" style={{ color: dealTierColor(deal), fontFamily: "'JetBrains Mono', monospace" }}>
                                   {deal.score}
                                 </span>
                               </div>
@@ -1989,9 +1996,9 @@ export default function Pipeline() {
                       </div>
                       <div
                         className="h-10 w-10 rounded-full border flex items-center justify-center shrink-0"
-                        style={{ borderColor: scoreColor(selected.score), background: `${scoreColor(selected.score)}12` }}
+                        style={{ borderColor: dealTierColor(selected), background: `${dealTierColor(selected)}12` }}
                       >
-                        <span className="font-mono text-sm font-bold" style={{ color: scoreColor(selected.score), fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span className="font-mono text-sm font-bold" style={{ color: dealTierColor(selected), fontFamily: "'JetBrains Mono', monospace" }}>
                           {selected.score}
                         </span>
                       </div>
