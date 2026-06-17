@@ -276,6 +276,10 @@ def hydrate_public_surface_caches() -> None:
         hydrated += 1
 
     logger.info("Public surface L1 hydrated from durable cache (%d surfaces)", hydrated)
+    global _last_refresh_monotonic
+    if hydrated > 0:
+        # Warm L1 exists — do not treat cache as cold on every GET during background rebuild.
+        _last_refresh_monotonic = time.monotonic()
 
 
 def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_newsletter: bool = True) -> None:
@@ -381,9 +385,21 @@ def start_public_cache_refresh_loop() -> None:
     _loop_started = True
 
     def _loop() -> None:
-        # Initial refresh shortly after deploy so L1/durable stay warm without blocking requests.
-        time.sleep(int(os.getenv("PUBLIC_CACHE_STARTUP_DELAY_SEC", "45")))
-        schedule_public_cache_refresh(force=False, reason="startup")
+        # Let health checks and read-only cache serves win first after deploy.
+        delay = int(os.getenv("PUBLIC_CACHE_STARTUP_DELAY_SEC", "180"))
+        time.sleep(delay)
+        from app.services.content_surfaces import KEY_PIPELINE_FEED
+
+        feed = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
+        if isinstance(feed, dict) and (feed.get("leads") or []):
+            global _last_refresh_monotonic
+            _last_refresh_monotonic = time.monotonic()
+            logger.info(
+                "Startup pipeline refresh skipped — durable feed warm (%d leads)",
+                len(feed.get("leads") or []),
+            )
+        else:
+            schedule_public_cache_refresh(force=False, reason="startup")
         while True:
             time.sleep(PUBLIC_CACHE_REFRESH_INTERVAL_SEC)
             schedule_public_cache_refresh(reason="interval")

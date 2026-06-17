@@ -56,6 +56,8 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   PIPELINE_HOT_SLOTS = "15"
   PIPELINE_WARM_SLOTS = "20"
   PIPELINE_MONITOR_SLOTS = "15"
+  # Defer heavy cache rebuild after deploy so /api/leads/pipeline stays responsive.
+  PUBLIC_CACHE_STARTUP_DELAY_SEC = "180"
 
 [http_service]
   internal_port = 8080
