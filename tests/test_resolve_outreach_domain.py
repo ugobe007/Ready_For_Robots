@@ -44,3 +44,18 @@ def test_persist_company_domain_sets_website():
     persist_company_domain(company, "marriott.com")
     assert company.website == "https://marriott.com"
     assert company.website_domain == "marriott.com"
+
+
+def test_q_casino_does_not_resolve_to_casino_com():
+    company = MagicMock()
+    company.website = "https://casino.com"
+    company.website_domain = None
+    company.name = "Q Casino"
+    assert resolve_outreach_domain(company) == "qcasinoandresort.com"
+
+
+def test_generic_casino_com_is_untrusted():
+    from app.services.company_domain import is_trusted_outreach_domain
+
+    assert is_trusted_outreach_domain("casino.com") is False
+    assert is_trusted_outreach_domain("qcasinoandresort.com") is True

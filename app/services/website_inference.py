@@ -12,6 +12,7 @@ import urllib.request
 from typing import Optional
 
 from app.services.lead_primary_link import _looks_like_http_url
+from app.services.company_domain import is_trusted_outreach_domain, normalize_website_domain
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,14 @@ def try_duckduckgo_company_website(company_name: str, *, timeout: float = 10.0) 
     for c in candidates:
         low = c.lower()
         if not any(b in low for b in bad_sub):
+            dom = normalize_website_domain(c)
+            if dom and is_trusted_outreach_domain(dom):
+                return c
+    for c in candidates:
+        dom = normalize_website_domain(c)
+        if dom and is_trusted_outreach_domain(dom):
             return c
-    return candidates[0] if candidates else None
+    return None
 
 
 def sleep_between_lookups(seconds: float = 0.75) -> None:

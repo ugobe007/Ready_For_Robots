@@ -105,6 +105,10 @@ def _first_brand_slug(name: str) -> str | None:
             continue
         if slug in _SLUG_SKIP:
             continue
+        from app.services.company_domain import _GENERIC_SLUG_NOUNS
+
+        if slug in _GENERIC_SLUG_NOUNS:
+            continue
         return slug
     return None
 

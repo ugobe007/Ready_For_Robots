@@ -19,13 +19,91 @@ _LEGAL_SUFFIX_RE = re.compile(
 _DOMAIN_ENTITY_NAME_KEYS: Dict[str, str] = {
     "jal.co.jp": "japan airlines",
     "choicehotels.com": "choice hotels",
+    "qcasinoandresort.com": "q casino",
 }
 
 # Alternate display names → canonical buyer name key
 _NAME_ENTITY_ALIASES: Dict[str, str] = {
     "jal": "japan airlines",
     "japan airline": "japan airlines",
+    "q casino resort": "q casino",
+    "q casino + resort": "q casino",
 }
+
+# Curated official domains for short/ambiguous names (avoid casino.com-style false positives).
+_KNOWN_BRAND_DOMAINS: Dict[str, str] = {
+    "q casino": "qcasinoandresort.com",
+}
+
+# Registrable domains that are generic nouns — never infer outreach from these.
+_UNTRUSTED_GENERIC_DOMAINS: frozenset[str] = frozenset({
+    "casino.com",
+    "hotel.com",
+    "hotels.com",
+    "resort.com",
+    "resorts.com",
+    "shop.com",
+    "store.com",
+    "company.com",
+    "business.com",
+    "travel.com",
+    "food.com",
+    "mail.com",
+    "email.com",
+    "group.com",
+    "global.com",
+    "international.com",
+})
+
+# Single-token slugs that map to generic .com domains (not buyer-specific brands).
+_GENERIC_SLUG_NOUNS: frozenset[str] = frozenset({
+    "casino",
+    "hotel",
+    "hotels",
+    "resort",
+    "resorts",
+    "shop",
+    "store",
+    "mall",
+    "food",
+    "travel",
+    "company",
+    "business",
+    "group",
+    "global",
+    "national",
+    "regional",
+    "local",
+    "market",
+    "media",
+    "news",
+    "tech",
+    "digital",
+    "smart",
+    "auto",
+    "bank",
+    "finance",
+    "health",
+    "care",
+    "home",
+    "house",
+    "land",
+    "city",
+    "town",
+    "county",
+    "state",
+    "energy",
+    "power",
+    "water",
+    "steel",
+    "metal",
+    "wood",
+    "glass",
+    "paper",
+    "plastic",
+    "robot",
+    "robots",
+})
 
 
 def normalize_website_domain(website: Optional[str]) -> Optional[str]:
@@ -46,6 +124,26 @@ def normalize_website_domain(website: Optional[str]) -> Optional[str]:
     return netloc or None
 
 
+def is_trusted_outreach_domain(domain: Optional[str]) -> bool:
+    """False for generic registrable domains (e.g. casino.com) unlinked to a specific buyer."""
+    dom = normalize_website_domain(domain)
+    if not dom:
+        return False
+    if dom in _UNTRUSTED_GENERIC_DOMAINS:
+        return False
+    label = dom.split(".", 1)[0]
+    if label in _GENERIC_SLUG_NOUNS and dom.endswith(".com"):
+        return False
+    return True
+
+
+def known_brand_domain(name: Optional[str]) -> Optional[str]:
+    key = normalize_company_name_key(name)
+    if not key:
+        return None
+    return _KNOWN_BRAND_DOMAINS.get(key)
+
+
 def resolve_outreach_domain(
     company: Any | None = None,
     acct: Any | None = None,
@@ -55,35 +153,42 @@ def resolve_outreach_domain(
     """
     Best domain for outreach email inference.
 
-    Order: company/acct website URL → company.website_domain → brand slug from name
-    (e.g. "Marriott International" → marriott.com).
+    Order: known brand map → company/acct website URL → company.website_domain → brand slug from name
+    (e.g. "Marriott International" → marriott.com). Generic domains like casino.com are rejected.
     """
+    name = company_name or (getattr(company, "name", None) if company else None) or ""
+
+    curated = known_brand_domain(name)
+    if curated:
+        return curated
+
     dom = normalize_website_domain(
         (getattr(company, "website", None) if company else None)
         or (getattr(acct, "website", None) if acct else None)
     )
-    if dom:
+    if dom and is_trusted_outreach_domain(dom):
         return dom
 
     wd = getattr(company, "website_domain", None) if company else None
     if wd and str(wd).strip():
-        return str(wd).strip().lower()
+        dom = str(wd).strip().lower()
+        if is_trusted_outreach_domain(dom):
+            return dom
 
-    name = company_name or (getattr(company, "name", None) if company else None) or ""
     from app.services.company_name_presence import infer_brand_domain_hosts
 
     hosts = infer_brand_domain_hosts(str(name))
-    if not hosts:
-        return None
-    host = hosts[0]
-    if host.startswith("www."):
-        host = host[4:]
-    return host or None
+    for host in hosts:
+        candidate = host[4:] if host.startswith("www.") else host
+        if is_trusted_outreach_domain(candidate):
+            return candidate
+
+    return curated
 
 
 def persist_company_domain(company: Any, domain: str) -> None:
     """Write a resolved domain onto company when website is empty."""
-    if not domain or not company:
+    if not domain or not company or not is_trusted_outreach_domain(domain):
         return
     if getattr(company, "website", None):
         return

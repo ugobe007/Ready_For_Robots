@@ -22,7 +22,7 @@ from app.services.apollo_client import (
     ApolloProspectClient,
     recommended_prospect_titles,
 )
-from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain
+from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain, is_trusted_outreach_domain
 from app.services.outreach_email_inference import (
     infer_cc_outreach_emails,
     infer_primary_outreach_email,
@@ -45,8 +45,14 @@ def enrich_company_website(company: Company, *, sleep_s: float = 0.75) -> str | 
 
     Waterfall (pythh-style): OpenAI homepage batch → DuckDuckGo → brand slug domain.
     """
-    if company.website and str(company.website).strip():
+    existing = normalize_website_domain(company.website)
+    if existing and is_trusted_outreach_domain(existing):
         return company.website
+    if existing and not is_trusted_outreach_domain(existing):
+        logger.info("Clearing untrusted website for %r: %s", company.name, company.website)
+        company.website = None
+        if hasattr(company, "website_domain"):
+            company.website_domain = None
 
     name = (company.name or "").strip()
     if not name:
@@ -84,7 +90,10 @@ def enrich_company_website(company: Company, *, sleep_s: float = 0.75) -> str | 
             source = "brand_slug"
 
     if found and source != "brand_slug":
-        company.website = found
+        if is_trusted_outreach_domain(normalize_website_domain(found)):
+            company.website = found
+        else:
+            found = None
 
     if found:
         logger.info("Website enriched (%s): %s → %s", source, name, found)
