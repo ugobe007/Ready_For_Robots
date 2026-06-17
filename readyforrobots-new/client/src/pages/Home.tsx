@@ -5,7 +5,7 @@
  * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
  */
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, RefreshCw, X, Quote, Mail } from "lucide-react";
+import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, X, Quote, Mail } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
@@ -111,16 +111,16 @@ const beforeAfter = [
 ];
 
 const agentFeatures = [
-  { icon: Search, title: "Prospecting", desc: "Find robot-ready companies from live market signals—updated 24/7" },
-  { icon: Shield, title: "Qualifying", desc: "Score timing, fit, and automation intent before anyone reaches out" },
-  { icon: FileText, title: "Outreach campaigns", desc: "Signal-based sequences synced to HubSpot—or pushed into your CRM" },
-  { icon: Globe, title: "CRM intelligence", desc: "Scores, triggers, and briefs flow into HubSpot, Salesforce, Pipedrive, or your stack" },
+  { icon: Search, title: "Discover", desc: "Find robot-ready companies from live market signals—monitored 24/7 across 150+ sources" },
+  { icon: Shield, title: "Develop", desc: "Score timing, fit, and intent; draft trigger-aware outreach for each opportunity" },
+  { icon: TrendingUp, title: "Close", desc: "Advance deals with follow-ups, pipeline tracking, and meeting-ready briefs" },
+  { icon: FileText, title: "Content Studio", desc: "Daily posts and outreach copy built from today's hottest leads" },
   { icon: Users, title: "Partnership pipeline", desc: "Integrators, distributors, and channel partners in the same workflow" },
-  { icon: RefreshCw, title: "Pipeline continuity", desc: "From first signal through follow-up—one service, not another platform" },
+  { icon: Globe, title: "HubSpot sync", desc: "Optional—push scored accounts into HubSpot, Salesforce, or Pipedrive when you want" },
 ];
 
 export default function Home() {
-  const { displayed: typedText, done: typedDone } = useTypewriter("Start closing.", 65, 700);
+  const { displayed: typedText, done: typedDone } = useTypewriter("Robot deals.", 65, 700);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -249,7 +249,7 @@ export default function Home() {
               className="font-extrabold leading-[1.05] tracking-tight mb-3 text-white"
               style={{ fontSize: "clamp(2.8rem, 6vw, 5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Stop prospecting.
+              Discover. Develop. Close.
               <br />
               <span
                 style={{
@@ -273,10 +273,7 @@ export default function Home() {
               className="mb-7 max-w-md text-[0.95rem] leading-relaxed text-white/60 sm:text-base"
               style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
             >
-              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#c4b5fd" }}>Signal</span>
-              {" — robot sales management workflow. Prospecting, qualifying, and outreach synced to "}
-              <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
-              {" or your CRM."}
+              SIGNAL automates robot sales to closure—discovery, development, and deal advance in one workflow.
             </p>
 
             {/* Primary CTA */}
@@ -328,21 +325,21 @@ export default function Home() {
               What ReadyForRobots does
             </p>
             <h2 className="max-w-xl text-3xl font-extrabold leading-tight text-white lg:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              We help robot companies find buyers before the market becomes obvious.
+              Discover, develop, and close robot sales—from one system.
             </h2>
           </div>
 
           <div>
             <p className="text-base leading-relaxed text-white/50">
-              We find companies ready for robots using live market signals—fresh 24/7 updates and CRM intelligence that flows into{" "}
-              <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span>, Salesforce, Pipedrive, or the sales stack your team already runs.
-              No cold lists: every account shows why it is ready, what triggered the signal, and how to open the conversation.
+              SIGNAL discovers automation-ready buyers from live market signals, develops each opportunity with evidence-backed outreach, and helps your team close.
+              No cold lists—every account shows why it is ready, what triggered the signal, and how to move the deal forward.
+              Sync to HubSpot when you want, or run everything in SIGNAL.
             </p>
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                ["Prospecting", "Labor gaps, expansions, CapEx, hiring, and deployment news—monitored 24/7."],
-                ["Qualifying", "Automation intent scored on fit, timing, and evidence before outreach."],
-                ["Outreach", "Campaigns and drafts aligned with HubSpot—or exported into the CRM and sequences you use."],
+                ["Discover", "Labor gaps, expansions, CapEx, hiring, and deployment news—monitored 24/7."],
+                ["Develop", "Fit scoring, signal briefs, and outreach drafts tailored to each account."],
+                ["Close", "Follow-ups, pipeline stages, and meeting-ready intelligence to win the deal."],
               ].map(([label, copy], index) => (
                 <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <p className="mb-2 font-mono text-xs font-bold" style={{ color: index === 1 ? "#03DAC5" : "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
@@ -363,9 +360,9 @@ export default function Home() {
           <p ref={howItWorks.ref as React.RefObject<HTMLParagraphElement>} className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-7 ${fadeUpClass(howItWorks.visible)}`} style={{ color: "#a78bfa" }}>How it works</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: "rgba(255,255,255,0.06)" }}>
             {[
-              { step: "01", icon: Search, title: "Prospecting", desc: "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.", color: "#8b5cf6" },
-              { step: "02", icon: Shield, title: "Qualifying", desc: "Every company is scored on labor pain, expansion stage, automation fit, and timing. Only qualified opportunities enter your pipeline.", color: "#03DAC5" },
-              { step: "03", icon: Zap, title: "Outreach campaigns", desc: "Prioritized accounts with signal-specific drafts and timing—synced to HubSpot and the outreach tools your reps already use.", color: "#a78bfa" },
+              { step: "01", icon: Search, title: "Discover", desc: "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.", color: "#8b5cf6" },
+              { step: "02", icon: Shield, title: "Develop", desc: "Every company is scored on fit and timing, then developed with signal-specific briefs and trigger-aware outreach drafts.", color: "#03DAC5" },
+              { step: "03", icon: CheckCircle2, title: "Close", desc: "Pipeline advances through follow-ups, re-engagement, and meeting-ready intelligence—from first signal to signed deal.", color: "#a78bfa" },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -547,20 +544,20 @@ export default function Home() {
               className="font-extrabold text-white leading-tight mb-5"
               style={{ fontSize: "clamp(2rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Prospecting, qualifying, and outreach—{" "}
+              Discover, develop, and close—{" "}
               <span
                 style={{
                   background: "linear-gradient(135deg, #03DAC5, #7c3aed)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
-              >in your sales workflow
+              >robot deals end to end
               </span>
             </h2>
             <p className="text-white/45 text-base leading-relaxed mb-8">
-              Signal is ReadyForRobots&apos; managed pipeline service—not a personified agent.
-              It monitors market signals 24/7, qualifies robot-ready accounts, and runs outreach campaigns synced to{" "}
-              <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span> or the CRM your team already uses.
+              Signal is ReadyForRobots&apos; complete robot sales workflow—not a lead list or a CRM plugin.
+              It discovers automation-ready buyers, develops each opportunity, and advances your pipeline to close.
+              HubSpot sync is optional when you want it.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {agentFeatures.map((f) => {
@@ -906,10 +903,10 @@ export default function Home() {
             className="font-extrabold text-white mb-3"
             style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
           >
-            Run prospecting, qualifying, and outreach from one service.
+            Discover. Develop. Close robot deals.
           </h2>
           <p className="text-white/35 text-sm mb-8">
-            Signal finds robot-ready companies from live market signals, scores timing and fit, and pushes outreach into HubSpot—or the CRM your team already uses.
+            Robot sales automated to closure. HubSpot sync optional.
           </p>
 
           {/* CTA — Activate Pipeline */}
