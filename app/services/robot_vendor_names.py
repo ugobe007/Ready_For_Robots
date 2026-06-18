@@ -202,6 +202,13 @@ def _all_vendor_names() -> frozenset[str]:
     return frozenset(KNOWN_ROBOTICS_VENDOR_NAMES) | catalog_humanoid_vendor_names()
 
 
+# Humanoid catalog lists deployment partners (e.g. GXO piloting Digit) — still buyer accounts.
+_BUYER_DEPLOYMENT_PARTNERS = frozenset({
+    "gxo logistics",
+    "gxo",
+})
+
+
 _LEGAL_SUFFIX = re.compile(
     r"""
     \s*[\(,]?\s*
@@ -231,6 +238,12 @@ def is_known_robotics_vendor_name(name: Optional[str]) -> bool:
     key = _normalize_key(str(name))
     if not key:
         return False
+
+    if key in _BUYER_DEPLOYMENT_PARTNERS:
+        return False
+    for partner in _BUYER_DEPLOYMENT_PARTNERS:
+        if key.startswith(partner + " ") or key.startswith(partner + ","):
+            return False
 
     if key in _all_vendor_names():
         return True

@@ -51,6 +51,15 @@ def signals_contain_google_rss_html(signals: Sequence[object]) -> bool:
     return hits >= max(1, int(len(texts) * 0.34))
 
 
+def signals_predominantly_rss_html(signals: Sequence[object], *, min_ratio: float = 0.6) -> bool:
+    """True when most signal rows are RSS/HTML aggregator blobs (not one noisy outlier)."""
+    texts = [str(getattr(s, "signal_text", None) or "") for s in signals or []]
+    if not texts:
+        return False
+    hits = sum(1 for t in texts if _GOOGLE_RSS_HTML_RE.search(t))
+    return hits / len(texts) >= min_ratio
+
+
 def signals_are_market_research_noise(signals: Sequence[object]) -> bool:
     texts = [str(getattr(s, "signal_text", None) or "") for s in signals or []]
     if not texts:
