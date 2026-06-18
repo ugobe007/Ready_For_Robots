@@ -35,6 +35,8 @@ PRIORITY_SLUGS = (
     "apptronik-apollo",
     "tesla-optimus-gen1",
     "tesla-optimus-gen2",
+    "neura-4ne1",
+    "magiclab-humanoid",
 )
 
 _CATALOG_SPECS_BY_SLUG: Dict[str, dict] = {

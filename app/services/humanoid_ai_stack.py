@@ -220,6 +220,14 @@ AI_STACK_BY_SLUG: Dict[str, Dict[str, Any]] = {
         "third_party": ["NVIDIA", "Bosch"],
         "unique_claim": "Europe's production-ready cognitive humanoid; reservations open with AURA perception stack.",
     },
+    "magiclab-humanoid": {
+        "primary_model": "MagicLab onboard navigation + manipulation stack",
+        "model_family": "hybrid",
+        "stack_layers": ["locomotion", "manipulation", "perception", "voice interaction"],
+        "compute": "8-core CPU + 100 TOPS AI processor (on-robot)",
+        "third_party": [],
+        "unique_claim": "Full-size general-purpose humanoid with 42 active DOF and multi-robot collaboration demos.",
+    },
     "rainbow-hubo": {
         "primary_model": "HUBO2 real-time controller stack",
         "model_family": "hybrid",
