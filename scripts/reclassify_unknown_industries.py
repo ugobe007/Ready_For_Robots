@@ -26,7 +26,7 @@ from sqlalchemy.orm import joinedload
 
 from app.database import SessionLocal
 from app.models.company import Company
-from app.services.industry_inference import infer_industry_from_text
+from app.services.industry_inference import effective_industry_for_lead
 
 
 def main():
@@ -45,13 +45,12 @@ def main():
         updated = 0
         by_industry = {}
         for c in companies:
-            text_parts = [c.name or ""]
-            for sig in c.signals or []:
-                if getattr(sig, "signal_text", None):
-                    text_parts.append(sig.signal_text)
-            text = " ".join(text_parts)
-            inferred = infer_industry_from_text(text)
-            if inferred != "Unknown":
+            inferred = effective_industry_for_lead(
+                c.name,
+                c.industry,
+                c.signals or [],
+            )
+            if inferred not in ("Unknown", "New", "Other") and inferred != (c.industry or "").strip():
                 c.industry = inferred
                 updated += 1
                 by_industry[inferred] = by_industry.get(inferred, 0) + 1

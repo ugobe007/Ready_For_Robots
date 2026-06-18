@@ -387,15 +387,11 @@ def should_skip_industry_reinfer_for_company_name(name: Optional[str]) -> bool:
     return False
 
 
-_BOUNDARY_KEYWORDS = frozenset({
-    "defense", "defence", "military", "dod", "army", "navy", "lab", "grid", "icu", "ed", "er",
-})
-
 
 def _keyword_in_text(kw: str, text_lower: str) -> bool:
-    if kw in _BOUNDARY_KEYWORDS:
-        return re.search(rf"\b{re.escape(kw)}\b", text_lower) is not None
-    return kw in text_lower
+    from app.services.industry_sector_ontology import term_in_text
+
+    return term_in_text(kw, text_lower)
 
 
 def known_industry_for_company_name(company_name: Optional[str]) -> Optional[str]:

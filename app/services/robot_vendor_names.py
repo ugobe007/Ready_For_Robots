@@ -7,6 +7,7 @@ Conservative matching: normalized exact / starts-with / ends-with known vendor s
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import Optional, Set
 
 # Normalized (lowercase, single spaces). Expand as you discover false positives in the wild.
@@ -178,7 +179,27 @@ KNOWN_ROBOTICS_VENDOR_NAMES: Set[str] = {
     "kassow robots",
     "vention",
     "rethink robotics",
+    # Humanoid OEMs (also synced from humanoid_vendor_catalog)
+    "magiclab",
+    "magic lab",
+    "hexagon robotics",
+    "unitree robotics",
+    "unitree",
+    "fourier intelligence",
+    "fftai",
+    "engineered arts",
+    "sanctuary ai",
+    "apptronik",
+    "1x technologies",
+    "ubtech",
 }
+
+
+@lru_cache(maxsize=1)
+def _all_vendor_names() -> frozenset[str]:
+    from app.services.humanoid_ontology_terms import catalog_humanoid_vendor_names
+
+    return frozenset(KNOWN_ROBOTICS_VENDOR_NAMES) | catalog_humanoid_vendor_names()
 
 
 _LEGAL_SUFFIX = re.compile(
@@ -211,11 +232,11 @@ def is_known_robotics_vendor_name(name: Optional[str]) -> bool:
     if not key:
         return False
 
-    if key in KNOWN_ROBOTICS_VENDOR_NAMES:
+    if key in _all_vendor_names():
         return True
 
     # Prefix only (avoid "Acme … Bear Robotics" false positives on endswith)
-    for v in KNOWN_ROBOTICS_VENDOR_NAMES:
+    for v in _all_vendor_names():
         if key.startswith(v + " ") or key.startswith(v + ","):
             return True
 

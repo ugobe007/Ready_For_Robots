@@ -15,6 +15,7 @@ from app.services.signal_rules_engine import infer_source_channel, rules_engine_
 # Concept name → signal_type for DB storage (aligns with SIGNAL_PATTERNS)
 CONCEPT_TO_SIGNAL: dict = {
     "robot_installation": "robot_installation",
+    "humanoid_deployment": "robot_installation",
     "pilot_success": "pilot_success",
     "roi_documented": "roi_documented",
     "disinfection_robot": "robot_installation",
@@ -212,11 +213,67 @@ def classify_signals_with_fallback(
     return ["news"]
 
 
+_VENDOR_CONCEPTS = frozenset({"robot_oem", "system_integrator", "robotics_distributor"})
+_OEM_HUMANOID_ANNOUNCE_RE = re.compile(
+    r"(?i)(?:\b(?:unveil(?:s|ed)?|introduc(?:e|es|ed)|launch(?:es|ed)?|debut(?:s|ed)?|"
+    r"announc(?:e|es|ed)|reveal(?:s|ed)?)\b.*\bhumanoid\b"
+    r"|\bhumanoid\b.*\b(?:unveil(?:s|ed)?|introduc(?:e|es|ed)|launch(?:es|ed)?|"
+    r"debut(?:s|ed)?|announc(?:e|es|ed)|reveal(?:s|ed)?)\b)"
+)
+_BUYER_INTENT_CONCEPTS = frozenset({
+    "labor_shortage", "high_turnover", "reduce_labor_costs", "vendor_selection", "rfq_rfp",
+    "warehouse_expansion", "hotel_expansion", "capex_announcement", "strategic_automation_hire",
+    "robot_installation", "pilot_success", "series_funding", "ma_activity", "new_construction",
+    "humanoid_deployment",
+})
+
+
 def _filter_vendor_story_signals(text: str, signals: List[str]) -> List[str]:
     """Drop weak buyer tags when text is clearly vendor/funding PR, not end-buyer intent."""
     from app.services.lead_filter import SELLER_OR_PUBLISHER_CONTEXT_RE
 
-    if not signals or not SELLER_OR_PUBLISHER_CONTEXT_RE.search(text):
+    if not signals:
+        return signals
+
+    parse = _get_parser().parse(text)
+    vendor_active = any(
+        (act := parse.activations.get(name)) and act.confidence >= 0.45
+        for name in _VENDOR_CONCEPTS
+    )
+    humanoid_oem_story = (
+        _OEM_HUMANOID_ANNOUNCE_RE.search(text)
+        or (
+            (oem := parse.activations.get("humanoid_robot")) and oem.confidence >= 0.45
+            and not (
+                (dep := parse.activations.get("humanoid_deployment")) and dep.confidence >= 0.35
+            )
+        )
+    )
+    vendor_active = vendor_active or humanoid_oem_story
+    buyer_intent_active = any(
+        (act := parse.activations.get(name)) and act.confidence >= 0.35
+        for name in _BUYER_INTENT_CONCEPTS
+    )
+    vendor_story = vendor_active and not buyer_intent_active
+
+    if vendor_story:
+        buyer_direct = {
+            "vendor_selection",
+            "pilot_success",
+            "rfp_posted",
+            "labor_shortage",
+            "expansion",
+            "capex",
+            "strategic_hire",
+            "robot_installation",
+            "warehouse_throughput",
+            "production_capacity",
+        }
+        if any(s in buyer_direct for s in signals):
+            return [s for s in signals if s not in ("automation_interest", "automation_intent", "funding_round")]
+        return ["news"]
+
+    if not SELLER_OR_PUBLISHER_CONTEXT_RE.search(text):
         return signals
     buyer_direct = {
         "vendor_selection",

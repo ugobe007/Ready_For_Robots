@@ -218,6 +218,39 @@ def test_datacenter_query_not_every_hospitality_signal():
     )
 
 
+def test_grid_subject_requires_power_context():
+    assert not text_matches_subject_inference(
+        "Startup builds off-grid solar microgrid for remote communities",
+        "grid automation",
+    )
+    assert text_matches_subject_inference(
+        "Utility pilots substation inspection robot for grid modernization program",
+        "grid automation",
+    )
+
+
+def test_patient_capital_not_healthcare_patient():
+    assert not text_matches_subject_inference(
+        "Private equity firm deploys patient capital into robotics portfolio",
+        "patient automation",
+    )
+
+
+def test_hospital_robot_alone_not_lab_inference():
+    assert not text_matches_subject_inference(
+        "Siemens partnership creates customisable collaborative manufacturing capability",
+        "lab automation",
+    )
+
+
+def test_vendor_integrator_story_filtered_from_buyer_signals():
+    from app.services.signal_classifier import classify_signals_with_fallback
+
+    text = "Acme Robotics, a leading system integrator, unveils new AMR software platform for partners."
+    signals = classify_signals_with_fallback(text)
+    assert signals == ["news"]
+
+
 def test_row_matches_industry_search_uses_known_company_industry():
     from types import SimpleNamespace
     from app.api.leads import _row_matches_industry_search
@@ -264,3 +297,46 @@ def test_sql_signal_terms_avoids_broad_logistics_phrases():
     terms = sql_signal_terms_for_query("restaurant")
     assert "restaurant" in terms
     assert "food delivery" not in terms
+
+
+def test_robotics_channel_integrator_sector():
+    assert "Manufacturing" in canonical_industries_for_query("system integrator")
+    assert lead_matches_search(
+        "robotics integrator",
+        industry="Manufacturing",
+        signal_text="Regional automation integrator expands AMR deployment services for warehouse clients",
+    )
+
+
+def test_humanoid_deployment_buyer_signal():
+    from app.services.signal_classifier import classify_signals_with_fallback
+
+    text = (
+        "Automotive supplier pilots humanoid workforce deployment on assembly line "
+        "to address skilled labor shortages"
+    )
+    signals = classify_signals_with_fallback(text)
+    assert "robot_installation" in signals
+
+
+def test_humanoid_oem_pr_filtered_to_news():
+    from app.services.signal_classifier import classify_signals_with_fallback
+
+    text = "Neura Robotics unveils NEURA 4NE1 humanoid robot platform at Hannover Messe"
+    signals = classify_signals_with_fallback(text)
+    assert signals == ["news"]
+
+
+def test_magiclab_is_known_vendor():
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
+
+    assert is_known_robotics_vendor_name("MagicLab")
+    assert is_known_robotics_vendor_name("Neura Robotics GmbH")
+
+
+def test_catalog_humanoid_patterns_include_neura_and_magiclab():
+    from app.services.humanoid_ontology_terms import catalog_humanoid_patterns
+
+    patterns = catalog_humanoid_patterns()
+    assert any("neura" in p for p in patterns)
+    assert any("magiclab" in p for p in patterns)

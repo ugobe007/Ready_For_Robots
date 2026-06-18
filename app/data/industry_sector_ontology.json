@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "inference_anchors": [
     "automation",
     "automated",
@@ -576,6 +576,7 @@
           "label": "Patient Automation",
           "subject": "patient",
           "modifiers": ["transport", "mobility", "care", "delivery", "room", "rounding"],
+          "exclusions": ["patient capital", "patient investor", "patiently"],
           "terms": [
             "patient automation",
             "patient transport robot",
@@ -598,6 +599,7 @@
           "label": "Lab Automation",
           "subject": "lab",
           "modifiers": ["delivery", "specimen", "clinical", "pathology", "diagnostics", "sample"],
+          "exclusions": ["collaborative", "collaboration", "scalable", "availability"],
           "terms": [
             "lab automation",
             "lab delivery automation",
@@ -858,6 +860,7 @@
           "label": "Data Center Automation",
           "subject": "data center",
           "modifiers": ["datacenter", "server farm", "hyperscale", "colo", "facility operations", "maintenance"],
+          "exclusions": ["housekeeping", "f&b", "food and beverage", "vacancy rate", "casino", "hotel"],
           "terms": [
             "data center automation",
             "datacenter automation",
@@ -940,12 +943,78 @@
           "label": "Grid Automation",
           "subject": "grid",
           "modifiers": ["power grid", "substation", "transmission", "distribution", "utility", "smart grid"],
+          "exclusions": ["off-grid", "off grid", "gridiron", "storyboard"],
           "terms": [
             "grid automation",
             "power grid automation",
             "substation automation",
             "utility grid robotics",
             "smart grid automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "robotics_channel",
+      "label": "Robotics Channel & Integrators",
+      "canonical_industries": [
+        "Contract Manufacturing",
+        "Manufacturing",
+        "Automotive & Manufacturing"
+      ],
+      "root_aliases": [
+        "robotics integrator",
+        "system integrator",
+        "automation integrator",
+        "robotics channel",
+        "robot distributor",
+        "robotics distributor",
+        "automation partner",
+        "robot oem",
+        "robotics oem"
+      ],
+      "sub_ontologies": {
+        "system_integrator": {
+          "label": "System Integrator",
+          "subject": "integrator",
+          "modifiers": ["robotics", "automation", "industrial", "warehouse", "amr", "cobot"],
+          "terms": [
+            "system integrator",
+            "robotics integrator",
+            "automation integrator",
+            "si partner",
+            "integration partner",
+            "robotics integration services",
+            "automation integration services"
+          ]
+        },
+        "robotics_distributor": {
+          "label": "Robotics Distributor",
+          "subject": "distributor",
+          "modifiers": ["robot", "robotics", "automation", "amr", "cobot", "authorized"],
+          "terms": [
+            "robot distributor",
+            "robotics distributor",
+            "authorized distributor",
+            "distribution agreement",
+            "distribution partnership",
+            "channel program",
+            "dealer network",
+            "reseller program"
+          ]
+        },
+        "robot_oem": {
+          "label": "Robot OEM",
+          "subject": "robot",
+          "modifiers": ["oem", "manufacturer", "maker", "vendor", "startup", "humanoid"],
+          "terms": [
+            "robot oem",
+            "robotics oem",
+            "robot manufacturer",
+            "robotics manufacturer",
+            "humanoid robot maker",
+            "amr manufacturer",
+            "cobot manufacturer"
           ]
         }
       }

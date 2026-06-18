@@ -47,6 +47,7 @@ class SubjectRef:
     modifiers: List[str]
     canonical_industries: List[str]
     terms: List[str]
+    exclusions: List[str]
 
 
 @dataclass
@@ -88,6 +89,7 @@ def _subject_refs() -> List[SubjectRef]:
                     modifiers=[normalize_term(m) for m in (sub.get("modifiers") or []) if normalize_term(m)],
                     canonical_industries=canonical,
                     terms=[normalize_term(t) for t in (sub.get("terms") or []) if normalize_term(t)],
+                    exclusions=[normalize_term(x) for x in (sub.get("exclusions") or []) if normalize_term(x)],
                 )
             )
     refs.sort(key=lambda r: len(r.subject), reverse=True)
@@ -153,6 +155,25 @@ def term_in_text(term: str, hay: str) -> bool:
     if len(t) >= 8:
         return t in h
     return re.search(rf"\b{re.escape(t)}\b", h) is not None
+
+
+def _subject_blocked(hay: str, ref: SubjectRef) -> bool:
+    return any(ex in hay for ex in ref.exclusions)
+
+
+def _subject_inference_satisfied(hay: str, ref: SubjectRef) -> bool:
+    """Single-token subjects need a modifier or explicit term — not anchor + substring alone."""
+    if _subject_blocked(hay, ref):
+        return False
+    if not _subject_in_text(ref.subject, hay):
+        return False
+    if " " in ref.subject:
+        return True
+    if ref.modifiers and any(mod in hay for mod in ref.modifiers):
+        return True
+    if any(term_in_text(term, hay) for term in ref.terms):
+        return True
+    return False
 
 
 def _subject_in_text(subject: str, hay: str) -> bool:
@@ -229,13 +250,7 @@ def text_matches_subject_inference(text: str, query: str) -> bool:
     if not _has_inference_anchor(hay):
         return False
     for ref in refs:
-        if not _subject_in_text(ref.subject, hay):
-            continue
-        if ref.modifiers and any(mod in hay for mod in ref.modifiers):
-            return True
-        if any(term in hay for term in ref.terms):
-            return True
-        if _subject_in_text(ref.subject, hay):
+        if _subject_inference_satisfied(hay, ref):
             return True
     return False
 
@@ -247,7 +262,7 @@ def infer_industries_from_subject_automation(text: str) -> Dict[str, int]:
         return {}
     boosts: Dict[str, int] = {}
     for ref in _subject_refs():
-        if not _subject_in_text(ref.subject, hay):
+        if not _subject_inference_satisfied(hay, ref):
             continue
         weight = 2 if ref.modifiers and any(m in hay for m in ref.modifiers) else 1
         for ind in ref.canonical_industries:

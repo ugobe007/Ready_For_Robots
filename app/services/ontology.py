@@ -106,6 +106,39 @@ CONCEPTS: Dict[str, Concept] = {
         synonyms=["cobot", "collaborative automation"],
     ),
 
+    # ── Channel / vendor ecosystem (seller-side — used to filter non-buyer stories) ──
+    "robot_oem": Concept(
+        name="robot_oem", domain="vendor", base_weight=0.90,
+        patterns=[
+            r"\brobot (?:oem|manufacturer|maker|vendor)\b",
+            "robotics company", "robotics startup", "robotics firm",
+            "humanoid (?:company|startup|maker)", "amr (?:company|vendor|maker)",
+            r"raises? \$\d+.*robot", "funding.*robotics (?:company|startup)",
+            "unveils? (?:new )?robot", "launches? (?:new )?robot",
+        ],
+        synonyms=["robot manufacturer", "robotics OEM", "robot vendor"],
+    ),
+    "system_integrator": Concept(
+        name="system_integrator", domain="vendor", base_weight=0.88,
+        patterns=[
+            "system integrator", "systems integrator", "automation integrator",
+            "robotics integrator", "solution integrator", "integration partner",
+            "certified integrator", "authorized integrator", "value.added reseller",
+            r"\bVAR\b", "channel partner", "distribution partner",
+            "implementation partner", "deployment partner",
+        ],
+        synonyms=["SI partner", "robotics integrator", "automation partner"],
+    ),
+    "robotics_distributor": Concept(
+        name="robotics_distributor", domain="vendor", base_weight=0.85,
+        patterns=[
+            "robot distributor", "robotics distributor", "authorized distributor",
+            "distribution agreement", "distribution deal", "distribution partnership",
+            "reseller program", "channel program", "dealer network",
+        ],
+        synonyms=["robot reseller", "distribution partner", "channel distributor"],
+    ),
+
     # ── Humanoid robots ──────────────────────
     "humanoid_robot": Concept(
         name="humanoid_robot", domain="automation", base_weight=0.95,
@@ -118,6 +151,18 @@ CONCEPTS: Dict[str, Concept] = {
             "digit robot", "ameca robot", "nao robot", "pepper robot",
         ],
         synonyms=["humanoid bot", "bipedal machine", "android automaton"],
+    ),
+    "humanoid_deployment": Concept(
+        name="humanoid_deployment", domain="expansion", base_weight=0.93,
+        patterns=[
+            "deploy.*humanoid", "humanoid.*deploy", "humanoid.*pilot",
+            "pilot.*humanoid", "humanoid.*trial", "humanoid.*factory",
+            "humanoid.*warehouse", "humanoid.*production", "humanoid.*assembly",
+            "humanoid.*logistics", "humanoid.*workforce", "humanoid.*workcell",
+            "bipedal.*factory", "bipedal.*deploy", "humanoid fleet",
+            "humanoid.*operations", "humanoid.*manufacturing",
+        ],
+        synonyms=["humanoid rollout program", "humanoid workforce deployment", "humanoid pilot deployment"],
     ),
 
     # ── Drone / UAV / UAS ─────────────────────
@@ -665,6 +710,18 @@ CONCEPTS: Dict[str, Concept] = {
 }
 
 
+from app.services.humanoid_ontology_terms import merge_catalog_patterns
+
+_h = CONCEPTS["humanoid_robot"]
+CONCEPTS["humanoid_robot"] = Concept(
+    name=_h.name,
+    domain=_h.domain,
+    base_weight=_h.base_weight,
+    patterns=merge_catalog_patterns(_h.patterns),
+    synonyms=_h.synonyms,
+)
+
+
 # ──────────────────────────────────────────────
 # 5. Relationships
 # ──────────────────────────────────────────────
@@ -757,6 +814,9 @@ RELATIONSHIPS: List[Relationship] = [
     # ── New robot categories → industry verticals ────────────────────────────
     Relationship("humanoid_robot",            "automation_intent",       "implies",         0.95),
     Relationship("humanoid_robot",            "robotics_engineer",       "associated_with", 0.85),
+    Relationship("humanoid_deployment",         "robot_installation",      "implies",         0.95),
+    Relationship("humanoid_deployment",         "automation_intent",       "implies",         0.90),
+    Relationship("humanoid_deployment",         "pilot_success",           "associated_with", 0.80),
     Relationship("drone_uav",                 "automation_intent",       "implies",         0.90),
     Relationship("drone_uav",                 "logistics_vertical",      "associated_with", 0.70),
     Relationship("additive_manufacturing",    "automation_intent",       "implies",         0.80),
@@ -1100,6 +1160,20 @@ INFERENCE_RULES: List[InferenceRule] = [
         conclusion_domain="automation",
         boost=0.45,
         description="Humanoid robot maker with engineering talent → high-priority OEM prospect"
+    ),
+    InferenceRule(
+        name="humanoid_buyer_deployment",
+        conditions=["humanoid_deployment", "labor_shortage"],
+        conclusion_domain="automation",
+        boost=0.48,
+        description="End-user deploying humanoids with labor pain → premium buyer signal"
+    ),
+    InferenceRule(
+        name="humanoid_pilot_buyer",
+        conditions=["humanoid_deployment", "automation_intent"],
+        conclusion_domain="automation",
+        boost=0.42,
+        description="Humanoid pilot / rollout language with automation intent → active buyer"
     ),
     InferenceRule(
         name="drone_logistics",

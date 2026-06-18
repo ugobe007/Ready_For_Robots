@@ -2635,8 +2635,12 @@ def reclassify_unknown_industries(db: Session = Depends(get_db)):
             if getattr(sig, "signal_text", None):
                 text_parts.append(sig.signal_text)
         text = " ".join(text_parts)
-        inferred = infer_industry_from_text(text)
-        if inferred != "Unknown":
+        inferred = effective_industry_for_lead(
+            c.name,
+            c.industry,
+            c.signals or [],
+        )
+        if inferred not in ("Unknown", "New", "Other") and inferred != (c.industry or "").strip():
             c.industry = inferred
             updated += 1
             by_industry[inferred] = by_industry.get(inferred, 0) + 1
