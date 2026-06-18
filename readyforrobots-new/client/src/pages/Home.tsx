@@ -117,7 +117,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\u00A0Pipeline", 120, 1000);
+  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales Pipeline", 120, 1000);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -242,7 +242,7 @@ export default function Home() {
             </p>
 
             <h1
-              className="mb-5 font-extrabold text-white"
+              className="mb-5 max-w-2xl font-extrabold text-white"
               style={{
                 fontFamily: "'Sora', system-ui, sans-serif",
                 textWrap: "balance",
@@ -262,7 +262,9 @@ export default function Home() {
                     WebkitTextFillColor: "transparent",
                   }}
                 >
-                  Robot&nbsp;Revenue&nbsp;Automation
+                  Robot Revenue
+                  <br />
+                  Automation
                 </span>
                 <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
                   ™
@@ -271,7 +273,7 @@ export default function Home() {
               <span
                 className="mt-2 block leading-[1.08] text-white"
                 style={{
-                  fontSize: "clamp(1.4rem, 3vw, 2.35rem)",
+                  fontSize: "clamp(1.65rem, 3.6vw, 2.85rem)",
                   letterSpacing: "-0.04em",
                 }}
               >
