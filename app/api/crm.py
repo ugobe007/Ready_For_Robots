@@ -54,13 +54,15 @@ CRM_GENERIC_DB_HINT = (
 from app.api.auth_deps import _require_user
 from app.api.user import _ensure_profile
 from app.models.company import Company
-from app.models.crm import Team, TeamMember, CrmAccount
+from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement, CrmTask, CrmNote
 from app.models.outreach import OutreachMessage
 from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature
 from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
+from app.services.crm_engagement_sync import serialize_engagement, sync_account_stage_to_engagement
+from app.services.sales_plan_agent import generate_sales_plan
 
 router = APIRouter()
 
@@ -1108,6 +1110,10 @@ def send_account_outreach(
         acct.outreach_draft = outreach_draft
         acct.outreach_sent_at = now
         acct.outreach_stage = "intro_sent"
+        sync_account_stage_to_engagement(db, acct)
+        from app.services.sequence_runner import enroll_account
+
+        enroll_account(db, team_id=acct.team_id, crm_account_id=acct.id)
         record_sales_experience(
             db,
             event_type="crm_outreach_sent",
@@ -1148,3 +1154,275 @@ def send_account_outreach(
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
         _raise_crm_db_error(e)
+
+
+class SetContactIn(BaseModel):
+    contact_email: str = Field(..., max_length=320)
+    contact_name: Optional[str] = Field(None, max_length=240)
+    contact_title: Optional[str] = Field(None, max_length=240)
+    source: Optional[str] = Field("apollo", max_length=32)
+
+
+class EngagementPatchIn(BaseModel):
+    stage: Optional[str] = Field(None, max_length=64)
+    status: Optional[str] = Field(None, max_length=32)
+    name: Optional[str] = Field(None, max_length=240)
+    value_amount: Optional[float] = None
+
+
+class TaskCreateIn(BaseModel):
+    title: str = Field(..., max_length=240)
+    body: Optional[str] = None
+    priority: Optional[str] = Field("normal", max_length=32)
+    due_at: Optional[str] = None
+    engagement_id: Optional[str] = None
+
+
+class TaskPatchIn(BaseModel):
+    status: Optional[str] = Field(None, max_length=32)
+    title: Optional[str] = Field(None, max_length=240)
+    body: Optional[str] = None
+    priority: Optional[str] = Field(None, max_length=32)
+    due_at: Optional[str] = None
+
+
+class PlanCommitIn(BaseModel):
+    commit_tasks: bool = True
+
+
+@router.post("/accounts/{account_id}/set-contact")
+def set_account_contact(
+    account_id: str,
+    body: SetContactIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    email = body.contact_email.strip()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid contact email")
+    acct.contact_email = email
+    if body.contact_name or body.contact_title:
+        note_bits = [bit for bit in (body.contact_name, body.contact_title) if bit]
+        db.add(
+            CrmNote(
+                team_id=acct.team_id,
+                crm_account_id=acct.id,
+                author_user_id=uid,
+                body=f"Contact set from {body.source or 'prospect'}: {' — '.join(note_bits)} ({email})",
+                source=body.source or "apollo",
+            )
+        )
+    db.commit()
+    db.refresh(acct)
+    pl = _pipeline_lead_for_account(db, acct)
+    return _attach_workflow_intelligence(db, acct, _serialize_account_enriched(acct, pl))
+
+
+@router.get("/engagements")
+def list_engagements(
+    team_id: str = Query(...),
+    account_id: Optional[str] = Query(None),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        tid = uuid.UUID(team_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid team id") from None
+    _require_team_member(db, uid, tid)
+    query = db.query(CrmEngagement).filter(CrmEngagement.team_id == tid)
+    if account_id:
+        try:
+            query = query.filter(CrmEngagement.crm_account_id == uuid.UUID(account_id))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid account id") from None
+    rows = query.order_by(CrmEngagement.updated_at.desc()).limit(100).all()
+    return [serialize_engagement(row) for row in rows]
+
+
+@router.patch("/engagements/{engagement_id}")
+def patch_engagement(
+    engagement_id: str,
+    body: EngagementPatchIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        eid = uuid.UUID(engagement_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid engagement id") from None
+    row = db.query(CrmEngagement).filter(CrmEngagement.id == eid).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Engagement not found")
+    _require_team_member(db, uid, row.team_id)
+    patch = body.model_dump(exclude_unset=True)
+    if "stage" in patch and patch["stage"]:
+        row.stage = patch["stage"]
+    if "status" in patch and patch["status"]:
+        row.status = patch["status"]
+    if "name" in patch and patch["name"]:
+        row.name = patch["name"]
+    if "value_amount" in patch:
+        row.value_amount = patch["value_amount"]
+    db.commit()
+    db.refresh(row)
+    return serialize_engagement(row)
+
+
+@router.get("/tasks")
+def list_tasks(
+    team_id: str = Query(...),
+    account_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        tid = uuid.UUID(team_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid team id") from None
+    _require_team_member(db, uid, tid)
+    query = db.query(CrmTask).filter(CrmTask.team_id == tid)
+    if account_id:
+        try:
+            query = query.filter(CrmTask.crm_account_id == uuid.UUID(account_id))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid account id") from None
+    if status:
+        query = query.filter(CrmTask.status == status)
+    rows = query.order_by(CrmTask.due_at.asc().nullslast(), CrmTask.created_at.desc()).limit(100).all()
+    return [
+        {
+            "id": str(row.id),
+            "crm_account_id": str(row.crm_account_id),
+            "engagement_id": str(row.engagement_id) if row.engagement_id else None,
+            "title": row.title,
+            "body": row.body,
+            "status": row.status,
+            "priority": row.priority,
+            "due_at": row.due_at.isoformat() if row.due_at else None,
+            "source": row.source,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in rows
+    ]
+
+
+@router.post("/accounts/{account_id}/tasks")
+def create_task(
+    account_id: str,
+    body: TaskCreateIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    due_at = None
+    if body.due_at:
+        try:
+            due_at = datetime.fromisoformat(body.due_at.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid due_at") from None
+    engagement_id = None
+    if body.engagement_id:
+        try:
+            engagement_id = uuid.UUID(body.engagement_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid engagement id") from None
+    task = CrmTask(
+        team_id=acct.team_id,
+        crm_account_id=acct.id,
+        engagement_id=engagement_id,
+        title=body.title.strip(),
+        body=body.body,
+        status="todo",
+        priority=body.priority or "normal",
+        due_at=due_at,
+        assignee_user_id=uid,
+        source="user",
+    )
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return {
+        "id": str(task.id),
+        "title": task.title,
+        "status": task.status,
+        "due_at": task.due_at.isoformat() if task.due_at else None,
+    }
+
+
+@router.patch("/tasks/{task_id}")
+def patch_task(
+    task_id: str,
+    body: TaskPatchIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        tid = uuid.UUID(task_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid task id") from None
+    task = db.query(CrmTask).filter(CrmTask.id == tid).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    _require_team_member(db, uid, task.team_id)
+    patch = body.model_dump(exclude_unset=True)
+    if "due_at" in patch:
+        if patch["due_at"]:
+            try:
+                task.due_at = datetime.fromisoformat(patch["due_at"].replace("Z", "+00:00"))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid due_at") from None
+        else:
+            task.due_at = None
+        patch.pop("due_at")
+    for key, value in patch.items():
+        setattr(task, key, value)
+    db.commit()
+    db.refresh(task)
+    return {
+        "id": str(task.id),
+        "title": task.title,
+        "status": task.status,
+        "due_at": task.due_at.isoformat() if task.due_at else None,
+    }
+
+
+@router.post("/accounts/{account_id}/generate-plan")
+def generate_account_plan(
+    account_id: str,
+    body: PlanCommitIn | None = None,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    commit = body.commit_tasks if body else True
+    result = generate_sales_plan(db, account=acct, user_id=uid, commit_tasks=commit)
+    db.commit()
+    return result

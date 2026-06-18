@@ -1152,3 +1152,21 @@ def daily_analytics_report_task(self, days: int = 1):
         logger.info(f"[ANALYTICS] Report saved to {filepath} | Signals: {totals.get('signals', 0)}, Companies: {totals.get('companies_with_signals', 0)}")
     except Exception as e:
         logger.error(f"[ANALYTICS] Error generating daily analytics report: {e}")
+
+
+@celery_app.task(bind=True)
+def run_outreach_sequences_task(self, limit: int = 50):
+    """Process due outreach sequence enrollments (follow-up cadence)."""
+    from app.services.sequence_runner import process_due_enrollments
+
+    db = get_db()
+    try:
+        result = process_due_enrollments(db, limit=limit)
+        logger.info("[SEQUENCES] Processed due enrollments: %s", result)
+        return result
+    except Exception as exc:
+        logger.error("[SEQUENCES] Sequence runner failed: %s", exc)
+        db.rollback()
+        raise
+    finally:
+        db.close()

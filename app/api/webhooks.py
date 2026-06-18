@@ -645,6 +645,9 @@ async def resend_inbound_webhook(
         db.add(reply)
         if account:
             account.outreach_stage = "replied"
+            from app.services.sequence_runner import pause_enrollment_for_reply
+
+            pause_enrollment_for_reply(db, crm_account_id=account.id)
             record_sales_experience(
                 db,
                 event_type="email_reply_received",

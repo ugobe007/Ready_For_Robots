@@ -170,10 +170,21 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
   ].join("\n");
 }
 
-export function mapApiLeadToDeal(lead: ApiLead) {
+export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {
+  const s = (stage || "").toLowerCase();
+  if (!s) return null;
+  if (["draft_ready", "review_required", "draft_approved"].includes(s)) return "Draft Ready";
+  if (["intro_sent", "sequence_step_sent", "sent"].includes(s)) return "Outreach Sent";
+  if (["replied", "qualified", "nurture", "discovery"].includes(s)) return "Qualified";
+  if (["meeting", "meeting_booked", "proposal"].includes(s)) return "Meeting Set";
+  return null;
+}
+
+export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null) {
   const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);
   const score = numericScore(lead);
+  const crmStage = pipelineStageFromCrmOutreach(crmOutreachStage);
   return {
     id: lead.id,
     company: lead.company_name || `Company #${lead.id}`,
@@ -183,7 +194,7 @@ export function mapApiLeadToDeal(lead: ApiLead) {
     signal: text,
     signalType: type,
     signalColor: color,
-    stage: stageForLead(lead) as PipelineStage,
+    stage: (crmStage ?? stageForLead(lead)) as PipelineStage,
     updatedAt: "live",
     contact: lead.inferred_contact_email || undefined,
     contactTitle: lead.inferred_contact_role

@@ -728,3 +728,83 @@ def scout_control_activation(
     db.refresh(activation)
     return _serialize_activation(activation)
 
+
+class ActivationApproveIn(BaseModel):
+    send_now: bool = False
+
+
+@router.post("/activations/{activation_id}/approve")
+def scout_approve_activation(
+    activation_id: int,
+    body: ActivationApproveIn | None = None,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    try:
+        user_id = UUID(str(user["uid"]))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Sign in required") from None
+    activation = _activation_for_user(db, activation_id, user_id)
+    log = list(activation.activity_log or [])
+    activation.status = "drafted" if not (body and body.send_now) else "sent"
+    log.append(
+        {
+            "type": "approved",
+            "message": "User approved SIGNAL outreach plan."
+            if not (body and body.send_now)
+            else "User approved and requested immediate send.",
+        }
+    )
+    activation.activity_log = log
+    db.commit()
+    if body and body.send_now:
+        return scout_send_activation(activation_id, db=db, user=user)
+    db.refresh(activation)
+    return {"activation": _serialize_activation(activation)}
+
+
+@router.post("/activations/{activation_id}/send")
+def scout_send_activation(
+    activation_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    from app.api.crm import SendOutreachIn, send_account_outreach
+
+    try:
+        user_id = UUID(str(user["uid"]))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Sign in required") from None
+    activation = _activation_for_user(db, activation_id, user_id)
+    team = _ensure_default_team(db, user_id, user.get("email") or "")
+    sent = 0
+    errors: list[dict[str, Any]] = []
+    for lead in activation.leads_snapshot or []:
+        if not isinstance(lead, dict):
+            continue
+        company_id = None
+        try:
+            company_id = int(lead.get("id") or 0)
+        except (TypeError, ValueError):
+            continue
+        acct = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.team_id == team.id, CrmAccount.company_id == company_id)
+            .first()
+        )
+        if not acct or not acct.outreach_draft or not acct.contact_email:
+            errors.append({"company_id": company_id, "error": "missing draft or contact"})
+            continue
+        try:
+            send_account_outreach(str(acct.id), SendOutreachIn(), user=user, db=db)
+            sent += 1
+        except HTTPException as exc:
+            errors.append({"company_id": company_id, "error": exc.detail})
+    log = list(activation.activity_log or [])
+    log.append({"type": "sent", "message": f"SIGNAL sent outreach for {sent} lead(s).", "errors": len(errors)})
+    activation.activity_log = log
+    activation.status = "sent" if sent else activation.status
+    db.commit()
+    db.refresh(activation)
+    return {"activation": _serialize_activation(activation), "sent": sent, "errors": errors}
+

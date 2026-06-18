@@ -238,11 +238,15 @@ def hubspot_push_lead(
                 "connect_url": "/integrations/hubspot",
             },
         )
-    raise HTTPException(
-        status_code=501,
-        detail={
-            "code": "hubspot_push_pending",
-            "message": "HubSpot push handler is stubbed — wire CRM create in phase 2.",
-            "company_id": body.company_id,
-        },
-    )
+    from app.services.hubspot_crm_sync import push_company_to_hubspot
+
+    try:
+        result = push_company_to_hubspot(
+            db,
+            token=token,
+            company_id=body.company_id,
+            deal_name=body.deal_name,
+        )
+    except HubSpotError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {"pushed": True, **result}

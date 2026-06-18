@@ -19,6 +19,7 @@ import Crm from "./pages/Crm";
 import Inbox from "./pages/Inbox";
 import CalendarPage from "./pages/Calendar";
 import SalesConsole from "./pages/SalesConsole";
+import SalesWorkflow from "./pages/SalesWorkflow";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
 import Integrations from "./pages/Integrations";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/inbox" component={Inbox} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/sales-console" component={SalesConsole} />
+      <Route path="/sales-workflow" component={SalesWorkflow} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/integrations" component={Integrations} />
@@ -65,6 +67,7 @@ function Router() {
       <Route path="/readyforrobots/inbox" component={Inbox} />
       <Route path="/readyforrobots/calendar" component={CalendarPage} />
       <Route path="/readyforrobots/sales-console" component={SalesConsole} />
+      <Route path="/readyforrobots/sales-workflow" component={SalesWorkflow} />
       <Route path="/readyforrobots/supply-pipeline" component={SupplyPipeline} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.types import JSONB
 
 
 class Team(Base):
@@ -66,3 +67,52 @@ class CrmEngagement(Base):
     closed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class CrmTask(Base):
+    __tablename__ = "crm_tasks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    crm_account_id = Column(UUID(as_uuid=True), ForeignKey("crm_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    engagement_id = Column(UUID(as_uuid=True), ForeignKey("crm_engagements.id", ondelete="SET NULL"), nullable=True, index=True)
+    title = Column(String, nullable=False)
+    body = Column(Text, nullable=True)
+    status = Column(String, nullable=False, server_default="todo")
+    priority = Column(String, nullable=True, server_default="normal")
+    due_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    assignee_user_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    source = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class CrmNote(Base):
+    __tablename__ = "crm_notes"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    crm_account_id = Column(UUID(as_uuid=True), ForeignKey("crm_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    engagement_id = Column(UUID(as_uuid=True), ForeignKey("crm_engagements.id", ondelete="SET NULL"), nullable=True, index=True)
+    author_user_id = Column(UUID(as_uuid=True), nullable=True)
+    body = Column(Text, nullable=False)
+    source = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    crm_account_id = Column(UUID(as_uuid=True), ForeignKey("crm_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    engagement_id = Column(UUID(as_uuid=True), ForeignKey("crm_engagements.id", ondelete="SET NULL"), nullable=True)
+    model = Column(String, nullable=True)
+    prompt_version = Column(String, nullable=True)
+    input_json = Column(JSONB, nullable=True)
+    output_json = Column(JSONB, nullable=True)
+    tokens_in = Column(Integer, nullable=True)
+    tokens_out = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)

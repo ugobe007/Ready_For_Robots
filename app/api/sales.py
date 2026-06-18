@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 from urllib.parse import urlparse
 
@@ -22,6 +23,11 @@ from app.services.apollo_client import (
 )
 from app.services.sales_learning_agent import scraper_learning_report
 from app.services.sales_agent import create_automated_next_action, execute_sales_agent_action
+from app.services.sales_workflow_hub import (
+    collect_activity_feed,
+    collect_next_actions,
+    workflow_summary_since,
+)
 
 router = APIRouter()
 
@@ -408,3 +414,183 @@ def automate_sales_action(
     db.commit()
     db.refresh(action)
     return {"action": _serialize_action(action), "opportunity": _serialize_opportunity(db, opportunity, include_details=True)}
+
+
+@router.get("/next-actions")
+def list_next_actions(
+    team_id: Optional[str] = Query(None),
+    limit: int = Query(25, ge=1, le=50),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    if not team_ids:
+        return {"actions": []}
+    if team_id:
+        requested = _db_uuid(db, team_id)
+        if requested not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+        team_ids = [requested]
+    return {"actions": collect_next_actions(db, team_ids=team_ids, user_id=uid, limit=limit)}
+
+
+@router.get("/activity-feed")
+def list_activity_feed(
+    team_id: Optional[str] = Query(None),
+    limit: int = Query(40, ge=1, le=100),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        return {"activities": []}
+    if team_id:
+        requested = _db_uuid(db, team_id)
+        if requested not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+        team_ids = [requested]
+    return {"activities": collect_activity_feed(db, team_ids=team_ids, limit=limit)}
+
+
+@router.get("/workflow-summary")
+def get_workflow_summary(
+    team_id: Optional[str] = Query(None),
+    since: Optional[str] = Query(None, description="ISO timestamp; default last 24h"),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        return {
+            "signalsDetected": 0,
+            "companiesQualified": 0,
+            "outreachDraftsCreated": 0,
+            "followupsSent": 0,
+            "opportunitiesAdvanced": 0,
+            "repliesReceived": 0,
+        }
+    if team_id:
+        requested = _db_uuid(db, team_id)
+        if requested not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+        team_ids = [requested]
+    since_dt = datetime.now(timezone.utc) - timedelta(hours=24)
+    if since:
+        try:
+            since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Invalid since timestamp") from exc
+    return workflow_summary_since(db, team_ids=team_ids, since=since_dt)
+
+
+class SequenceEnrollIn(BaseModel):
+    crm_account_id: str = Field(..., min_length=8)
+    sequence_id: Optional[str] = None
+
+
+@router.get("/sequences")
+def list_sequences(
+    team_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    from app.models.sequences import OutreachSequence, OutreachSequenceStep
+    from app.services.sequence_runner import ensure_default_sequence
+
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    if not team_ids:
+        return {"sequences": []}
+    tid = team_ids[0]
+    if team_id:
+        tid = _db_uuid(db, team_id)
+        if tid not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+    ensure_default_sequence(db, team_id=tid)
+    db.commit()
+    rows = (
+        db.query(OutreachSequence)
+        .filter(or_(OutreachSequence.team_id == tid, OutreachSequence.team_id.is_(None)))
+        .order_by(OutreachSequence.is_default.desc())
+        .all()
+    )
+    payload = []
+    for row in rows:
+        steps = (
+            db.query(OutreachSequenceStep)
+            .filter(OutreachSequenceStep.sequence_id == row.id)
+            .order_by(OutreachSequenceStep.step_number.asc())
+            .all()
+        )
+        payload.append(
+            {
+                "id": str(row.id),
+                "name": row.name,
+                "slug": row.slug,
+                "channel": row.channel,
+                "is_default": bool(row.is_default),
+                "steps": [
+                    {
+                        "step_number": step.step_number,
+                        "delay_days": step.delay_days,
+                        "action_label": step.action_label,
+                        "subject_template": step.subject_template,
+                    }
+                    for step in steps
+                ],
+            }
+        )
+    return {"sequences": payload}
+
+
+@router.post("/sequences/enroll")
+def enroll_sequence(
+    body: SequenceEnrollIn,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    from app.services.sequence_runner import enroll_account, ensure_default_sequence
+
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        raise HTTPException(status_code=404, detail="No workspace found")
+    try:
+        account_id = _db_uuid(db, body.crm_account_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid crm_account_id") from None
+    account = db.query(CrmAccount).filter(CrmAccount.id == account_id, CrmAccount.team_id.in_(team_ids)).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+    sequence = None
+    if body.sequence_id:
+        from app.models.sequences import OutreachSequence
+
+        sequence = db.query(OutreachSequence).filter(OutreachSequence.id == _db_uuid(db, body.sequence_id)).first()
+        if not sequence:
+            raise HTTPException(status_code=404, detail="Sequence not found")
+    else:
+        sequence = ensure_default_sequence(db, team_id=account.team_id)
+    enrollment = enroll_account(db, team_id=account.team_id, crm_account_id=account.id, sequence=sequence)
+    db.commit()
+    return {
+        "enrollment_id": str(enrollment.id),
+        "crm_account_id": str(account.id),
+        "sequence_id": str(enrollment.sequence_id),
+        "current_step": enrollment.current_step,
+        "status": enrollment.status,
+        "next_step_at": enrollment.next_step_at.isoformat() if enrollment.next_step_at else None,
+    }
+
+
+@router.post("/sequences/run-due")
+def run_due_sequences(
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    from app.services.sequence_runner import process_due_enrollments
+
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not team_ids:
+        return {"processed": 0, "sent": 0, "skipped": 0, "failed": 0}
+    return process_due_enrollments(db)

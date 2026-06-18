@@ -266,6 +266,29 @@ export default function Crm() {
     }
   };
 
+  const generatePlan = async () => {
+    if (!selectedAccount) return;
+    setBusy(true);
+    setMsg("");
+    try {
+      const result = (await authFetch(`/api/crm/accounts/${selectedAccount.id}/generate-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commit_tasks: true }),
+      })) as { plan?: { executive_summary?: string }; tasks?: { title: string }[] };
+      const taskCount = result.tasks?.length ?? 0;
+      setMsg(
+        result.plan?.executive_summary
+          ? `${result.plan.executive_summary} (${taskCount} task${taskCount === 1 ? "" : "s"} saved.)`
+          : `Sales plan generated (${taskCount} tasks).`,
+      );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not generate sales plan");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const sendWithScout = async () => {
     if (!selectedAccount) return;
     setSending(true);
@@ -543,6 +566,14 @@ export default function Crm() {
                 </div>
               )}
               <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void generatePlan()}
+                  disabled={busy || sending}
+                  className="rounded-lg border border-emerald-500/35 bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-100 disabled:opacity-50"
+                >
+                  Generate sales plan
+                </button>
                 <button
                   type="button"
                   onClick={() => void draftWithScout()}

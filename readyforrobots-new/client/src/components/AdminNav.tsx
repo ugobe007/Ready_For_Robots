@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 const ADMIN_LINKS = [
   { label: "Admin", href: "/admin" },
   { label: "Prospects", href: "/admin/prospects" },
-  { label: "Workflow", href: "/admin#workflow" },
+  { label: "Workflow", href: "/sales-workflow" },
   { label: "Inbox", href: "/inbox" },
   { label: "Calendar", href: "/calendar" },
   { label: "Buyer CRM", href: "/crm" },
@@ -16,6 +16,7 @@ const ADMIN_LINKS = [
 function isActive(currentPath: string, href: string) {
   const path = href.split("#", 1)[0];
   const hash = typeof window !== "undefined" ? window.location.hash : "";
+  if (path === "/sales-workflow") return currentPath === "/sales-workflow" || currentPath === "/readyforrobots/sales-workflow";
   if (href.includes("#workflow")) return (currentPath === "/admin" || currentPath === "/readyforrobots/admin") && hash === "#workflow";
   if (path === "/admin") return (currentPath === "/admin" || currentPath === "/readyforrobots/admin") && hash !== "#workflow";
   if (path === "/admin/prospects") return currentPath === "/admin/prospects" || currentPath === "/readyforrobots/admin/prospects";

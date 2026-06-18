@@ -9,11 +9,12 @@ import {
   AlertTriangle, MapPin, Filter, ChevronRight, ChevronDown, ChevronUp,
   Copy, CheckCheck, ArrowRight, ArrowLeft, Mail,
   Users, Clock, Target, Newspaper, Send, Eye, MousePointerClick,
-  Zap, RefreshCw
+  Zap, RefreshCw, FileText, Sparkles, Download
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import ScoutActionBar from "@/components/ScoutActionBar";
+import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
 import { Link, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -357,11 +358,11 @@ type PipelineFeedPayload = {
   entitlements?: PipelineEntitlements;
 };
 
-function mapPipelineRows(apiRows: ApiLead[]): Deal[] {
+function mapPipelineRows(apiRows: ApiLead[], crmStages: Record<number, string> = {}): Deal[] {
   const mapped: Deal[] = [];
   for (const row of apiRows) {
     try {
-      mapped.push(mapApiLeadToDeal(row) as Deal);
+      mapped.push(mapApiLeadToDeal(row, crmStages[row.id]) as Deal);
     } catch {
       /* skip malformed pipeline row */
     }
@@ -391,6 +392,7 @@ function applyPipelineFeed(
     setEntitlements: (v: PipelineEntitlements | null) => void;
     setMarketSnippet: (v: MarketSnippet) => void;
   },
+  crmStages: Record<number, string> = {},
 ) {
   const rows = Array.isArray(payload.leads) ? payload.leads : [];
   if (payload.entitlements) setters.setEntitlements(payload.entitlements);
@@ -398,7 +400,7 @@ function applyPipelineFeed(
     setters.setSummary(payload.summary);
   }
   if (rows.length > 0) {
-    const mapped = mapPipelineRows(rows);
+    const mapped = mapPipelineRows(rows, crmStages);
     setters.setDeals((prev) => mergePipelineFeedDeals(mapped, prev));
     const deepLinkId =
       typeof window !== "undefined"
@@ -549,6 +551,10 @@ export default function Pipeline() {
   const [developingLeadId, setDevelopingLeadId] = useState<number | null>(null);
   // Draft preview email modal
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [proposalOpen, setProposalOpen] = useState(false);
+  const [proposalData, setProposalData] = useState<ProposalData | null>(null);
+  const [proposalBusy, setProposalBusy] = useState(false);
+  const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -571,6 +577,65 @@ export default function Pipeline() {
   const panelPlan = panelPlanFor(isAdmin, entitlements);
   const showFullPanel = panelPlan === "paid";
   const showStandardPanel = panelPlan === "free";
+  const showKanban = isAdmin || Boolean(session?.access_token);
+
+  useEffect(() => {
+    if (!session?.access_token) {
+      setCrmStageByCompanyId({});
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const teamsRes = await fetch(
+          `${getApiBase()}/api/crm/teams`,
+          liveFetchInit({ headers: authHeader(session.access_token) }),
+        );
+        if (!teamsRes.ok) return;
+        const teams = (await teamsRes.json()) as Array<{ id: string }>;
+        const teamId = teams[0]?.id;
+        if (!teamId) return;
+        const accountsRes = await fetch(
+          `${getApiBase()}/api/crm/accounts?team_id=${encodeURIComponent(teamId)}`,
+          liveFetchInit({ headers: authHeader(session.access_token) }),
+        );
+        if (!accountsRes.ok) return;
+        const accounts = (await accountsRes.json()) as Array<{
+          company_id?: number | null;
+          outreach_stage?: string | null;
+        }>;
+        if (cancelled) return;
+        const next: Record<number, string> = {};
+        for (const acct of accounts) {
+          if (acct.company_id && acct.outreach_stage) next[acct.company_id] = acct.outreach_stage;
+        }
+        setCrmStageByCompanyId(next);
+        setDeals((prev) =>
+          prev.map((deal) => {
+            const stage = next[deal.id];
+            if (!stage) return deal;
+            const mapped = mapApiLeadToDeal(
+              {
+                id: deal.id,
+                company_name: deal.company,
+                industry: deal.industry,
+                priority_tier: deal.priorityTier,
+                score: deal.score,
+                signals: [{ signal_type: deal.signalType, text: deal.signal }],
+              },
+              stage,
+            ) as Deal;
+            return { ...deal, stage: mapped.stage, updatedAt: "synced" };
+          }),
+        );
+      } catch {
+        /* CRM stage sync is additive */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token]);
 
   useEffect(() => {
     setIntelligenceOpen(true);
@@ -719,7 +784,7 @@ export default function Pipeline() {
           return;
         }
         const lead = (await response.json()) as ApiLead;
-        const mapped = mapApiLeadToDeal(lead) as Deal;
+        const mapped = mapApiLeadToDeal(lead, crmStageByCompanyId[lead.id]) as Deal;
         if (cancelled) return;
         deepLinkInflightRef.current = null;
         setDeepLinkLoadFailed(false);
@@ -870,7 +935,7 @@ export default function Pipeline() {
           );
           if (!response.ok) throw new Error(await response.text());
           const lead = (await response.json()) as ApiLead;
-          const mapped = mapApiLeadToDeal(lead) as Deal;
+          const mapped = mapApiLeadToDeal(lead, crmStageByCompanyId[lead.id]) as Deal;
           if (!cancelled) {
             setDeals((prev) => {
               if (prev.some((deal) => deal.id === selectedId)) {
@@ -970,6 +1035,41 @@ export default function Pipeline() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const generateProposalForDeal = async (deal: Deal) => {
+    if (!session?.access_token) {
+      toast.error("Sign in to generate a proposal");
+      return;
+    }
+    setProposalBusy(true);
+    try {
+      const res = await fetch(
+        `${getApiBase()}/api/proposals/generate`,
+        liveFetchInit({
+          method: "POST",
+          headers: { ...authHeader(session.access_token), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            company_name: deal.company,
+            company_id: deal.id,
+            industry: deal.industry,
+            robot_category: deal.robotTypesNeeded?.[0],
+            signal: deal.signal,
+            scout_score: deal.score,
+            contact_email: deal.contact,
+          }),
+        }),
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as ProposalData;
+      setProposalData(data);
+      setProposalOpen(true);
+      toast.success("Proposal generated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate proposal");
+    } finally {
+      setProposalBusy(false);
+    }
+  };
+
   const handleSaveLead = async (deal: Deal) => {
     if (!session?.access_token) {
       const next = `/pipeline?lead=${deal.id}`;
@@ -1016,10 +1116,6 @@ export default function Pipeline() {
   };
 
   const handleAdvanceLead = async (deal: Deal) => {
-    if (!isAdmin) {
-      await handleSaveLead(deal);
-      return;
-    }
     if (!session?.access_token) {
       const next = `/pipeline?lead=${deal.id}`;
       window.location.href = `/signup?next=${encodeURIComponent(next)}`;
@@ -1779,7 +1875,7 @@ export default function Pipeline() {
                     {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
                   </p>
                 </div>
-              ) : isAdmin ? (
+              ) : showKanban ? (
               STAGES.map((stage) => {
                 const stageDeals = filtered.filter((d) => d.stage === stage);
                 const meta = STAGE_META[stage];
@@ -2006,7 +2102,7 @@ export default function Pipeline() {
 
                     {/* Tier / stage badge + contact inline */}
                     <div className="flex items-center gap-3 flex-wrap">
-                      {isAdmin ? (
+                      {showKanban ? (
                         <span
                           className="text-[10px] font-bold px-2 py-1 rounded-full"
                           style={{ color: displayStageColor(selected), background: `${displayStageColor(selected)}15`, border: `1px solid ${displayStageColor(selected)}25` }}
@@ -2226,8 +2322,8 @@ export default function Pipeline() {
                   </div>
                   )}
 
-                  {/* Cal outreach — admin only */}
-                  {isAdmin && (
+                  {/* Cal outreach — workspace users */}
+                  {showKanban && session?.access_token && (
                   <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
@@ -2303,7 +2399,7 @@ export default function Pipeline() {
                       </div>
                     )}
 
-                    {selected.outreachBody && isAdmin && (
+                    {selected.outreachBody && showKanban && (
                       <button
                         type="button"
                         disabled={developingLeadId === selected.id}
@@ -2335,7 +2431,7 @@ export default function Pipeline() {
 
                   </div>
 
-                  {!isAdmin && (
+                  {!showKanban && (
                     <div
                       className="shrink-0 z-20 px-3 py-2.5 pb-12 border-t border-teal-400/20 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]"
                       style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.12) 0%, rgba(13,5,32,0.98) 50%)" }}
@@ -2372,8 +2468,42 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  {/* Action bar — admin only */}
-                  {isAdmin && (
+                  {showKanban && session?.access_token && selected && (
+                    <div className="shrink-0 px-5 py-3 border-t border-white/8">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Proposal</p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={proposalBusy}
+                          onClick={() => void generateProposalForDeal(selected)}
+                          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded transition-all disabled:opacity-50"
+                          style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}
+                        >
+                          {proposalBusy ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                          {proposalBusy ? "Generating…" : "Generate"}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-white/40 leading-relaxed">
+                        SCOUT writes a structured proposal from this lead&apos;s signal, score, and industry — then preview or download PDF.
+                      </p>
+                      {proposalData && (
+                        <button
+                          type="button"
+                          onClick={() => setProposalOpen(true)}
+                          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-200 underline"
+                        >
+                          <Download className="h-3 w-3" />
+                          Open last proposal preview
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action bar — workspace kanban */}
+                  {showKanban && session?.access_token && (
                   <div className="shrink-0 p-4 border-t border-white/8 flex items-center gap-2">
                     {
                       <>
@@ -2448,8 +2578,8 @@ export default function Pipeline() {
         </div>
       </main>
 
-      {/* Email Preview Modal — admin only */}
-      {isAdmin && previewOpen && selected && (
+      {/* Email Preview Modal — workspace users */}
+      {showKanban && previewOpen && selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
@@ -2518,6 +2648,23 @@ export default function Pipeline() {
             </div>
           </div>
         </div>
+      )}
+      {session?.access_token && (
+        <ProposalPdfModal
+          open={proposalOpen}
+          onClose={() => setProposalOpen(false)}
+          data={proposalData}
+          accessToken={session.access_token}
+          dealMeta={
+            selected
+              ? {
+                  robotCategory: selected.robotTypesNeeded?.[0],
+                  signal: selected.signal,
+                  scoutScore: selected.score,
+                }
+              : undefined
+          }
+        />
       )}
     </div>
   );

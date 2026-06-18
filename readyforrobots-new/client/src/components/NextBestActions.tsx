@@ -4,6 +4,7 @@
 // Colors: High priority = amber, Medium = blue, Low = neutral
 
 import { ArrowRight, Flame, Circle, ChevronRight } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { NextAction } from "../types/readyForRobots";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ const priorityConfig = {
 };
 
 export default function NextBestActions({ actions }: NextBestActionsProps) {
+  const [, navigate] = useLocation();
   const sorted = [...actions].sort((a, b) => {
     const order = { high: 0, medium: 1, low: 2 };
     return order[a.priority] - order[b.priority];
@@ -64,7 +66,17 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
           return (
             <button
               key={action.id}
-              onClick={() => toast(`Action: ${action.label} for ${action.companyName}`)}
+              onClick={() => {
+                if (action.route) {
+                  const path =
+                    action.entity_type === "crm_account" && action.entity_id
+                      ? `${action.route}?account=${action.entity_id}`
+                      : action.route;
+                  navigate(path);
+                } else {
+                  toast(`Action: ${action.label} for ${action.companyName}`);
+                }
+              }}
               className={`group w-full text-left p-3.5 rounded-xl border ${config.border} ${config.bg} hover:shadow-sm transition-all duration-150 hover:-translate-y-0.5`}
             >
               <div className="flex items-start gap-3">
@@ -99,7 +111,7 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
         variant="ghost"
         size="sm"
         className="w-full justify-between text-xs text-neutral-500 hover:text-neutral-950 border border-neutral-200 hover:border-neutral-300 rounded-lg h-8"
-        onClick={() => toast("Full action queue coming soon.")}
+        onClick={() => navigate("/sales-console")}
       >
         View all actions
         <ArrowRight className="h-3.5 w-3.5" />
@@ -120,12 +132,14 @@ export default function NextBestActions({ actions }: NextBestActionsProps) {
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div className="bg-neutral-800 rounded-lg p-2 text-center">
-            <p className="font-mono text-base font-bold text-white">5</p>
-            <p className="text-xs text-neutral-400">Signals today</p>
+            <p className="font-mono text-base font-bold text-white">{actions.length}</p>
+            <p className="text-xs text-neutral-400">Open actions</p>
           </div>
           <div className="bg-neutral-800 rounded-lg p-2 text-center">
-            <p className="font-mono text-base font-bold text-emerald-400">3</p>
-            <p className="text-xs text-neutral-400">Qualified</p>
+            <p className="font-mono text-base font-bold text-emerald-400">
+              {actions.filter((a) => a.priority === "high").length}
+            </p>
+            <p className="text-xs text-neutral-400">High priority</p>
           </div>
         </div>
       </div>

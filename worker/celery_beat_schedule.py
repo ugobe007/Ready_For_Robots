@@ -256,6 +256,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(hour=9, minute=15),
         'kwargs': {'days': 1},
     },
+    # ── OUTREACH SEQUENCES ── Due follow-up steps every hour
+    'outreach-sequences-hourly': {
+        'task': 'worker.tasks.run_outreach_sequences_task',
+        'schedule': crontab(minute=15),
+        'kwargs': {'limit': 50},
+    },
 }
 
 # Timezone

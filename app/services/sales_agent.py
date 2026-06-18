@@ -15,6 +15,7 @@ from app.models.robot_company import RobotCompany
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.crm_engagement_sync import ensure_engagement_for_opportunity, sync_opportunity_stage_to_engagement
 from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature, max_signature
 from app.services.sales_learning_agent import capture_sales_action_experience
 
@@ -489,6 +490,7 @@ def _get_or_create_opportunity(
     )
     db.add(row)
     db.flush()
+    ensure_engagement_for_opportunity(db, row)
     return row
 
 
@@ -556,6 +558,7 @@ def _handle_first_response(
     db.add(inbound)
     stage_before = opportunity.current_stage
     opportunity.current_stage = plan.stage_after
+    sync_opportunity_stage_to_engagement(db, opportunity)
     opportunity.last_inbound_at = datetime.now(timezone.utc)
     opportunity.next_best_action = {
         "intent": plan.detected_intent,

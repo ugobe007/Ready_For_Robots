@@ -11,6 +11,18 @@ export type ActivityStatus =
   | "qualified"
   | "meeting_suggested";
 
+export type NextAction = {
+  id: string;
+  label: string;
+  companyName: string;
+  priority: "low" | "medium" | "high";
+  route?: string;
+  entity_type?: string;
+  entity_id?: string;
+  score?: number;
+  meta?: Record<string, unknown>;
+};
+
 export type ActivityItem = {
   id: string;
   companyName: string;
@@ -22,13 +34,8 @@ export type ActivityItem = {
   status: ActivityStatus;
   confidenceScore: number;
   createdAt: string;
-};
-
-export type NextAction = {
-  id: string;
-  label: string;
-  companyName: string;
-  priority: "low" | "medium" | "high";
+  route?: string;
+  entity_id?: string;
 };
 
 export type DailySummary = {

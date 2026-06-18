@@ -233,6 +233,31 @@ export default function SalesConsole() {
     }
   };
 
+  const applyProspectContact = async (person: ApolloProspect) => {
+    if (!selected?.crm_account_id || !person.email) {
+      toast.error("Select an opportunity with a CRM account and a prospect email.");
+      return;
+    }
+    try {
+      setBusy(true);
+      await authFetch(`/api/crm/accounts/${selected.crm_account_id}/set-contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact_email: person.email,
+          contact_name: person.name,
+          contact_title: person.title,
+          source: "apollo",
+        }),
+      });
+      toast.success(`Set ${person.email} as outreach contact.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save contact.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const automateAction = async (action: SalesAction) => {
     if (!selected) return;
     setBusy(true);
@@ -475,6 +500,15 @@ export default function SalesConsole() {
                           <p className="mt-1 text-xs text-white/50">{person.title || "Title unavailable"}</p>
                           <p className="mt-1 text-xs text-white/35">{person.organization_name || person.organization_domain || "Organization unavailable"}</p>
                           {person.email && <p className="mt-2 text-xs" style={{ color: "#03DAC5" }}>{person.email}</p>}
+                          {person.email && selected.crm_account_id && (
+                            <button
+                              onClick={() => void applyProspectContact(person)}
+                              disabled={busy}
+                              className="mt-2 rounded-lg border border-emerald-400/30 px-2 py-1 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10 disabled:opacity-50"
+                            >
+                              Use as contact
+                            </button>
+                          )}
                           {person.linkedin_url && (
                             <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs text-amber-200 underline">
                               LinkedIn
