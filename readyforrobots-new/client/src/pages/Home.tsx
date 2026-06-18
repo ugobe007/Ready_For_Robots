@@ -4,7 +4,7 @@
  * Color system: #0d0520 bg · #7c3aed purple (brand/headlines) · #03DAC5 teal (action/live/CTA)
  * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, X, Quote, Mail } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
@@ -15,6 +15,37 @@ import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
+
+function useTypewriter(text: string, speed = 55, startDelay = 600) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  const speedRef = useRef(speed);
+  const delayRef = useRef(startDelay);
+
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+    let i = 0;
+    let interval: ReturnType<typeof setInterval>;
+    const delay = setTimeout(() => {
+      interval = setInterval(() => {
+        i++;
+        setDisplayed(text.slice(0, i));
+        if (i >= text.length) {
+          clearInterval(interval);
+          setDone(true);
+        }
+      }, speedRef.current);
+    }, delayRef.current);
+    return () => {
+      clearTimeout(delay);
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
+  return { displayed, done };
+}
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/rfr-dark-hero-eCRKfoUwPNDkc82gUhUXL9.webp";
 
@@ -86,6 +117,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
+  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales Pipeline", 55, 900);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -225,6 +257,16 @@ export default function Home() {
               <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
                 ™
               </sup>
+              <br />
+              <span className="text-white">
+                {typedPipeline}
+              </span>
+              {!typedDone && (
+                <span
+                  className="inline-block w-[3px] h-[0.85em] ml-[2px] align-middle animate-pulse"
+                  style={{ background: "#03DAC5", borderRadius: "1px", verticalAlign: "middle" }}
+                />
+              )}
             </h1>
 
             <p
