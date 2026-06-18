@@ -4,7 +4,7 @@
  * Color system: #0d0520 bg · #7c3aed purple (brand/headlines) · #03DAC5 teal (action/live/CTA)
  * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
  */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, X, Quote, Mail } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
@@ -15,40 +15,6 @@ import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
-
-// Typewriter hook — spells out text character by character after a delay
-// Uses refs for speed/delay so re-renders don't reset the animation mid-flight
-function useTypewriter(text: string, speed = 55, startDelay = 600) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-  const speedRef = useRef(speed);
-  const delayRef = useRef(startDelay);
-
-  useEffect(() => {
-    setDisplayed("");
-    setDone(false);
-    let i = 0;
-    let interval: ReturnType<typeof setInterval>;
-    const delay = setTimeout(() => {
-      interval = setInterval(() => {
-        i++;
-        setDisplayed(text.slice(0, i));
-        if (i >= text.length) {
-          clearInterval(interval);
-          setDone(true);
-        }
-      }, speedRef.current);
-    }, delayRef.current);
-    return () => {
-      clearTimeout(delay);
-      clearInterval(interval);
-    };
-  // Only re-run when the text itself changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
-
-  return { displayed, done };
-}
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/rfr-dark-hero-eCRKfoUwPNDkc82gUhUXL9.webp";
 
@@ -120,7 +86,6 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedText, done: typedDone } = useTypewriter("Robot-ready buyers.", 65, 700);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -245,11 +210,9 @@ export default function Home() {
             </p>
 
             <h1
-              className="font-extrabold leading-[1.05] tracking-tight mb-3 text-white"
-              style={{ fontSize: "clamp(2.8rem, 6vw, 5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
+              className="font-extrabold leading-[1.05] tracking-tight mb-5 text-white"
+              style={{ fontSize: "clamp(2.4rem, 5.5vw, 4.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Discover. Develop. Deploy.
-              <br />
               <span
                 style={{
                   background: "linear-gradient(135deg, #03DAC5 0%, #7c3aed 100%)",
@@ -257,29 +220,18 @@ export default function Home() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                {typedText}
+                Robot Revenue Automation
               </span>
-              {!typedDone && (
-                <span
-                  className="inline-block w-[3px] h-[0.85em] ml-[2px] align-middle animate-pulse"
-                  style={{ background: "#03DAC5", borderRadius: "1px", verticalAlign: "middle" }}
-                />
-              )}
+              <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
+                ™
+              </sup>
             </h1>
 
             <p
-              className="mb-3 max-w-xl text-[10px] font-bold uppercase tracking-[0.18em] text-white/35"
+              className="mb-7 max-w-xl text-[1.05rem] leading-relaxed text-white/65 sm:text-lg"
               style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
             >
-              Discovery → Development → Deployment
-            </p>
-
-            <p
-              className="mb-7 max-w-xl text-[0.95rem] leading-relaxed text-white/60 sm:text-base"
-              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-            >
-              SIGNAL finds automation-ready buyers, scores timing and robot fit, and develops each opportunity
-              with tailored outreach—from discovery through deployment: trial, purchase, or rental.
+              The first sales intelligence and workflow platform built exclusively for robot vendors and integrators.
             </p>
 
             {/* Primary CTA */}
