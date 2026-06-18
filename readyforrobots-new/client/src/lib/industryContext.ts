@@ -84,7 +84,7 @@ export function marketInsightForIndustry(industry?: string | null): string {
     case "manufacturing":
       return "Manufacturers are treating robotics as targeted relief for quality, safety, and material-flow bottlenecks rather than broad replacement.";
     default:
-      return "SIGNAL is watching for accounts where signal timing suggests a real sales motion, not just a generic news headline.";
+      return "SIGNAL is watching for accounts where timing, fit, and buying intent line up for a robotics conversation.";
   }
 }
 

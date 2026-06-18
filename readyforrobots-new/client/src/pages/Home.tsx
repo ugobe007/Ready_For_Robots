@@ -120,7 +120,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedText, done: typedDone } = useTypewriter("Robot deals.", 65, 700);
+  const { displayed: typedText, done: typedDone } = useTypewriter("Robot-ready buyers.", 65, 700);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -244,12 +244,11 @@ export default function Home() {
               {" — "}{benchInlineText}
             </p>
 
-            {/* Headline */}
             <h1
               className="font-extrabold leading-[1.05] tracking-tight mb-3 text-white"
               style={{ fontSize: "clamp(2.8rem, 6vw, 5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
             >
-              Discover. Develop. Close.
+              Discover. Develop. Deploy.
               <br />
               <span
                 style={{
@@ -268,12 +267,19 @@ export default function Home() {
               )}
             </h1>
 
-            {/* Subheadline — width capped to headline column */}
             <p
-              className="mb-7 max-w-md text-[0.95rem] leading-relaxed text-white/60 sm:text-base"
+              className="mb-3 max-w-xl text-[10px] font-bold uppercase tracking-[0.18em] text-white/35"
               style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
             >
-              SIGNAL automates robot sales to closure—discovery, development, and deal advance in one workflow.
+              Discovery → Development → Deployment
+            </p>
+
+            <p
+              className="mb-7 max-w-xl text-[0.95rem] leading-relaxed text-white/60 sm:text-base"
+              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+            >
+              SIGNAL finds automation-ready buyers, scores timing and robot fit, and develops each opportunity
+              with tailored outreach—from discovery through deployment: trial, purchase, or rental.
             </p>
 
             {/* Primary CTA */}
@@ -325,21 +331,22 @@ export default function Home() {
               What ReadyForRobots does
             </p>
             <h2 className="max-w-xl text-3xl font-extrabold leading-tight text-white lg:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              Discover, develop, and close robot sales—from one system.
+              Discover, develop, and deploy robot sales—from one system.
             </h2>
           </div>
 
           <div>
             <p className="text-base leading-relaxed text-white/50">
-              SIGNAL discovers automation-ready buyers from live market signals, develops each opportunity with evidence-backed outreach, and helps your team close.
-              No cold lists—every account shows why it is ready, what triggered the signal, and how to move the deal forward.
+              SIGNAL discovers automation-ready buyers from live market signals, develops each opportunity
+              with scored fit and tailored outreach, and advances accounts to deployment.
+              Every lead shows why it is ready, what triggered the signal, and how to move from trial to purchase or rental.
               Sync to HubSpot when you want, or run everything in SIGNAL.
             </p>
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                ["Discover", "Labor gaps, expansions, CapEx, hiring, and deployment news—monitored 24/7."],
-                ["Develop", "Fit scoring, signal briefs, and outreach drafts tailored to each account."],
-                ["Close", "Follow-ups, pipeline stages, and meeting-ready intelligence to win the deal."],
+                ["Discover", "Automation-ready buyers—timing, intent, and fit from live market signals."],
+                ["Develop", "Signal briefs and tailored outreach for each account."],
+                ["Deploy", "Pipeline through trial, purchase, or rental—with follow-ups and meeting-ready intelligence."],
               ].map(([label, copy], index) => (
                 <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
                   <p className="mb-2 font-mono text-xs font-bold" style={{ color: index === 1 ? "#03DAC5" : "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
