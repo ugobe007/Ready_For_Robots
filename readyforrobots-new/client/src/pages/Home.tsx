@@ -117,7 +117,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\u00A0Pipeline", 200, 1400);
+  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\u00A0Pipeline", 380, 2200);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -251,7 +251,7 @@ export default function Home() {
               <span
                 className="block leading-[1.02]"
                 style={{
-                  fontSize: "clamp(2.4rem, 5.5vw, 4.25rem)",
+                  fontSize: "clamp(1.85rem, 4vw, 3rem)",
                   letterSpacing: "-0.045em",
                 }}
               >
@@ -271,7 +271,7 @@ export default function Home() {
               <span
                 className="mt-2 block leading-[1.08] text-white"
                 style={{
-                  fontSize: "clamp(1.55rem, 3.4vw, 2.65rem)",
+                  fontSize: "clamp(1.1rem, 2.35vw, 1.75rem)",
                   letterSpacing: "-0.04em",
                 }}
               >
