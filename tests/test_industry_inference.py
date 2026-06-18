@@ -83,6 +83,25 @@ def test_home_depot_retail_not_datacenters_from_softbank_signal_noise():
 
 
 @pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("Novartis", "Medical Technology"),
+        ("Chili's", "Food Service"),
+        ("UPS Buys Hundreds", "Logistics"),
+        ("Becton Dickinson", "Medical Technology"),
+    ],
+)
+def test_phase3_known_company_industry_map(name, expected):
+    assert effective_industry_for_lead(name, "Unknown", []) == expected
+
+
+def test_farm_automation_infers_food_processing():
+    assert infer_industry_from_text(
+        "Regional co-op pilots farm automation and harvest automation amid labor shortages"
+    ) == "Food Processing & Manufacturing"
+
+
+@pytest.mark.parametrize(
     "name",
     [
         "Jeff Bezos",

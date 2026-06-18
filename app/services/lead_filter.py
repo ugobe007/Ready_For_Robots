@@ -1065,6 +1065,9 @@ _HEADLINE_FRAGMENT_EXACT = frozenset({
     "top 10", "cloud-based", "newsweek", "lego", "move}", "s for", "usd 1",
     "hyperscale data?", "labor and skilled worker shortage",
     "nexer robotics to",
+    "opponents", "ratings", "number", "collaborative", "global m&a", "fast facts",
+    "process excellence network", "global sports", "urinary tract infection",
+    "more farms", "ted danson", "arisealpha",
 })
 
 _HEADLINE_FRAGMENT_PATTERNS = [
@@ -1093,6 +1096,10 @@ _HEADLINE_FRAGMENT_PATTERNS = [
     r"(?i)\blogistics\s+pipeline\b",
     r"(?i)\bplans\s+to\s+automate\b",
     r"(?i)\baims\s+to\s+automate\b",
+    # Market-research / RSS headline stubs (not operating companies)
+    r"(?i)\bmarket\s+(analysis|to\s+reach|size|forecast)\b",
+    r"(?i)\bindustry\s+(outlook|trends|fast\s+facts)\b",
+    r"(?i)\band\s+[A-Z][a-z]+\s+Robotics\b",  # "Team X and Vendor Robotics Partner…"
 ]
 _HEADLINE_FRAGMENT_RE = [re.compile(p) for p in _HEADLINE_FRAGMENT_PATTERNS]
 

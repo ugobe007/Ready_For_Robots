@@ -75,6 +75,23 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "white castle": "Food Service",
     "chipotle": "Food Service",
     "sweetgreen": "Food Service",
+    "chili's": "Food Service",
+    "chilis": "Food Service",
+    "brinker international": "Food Service",
+    # Pharma / medtech
+    "novartis": "Medical Technology",
+    "becton dickinson": "Medical Technology",
+    "becton, dickinson and company": "Medical Technology",
+    # Logistics / parcel
+    "ups": "Logistics",
+    "united parcel service": "Logistics",
+    "fedex": "Logistics",
+    # Food / ag processing
+    "aboitiz foods": "Food Processing & Manufacturing",
+    "tyson foods": "Food Processing & Manufacturing",
+    "cargill": "Food Processing & Manufacturing",
+    # Contract / industrial manufacturing
+    "prince manufacturing": "Contract Manufacturing",
     "foxconn": "Automotive & Manufacturing",
     # Healthcare / senior living
     "cedarhurst": "Healthcare",
@@ -112,6 +129,8 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "lowes": "Retail",
     "walmart": "Retail",
     "costco": "Retail",
+    "costco wholesale": "Retail",
+    "novartis": "Medical Technology",
     "target corporation": "Retail",
 }
 
@@ -217,6 +236,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "seafood processing", "dairy processing", "cheese plant", "meat packing",
         "beverage manufacturing", "bottling plant", "canning", "brewing",
         "snack food", "baked goods", "confectionery", "cereal manufacturing",
+        "farm automation", "agriculture automation", "agtech", "ag tech",
+        "crop processing", "harvest automation", "greenhouse automation",
     ],
     "CPG & Consumer Goods": [
         "consumer packaged goods", "cpg", "consumer goods", "fmcg",
@@ -241,6 +262,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "custom manufacturer", "job shop", "make to order",
         "co-manufacturer", "flexible manufacturing", "small batch",
         "multi-sku", "rapid changeover", "high mix low volume",
+        "system integrator", "robotics integrator", "automation integrator",
+        "integration partner", "robotics integration services",
     ],
     "Datacenters": [
         "datacenter", "data center", "hyperscale", "cloud infrastructure",

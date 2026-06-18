@@ -340,3 +340,12 @@ def test_catalog_humanoid_patterns_include_neura_and_magiclab():
     patterns = catalog_humanoid_patterns()
     assert any("neura" in p for p in patterns)
     assert any("magiclab" in p for p in patterns)
+
+
+def test_pipeline_search_suggestions_include_integrator_and_humanoid():
+    from app.services.industry_search_lexicon import pipeline_search_suggestions
+
+    hints = pipeline_search_suggestions()
+    assert "system integrator" in hints
+    assert "humanoid deployment" in hints
+    assert "robotics integrator" in hints

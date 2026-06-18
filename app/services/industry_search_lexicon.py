@@ -168,6 +168,48 @@ def lead_matches_search(
 PIPELINE_DIVERSITY_INDUSTRIES = pipeline_diversity_industries()
 
 
+def pipeline_search_suggestions(*, max_terms: int = 48) -> List[str]:
+    """
+    Curated ontology-backed search hints for pipeline industry filter (datalist).
+    Includes sector root aliases and high-signal sub-ontology entry points.
+    """
+    priority = [
+        "restaurant",
+        "hotel automation",
+        "warehouse automation",
+        "humanoid deployment",
+        "system integrator",
+        "grocery fulfillment",
+        "lab automation",
+        "data center automation",
+        "defense logistics",
+        "food processing automation",
+        "pack out",
+        "janitorial automation",
+        "robotics integrator",
+        "airport baggage handling",
+    ]
+    seen: set[str] = set()
+    out: List[str] = []
+    for term in priority:
+        t = normalize_term(term)
+        if t and t not in seen:
+            seen.add(t)
+            out.append(term)
+    for sector in load_sector_ontology().get("sectors", []):
+        for alias in sector.get("root_aliases") or []:
+            t = normalize_term(alias)
+            if t and t not in seen:
+                seen.add(t)
+                out.append(alias)
+    for ind in PIPELINE_DIVERSITY_INDUSTRIES:
+        t = normalize_term(ind)
+        if t and t not in seen:
+            seen.add(t)
+            out.append(ind)
+    return out[:max_terms]
+
+
 def _dedupe(items: List[str]) -> List[str]:
     seen = set()
     out: List[str] = []

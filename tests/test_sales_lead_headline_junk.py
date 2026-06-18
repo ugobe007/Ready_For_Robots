@@ -14,6 +14,10 @@ from app.services.lead_name_gate import check_lead_name
         "Sysco plans to automate distribution centers nationwide",
         "Inside Amazon's $536M Robotic Warehouse Where Humans",
         "Domino's distribution center approved",
+        "Global M&A industry trends: 2026 outlook",
+        "Opponents say proposed increase in line speeds",
+        "Urinary Tract Infection Testing Market to Reach USD 78.9 Billion",
+        "Vegas Golden Knights and Richtech Robotics Partner",
     ],
 )
 def test_sentence_leads_are_junk(name: str):

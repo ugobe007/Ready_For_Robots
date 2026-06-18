@@ -28,7 +28,7 @@ import {
   writeSurfaceCache,
 } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
-import { dealMatchesIndustrySearch } from "@/lib/industrySearchLexicon";
+import { dealMatchesIndustrySearch, pipelineSearchSuggestions } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -992,6 +992,10 @@ export default function Pipeline() {
   }, [industryQuery, filter, session?.access_token]);
 
   const industries = Array.from(new Set(deals.map((d) => d.industry).filter(Boolean))).sort();
+  const searchSuggestions = useMemo(
+    () => Array.from(new Set([...pipelineSearchSuggestions(), ...industries])).sort(),
+    [industries],
+  );
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
   const clientSearchMatches = useMemo(
@@ -1452,7 +1456,7 @@ export default function Pipeline() {
                 </button>
               )}
               <datalist id="pipeline-industries">
-                {industries.map((ind) => (
+                {searchSuggestions.map((ind) => (
                   <option key={ind} value={ind} />
                 ))}
               </datalist>

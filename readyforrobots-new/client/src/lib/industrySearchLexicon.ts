@@ -9,6 +9,7 @@ type SubOntology = {
   subject?: string;
   modifiers?: string[];
   terms?: string[];
+  exclusions?: string[];
 };
 type Sector = {
   id: string;
@@ -24,6 +25,7 @@ type SubjectRef = {
   subject: string;
   modifiers: string[];
   terms: string[];
+  exclusions: string[];
 };
 
 const QUERY_ALIASES: Record<string, string> = {
@@ -70,6 +72,7 @@ function buildSubjectRefs(): SubjectRef[] {
         subject,
         modifiers: (sub.modifiers ?? []).map((m) => normalizeTerm(m)).filter(Boolean),
         terms: (sub.terms ?? []).map((t) => normalizeTerm(t)).filter(Boolean),
+        exclusions: (sub.exclusions ?? []).map((x) => normalizeTerm(x)).filter(Boolean),
       });
     }
   }
@@ -158,17 +161,25 @@ function hasInferenceAnchor(hay: string): boolean {
   return INFERENCE_ANCHORS.some((anchor) => hay.includes(anchor));
 }
 
+function subjectBlocked(hay: string, ref: SubjectRef): boolean {
+  return ref.exclusions.some((ex) => hay.includes(ex));
+}
+
+function subjectInferenceSatisfied(hay: string, ref: SubjectRef): boolean {
+  if (subjectBlocked(hay, ref)) return false;
+  if (!subjectInText(ref.subject, hay)) return false;
+  if (ref.subject.includes(" ")) return true;
+  if (ref.modifiers.some((mod) => hay.includes(mod))) return true;
+  if (ref.terms.some((term) => hay.includes(term))) return true;
+  return false;
+}
+
 function textMatchesSubjectInference(text: string, query: string): boolean {
   const hay = normalizeTerm(text);
   if (!hay || !hasInferenceAnchor(hay)) return false;
   const refs = resolveSubjectRefs(query);
   if (!refs.length) return false;
-  return refs.some((ref) => {
-    if (!subjectInText(ref.subject, hay)) return false;
-    if (ref.modifiers.some((mod) => hay.includes(mod))) return true;
-    if (ref.terms.some((term) => hay.includes(term))) return true;
-    return subjectInText(ref.subject, hay);
-  });
+  return refs.some((ref) => subjectInferenceSatisfied(hay, ref));
 }
 
 interface OntologyMatch {
@@ -266,4 +277,40 @@ export function dealMatchesIndustrySearch(
     .join(" ")
     .toLowerCase();
   return textMatchesIndustrySearch(hay, q);
+}
+
+/** Ontology-backed pipeline search hints (sector aliases + curated entry points). */
+export function pipelineSearchSuggestions(maxTerms = 48): string[] {
+  const priority = [
+    "restaurant",
+    "hotel automation",
+    "warehouse automation",
+    "humanoid deployment",
+    "system integrator",
+    "grocery fulfillment",
+    "lab automation",
+    "data center automation",
+    "defense logistics",
+    "food processing automation",
+    "pack out",
+    "janitorial automation",
+    "robotics integrator",
+    "airport baggage handling",
+  ];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const add = (raw: string) => {
+    const t = normalizeTerm(raw);
+    if (!t || seen.has(t)) return;
+    seen.add(t);
+    out.push(raw);
+  };
+  for (const term of priority) add(term);
+  for (const sector of (ontology.sectors ?? []) as Sector[]) {
+    for (const alias of sector.root_aliases ?? []) add(alias);
+  }
+  for (const sector of (ontology.sectors ?? []) as Sector[]) {
+    for (const ind of sector.canonical_industries ?? []) add(ind);
+  }
+  return out.slice(0, maxTerms);
 }
