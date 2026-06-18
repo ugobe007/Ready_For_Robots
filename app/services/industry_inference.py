@@ -103,6 +103,11 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "rebellyous foods": "Food Processing & Manufacturing",
     "smashburger": "Food Service",
     "bazooka candy": "CPG & Consumer Goods",
+    "ring pop maker bazooka": "CPG & Consumer Goods",
+    "topps": "CPG & Consumer Goods",
+    "shell": "Energy & Utilities",
+    "volvo": "Automotive & Manufacturing",
+    "makemytrip": "Airports & Aviation",
     # Healthcare / senior living
     "cedarhurst": "Healthcare",
     "lifespire": "Healthcare",

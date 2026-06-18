@@ -69,3 +69,12 @@ def test_known_industry_not_deleted_even_with_rss():
         from_is_junk=is_junk("Acme Corp"),
     )
     assert not ok
+
+
+def test_ring_pop_maker_bazooka_maps_to_cpg():
+    from app.services.industry_inference import effective_industry_for_lead
+
+    assert (
+        effective_industry_for_lead("Ring Pop maker Bazooka", "New", [])
+        == "CPG & Consumer Goods"
+    )
