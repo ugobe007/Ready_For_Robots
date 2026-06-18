@@ -117,7 +117,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales Pipeline", 55, 900);
+  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\u00A0Pipeline", 200, 1400);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -242,31 +242,47 @@ export default function Home() {
             </p>
 
             <h1
-              className="font-extrabold leading-[1.05] tracking-tight mb-5 text-white"
-              style={{ fontSize: "clamp(2.4rem, 5.5vw, 4.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
+              className="mb-5 font-extrabold text-white"
+              style={{
+                fontFamily: "'Sora', system-ui, sans-serif",
+                textWrap: "balance",
+              }}
             >
               <span
+                className="block leading-[1.02]"
                 style={{
-                  background: "linear-gradient(135deg, #03DAC5 0%, #7c3aed 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
+                  fontSize: "clamp(2.4rem, 5.5vw, 4.25rem)",
+                  letterSpacing: "-0.045em",
                 }}
               >
-                Robot Revenue Automation
-              </span>
-              <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
-                ™
-              </sup>
-              <br />
-              <span className="text-white">
-                {typedPipeline}
-              </span>
-              {!typedDone && (
                 <span
-                  className="inline-block w-[3px] h-[0.85em] ml-[2px] align-middle animate-pulse"
-                  style={{ background: "#03DAC5", borderRadius: "1px", verticalAlign: "middle" }}
-                />
-              )}
+                  style={{
+                    background: "linear-gradient(135deg, #03DAC5 0%, #7c3aed 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  Robot&nbsp;Revenue&nbsp;Automation
+                </span>
+                <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
+                  ™
+                </sup>
+              </span>
+              <span
+                className="mt-2 block leading-[1.08] text-white"
+                style={{
+                  fontSize: "clamp(1.55rem, 3.4vw, 2.65rem)",
+                  letterSpacing: "-0.04em",
+                }}
+              >
+                {typedPipeline}
+                {!typedDone && (
+                  <span
+                    className="inline-block w-[3px] h-[0.85em] ml-[2px] align-middle animate-pulse"
+                    style={{ background: "#03DAC5", borderRadius: "1px", verticalAlign: "middle" }}
+                  />
+                )}
+              </span>
             </h1>
 
             <p
