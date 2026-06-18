@@ -93,6 +93,16 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     # Contract / industrial manufacturing
     "prince manufacturing": "Contract Manufacturing",
     "foxconn": "Automotive & Manufacturing",
+    # Healthcare / food buyers often stuck Unknown after RSS-heavy scrapes
+    "hancock health": "Healthcare",
+    "rwjbarnabas health": "Healthcare",
+    "heineken": "Food Processing & Manufacturing",
+    "denny's": "Food Service",
+    "dennys": "Food Service",
+    "associated wholesale grocers": "Retail",
+    "rebellyous foods": "Food Processing & Manufacturing",
+    "smashburger": "Food Service",
+    "bazooka candy": "CPG & Consumer Goods",
     # Healthcare / senior living
     "cedarhurst": "Healthcare",
     "lifespire": "Healthcare",

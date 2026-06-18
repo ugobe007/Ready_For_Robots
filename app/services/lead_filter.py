@@ -1068,6 +1068,8 @@ _HEADLINE_FRAGMENT_EXACT = frozenset({
     "opponents", "ratings", "number", "collaborative", "global m&a", "fast facts",
     "process excellence network", "global sports", "urinary tract infection",
     "more farms", "ted danson", "arisealpha",
+    "cargo thieves", "iran war", "bypass", "tankers entering hormuz during war",
+    "cava proves that", "bankruptcy court approves the sale",
 })
 
 _HEADLINE_FRAGMENT_PATTERNS = [

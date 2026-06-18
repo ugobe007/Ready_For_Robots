@@ -80,11 +80,57 @@ def add_to_blocklist(name: str, reason: str = "manual_delete") -> None:
 
 def add_bulk_to_blocklist(names: list[str], reason: str = "bulk_purge") -> int:
     """Add multiple names to the blocklist. Returns count added."""
-    added = 0
+    keys: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for name in names:
-        if name and name.strip():
-            add_to_blocklist(name, reason)
-            added += 1
+        if not name or not name.strip():
+            continue
+        key = name.strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        keys.append((key, name.strip()))
+
+    if not keys:
+        return 0
+
+    added = 0
+    try:
+        from app.database import SessionLocal
+        from app.models.scraper_blocklist import ScraperBlocklist
+
+        db = SessionLocal()
+        try:
+            existing = {
+                r[0]
+                for r in db.query(ScraperBlocklist.name_lower)
+                .filter(ScraperBlocklist.name_lower.in_([k for k, _ in keys]))
+                .all()
+            }
+            for key, original in keys:
+                if key in existing:
+                    continue
+                db.add(
+                    ScraperBlocklist(
+                        name_lower=key,
+                        original_name=original,
+                        reason=reason,
+                    )
+                )
+                added += 1
+            if added:
+                db.commit()
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning("Could not bulk persist blocklist entries: %s", e)
+
+    global _BLOCKLIST_CACHE
+    if _BLOCKLIST_CACHE is not None:
+        _BLOCKLIST_CACHE.update(k for k, _ in keys)
+    elif added:
+        invalidate_cache()
+
     return added
 
 
