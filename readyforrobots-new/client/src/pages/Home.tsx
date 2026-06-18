@@ -117,7 +117,7 @@ const agentFeatures = [
 ];
 
 export default function Home() {
-  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales Pipeline", 120, 1000);
+  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\nPipeline", 120, 1000);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -275,6 +275,7 @@ export default function Home() {
                 style={{
                   fontSize: "clamp(1.65rem, 3.6vw, 2.85rem)",
                   letterSpacing: "-0.04em",
+                  whiteSpace: "pre-line",
                 }}
               >
                 {typedPipeline}
