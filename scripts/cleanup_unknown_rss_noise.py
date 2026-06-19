@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Phase 4: purge Unknown-industry leads that are RSS / headline scraper noise.
+Phase 4: audit Unknown-industry leads that fail name-based delete policy.
 
 Default is dry-run:
   python3 scripts/cleanup_unknown_rss_noise.py
 
-Delete after reviewing the CSV report:
-  python3 scripts/cleanup_unknown_rss_noise.py --apply --delete --yes
+Delete after reviewing the CSV report (requires env):
+  PIPELINE_HARD_DELETE_OK=1 python3 scripts/cleanup_unknown_rss_noise.py --apply --delete --yes
 
-Only targets companies with industry empty / Unknown / Other / New AND at least one
-of: is_junk(name), Google RSS HTML signals, market-report headlines, or high-confidence
-article/market entity classification.
+Only targets companies with industry empty / Unknown / Other / New AND a name that
+fails is_junk or high-confidence headline entity classification.
+RSS/HTML signal format alone is NOT a delete criterion.
 """
 from __future__ import annotations
 
@@ -49,8 +49,10 @@ from app.models.lead_rep_feedback import LeadRepFeedback
 from app.models.score import Score
 from app.models.signal import Signal
 from app.services.lead_filter import is_junk
-from app.services.rss_noise_lead import is_rss_noise_delete_candidate
+from app.services.pipeline_delete_policy import unknown_industry_delete_allowed
 from app.services.scraper_blocklist import add_bulk_to_blocklist
+
+_HARD_DELETE_ENV = "PIPELINE_HARD_DELETE_OK"
 
 
 def _delete_company_rows(db, company_id: int) -> None:
@@ -97,7 +99,7 @@ def main() -> None:
         print(f"Scanning {len(rows)} unknown-industry companies...")
         for company in rows:
             junk_pair = is_junk(company.name or "")
-            ok, reason, bucket = is_rss_noise_delete_candidate(
+            ok, reason, bucket = unknown_industry_delete_allowed(
                 company.name,
                 company.industry,
                 company.signals or [],
@@ -142,8 +144,15 @@ def main() -> None:
             print(f"  ... +{len(candidates) - 25} more")
 
         if not (args.apply and args.delete):
-            print("\nDRY RUN — no rows deleted. Use --apply --delete --yes after reviewing CSV.")
+            print("\nDRY RUN — no rows deleted. Review CSV before any delete.")
             return
+
+        if not os.environ.get(_HARD_DELETE_ENV):
+            print(
+                f"\nRefusing hard delete: set {_HARD_DELETE_ENV}=1 after CSV review.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
 
         to_delete = candidates
         if args.limit:

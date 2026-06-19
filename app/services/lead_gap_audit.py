@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, List, Optional, Sequence
 
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.models.company import Company
@@ -195,6 +195,58 @@ def audit_company_gaps(
     )
 
 
+def _secondary_candidate_pool(
+    db: Session,
+    *,
+    pool_limit: int,
+) -> List[Company]:
+    """
+    Mix high-score leads with gap-likely rows (unknown industry, never ledgered).
+
+    Score-only pools miss work when the top N leads were already enriched on restore.
+    """
+    half = max(pool_limit // 2, 50)
+    from app.models.score import Score
+
+    score_rows = (
+        db.query(Company)
+        .filter(Company.is_internal.is_(True))
+        .join(Signal, Signal.company_id == Company.id)
+        .outerjoin(Score, Score.company_id == Company.id)
+        .group_by(Company.id)
+        .order_by(desc(func.coalesce(func.max(Score.overall_intent_score), 0)), desc(Company.id))
+        .limit(half)
+        .all()
+    )
+
+    unknown_rows = (
+        db.query(Company)
+        .filter(Company.is_internal.is_(True))
+        .join(Signal, Signal.company_id == Company.id)
+        .filter(
+            or_(
+                Company.industry.is_(None),
+                Company.industry == "",
+                func.lower(Company.industry).in_(tuple(_UNKNOWN_INDUSTRY)),
+            )
+        )
+        .group_by(Company.id)
+        .order_by(desc(Company.id))
+        .limit(half)
+        .all()
+    )
+
+    merged: List[Company] = []
+    seen: set[int] = set()
+    for company in (*score_rows, *unknown_rows):
+        cid = int(company.id)
+        if cid in seen:
+            continue
+        seen.add(cid)
+        merged.append(company)
+    return merged[:pool_limit]
+
+
 def select_gap_repair_candidates(
     db: Session,
     *,
@@ -206,21 +258,11 @@ def select_gap_repair_candidates(
     Rank internal leads with at least one signal by gap priority.
     Returns reports for companies that still have open gaps.
     """
-    from app.models.score import Score
-
     cap = max(1, min(int(limit), 500))
-    pool = min(cap * 4, 800)
+    # Pool must not shrink with --limit (limit=5 used to scan only 40 rows — all enriched).
+    pool = min(max(cap * 8, 500), 2500)
 
-    rows = (
-        db.query(Company)
-        .filter(Company.is_internal.is_(True))
-        .join(Signal, Signal.company_id == Company.id)
-        .outerjoin(Score, Score.company_id == Company.id)
-        .group_by(Company.id)
-        .order_by(desc(func.coalesce(func.max(Score.overall_intent_score), 0)), desc(Company.id))
-        .limit(pool)
-        .all()
-    )
+    rows = _secondary_candidate_pool(db, pool_limit=pool)
 
     require = set(require_gaps or [])
     reports: List[LeadGapReport] = []

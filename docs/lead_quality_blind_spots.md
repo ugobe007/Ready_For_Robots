@@ -13,6 +13,11 @@ Heuristic filters will always miss some edge cases: headlines are infinite, and 
 
 When cleanup (`scripts/cleanup_leads.py`) deletes rows, the purge phase uses **`is_valid_lead`** (full logic engine, not `is_junk` alone) so it stays aligned with ingest and the API.
 
+**Hard-delete policy:** `app/services/pipeline_delete_policy.py` is the single gate for
+`cleanup_pipeline_junk.py` and `cleanup_unknown_rss_noise.py`. Those scripts must never
+delete for RSS signal format, `classify_lead` display junk, or rectifier quarantine
+(`is_internal=False`). Both require `PIPELINE_HARD_DELETE_OK=1` before `--delete`.
+
 ## Operational hygiene
 
 - **Export decisions** — `scripts/export_quality_decision_log.py` for offline review and new rules.

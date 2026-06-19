@@ -45,7 +45,7 @@ def test_headline_fragment_junk_deleted():
     assert bucket == "fast_junk"
 
 
-def test_rss_unknown_deleted():
+def test_rss_unknown_not_deleted_without_junk_name():
     ok, reason, bucket = is_rss_noise_delete_candidate(
         "PE firm Advent",
         "Unknown",
@@ -57,8 +57,7 @@ def test_rss_unknown_deleted():
         ],
         from_is_junk=is_junk("PE firm Advent"),
     )
-    assert ok
-    assert bucket == "rss_html_noise"
+    assert not ok
 
 
 def test_known_industry_not_deleted_even_with_rss():

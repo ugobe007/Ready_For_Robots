@@ -4,7 +4,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from pathlib import Path
+
+_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_root))
+
+from dotenv import load_dotenv
+
+from app.env_loader import database_url_is_template_or_sqlite
+
+_shell_database_url = (os.environ.get("DATABASE_URL") or "").strip()
+load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
+load_dotenv(_root / ".env", override=True)
+_dotenv_path = (os.getenv("DOTENV_PATH") or "").strip()
+if _dotenv_path:
+    load_dotenv(Path(_dotenv_path).expanduser(), override=True)
+_loaded = (os.environ.get("DATABASE_URL") or "").strip()
+if _shell_database_url and database_url_is_template_or_sqlite(_loaded):
+    os.environ["DATABASE_URL"] = _shell_database_url
 
 from app.database import SessionLocal
 from app.services.lead_gap_audit import select_gap_repair_candidates

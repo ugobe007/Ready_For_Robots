@@ -1497,20 +1497,36 @@ _TARGET_FALSE_POSITIVE_PHRASES = (
 )
 
 def _signal_text_blob(signals) -> str:
+    from app.services.signal_text_normalize import strip_signal_html
+
     parts = []
     for s in signals or []:
         t = getattr(s, "signal_text", None) or ""
-        t = re.sub(r"<[^>]+>", " ", str(t))
-        parts.append(t.lower())
+        parts.append(strip_signal_html(str(t)).lower())
     return " ".join(parts)
 
 
-def _buyer_opportunity_gate(signals) -> tuple[bool, str]:
+def _buyer_opportunity_gate(
+    signals,
+    *,
+    company_name: Optional[str] = None,
+) -> tuple[bool, str]:
     """
     Require evidence that the record is an end-customer buying opportunity, not
     just a robotics/news/vendor headline. Empty signal sets are allowed to stay
     as non-promoted COLD records; records with signals must prove buyer intent.
+
+    Known buyer brands with thin RSS-only copy stay visible as COLD — secondary
+    pass signal_backfill can enrich them later.
     """
+    from app.services.industry_inference import known_industry_for_company_name
+
+    name = (company_name or "").strip()
+    if name and (
+        is_allowlisted_company_name(name) or known_industry_for_company_name(name)
+    ):
+        return True, ""
+
     sigs = list(signals or [])
     if not sigs:
         return True, ""
@@ -1647,7 +1663,7 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     if not ok_logic:
         return True, f"logic engine: {logic_reason}", PriorityResult("COLD", 0.0, [logic_reason])
 
-    ok_buyer, buyer_reason = _buyer_opportunity_gate(signals)
+    ok_buyer, buyer_reason = _buyer_opportunity_gate(signals, company_name=name or "")
     if not ok_buyer:
         return True, f"buyer opportunity gate: {buyer_reason}", PriorityResult(
             "COLD", 0.0, [buyer_reason]

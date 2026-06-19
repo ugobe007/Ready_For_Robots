@@ -83,34 +83,16 @@ def is_rss_noise_delete_candidate(
     from_is_junk: Optional[Tuple[bool, str]] = None,
 ) -> Tuple[bool, str, str]:
     """
-    Conservative delete gate for Unknown-industry RSS / headline garbage.
+    Narrow delete gate for Unknown-industry headline garbage.
 
-    Returns (should_delete, reason, bucket).
+    RSS/HTML signal storage format is NOT a delete criterion — use
+    ``pipeline_delete_policy.unknown_industry_delete_allowed``.
     """
-    name = (company_name or "").strip()
-    if not is_unknown_industry(industry):
-        return False, "", ""
+    from app.services.pipeline_delete_policy import unknown_industry_delete_allowed
 
-    if from_is_junk is not None:
-        junk, reason = from_is_junk
-    else:
-        from app.services.lead_filter import is_junk
-
-        junk, reason = is_junk(name)
-
-    if junk:
-        return True, reason, "fast_junk"
-
-    if signals_contain_google_rss_html(signals):
-        return True, "google RSS HTML aggregator noise in signals", "rss_html_noise"
-
-    if signals_are_market_research_noise(signals):
-        ent_ok, ent_reason = entity_is_noise_headline(name, min_confidence=0.55)
-        if ent_ok or len(name) >= 40:
-            return True, "market research / industry report headline", "market_report_noise"
-
-    ent_ok, ent_reason = entity_is_noise_headline(name, min_confidence=0.78)
-    if ent_ok:
-        return True, ent_reason, "headline_entity"
-
-    return False, "", ""
+    return unknown_industry_delete_allowed(
+        company_name,
+        industry,
+        signals,
+        from_is_junk=from_is_junk,
+    )

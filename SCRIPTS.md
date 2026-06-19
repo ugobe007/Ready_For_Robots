@@ -27,6 +27,9 @@ cat scripts/sql/add_company_automation_profile_column.sql
 
 ## 2. Lead cleanup pipeline (recommended)
 
+**Use this script for production cleanup.** Dry-run by default; deletes only when
+``is_valid_lead(name)`` fails (same gate as ingest and API logic engine).
+
 **Dry run** (no writes):
 
 ```bash
@@ -43,6 +46,22 @@ python3 scripts/cleanup_leads.py --apply
 
 ```bash
 python3 scripts/cleanup_leads.py --apply --skip-industry
+```
+
+### ⚠️ Do NOT use for bulk purge
+
+These audit scripts are **not** replacements for ``cleanup_leads.py``. They previously
+deleted rows for RSS signal format and quarantine status — that was a data-loss bug.
+They now follow ``app/services/pipeline_delete_policy.py`` (name gate only) and require
+``PIPELINE_HARD_DELETE_OK=1`` before any ``--delete``.
+
+```bash
+# Report only (safe)
+python3 scripts/cleanup_pipeline_junk.py
+python3 scripts/cleanup_unknown_rss_noise.py
+
+# Evaluate / enrich audit (no delete)
+python3 scripts/evaluate_pipeline_leads.py
 ```
 
 **Apply — skip purge** (only names / industry / profiles):
