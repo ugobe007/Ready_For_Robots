@@ -1104,15 +1104,15 @@ class IntelligenceNewsScraper:
                 self.db.rollback()
                 self._record_phase_failure("article_commit", e, article_ref)
     
-    def _enrich_company(self, company: Company):
+    def _enrich_company(self, company: Company, *, max_queries: int = 4):
         """Search news for specific company and add new signals."""
         queries = [
             f"{company.name} automation investment",
             f"{company.name} expansion facility",
             f"{company.name} funding round",
             f"{company.name} labor shortage staffing",
-        ]
-        
+        ][: max(1, int(max_queries))]
+
         for query in queries:
             articles = self._fetch_google_news(query)
             for article in articles[:5]:  # Top 5 per query

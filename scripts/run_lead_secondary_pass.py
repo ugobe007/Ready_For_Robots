@@ -36,14 +36,40 @@ def main() -> int:
     parser.add_argument("--min-score", type=float, default=15.0, help="Minimum intent score")
     parser.add_argument("--audit-only", action="store_true", help="List gaps without running passes")
     parser.add_argument("--no-llm", action="store_true", help="Skip LLM agent QA pass")
+    parser.add_argument("--no-apollo", action="store_true", help="Skip Apollo contact lookup")
+    parser.add_argument(
+        "--no-signal-backfill",
+        action="store_true",
+        help="Skip Google News signal backfill (much faster for large batches)",
+    )
+    parser.add_argument(
+        "--cooldown-hours",
+        type=int,
+        default=0,
+        help="Hours before re-running a pass (default 0 for manual CLI runs)",
+    )
+    parser.add_argument("--quiet", action="store_true", help="Suppress progress lines")
     parser.add_argument("--no-rescore", action="store_true", help="Do not queue rescore after batch")
+    parser.add_argument(
+        "--all-leads",
+        action="store_true",
+        help="Include headline/junk Unknown rows (default: pipeline sales-lead filter only)",
+    )
     args = parser.parse_args()
+
+    sales_leads_only = not args.all_leads
 
     db = SessionLocal()
     try:
         if args.audit_only:
+            if not args.quiet:
+                print(f"── Audit — scanning for gap candidates (limit={args.limit})…", flush=True)
             reports = select_gap_repair_candidates(
-                db, limit=args.limit, min_score=args.min_score
+                db,
+                limit=args.limit,
+                min_score=args.min_score,
+                progress=not args.quiet,
+                sales_leads_only=sales_leads_only,
             )
             print(json.dumps([r.to_dict() for r in reports], indent=2))
             return 0
@@ -53,7 +79,12 @@ def main() -> int:
             limit=args.limit,
             min_score=args.min_score,
             use_llm=not args.no_llm,
+            use_apollo=not args.no_apollo,
+            signal_backfill=not args.no_signal_backfill,
             rescore=not args.no_rescore,
+            cooldown_hours=args.cooldown_hours,
+            progress=not args.quiet,
+            sales_leads_only=sales_leads_only,
         )
         print(json.dumps(stats, indent=2, default=str))
         return 0

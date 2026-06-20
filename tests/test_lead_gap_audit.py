@@ -2,7 +2,11 @@
 
 from types import SimpleNamespace
 
-from app.services.lead_gap_audit import audit_company_gaps, stamp_ledger_entry
+from app.services.lead_gap_audit import (
+    _passes_sales_lead_filter,
+    audit_company_gaps,
+    stamp_ledger_entry,
+)
 
 
 def _company(**kwargs):
@@ -55,3 +59,24 @@ def test_stamp_ledger_entry_persists_on_crm_metadata():
     ledger = company.crm_metadata.get("enrichment_ledger", {})
     assert ledger["website_rescue"]["status"] == "filled"
     assert ledger["website_rescue"]["fields_filled"] == ["website"]
+
+
+def test_passes_sales_lead_filter_uses_row_is_junk():
+    assert _passes_sales_lead_filter("LifePoint Health")
+    assert _passes_sales_lead_filter("Acme Logistics")
+    assert not _passes_sales_lead_filter("Global M&A industry trends: 2026 outlook")
+
+
+def test_classify_lead_rejects_sentence_headline_as_sales_lead():
+    from app.services.lead_filter import classify_lead
+
+    company = _company(name="Global M&A industry trends: 2026 outlook")
+    signals = [
+        SimpleNamespace(
+            signal_type="news",
+            signal_text="Global M&A industry trends: 2026 outlook - PwC",
+        )
+    ]
+    junk, reason, _ = classify_lead(company, None, signals)
+    assert junk
+    assert reason

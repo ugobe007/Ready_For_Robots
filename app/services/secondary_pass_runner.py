@@ -100,19 +100,36 @@ def _llm_available() -> bool:
     return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY"))
 
 
+def _sales_leads_only_from_env() -> bool:
+    return os.getenv("SECONDARY_PASS_SALES_LEADS_ONLY", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+
+
 def run_leads_secondary_pass_sync(
     *,
     limit: int = 120,
     min_score: float = 15.0,
     use_llm: bool = True,
     rescore: bool = True,
+    sales_leads_only: Optional[bool] = None,
 ) -> Dict[str, Any]:
     if not _GLOBAL_LOCK.acquire(blocking=False):
         _emit("leads_skipped", reason="already_running", running=get_secondary_pass_status().get("running"))
         return {"status": "skipped", "reason": "already_running"}
 
     _set_running("leads")
-    _emit("leads_start", limit=limit, min_score=min_score, use_llm=use_llm)
+    if sales_leads_only is None:
+        sales_leads_only = _sales_leads_only_from_env()
+    _emit(
+        "leads_start",
+        limit=limit,
+        min_score=min_score,
+        use_llm=use_llm,
+        sales_leads_only=sales_leads_only,
+    )
     try:
         from app.services.lead_secondary_pass import run_secondary_pass_batch_and_refresh_caches
 
@@ -125,6 +142,7 @@ def run_leads_secondary_pass_sync(
             min_score=min_score,
             use_llm=use_llm,
             rescore=rescore,
+            sales_leads_only=sales_leads_only,
         )
         result = {"status": "completed", **stats}
         _record_finish("leads", result)
@@ -236,6 +254,7 @@ def run_full_secondary_pipeline_sync(
             if lead_rescore is not None
             else os.getenv("SECONDARY_PASS_RESCORE", "1").strip().lower() not in ("0", "false", "no")
         )
+        sales_leads_only = _sales_leads_only_from_env()
         if use_llm and not _llm_available():
             use_llm = False
 
@@ -246,12 +265,13 @@ def run_full_secondary_pipeline_sync(
             leads_result = {"status": "skipped", "reason": "ENABLE_SCHEDULED_SECONDARY_PASS=0"}
             _emit("pipeline_leads_skipped", reason=leads_result["reason"])
         else:
-            _emit("pipeline_leads_start", limit=lim)
+            _emit("pipeline_leads_start", limit=lim, sales_leads_only=sales_leads_only)
             leads_result = run_secondary_pass_batch_and_refresh_caches(
                 limit=lim,
                 min_score=min_score,
                 use_llm=use_llm,
                 rescore=rescore,
+                sales_leads_only=sales_leads_only,
             )
             leads_result = {"status": "completed", **leads_result}
             _emit(

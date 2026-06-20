@@ -85,17 +85,20 @@ def _run_website_rescue(company: Company, db: Session) -> tuple[str, List[str]]:
 
 
 def _run_industry_rescue(company: Company, signals: List[Signal], db: Session) -> tuple[str, List[str]]:
-    from app.services.industry_inference import infer_industry_from_text
+    from app.services.industry_inference import effective_industry_for_lead
+    from app.services.signal_text_normalize import strip_signal_html
 
-    text = " ".join(
-        filter(
-            None,
-            [company.name or ""]
-            + [getattr(s, "signal_text", "") or "" for s in signals[:12]],
-        )
-    )
-    inferred = infer_industry_from_text(text)
-    if not inferred or inferred.lower() in ("unknown", "other"):
+    class _Sig:
+        __slots__ = ("signal_text",)
+
+        def __init__(self, text: str) -> None:
+            self.signal_text = text
+
+    clean_signals = [
+        _Sig(strip_signal_html(getattr(s, "signal_text", "") or "")) for s in signals[:12]
+    ]
+    inferred = effective_industry_for_lead(company.name, company.industry, clean_signals)
+    if not inferred or inferred.lower() in ("unknown", "other", "new"):
         return "failed", []
     if (company.industry or "").strip().lower() == inferred.lower():
         return "skipped", []
@@ -105,7 +108,7 @@ def _run_industry_rescue(company: Company, signals: List[Signal], db: Session) -
     return "filled", ["industry"]
 
 
-def _run_contact_rescue(company: Company, db: Session) -> tuple[str, List[str]]:
+def _run_contact_rescue(company: Company, db: Session, *, use_apollo: bool = True) -> tuple[str, List[str]]:
     from app.services.lead_enrichment import enrich_company_contact_with_fallback
 
     before_email = any(
@@ -115,7 +118,7 @@ def _run_contact_rescue(company: Company, db: Session) -> tuple[str, List[str]]:
     meta_before = (company.crm_metadata or {}).get("outreach_email")
 
     out = enrich_company_contact_with_fallback(
-        company, db, sleep_s=0.4, use_apollo=True
+        company, db, sleep_s=0.4, use_apollo=use_apollo
     )
     email = out.get("email")
     source = out.get("email_source")
@@ -157,12 +160,12 @@ def _run_inference_rescue(company: Company, signals: List[Signal], db: Session) 
     return "failed", []
 
 
-def _run_signal_backfill(company: Company, db: Session) -> tuple[str, List[str]]:
+def _run_signal_backfill(company: Company, db: Session, *, max_queries: int = 4) -> tuple[str, List[str]]:
     from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
 
     scraper = IntelligenceNewsScraper(db=db)
     before = db.query(Signal).filter(Signal.company_id == company.id).count()
-    scraper._enrich_company(company)
+    scraper._enrich_company(company, max_queries=max(1, int(max_queries)))
     after = db.query(Signal).filter(Signal.company_id == company.id).count()
     if after > before:
         return "filled", ["signals"]
@@ -196,6 +199,9 @@ def run_rescue_passes_for_company(
     report: LeadGapReport,
     *,
     use_llm: bool = True,
+    use_apollo: bool = True,
+    signal_backfill: bool = True,
+    signal_backfill_queries: int = 1,
     cooldown_hours: int = 24,
 ) -> Dict[str, Any]:
     """Execute applicable rescue passes for one lead; returns per-pass outcomes."""
@@ -206,18 +212,24 @@ def run_rescue_passes_for_company(
     outcomes: Dict[str, str] = {}
     fields_filled: List[str] = []
 
+    passes = list(report.passes)
+    if not signal_backfill:
+        passes = [p for p in passes if p != PASS_SIGNALS]
+
     pass_runners = {
         PASS_WEBSITE: lambda: _run_website_rescue(company, db),
         PASS_INDUSTRY: lambda: _run_industry_rescue(company, signals, db),
-        PASS_CONTACT: lambda: _run_contact_rescue(company, db),
+        PASS_CONTACT: lambda: _run_contact_rescue(company, db, use_apollo=use_apollo),
         PASS_CRM: lambda: _run_crm_rescue(company, signals, db),
         PASS_INFERENCE: lambda: _run_inference_rescue(company, signals, db),
-        PASS_SIGNALS: lambda: _run_signal_backfill(company, db),
+        PASS_SIGNALS: lambda: _run_signal_backfill(
+            company, db, max_queries=signal_backfill_queries
+        ),
         PASS_RECTIFY: lambda: _run_rectification(company, signals, db),
         PASS_AGENT_QA: lambda: _run_agent_qa(company, signals, db, use_llm=use_llm),
     }
 
-    for pass_name in report.passes:
+    for pass_name in passes:
         if pass_name not in pass_runners:
             continue
         if not ledger_cooldown_ok(company, pass_name, cooldown_hours=cooldown_hours):
@@ -389,25 +401,48 @@ def run_secondary_pass_batch(
     limit: int = DEFAULT_SECONDARY_LIMIT,
     min_score: float = 15.0,
     use_llm: bool = True,
+    use_apollo: bool = True,
+    signal_backfill: bool = True,
+    signal_backfill_queries: int = 1,
     rescore: bool = True,
     cooldown_hours: int = 24,
+    progress: bool = False,
+    sales_leads_only: bool = True,
 ) -> Dict[str, Any]:
     """
     Nightly rescue batch: select gap-ranked leads, run decoupled passes, optional rescore.
     """
     lim = max(1, min(int(limit), MAX_SECONDARY_LIMIT))
-    candidates = select_gap_repair_candidates(db, limit=lim, min_score=min_score)
+    if progress:
+        print(f"── Secondary pass — scanning up to {min(max(lim * 8, 500), 2500)} leads for gaps…", flush=True)
+    candidates = select_gap_repair_candidates(
+        db,
+        limit=lim,
+        min_score=min_score,
+        progress=progress,
+        sales_leads_only=sales_leads_only,
+    )
+    if progress:
+        print(f"── Candidates: {len(candidates)} — processing…", flush=True)
 
     results: List[Dict[str, Any]] = []
     filled_total = 0
     errors = 0
 
-    for report in candidates:
+    for n, report in enumerate(candidates, start=1):
+        if progress:
+            print(
+                f"  [{n}/{len(candidates)}] id={report.company_id} {report.company_name[:40]!r}",
+                flush=True,
+            )
         try:
             row = run_rescue_passes_for_company(
                 db,
                 report,
                 use_llm=use_llm,
+                use_apollo=use_apollo,
+                signal_backfill=signal_backfill,
+                signal_backfill_queries=signal_backfill_queries,
                 cooldown_hours=cooldown_hours,
             )
             results.append(row)
@@ -443,6 +478,7 @@ def run_secondary_pass_batch_and_refresh_caches(
     min_score: float = 15.0,
     use_llm: bool = True,
     rescore: bool = True,
+    sales_leads_only: bool = True,
 ) -> Dict[str, Any]:
     """Background job: secondary rescue batch (optional cache refresh is lightweight)."""
     from app.database import SessionLocal
@@ -456,6 +492,7 @@ def run_secondary_pass_batch_and_refresh_caches(
             min_score=min_score,
             use_llm=use_llm,
             rescore=rescore,
+            sales_leads_only=sales_leads_only,
         )
     finally:
         db.close()

@@ -120,3 +120,32 @@ def test_skip_industry_reinfer_for_headline_like_names(name):
 def test_do_not_skip_normal_company_for_industry_reinfer():
     assert should_skip_industry_reinfer_for_company_name("Saks Global") is False
     assert should_skip_industry_reinfer_for_company_name("Acme Logistics LLC") is False
+
+
+def test_curly_apostrophe_known_brand_food_service():
+    assert known_industry_for_company_name("Denny\u2019s Corporation") == "Food Service"
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Houston-based steakhouse chain expands automation", "Food Service"),
+        ("Port of Los Angeles deploys terminal automation", "Ports & Maritime"),
+        ("Regional trucking company invests in fleet automation", "Logistics"),
+        ("City of Austin pilots municipal cleaning robots", "Government & Public Sector"),
+        ("State university campus facilities automation pilot", "Education"),
+        ("Cloud ERP vendor Versa announces warehouse module", "Software & IT"),
+        ("Somerset cheese factory packaging automation", "Food Processing & Manufacturing"),
+        ("Open pit mine automation and autonomous haul trucks", "Mining & Extraction"),
+        ("Oil refinery maintenance robotics program", "Oil & Gas & Petrochemical"),
+        ("Pharmaceutical manufacturer fill-finish automation", "Pharmaceuticals & Life Sciences"),
+        ("Major league stadium concession automation", "Sports & Stadiums"),
+    ],
+)
+def test_new_buyer_vertical_keywords(text, expected):
+    assert infer_industry_from_text(text) == expected
+
+
+def test_manufacturing_and_food_beverage_keyword_lists():
+    assert infer_industry_from_text("Precision machining shop expands production automation") == "Manufacturing"
+    assert infer_industry_from_text("Craft distillery expands spirits production capacity") == "Food & Beverage"

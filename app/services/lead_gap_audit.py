@@ -47,6 +47,17 @@ GAP_TO_PASS = {
 _UNKNOWN_INDUSTRY = frozenset({"", "unknown", "other", "new", "unclassified"})
 
 
+def _passes_sales_lead_filter(name: Optional[str]) -> bool:
+    """
+    Same junk / logic-engine gate as the public pipeline list and agent batch
+    (``pipeline_inference_batch.select_top_pipeline_company_ids``).
+    """
+    from app.api.leads import _row_is_junk
+
+    junk, _ = _row_is_junk(name)
+    return not junk
+
+
 @dataclass
 class LeadGapReport:
     company_id: int
@@ -199,12 +210,35 @@ def _secondary_candidate_pool(
     db: Session,
     *,
     pool_limit: int,
+    sales_leads_only: bool = True,
 ) -> List[Company]:
     """
     Mix high-score leads with gap-likely rows (unknown industry, never ledgered).
 
-    Score-only pools miss work when the top N leads were already enriched on restore.
+    When ``sales_leads_only`` (default), use the same score-ranked pipeline pool as
+    ``select_top_pipeline_company_ids`` and drop junk via ``_row_is_junk`` — avoids
+    headline-fragment Unknown rows dominating secondary batches.
     """
+    if sales_leads_only:
+        from app.api.leads import _lead_rows_query_limited
+
+        lim = max(pool_limit * 2, pool_limit + 100)
+        rows = _lead_rows_query_limited(db, lim).all()
+        ordered_ids: List[int] = []
+        for row in rows:
+            if not _passes_sales_lead_filter(getattr(row, "name", None)):
+                continue
+            if int(getattr(row, "signal_count", 0) or 0) < 1:
+                continue
+            ordered_ids.append(int(row.id))
+            if len(ordered_ids) >= pool_limit:
+                break
+        if not ordered_ids:
+            return []
+        companies = db.query(Company).filter(Company.id.in_(ordered_ids)).all()
+        by_id = {int(c.id): c for c in companies}
+        return [by_id[cid] for cid in ordered_ids if cid in by_id]
+
     half = max(pool_limit // 2, 50)
     from app.models.score import Score
 
@@ -253,6 +287,8 @@ def select_gap_repair_candidates(
     limit: int = 100,
     min_score: float = 0.0,
     require_gaps: Optional[Iterable[str]] = None,
+    progress: bool = False,
+    sales_leads_only: bool = True,
 ) -> List[LeadGapReport]:
     """
     Rank internal leads with at least one signal by gap priority.
@@ -262,12 +298,18 @@ def select_gap_repair_candidates(
     # Pool must not shrink with --limit (limit=5 used to scan only 40 rows — all enriched).
     pool = min(max(cap * 8, 500), 2500)
 
-    rows = _secondary_candidate_pool(db, pool_limit=pool)
+    rows = _secondary_candidate_pool(
+        db, pool_limit=pool, sales_leads_only=sales_leads_only
+    )
 
     require = set(require_gaps or [])
     reports: List[LeadGapReport] = []
 
-    for company in rows:
+    for idx, company in enumerate(rows, start=1):
+        if progress and idx % 50 == 0:
+            print(f"  … gap scan {idx}/{len(rows)}", flush=True)
+        if sales_leads_only and not _passes_sales_lead_filter(company.name):
+            continue
         signals = (
             db.query(Signal)
             .filter(Signal.company_id == company.id)
@@ -278,6 +320,13 @@ def select_gap_repair_candidates(
         if not signals:
             continue
         contacts = db.query(Contact).filter(Contact.company_id == company.id).limit(10).all()
+        if sales_leads_only:
+            from app.services.lead_filter import classify_lead
+
+            junk, _, _ = classify_lead(company, company.scores, signals)
+            if junk:
+                continue
+
         score_row = pick_primary_score(company.scores)
         overall = float(score_row.overall_intent_score or 0) if score_row else 0.0
         if overall < min_score:

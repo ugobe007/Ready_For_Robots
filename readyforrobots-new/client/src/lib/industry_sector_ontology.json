@@ -1055,6 +1055,46 @@
           ]
         }
       }
+    },
+    {
+      "id": "extended_buyer_verticals",
+      "label": "Extended Buyer Verticals",
+      "canonical_industries": [
+        "Construction & Building",
+        "Mining & Extraction",
+        "Oil & Gas & Petrochemical",
+        "Pharmaceuticals & Life Sciences",
+        "Ports & Maritime",
+        "Rail & Transit",
+        "Agriculture & Agribusiness",
+        "Government & Public Sector",
+        "Education",
+        "Financial Services",
+        "Telecom",
+        "Software & IT",
+        "Waste & Environmental",
+        "Sports & Stadiums",
+        "Manufacturing",
+        "Food & Beverage"
+      ],
+      "root_aliases": [
+        "construction",
+        "mining",
+        "oil and gas",
+        "pharmaceutical",
+        "port",
+        "maritime",
+        "rail",
+        "agriculture",
+        "government",
+        "education",
+        "financial services",
+        "telecom",
+        "software",
+        "waste management",
+        "stadium"
+      ],
+      "sub_ontologies": {}
     }
   ]
 }

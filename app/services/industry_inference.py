@@ -158,21 +158,42 @@ _AIRLINE_NAME_RE = re.compile(
 INDUSTRY_TIE_PRIORITY: Tuple[str, ...] = (
     "Automotive & Manufacturing",
     "Medical Technology",
+    "Pharmaceuticals & Life Sciences",
     "Healthcare",
-    "Logistics",
     "Defense",
+    "Oil & Gas & Petrochemical",
     "Energy & Utilities",
+    "Ports & Maritime",
+    "Rail & Transit",
+    "Logistics",
+    "Construction & Building",
+    "Mining & Extraction",
+    "Agriculture & Agribusiness",
     "Food Processing & Manufacturing",
     "CPG & Consumer Goods",
     "Contract Manufacturing",
     "Manufacturing",
     "Food & Beverage",
+    "Food Service",
     "Retail",
+    "Software & IT",
     "Datacenters",
+    "Telecom",
+    "Financial Services",
     "Airports & Aviation",
     "Hospitality",
-    "Food Service",
+    "Education",
+    "Government & Public Sector",
     "Real Estate & Facilities",
+    "Waste & Environmental",
+    "Sports & Stadiums",
+    "Apparel & Textiles",
+    "Automotive Dealerships",
+    "Casinos & Gaming",
+    "Cruise Lines",
+    "Theme Parks & Entertainment",
+    "Car Wash",
+    "Laundry & Linen Services",
     "Media & Publishing",
 )
 
@@ -186,7 +207,10 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "micro logistics", "light logistics", "package handling", "package automation",
         "parcel sorting", "sortation", "goods to person", "goods-to-person", "cross dock",
         "grocery logistics", "grocery distribution", "grocery fulfillment",
-        # Omit bare "delivery" — matches almost any supply-chain headline and pollutes other verticals.
+        "trucking", "trucking company", "fleet operator", "fleet management",
+        "last mile delivery", "courier", "parcel carrier", "ltl carrier", "ftl carrier",
+        "cold chain", "cold chain logistics", "refrigerated transport",
+        # Omit bare "delivery" / "fleet" alone — too generic in headlines.
     ],
     # Do not use generic "property management" — STR/Airbnb robot deployments often mention it
     # and mislabel automotive OEMs (e.g. Faraday Future delivering robots to vacation rentals).
@@ -208,6 +232,9 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "drive through", "mcdonald", "starbucks", "chipotle", "yum brands",
         "compass group", "aramark", "sodexo", "darden", "dine brands",
         "truck stop", "truckstop", "travel center", "travel plaza",
+        "steakhouse", "steak house", "steak chain", "pizzeria", "pizza chain",
+        "pizza restaurant", "bar and grill", "bar & grill", "brewpub", "tavern",
+        "buffet restaurant", "family dining", "full service restaurant",
     ],
     "Healthcare": [
         "hospital", "healthcare", "health system", "clinic", "patient",
@@ -240,6 +267,13 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "energy storage", "battery storage", "bess", "grid scale storage",
         "grid automation", "power grid", "smart grid", "substation",
         "utility", "utilities", "energy automation", "transmission automation",
+        "electric utility", "power utility", "water utility", "wastewater utility",
+    ],
+    "Oil & Gas & Petrochemical": [
+        "oil and gas", "oil & gas", "petrochemical", "petrochemical plant",
+        "refinery", "oil refinery", "natural gas", "lng terminal", "lng plant",
+        "pipeline operator", "midstream", "upstream", "downstream", "drilling",
+        "offshore platform", "oilfield", "gas processing",
     ],
     "Food Processing & Manufacturing": [
         "food processing", "food manufacturing", "food processing automation",
@@ -249,6 +283,8 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "robotic chef", "robotic kitchen",
         "food plant", "food factory", "food production", "poultry processing",
         "seafood processing", "dairy processing", "cheese plant", "meat packing",
+        "cheese factory", "dairy processor", "dairy processors", "meat packer",
+        "poultry plant", "meat processing plant",
         "beverage manufacturing", "bottling plant", "canning", "brewing",
         "snack food", "baked goods", "confectionery", "cereal manufacturing",
         "farm automation", "agriculture automation", "agtech", "ag tech",
@@ -338,6 +374,89 @@ INDUSTRY_KEYWORDS: Dict[str, list] = {
         "building maintenance automation", "landscape automation", "grounds maintenance",
         "mowing robot", "facilities automation",
         # Omit bare "enterprise" — matches generic B2B / software copy unrelated to facilities.
+    ],
+    "Manufacturing": [
+        "discrete manufacturing", "production plant", "manufacturing plant",
+        "industrial plant", "production facility", "fabrication plant",
+        "machine shop", "metal fabrication", "sheet metal", "injection molding",
+        "plastics manufacturing", "foundry", "die casting", "stampings",
+        "cnc machining", "precision machining", "tool and die",
+        "production automation", "factory automation", "plant automation",
+        # Omit bare "manufacturing", "factory", "assembly" — false positives in hospitality/CPG copy.
+    ],
+    "Food & Beverage": [
+        "food and beverage", "food & beverage", "f&b company", "beverage company",
+        "brewery", "brewing company", "distillery", "winery", "viticulture",
+        "soft drink", "beverage bottling", "spirits company", "wine producer",
+        "non-alcoholic beverage", "drink manufacturer",
+    ],
+    "Ports & Maritime": [
+        "port of", "seaport", "container port", "container terminal",
+        "maritime terminal", "shipping terminal", "port authority", "harbor",
+        "stevedoring", "maritime logistics", "shipping line", "container ship",
+        "port automation", "terminal automation", "crane automation",
+        # Omit bare "port" — matches "airport", "support", "export".
+    ],
+    "Rail & Transit": [
+        "railroad", "railway", "freight rail", "passenger rail", "commuter rail",
+        "light rail", "metro rail", "subway", "transit agency", "transit authority",
+        "rail yard", "intermodal rail", "rail automation", "train maintenance",
+    ],
+    "Construction & Building": [
+        "general contractor", "construction company", "construction firm",
+        "commercial construction", "infrastructure contractor", "builder",
+        "construction site", "building contractor", "civil contractor",
+        "construction automation", "construction robotics", "jobsite automation",
+    ],
+    "Mining & Extraction": [
+        "mining company", "mining operation", "open pit mine", "underground mine",
+        "quarry", "mineral extraction", "mining automation", "mine automation",
+        "autonomous haul", "autonomous hauling", "ore processing",
+    ],
+    "Pharmaceuticals & Life Sciences": [
+        "pharmaceutical", "pharma company", "biotech", "biotechnology",
+        "life sciences", "drug manufacturer", "biologics", "biopharma",
+        "pharmaceutical manufacturing", "api manufacturing", "fill finish",
+        "clinical manufacturing", "cell therapy", "gene therapy",
+        # cdmo overlaps Contract Manufacturing — prefer pharma-specific phrases here.
+        "pharma cdmo", "biologics cdmo", "drug discovery",
+    ],
+    "Agriculture & Agribusiness": [
+        "agribusiness", "agricultural cooperative", "crop production", "grower",
+        "farm operator", "farming operation", "vertical farm", "vertical farming",
+        "greenhouse grower", "hydroponic", "livestock operation", "dairy farm",
+        "poultry farm", "orchard", "vineyard operation", "grain elevator",
+    ],
+    "Government & Public Sector": [
+        "municipal", "city of", "county of", "state government", "federal agency",
+        "public sector", "government agency", "correctional facility", "prison",
+        "detention center", "public works", "municipal services",
+    ],
+    "Education": [
+        "university", "college campus", "school district", "k-12", "higher education",
+        "community college", "campus facilities", "education institution",
+    ],
+    "Financial Services": [
+        "bank", "banking", "insurance company", "insurer", "financial services",
+        "asset management", "investment firm", "credit union", "mortgage lender",
+    ],
+    "Telecom": [
+        "telecom", "telecommunications", "wireless carrier", "mobile network",
+        "broadband provider", "fiber network", "telco", "communications provider",
+    ],
+    "Software & IT": [
+        "software company", "saas", "software as a service", "cloud software",
+        "enterprise software", "erp vendor", "cloud erp", "business software",
+        "it services", "managed services provider", "systems integrator software",
+        # Omit bare "software", "cloud", "erp" — too generic in automation headlines.
+    ],
+    "Waste & Environmental": [
+        "waste management", "recycling facility", "material recovery", "landfill",
+        "environmental services", "sanitation", "waste hauling", "mrf facility",
+    ],
+    "Sports & Stadiums": [
+        "stadium", "arena", "ballpark", "sports venue", "sports complex",
+        "athletic facility", "convention center", "event venue",
     ],
     "Automotive Dealerships": [
         "dealership", "auto dealer", "car dealer", "automotive retail",
@@ -432,9 +551,20 @@ def _keyword_in_text(kw: str, text_lower: str) -> bool:
     return term_in_text(kw, text_lower)
 
 
+def _normalize_company_name_for_lookup(name: str) -> str:
+    """Normalize unicode punctuation so KNOWN_COMPANY_INDUSTRY keys match scraped names."""
+    n = name.strip().lower()
+    return (
+        n.replace("\u2019", "'")
+        .replace("\u2018", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+    )
+
+
 def known_industry_for_company_name(company_name: Optional[str]) -> Optional[str]:
     """Map company name to curated industry — never scan unrelated signal text."""
-    low = (company_name or "").strip().lower()
+    low = _normalize_company_name_for_lookup(company_name or "")
     if not low:
         return None
     for key in sorted(KNOWN_COMPANY_INDUSTRY.keys(), key=len, reverse=True):
@@ -562,7 +692,11 @@ def effective_industry_for_lead(
     Still prefers OEM/automotive inference when signal copy is vehicle-centric (Faraday, etc.).
     """
     name = (company_name or "").strip()
-    signal_blob = " ".join(getattr(s, "signal_text", None) or "" for s in signals or [])
+    from app.services.signal_text_normalize import strip_signal_html
+
+    signal_blob = " ".join(
+        strip_signal_html(getattr(s, "signal_text", None) or "") for s in signals or []
+    )
     stored = (stored_industry or "").strip()
     blob = " ".join([name, signal_blob, stored])
 
