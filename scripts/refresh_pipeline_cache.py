@@ -44,20 +44,25 @@ def main() -> int:
             return 1
         import urllib.request
 
-        url = f"{args.api_base.rstrip('/')}/api/admin/leads/refresh-pipeline-cache"
-        req = urllib.request.Request(
-            url,
-            method="POST",
-            headers={"X-Admin-Key": admin_key},
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                body = resp.read().decode()
-        except Exception as exc:
-            print(f"Remote refresh failed: {exc}", file=sys.stderr)
-            return 1
-        print(body)
-        return 0
+        base = args.api_base.rstrip("/")
+        for method, url in (
+            ("POST", f"{base}/api/admin/leads/refresh-pipeline-cache"),
+            ("GET", f"{base}/api/scraper/cron/refresh-pipeline"),
+        ):
+            req = urllib.request.Request(
+                url,
+                method=method,
+                headers={"X-Admin-Key": admin_key},
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    body = resp.read().decode()
+                print(body)
+                return 0
+            except Exception as exc:
+                last_err = exc
+        print(f"Remote refresh failed: {last_err}", file=sys.stderr)
+        return 1
 
     from app.database import SessionLocal
     from app.services.public_surface_cache import refresh_pipeline_surface_caches

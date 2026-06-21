@@ -56,16 +56,22 @@ def enrich_pipeline_leads_with_agent(
 
 
 @router.post("/leads/refresh-pipeline-cache")
-def refresh_pipeline_public_caches(background_tasks: BackgroundTasks):
+def refresh_pipeline_public_caches():
     """Rebuild homepage, summary, rotated lead lists, and /api/leads/pipeline feed."""
+    import threading
+
     from app.api.scraper_control import _run_pipeline_surface_refresh_sync
 
-    background_tasks.add_task(_run_pipeline_surface_refresh_sync)
+    threading.Thread(
+        target=_run_pipeline_surface_refresh_sync,
+        daemon=True,
+        name="admin-pipeline-cache-refresh",
+    ).start()
     return {
         "status": "started",
         "message": (
-            "Refreshing homepage, summary, rotated lead lists, and /pipeline feed. "
-            "Restart the web machine or wait ~30s if the UI still shows an old built_at."
+            "Refreshing homepage, summary, rotated lead lists, and /pipeline feed in background. "
+            "Heavy work runs off the request thread — allow 15–20 minutes, then check built_at."
         ),
     }
 

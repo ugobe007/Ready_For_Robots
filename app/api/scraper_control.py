@@ -255,7 +255,6 @@ def _run_pipeline_surface_refresh_sync() -> Dict[str, Any]:
 
 @router.get("/cron/refresh-pipeline")
 async def cron_refresh_pipeline_surfaces(
-    background_tasks: BackgroundTasks,
     token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
 ) -> Dict[str, Any]:
@@ -265,6 +264,7 @@ async def cron_refresh_pipeline_surfaces(
     Or: same URL with header X-Admin-Key: YOUR_ADMIN_KEY (no query token required).
     """
     import os
+    import threading
 
     from app.admin_auth import get_admin_key
 
@@ -275,7 +275,11 @@ async def cron_refresh_pipeline_surfaces(
     if not ok_cron and not ok_admin:
         raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
 
-    background_tasks.add_task(_run_pipeline_surface_refresh_sync)
+    threading.Thread(
+        target=_run_pipeline_surface_refresh_sync,
+        daemon=True,
+        name="cron-pipeline-cache-refresh",
+    ).start()
     return {
         "status": "started",
         "message": "Refreshing homepage, summary, rotated lead lists, and /pipeline feed.",
