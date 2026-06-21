@@ -3,6 +3,7 @@ Lead pipeline admin ops — auth via X-Admin-Key or admin Supabase JWT.
 
 POST /api/admin/leads/refresh-inference
 POST /api/admin/leads/enrich-agent
+POST /api/admin/leads/refresh-pipeline-cache
 POST /api/admin/leads/secondary-pass
 """
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
@@ -50,6 +51,21 @@ def enrich_pipeline_leads_with_agent(
         "message": (
             f"Enrichment agent processing up to {limit} leads — inference refresh, "
             "rich data extraction, and learned ontology update."
+        ),
+    }
+
+
+@router.post("/leads/refresh-pipeline-cache")
+def refresh_pipeline_public_caches(background_tasks: BackgroundTasks):
+    """Rebuild homepage, summary, rotated lead lists, and /api/leads/pipeline feed."""
+    from app.api.scraper_control import _run_pipeline_surface_refresh_sync
+
+    background_tasks.add_task(_run_pipeline_surface_refresh_sync)
+    return {
+        "status": "started",
+        "message": (
+            "Refreshing homepage, summary, rotated lead lists, and /pipeline feed. "
+            "Restart the web machine or wait ~30s if the UI still shows an old built_at."
         ),
     }
 

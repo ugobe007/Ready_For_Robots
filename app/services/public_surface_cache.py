@@ -15,6 +15,7 @@ import logging
 import os
 import threading
 import time
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from sqlalchemy.orm import Session
@@ -67,6 +68,24 @@ def read_public_caches_many(cache_keys: list[str], *, stale_ok: bool = True) -> 
 
 def write_public_cache(db: Session, cache_key: str, data: Any) -> None:
     cache_write(db, cache_key, data, ttl_minutes=PUBLIC_CACHE_TTL_MINUTES)
+
+
+def pipeline_feed_is_stale(feed: Optional[dict], *, ttl_minutes: Optional[int] = None) -> bool:
+    """True when durable pipeline feed is missing built_at or older than TTL."""
+    if not feed or not isinstance(feed, dict) or not (feed.get("leads") or []):
+        return True
+    built_at = feed.get("built_at")
+    if not built_at:
+        return True
+    try:
+        ts = datetime.fromisoformat(str(built_at).replace("Z", "+00:00"))
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return True
+    ttl = ttl_minutes if ttl_minutes is not None else PUBLIC_CACHE_TTL_MINUTES
+    age_min = (datetime.now(timezone.utc) - ts).total_seconds() / 60.0
+    return age_min > ttl
 
 
 def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
@@ -410,14 +429,20 @@ def start_public_cache_refresh_loop() -> None:
         from app.services.content_surfaces import KEY_PIPELINE_FEED
 
         feed = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
-        if isinstance(feed, dict) and (feed.get("leads") or []):
+        if isinstance(feed, dict) and (feed.get("leads") or []) and not pipeline_feed_is_stale(feed):
             global _last_refresh_monotonic
             _last_refresh_monotonic = time.monotonic()
             logger.info(
-                "Startup pipeline refresh skipped — durable feed warm (%d leads)",
+                "Startup pipeline refresh skipped — durable feed warm (%d leads, built_at=%s)",
                 len(feed.get("leads") or []),
+                feed.get("built_at"),
             )
         else:
+            if isinstance(feed, dict) and feed.get("built_at"):
+                logger.info(
+                    "Startup pipeline refresh scheduled — stale feed built_at=%s",
+                    feed.get("built_at"),
+                )
             schedule_public_cache_refresh(pipeline_only=True, reason="startup")
         while True:
             time.sleep(PUBLIC_CACHE_REFRESH_INTERVAL_SEC)

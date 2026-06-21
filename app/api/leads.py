@@ -2463,6 +2463,7 @@ def leads_pipeline_feed(
     from app.services.public_surface_cache import (
         PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
         maybe_schedule_public_cache_refresh,
+        pipeline_feed_is_stale,
         read_public_cache,
         schedule_public_cache_refresh,
     )
@@ -2481,13 +2482,15 @@ def leads_pipeline_feed(
     mem = _PIPELINE_FEED_MEM.get("v1")
     if mem is not None:
         data = mem["data"]
-        if isinstance(data, dict) and (data.get("leads") or []):
+        if isinstance(data, dict) and (data.get("leads") or []) and not pipeline_feed_is_stale(data):
             return _finish(data)
+        _PIPELINE_FEED_MEM.pop("v1", None)
 
     cached = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
     if cached and isinstance(cached, dict) and (cached.get("leads") or []):
-        hydrate_pipeline_feed_cache(cached)
-        return _finish(cached)
+        if not pipeline_feed_is_stale(cached):
+            hydrate_pipeline_feed_cache(cached)
+            return _finish(cached)
 
     schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
 

@@ -4,7 +4,7 @@ Scraper control API - Manual trigger and monitoring
 import logging
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Header
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy import func, cast, Date
@@ -257,16 +257,23 @@ def _run_pipeline_surface_refresh_sync() -> Dict[str, Any]:
 async def cron_refresh_pipeline_surfaces(
     background_tasks: BackgroundTasks,
     token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
 ) -> Dict[str, Any]:
     """
     Rebuild pipeline/sales-lead caches with rotation (default cadence: 30 minutes).
     GET /api/scraper/cron/refresh-pipeline?token=YOUR_SCRAPER_CRON_TOKEN
+    Or: same URL with header X-Admin-Key: YOUR_ADMIN_KEY (no query token required).
     """
     import os
 
+    from app.admin_auth import get_admin_key
+
     expected = os.getenv("SCRAPER_CRON_TOKEN")
-    if expected and token != expected:
-        raise HTTPException(status_code=403, detail="Invalid token")
+    admin = get_admin_key()
+    ok_cron = bool(expected and token.strip() == expected)
+    ok_admin = bool(admin and x_admin_key and x_admin_key.strip() == admin)
+    if not ok_cron and not ok_admin:
+        raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
 
     background_tasks.add_task(_run_pipeline_surface_refresh_sync)
     return {
