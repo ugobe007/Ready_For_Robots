@@ -88,7 +88,7 @@ def pipeline_feed_is_stale(feed: Optional[dict], *, ttl_minutes: Optional[int] =
     return age_min > ttl
 
 
-def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
+def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: bool = True) -> dict[str, Any]:
     """Pipeline/homepage/summary/leads/humanoid — default every 30 minutes with lead rotation."""
     from datetime import datetime, timezone
 
@@ -112,7 +112,7 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
     homepage_day = homepage_rotation_day()
     homepage_slot = homepage_rotation_slot()
 
-    homepage = _build_homepage_payload(db)
+    homepage = _build_homepage_payload(db, resolve_llm_urls=False)
     write_public_cache(db, KEY_HOMEPAGE, homepage)
     stats["homepage_hot_leads"] = len(homepage.get("hotLeads") or [])
     stats["rotation_slot"] = rotation_slot
@@ -145,9 +145,10 @@ def refresh_pipeline_surface_caches(db: Session) -> dict[str, Any]:
     hydrate_pipeline_feed_cache(pipeline_feed)
     stats["pipeline_feed_leads"] = len(pipeline_leads)
 
-    report = build_humanoid_report_payload(db)
-    write_public_cache(db, KEY_HUMANOID_REPORT, report)
-    stats["humanoid_robots"] = (report.get("report") or {}).get("total_robots", 0)
+    if include_humanoid_report:
+        report = build_humanoid_report_payload(db)
+        write_public_cache(db, KEY_HUMANOID_REPORT, report)
+        stats["humanoid_robots"] = (report.get("report") or {}).get("total_robots", 0)
 
     logger.info("Pipeline surface caches refreshed: %s", stats)
     return stats
@@ -309,7 +310,7 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
     db = SessionLocal()
     try:
         if pipeline_only:
-            refresh_pipeline_surface_caches(db)
+            refresh_pipeline_surface_caches(db, include_humanoid_report=False)
         elif force:
             refresh_all_public_surface_caches(db)
         else:

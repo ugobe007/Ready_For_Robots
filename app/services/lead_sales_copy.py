@@ -87,20 +87,21 @@ _JUNK_DISPLAY_RE = re.compile(
 _WIRE_HEADLINE_FRAGMENT_RE = re.compile(
     r"(?i)"
     r"(?:"
-    r"\bopens?\s+\w+.*\bas\s+\$?\d"
+    r"\bopens?\s+\w+(?:[^\n]{0,120}?)\bas\s+\$?\d"
     r"|\bexpansion\s+positions\b"
     r"|\bpositions?\s+property\b"
-    r"|\bas\s+\$?\d+[mbk]?\b.*\bexpansion\b.*\b(for|to)\b"
+    r"|\bas\s+\$?\d+[mbk]?\b(?:[^\n]{0,120}?)\bexpansion\b(?:[^\n]{0,40}?)\b(for|to)\b"
     r")",
 )
 
 _EXPANSION_OPENING_RE = re.compile(
-    r"(?i)^(?P<subject>.+?)\s+opens?\s+(?P<target>.+?)\s+as\s+(?:a\s+)?"
-    r"(?P<amount>\$[\d,.]+[MBK]?|\d+(?:\.\d+)?\s*(?:million|billion))\s+expansion",
+    r"(?i)^(?P<subject>[\w\s\-'&,().]{1,120}?)\s+opens?\s+(?P<target>[\w\s\-'&,().]{1,120}?)\s+as\s+(?:a\s+)?"
+    r"(?P<amount>\$[\d,.]+[MBK]?|\d+(?:\.\d+)?\s*(?:million|billion))\s+expansion\b",
 )
 
+# Bounded tail only — unbounded `(?:word\s*)+$` caused catastrophic backtracking on long headlines.
 _NEWS_ATTRIBUTION_TAIL_RE = re.compile(
-    r"\s*[-–—]\s*(?:[A-Za-z0-9][\w.]*\s*)+$"
+    r"\s[-–—]\s+[A-Za-z][\w .&'-]{1,48}\s*$"
 )
 
 # Plain-English drivers — never expose internal signal taxonomy to reps.

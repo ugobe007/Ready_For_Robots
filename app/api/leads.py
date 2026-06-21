@@ -942,9 +942,17 @@ def _fmt_company(
     )
     gtm = compute_gtm_readiness(sigs, pri.tier, pri.reasons)
 
-    share_blurb, share_summary = _build_share_blurb(
-        c, pri, sigs, industry_for_copy=industry_display, automation_profile=automation_profile
-    )
+    if fast_signals:
+        from app.services.lead_signal_display import format_signal_for_sales
+
+        top = _dedup_top_signals(sigs, 1)
+        sig = top[0] if top else None
+        share_summary = format_signal_for_sales(sig.signal_text)[:320] if sig else ""
+        share_blurb = share_summary[:220]
+    else:
+        share_blurb, share_summary = _build_share_blurb(
+            c, pri, sigs, industry_for_copy=industry_display, automation_profile=automation_profile
+        )
 
     from app.services.lead_project_timing import resolve_project_timing
 
@@ -1435,13 +1443,8 @@ def _fetch_staged_by_tier(
         return []
     if pool_cap is None:
         if tier_u == "COLD":
-            # Monitoring leads score below the HOT/WARM band — scan the full public corpus.
-            public_n = (
-                db.query(Company.id)
-                .filter(Company.is_internal.is_(True))
-                .count()
-            )
-            pool_cap = min(5000, max(public_n, _PIPELINE_SUMMARY_ROW_CAP))
+            # Monitoring tier — bounded slice (full corpus scan was 30+ min on refresh).
+            pool_cap = min(_PIPELINE_SUMMARY_ROW_CAP, max(limit * 60, 400))
         elif tier_u == "WARM":
             pool_cap = min(_PIPELINE_SUMMARY_ROW_CAP, max(limit * 60, 800))
         else:
