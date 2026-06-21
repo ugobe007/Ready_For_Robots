@@ -215,24 +215,17 @@ def _secondary_candidate_pool(
     """
     Mix high-score leads with gap-likely rows (unknown industry, never ledgered).
 
-    When ``sales_leads_only`` (default), use the same score-ranked pipeline pool as
-    ``select_top_pipeline_company_ids`` and drop junk via ``_row_is_junk`` — avoids
-    headline-fragment Unknown rows dominating secondary batches.
+    When ``sales_leads_only`` (default), use the same HOT/WARM/COLD pipeline surface
+    as GET /api/leads/pipeline (via ``select_pipeline_surface_company_ids``).
     """
     if sales_leads_only:
-        from app.api.leads import _lead_rows_query_limited
+        from app.services.pipeline_inference_batch import select_pipeline_surface_company_ids
 
-        lim = max(pool_limit * 2, pool_limit + 100)
-        rows = _lead_rows_query_limited(db, lim).all()
-        ordered_ids: List[int] = []
-        for row in rows:
-            if not _passes_sales_lead_filter(getattr(row, "name", None)):
-                continue
-            if int(getattr(row, "signal_count", 0) or 0) < 1:
-                continue
-            ordered_ids.append(int(row.id))
-            if len(ordered_ids) >= pool_limit:
-                break
+        ordered_ids = select_pipeline_surface_company_ids(
+            db,
+            limit=pool_limit,
+            slots_multiplier=4,
+        )
         if not ordered_ids:
             return []
         companies = db.query(Company).filter(Company.id.in_(ordered_ids)).all()

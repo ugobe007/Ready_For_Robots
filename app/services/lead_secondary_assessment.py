@@ -230,6 +230,49 @@ def stamp_secondary_assessment(company: Company, assessment: Dict[str, Any]) -> 
     company.crm_metadata = meta
 
 
+def read_sales_opportunity_rank(company: Company) -> Optional[float]:
+    """Return persisted sales_opportunity_rank, if secondary pass has run."""
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
+    assessment = meta.get("secondary_assessment")
+    if not isinstance(assessment, dict):
+        return None
+    rank = (assessment.get("pillars") or {}).get(PILLAR_RANK) or {}
+    val = rank.get("sales_opportunity_rank")
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def read_completeness_score(company: Company) -> float:
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
+    assessment = meta.get("secondary_assessment")
+    if not isinstance(assessment, dict):
+        return 0.0
+    rank = (assessment.get("pillars") or {}).get(PILLAR_RANK) or {}
+    try:
+        return float(rank.get("completeness_score") or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def blend_pipeline_rank_score(company: Company, *, tier_score: float) -> float:
+    """
+    Prefer secondary-assessed leads on /pipeline when enrichment exists.
+    Unassessed leads keep tier_score (no penalty before secondary pass runs).
+    """
+    sor = read_sales_opportunity_rank(company)
+    if sor is None:
+        return float(tier_score)
+    completeness = read_completeness_score(company)
+    return round(
+        0.55 * sor + 0.35 * float(tier_score) + 0.10 * completeness * 100.0,
+        4,
+    )
+
+
 def run_value_assessment_pass(
     company: Company,
     signals: Sequence[Signal],

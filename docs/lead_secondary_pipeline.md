@@ -64,6 +64,16 @@ Stored on each lead as `crm_metadata.secondary_assessment` after every secondary
 | `ontology_gaps` | `agent_qa` | Rich facts, ontology candidates |
 | *(always)* | `value_assessment` | `secondary_assessment` + rank |
 
+## Pipeline alignment
+
+Secondary pass and the public `/pipeline` feed share the same surface:
+
+| Step | Behavior |
+|------|----------|
+| **Candidate pool** | `select_pipeline_surface_company_ids` — HOT/WARM/COLD staging via `_fetch_staged_by_tier` (4× slot width for batches) |
+| **Display ranking** | `blend_pipeline_rank_score` — 55% `sales_opportunity_rank` + 35% tier score + 10% completeness when assessed |
+| **After batch** | `refresh_pipeline_surface_caches()` full rebuild (not hydrate-only) so UI reflects enrichment immediately |
+
 ## Automatic execution (production)
 
 Fly runs **`SKIP_CELERY=1`** on the web machine, so Celery Beat alone does not fire jobs. Secondary logic is automatic via:

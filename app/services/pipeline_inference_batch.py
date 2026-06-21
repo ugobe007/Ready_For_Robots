@@ -18,37 +18,57 @@ DEFAULT_BATCH_LIMIT = 300
 MAX_BATCH_LIMIT = 500
 
 
-def select_top_pipeline_company_ids(db: Session, *, limit: int = DEFAULT_BATCH_LIMIT) -> List[int]:
+def select_pipeline_surface_company_ids(
+    db: Session,
+    *,
+    limit: int = DEFAULT_BATCH_LIMIT,
+    slots_multiplier: int = 4,
+) -> List[int]:
     """
-    Same ranking as the public pipeline: intent score + priority tier, excluding junk
-    and companies with no signals.
+    Company IDs from the same HOT/WARM/COLD staging as GET /api/leads/pipeline.
+
+    Uses a wider per-tier pool (``slots_multiplier``) for secondary pass / inference
+    batches while preserving tier diversity and classify_lead gating.
     """
-    from app.api.leads import _lead_rows_query_limited, _row_is_junk, _row_priority
+    from app.api.leads import (
+        PIPELINE_HOT_SLOTS,
+        PIPELINE_MONITOR_SLOTS,
+        PIPELINE_WARM_SLOTS,
+        _fetch_staged_by_tier,
+    )
 
     lim = max(1, min(int(limit), MAX_BATCH_LIMIT))
-    pool = min(600, max(lim * 2, lim + 50))
-    rows = _lead_rows_query_limited(db, pool).all()
+    mult = max(2, int(slots_multiplier))
+    hot_n = min(PIPELINE_HOT_SLOTS * mult, lim)
+    warm_n = min(PIPELINE_WARM_SLOTS * mult, max(0, lim - hot_n))
+    cold_n = min(PIPELINE_MONITOR_SLOTS * mult, max(0, lim - hot_n - warm_n))
 
-    scored: List[tuple[int, float]] = []
-    for row in rows:
-        if _row_is_junk(row.name)[0]:
-            continue
-        if int(row.signal_count or 0) < 1:
-            continue
-        pri = _row_priority(row)
-        scored.append((int(row.id), float(pri.score)))
-
-    scored.sort(key=lambda x: x[1], reverse=True)
-    seen: set[int] = set()
+    exclude: set[int] = set()
     ids: List[int] = []
-    for cid, _ in scored:
-        if cid in seen:
+
+    for tier, tier_lim in (
+        ("HOT", hot_n),
+        ("WARM", warm_n),
+        ("COLD", cold_n),
+    ):
+        if tier_lim <= 0:
             continue
-        seen.add(cid)
-        ids.append(cid)
-        if len(ids) >= lim:
-            break
-    return ids
+        staged = _fetch_staged_by_tier(db, tier, limit=tier_lim, exclude_ids=exclude)
+        for company, *_rest in staged:
+            cid = int(company.id)
+            if cid in exclude:
+                continue
+            ids.append(cid)
+            exclude.add(cid)
+            if len(ids) >= lim:
+                return ids[:lim]
+
+    return ids[:lim]
+
+
+def select_top_pipeline_company_ids(db: Session, *, limit: int = DEFAULT_BATCH_LIMIT) -> List[int]:
+    """Pipeline-ranked company IDs — same HOT/WARM/COLD surface as /api/leads/pipeline."""
+    return select_pipeline_surface_company_ids(db, limit=limit, slots_multiplier=2)
 
 
 def run_pipeline_inference_batch(

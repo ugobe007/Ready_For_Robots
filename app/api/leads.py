@@ -1471,28 +1471,32 @@ def _fetch_staged_by_tier(
     if not staged:
         return []
 
-    out = []
-    batch_size = max(limit * 8, 40)
-    for offset in range(0, len(staged), batch_size):
-        ids = [sid for sid, _ in staged[offset : offset + batch_size]]
-        companies = (
-            db.query(Company)
-            .options(joinedload(Company.scores), joinedload(Company.signals))
-            .filter(Company.id.in_(ids))
-            .all()
-        )
-        company_map = {c.id: c for c in companies}
-        for cid in ids:
-            c = company_map.get(cid)
-            if not c:
-                continue
-            junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
-            if junk or pri.tier != tier_u:
-                continue
-            out.append((c, junk, junk_reason, pri))
-            if len(out) >= limit:
-                return out
-    return out
+    from app.services.lead_secondary_assessment import blend_pipeline_rank_score
+
+    scan_cap = min(len(staged), max(limit * 8, 80))
+    ids = [sid for sid, _ in staged[:scan_cap]]
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+    candidates: list = []
+    for cid in ids:
+        c = company_map.get(cid)
+        if not c:
+            continue
+        junk, junk_reason, pri = classify_lead(c, c.scores, c.signals)
+        if junk or pri.tier != tier_u:
+            continue
+        candidates.append((c, junk, junk_reason, pri))
+
+    candidates.sort(
+        key=lambda t: blend_pipeline_rank_score(t[0], tier_score=float(t[3].score)),
+        reverse=True,
+    )
+    return candidates[:limit]
 
 
 def _staged_tuples_to_feed_rows(staged: list, *, slim: bool = False) -> list:

@@ -480,9 +480,12 @@ def run_secondary_pass_batch_and_refresh_caches(
     rescore: bool = True,
     sales_leads_only: bool = True,
 ) -> Dict[str, Any]:
-    """Background job: secondary rescue batch (optional cache refresh is lightweight)."""
+    """Background job: secondary rescue batch then full pipeline cache rebuild."""
     from app.database import SessionLocal
-    from app.services.public_surface_cache import hydrate_public_surface_caches
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_pipeline_surface_caches,
+    )
 
     db = SessionLocal()
     try:
@@ -498,10 +501,16 @@ def run_secondary_pass_batch_and_refresh_caches(
         db.close()
 
     try:
-        hydrate_public_surface_caches()
-        stats["cache_refresh"] = "ok"
+        db2 = SessionLocal()
+        try:
+            refresh_pipeline_surface_caches(db2, include_humanoid_report=False)
+            db2.commit()
+            hydrate_public_surface_caches()
+            stats["cache_refresh"] = "ok"
+        finally:
+            db2.close()
     except Exception as exc:
-        logger.warning("Secondary pass cache hydrate failed: %s", exc)
+        logger.warning("Secondary pass pipeline cache refresh failed: %s", exc)
         stats["cache_refresh"] = f"failed: {exc}"
 
     logger.info("Secondary pass batch complete: %s", stats)
