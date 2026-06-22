@@ -213,6 +213,18 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "comptroller ny": "Government & Public Sector",
     "bnp media": "Media & Publishing",
     "packaging machinery": "Manufacturing",
+    # ── Unknown-industry residual sweep (2026-06-23) ─────────────────────────
+    "tracegains": "Food Processing & Manufacturing",
+    "crewline": "Logistics",
+    "korth group": "Construction & Building",
+    "oracle": "Software & IT",
+    "invivoscribe": "Medical Technology",
+    "schaeffler": "Automotive & Manufacturing",
+    "idaho health": "Healthcare",
+    "greece tourism": "Hospitality",
+    "sata": "Automotive & Manufacturing",
+    "cama group": "Food Processing & Manufacturing",
+    "xyall": "Medical Technology",
 }
 
 # Company name looks like a passenger airline (not an automaker).
@@ -586,9 +598,19 @@ def should_skip_industry_reinfer_for_company_name(name: Optional[str]) -> bool:
         r"(?i)^tim\s+cook\b",
         r"(?i)^satya\s+nadella\b",
         r"(?i)^sundar\s+pichai\b",
+        r"(?i)^yann\s+lecun\b",
+        r"(?i)^sam\s+altman\b",
+        r"(?i)^jensen\s+huang\b",
     ):
         if re.match(pat, raw):
             return True
+
+    if re.match(r"(?i)^(uk|us|a)\s+firm\.?$", raw):
+        return True
+    if re.match(r"(?i)^20\d\d:\s", raw):
+        return True
+    if re.search(r"(?i)\b(championship|tournament|vc cultivate)\b", raw):
+        return True
 
     # Conference / trade-show / week-style headlines
     if re.search(r"(?i)\b(national|international)\s+\w+\s+week\b", raw):

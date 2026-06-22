@@ -2,7 +2,7 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-23 (Phase 1 friction baseline — live `intelligence` slice restored; vendor/OEM promoted to rank 1)
+**Last updated:** 2026-06-23 (unknown-industry residual sweep — active Unknown w/ signals cleared to 0)
 
 ---
 
@@ -116,8 +116,9 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`pipeline-action-copy`~~ | ProductSurface | ✅ **Done 2026-06-23** — industry `pipeline_action` + `share_blurb` on cards; cache rebuilt (**35** feed). |
 | ~~1~~ | ~~`next-actions-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — home hero + pipeline right rail; `GET /api/leads/pipeline-next-actions`. |
 | ~~1~~ | ~~`humanoid-pilot-ranking`~~ | LeadQuality + ProductSurface | ✅ **Done 2026-06-23** — `humanoid_pilot_*` tiers on cards; humanoid leads boost next-actions + pipeline badge. |
+| ~~1~~ | ~~`unknown-industry-residual-sweep`~~ | LeadQuality | ✅ **Done 2026-06-23** — **8** industries applied, **48** quarantined; active Unknown w/ signals **56→0**. |
 
-*Backlog empty after humanoid-pilot-ranking — next: harness snapshot + friction re-rank (Unknown **52**, buyer-intent historical).*
+*Backlog empty after unknown-industry-residual-sweep — next: harness snapshot + friction re-rank (`pipeline-robot-types-surface`, `vendor-oem-live-flow`, `contact-gap-backfill`).*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
