@@ -90,7 +90,9 @@ What this mission must not touch.
 
 | Slug | Agent | Type | Notes |
 |------|-------|------|-------|
-| `2026-06-23-friction-baseline` | FrictionMiner | research | **Start here** — thesis + backlog from snapshot |
+| `2026-06-23-friction-baseline` | FrictionMiner | research | **Done** — thesis + backlog from sweep reports |
+| `2026-06-23-snapshot-db-telemetry` | PipelineHealth | build | **Done** — `harness_env.py`, DB telemetry in snapshot |
+| `buyer-intent-gate-triage` | LeadQuality | build | **Next** — rank 1 backlog (69% no-intent junk) |
 | `pipeline-observe-baseline` | PipelineHealth | research | Snapshot only, no code |
 | `hero-ticker-swap` | ProductSurface | build | Live ticker on home hero |
 | `partnership-quarantine-sweep` | LeadQuality | build | Dry-run then apply quarantine script |

@@ -23,16 +23,10 @@ from typing import Any
 _root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_root))
 
-from dotenv import load_dotenv
-
 from app.env_loader import database_url_is_template_or_sqlite
+from scripts.harness_env import database_telemetry, load_harness_env
 
-_shell_database_url = (os.environ.get("DATABASE_URL") or "").strip()
-load_dotenv(_root / "frontend" / "nextjs" / ".env.local")
-load_dotenv(_root / ".env", override=True)
-_loaded = (os.environ.get("DATABASE_URL") or "").strip()
-if _shell_database_url and database_url_is_template_or_sqlite(_loaded):
-    os.environ["DATABASE_URL"] = _shell_database_url
+load_harness_env(_root)
 
 
 def _fetch_json(url: str, timeout: int = 25) -> tuple[dict | list | None, str | None]:
@@ -138,6 +132,16 @@ def _db_counts(db) -> dict | None:
         }
     except Exception as exc:
         return {"error": str(exc)}
+
+
+def _merge_database_block(db, telemetry: dict[str, Any]) -> dict[str, Any]:
+    counts = _db_counts(db)
+    block: dict[str, Any] = {"telemetry": telemetry}
+    if counts:
+        block.update(counts)
+    elif telemetry.get("status") != "connected":
+        block["counts_available"] = False
+    return block
 
 
 def _junk_reason_sample(db, sample_size: int = 400) -> dict[str, Any]:
@@ -356,14 +360,22 @@ def build_snapshot(api_base: str, *, previous: dict | None = None) -> dict:
         alerts.append("homepage hotLeads empty")
 
     db = _db_session()
+    telemetry = database_telemetry(_root)
+    if telemetry.get("status") != "connected" and db is None:
+        telemetry = {**telemetry, "intelligence_blocked": True}
     try:
         intelligence = _build_intelligence(db, pipeline_leads, previous)
-        database = _db_counts(db)
+        database = _merge_database_block(db, telemetry)
     finally:
         if db is not None:
             db.close()
 
     intel_alerts: list[str] = []
+    if telemetry.get("status") != "connected":
+        reason = telemetry.get("reason") or "unknown"
+        intel_alerts.append(f"DB telemetry unavailable ({reason})")
+    elif not (intelligence.get("junk_reasons") or {}).get("available"):
+        intel_alerts.append("intelligence slice incomplete despite DB connection")
     junk = intelligence.get("junk_reasons") or {}
     if junk.get("available") and junk.get("junk_rate", 0) > 0.35:
         intel_alerts.append(f"high junk rate in sample ({junk.get('junk_rate'):.0%})")
@@ -438,6 +450,12 @@ def main() -> int:
 
     print(f"Wrote {path}")
     print(f"Wrote {latest}")
+    telemetry = (snapshot.get("database") or {}).get("telemetry") or {}
+    print(f"DB telemetry: {telemetry.get('status')} ({telemetry.get('source') or telemetry.get('reason', 'n/a')})")
+    intel = snapshot.get("intelligence") or {}
+    junk_ok = (intel.get("junk_reasons") or {}).get("available")
+    gap_ok = (intel.get("gap_frequency") or {}).get("available")
+    print(f"Intelligence: junk={junk_ok} gaps={gap_ok} industries={len(intel.get('industry_top') or [])}")
     if snapshot["alerts"]:
         print("Alerts:", "; ".join(snapshot["alerts"]))
     return 0

@@ -83,23 +83,39 @@ Active bets the Orchestrator should prefer when choosing build missions:
 
 ---
 
+## Intelligence baseline (DB-backed, 2026-06-23)
+
+First snapshot with live `intelligence` slice (`database.telemetry.status: connected`):
+
+| Signal | Value | Implication |
+|--------|-------|-------------|
+| Unknown industry (with signals) | **960** | Rank 3 RSS/HTML + report filter still critical |
+| Quarantined companies | **1,053** | Rectifier/quarantine working; volume worth trending |
+| Pipeline gap scan (34 candidates) | `low_signals` 17, `industry` 11 | Surface leads thin on evidence + industry |
+| Recent-name junk sample | 6% (OEM/vendor dominated) | Recent ingest cleaner than historical CSV sweeps |
+| Pipeline surface | 9 leads, tiers unknown, empty robot_types | ProductSurface: tier + robot_types still broken on cache |
+
+Historical CSV sweeps (pre-telemetry) remain directionally valid for **bulk junk** (69% no-intent) but should not be re-used once DB deltas are available.
+
+---
+
 ## Ranked build backlog (agent-maintained)
 
 Updated by research missions. Execution missions pull from here.
 
-Re-ranked 2026-06-23 from the friction baseline. Ranks now follow **volume × north-star order**: unblock measurement (theme 0), then attack the highest-volume name/event junk before copy/UX.
+Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-star order**: unblock measurement (theme 0), then attack the highest-volume name/event junk before copy/UX.
 
 | Rank | Mission slug | Agent | Rationale (evidence) |
 |------|--------------|-------|----------------------|
-| 1 | `snapshot-db-telemetry` | PipelineHealth + Deploy | **NEW.** Wire read-only `DATABASE_URL` into the snapshot run so `junk_reasons`/`gap_frequency`/`industry_top` populate. Theme 0 — every other metric is un-trended without it. |
-| 2 | `buyer-intent-gate-triage` | LeadQuality | **NEW.** 69% of junk = "no buyer-intent signal". Suppress/route no-intent rows out of the pipeline surface or into secondary pass; instrument the gate. Highest-volume friction. |
-| 3 | `rss-html-strip-and-report-filter` | LeadQuality | **NEW.** Strip HTML boilerplate (`nbsp/font/href/indexbox`) and demote market-research headlines; recovers the 1,110 `Unknown`-industry junk rows. Themes 2 + 4. |
-| 4 | `vendor-oem-suppression-refresh` | LeadQuality | **NEW.** Extend OEM blocklist for Tesla/Foxconn/SoftBank/Nvidia variants (~167 vendor leaks). Enforces OEM anti-bet. |
-| 5 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 in latest sweeps); harden rule for vendor+entity and slogan phrases. |
-| 6 | `industry-rescue-ontology` | LeadQuality | Reduce `industry_rescue` failures on HOT rows once RSS/HTML noise (rank 3) is removed. |
-| 7 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean. |
-| 8 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
-| 9 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~1~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23** — `harness_env.py` + `database.telemetry`; intelligence slice live. |
+| 1 | `buyer-intent-gate-triage` | LeadQuality | 69% of historical junk = "no buyer-intent signal". Suppress/route no-intent rows; instrument the gate. |
+| 2 | `rss-html-strip-and-report-filter` | LeadQuality | **960 Unknown** industry rows with signals; HTML/market-report noise. |
+| 3 | `vendor-oem-suppression-refresh` | LeadQuality | OEM blocklist gaps (~167 vendor leaks in sweeps; 6% in recent sample). |
+| 4 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 in latest sweeps). |
+| 5 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 on pipeline surface (11/34) once RSS noise removed. |
+| 6 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean. |
+| 7 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 8 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
 
 *`hospitality-headline-filter` folded into rank 3 (RSS/HTML strip covers hotel/geo header merges).*
 

@@ -73,16 +73,19 @@ One mission = one primary goal. Split hero swap from pipeline cleanup.
 | `harness/intelligence.yaml` | Intelligence slice config |
 | `harness/gates.yaml` | Verification before commit/deploy |
 | `scripts/harness_snapshot.py` | Writes `reports/harness_snapshot_latest.json` |
+| `scripts/harness_env.py` | Loads `.env` / `HARNESS_DATABASE_URL` for all harness scripts |
 | `scripts/run_mission.py` | Agent SDK mission runner (Orchestrator entry) |
 | `scripts/harness_notify.py` | Post-mission notification (file + optional email) |
 
 Run observe before every mission:
 
 ```bash
-python3 scripts/harness_snapshot.py
+python3 scripts/harness_snapshot.py   # requires DATABASE_URL or HARNESS_DATABASE_URL in .env
 python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
 python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baseline
 ```
+
+If snapshot shows `database.telemetry.status: unavailable`, set `DATABASE_URL` in repo-root `.env` or export `HARNESS_DATABASE_URL` before running missions.
 
 ## Autonomous policy
 

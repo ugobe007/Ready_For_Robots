@@ -24,6 +24,10 @@ from pathlib import Path
 _root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_root))
 
+from scripts.harness_env import load_harness_env
+
+load_harness_env(_root)
+
 
 def _load_mission_brief(mission_dir: Path) -> str:
     brief = mission_dir / "brief.md"
