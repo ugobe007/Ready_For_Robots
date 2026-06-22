@@ -1,4 +1,4 @@
-# Verification gates — missions must pass before commit/deploy requests
+# Verification gates — missions must pass before commit/deploy
 
 tests:
   lead_quality_smoke:
@@ -6,6 +6,7 @@ tests:
     required_for:
       - LeadQuality
       - ProductSurface
+      - FrictionMiner
 
   partnership_rule:
     command: python3 -m pytest tests/test_lead_filter_junk.py::test_partnership_compound_names_are_junk -q
@@ -19,10 +20,13 @@ pre_commit:
     - frontend/nextjs/.env.local
 
 deploy:
-  requires_human_approval: true
+  autonomous: true
   command: fly deploy -a ready-2-robot --wait-timeout 600
+  command_no_migrations: fly deploy -a ready-2-robot --wait-timeout 600 --skip-release-command -y
   post_smoke:
     - curl -sS "${API_BASE}/api/leads/pipeline"
+  notify:
+    - python3 scripts/harness_notify.py --mission "${MISSION_DIR}"
   never:
     - fly deploy --force
     - git push --force

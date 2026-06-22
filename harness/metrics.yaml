@@ -38,8 +38,26 @@ optional_db:
   enabled_when: DATABASE_URL
   queries:
     quarantined_companies: "SELECT COUNT(*) FROM companies WHERE is_internal = false"
-    public_companies: "SELECT COUNT(*) FROM companies WHERE is_internal IS NOT FALSE"
+    active_companies: "SELECT COUNT(*) FROM companies WHERE is_internal IS NOT FALSE"
+    unknown_industry_with_signals: "companies with signals and blank/unknown industry"
+
+intelligence:
+  config: harness/intelligence.yaml
+  sections:
+    - junk_reasons
+    - gap_frequency
+    - industry_top
+    - pipeline_surface
+    - deltas
+  thesis_doc: docs/market_thesis.md
 
 product_surface:
   canonical_frontend: readyforrobots-new/client
   experiment_route: /experiment
+
+notification:
+  script: scripts/harness_notify.py
+  env:
+    - HARNESS_NOTIFY_EMAIL
+    - ADMIN_EMAILS
+    - RESEND_API_KEY

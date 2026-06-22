@@ -8,10 +8,10 @@ Prerequisites:
 
 Usage:
   python3 scripts/harness_snapshot.py
-  python3 scripts/run_mission.py --mission missions/2026-06-22-pipeline-observe-baseline
+  python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
 
 Dry-run (print prompt only):
-  python3 scripts/run_mission.py --mission missions/2026-06-22-pipeline-observe-baseline --dry-run
+  python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline --dry-run
 """
 from __future__ import annotations
 
@@ -39,14 +39,26 @@ def _latest_snapshot_text() -> str:
     return latest.read_text(encoding="utf-8")
 
 
+def _market_thesis_text() -> str:
+    thesis = _root / "docs" / "market_thesis.md"
+    if not thesis.is_file():
+        return "(no market thesis — see docs/market_thesis.md)"
+    return thesis.read_text(encoding="utf-8")
+
+
 def _build_prompt(mission_dir: Path) -> str:
     brief = _load_mission_brief(mission_dir)
     snapshot = _latest_snapshot_text()
+    thesis = _market_thesis_text()
     return f"""You are the Ready For Robots Orchestrator. Follow AGENTS.md and CLAUDE.md.
 
 ## Mission brief
 
 {brief}
+
+## Market thesis (read before orienting)
+
+{thesis}
 
 ## Latest harness snapshot
 
@@ -56,11 +68,15 @@ def _build_prompt(mission_dir: Path) -> str:
 
 ## Instructions
 
-1. Orient against the north star in AGENTS.md (names/events first).
-2. Execute this mission using the assigned subagent role from the brief.
-3. Run verification gates from harness/gates.yaml where applicable.
-4. Do NOT commit, push, or deploy without explicit human approval — stop and summarize proposed changes.
-5. When done, draft content for missions/{mission_dir.name}/outcome.md (do not commit unless human asked).
+1. Run `python3 scripts/harness_snapshot.py` if snapshot is missing or stale (>6h pipeline cache).
+2. Orient against north star (names/events first) and `docs/market_thesis.md` backlog.
+3. Execute this mission using the assigned subagent role from the brief.
+4. Run verification gates from `harness/gates.yaml` where applicable.
+5. **Autonomous mode:** commit, push, and deploy when the mission requires it — do not wait for human approval.
+6. Write `missions/{mission_dir.name}/outcome.md` with metrics delta and follow-ups.
+7. Run `python3 scripts/harness_notify.py --mission missions/{mission_dir.name}` when finished.
+
+Red lines: no force push, no committing `reports/`, no parallel local+Fly cache refresh, no `.env` commits.
 
 Begin.
 """

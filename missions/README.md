@@ -12,16 +12,28 @@ python3 scripts/harness_snapshot.py
 python3 -m venv .venv-harness && source .venv-harness/bin/activate
 pip install -r requirements-harness.txt
 export ANTHROPIC_API_KEY=...
-python3 scripts/run_mission.py --mission missions/2026-06-22-pipeline-observe-baseline
+python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
+python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baseline
 ```
 
 Or use the wrapper: `./scripts/harness python3 scripts/harness_snapshot.py`
 
-1. **Observe** — `python3 scripts/harness_snapshot.py`
-2. **Brief** — create `missions/YYYY-MM-DD-<slug>/brief.md`
-3. **Run** — `python3 scripts/run_mission.py --mission missions/YYYY-MM-DD-<slug>`
-4. **Verify** — gates in `harness/gates.yaml`
-5. **Outcome** — write `outcome.md` with metrics delta and follow-ups
+### Intelligence loop (start here)
+
+1. **Observe** — `python3 scripts/harness_snapshot.py` (includes `intelligence` slice)
+2. **Orient** — read `docs/market_thesis.md` + snapshot deltas
+3. **Research mission** — FrictionMiner / MarketIntel → update thesis + backlog
+4. **Build mission** — LeadQuality / ProductSurface / Deploy → code + deploy
+5. **Notify** — `harness_notify.py` (email if Resend configured)
+
+## Mission types
+
+| Type | Deploy? | Example |
+|------|---------|---------|
+| `research` | No (docs only) | `2026-06-23-friction-baseline` |
+| `build` | Yes when brief says so | `hero-ticker-swap`, `partnership-quarantine-sweep` |
+
+Add `**Type:** research | build` to `brief.md`.
 
 ## brief.md template
 
@@ -29,8 +41,9 @@ Or use the wrapper: `./scripts/harness python3 scripts/harness_snapshot.py`
 # Mission: <title>
 
 **Date:** YYYY-MM-DD
-**Agent:** PipelineHealth | LeadQuality | ProductSurface | Deploy
+**Agent:** FrictionMiner | MarketIntel | LeadQuality | ProductSurface | Deploy
 **Status:** planned | in_progress | blocked | done
+**Type:** research | build
 
 ## Goal
 
@@ -43,7 +56,7 @@ One sentence.
 
 ## Context
 
-Link to harness snapshot paths, related issues, user intent.
+Link to harness snapshot paths, market thesis, user intent.
 
 ## Out of scope
 
@@ -65,6 +78,7 @@ What this mission must not touch.
 ## Metrics (before → after)
 
 - pipeline leads: …
+- intelligence.gap_frequency: …
 - built_at: …
 
 ## Follow-ups
@@ -72,10 +86,13 @@ What this mission must not touch.
 - …
 ```
 
-## Example missions (backlog)
+## Example missions
 
-| Slug | Agent | Notes |
-|------|-------|-------|
-| `pipeline-observe-baseline` | PipelineHealth | Snapshot only, no code |
-| `hero-ticker-swap` | ProductSurface | Replace HeroSpotlightLeads; see `/experiment` |
-| `partnership-quarantine-sweep` | LeadQuality | Dry-run then apply quarantine script |
+| Slug | Agent | Type | Notes |
+|------|-------|------|-------|
+| `2026-06-23-friction-baseline` | FrictionMiner | research | **Start here** — thesis + backlog from snapshot |
+| `pipeline-observe-baseline` | PipelineHealth | research | Snapshot only, no code |
+| `hero-ticker-swap` | ProductSurface | build | Live ticker on home hero |
+| `partnership-quarantine-sweep` | LeadQuality | build | Dry-run then apply quarantine script |
+
+Backlog ranks live in `docs/market_thesis.md`.

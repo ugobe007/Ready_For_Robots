@@ -1,0 +1,30 @@
+# Intelligence slice — collected by scripts/harness_snapshot.py (section: intelligence)
+# Used by MarketIntel, FrictionMiner, and Orchestrator mission selection.
+
+junk_sample:
+  size: 400
+  note: Recent companies by id; is_junk() reason aggregation
+
+gap_scan:
+  limit: 80
+  pool_cap: 500
+  sales_leads_only: true
+  note: Same pool semantics as secondary pass pipeline surface
+
+industry:
+  top_n: 15
+  unknown_values: ["", "unknown", "other", "new", "unclassified"]
+
+pipeline_surface:
+  fields:
+    - industry
+    - tier
+    - robot_types_needed
+  note: Derived from GET /api/leads/pipeline leads array
+
+delta:
+  compare_to: reports/harness_snapshot_latest.json
+  fields:
+    - intelligence.industry_top
+    - intelligence.gap_frequency
+    - intelligence.junk_reasons
