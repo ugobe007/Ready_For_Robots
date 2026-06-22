@@ -78,6 +78,36 @@ def test_buyer_name_containing_robotics_vendor_token_not_auto_junk():
 @pytest.mark.parametrize(
     "name",
     [
+        "Serve Robotics and White Castle",
+        "Serve Robotics and White Castle launch autonomous delivery via Uber Eats",
+        "NVIDIA and SAP Partner on Enterprise AI",
+        "Vegas Golden Knights and Richtech Robotics Partner",
+        "BITO Lagertechnik and Locus Robotics",
+    ],
+)
+def test_partnership_compound_names_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True, reason
+    assert "partnership compound" in reason.lower()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Johnson and Johnson",
+        "Johnson & Johnson",
+        "Marks and Spencer",
+        "Procter and Gamble",
+        "Ben and Jerry's",
+    ],
+)
+def test_single_entity_and_names_not_partnership_junk(name):
+    assert is_junk(name)[0] is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
         "Why Automation Is",
         "Why Automation Is the Ally of Hotel Staff",
         "Five Success Factors",

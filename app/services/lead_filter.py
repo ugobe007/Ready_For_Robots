@@ -1106,6 +1106,153 @@ _HEADLINE_FRAGMENT_PATTERNS = [
 ]
 _HEADLINE_FRAGMENT_RE = [re.compile(p) for p in _HEADLINE_FRAGMENT_PATTERNS]
 
+# Single legal entities whose names contain " and " / " & " — not partnership headlines.
+_PARTNERSHIP_COMPOUND_ALLOWLIST = frozenset({
+    "johnson and johnson", "johnson & johnson",
+    "procter and gamble", "procter & gamble",
+    "bed bath and beyond",
+    "marks and spencer", "marks & spencer",
+    "simon and schuster", "simon & schuster",
+    "barnes and noble", "barnes & noble",
+    "abercrombie and fitch", "abercrombie & fitch",
+    "dolce and gabbana", "dolce & gabbana",
+    "fortnum and mason",
+    "lord and taylor",
+    "smith and wesson", "smith & wesson",
+    "ben and jerry's", "ben & jerry's",
+    "ab inbev",  # not conjunction — guard against false split
+})
+_CONJUNCTION_SPLIT_RE = re.compile(r"\s+and\s+", re.I)
+_AMPERSAND_SPLIT_RE = re.compile(r"\s+&\s+")
+_CONJUNCTION_PART_BAD_START = re.compile(
+    r"(?i)^(your|the|this|our|their|its|every|some|any|all|new|why|how|what|when|where|"
+    r"inside|future|using|with|from|for|to)\b",
+)
+_CONJUNCTION_GENERIC_PARTS = frozenset({
+    "research", "development", "operations", "supply chain", "quality",
+    "innovation", "technology", "services", "solutions", "management",
+    "proofing", "chain", "staff", "workforce", "roi", "impact",
+})
+_PARTNERSHIP_VENDOR_SIDE_TOKENS = (
+    "robotics", "robots", " robot", "automation", "technologies",
+    "humanoid", "cobot", " amr", " agv",
+)
+_PARTNERSHIP_HEADLINE_TAIL_RE = re.compile(
+    r"(?i)\b("
+    r"launch(?:es|ed|ing)?|partner(?:s|ed|ing|ship)?|collaborat\w+|team(?:s|ed|ing)?\s+up|"
+    r"expand(?:s|ed|ing)?|deliver(?:y|s|ed|ing)?|integrat\w+|deploy(?:s|ed|ing)?|"
+    r"sign(?:s|ed|ing)?|announce(?:s|d|ing)?|unveil(?:s|ed|ing)?|"
+    r"via|with|to\s+bring|join(?:s|ed|ing)?"
+    r")\b",
+)
+
+
+_PARTNERSHIP_GENERIC_SIDE_WORDS = frozenset({
+    "global", "digital", "comprehensive", "supply", "chain", "logistics", "tech", "research",
+    "amusement", "theme", "parks", "biotech", "life", "sciences", "transportation", "flying",
+    "taxis", "self", "driving", "trucks", "shaping", "empowering", "health", "welfare", "budget",
+    "career", "technical", "education", "talent", "gaps", "unlock", "value", "agentic", "velocity",
+    "module", "expansion", "plant", "cell", "connected", "stores", "capex", "mexico", "indiana",
+    "texas", "idaho", "scaling", "restaurants", "hospitality", "strategic", "business",
+})
+
+
+def _split_entity_conjunction(name: str) -> tuple[str, str, str] | None:
+    """Return (left, right, sep_kind) where sep_kind is 'and' or 'ampersand'."""
+    stripped = name.strip()
+    parts = _CONJUNCTION_SPLIT_RE.split(stripped, maxsplit=1)
+    if len(parts) == 2:
+        left, right = parts[0].strip(), parts[1].strip()
+        if left and right:
+            return left, right, "and"
+    parts = _AMPERSAND_SPLIT_RE.split(stripped, maxsplit=1)
+    if len(parts) == 2:
+        left, right = parts[0].strip(), parts[1].strip()
+        if left and right:
+            return left, right, "ampersand"
+    return None
+
+
+def _side_looks_like_brand_entity(part: str) -> bool:
+    words = part.split()
+    if not words:
+        return False
+    if any(w.lower() in _PARTNERSHIP_GENERIC_SIDE_WORDS for w in words):
+        return False
+    if all(w.lower() in _CONJUNCTION_GENERIC_PARTS for w in words):
+        return False
+    return True
+
+
+def _looks_like_conjoined_entity(part: str) -> bool:
+    if len(part) < 2 or not part[0].isupper():
+        return False
+    if _CONJUNCTION_PART_BAD_START.search(part):
+        return False
+    low = part.lower()
+    if low in _CONJUNCTION_GENERIC_PARTS:
+        return False
+    words = part.split()
+    if not words:
+        return False
+    if all(w.lower() in _CONJUNCTION_GENERIC_PARTS for w in words):
+        return False
+    return True
+
+
+def _side_has_vendor_signal(part: str) -> bool:
+    if is_known_robotics_vendor_name(part):
+        return True
+    low = part.lower()
+    return any(tok in low for tok in _PARTNERSHIP_VENDOR_SIDE_TOKENS)
+
+
+def is_partnership_compound_name(name: Optional[str]) -> tuple[bool, str]:
+    """
+    True when the name joins two organizations (partnership headline), not one buyer.
+
+    Partnership announcements are not sales opportunities for Ready For Robots —
+    the buyer is one side of the conjunction, not the merged string.
+    """
+    if not name or not name.strip():
+        return False, ""
+    stripped = name.strip()
+    low = stripped.lower()
+    if low in _PARTNERSHIP_COMPOUND_ALLOWLIST:
+        return False, ""
+    split = _split_entity_conjunction(stripped)
+    if not split:
+        return False, ""
+    left, right, sep_kind = split
+    if left.lower() == right.lower():
+        return False, ""
+    if not (_looks_like_conjoined_entity(left) and _looks_like_conjoined_entity(right)):
+        return False, ""
+
+    left_words, right_words = left.split(), right.split()
+    both_multi_word = len(left_words) >= 2 and len(right_words) >= 2
+    both_brand_like = _side_looks_like_brand_entity(left) and _side_looks_like_brand_entity(right)
+    vendor_side = _side_has_vendor_signal(left) or _side_has_vendor_signal(right)
+    headline_tail = bool(_PARTNERSHIP_HEADLINE_TAIL_RE.search(stripped))
+
+    if sep_kind == "ampersand":
+        if vendor_side and (len(left_words) >= 2 or len(right_words) >= 2):
+            return True, "partnership compound (vendor + entity conjunction — not a buyer)"
+        if headline_tail and both_multi_word and both_brand_like:
+            return True, "partnership compound (partnership headline — not a buyer)"
+        return False, ""
+
+    # Word "and" — classic "X and Y" partnership headline merge from RSS.
+    if both_multi_word and both_brand_like:
+        return True, "partnership compound (two entities joined by 'and' — not a buyer)"
+    if vendor_side and (len(left_words) >= 2 or len(right_words) >= 2):
+        return True, "partnership compound (vendor + entity conjunction — not a buyer)"
+    if headline_tail and (len(left_words) >= 2 or len(right_words) >= 2):
+        return True, "partnership compound (partnership headline — not a buyer)"
+    if len(left_words) == 1 and len(right_words) == 1 and (vendor_side or headline_tail):
+        return True, "partnership compound (conjoined brands in headline — not a buyer)"
+    return False, ""
+
 
 def is_headline_fragment(name: Optional[str]) -> tuple[bool, str]:
     """True when the string is a news headline stub, not a company legal name."""
@@ -1146,6 +1293,10 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     stripped_punct = stripped.rstrip(".,;:!?")
     if stripped_punct != stripped and is_known_publication_name(stripped_punct):
         return True, "news or trade publication (not a buyer company)"
+
+    partner_junk, partner_reason = is_partnership_compound_name(stripped)
+    if partner_junk:
+        return True, partner_reason
 
     frag, frag_reason = is_headline_fragment(stripped)
     if frag:
