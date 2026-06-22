@@ -1,10 +1,11 @@
 """Central hard-delete policy tests."""
 from types import SimpleNamespace
 
-from app.services.lead_filter import classify_lead
+from app.services.lead_filter import classify_lead, is_junk
 from app.services.pipeline_delete_policy import (
     hard_delete_allowed,
     unknown_industry_delete_allowed,
+    unknown_rss_noise_quarantine_allowed,
 )
 from app.services.signal_text_normalize import strip_signal_html
 
@@ -74,3 +75,29 @@ def test_strip_signal_html_keeps_anchor():
     )
     assert "Real Headline Here" in clean
     assert "<a" not in clean
+
+
+def test_novartis_unknown_not_quarantined():
+    html = (
+        'Novartis reports progress '
+        '<a href="https://news.google.com/rss/articles/X">Novartis reports progress</a>'
+    )
+    ok, _, bucket = unknown_rss_noise_quarantine_allowed(
+        "Novartis",
+        "Unknown",
+        [_sig(html)],
+        from_is_junk=(False, ""),
+        from_classify=(False, "", None),
+    )
+    assert not ok
+
+
+def test_market_report_unknown_quarantined():
+    ok, reason, bucket = unknown_rss_noise_quarantine_allowed(
+        "Global M&A industry trends: 2026 outlook",
+        "Unknown",
+        [_sig("Global M&A industry trends: 2026 outlook - PwC")],
+        from_is_junk=is_junk("Global M&A industry trends: 2026 outlook"),
+    )
+    assert ok
+    assert bucket == "junk_name"

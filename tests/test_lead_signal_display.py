@@ -61,3 +61,17 @@ def test_core_need_from_top_signal():
     out = core_need_from_top_signal(top)
     assert "warehouse" in out.lower()
     assert "[explanation]" not in out.lower()
+
+
+def test_strip_google_rss_html_prefers_anchor_headline():
+    raw = (
+        'Novartis Novartis reports progress on $23B US manufacturing expansion. '
+        '<a href="https://news.google.com/rss/articles/ABC" target="_blank">'
+        "Novartis reports progress on $23B US manufacturing expansion</a>"
+        '&nbsp;&nbsp;<font color="#6f6f6f">NJBIZ</font>'
+    )
+    out = strip_extraction_artifacts(raw)
+    assert "<a" not in out
+    assert "novartis reports progress" in out.lower()
+    assert "6f6f6f" not in out
+    assert "news.google.com" not in out

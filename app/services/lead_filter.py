@@ -104,6 +104,9 @@ _JUNK_SUBSTRINGS = [
     "declares meat", "meat supply critical",
     "senate democrats", "executive order",
     "market overview", "market report",
+    "to reach usd", "to reach us$", "by 2035", "by 2036", "by 2034",
+    "indexbox", "future market insights", "market intelligence platform",
+    "featuring analysis", "globenewswire", "fortunebusinessinsights",
     "canned soup", "processed food", "fortified foods", "foods market",
     "vending machine", "filling machine", "sealing machine", "labeling machine",
     "wrapping machine", "packing machine", "capping machine",
@@ -1297,6 +1300,11 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     partner_junk, partner_reason = is_partnership_compound_name(stripped)
     if partner_junk:
         return True, partner_reason
+
+    from app.services.rss_noise_lead import is_market_report_company_name
+
+    if is_market_report_company_name(stripped):
+        return True, "market research / industry report headline"
 
     frag, frag_reason = is_headline_fragment(stripped)
     if frag:

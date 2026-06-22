@@ -45,6 +45,13 @@ def strip_extraction_artifacts(text: Optional[str]) -> str:
     if not text:
         return ""
     t = html.unescape(str(text)).replace("\xa0", " ")
+    # Prefer visible anchor text over raw Google News RSS markup.
+    anchors = re.findall(r"<a[^>]*>([^<]+)</a>", t, flags=re.I)
+    if anchors:
+        joined = " ".join(a.strip() for a in anchors if a.strip())
+        if len(joined) >= 24:
+            t = joined
+    t = re.sub(r"<\s*font[^>]*>([^<]*)</\s*font\s*>", r"\1", t, flags=re.I)
     t = re.sub(r"<\s*a\s*href\s*=\s*['\"][^'\"]*['\"][^>]*>(.*?)</a>", r"\1", t, flags=re.I | re.S)
     t = re.sub(r"<\s*ahref\s*=\s*['\"][^'\"]*['\"][^>]*>(.*?)</a>", r"\1", t, flags=re.I | re.S)
     t = re.sub(r"\bsource_url\s*[:=]?\s*", " ", t, flags=re.I)
@@ -52,6 +59,7 @@ def strip_extraction_artifacts(text: Optional[str]) -> str:
     t = re.sub(r"\b(?:a?href)\s*=\s*https?://\S+", " ", t, flags=re.I)
     t = re.sub(r"https?://\S+", " ", t, flags=re.I)
     t = re.sub(r"<[^>]+>", "", t)
+    t = re.sub(r"#6f6f6f", " ", t, flags=re.I)
     t = re.sub(r"\b(?:ca|cc|ved|usg)=[^\s\"'<>]+", " ", t, flags=re.I)
     t = re.sub(r"(^|\s)>+", " ", t)
     t = _strip_fenced_code(t)

@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from app.services.lead_filter import is_junk
 from app.services.rss_noise_lead import (
+    is_market_report_company_name,
     is_rss_noise_delete_candidate,
     signals_contain_google_rss_html,
 )
@@ -77,3 +78,17 @@ def test_ring_pop_maker_bazooka_maps_to_cpg():
         effective_industry_for_lead("Ring Pop maker Bazooka", "New", [])
         == "CPG & Consumer Goods"
     )
+
+
+def test_market_report_company_name_detected():
+    assert is_market_report_company_name(
+        "Urinary Tract Infection Testing Market to Reach USD 78.9 Billion by 2036"
+    )
+    assert is_market_report_company_name("Sterilization Equipment Market")
+    assert not is_market_report_company_name("Novartis")
+
+
+def test_market_report_name_is_junk():
+    junk, reason = is_junk("Sterilization Equipment Market", mode="buyer")
+    assert junk is True
+    assert "market" in reason.lower()

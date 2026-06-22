@@ -21,9 +21,23 @@ _GOOGLE_RSS_HTML_RE = re.compile(
 )
 
 _MARKET_REPORT_RE = re.compile(
-    r"(?i)\bmarket\s+(analysis|size|forecast|to\s+reach|report)\b|"
+    r"(?i)\bmarket\s+(analysis|size|forecast|to\s+reach|report|intelligence)\b|"
     r"\bforecast,?\s+size|indexbox\b|future\s+market\s+insights\b|"
-    r"\bindustry\s+outlook\b|\bfast\s+facts\b",
+    r"\bindustry\s+outlook\b|\bfast\s+facts\b|"
+    r"\bto\s+reach\s+(?:usd|us\$|\$)|"
+    r"\bby\s+203[0-9]\b|"
+    r"\bfeaturing\s+analysis\b|"
+    r"\bglobenewswire\b|"
+    r"\bfortunebusinessinsights\b|"
+    r"\bresearch\s+and\s+markets\b",
+)
+
+_MARKET_REPORT_NAME_RE = re.compile(
+    r"(?i)(?:\b(?:market\s+(?:size|analysis|forecast|report|intelligence|overview)|"
+    r"to\s+reach\s+(?:usd|us\$|\$)|"
+    r"by\s+203[0-9]|indexbox|future\s+market\s+insights|"
+    r"featuring\s+analysis|globenewswire)\b|"
+    r"(?:testing|equipment|instruments|systems|machines?)\s+market\s*$)",
 )
 
 _DELETE_ENTITY_TYPES = frozenset({
@@ -66,6 +80,11 @@ def signals_are_market_research_noise(signals: Sequence[object]) -> bool:
         return False
     blob = " ".join(texts)
     return bool(_MARKET_REPORT_RE.search(blob))
+
+
+def is_market_report_company_name(name: Optional[str]) -> bool:
+    """True when the stored company name is a market-research headline stub."""
+    return bool(_MARKET_REPORT_NAME_RE.search(name or ""))
 
 
 def entity_is_noise_headline(name: str, *, min_confidence: float = 0.65) -> Tuple[bool, str]:
