@@ -112,10 +112,10 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`rss-html-strip-and-report-filter`~~ | LeadQuality | ✅ **Done 2026-06-23** — stripped **1,714** RSS HTML signals; quarantined **704** Unknown junk rows (865→153 live). |
 | ~~1~~ | ~~`partnership-quarantine-sweep`~~ | LeadQuality | ✅ **Done 2026-06-23** — re-sweep found **0** new compounds (58 quarantined 2026-06-22). |
 | ~~2~~ | ~~`industry-rescue-ontology`~~ | LeadQuality | ✅ **Done 2026-06-23** — **62** industries applied, **39** stubs quarantined; Unknown **153→52**. |
-| 1 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics unmeasurable until built. Blocks rank 2–3. |
-| 2 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after cache built. |
-| 3 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
-| 4 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~1~~ | ~~`pipeline-cache-refresh-health`~~ | PipelineHealth | ✅ **Done 2026-06-23** — full cache rebuild; **35** durable feed leads, **9** anonymous visible; `cache_pending` idle. |
+| 1 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — cache built; names/events clean enough to start copy work. |
+| 2 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 3 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

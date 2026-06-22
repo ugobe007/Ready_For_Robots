@@ -238,9 +238,15 @@ def _pipeline_surface_intel(pipeline_leads: list) -> dict[str, Any]:
             continue
         ind = (lead.get("industry") or lead.get("sector") or "(blank)").strip() or "(blank)"
         industries[ind] += 1
-        tier = (lead.get("tier") or lead.get("priority") or "unknown").strip()
+        tier = (
+            lead.get("priority_tier")
+            or lead.get("tier")
+            or lead.get("priority")
+            or "unknown"
+        )
+        tier = str(tier).strip() or "unknown"
         tiers[tier] += 1
-        for rt in lead.get("robot_types_needed") or []:
+        for rt in lead.get("robot_types_needed") or lead.get("robot_types") or []:
             if isinstance(rt, str) and rt.strip():
                 robot_types[rt.strip()] += 1
     return {
