@@ -29,6 +29,7 @@ import Robots from "./pages/Robots";
 import FindRobots from "./pages/FindRobots";
 import Admin from "./pages/Admin";
 import Social from "./pages/Social";
+import ExperimentIdeas from "./pages/ExperimentIdeas";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScoutChat } from "./components/ScoutChat";
 
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/social" component={Social} />
+      <Route path="/experiment" component={ExperimentIdeas} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/profile" component={Profile} />
