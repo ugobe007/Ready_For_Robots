@@ -46,6 +46,29 @@ def test_collect_pipeline_next_actions_skips_junk():
     assert actions[0]["entity_id"] == "2"
 
 
+def test_collect_pipeline_next_actions_prefers_humanoid_pilot():
+    leads = [
+        {
+            "id": 1,
+            "company_name": "Generic Hot",
+            "priority_tier": "HOT",
+            "priority_score": 95,
+        },
+        {
+            "id": 2,
+            "company_name": "Humanoid Buyer",
+            "priority_tier": "WARM",
+            "priority_score": 70,
+            "humanoid_pilot_tier": "ACTIVE_PILOT",
+            "humanoid_pilot_score": 90,
+            "humanoid_pilot_action": "Lead with a narrow humanoid workcell pilot.",
+        },
+    ]
+    actions = collect_pipeline_next_actions(leads, limit=2)
+    assert actions[0]["companyName"] == "Humanoid Buyer"
+    assert "Humanoid" in actions[0]["label"]
+
+
 def test_collect_pipeline_next_actions_default_label():
     actions = collect_pipeline_next_actions(
         [{"id": 5, "company_name": "Mystery", "priority_tier": "COLD"}],

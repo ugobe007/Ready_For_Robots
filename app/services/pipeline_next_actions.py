@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from app.services.humanoid_pilot_ranking import humanoid_pilot_sort_key
+
 _TIER_ORDER = {"HOT": 0, "WARM": 1, "COLD": 2}
 _TIER_PRIORITY = {"HOT": "high", "WARM": "medium", "COLD": "low"}
 
@@ -27,6 +29,9 @@ def _lead_tier(lead: dict[str, Any]) -> str:
 
 
 def _action_label(lead: dict[str, Any]) -> str:
+    hp_action = (lead.get("humanoid_pilot_action") or "").strip()
+    if hp_action and lead.get("humanoid_pilot_tier") in ("ACTIVE_PILOT", "PILOT_INTENT"):
+        return f"Humanoid · {hp_action}"
     action = (lead.get("pipeline_action") or "").strip()
     if action:
         return action
@@ -47,7 +52,12 @@ def collect_pipeline_next_actions(
     lim = max(1, min(int(limit), 10))
     ranked = sorted(
         [lead for lead in leads if lead.get("id") and not lead.get("is_junk")],
-        key=lambda row: (_TIER_ORDER.get(_lead_tier(row), 9), -_lead_score(row)),
+        key=lambda row: (
+            humanoid_pilot_sort_key(row)[0],
+            _TIER_ORDER.get(_lead_tier(row), 9),
+            humanoid_pilot_sort_key(row)[1],
+            humanoid_pilot_sort_key(row)[2],
+        ),
     )
 
     actions: list[dict[str, Any]] = []
@@ -68,6 +78,8 @@ def collect_pipeline_next_actions(
                 "meta": {
                     "tier": tier,
                     "industry": lead.get("industry"),
+                    "humanoid_pilot_tier": lead.get("humanoid_pilot_tier"),
+                    "humanoid_pilot_label": lead.get("humanoid_pilot_label"),
                 },
             }
         )

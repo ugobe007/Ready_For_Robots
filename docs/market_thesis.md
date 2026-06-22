@@ -115,7 +115,9 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`pipeline-cache-refresh-health`~~ | PipelineHealth | ✅ **Done 2026-06-23** — full cache rebuild; **35** durable feed leads, **9** anonymous visible; `cache_pending` idle. |
 | ~~1~~ | ~~`pipeline-action-copy`~~ | ProductSurface | ✅ **Done 2026-06-23** — industry `pipeline_action` + `share_blurb` on cards; cache rebuilt (**35** feed). |
 | ~~1~~ | ~~`next-actions-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — home hero + pipeline right rail; `GET /api/leads/pipeline-next-actions`. |
-| 1 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~1~~ | ~~`humanoid-pilot-ranking`~~ | LeadQuality + ProductSurface | ✅ **Done 2026-06-23** — `humanoid_pilot_*` tiers on cards; humanoid leads boost next-actions + pipeline badge. |
+
+*Backlog empty after humanoid-pilot-ranking — next: harness snapshot + friction re-rank (Unknown **52**, buyer-intent historical).*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

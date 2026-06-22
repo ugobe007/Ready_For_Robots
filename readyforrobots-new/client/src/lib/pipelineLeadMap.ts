@@ -21,6 +21,10 @@ export interface ApiLead {
   share_summary?: string | null;
   share_blurb?: string | null;
   pipeline_action?: string | null;
+  humanoid_pilot_tier?: string | null;
+  humanoid_pilot_score?: number | null;
+  humanoid_pilot_label?: string | null;
+  humanoid_pilot_action?: string | null;
   robot_types_needed?: string[];
   signals?: Array<{
     signal_type?: string;
@@ -207,6 +211,10 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
     shareSummary: lead.share_summary || undefined,
     shareBlurb: lead.share_blurb || undefined,
     pipelineAction: lead.pipeline_action || undefined,
+    humanoidPilotTier: lead.humanoid_pilot_tier || undefined,
+    humanoidPilotScore: lead.humanoid_pilot_score ?? undefined,
+    humanoidPilotLabel: lead.humanoid_pilot_label || undefined,
+    humanoidPilotAction: lead.humanoid_pilot_action || undefined,
     priorityTier: lead.priority_tier || undefined,
     robotTypesNeeded: lead.robot_types_needed || [],
     researchUpdates: lead.research_updates,

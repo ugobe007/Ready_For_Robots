@@ -865,6 +865,11 @@ def _fmt_pipeline_card(
             except Exception:
                 if sig:
                     share_summary = format_signal_for_sales(sig.signal_text)[:320]
+    from app.services.humanoid_pilot_ranking import assess_humanoid_pilot_language
+
+    hp = assess_humanoid_pilot_language(sigs, industry=industry_display)
+    if hp.tier in ("ACTIVE_PILOT", "PILOT_INTENT") and hp.action:
+        pipeline_action = f"Humanoid · {hp.action}"
     payload = {
         "id": c.id,
         "company_name": c.name,
@@ -880,6 +885,7 @@ def _fmt_pipeline_card(
         "share_blurb": share_blurb or None,
         "pipeline_action": pipeline_action or None,
         "pipeline_slim": True,
+        **hp.as_dict(),
     }
     if sig:
         payload["signals"] = [
@@ -997,6 +1003,10 @@ def _fmt_company(
     domain = resolve_outreach_domain(c)
     outreach_guess = infer_outreach_emails(domain, industry_display if industry_display != "New" else c.industry) if domain else None
 
+    from app.services.humanoid_pilot_ranking import assess_humanoid_pilot_language
+
+    hp = assess_humanoid_pilot_language(sigs, industry=industry_display)
+
     payload = {
         "id":             c.id,
         "company_name":   c.name,
@@ -1068,6 +1078,7 @@ def _fmt_company(
                 else None
             ),
         } if (inf or crm_meta.get("agent_enrichment")) else None,
+        **hp.as_dict(),
         **link_extras,
     }
     if outreach_guess:

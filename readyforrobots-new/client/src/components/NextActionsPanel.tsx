@@ -131,6 +131,15 @@ export default function NextActionsPanel({
                     <p className="text-[12px] font-semibold leading-snug text-white/90">
                       {action.label}
                     </p>
+                    {(action.meta?.humanoid_pilot_tier === "ACTIVE_PILOT" ||
+                      action.meta?.humanoid_pilot_tier === "PILOT_INTENT") && (
+                      <span
+                        className="mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                        style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.22)" }}
+                      >
+                        {String(action.meta?.humanoid_pilot_label || "Humanoid pilot")}
+                      </span>
+                    )}
                     <p className="mt-0.5 truncate text-[11px]" style={{ color: style.text }}>
                       {action.companyName}
                     </p>

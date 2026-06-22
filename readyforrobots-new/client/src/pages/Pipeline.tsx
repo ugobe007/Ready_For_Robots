@@ -1958,6 +1958,17 @@ export default function Pipeline() {
                                   >
                                     {displayStageLabel(deal, true)}
                                   </span>
+                                  {(deal as { humanoidPilotTier?: string }).humanoidPilotTier &&
+                                    ["ACTIVE_PILOT", "PILOT_INTENT"].includes(
+                                      String((deal as { humanoidPilotTier?: string }).humanoidPilotTier),
+                                    ) && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
+                                    >
+                                      Humanoid
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-[11px] text-white/40 truncate">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
@@ -2058,6 +2069,15 @@ export default function Pipeline() {
                                   >
                                     {tier.label}
                                   </span>
+                                  {deal.humanoidPilotTier &&
+                                    ["ACTIVE_PILOT", "PILOT_INTENT"].includes(deal.humanoidPilotTier) && (
+                                    <span
+                                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
+                                      style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
+                                    >
+                                      Humanoid
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-[11px] text-white/40 truncate">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
