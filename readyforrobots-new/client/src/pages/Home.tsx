@@ -9,7 +9,7 @@ import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Targe
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
-import HeroSpotlightLeads from "@/components/HeroSpotlightLeads";
+import HeroLeadTicker from "@/components/HeroLeadTicker";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
@@ -329,8 +329,8 @@ export default function Home() {
           </div>
 
           {/* Live SIGNAL leads — right column */}
-          <div className="hidden lg:block">
-            <HeroSpotlightLeads />
+          <div className="mt-8 lg:mt-0">
+            <HeroLeadTicker />
           </div>
           </div>
         </div>

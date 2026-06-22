@@ -3,6 +3,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "wouter";
+import { ChevronRight } from "lucide-react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { dedupeHomepageLeads } from "@/lib/homepageLeads";
 
@@ -16,9 +18,18 @@ export type TickerLead = {
 
 type TickerRow = TickerLead & { tickKey: number };
 
-const MAX_VISIBLE = 12;
-const TICK_MS = 5000;
+const DEFAULT_MAX_VISIBLE = 12;
+const DEFAULT_TICK_MS = 5000;
 const POOL_REFRESH_MS = 90_000;
+
+export type ExperimentLeadTickerProps = {
+  maxVisible?: number;
+  tickMs?: number;
+  minHeightClass?: string;
+  title?: string;
+  subtitle?: string;
+  showPipelineLink?: boolean;
+};
 
 const FALLBACK_POOL: TickerLead[] = [
   { id: -1, company_name: "Lineage Logistics", industry: "Logistics", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "warehouse automation"] },
@@ -51,7 +62,7 @@ function robotLine(lead: TickerLead): string {
   return "Robot category mapping in progress";
 }
 
-function normalizePool(raw: unknown[]): TickerLead[] {
+function normalizePool(raw: unknown[], minVisible: number): TickerLead[] {
   const mapped: TickerLead[] = [];
   for (const row of raw) {
     const r = row as Record<string, unknown>;
@@ -71,11 +82,11 @@ function normalizePool(raw: unknown[]): TickerLead[] {
 
   const deduped = dedupeHomepageLeads(mapped) as TickerLead[];
   const withRobots = deduped.filter((l) => (l.robot_types_needed?.length ?? 0) > 0);
-  const pool = withRobots.length >= MAX_VISIBLE ? withRobots : deduped;
+  const pool = withRobots.length >= minVisible ? withRobots : deduped;
   return pool.length ? pool : FALLBACK_POOL;
 }
 
-async function fetchLeadPool(): Promise<TickerLead[]> {
+async function fetchLeadPool(minVisible: number): Promise<TickerLead[]> {
   const base = getApiBase();
   const res = await fetch(
     `${base}/api/leads?limit=50&sort=score&exclude_junk=true`,
@@ -86,30 +97,40 @@ async function fetchLeadPool(): Promise<TickerLead[]> {
   if (raw.trimStart().startsWith("<")) throw new Error("non-json response");
   const data = JSON.parse(raw) as { leads?: unknown[] };
   const rows = Array.isArray(data.leads) ? data.leads : [];
-  return normalizePool(rows);
+  return normalizePool(rows, minVisible);
 }
 
-export default function ExperimentLeadTicker() {
+export default function ExperimentLeadTicker({
+  maxVisible = DEFAULT_MAX_VISIBLE,
+  tickMs = DEFAULT_TICK_MS,
+  minHeightClass = "min-h-[520px]",
+  title = "Live sales leads",
+  subtitle = "Robot demand ticker",
+  showPipelineLink = false,
+}: ExperimentLeadTickerProps) {
   const [pool, setPool] = useState<TickerLead[]>(FALLBACK_POOL);
   const [visible, setVisible] = useState<TickerRow[]>([]);
   const [live, setLive] = useState(false);
   const poolIndex = useRef(0);
   const tickKey = useRef(0);
 
-  const seedVisible = useCallback((nextPool: TickerLead[]) => {
-    const initial = nextPool.slice(0, MAX_VISIBLE).map((lead, i) => ({
-      ...lead,
-      tickKey: tickKey.current++ + lead.id + i,
-    }));
-    poolIndex.current = initial.length % Math.max(nextPool.length, 1);
-    setVisible(initial);
-  }, []);
+  const seedVisible = useCallback(
+    (nextPool: TickerLead[]) => {
+      const initial = nextPool.slice(0, maxVisible).map((lead, i) => ({
+        ...lead,
+        tickKey: tickKey.current++ + lead.id + i,
+      }));
+      poolIndex.current = initial.length % Math.max(nextPool.length, 1);
+      setVisible(initial);
+    },
+    [maxVisible],
+  );
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const nextPool = await fetchLeadPool();
+        const nextPool = await fetchLeadPool(maxVisible);
         if (cancelled) return;
         setPool(nextPool);
         setLive(true);
@@ -124,11 +145,11 @@ export default function ExperimentLeadTicker() {
     return () => {
       cancelled = true;
     };
-  }, [seedVisible]);
+  }, [maxVisible, seedVisible]);
 
   useEffect(() => {
     const refresh = window.setInterval(() => {
-      fetchLeadPool()
+      fetchLeadPool(maxVisible)
         .then((nextPool) => {
           setPool(nextPool);
           setLive(true);
@@ -136,7 +157,7 @@ export default function ExperimentLeadTicker() {
         .catch(() => undefined);
     }, POOL_REFRESH_MS);
     return () => window.clearInterval(refresh);
-  }, []);
+  }, [maxVisible]);
 
   useEffect(() => {
     if (pool.length === 0) return;
@@ -146,15 +167,17 @@ export default function ExperimentLeadTicker() {
       poolIndex.current = (idx + 1) % pool.length;
       setVisible((prev) => {
         const row: TickerRow = { ...next, tickKey: tickKey.current++ };
-        return [row, ...prev].slice(0, MAX_VISIBLE);
+        return [row, ...prev].slice(0, maxVisible);
       });
-    }, TICK_MS);
+    }, tickMs);
     return () => window.clearInterval(timer);
-  }, [pool]);
+  }, [pool, maxVisible, tickMs]);
+
+  const tickSec = Math.round(tickMs / 1000);
 
   return (
     <div
-      className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40"
+      className={`flex h-full ${minHeightClass} flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40`}
       style={{
         background: "linear-gradient(165deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
         boxShadow: "0 24px 64px -12px rgba(124,58,237,0.12), 0 0 0 1px rgba(255,255,255,0.06) inset",
@@ -166,9 +189,9 @@ export default function ExperimentLeadTicker() {
       >
         <div>
           <p className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-            Live sales leads
+            {title}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.14em] text-violet-200/70">Robot demand ticker</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-violet-200/70">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -225,7 +248,19 @@ export default function ExperimentLeadTicker() {
         className="shrink-0 border-t border-white/8 px-4 py-3 text-[10px] text-white/35"
         style={{ background: "rgba(124,58,237,0.06)" }}
       >
-        New lead every 5s · {MAX_VISIBLE} visible · oldest rolls off the bottom
+        {showPipelineLink ? (
+          <Link
+            href="/pipeline"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-violet-200/90 transition-colors hover:text-white"
+          >
+            View full pipeline
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        ) : (
+          <>
+            New lead every {tickSec}s · {maxVisible} visible · oldest rolls off the bottom
+          </>
+        )}
       </div>
     </div>
   );
