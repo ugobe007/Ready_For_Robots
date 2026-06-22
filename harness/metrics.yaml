@@ -1,0 +1,45 @@
+# Harness metrics — collected by scripts/harness_snapshot.py
+# Thresholds are advisory; Orchestrator uses north star priority to decide action.
+
+api_base: "${API_BASE:-https://ready-2-robot.fly.dev}"
+
+endpoints:
+  pipeline:
+    path: /api/leads/pipeline
+    fields:
+      - built_at
+      - cache_pending
+      - leads_count
+      - entitlements.visible_count
+    alerts:
+      stale_hours: 6
+      min_anonymous_leads: 1
+
+  homepage:
+    path: /api/leads/homepage
+    fields:
+      - hotLeads_count
+    alerts:
+      min_hot_leads: 1
+
+  summary:
+    path: /api/leads/summary?exclude_junk=true
+    fields:
+      - total
+      - hot
+      - warm
+      - cold
+
+git:
+  track_branch: main
+  note_dirty_worktree: true
+
+optional_db:
+  enabled_when: DATABASE_URL
+  queries:
+    quarantined_companies: "SELECT COUNT(*) FROM companies WHERE is_internal = false"
+    public_companies: "SELECT COUNT(*) FROM companies WHERE is_internal IS NOT FALSE"
+
+product_surface:
+  canonical_frontend: readyforrobots-new/client
+  experiment_route: /experiment

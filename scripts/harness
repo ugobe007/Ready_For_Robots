@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Run harness tools from repo root (avoids readyforrobots-new/ cwd mistakes).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+exec "$@"

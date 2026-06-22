@@ -1,0 +1,34 @@
+# Verification gates — missions must pass before commit/deploy requests
+
+tests:
+  lead_quality_smoke:
+    command: python3 -m pytest tests/test_lead_filter_junk.py -q --tb=no
+    required_for:
+      - LeadQuality
+      - ProductSurface
+
+  partnership_rule:
+    command: python3 -m pytest tests/test_lead_filter_junk.py::test_partnership_compound_names_are_junk -q
+    required_for:
+      - LeadQuality
+
+pre_commit:
+  block_paths:
+    - reports/
+    - "*.env"
+    - frontend/nextjs/.env.local
+
+deploy:
+  requires_human_approval: true
+  command: fly deploy -a ready-2-robot --wait-timeout 600
+  post_smoke:
+    - curl -sS "${API_BASE}/api/leads/pipeline"
+  never:
+    - fly deploy --force
+    - git push --force
+
+database:
+  never_parallel:
+    - local refresh_pipeline_cache
+    - fly admin refresh-pipeline-cache
+  note: Concurrent cache rebuilds exhaust the DB pool
