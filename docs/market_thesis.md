@@ -110,13 +110,12 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~–~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23**, then **re-fixed 2026-06-23** (friction-baseline): venv lost `sqlalchemy`/`requests`/`fastapi` → slice silently degraded. Deps now pinned in `harness/requirements.txt`. |
 | ~~1~~ | ~~`vendor-oem-suppression-refresh`~~ | LeadQuality | ✅ **Done 2026-06-23** — blocklist + catalog buyer denylist; **28** active OEM rows quarantined. |
 | ~~1~~ | ~~`rss-html-strip-and-report-filter`~~ | LeadQuality | ✅ **Done 2026-06-23** — stripped **1,714** RSS HTML signals; quarantined **704** Unknown junk rows (865→153 live). |
-| 1 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
-| ~~3~~ | ~~`buyer-intent-gate-triage`~~ | LeadQuality | ✅ **Done 2026-06-23** — `buyer_intent_gate.py` + triage script; live sample **55% no-intent**; 177 rows stamped; `--apply` run on 500-row batch. |
-| 2 | `industry-rescue-ontology` | LeadQuality | **153** live Unknown rows remain — classify via ontology once partnership sweep done. |
-| 3 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics unmeasurable until built. Blocks rank 4–5. |
-| 4 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean + cache built. |
-| 5 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
-| 6 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~1~~ | ~~`partnership-quarantine-sweep`~~ | LeadQuality | ✅ **Done 2026-06-23** — re-sweep found **0** new compounds (58 quarantined 2026-06-22). |
+| ~~2~~ | ~~`industry-rescue-ontology`~~ | LeadQuality | ✅ **Done 2026-06-23** — **62** industries applied, **39** stubs quarantined; Unknown **153→52**. |
+| 1 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics unmeasurable until built. Blocks rank 2–3. |
+| 2 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after cache built. |
+| 3 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 4 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
