@@ -310,11 +310,64 @@ def _compute_deltas(current: dict, previous: dict | None) -> dict[str, Any]:
     }
 
 
+def _buyer_intent_gate_sample(db, sample_size: int = 150) -> dict[str, Any]:
+    if db is None:
+        return {"available": False}
+    try:
+        from collections import Counter
+
+        from app.models.company import Company
+        from app.models.signal import Signal
+        from app.services.buyer_intent_gate import assess_buyer_intent_gate
+
+        companies = (
+            db.query(Company)
+            .filter(Company.is_internal.is_(True))
+            .order_by(Company.id.desc())
+            .limit(max(50, sample_size))
+            .all()
+        )
+        dispositions: Counter[str] = Counter()
+        routes: Counter[str] = Counter()
+        assessed = 0
+        for company in companies:
+            signals = (
+                db.query(Signal)
+                .filter(Signal.company_id == company.id)
+                .limit(10)
+                .all()
+            )
+            if not signals:
+                continue
+            assessed += 1
+            result = assess_buyer_intent_gate(
+                company_name=company.name,
+                signals=signals,
+            )
+            dispositions[result.disposition] += 1
+            routes[result.route] += 1
+        return {
+            "available": True,
+            "sample_companies": len(companies),
+            "assessed_with_signals": assessed,
+            "dispositions": [{"disposition": d, "count": c} for d, c in dispositions.most_common()],
+            "routes": [{"route": r, "count": c} for r, c in routes.most_common()],
+            "no_intent_rate": round(
+                dispositions.get("no_intent", 0) / assessed, 3
+            )
+            if assessed
+            else 0.0,
+        }
+    except Exception as exc:
+        return {"available": False, "error": str(exc)}
+
+
 def _build_intelligence(db, pipeline_leads: list, previous: dict | None) -> dict[str, Any]:
     industry_top = _industry_top(db)
     intel = {
         "junk_reasons": _junk_reason_sample(db),
         "gap_frequency": _gap_frequency(db),
+        "buyer_intent_gate": _buyer_intent_gate_sample(db),
         "industry_top": industry_top,
         "pipeline_surface": _pipeline_surface_intel(pipeline_leads),
     }

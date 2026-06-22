@@ -2,7 +2,7 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-23 (Phase 1 baseline — from quarantine sweeps, secondary-pass telemetry, UX direction)
+**Last updated:** 2026-06-23 (Phase 1 friction baseline — live `intelligence` slice restored; vendor/OEM promoted to rank 1)
 
 ---
 
@@ -44,19 +44,19 @@ Users want deals moving forward without doing the work. The control surface is a
 
 ## Friction themes (internal — from secondary pass & quarantine)
 
-Priority order matches north star: fix (1) before tuning (4). **Baseline below is evidence-backed** from the `friction-baseline` mission (2026-06-23), reconstructed from sweep reports in `reports/` (snapshot `intelligence` DB slice was unavailable — see theme 0).
+Priority order matches north star: fix (1) before tuning (4). **Baseline below is now live-DB-backed** from the `friction-baseline` mission (2026-06-23). The live `intelligence` slice was restored this mission (see theme 0); historical CSV sweeps are retained for bulk-junk shape.
 
-**Reference sample:** `pipeline_junk_cleanup_20260619_222706.csv` — **3,163 junk rows**; `buyer_opportunity_junk_20260618_220744.csv` — 2,206 rows; `partnership_compound_quarantine_*` (2026-06-22) — 58 rows across 3 sweeps; `unknown_industry_keyword_analysis.txt` — 1,389 unknown-industry leads.
+**Reference sample:** live snapshot `intelligence` slice (`database.telemetry: connected`, sample 400); `pipeline_junk_cleanup_20260619_222706.csv` — **3,163 junk rows**; `partnership_compound_quarantine_*` (2026-06-22) — **58** rows across 3 sweeps (30/14/14); `unknown_industry_keyword_analysis.txt` — 1,389 unknown-industry leads.
 
-0. **Telemetry blind spot (meta-friction)** — snapshot `intelligence.junk_reasons`, `gap_frequency`, `industry_top` are all `available:false` because `database:null` (no `DATABASE_URL` in the snapshot run; sqlite template is skipped by `_db_session`). *The harness cannot self-measure friction — every baseline must be hand-reconstructed from ad-hoc CSVs.* Fix first or all other metrics stay un-trended.
-1. **No buyer-intent signal (gate failures)** — **2,188 / 3,163 = 69%** of the junk sweep: `buyer opportunity gate: no buyer-intent signal found (labor, expansion, capex, RFP, deployment, or operations hiring)`. Company may be real but there is no actionable event. *Largest single friction by volume — newly the #1 theme.*
-2. **RSS/HTML + market-report noise → Unknown industry** — **1,110 / 3,163 = 35%** of junk rows carry `Unknown` industry; the 1,389 unknown-industry leads are dominated by raw HTML boilerplate tokens (`nbsp`, `font`, `href`, `target`, `blank`, `color`, `6f6f6f`, `indexbox`) and market-research headline spam (`market analysis/forecast/size/trends`, `... to 2035`). Subsumes the old "headline junk" + "missing industry" themes.
-3. **Robotics vendor / OEM contamination** — ~**167** rows flagged `robotics vendor / OEM` or `seller/vendor or publisher story`. Recurring offenders: Tesla (`Tesla moves`, `Tesla Semi`, `Tesla Stock`), Foxconn, SoftBank, Nvidia. Direct leak against the OEM-prospecting anti-bet.
-4. **Headline fragments / verb-merge names in `companies.name`** — `Tesla moves`, `Lululemon claps`, `Olympic goalie shares`, `Havertys Furniture battles`, `Production demand`, `Multifamily`; plus mis-attributed fragments (`company name not found in signal text`, e.g. JLL) and one-off junk titles (`Ted Danson`, `Iran war`, `Hormuz`, `Cargo Thieves`). *Rep cannot act — no trust.*
-5. **Partnership compounds** — **58** quarantined across three 2026-06-22 sweeps (rule shipped, still recurring). Two shapes: real vendor+entity (`Locus Robotics and GEODIS`, `Avery Dennison and TEXAID RFID`) and pure slogan noise (`Automation and AI Unlock New Value`, `Supercharge Your Retail and CPG AI Strategy`).
-6. **Robot types too generic** — pipeline surface `robot_types: []` for all 9 visible leads; `robot_types_needed` not tied to deployment context. Limits outbound specificity. (Tune only after 0–5.)
+0. **Telemetry blind spot (meta-friction) — ✅ RESOLVED 2026-06-23.** The live snapshot had silently regressed: `.venv-harness` was missing `sqlalchemy`/`psycopg2-binary` (→ `database.telemetry: unavailable`), then `requests` (→ `junk_reasons` blocked), then `fastapi` (→ `gap_frequency` blocked). Despite a real Postgres `DATABASE_URL` in `.env`, all three intelligence sub-slices read `available:false`. Fixed by installing the four deps into the harness venv and pinning them in **`harness/requirements.txt`** so the slice doesn't silently degrade again. *Lesson: a "Done" telemetry mission can regress at the venv layer with no code change — pin deps, don't assume.*
+1. **No buyer-intent signal (gate failures)** — **2,188 / 3,163 = 69%** of the historical junk sweep: `buyer opportunity gate: no buyer-intent signal found (labor, expansion, capex, RFP, deployment, or operations hiring)`. Company may be real but there is no actionable event. *Largest single friction by volume in the historical backlog.*
+2. **RSS/HTML + market-report noise → Unknown industry** — **960** live Unknown-industry companies with signals (the #1 industry bucket by far; next is Logistics 385). In the CSV sweep, **1,110 / 3,163 = 35%** of junk rows carry `Unknown`; the 1,389 unknown-industry leads are dominated by raw HTML boilerplate tokens (`nbsp` 3,557, `font` 3,343, `href`, `target`, `blank`, `color`, `6f6f6f`, `indexbox`) and market-research headline spam (`market analysis/forecast/size/trends`, `... to 2035`/`2034`).
+3. **Robotics vendor / OEM contamination — now the dominant *recent-flow* leak.** The live junk sample (400 recent companies, **5.8% junk rate**) is **100% vendor/OEM**: `robotics vendor / OEM (not a buyer opportunity)` 17 + `name pattern matches automation/robotics vendor` 6 = 23/23. Historical sweep adds 99 `seller/vendor or publisher story` + 68 `robotics vendor / OEM`. Recurring offenders: Tesla, Foxconn, SoftBank, Nvidia. Direct leak against the OEM-prospecting anti-bet — *and the single thing still entering the pipeline.*
+4. **Headline fragments / verb-merge / mis-attributed names in `companies.name`** — `invalid_name` bucket = **80** rows in the sweep; mis-attributed fragments (`company name not found in signal text`, e.g. JLL) = 8. Examples: `Tesla moves`, `Lululemon claps`, `Havertys Furniture battles`, `Production demand`, one-off junk titles (`Ted Danson`, `Iran war`). *Rep cannot act — no trust.*
+5. **Partnership compounds** — **58** quarantined across three 2026-06-22 sweeps (rule shipped, still recurring). Two shapes: real vendor+entity (`Serve Robotics and White Castle`, `Locus Robotics and GEODIS`) and pure slogan noise (`Shaping Biotech And Life Sciences`, `Flying Taxis And Self-Driving Trucks`).
+6. **Robot types too generic / pipeline surface empty** — live pipeline feed is **empty** (`cache_pending: true`, surface `lead_count: 0`, `robot_types: []`); gap scan shows `low_signals` 17 + `industry` 11 dominate the 34 candidates with gaps. Limits outbound specificity. (Tune only after 0–5.)
 
-**Harness metric:** once theme 0 is fixed, track junk-reason distribution, gap frequency, and industry_top in `reports/harness_snapshot_latest.json` → `intelligence` slice. Until then, cite the sweep CSVs above.
+**Harness metric:** theme 0 is fixed — track junk-reason distribution, gap frequency, and industry_top live in `reports/harness_snapshot_latest.json` → `intelligence` slice each mission. Re-install via `python3 -m pip install -r harness/requirements.txt` if the slice degrades.
 
 ---
 
@@ -83,19 +83,19 @@ Active bets the Orchestrator should prefer when choosing build missions:
 
 ---
 
-## Intelligence baseline (DB-backed, 2026-06-23)
+## Intelligence baseline (live-DB-backed, 2026-06-23)
 
-First snapshot with live `intelligence` slice (`database.telemetry.status: connected`):
+Live `intelligence` slice (`database.telemetry.status: connected`) — restored this mission after a silent venv regression (theme 0). All sub-slices now `available:true`:
 
 | Signal | Value | Implication |
 |--------|-------|-------------|
-| Unknown industry (with signals) | **960** | Rank 3 RSS/HTML + report filter still critical |
-| Quarantined companies | **1,053** | Rectifier/quarantine working; volume worth trending |
-| Pipeline gap scan (34 candidates) | `low_signals` 17, `industry` 11 | Surface leads thin on evidence + industry |
-| Recent-name junk sample | 6% (OEM/vendor dominated) | Recent ingest cleaner than historical CSV sweeps |
-| Pipeline surface | 9 leads, tiers unknown, empty robot_types | ProductSurface: tier + robot_types still broken on cache |
+| Recent junk sample (400) | **5.8%** junk, **100% vendor/OEM** (17 + 6) | Marginal *fresh* ingest leak is now OEM/vendor, not no-intent → rank 3 matters for live flow |
+| Industry distribution (top) | **Unknown 960**, Logistics 385, Hospitality 258, Healthcare 257, Auto&Mfg 244, Food Svc 199, Airports 172, Retail 147 | Unknown dwarfs every real vertical → RSS/HTML + report filter is the biggest classifiable win |
+| Pipeline gap scan (34 candidates) | `low_signals` 17, `industry` 11, `crm_descriptors` 5 | Surface leads thin on evidence + industry |
+| API summary | 3,881 leads (306 hot / 1,639 warm / 1,936 cold); 4,258 companies; 11,841 signals | Scale of corpus the gates run against |
+| Pipeline surface | **empty** (`cache_pending`, lead_count 0, robot_types []) | PipelineHealth: feed not built; surface metrics unmeasurable until cache refreshes |
 
-Historical CSV sweeps (pre-telemetry) remain directionally valid for **bulk junk** (69% no-intent) but should not be re-used once DB deltas are available.
+Historical CSV sweeps remain directionally valid for **bulk backlog junk** (69% no-intent, 35% Unknown). The live slice supersedes them for *recent-flow* trends — note the divergence: bulk backlog is no-intent-dominated, recent ingest is vendor/OEM-dominated.
 
 ---
 
@@ -107,17 +107,18 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 
 | Rank | Mission slug | Agent | Rationale (evidence) |
 |------|--------------|-------|----------------------|
-| ~~1~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23** — `harness_env.py` + `database.telemetry`; intelligence slice live. |
-| 1 | `buyer-intent-gate-triage` | LeadQuality | 69% of historical junk = "no buyer-intent signal". Suppress/route no-intent rows; instrument the gate. |
-| 2 | `rss-html-strip-and-report-filter` | LeadQuality | **960 Unknown** industry rows with signals; HTML/market-report noise. |
-| 3 | `vendor-oem-suppression-refresh` | LeadQuality | OEM blocklist gaps (~167 vendor leaks in sweeps; 6% in recent sample). |
-| 4 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 in latest sweeps). |
-| 5 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 on pipeline surface (11/34) once RSS noise removed. |
-| 6 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean. |
-| 7 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
-| 8 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~–~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23**, then **re-fixed 2026-06-23** (friction-baseline): venv lost `sqlalchemy`/`requests`/`fastapi` → slice silently degraded. Deps now pinned in `harness/requirements.txt`. |
+| 1 | `vendor-oem-suppression-refresh` | LeadQuality | **Promoted ↑.** Live junk sample is **100% vendor/OEM** (5.8% of recent ingest) — the *only* junk class still entering the pipeline. Highest leverage on *fresh* flow; small blocklist surface. |
+| 2 | `rss-html-strip-and-report-filter` | LeadQuality | **960 live Unknown**-industry companies (largest bucket, > 2× Logistics); HTML boilerplate (`nbsp`/`font`/`6f6f6f`) + market-report spam. Biggest classifiable cleanup. |
+| 3 | `buyer-intent-gate-triage` | LeadQuality | 69% of historical backlog junk = "no buyer-intent signal". Suppress/route no-intent rows; instrument the gate. (Bulk backlog, not recent-flow.) |
+| 4 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
+| 5 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 in live gap scan (11/34) once RSS noise removed. |
+| 6 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics (tier, robot_types) unmeasurable until built. Blocks rank 7–8. |
+| 7 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean + cache built. |
+| 8 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 9 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
 
-*`hospitality-headline-filter` folded into rank 3 (RSS/HTML strip covers hotel/geo header merges).*
+*Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
 ---
 
