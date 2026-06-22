@@ -44,16 +44,19 @@ Users want deals moving forward without doing the work. The control surface is a
 
 ## Friction themes (internal — from secondary pass & quarantine)
 
-Priority order matches north star: fix (1) before tuning (4).
+Priority order matches north star: fix (1) before tuning (4). **Baseline below is evidence-backed** from the `friction-baseline` mission (2026-06-23), reconstructed from sweep reports in `reports/` (snapshot `intelligence` DB slice was unavailable — see theme 0).
 
-1. **Headline junk in `companies.name`** — RSS merges, geo stubs (`Upstate NY`, `Co Antrim`), truncated headlines (`US Sets`, `'We want`). *Rep cannot act — no trust.*
-2. **Partnership compounds** — `Serve Robotics and White Castle` is not a buyer; White Castle row may be. Rule shipped; periodic sweeps needed.
-3. **Rectification failures** — contact/CRM filled but entity coherence fails → quarantine. *Data looks rich but record is still junk.*
-4. **Missing industry** — `industry_rescue` failed on otherwise HOT rows. Blocks vertical copy and rep triage.
-5. **Low signals** — pipeline-visible but thin evidence. Rank inflation risk.
-6. **Robot types too generic** — `robot_types_needed` present but not tied to deployment context. Limits outbound specificity.
+**Reference sample:** `pipeline_junk_cleanup_20260619_222706.csv` — **3,163 junk rows**; `buyer_opportunity_junk_20260618_220744.csv` — 2,206 rows; `partnership_compound_quarantine_*` (2026-06-22) — 58 rows across 3 sweeps; `unknown_industry_keyword_analysis.txt` — 1,389 unknown-industry leads.
 
-**Harness metric:** track gap frequency and junk reason distribution in `reports/harness_snapshot_latest.json` → `intelligence` slice.
+0. **Telemetry blind spot (meta-friction)** — snapshot `intelligence.junk_reasons`, `gap_frequency`, `industry_top` are all `available:false` because `database:null` (no `DATABASE_URL` in the snapshot run; sqlite template is skipped by `_db_session`). *The harness cannot self-measure friction — every baseline must be hand-reconstructed from ad-hoc CSVs.* Fix first or all other metrics stay un-trended.
+1. **No buyer-intent signal (gate failures)** — **2,188 / 3,163 = 69%** of the junk sweep: `buyer opportunity gate: no buyer-intent signal found (labor, expansion, capex, RFP, deployment, or operations hiring)`. Company may be real but there is no actionable event. *Largest single friction by volume — newly the #1 theme.*
+2. **RSS/HTML + market-report noise → Unknown industry** — **1,110 / 3,163 = 35%** of junk rows carry `Unknown` industry; the 1,389 unknown-industry leads are dominated by raw HTML boilerplate tokens (`nbsp`, `font`, `href`, `target`, `blank`, `color`, `6f6f6f`, `indexbox`) and market-research headline spam (`market analysis/forecast/size/trends`, `... to 2035`). Subsumes the old "headline junk" + "missing industry" themes.
+3. **Robotics vendor / OEM contamination** — ~**167** rows flagged `robotics vendor / OEM` or `seller/vendor or publisher story`. Recurring offenders: Tesla (`Tesla moves`, `Tesla Semi`, `Tesla Stock`), Foxconn, SoftBank, Nvidia. Direct leak against the OEM-prospecting anti-bet.
+4. **Headline fragments / verb-merge names in `companies.name`** — `Tesla moves`, `Lululemon claps`, `Olympic goalie shares`, `Havertys Furniture battles`, `Production demand`, `Multifamily`; plus mis-attributed fragments (`company name not found in signal text`, e.g. JLL) and one-off junk titles (`Ted Danson`, `Iran war`, `Hormuz`, `Cargo Thieves`). *Rep cannot act — no trust.*
+5. **Partnership compounds** — **58** quarantined across three 2026-06-22 sweeps (rule shipped, still recurring). Two shapes: real vendor+entity (`Locus Robotics and GEODIS`, `Avery Dennison and TEXAID RFID`) and pure slogan noise (`Automation and AI Unlock New Value`, `Supercharge Your Retail and CPG AI Strategy`).
+6. **Robot types too generic** — pipeline surface `robot_types: []` for all 9 visible leads; `robot_types_needed` not tied to deployment context. Limits outbound specificity. (Tune only after 0–5.)
+
+**Harness metric:** once theme 0 is fixed, track junk-reason distribution, gap frequency, and industry_top in `reports/harness_snapshot_latest.json` → `intelligence` slice. Until then, cite the sweep CSVs above.
 
 ---
 
@@ -84,15 +87,21 @@ Active bets the Orchestrator should prefer when choosing build missions:
 
 Updated by research missions. Execution missions pull from here.
 
-| Rank | Mission slug | Agent | Rationale |
-|------|--------------|-------|-----------|
-| 1 | `friction-baseline` | FrictionMiner | Establish thesis + gap/junk telemetry baseline (research) |
-| 2 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership compound cleanup |
-| 3 | `industry-rescue-ontology` | LeadQuality | Reduce `industry_rescue` failures on HOT rows |
-| 4 | `hospitality-headline-filter` | LeadQuality | Cut hotel/geo headline merges at ingest |
-| 5 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs on pipeline cards |
-| 6 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc) |
-| 7 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language |
+Re-ranked 2026-06-23 from the friction baseline. Ranks now follow **volume × north-star order**: unblock measurement (theme 0), then attack the highest-volume name/event junk before copy/UX.
+
+| Rank | Mission slug | Agent | Rationale (evidence) |
+|------|--------------|-------|----------------------|
+| 1 | `snapshot-db-telemetry` | PipelineHealth + Deploy | **NEW.** Wire read-only `DATABASE_URL` into the snapshot run so `junk_reasons`/`gap_frequency`/`industry_top` populate. Theme 0 — every other metric is un-trended without it. |
+| 2 | `buyer-intent-gate-triage` | LeadQuality | **NEW.** 69% of junk = "no buyer-intent signal". Suppress/route no-intent rows out of the pipeline surface or into secondary pass; instrument the gate. Highest-volume friction. |
+| 3 | `rss-html-strip-and-report-filter` | LeadQuality | **NEW.** Strip HTML boilerplate (`nbsp/font/href/indexbox`) and demote market-research headlines; recovers the 1,110 `Unknown`-industry junk rows. Themes 2 + 4. |
+| 4 | `vendor-oem-suppression-refresh` | LeadQuality | **NEW.** Extend OEM blocklist for Tesla/Foxconn/SoftBank/Nvidia variants (~167 vendor leaks). Enforces OEM anti-bet. |
+| 5 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 in latest sweeps); harden rule for vendor+entity and slogan phrases. |
+| 6 | `industry-rescue-ontology` | LeadQuality | Reduce `industry_rescue` failures on HOT rows once RSS/HTML noise (rank 3) is removed. |
+| 7 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean. |
+| 8 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 9 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+
+*`hospitality-headline-filter` folded into rank 3 (RSS/HTML strip covers hotel/geo header merges).*
 
 ---
 
