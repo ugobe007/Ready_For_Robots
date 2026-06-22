@@ -1,78 +1,107 @@
 # Outcome: Friction baseline (intelligence)
 
 **Date:** 2026-06-23
-**Agent:** FrictionMiner (+ ProductThesis synthesis)
+**Agent:** FrictionMiner (+ ProductThesis synthesis), Orchestrator
 **Status:** complete
-**Type:** research (no production code; doc-only)
+**Type:** research (one harness-config fix; no production/app code; no deploy)
 
-## Summary
+## Headline
 
-Established the Phase 1 friction baseline from sweep reports because the snapshot's
-DB-derived intelligence slice was unavailable. Updated `docs/market_thesis.md`
-**Friction themes** (now evidence-backed) and **Ranked build backlog** (re-ranked by
-volume × north-star order). No deploy — research mission, doc-only change.
+The friction baseline is now **live-DB-backed** for the first time — but only after fixing
+the meta-friction (theme 0). The "DB telemetry" mission had been marked Done, yet the live
+snapshot was **silently degraded**: `.venv-harness` was missing the libraries the
+`intelligence` slice needs. All three sub-slices read `available:false` despite a valid
+Postgres `DATABASE_URL` in `.env`.
 
-## Metrics cited (baseline)
+Fixed by installing the four deps into `.venv-harness` and **pinning them** in a new
+`harness/requirements.txt` so the slice cannot silently regress again.
 
-Snapshot `reports/harness_snapshot_latest.json` (generated 2026-06-22T17:27Z, pipeline built 17:15Z):
+### Telemetry restore chain (each install unblocked one sub-slice)
+| Missing dep | Symptom before | Slice unblocked |
+|-------------|----------------|-----------------|
+| `sqlalchemy` + `psycopg2-binary` | `database.telemetry: unavailable (No module named 'sqlalchemy')` | `database.telemetry`, `industry_top` |
+| `requests` | `junk_reasons.error: No module named 'requests'` | `junk_reasons` |
+| `fastapi` | `gap_frequency.error: No module named 'fastapi'` | `gap_frequency` |
 
-| Metric | Value |
-|--------|-------|
-| Companies in DB | 4,257 |
-| Signals in DB | 11,841 |
-| Tiers | hot 306 / warm 1,639 / cold 1,935 (total 3,880) |
-| Pipeline surface leads | 9 (all tier `unknown`, `robot_types: []`) |
-| Homepage hot leads | 47 |
-| `intelligence.junk_reasons` | **available: false** (DB null) |
-| `intelligence.gap_frequency` | **available: false** (DB null) |
-| `intelligence.industry_top` | `[]` (DB null) |
+Result: `Intelligence: junk=True gaps=True industries=15` (was `junk=False gaps=False industries=0`).
 
-Sweep-report sample (source of friction quantification):
+## Top 5 friction themes (evidence-cited)
 
-| Report | Rows | Key finding |
-|--------|------|-------------|
-| `pipeline_junk_cleanup_20260619_222706.csv` | 3,163 | 2,188 (69%) no buyer-intent; 1,110 (35%) `Unknown` industry |
-| `buyer_opportunity_junk_20260618_220744.csv` | 2,206 | mostly `company_name`-bucket no-intent |
-| `partnership_compound_quarantine_*` (06-22) | 58 (30+14+14) | recurring vendor+entity + slogan compounds |
-| `unknown_industry_keyword_analysis.txt` | 1,389 leads | top tokens = HTML boilerplate + market-report spam |
+0. **Telemetry blind spot (meta) — RESOLVED.** Live slice was `available:false` across the
+   board due to venv dep drift. Fixed + pinned (`harness/requirements.txt`). *A "Done"
+   telemetry mission regressed at the venv layer with zero code change.*
+1. **Robotics vendor / OEM contamination — dominant recent-flow leak.** Live junk sample
+   (400 recent companies) = **5.8% junk, 100% vendor/OEM** (17 `robotics vendor / OEM` +
+   6 `name pattern matches automation/robotics vendor`). It is the *only* junk class still
+   entering fresh ingest. Anti-bet violation.
+2. **RSS/HTML + market-report → Unknown industry.** **960** live Unknown-industry companies
+   with signals — the #1 industry bucket, > 2× Logistics (385). Driven by HTML boilerplate
+   (`nbsp` 3,557, `font` 3,343, `href`, `6f6f6f`, `indexbox`) + report spam (`market
+   analysis/forecast/size/trends`, `... to 2035`). 1,110/3,163 (35%) of the CSV sweep.
+3. **No buyer-intent signal — bulk backlog.** **2,188/3,163 = 69%** of the historical junk
+   sweep: `buyer opportunity gate: no buyer-intent signal found`. Largest by volume, but a
+   backlog cleanup — not what recent ingest produces.
+4. **Headline fragments / verb-merge / mis-attributed names.** `invalid_name` bucket = 80
+   rows; 8 `company name not found in signal text` (e.g. JLL). `Tesla moves`, `Lululemon
+   claps`, one-off titles (`Ted Danson`, `Iran war`).
+5. **Partnership compounds — recurring.** **58** quarantined across three 2026-06-22 sweeps
+   (30/14/14). Real entity+entity (`Serve Robotics and White Castle`) + slogan noise
+   (`Shaping Biotech And Life Sciences`, `Flying Taxis And Self-Driving Trucks`).
 
-## Top 5 friction themes (evidence-backed)
+(Also: live pipeline feed **empty** — `cache_pending`, surface `lead_count: 0`,
+`robot_types: []`; gap scan `low_signals` 17 + `industry` 11 dominate 34 candidates.)
 
-0. **Telemetry blind spot** — snapshot intelligence DB slice `available:false` (no `DATABASE_URL`); harness can't self-measure friction. *Meta — fix first.*
-1. **No buyer-intent signal** — 2,188/3,163 = **69%** of junk. Real-ish companies, no actionable event. Largest by volume.
-2. **RSS/HTML + market-report noise → Unknown industry** — 1,110/3,163 = **35%** `Unknown`; tokens dominated by `nbsp/font/href/indexbox` and `market forecast/size/trends`.
-3. **Robotics vendor/OEM contamination** — ~**167** vendor/seller flags; recurring Tesla/Foxconn/SoftBank/Nvidia. Anti-bet leak.
-4. **Headline-fragment / verb-merge names** — `Tesla moves`, `Lululemon claps`, `Olympic goalie shares`, mis-attributed fragments (JLL).
-5. **Partnership compounds** — 58 quarantined across three 06-22 sweeps despite shipped rule.
+## Top 5 ranked build missions (re-ranked from live slice)
 
-## Top 5 ranked build missions (new backlog)
+| Rank | Mission | Agent | Why |
+|------|---------|-------|-----|
+| 1 | `vendor-oem-suppression-refresh` | LeadQuality | **Promoted.** 100% of recent junk; only class still entering pipeline; small blocklist surface. |
+| 2 | `rss-html-strip-and-report-filter` | LeadQuality | 960 live Unknown (largest bucket); HTML + report spam. Biggest classifiable cleanup. |
+| 3 | `buyer-intent-gate-triage` | LeadQuality | 69% of historical backlog junk. Suppress/route + instrument gate. |
+| 4 | `partnership-quarantine-sweep` | LeadQuality | 58 recurring partnership compounds. |
+| 5 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 (11/34) once RSS noise removed. |
 
-1. `snapshot-db-telemetry` (PipelineHealth + Deploy) — wire read-only `DATABASE_URL` so intelligence slice populates. Unblocks all trending.
-2. `buyer-intent-gate-triage` (LeadQuality) — suppress/route the 69% no-intent rows; instrument the gate.
-3. `rss-html-strip-and-report-filter` (LeadQuality) — strip HTML boilerplate + demote market-research headlines; recovers 1,110 `Unknown` rows.
-4. `vendor-oem-suppression-refresh` (LeadQuality) — extend OEM blocklist (~167 leaks).
-5. `partnership-quarantine-sweep` (LeadQuality) — recurring sweep + harden rule for vendor+entity & slogan phrases.
+(New addition `pipeline-cache-refresh-health` (PipelineHealth) ranked 6 — feed empty blocks surface work.)
 
-## Dry-run / quarantine note
+## Metrics delta (snapshot)
 
-No `--apply` quarantine scripts were run. Findings are read-only aggregates over
-existing `reports/` CSVs; the 58 partnership rows are already-quarantined records
-from prior 06-22 sweeps, not new actions taken in this mission.
+| Metric | Before this mission | After |
+|--------|--------------------|-------|
+| `database.telemetry.status` | `unavailable` | `connected` |
+| `intelligence.junk_reasons.available` | `false` | `true` (5.8% junk, OEM/vendor) |
+| `intelligence.gap_frequency.available` | `false` | `true` (34 candidates) |
+| `intelligence.industry_top` | `[]` (0) | 15 industries (Unknown 960 …) |
+| Snapshot line | `junk=False gaps=False industries=0` | `junk=True gaps=True industries=15` |
 
-## Follow-ups / blockers
+## Quarantine / rectification sample (no `--apply`, read-only)
 
-- **Blocker for trending:** until `snapshot-db-telemetry` (rank 1) ships, friction deltas
-  cannot be auto-tracked; next research mission must again reconstruct from CSVs.
-- Confirm whether `_db_session` should accept a read-replica URL distinct from the
-  app's primary `DATABASE_URL` (snapshot is read-only).
-- Re-run `harness_snapshot.py` with DB access after rank 1 to capture the first real
-  `junk_reasons`/`gap_frequency` baseline.
+- `pipeline_junk_cleanup_20260619_222706.csv` (3,163 rows): buckets `display_junk` 2,311,
+  `ok`/quarantined 772, `invalid_name` 80. Reasons: 69.2% no-intent, 3.1% seller/vendor
+  story, 2.1% vendor/OEM, 0.3% mis-attributed fragment.
+- `partnership_compound_quarantine_2026-06-22` ×3: 30 + 14 + 14 = 58 `would_quarantine`.
+- `unknown_industry_keyword_analysis.txt`: 1,389 leads, HTML-token + report-spam dominated.
 
-## Files changed
+No quarantine scripts were run (research mission; `--apply` out of scope).
 
-- `docs/market_thesis.md` — Friction themes + Ranked build backlog (evidence-backed)
-- `missions/2026-06-23-friction-baseline/outcome.md` — this file
+## Changes committed
 
-## Verification
+- `docs/market_thesis.md` — Friction themes (theme 0 resolved; vendor/OEM = recent-flow
+  leak), live Intelligence baseline table, re-ranked build backlog, header.
+- `harness/requirements.txt` — **new**; pins `sqlalchemy`, `psycopg2-binary`, `requests`,
+  `fastapi` so the intelligence slice does not silently regress.
 
-Doc-only mission; no code paths touched → no pytest gate applicable. No deploy.
+## Follow-ups / open blockers
+
+1. **Pipeline feed empty** (`cache_pending`) — surface tier/robot_types unmeasurable.
+   Hand to PipelineHealth (`pipeline-cache-refresh-health`). Heed red line: no parallel
+   local+Fly cache refresh.
+2. Add `python3 -m pip install -r harness/requirements.txt` to harness bootstrap / README so
+   a fresh `.venv-harness` is telemetry-ready.
+3. Next execution mission should be **rank 1 `vendor-oem-suppression-refresh`** — highest
+   leverage on live flow, now measurable via `junk_reasons`.
+4. Re-trend `junk_reasons` / `industry_top` next mission now that the slice is live (deltas
+   will be meaningful run-over-run).
+
+## Deploy
+
+None. Research mission; the only change is harness config + docs (no app/production code).

@@ -110,9 +110,9 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~–~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23**, then **re-fixed 2026-06-23** (friction-baseline): venv lost `sqlalchemy`/`requests`/`fastapi` → slice silently degraded. Deps now pinned in `harness/requirements.txt`. |
 | 1 | `vendor-oem-suppression-refresh` | LeadQuality | **Promoted ↑.** Live junk sample is **100% vendor/OEM** (5.8% of recent ingest) — the *only* junk class still entering the pipeline. Highest leverage on *fresh* flow; small blocklist surface. |
 | 2 | `rss-html-strip-and-report-filter` | LeadQuality | **960 live Unknown**-industry companies (largest bucket, > 2× Logistics); HTML boilerplate (`nbsp`/`font`/`6f6f6f`) + market-report spam. Biggest classifiable cleanup. |
-| 3 | `buyer-intent-gate-triage` | LeadQuality | 69% of historical backlog junk = "no buyer-intent signal". Suppress/route no-intent rows; instrument the gate. (Bulk backlog, not recent-flow.) |
-| 4 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
-| 5 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 in live gap scan (11/34) once RSS noise removed. |
+| ~~3~~ | ~~`buyer-intent-gate-triage`~~ | LeadQuality | ✅ **Done 2026-06-23** — `buyer_intent_gate.py` + triage script; live sample **55% no-intent**; 177 rows stamped. `--apply` quarantine pending CSV review. |
+| 3 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
+| 4 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 in live gap scan (11/34) once RSS noise removed. |
 | 6 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics (tier, robot_types) unmeasurable until built. Blocks rank 7–8. |
 | 7 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean + cache built. |
 | 8 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
