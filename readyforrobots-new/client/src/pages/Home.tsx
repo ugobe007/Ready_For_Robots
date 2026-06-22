@@ -10,11 +10,9 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
 import HeroLeadTicker from "@/components/HeroLeadTicker";
-import NextActionsPanel from "@/components/NextActionsPanel";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
-import { usePipelineNextActions } from "@/hooks/usePipelineNextActions";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -127,7 +125,6 @@ export default function Home() {
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [dailyBrief, setDailyBrief] = useState<NewsletterEdition | null>(null);
   const [benchReport, setBenchReport] = useState<HumanoidBenchReport | null>(null);
-  const { actions: nextActions, loading: nextActionsLoading } = usePipelineNextActions(3);
 
   const howItWorks = useFadeUp();
   const agentPitch = useFadeUp();
@@ -213,7 +210,7 @@ export default function Home() {
       {/* ── HERO ── */}
       <section
         id="hero-cta"
-        className="relative min-h-screen flex flex-col justify-center overflow-hidden"
+        className="relative overflow-hidden py-20 lg:py-24"
         style={{ background: "#0d0520" }}
       >
         {/* Background image */}
@@ -232,8 +229,8 @@ export default function Home() {
           style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] gap-10 xl:gap-12 items-center">
+        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 xl:gap-10 items-start">
           <div className="min-w-0">
             {/* Live benchmark — product intelligence (links to /robots) */}
             <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -331,10 +328,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Live SIGNAL leads + next actions — right column */}
-          <div className="mt-8 flex flex-col gap-4 lg:mt-0">
+          {/* Live pipeline — aligned with headline */}
+          <div className="mt-6 lg:mt-0 lg:pt-10 lg:sticky lg:top-24">
             <HeroLeadTicker />
-            <NextActionsPanel actions={nextActions} loading={nextActionsLoading} compact />
           </div>
           </div>
         </div>

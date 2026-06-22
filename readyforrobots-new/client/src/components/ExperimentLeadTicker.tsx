@@ -177,7 +177,7 @@ export default function ExperimentLeadTicker({
 
   return (
     <div
-      className={`flex h-full ${minHeightClass} flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40`}
+      className={`flex flex-col overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 ${minHeightClass}`}
       style={{
         background: "linear-gradient(165deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
         boxShadow: "0 24px 64px -12px rgba(124,58,237,0.12), 0 0 0 1px rgba(255,255,255,0.06) inset",
@@ -207,7 +207,7 @@ export default function ExperimentLeadTicker({
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative shrink-0 overflow-hidden" style={{ minHeight: `${maxVisible * 52 + 8}px` }}>
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-[#12082a] to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[#0d0520] to-transparent" />
 
