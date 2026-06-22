@@ -10,9 +10,11 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import PipelinePreview from "@/components/PipelinePreview";
 import HeroLeadTicker from "@/components/HeroLeadTicker";
+import NextActionsPanel from "@/components/NextActionsPanel";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
 import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
+import { usePipelineNextActions } from "@/hooks/usePipelineNextActions";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -125,6 +127,7 @@ export default function Home() {
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [dailyBrief, setDailyBrief] = useState<NewsletterEdition | null>(null);
   const [benchReport, setBenchReport] = useState<HumanoidBenchReport | null>(null);
+  const { actions: nextActions, loading: nextActionsLoading } = usePipelineNextActions(3);
 
   const howItWorks = useFadeUp();
   const agentPitch = useFadeUp();
@@ -328,9 +331,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Live SIGNAL leads — right column */}
-          <div className="mt-8 lg:mt-0">
+          {/* Live SIGNAL leads + next actions — right column */}
+          <div className="mt-8 flex flex-col gap-4 lg:mt-0">
             <HeroLeadTicker />
+            <NextActionsPanel actions={nextActions} loading={nextActionsLoading} compact />
           </div>
           </div>
         </div>

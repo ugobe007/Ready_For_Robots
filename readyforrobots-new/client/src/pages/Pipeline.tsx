@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import NextActionsPanel from "@/components/NextActionsPanel";
 import ScoutActionBar from "@/components/ScoutActionBar";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
 import { Link, useSearch } from "wouter";
@@ -30,6 +31,7 @@ import {
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { dealMatchesIndustrySearch, pipelineSearchSuggestions } from "@/lib/industrySearchLexicon";
 import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
+import { buildNextActionsFromPipelineLeads } from "@/lib/pipelineNextActions";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
@@ -1008,6 +1010,10 @@ export default function Pipeline() {
     if (serverSearchDeals.length > 0) return serverSearchDeals;
     return clientSearchMatches;
   }, [deals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
+  const pipelineNextActions = useMemo(
+    () => buildNextActionsFromPipelineLeads(deals, 3),
+    [deals],
+  );
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
@@ -1530,6 +1536,20 @@ export default function Pipeline() {
               </Link>
             </div>
           </section>
+
+          {pipelineNextActions.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="hidden xl:block" aria-hidden="true" />
+              <NextActionsPanel
+                actions={pipelineNextActions}
+                compact
+                onSelect={(action) => {
+                  const id = Number(action.entity_id);
+                  if (Number.isFinite(id)) setSelectedId(id);
+                }}
+              />
+            </div>
+          )}
 
           {/* ── SIGNAL activation queue (admin only) ── */}
           {isAdmin && (

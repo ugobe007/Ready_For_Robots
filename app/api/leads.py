@@ -2522,6 +2522,48 @@ def leads_pipeline_feed(
     })
 
 
+@router.get("/pipeline-next-actions")
+def leads_pipeline_next_actions(
+    response: Response,
+    limit: int = Query(3, ge=1, le=10),
+    user: Optional[dict] = Depends(optional_user),
+):
+    """
+    Top ranked autonomous actions from the pipeline feed — for home/pipeline right rails.
+    """
+    from app.services.content_surfaces import KEY_PIPELINE_FEED
+    from app.services.pipeline_next_actions import collect_pipeline_next_actions
+    from app.services.plan_entitlements import apply_pipeline_entitlements, resolve_plan_tier
+    from app.services.public_surface_cache import (
+        PUBLIC_CACHE_REFRESH_INTERVAL_SEC,
+        maybe_schedule_public_cache_refresh,
+        pipeline_feed_is_stale,
+        read_public_cache,
+        schedule_public_cache_refresh,
+    )
+
+    response.headers["Cache-Control"] = (
+        f"public, max-age={min(120, PUBLIC_CACHE_REFRESH_INTERVAL_SEC // 2)}, "
+        f"stale-while-revalidate={PUBLIC_CACHE_REFRESH_INTERVAL_SEC}"
+    )
+    maybe_schedule_public_cache_refresh()
+
+    plan = resolve_plan_tier(user)
+    cached = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
+    if cached and isinstance(cached, dict) and (cached.get("leads") or []):
+        if not pipeline_feed_is_stale(cached):
+            payload = apply_pipeline_entitlements(cached, plan)
+            leads = payload.get("leads") or []
+            return {
+                "actions": collect_pipeline_next_actions(leads, limit=limit),
+                "built_at": payload.get("built_at"),
+                "cache_pending": None,
+            }
+
+    schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_next_actions_miss")
+    return {"actions": [], "built_at": None, "cache_pending": True}
+
+
 @router.get("/homepage")
 def leads_homepage(response: Response, db: Session = Depends(get_db)):
     """
