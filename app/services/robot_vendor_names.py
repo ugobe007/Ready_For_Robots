@@ -10,6 +10,8 @@ import re
 from functools import lru_cache
 from typing import Optional, Set
 
+from app.services.humanoid_ontology_terms import HUMANOID_CATALOG_BUYER_VENDORS
+
 # Normalized (lowercase, single spaces). Expand as you discover false positives in the wild.
 KNOWN_ROBOTICS_VENDOR_NAMES: Set[str] = {
     # User-called out + common AMR / service robot OEMs
@@ -192,6 +194,19 @@ KNOWN_ROBOTICS_VENDOR_NAMES: Set[str] = {
     "apptronik",
     "1x technologies",
     "ubtech",
+    "realman",
+    "agibot",
+    "agibot robotics",
+    "limx dynamics",
+    "limx",
+    "milagrow",
+    "ecovacs",
+    "ecovacs robotics",
+    "serve robotics",
+    "skild ai",
+    "physical intelligence",
+    "persona ai",
+    "cloudminds",
 }
 
 
@@ -206,7 +221,7 @@ def _all_vendor_names() -> frozenset[str]:
 _BUYER_DEPLOYMENT_PARTNERS = frozenset({
     "gxo logistics",
     "gxo",
-})
+}) | HUMANOID_CATALOG_BUYER_VENDORS
 
 
 _LEGAL_SUFFIX = re.compile(

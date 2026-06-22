@@ -12,6 +12,32 @@ from typing import Iterable, List, Set
 
 from app.services.humanoid_vendor_catalog import HUMANOID_CATALOG
 
+# Pilot catalog rows label deployers as vendor — exclude from OEM junk filter.
+HUMANOID_CATALOG_BUYER_VENDORS = frozenset({
+    "foxconn",
+    "siemens",
+    "softbank",
+    "softbank robotics",
+    "nvidia robotics",
+    "toyota",
+    "toyota industries",
+    "toyota motor",
+    "toyota material handling",
+    "samsung",
+    "samsung electronics",
+    "samsung c&t",
+    "mercedes-benz",
+    "honda",
+    "hyundai",
+    "boeing",
+    "airbus",
+    "schaeffler",
+    "mitsubishi electric",
+    "mitsubishi electric automation",
+    "lg electronics",
+    "tesla",
+})
+
 _ALIAS_SPLIT = re.compile(r"[|,;/]")
 
 
@@ -51,11 +77,11 @@ def catalog_humanoid_vendor_names() -> frozenset[str]:
     for entry in HUMANOID_CATALOG:
         for key in ("vendor",):
             v = _norm_phrase(str(entry.get(key) or ""))
-            if v:
+            if v and v not in HUMANOID_CATALOG_BUYER_VENDORS:
                 names.add(v)
         for part in _ALIAS_SPLIT.split(str(entry.get("vendor_aliases") or "")):
             v = _norm_phrase(part)
-            if len(v) >= 4:
+            if len(v) >= 4 and v not in HUMANOID_CATALOG_BUYER_VENDORS:
                 names.add(v)
     return frozenset(names)
 

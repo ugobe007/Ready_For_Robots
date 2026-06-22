@@ -108,15 +108,15 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | Rank | Mission slug | Agent | Rationale (evidence) |
 |------|--------------|-------|----------------------|
 | ~~–~~ | ~~`snapshot-db-telemetry`~~ | PipelineHealth | ✅ **Done 2026-06-23**, then **re-fixed 2026-06-23** (friction-baseline): venv lost `sqlalchemy`/`requests`/`fastapi` → slice silently degraded. Deps now pinned in `harness/requirements.txt`. |
-| 1 | `vendor-oem-suppression-refresh` | LeadQuality | **Promoted ↑.** Live junk sample is **100% vendor/OEM** (5.8% of recent ingest) — the *only* junk class still entering the pipeline. Highest leverage on *fresh* flow; small blocklist surface. |
-| 2 | `rss-html-strip-and-report-filter` | LeadQuality | **960 live Unknown**-industry companies (largest bucket, > 2× Logistics); HTML boilerplate (`nbsp`/`font`/`6f6f6f`) + market-report spam. Biggest classifiable cleanup. |
-| ~~3~~ | ~~`buyer-intent-gate-triage`~~ | LeadQuality | ✅ **Done 2026-06-23** — `buyer_intent_gate.py` + triage script; live sample **55% no-intent**; 177 rows stamped. `--apply` quarantine pending CSV review. |
-| 3 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
-| 4 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 in live gap scan (11/34) once RSS noise removed. |
-| 6 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics (tier, robot_types) unmeasurable until built. Blocks rank 7–8. |
-| 7 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean + cache built. |
-| 8 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
-| 9 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
+| ~~1~~ | ~~`vendor-oem-suppression-refresh`~~ | LeadQuality | ✅ **Done 2026-06-23** — blocklist + catalog buyer denylist; **28** active OEM rows quarantined. |
+| 1 | `rss-html-strip-and-report-filter` | LeadQuality | **960 live Unknown**-industry companies (largest bucket, > 2× Logistics); HTML boilerplate (`nbsp`/`font`/`6f6f6f`) + market-report spam. Biggest classifiable cleanup. |
+| 2 | `partnership-quarantine-sweep` | LeadQuality | Recurring partnership-compound cleanup (58 across 3 sweeps; `Serve Robotics and White Castle`, slogan noise). |
+| ~~3~~ | ~~`buyer-intent-gate-triage`~~ | LeadQuality | ✅ **Done 2026-06-23** — `buyer_intent_gate.py` + triage script; live sample **55% no-intent**; 177 rows stamped; `--apply` run on 500-row batch. |
+| 3 | `industry-rescue-ontology` | LeadQuality | `industry` gap #2 in live gap scan (11/34) once RSS noise removed. |
+| 4 | `pipeline-cache-refresh-health` | PipelineHealth | Live pipeline feed **empty** (`cache_pending`); surface metrics (tier, robot_types) unmeasurable until built. Blocks rank 5–6. |
+| 5 | `pipeline-action-copy` | ProductSurface | Industry-specific SIGNAL blurbs — only after names/events clean + cache built. |
+| 6 | `next-actions-panel` | ProductSurface | Home right rail: top 3 autonomous actions (UX doc). |
+| 7 | `humanoid-pilot-ranking` | LeadQuality + ProductSurface | Tag + rank humanoid pilot language. |
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
