@@ -181,6 +181,7 @@ def sanitize_lead_for_plan(lead: dict[str, Any], plan: str) -> dict[str, Any]:
     # Anonymous preview — enough SCOUT context to excite signup without full workspace depth.
     row["share_summary"] = _teaser_copy(row.get("share_summary"), 240)
     row["share_blurb"] = _teaser_copy(row.get("share_blurb"), 160)
+    row["pipeline_action"] = _teaser_copy(row.get("pipeline_action"), 120)
     highlights = row.get("lead_highlights")
     if isinstance(highlights, dict):
         teaser: dict[str, Any] = {}

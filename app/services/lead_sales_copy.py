@@ -354,6 +354,11 @@ def humanize_robot_types(
 
 
 def _industry_pain(industry: str, automation_type: str, pain_point: str) -> str:
+    from app.services.pipeline_action_copy import industry_automation_context
+
+    _, canonical_pain = industry_automation_context(industry)
+    if canonical_pain and canonical_pain != "operational efficiency and labor costs":
+        return canonical_pain
     low = (industry or "").lower()
     for key, phrase in _INDUSTRY_PAIN.items():
         if key in low:

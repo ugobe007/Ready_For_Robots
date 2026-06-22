@@ -20,6 +20,7 @@ export interface ApiLead {
   priority_tier?: string | null;
   share_summary?: string | null;
   share_blurb?: string | null;
+  pipeline_action?: string | null;
   robot_types_needed?: string[];
   signals?: Array<{
     signal_type?: string;
@@ -202,9 +203,10 @@ export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null
       : undefined,
     outreachSubject: outreachSubject(lead.company_name, type),
     outreachBody: outreachBody(lead, type, text),
-    notes: cleanScrapedText(lead.share_summary) || undefined,
+    notes: cleanScrapedText(lead.pipeline_action || lead.share_summary) || undefined,
     shareSummary: lead.share_summary || undefined,
     shareBlurb: lead.share_blurb || undefined,
+    pipelineAction: lead.pipeline_action || undefined,
     priorityTier: lead.priority_tier || undefined,
     robotTypesNeeded: lead.robot_types_needed || [],
     researchUpdates: lead.research_updates,

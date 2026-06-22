@@ -752,11 +752,9 @@ _INDUSTRY_AUTOMATION_CTX: dict[str, tuple[str, str]] = {
 
 
 def _automation_ctx(industry: str) -> tuple[str, str]:
-    low = (industry or "").lower()
-    for key, val in _INDUSTRY_AUTOMATION_CTX.items():
-        if key in low:
-            return val
-    return ("robotic automation", "operational efficiency and labor costs")
+    from app.services.pipeline_action_copy import industry_automation_context
+
+    return industry_automation_context(industry)
 
 
 def _company_size_word(emp: Optional[int]) -> str:
@@ -842,17 +840,28 @@ def _fmt_pipeline_card(
         industry_display = "New"
     overall = round(float(s.overall_intent_score) if s else 0.0, 1)
     share_summary = ""
+    share_blurb = ""
+    pipeline_action = ""
     if sigs:
         if fast and sig:
             share_summary = format_signal_for_sales(sig.signal_text)[:320]
         else:
             try:
                 from app.services.lead_sales_copy import preview_sentences
+                from app.services.pipeline_action_copy import pipeline_action_for_lead
 
-                _blurb, full = _build_share_blurb(
+                share_blurb, full = _build_share_blurb(
                     c, pri, sigs[:3], industry_for_copy=industry_display, automation_profile=None
                 )
-                share_summary = preview_sentences(full or _blurb, max_sentences=2, max_chars=320)
+                share_summary = preview_sentences(full or share_blurb, max_sentences=2, max_chars=320)
+                unique_types = list(
+                    dict.fromkeys(getattr(s, "signal_type", "") for s in (_dedup_top_signals(sigs, 5) or []))
+                )[:4]
+                pipeline_action = pipeline_action_for_lead(
+                    industry_display,
+                    tier=pri.tier,
+                    signal_types=unique_types,
+                )
             except Exception:
                 if sig:
                     share_summary = format_signal_for_sales(sig.signal_text)[:320]
@@ -868,6 +877,8 @@ def _fmt_pipeline_card(
         "junk_reason": junk_reason,
         "score": {"overall_score": overall},
         "share_summary": share_summary or None,
+        "share_blurb": share_blurb or None,
+        "pipeline_action": pipeline_action or None,
         "pipeline_slim": True,
     }
     if sig:

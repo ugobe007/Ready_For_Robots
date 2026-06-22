@@ -55,6 +55,7 @@ interface Deal {
   notes?: string;
   shareSummary?: string;
   shareBlurb?: string;
+  pipelineAction?: string;
   priorityTier?: string;
   robotTypesNeeded?: string[];
   researchUpdates?: Array<{
@@ -1938,7 +1939,9 @@ export default function Pipeline() {
                                     {displayStageLabel(deal, true)}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
+                                <p className="text-[11px] text-white/40 truncate">
+                                  {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
+                                </p>
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -2036,7 +2039,9 @@ export default function Pipeline() {
                                     {tier.label}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-white/40 truncate">{deal.signal}</p>
+                                <p className="text-[11px] text-white/40 truncate">
+                                  {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
+                                </p>
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0">
