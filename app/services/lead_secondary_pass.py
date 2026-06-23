@@ -134,6 +134,19 @@ def _run_contact_rescue(company: Company, db: Session, *, use_apollo: bool = Tru
     return "failed", []
 
 
+def _crm_metadata_field_has_content(key: str, metadata: dict) -> bool:
+    if key == "budget":
+        block = metadata.get("budget")
+        return isinstance(block, dict) and bool(block.get("signals") or block.get("top_amount"))
+    if key == "timing":
+        block = metadata.get("timing")
+        return isinstance(block, dict) and bool(block.get("signals") or block.get("top_window"))
+    if key in ("automation_requirements", "decision_makers"):
+        value = metadata.get(key)
+        return bool(value) if isinstance(value, list) else bool(value)
+    return bool(metadata.get(key))
+
+
 def _run_crm_rescue(company: Company, signals: List[Signal], db: Session) -> tuple[str, List[str]]:
     from app.services.crm_extractor import build_crm_metadata_dict, extract
 
@@ -142,7 +155,7 @@ def _run_crm_rescue(company: Company, signals: List[Signal], db: Session) -> tup
     existing = dict(company.crm_metadata or {})
     filled: List[str] = []
     for key in ("budget", "timing", "automation_requirements", "decision_makers"):
-        if metadata.get(key) and not existing.get(key):
+        if _crm_metadata_field_has_content(key, metadata) and not _crm_metadata_field_has_content(key, existing):
             filled.append(key)
     existing.update(metadata)
     company.crm_metadata = existing

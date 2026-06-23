@@ -117,16 +117,18 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`next-actions-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — home hero + pipeline right rail; `GET /api/leads/pipeline-next-actions`. |
 | ~~1~~ | ~~`humanoid-pilot-ranking`~~ | LeadQuality + ProductSurface | ✅ **Done 2026-06-23** — `humanoid_pilot_*` tiers on cards; humanoid leads boost next-actions + pipeline badge. |
 | ~~1~~ | ~~`unknown-industry-residual-sweep`~~ | LeadQuality | ✅ **Done 2026-06-23** — **8** industries applied, **48** quarantined; active Unknown w/ signals **56→0**. |
-| ~~1~~ | ~~`hero-live-pipeline-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — Supabase-like hero panel; amber Live pipeline headline tied to Activate SIGNAL. |
+| ~~1~~ | ~~`hero-live-pipeline-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — Supabase-like hero panel (superseded by on-brand redesign). |
+| ~~1~~ | ~~`hero-pipeline-on-brand`~~ | ProductSurface | ✅ **Done 2026-06-23** — compact editorial Live pipeline widget; 360px column, site purple/teal theme. |
 | ~~1~~ | ~~`pipeline-robot-types-surface`~~ | PipelineHealth | ✅ **Done 2026-06-23** — `robot_types_needed` on slim pipeline cards; **35/35** feed rows. |
 | ~~1~~ | ~~`vendor-oem-live-flow`~~ | LeadQuality | ✅ **Done 2026-06-23** — broad OEM quarantine; **19** pattern/blocklist rows hidden. |
 | ~~2~~ | ~~`contact-gap-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--require-gap contact`; batch filled **3** contacts (Apollo key still needed for scale). |
 | ~~1~~ | ~~`ingest-oem-pr-gate`~~ | LeadQuality | ✅ **Done 2026-06-23** — `_buyer_opportunity_gate` on article context at ingest. |
-| ~~2~~ | ~~`apollo-contact-hot-warm`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--priority-tier HOT/WARM`; **0** fills (surface mostly covered; Apollo key missing). |
+| ~~2~~ | ~~`apollo-contact-hot-warm`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--priority-tier HOT/WARM`; Apollo key present but **403** on free plan search API. |
+| ~~2~~ | ~~`crm-descriptors-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — robot-fit fallback in CRM extractor; **4** fills; gap **30→28**. |
 
-*Harness re-rank 2026-06-23: Unknown w/ signals **1**; pipeline `robot_types` populated; junk sample **11%** vendor/OEM; top gap **crm_descriptors** 30 > **contact** 29.*
+*Harness re-rank 2026-06-23: Unknown w/ signals **1**; pipeline `robot_types` populated; junk sample **11%** vendor/OEM; top gap **contact** 30 > **crm_descriptors** 28.*
 
-*Next: add `APOLLO_API_KEY`; `crm-descriptors-backfill`; periodic prod cache refresh after deploys.*
+*Next: upgrade Apollo plan for contact search; periodic prod cache refresh after deploys; inference pass for residual CRM gaps.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

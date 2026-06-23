@@ -249,6 +249,28 @@ def _extract_timing(signal_texts: List[tuple[str, str]]) -> List[TimingSignal]:
     return found[:5]
 
 
+def _infer_automation_requirements_fallback(
+    company: "Company",
+    signal_texts: List[tuple[str, str]],
+) -> List[str]:
+    """Derive requirement labels from robot-fit inference when signal regex finds nothing."""
+    from app.services.lead_sales_copy import humanize_robot_types
+
+    blob = " ".join((text or "")[:2000] for text, _ in signal_texts[:12])
+    meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
+    profile = meta.get("automation_profile") if isinstance(meta.get("automation_profile"), dict) else {}
+    robot_types = humanize_robot_types(
+        profile,
+        industry=(company.industry or ""),
+        signal_blob=blob,
+    )
+    return [
+        label
+        for label in robot_types
+        if label and "confirm on discovery" not in label.lower()
+    ][:5]
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Automation requirements extraction
 # ─────────────────────────────────────────────────────────────────────────────
@@ -413,10 +435,14 @@ def extract(company: "Company", signals: List["Signal"], db: "Session") -> CRMDe
     if not signal_texts:
         return CRMDescriptors(extracted_at=_now())
 
+    automation_requirements = _extract_automation_requirements(signal_texts)
+    if not automation_requirements:
+        automation_requirements = _infer_automation_requirements_fallback(company, signal_texts)
+
     descriptors = CRMDescriptors(
         budget_signals=_extract_budget(signal_texts),
         timing_signals=_extract_timing(signal_texts),
-        automation_requirements=_extract_automation_requirements(signal_texts),
+        automation_requirements=automation_requirements,
         decision_makers=_extract_decision_makers(signal_texts),
         extracted_at=_now(),
     )

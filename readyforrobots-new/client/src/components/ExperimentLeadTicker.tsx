@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "wouter";
-import { ChevronRight, Zap } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { dedupeHomepageLeads } from "@/lib/homepageLeads";
 
@@ -21,10 +21,7 @@ type TickerRow = TickerLead & { tickKey: number };
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_TICK_MS = 5000;
 const POOL_REFRESH_MS = 90_000;
-const AMBER = "#FFB000";
-const PANEL_BG = "#171717";
-const ROW_BG = "#232323";
-const SUPABASE_GREEN = "#3ecf8e";
+const ROW_HEIGHT_PX = 44;
 
 export type ExperimentLeadTickerProps = {
   maxVisible?: number;
@@ -33,8 +30,6 @@ export type ExperimentLeadTickerProps = {
   title?: string;
   subtitle?: string;
   showPipelineLink?: boolean;
-  /** Supabase-inspired hero panel — amber headline tied to Activate SIGNAL CTA */
-  heroVariant?: boolean;
 };
 
 const FALLBACK_POOL: TickerLead[] = [
@@ -56,14 +51,14 @@ const FALLBACK_POOL: TickerLead[] = [
 ];
 
 const tierStyle: Record<string, { color: string; bg: string; border: string }> = {
-  HOT: { color: "#fca5a5", bg: "rgba(248,113,113,0.16)", border: "rgba(248,113,113,0.45)" },
-  WARM: { color: "#fcd34d", bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.35)" },
-  COLD: { color: "#94a3b8", bg: "rgba(148,163,184,0.1)", border: "rgba(148,163,184,0.28)" },
+  HOT: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.25)" },
+  WARM: { color: "#a78bfa", bg: "rgba(96,165,250,0.10)", border: "rgba(96,165,250,0.22)" },
+  COLD: { color: "#94a3b8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.2)" },
 };
 
 function robotLine(lead: TickerLead): string {
   const types = lead.robot_types_needed?.filter(Boolean) ?? [];
-  if (types.length) return types.slice(0, 3).join(" · ");
+  if (types.length) return types.slice(0, 2).join(" · ");
   if (lead.industry) return `${lead.industry} automation fit`;
   return "Robot category mapping in progress";
 }
@@ -109,18 +104,16 @@ async function fetchLeadPool(minVisible: number): Promise<TickerLead[]> {
 export default function ExperimentLeadTicker({
   maxVisible = DEFAULT_MAX_VISIBLE,
   tickMs = DEFAULT_TICK_MS,
-  minHeightClass = "min-h-[520px]",
+  minHeightClass = "min-h-0",
   title = "Live sales leads",
   subtitle = "Robot demand ticker",
   showPipelineLink = false,
-  heroVariant = false,
 }: ExperimentLeadTickerProps) {
   const [pool, setPool] = useState<TickerLead[]>(FALLBACK_POOL);
   const [visible, setVisible] = useState<TickerRow[]>([]);
   const [live, setLive] = useState(false);
   const poolIndex = useRef(0);
   const tickKey = useRef(0);
-  const rowHeightPx = heroVariant ? 68 : 52;
 
   const seedVisible = useCallback(
     (nextPool: TickerLead[]) => {
@@ -181,79 +174,41 @@ export default function ExperimentLeadTicker({
     return () => window.clearInterval(timer);
   }, [pool, maxVisible, tickMs]);
 
-  const tickSec = Math.round(tickMs / 1000);
-  const isHero = heroVariant;
-
   return (
     <div
-      className={`flex w-full flex-col overflow-hidden rounded-xl border shadow-2xl ${minHeightClass}`}
+      className={`flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-white/8 ${minHeightClass}`}
       style={{
-        background: isHero ? PANEL_BG : "linear-gradient(165deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
-        borderColor: isHero ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.1)",
-        boxShadow: isHero
-          ? "0 32px 80px -24px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,176,0,0.08) inset"
-          : "0 24px 64px -12px rgba(124,58,237,0.12), 0 0 0 1px rgba(255,255,255,0.06) inset",
+        background: "rgba(255,255,255,0.02)",
+        boxShadow: "0 16px 48px -20px rgba(0,0,0,0.55)",
       }}
     >
       <div
-        className={`flex shrink-0 items-center justify-between border-b px-5 ${isHero ? "py-5" : "py-4"}`}
-        style={{
-          background: isHero ? "#1f1f1f" : "rgba(124,58,237,0.12)",
-          borderColor: isHero ? "rgba(255,176,0,0.22)" : "rgba(255,255,255,0.08)",
-        }}
+        className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3"
+        style={{ background: "rgba(124,58,237,0.06)" }}
       >
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            {isHero && <Zap className="h-4 w-4 shrink-0" style={{ color: AMBER }} strokeWidth={2.5} />}
-            <p
-              className={`truncate font-semibold ${isHero ? "text-lg" : "text-sm text-white"}`}
-              style={{
-                fontFamily: "'Sora', system-ui, sans-serif",
-                color: isHero ? AMBER : undefined,
-                letterSpacing: isHero ? "-0.02em" : undefined,
-              }}
-            >
-              {title}
-            </p>
-          </div>
           <p
-            className={`mt-1 uppercase tracking-[0.16em] ${isHero ? "text-[11px] font-medium text-white/55" : "text-[10px] text-violet-200/70"}`}
+            className="text-[10px] font-bold uppercase tracking-[0.18em]"
+            style={{ color: "#a78bfa", fontFamily: "'Inter', system-ui, sans-serif" }}
           >
-            {subtitle}
+            {title}
           </p>
+          <p className="mt-0.5 truncate text-[11px] text-white/35">{subtitle}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <span
-            className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest"
-            style={{
-              color: SUPABASE_GREEN,
-              background: "rgba(62,207,142,0.1)",
-              borderColor: "rgba(62,207,142,0.35)",
-            }}
-          >
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: SUPABASE_GREEN }} />
-            Live
-          </span>
-          <span
-            className="hidden rounded-md border border-white/10 bg-black/30 px-2 py-1 font-mono text-[10px] text-white/45 sm:inline"
-            style={{ fontFamily: "'JetBrains Mono', monospace" }}
-          >
-            {live ? "API" : "Demo"}
-          </span>
-        </div>
+        <span
+          className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+          style={{ color: "#03DAC5", background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)" }}
+        >
+          <span className="h-1 w-1 animate-pulse rounded-full" style={{ background: "#03DAC5" }} />
+          {live ? "Live" : "Demo"}
+        </span>
       </div>
 
-      <div className="relative shrink-0 overflow-hidden" style={{ minHeight: `${maxVisible * rowHeightPx + 12}px` }}>
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-gradient-to-b to-transparent"
-          style={{ backgroundImage: `linear-gradient(to bottom, ${PANEL_BG}, transparent)` }}
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-gradient-to-t to-transparent"
-          style={{ backgroundImage: `linear-gradient(to top, ${PANEL_BG}, transparent)` }}
-        />
-
-        <ul className="relative h-full overflow-hidden px-4 py-3" aria-live="polite" aria-label="Latest sales leads and robot types">
+      <div
+        className="relative shrink-0 overflow-hidden"
+        style={{ minHeight: `${maxVisible * ROW_HEIGHT_PX + 4}px` }}
+      >
+        <ul className="relative overflow-hidden px-2 py-1.5" aria-live="polite" aria-label="Latest sales leads and robot types">
           <AnimatePresence initial={false} mode="popLayout">
             {visible.map((lead) => {
               const tier = (lead.priority_tier || "WARM").toUpperCase();
@@ -262,38 +217,27 @@ export default function ExperimentLeadTicker({
                 <motion.li
                   key={lead.tickKey}
                   layout
-                  initial={{ opacity: 0, y: -18, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 12, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className={`mb-2 overflow-hidden rounded-lg border px-3.5 ${isHero ? "py-3" : "py-2.5"}`}
-                  style={{
-                    background: isHero ? ROW_BG : "rgba(255,255,255,0.025)",
-                    borderColor: isHero ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
-                  }}
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="mb-1 flex items-center gap-2 rounded-lg border border-white/5 px-2.5 py-2"
+                  style={{ background: "rgba(255,255,255,0.02)" }}
                 >
-                  <div className="flex min-w-0 items-start justify-between gap-2">
-                    <p className={`truncate font-semibold leading-tight text-white ${isHero ? "text-[14px]" : "text-[13px]"}`}>
-                      {lead.company_name}
-                    </p>
-                    <span
-                      className="shrink-0 rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide"
-                      style={{ color: st.color, background: st.bg, borderColor: st.border }}
-                    >
-                      {tier}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-[12px] font-semibold leading-tight text-white/90">
+                        {lead.company_name}
+                      </p>
+                      <span
+                        className="shrink-0 rounded-full border px-1.5 py-px text-[8px] font-bold uppercase"
+                        style={{ color: st.color, background: st.bg, borderColor: st.border }}
+                      >
+                        {tier}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-[10px] text-white/38">{robotLine(lead)}</p>
                   </div>
-                  {lead.industry && (
-                    <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-wide text-white/40">
-                      {lead.industry}
-                    </p>
-                  )}
-                  <p
-                    className={`mt-1.5 line-clamp-2 leading-snug ${isHero ? "text-[12px]" : "text-[11px]"}`}
-                    style={{ color: isHero ? "rgba(62,207,142,0.92)" : "rgba(153,246,228,0.75)" }}
-                  >
-                    {robotLine(lead)}
-                  </p>
                 </motion.li>
               );
             })}
@@ -302,24 +246,20 @@ export default function ExperimentLeadTicker({
       </div>
 
       <div
-        className="shrink-0 border-t px-4 py-3.5"
-        style={{
-          background: isHero ? "#1a1a1a" : "rgba(124,58,237,0.06)",
-          borderColor: isHero ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.08)",
-        }}
+        className="shrink-0 border-t border-white/6 px-3 py-2.5"
+        style={{ background: "rgba(255,255,255,0.015)" }}
       >
         {showPipelineLink ? (
           <Link
             href="/pipeline"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:brightness-110"
-            style={{ color: AMBER }}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/45 transition-colors hover:text-white/75"
           >
             View full pipeline
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3" />
           </Link>
         ) : (
-          <p className="text-[10px] text-white/35">
-            New lead every {tickSec}s · {maxVisible} visible · oldest rolls off the bottom
+          <p className="text-[10px] text-white/25">
+            Rotates every {Math.round(tickMs / 1000)}s · {maxVisible} shown
           </p>
         )}
       </div>

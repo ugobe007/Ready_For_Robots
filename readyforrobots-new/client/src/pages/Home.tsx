@@ -230,7 +230,7 @@ export default function Home() {
         />
 
         <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] gap-8 xl:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 xl:gap-10 items-start">
           <div className="min-w-0">
             {/* Live benchmark — product intelligence (links to /robots) */}
             <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -328,8 +328,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Live pipeline — aligned with Activate SIGNAL CTA */}
-          <div className="mt-6 w-full lg:mt-0 lg:pt-6 lg:sticky lg:top-24">
+          {/* Live pipeline — compact, matches PipelinePreview theme */}
+          <div className="mt-6 flex justify-start lg:mt-0 lg:justify-end lg:pt-6 lg:sticky lg:top-24">
             <HeroLeadTicker />
           </div>
           </div>

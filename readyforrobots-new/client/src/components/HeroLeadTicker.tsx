@@ -1,18 +1,16 @@
 /**
- * Home hero — compact live lead ticker (replaces typewriter spotlight panel).
+ * Home hero — compact live lead ticker aligned with site editorial theme.
  */
 import ExperimentLeadTicker from "@/components/ExperimentLeadTicker";
 
 export default function HeroLeadTicker() {
   return (
     <ExperimentLeadTicker
-      maxVisible={5}
+      maxVisible={4}
       tickMs={6000}
-      minHeightClass="min-h-0"
       title="Live pipeline"
-      subtitle="SIGNAL · robot demand"
+      subtitle="Verified buyer signals"
       showPipelineLink
-      heroVariant
     />
   );
 }
