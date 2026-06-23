@@ -100,15 +100,16 @@ interface Deal {
     why_lead?: string[];
     procurement?: Record<string, unknown>;
     problem_size?: Record<string, unknown>;
-  robot_categories?: string[];
-  application_areas?: string[];
-  agent_enrichment?: {
-    rich_facts?: Array<{ claim?: string; evidence_span?: string }>;
-    procurement_clues?: string[];
-    timing_clues?: string[];
-    ontology_gaps?: string[];
+    robot_categories?: string[];
+    application_areas?: string[];
+    agent_enrichment?: {
+      rich_facts?: Array<{ claim?: string; evidence_span?: string }>;
+      procurement_clues?: string[];
+      timing_clues?: string[];
+      ontology_gaps?: string[];
+    };
   };
-};
+}
 
 function parseSavedLeadsLimitMessage(errText: string): string | null {
   try {
@@ -121,7 +122,6 @@ function parseSavedLeadsLimitMessage(errText: string): string | null {
     /* not JSON */
   }
   return null;
-}
 }
 
 interface ScoutActivationLead {
