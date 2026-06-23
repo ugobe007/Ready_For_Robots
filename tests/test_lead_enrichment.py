@@ -44,7 +44,7 @@ def test_resolve_outreach_email_prefers_crm_contact():
     acct.website = None
     acct.industry = None
 
-    email, source = resolve_outreach_email(company, acct, use_apollo=False)
+    email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
     assert email == "buyer@acme.com"
     assert source == "crm_contact"
 
@@ -60,7 +60,7 @@ def test_resolve_outreach_email_falls_back_to_domain():
     acct.industry = None
 
     with patch.dict("os.environ", {}, clear=True):
-        email, source = resolve_outreach_email(company, acct, use_apollo=False)
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
     assert email == "plantmanager@acme.com"
     assert source == "domain_inferred"
     assert acct.contact_email == "plantmanager@acme.com"
@@ -77,7 +77,7 @@ def test_resolve_outreach_email_uses_acct_website():
     acct.industry = None
 
     with patch.dict("os.environ", {}, clear=True):
-        email, source = resolve_outreach_email(company, acct, use_apollo=False)
+        email, source = resolve_outreach_email(company, acct, use_apollo=False)[:2]
     assert email == "plantmanager@acme.com"
     assert source == "domain_inferred"
 
@@ -94,8 +94,8 @@ def test_resolve_outreach_email_uses_apollo(mock_apollo):
     acct.website = None
     acct.industry = None
 
-    with patch.dict("os.environ", {"APOLLO_API_KEY": "test-key"}):
-        email, source = resolve_outreach_email(company, acct, use_apollo=True)
+    with patch.dict("os.environ", {"APOLLO_API_KEY": "test-key", "CONTACT_USE_APOLLO": "true"}):
+        email, source = resolve_outreach_email(company, acct, use_apollo=True)[:2]
     assert email == "vp@acme.com"
     assert source == "apollo"
     assert acct.contact_email == "vp@acme.com"

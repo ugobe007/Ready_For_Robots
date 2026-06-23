@@ -138,7 +138,7 @@ See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents mus
 | 1 | `profile-usage-meters` | ProductSurface | ✅ folded into entitlement-honesty |
 | ~~2~~ | ~~`mobile-signup-cta`~~ | ProductSurface | ✅ **Done 2026-06-23** — mobile header pill + drawer workspace CTA. |
 
-*Next: Apollo plan upgrade for contact search; periodic prod cache refresh after deploys; lead quality sweeps when gaps shift.*
+*Next: periodic prod cache refresh after deploys; lead quality sweeps when gaps shift. Apollo skipped ($588/yr); Hunter.io wired as primary paid contact source.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

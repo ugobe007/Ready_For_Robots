@@ -22,6 +22,20 @@ from app.services.apollo_client import (
     ApolloProspectClient,
     recommended_prospect_titles,
 )
+from app.services.contact_free_sources import (
+    apollo_contact_enabled,
+    decision_maker_records,
+    fetch_website_mailto_email,
+    infer_person_email_from_decision_makers,
+    pick_signal_outreach_email,
+)
+from app.services.hunter_client import (
+    HunterAPIError,
+    HunterClient,
+    HunterConfigError,
+    hunter_contact_enabled,
+    pick_best_domain_email,
+)
 from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain, is_trusted_outreach_domain
 from app.services.outreach_email_inference import (
     infer_cc_outreach_emails,
@@ -140,43 +154,148 @@ def apollo_contact_email(
     return None
 
 
+def hunter_contact_email(
+    company_name: str,
+    *,
+    domain: str | None = None,
+    industry: str | None = None,
+    company: Company | None = None,
+    contacts: list | None = None,
+) -> dict[str, Any] | None:
+    """
+    Find a decision-maker email via Hunter.io Email Finder or Domain Search.
+    Uses named decision makers when available; otherwise ranks domain emails by title.
+    """
+    if not hunter_contact_enabled():
+        return None
+    try:
+        client = HunterClient()
+    except HunterConfigError:
+        return None
+
+    source_company = company
+    dm_records = decision_maker_records(source_company, contacts) if source_company else []
+
+    for dm in dm_records[:2]:
+        first = (dm.get("first_name") or dm.get("first") or "").strip()
+        last = (dm.get("last_name") or dm.get("last") or "").strip()
+        if not first or not last:
+            continue
+        try:
+            prospect = client.find_email(
+                domain=domain,
+                company=company_name,
+                first_name=first,
+                last_name=last,
+            )
+        except HunterAPIError as exc:
+            logger.warning("Hunter finder failed for %r: %s", company_name, exc)
+            break
+        if prospect and prospect.get("email"):
+            if not prospect.get("title"):
+                prospect["title"] = dm.get("title")
+            return prospect
+
+    if not domain and not company_name:
+        return None
+
+    try:
+        search = client.domain_search(domain=domain, company=company_name)
+    except HunterAPIError as exc:
+        logger.warning("Hunter domain search failed for %r: %s", company_name, exc)
+        return None
+
+    best = pick_best_domain_email(search.get("emails") or [], industry=industry)
+    if best and best.get("email"):
+        return best
+    return None
+
+
 def resolve_outreach_email(
     company: Company,
     acct: CrmAccount | None = None,
     *,
-    use_apollo: bool = True,
-) -> tuple[str | None, str]:
+    use_apollo: bool | None = None,
+    signal_texts: list[str] | None = None,
+    contacts: list | None = None,
+) -> tuple[str | None, str, str | None]:
     """
-    Waterfall: CRM contact_email → Apollo → sales@domain.
-    Returns (email, source_label).
+    Waterfall: CRM → Apollo (opt-in) → Hunter → signal → person guess → mailto → role inbox.
+    Returns (email, source_label, contact_title).
     """
     if acct and (acct.contact_email or "").strip():
-        return acct.contact_email.strip(), "crm_contact"
+        return acct.contact_email.strip(), "crm_contact", None
 
     domain = outreach_domain(company, acct)
+    industry = company.industry or (acct.industry if acct else None)
 
-    if use_apollo and os.getenv("APOLLO_API_KEY"):
+    if use_apollo is None:
+        use_apollo = apollo_contact_enabled()
+
+    if use_apollo:
         prospect = apollo_contact_email(
             company.name,
             domain=domain,
-            industry=company.industry or (acct.industry if acct else None),
+            industry=industry,
         )
         if prospect and prospect.get("email"):
             email = prospect["email"].strip()
             if acct:
                 acct.contact_email = email
-            return email, "apollo"
+            return email, "apollo", prospect.get("title")
 
-    inferred = infer_primary_outreach_email(
-        domain,
-        company.industry or (acct.industry if acct else None),
+    prospect = hunter_contact_email(
+        company.name,
+        domain=domain,
+        industry=industry,
+        company=company,
+        contacts=contacts,
     )
+    if prospect and prospect.get("email"):
+        email = prospect["email"].strip()
+        if _EMAIL_RE.match(email):
+            if acct:
+                acct.contact_email = email
+            source = prospect.get("source") or "hunter"
+            label = "hunter_domain" if source == "hunter_domain" else "hunter"
+            return email, label, prospect.get("title")
+
+    texts = signal_texts or []
+    if not texts:
+        meta = company.crm_metadata or {}
+        for key in ("signal_snippets", "recent_signals"):
+            for item in meta.get(key) or []:
+                if isinstance(item, str) and item.strip():
+                    texts.append(item.strip())
+
+    signal_email = pick_signal_outreach_email(texts, domain)
+    if signal_email:
+        if acct:
+            acct.contact_email = signal_email
+        return signal_email, "signal_email", None
+
+    person_email, _pattern, dm_title = infer_person_email_from_decision_makers(
+        company, contacts, domain
+    )
+    if person_email:
+        if acct:
+            acct.contact_email = person_email
+        return person_email, "person_inferred", dm_title
+
+    if domain:
+        mailto_email = fetch_website_mailto_email(domain)
+        if mailto_email:
+            if acct:
+                acct.contact_email = mailto_email
+            return mailto_email, "website_mailto", None
+
+    inferred = infer_primary_outreach_email(domain, industry)
     if inferred:
         if acct:
             acct.contact_email = inferred
-        return inferred, "domain_inferred"
+        return inferred, "domain_inferred", None
 
-    return None, "missing"
+    return None, "missing", None
 
 
 def outreach_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
@@ -263,7 +382,25 @@ def persist_outreach_contact(
     )
     created = False
     if not existing:
-        role_title = title or ("Apollo prospect" if source == "apollo" else "Role inbox")
+        source_titles = {
+            "apollo": "Apollo prospect",
+            "hunter": "Hunter prospect",
+            "hunter_domain": "Hunter domain match",
+            "signal_email": "Signal contact",
+            "person_inferred": "Inferred person email",
+            "website_mailto": "Website contact",
+            "domain_inferred": "Role inbox",
+        }
+        source_scores = {
+            "apollo": 70,
+            "hunter": 78,
+            "hunter_domain": 72,
+            "website_mailto": 62,
+            "signal_email": 58,
+            "person_inferred": 50,
+            "domain_inferred": 45,
+        }
+        role_title = title or source_titles.get(source, "Outreach contact")
         db.add(
             Contact(
                 company_id=company.id,
@@ -271,7 +408,7 @@ def persist_outreach_contact(
                 last_name="",
                 title=role_title,
                 email=email,
-                confidence_score=70 if source == "apollo" else 45,
+                confidence_score=source_scores.get(source, 45),
             )
         )
         created = True
@@ -289,7 +426,7 @@ def enrich_company_and_contact(
     acct: CrmAccount | None = None,
     *,
     sleep_s: float = 0.75,
-    use_apollo: bool = True,
+    use_apollo: bool | None = None,
     db: "Session | None" = None,
     persist_contact: bool = False,
 ) -> dict[str, Any]:
@@ -313,13 +450,40 @@ def enrich_company_and_contact(
     if company.website and acct and not acct.website:
         acct.website = company.website
 
-    email, source = resolve_outreach_email(company, acct, use_apollo=use_apollo)
+    signal_texts: list[str] = []
+    contacts: list = []
+    if db is not None:
+        from app.models.contact import Contact
+        from app.models.signal import Signal
+        from app.services.signal_text_normalize import strip_signal_html
+
+        signals = (
+            db.query(Signal)
+            .filter(Signal.company_id == company.id)
+            .order_by(Signal.created_at.desc())
+            .limit(12)
+            .all()
+        )
+        signal_texts = [
+            strip_signal_html(getattr(s, "signal_text", "") or "")
+            for s in signals
+            if getattr(s, "signal_text", None)
+        ]
+        contacts = db.query(Contact).filter(Contact.company_id == company.id).limit(10).all()
+
+    email, source, contact_title = resolve_outreach_email(
+        company,
+        acct,
+        use_apollo=use_apollo,
+        signal_texts=signal_texts,
+        contacts=contacts,
+    )
     out["email"] = email
     out["email_source"] = source
 
     if email and persist_contact and db is not None:
         out["contact_persisted"] = persist_outreach_contact(
-            company, db, email=email, source=source
+            company, db, email=email, source=source, title=contact_title
         )
 
     return out
@@ -330,9 +494,9 @@ def enrich_company_contact_with_fallback(
     db: "Session",
     *,
     sleep_s: float = 0.5,
-    use_apollo: bool = True,
+    use_apollo: bool | None = None,
 ) -> dict[str, Any]:
-    """Website lookup + Apollo + role-inbox fallback; always persists when email found."""
+    """Website lookup + free contact stack + optional Apollo; persists when email found."""
     out = enrich_company_and_contact(
         company,
         acct=None,

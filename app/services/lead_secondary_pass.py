@@ -108,7 +108,7 @@ def _run_industry_rescue(company: Company, signals: List[Signal], db: Session) -
     return "filled", ["industry"]
 
 
-def _run_contact_rescue(company: Company, db: Session, *, use_apollo: bool = True) -> tuple[str, List[str]]:
+def _run_contact_rescue(company: Company, db: Session, *, use_apollo: bool | None = None) -> tuple[str, List[str]]:
     from app.services.lead_enrichment import enrich_company_contact_with_fallback
 
     before_email = any(
@@ -125,7 +125,15 @@ def _run_contact_rescue(company: Company, db: Session, *, use_apollo: bool = Tru
 
     if out.get("contact_persisted"):
         return "filled", ["contact"]
-    if email and source == "domain_inferred":
+    if email and source in (
+        "domain_inferred",
+        "signal_email",
+        "person_inferred",
+        "website_mailto",
+        "apollo",
+        "hunter",
+        "hunter_domain",
+    ):
         return "filled", ["contact", "outreach_email"]
     if email and not meta_before and not before_email:
         return "filled", ["outreach_email"]
@@ -214,12 +222,17 @@ def run_rescue_passes_for_company(
     report: LeadGapReport,
     *,
     use_llm: bool = True,
-    use_apollo: bool = True,
+    use_apollo: bool | None = None,
     signal_backfill: bool = True,
     signal_backfill_queries: int = 1,
     cooldown_hours: int = 24,
 ) -> Dict[str, Any]:
     """Execute applicable rescue passes for one lead; returns per-pass outcomes."""
+    if use_apollo is None:
+        from app.services.contact_free_sources import apollo_contact_enabled
+
+        use_apollo = apollo_contact_enabled()
+
     company, signals, contacts = _load_company_bundle(db, report.company_id)
     if not company or not signals:
         return {"company_id": report.company_id, "skipped": True, "reason": "missing company or signals"}
@@ -416,7 +429,7 @@ def run_secondary_pass_batch(
     limit: int = DEFAULT_SECONDARY_LIMIT,
     min_score: float = 15.0,
     use_llm: bool = True,
-    use_apollo: bool = True,
+    use_apollo: bool | None = None,
     signal_backfill: bool = True,
     signal_backfill_queries: int = 1,
     rescore: bool = True,

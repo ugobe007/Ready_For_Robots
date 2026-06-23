@@ -26,6 +26,7 @@ if _shell_database_url and database_url_is_template_or_sqlite(_loaded):
     os.environ["DATABASE_URL"] = _shell_database_url
 
 from app.database import SessionLocal
+from app.services.contact_free_sources import apollo_contact_enabled
 from app.services.lead_gap_audit import select_gap_repair_candidates
 from app.services.lead_secondary_pass import run_secondary_pass_batch
 
@@ -37,6 +38,11 @@ def main() -> int:
     parser.add_argument("--audit-only", action="store_true", help="List gaps without running passes")
     parser.add_argument("--no-llm", action="store_true", help="Skip LLM agent QA pass")
     parser.add_argument("--no-apollo", action="store_true", help="Skip Apollo contact lookup")
+    parser.add_argument(
+        "--use-apollo",
+        action="store_true",
+        help="Force Apollo lookup (requires APOLLO_API_KEY and CONTACT_USE_APOLLO=true)",
+    )
     parser.add_argument(
         "--no-signal-backfill",
         action="store_true",
@@ -90,12 +96,19 @@ def main() -> int:
             print(json.dumps([r.to_dict() for r in reports], indent=2))
             return 0
 
+        if args.no_apollo:
+            use_apollo = False
+        elif args.use_apollo:
+            use_apollo = True
+        else:
+            use_apollo = apollo_contact_enabled()
+
         stats = run_secondary_pass_batch(
             db,
             limit=args.limit,
             min_score=args.min_score,
             use_llm=not args.no_llm,
-            use_apollo=not args.no_apollo,
+            use_apollo=use_apollo,
             signal_backfill=not args.no_signal_backfill,
             rescore=not args.no_rescore,
             cooldown_hours=args.cooldown_hours,

@@ -739,7 +739,7 @@ def cal_bulk_send(
             skipped_already_sent += 1
             continue
 
-        to_email, email_source = resolve_outreach_email(company, acct, use_apollo=True)
+        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
             continue
@@ -1062,7 +1062,7 @@ def cal_send_one(
     company = db.query(Company).filter(Company.id == acct.company_id).first() if acct.company_id else None
     from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
 
-    to_email, _src = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
+    to_email, _src, _title = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
     if not to_email:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="No recipient email")
