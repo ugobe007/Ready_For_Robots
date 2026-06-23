@@ -348,7 +348,7 @@ export default function Crm() {
       <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
         <Header />
         <p className="text-gray-600 mb-4">Sign in for CRM workspaces.</p>
-        <Link href="/login" className="text-violet-400 underline text-sm">
+        <Link href="/login" className="text-emerald-700 underline text-sm">
           Login
         </Link>
       </div>

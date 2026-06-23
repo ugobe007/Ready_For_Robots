@@ -167,7 +167,7 @@ export default function Profile() {
       <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
         <Header />
         <p className="text-gray-600 mb-4">Sign in to view your workspace.</p>
-        <Link href="/login" className="text-violet-400 underline text-sm">
+        <Link href="/login" className="text-emerald-700 underline text-sm">
           Go to login
         </Link>
       </div>
@@ -386,7 +386,7 @@ export default function Profile() {
         </div>
         <p className="text-xs text-gray-400 mb-4">
           CRM outreach is on{" "}
-          <Link href="/crm" className="text-violet-400 underline">
+          <Link href="/crm" className="text-emerald-700 underline">
             /crm
           </Link>
           .

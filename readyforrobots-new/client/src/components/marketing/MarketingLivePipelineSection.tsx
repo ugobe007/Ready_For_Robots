@@ -1,5 +1,5 @@
 /**
- * Full-width live pipeline table — emerald redesign, live /api/leads data.
+ * Full-width live pipeline table — emerald redesign, /api/leads/homepage data.
  */
 import { useEffect, useState } from "react";
 import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils, Zap } from "lucide-react";
@@ -60,23 +60,29 @@ type Props = {
 
 export default function MarketingLivePipelineSection({ hotCount, totalCount }: Props) {
   const [rows, setRows] = useState<LeadRow[]>(FALLBACK);
+  const [live, setLive] = useState(false);
+  const [resolvedTotal, setResolvedTotal] = useState<number | null>(null);
+  const [resolvedHot, setResolvedHot] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(
-          `${getApiBase()}/api/leads?limit=50&sort=score&exclude_junk=true`,
-          liveFetchInit(),
-        );
+        const res = await fetch(`${getApiBase()}/api/leads/homepage`, liveFetchInit());
         if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { leads?: LeadRow[] };
-        const raw = Array.isArray(data.leads) ? data.leads : [];
-        const mapped = raw
-          .filter((r) => r.company_name && r.id)
-          .slice(0, 5) as LeadRow[];
+        const data = (await res.json()) as {
+          hotLeads?: LeadRow[];
+          summary?: { total?: number; hot?: number };
+        };
+        const raw = Array.isArray(data.hotLeads) ? data.hotLeads : [];
+        const mapped = raw.filter((r) => r.company_name && r.id).slice(0, 8) as LeadRow[];
         if (mapped.length && !cancelled) {
           setRows(dedupeHomepageLeads(mapped).slice(0, 5) as LeadRow[]);
+          setLive(true);
+        }
+        if (!cancelled && data.summary) {
+          if (typeof data.summary.total === "number") setResolvedTotal(data.summary.total);
+          if (typeof data.summary.hot === "number") setResolvedHot(data.summary.hot);
         }
       } catch {
         /* fallback */
@@ -87,11 +93,11 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
     };
   }, []);
 
-  const hotLabel = formatStat(hotCount, "319");
-  const totalLabel = formatStat(totalCount, "3,957");
+  const hotLabel = formatStat(resolvedHot ?? hotCount, "319");
+  const totalLabel = formatStat(resolvedTotal ?? totalCount, "3,957");
 
   return (
-    <section className="py-20 bg-slate-900">
+    <section id="live-pipeline" className="py-20 bg-slate-900 scroll-mt-24">
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-4">
           <div>
@@ -100,10 +106,18 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
               <span className="text-emerald-400 text-xs font-mono-data font-semibold uppercase tracking-widest">
                 Live Pipeline
               </span>
+              {live && (
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+                  Live data
+                </span>
+              )}
             </div>
             <h2 className="font-display text-4xl font-bold text-white tracking-tight">
               Your pipeline is already moving.
             </h2>
+            <p className="mt-2 max-w-xl text-sm text-slate-400">
+              SIGNAL-ranked buyers with scores, signals, and timing — updated from the same feed as your workspace pipeline.
+            </p>
           </div>
           <div className="text-slate-400 text-sm font-mono-data">
             Live pipeline · <span className="text-emerald-400 font-bold">{hotLabel} hot leads</span>
@@ -111,7 +125,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl border border-white/10 overflow-hidden">
-          <div className="grid grid-cols-12 px-6 py-3 border-b border-white/10 text-slate-500 text-xs font-mono-data uppercase tracking-widest">
+          <div className="grid grid-cols-12 px-6 py-3 border-b border-white/10 text-slate-400 text-xs font-mono-data uppercase tracking-widest">
             <div className="col-span-4">Company</div>
             <div className="col-span-4 hidden md:block">Signal</div>
             <div className="col-span-2 text-center">Score</div>
@@ -122,22 +136,26 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
             const Icon = iconForIndustry(lead.industry);
             const tier = (lead.priority_tier || "WARM").toUpperCase();
             const score = lead.score?.overall_score != null ? Math.round(Number(lead.score.overall_score)) : "—";
+            const href = lead.id > 0 ? `/pipeline?lead=${lead.id}` : "/pipeline";
             return (
-              <div
+              <Link
                 key={lead.id}
-                className="grid grid-cols-12 px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors duration-150 items-center"
+                href={href}
+                className="grid grid-cols-12 px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors duration-150 items-center group"
               >
                 <div className="col-span-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
                     <Icon size={16} className="text-slate-300" />
                   </div>
                   <div>
-                    <div className="text-white font-semibold text-sm font-display">{lead.company_name}</div>
-                    <div className="text-slate-500 text-xs font-mono-data uppercase">{lead.industry}</div>
+                    <div className="text-white font-semibold text-sm font-display group-hover:text-emerald-300 transition-colors">
+                      {lead.company_name}
+                    </div>
+                    <div className="text-slate-400 text-xs font-mono-data uppercase">{lead.industry}</div>
                   </div>
                 </div>
                 <div className="col-span-4 hidden md:block">
-                  <p className="text-slate-400 text-sm truncate pr-4">{signalLine(lead)}</p>
+                  <p className="text-slate-300 text-sm truncate pr-4">{signalLine(lead)}</p>
                 </div>
                 <div className="col-span-2 text-center">
                   <span className="score-number text-2xl text-emerald-400">{score}</span>
@@ -145,23 +163,32 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                 <div className="col-span-2 flex items-center justify-end">
                   <HeatBadge heat={tier} />
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-          <p className="text-slate-500 text-sm font-mono-data">
+          <p className="text-slate-400 text-sm font-mono-data">
             Showing {rows.length} of <span className="text-white font-bold">{totalLabel}</span> active opportunities
+            {!live && <span className="text-slate-500"> · sample preview</span>}
           </p>
-          <Link
-            href="/results?url="
-            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
-          >
-            <Zap size={16} />
-            Activate SIGNAL
-            <ArrowRight size={14} />
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/pipeline"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] text-sm"
+            >
+              Open full pipeline
+              <ArrowRight size={14} />
+            </Link>
+            <Link
+              href="/results?url="
+              className="inline-flex items-center gap-2 px-5 py-3 text-emerald-300 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
+            >
+              <Zap size={16} />
+              Activate SIGNAL
+            </Link>
+          </div>
         </div>
       </div>
     </section>

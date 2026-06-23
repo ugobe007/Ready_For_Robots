@@ -62,7 +62,8 @@ type Props = {
 };
 
 export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
-  const [rows, setRows] = useState<LeadRow[]>(FALLBACK);
+  const [pool, setPool] = useState<LeadRow[]>(FALLBACK);
+  const [visible, setVisible] = useState<LeadRow[]>(FALLBACK.slice(0, 3));
   const [live, setLive] = useState(false);
 
   useEffect(() => {
@@ -74,7 +75,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         const data = (await r.json()) as { hotLeads?: LeadRow[] };
         const hl = data.hotLeads;
         if (Array.isArray(hl) && hl.length && !cancelled) {
-          setRows(dedupeHomepageLeads(hl).slice(0, 3) as LeadRow[]);
+          const deduped = dedupeHomepageLeads(hl) as LeadRow[];
+          setPool(deduped);
+          setVisible(deduped.slice(0, 3));
           setLive(true);
         }
       } catch {
@@ -85,6 +88,16 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (pool.length <= 3) return;
+    let idx = 0;
+    const timer = window.setInterval(() => {
+      idx = (idx + 1) % pool.length;
+      setVisible([...pool.slice(idx), ...pool.slice(0, idx)].slice(0, 3));
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [pool]);
 
   const hotLabel = formatStat(hotCount, "319");
   const totalLabel = formatStat(totalCount, "3,957");
@@ -100,7 +113,7 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       </div>
 
       <div>
-        {rows.map((lead, i) => {
+        {visible.map((lead) => {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           return (
@@ -130,8 +143,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       </div>
 
       <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
-        <span className="text-slate-500 text-xs font-mono-data">
-          Showing {rows.length} of {totalLabel} active opportunities
+        <span className="text-slate-400 text-xs font-mono-data">
+          Showing {visible.length} of {totalLabel} active opportunities
+          {!live && <span className="text-slate-500"> · preview</span>}
         </span>
         <Link href="/pipeline" className="text-emerald-400 text-xs font-semibold hover:text-emerald-300 flex items-center gap-1">
           View all <ArrowRight size={12} />

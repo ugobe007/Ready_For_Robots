@@ -728,25 +728,25 @@ export default function Results() {
                               onClick={() => setMaterialChoice(option.id)}
                               className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
-                                ? { borderColor: "rgba(196,181,253,0.45)", background: "rgba(196,181,253,0.08)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
+                                ? { borderColor: "rgba(5,150,105,0.45)", background: "rgba(5,150,105,0.08)" }
+                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="flex min-w-0 items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#047857" : "rgba(255,255,255,0.32)" }} />
-                                  <span className="truncate text-xs font-bold text-gray-900/78">{option.title}</span>
+                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#047857" : "#9ca3af" }} />
+                                  <span className="truncate text-xs font-bold text-gray-900">{option.title}</span>
                                 </span>
-                                {active && <CheckCircle2 className="h-4 w-4 text-teal-200" />}
+                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-white/38">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
                             </button>
                           );
                         })}
                       </div>
                       {materialChoice === "upload" && (
-                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500 hover:border-violet-300/35">
+                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500 hover:border-emerald-300">
                           <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
-                          <span className="font-normal text-violet-200">Browse</span>
+                          <span className="font-normal text-emerald-700">Browse</span>
                           <input
                             type="file"
                             className="hidden"
@@ -760,8 +760,8 @@ export default function Results() {
                     <div className="border-b border-gray-100 pb-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-normal text-sky-200">02</span>
-                          <p className="text-[10px] font-normal uppercase tracking-widest text-sky-200">Lead scope</p>
+                          <span className="text-[10px] font-normal text-emerald-700">02</span>
+                          <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Lead scope</p>
                         </div>
                         <p className="text-[11px] text-gray-400">
                           {selectedCount} selected
@@ -777,14 +777,14 @@ export default function Results() {
                               onClick={() => setScopeChoice(option.id)}
                               className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
-                                ? { borderColor: "rgba(56,189,248,0.42)", background: "rgba(56,189,248,0.08)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
+                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
+                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900/78">{option.title}</p>
-                                {active && <CheckCircle2 className="h-4 w-4 text-sky-200" />}
+                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
+                                {active && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-white/38">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
                             </button>
                           );
                         })}
@@ -793,8 +793,8 @@ export default function Results() {
 
                     <div className="border-b border-gray-100 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal text-teal-200">03</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest text-teal-200">Automation mode</p>
+                        <span className="text-[10px] font-normal text-emerald-700">03</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Automation mode</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MODE_OPTIONS.map((option) => {
@@ -806,14 +806,14 @@ export default function Results() {
                               onClick={() => setModeChoice(option.id)}
                               className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
-                                ? { borderColor: "rgba(45,212,191,0.42)", background: "rgba(45,212,191,0.08)" }
-                                : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
+                                ? { borderColor: "rgba(5,150,105,0.42)", background: "rgba(5,150,105,0.08)" }
+                                : { borderColor: "#e5e7eb", background: "#ffffff" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-gray-900/78">{option.title}</p>
-                                {active ? <CheckCircle2 className="h-4 w-4 text-teal-200" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-gray-400" />}
+                                <p className="text-xs font-bold text-gray-900">{option.title}</p>
+                                {active ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-gray-400" />}
                               </div>
-                              <p className="mt-1 text-[11px] leading-relaxed text-white/38">{option.desc}</p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{option.desc}</p>
                             </button>
                           );
                         })}
@@ -824,8 +824,8 @@ export default function Results() {
                       <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SIGNAL starts with</p>
                       <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-500 md:grid-cols-4">
                         <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-600" /> Lead evaluation</span>
-                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-sky-200" /> Sales strategy</span>
-                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-teal-200" /> Activity schedule</span>
+                        <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-600" /> Sales strategy</span>
+                        <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-600" /> Activity schedule</span>
                         <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-200" /> Reply alerts</span>
                       </div>
                     </div>
@@ -881,7 +881,7 @@ export default function Results() {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelected(p.id)}
-                            className="h-4 w-4 accent-violet-500"
+                            className="h-4 w-4 accent-emerald-600"
                           />
                           Select
                         </label>
@@ -947,14 +947,14 @@ export default function Results() {
                       )}
 
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                        <div className="min-w-0 rounded-xl border border-gray-100 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                        <div className="min-w-0 rounded-xl border border-gray-100 bg-gray-50 p-3">
                           <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Why relevant</p>
                           <p className="mb-3 block break-words rounded-lg border-l-2 px-3 py-2 text-sm font-normal leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000", background: "rgba(255,176,0,0.07)", overflowWrap: "anywhere" }}>
                             “{p.signal}”
                           </p>
                           <p className="break-words text-xs text-gray-500 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
                         </div>
-                        <div className="min-w-0 rounded-xl border border-gray-100 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                        <div className="min-w-0 rounded-xl border border-gray-100 bg-gray-50 p-3">
                           <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Score rationale</p>
                           <p className="text-xs text-gray-500 leading-relaxed">{p.scoreReason}</p>
                         </div>

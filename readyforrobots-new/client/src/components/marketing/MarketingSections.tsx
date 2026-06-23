@@ -76,7 +76,7 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
                   </div>
                   <div className="text-right">
                     <div className="score-number text-2xl">{f.stat}</div>
-                    <div className="text-gray-400 text-xs font-mono-data">{f.statLabel}</div>
+                    <div className="text-gray-500 text-xs font-mono-data">{f.statLabel}</div>
                   </div>
                 </div>
                 <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{f.title}</h3>
@@ -139,7 +139,7 @@ export function MarketingHowItWorks() {
                     </div>
                   </div>
                   <div>
-                    <div className="font-mono-data text-xs text-gray-400 font-semibold mb-1">{step.num}</div>
+                    <div className="font-mono-data text-xs text-gray-500 font-semibold mb-1">{step.num}</div>
                     <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
                     <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
                   </div>
@@ -260,7 +260,7 @@ export function MarketingCaseStudies() {
           {cases.map((c) => (
             <div key={c.industry} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-xs font-mono-data font-semibold text-gray-400 uppercase tracking-widest">
+                <span className="text-xs font-mono-data font-semibold text-gray-500 uppercase tracking-widest">
                   {c.industry}
                 </span>
                 <span className={`text-xs font-mono-data font-bold px-3 py-1 rounded-full ${c.outcomeColor}`}>
@@ -326,7 +326,7 @@ export function MarketingTestimonials() {
           {testimonials.map((t) => (
             <div key={t.name} className="bg-slate-50 rounded-2xl p-7 border border-gray-100 flex flex-col">
               <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
-                <span className="text-xs font-mono-data text-gray-400">{t.signal}</span>
+                <span className="text-xs font-mono-data text-gray-500">{t.signal}</span>
                 <div className="flex items-center gap-2">
                   <span className="score-number text-xl">{t.signalScore}</span>
                   <HeatBadge heat="HOT" />
@@ -336,7 +336,7 @@ export function MarketingTestimonials() {
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div>
                   <div className="font-display font-semibold text-gray-900 text-sm">{t.name}</div>
-                  <div className="text-gray-400 text-xs">{t.company}</div>
+                  <div className="text-gray-500 text-xs">{t.company}</div>
                 </div>
                 <span className="text-xs font-mono-data font-bold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
                   {t.outcome}
@@ -381,7 +381,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <span className="font-display font-bold text-gray-900 text-sm">HEIR Benchmark Index</span>
-              <span className="text-xs font-mono-data text-gray-400">June 2026</span>
+              <span className="text-xs font-mono-data text-gray-500">June 2026</span>
             </div>
             <div>
               {robots.map((robot, i) => (
@@ -389,10 +389,10 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
                   key={robot.name}
                   className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors"
                 >
-                  <span className="font-mono-data text-gray-300 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
+                  <span className="font-mono-data text-gray-400 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-display font-semibold text-gray-900 text-sm truncate">{robot.name}</div>
-                    <div className="text-gray-400 text-xs">{robot.vendor}</div>
+                    <div className="text-gray-500 text-xs">{robot.vendor}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="score-number text-xl">{robot.score}</span>
@@ -498,8 +498,14 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
             <ArrowRight size={16} />
           </Link>
           <Link
-            href="/signup?next=/pipeline"
+            href="/pipeline"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/20 transition-all duration-150 active:scale-[0.97] text-base"
+          >
+            Open pipeline
+          </Link>
+          <Link
+            href="/signup?next=/pipeline"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-700/20 hover:bg-emerald-700/30 text-emerald-100 font-semibold rounded-xl border border-emerald-500/30 transition-all duration-150 active:scale-[0.97] text-base"
           >
             Start free workspace
           </Link>

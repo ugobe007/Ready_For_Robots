@@ -555,13 +555,13 @@ function MarketplaceTeaser() {
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-gray-900">{feature.title}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-white/42">{feature.desc}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-600">{feature.desc}</p>
                   </div>
                 </div>
                 <div className="grid gap-2">
                   {feature.preview.map((row) => (
-                    <div key={row.label} className="rounded-xl border border-gray-100 bg-black/10 px-3 py-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/28">{row.label}</p>
+                    <div key={row.label} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{row.label}</p>
                       <p className="mt-1 text-xs text-gray-500">{row.value}</p>
                     </div>
                   ))}

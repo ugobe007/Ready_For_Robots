@@ -150,7 +150,7 @@ export default function Home() {
                 contact. You approve. You show up. That&apos;s it.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <Link
                   href="/results?url="
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-md hover:shadow-lg text-base"
@@ -168,9 +168,12 @@ export default function Home() {
                 </Link>
               </div>
 
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-xs text-gray-500 font-medium mb-1">
                 No signup required · Free to start · Results in seconds
               </p>
+              <Link href="#live-pipeline" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1">
+                View live pipeline <ArrowRight size={12} />
+              </Link>
             </div>
 
             <div className="animate-fade-in-up" style={{ animationDelay: "120ms" }}>
@@ -262,7 +265,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={reportStatus === "submitting"}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {reportStatus === "submitting" ? "Requesting..." : "Download Free Report"}
                 </button>
