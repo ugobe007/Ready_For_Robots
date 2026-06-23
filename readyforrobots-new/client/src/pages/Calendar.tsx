@@ -111,16 +111,16 @@ export default function CalendarPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0d0520] text-white" />;
+  if (loading) return <div className="min-h-screen bg-slate-50 text-gray-900" />;
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#0d0520] text-white">
+      <div className="min-h-screen bg-slate-50 text-gray-900">
         <Header />
         <main className="mx-auto max-w-3xl px-6 pt-32">
           <h1 className="text-3xl font-black">Calendar</h1>
-          <p className="mt-3 text-white/55">Sign in to schedule meetings.</p>
-          <Link href="/login?next=/calendar" className="mt-6 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-black text-[#160b2c]">
+          <p className="mt-3 text-gray-500">Sign in to schedule meetings.</p>
+          <Link href="/login?next=/calendar" className="mt-6 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-black text-[#111827]">
             Sign in
           </Link>
         </main>
@@ -129,7 +129,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0520] text-white">
+    <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
       <main className="mx-auto max-w-7xl px-6 pb-16 pt-28">
         <AdminNav />
@@ -137,15 +137,15 @@ export default function CalendarPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Internal calendar</p>
             <h1 className="mt-2 text-4xl font-black">Calendar</h1>
-            <p className="mt-2 max-w-2xl text-sm text-white/55">Schedule meetings and send `.ics` invites. Events are stored internally and ready for future Google Calendar sync.</p>
+            <p className="mt-2 max-w-2xl text-sm text-gray-500">Schedule meetings and send `.ics` invites. Events are stored internally and ready for future Google Calendar sync.</p>
           </div>
-          <button onClick={() => void loadEvents()} disabled={busy} className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 disabled:opacity-50">
+          <button onClick={() => void loadEvents()} disabled={busy} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 disabled:opacity-50">
             Refresh
           </button>
         </div>
         <section className="mt-8 grid gap-6 lg:grid-cols-[420px_1fr]">
-          <form onSubmit={(event) => void createEvent(event)} className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white/40">Schedule meeting</h2>
+          <form onSubmit={(event) => void createEvent(event)} className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Schedule meeting</h2>
             {[
               ["title", "Title"],
               ["attendees", "Attendees"],
@@ -153,54 +153,54 @@ export default function CalendarPage() {
               ["location", "Location"],
             ].map(([key, label]) => (
               <label key={key} className="mt-4 block">
-                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</span>
+                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</span>
                 <input
                   value={String(form[key as keyof typeof form] || "")}
                   onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none"
                 />
               </label>
             ))}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <label>
-                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-white/35">Start</span>
-                <input type="datetime-local" value={form.start_at} onChange={(e) => setForm((current) => ({ ...current, start_at: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none" />
+                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">Start</span>
+                <input type="datetime-local" value={form.start_at} onChange={(e) => setForm((current) => ({ ...current, start_at: e.target.value }))} className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none" />
               </label>
               <label>
-                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-white/35">End</span>
-                <input type="datetime-local" value={form.end_at} onChange={(e) => setForm((current) => ({ ...current, end_at: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none" />
+                <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">End</span>
+                <input type="datetime-local" value={form.end_at} onChange={(e) => setForm((current) => ({ ...current, end_at: e.target.value }))} className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none" />
               </label>
             </div>
             <label className="mt-4 block">
-              <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-white/35">Context</span>
-              <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} rows={5} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none" />
+              <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-400">Context</span>
+              <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} rows={5} className="w-full rounded-xl border border-gray-200 bg-black/20 px-3 py-2 text-sm text-gray-900 outline-none" />
             </label>
-            <label className="mt-4 flex items-center gap-2 text-sm text-white/60">
+            <label className="mt-4 flex items-center gap-2 text-sm text-gray-600">
               <input type="checkbox" checked={form.send_invites} onChange={(e) => setForm((current) => ({ ...current, send_invites: e.target.checked }))} />
               Send `.ics` invites now
             </label>
-            <button disabled={busy} className="mt-5 w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-[#160b2c] disabled:opacity-50">
+            <button disabled={busy} className="mt-5 w-full rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-[#111827] disabled:opacity-50">
               Create meeting
             </button>
           </form>
-          <section className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white/40">Upcoming events</h2>
+          <section className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Upcoming events</h2>
             <div className="mt-4 space-y-3">
               {events.map((event) => (
-                <div key={event.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                <div key={event.id} className="rounded-2xl border border-gray-200 bg-white p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <p className="font-bold text-white">{event.title}</p>
-                      <p className="mt-1 text-xs text-white/45">{new Date(event.start_at).toLocaleString()} to {new Date(event.end_at).toLocaleString()}</p>
-                      <p className="mt-2 text-sm text-white/55">{event.description || "No description"}</p>
+                      <p className="font-bold text-gray-900">{event.title}</p>
+                      <p className="mt-1 text-xs text-gray-500">{new Date(event.start_at).toLocaleString()} to {new Date(event.end_at).toLocaleString()}</p>
+                      <p className="mt-2 text-sm text-gray-500">{event.description || "No description"}</p>
                     </div>
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase text-white/45">{event.invite_status}</span>
+                    <span className="rounded-full border border-gray-200 px-3 py-1 text-[10px] uppercase text-gray-500">{event.invite_status}</span>
                   </div>
-                  <p className="mt-2 text-xs text-white/35">Attendees: {(event.attendees || []).map((item) => item.email).join(", ") || "None"}</p>
-                  {(event.meeting_url || event.location) && <p className="mt-1 text-xs text-white/35">Where: {event.meeting_url || event.location}</p>}
+                  <p className="mt-2 text-xs text-gray-400">Attendees: {(event.attendees || []).map((item) => item.email).join(", ") || "None"}</p>
+                  {(event.meeting_url || event.location) && <p className="mt-1 text-xs text-gray-400">Where: {event.meeting_url || event.location}</p>}
                 </div>
               ))}
-              {!events.length && !busy && <p className="rounded-2xl border border-white/10 p-4 text-sm text-white/40">No meetings scheduled yet.</p>}
+              {!events.length && !busy && <p className="rounded-2xl border border-gray-200 p-4 text-sm text-gray-500">No meetings scheduled yet.</p>}
             </div>
           </section>
         </section>

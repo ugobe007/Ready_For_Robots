@@ -366,7 +366,7 @@ export default function SupplyPipeline() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="flex-1 px-4 pb-12 pt-24">
         <div className="mx-auto max-w-6xl">
@@ -374,48 +374,48 @@ export default function SupplyPipeline() {
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
             Marketplace supply pipeline
           </p>
-          <h1 className="text-2xl font-black text-white" style={{ fontFamily: "'Sora', system-ui" }}>
+          <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
             Robot company outreach agent
           </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
             SIGNAL researches robot companies, identifies who to contact, shows three matched buyer leads, and drafts a signup plus meeting email for review.
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{approvedCount} approved</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/55">{sentCount} sent</span>
-            <a href="/admin" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+          <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3">
+            <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{approvedCount} approved</span>
+            <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{sentCount} sent</span>
+            <a href="/admin" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
               Open Admin
             </a>
-            <a href="/crm" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+            <a href="/crm" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
               Open Buyer CRM
             </a>
-            <a href="/sales-console" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/65">
+            <a href="/sales-console" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
               Open Sales Console
             </a>
             <button
               type="button"
               onClick={approveAll}
-              className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
+              className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
             >
               Bulk approve drafts
             </button>
             <button
               type="button"
               onClick={() => void bulkSendApproved()}
-              className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c]"
+              className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#111827]"
             >
               Bulk send approved emails
             </button>
-            <p className="text-[11px] text-white/35">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
+            <p className="text-[11px] text-gray-400">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
           </div>
           {err && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{err}</p>}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
-            <aside className="rounded-2xl border border-white/10 bg-white/[0.025]">
-              <div className="border-b border-white/8 px-4 py-3">
-                <p className="text-xs font-bold text-white/75">{loading ? "Loading..." : `${visibleRows.length} shown · ${rows.length} total`}</p>
-                <p className="mt-1 text-[11px] text-white/35">Unsent prospects are separated from companies SIGNAL already contacted.</p>
-                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-white/8 bg-black/10 p-1">
+            <aside className="rounded-2xl border border-gray-200 bg-white">
+              <div className="border-b border-gray-100 px-4 py-3">
+                <p className="text-xs font-bold text-gray-700">{loading ? "Loading..." : `${visibleRows.length} shown · ${rows.length} total`}</p>
+                <p className="mt-1 text-[11px] text-gray-400">Unsent prospects are separated from companies SIGNAL already contacted.</p>
+                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-gray-100 bg-black/10 p-1">
                   {[
                     { key: "needs_action", label: "Unsent", count: needsActionCount },
                     { key: "sent", label: "Sent", count: sentCount },
@@ -426,7 +426,7 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => setSidebarView(item.key as "needs_action" | "sent" | "all")}
                       className={`rounded-lg px-2 py-1.5 text-[10px] font-bold transition ${
-                        sidebarView === item.key ? "bg-amber-400 text-[#160b2c]" : "text-white/45 hover:text-white"
+                        sidebarView === item.key ? "bg-amber-400 text-[#111827]" : "text-gray-500 hover:text-gray-900"
                       }`}
                     >
                       {item.label} {item.count}
@@ -436,9 +436,9 @@ export default function SupplyPipeline() {
               </div>
               <div className="max-h-[680px] overflow-y-auto p-2">
                 {visibleRows.length === 0 && (
-                  <div className="m-2 rounded-xl border border-dashed border-white/10 p-4 text-center">
-                    <p className="text-xs font-bold text-white/45">No companies in this view</p>
-                    <p className="mt-1 text-[11px] text-white/30">Switch tabs above to see sent or all companies.</p>
+                  <div className="m-2 rounded-xl border border-dashed border-gray-200 p-4 text-center">
+                    <p className="text-xs font-bold text-gray-500">No companies in this view</p>
+                    <p className="mt-1 text-[11px] text-gray-400">Switch tabs above to see sent or all companies.</p>
                   </div>
                 )}
                 {visibleRows.map((row) => {
@@ -462,12 +462,12 @@ export default function SupplyPipeline() {
                       }
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-bold text-white/85">{company.company_name}</p>
+                        <p className="truncate text-sm font-bold text-gray-800">{company.company_name}</p>
                         <span className="font-mono text-[11px]" style={{ color: "#FFB000" }}>
                           {Math.round(company.vendor_list_score ?? company.lead_score ?? 0)}
                         </span>
                       </div>
-                      <p className="mt-1 truncate text-[11px] text-white/35">
+                      <p className="mt-1 truncate text-[11px] text-gray-400">
                         {company.robot_type || "robotics"} · {company.target_market || "market TBD"}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -478,7 +478,7 @@ export default function SupplyPipeline() {
                           <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Contacted · {sentLabel}</span>
                         )}
                         {draft?.lastAction && !draft.sent && (
-                          <span className="rounded-full bg-white/8 px-2 py-0.5 text-[9px] font-bold text-white/45">{draft.lastAction}</span>
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-bold text-gray-500">{draft.lastAction}</span>
                         )}
                         {!draft?.to && (
                           <span className="rounded-full bg-amber-400/12 px-2 py-0.5 text-[9px] font-bold text-amber-100">Needs email</span>
@@ -492,10 +492,10 @@ export default function SupplyPipeline() {
 
             {selected && selectedDraft && (
               <section className="grid gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <h2 className="text-xl font-black text-white">{selected.robot_company.company_name}</h2>
+                      <h2 className="text-xl font-black text-gray-900">{selected.robot_company.company_name}</h2>
                       <p className="mt-1 text-sm text-white/42">
                         {selected.robot_company.robot_type || "Robotics"} for {selected.robot_company.target_market || "target market review"}
                       </p>
@@ -507,28 +507,28 @@ export default function SupplyPipeline() {
                     )}
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
-                      <p className="text-[10px] uppercase tracking-widest text-white/30">Who to contact</p>
-                      <p className="mt-1 text-sm font-bold text-white/80">{selected.contact_strategy.primary?.role || "Partnerships"}</p>
-                      <p className="mt-1 break-all text-xs text-white/45">{selected.contact_strategy.primary?.contact || selected.robot_company.contact_email || "Research contact first"}</p>
+                    <div className="rounded-xl border border-gray-100 bg-white p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">Who to contact</p>
+                      <p className="mt-1 text-sm font-bold text-gray-800">{selected.contact_strategy.primary?.role || "Partnerships"}</p>
+                      <p className="mt-1 break-all text-xs text-gray-500">{selected.contact_strategy.primary?.contact || selected.robot_company.contact_email || "Research contact first"}</p>
                       {selected.contact_strategy.primary?.needs_verification && (
                         <p className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-1 text-[10px] font-bold text-amber-100">
                           Inferred email. Verify before sending.
                         </p>
                       )}
                     </div>
-                    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3 md:col-span-2">
-                      <p className="text-[10px] uppercase tracking-widest text-white/30">Research checklist</p>
-                      <p className="mt-1 text-xs leading-relaxed text-white/45">
+                    <div className="rounded-xl border border-gray-100 bg-white p-3 md:col-span-2">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">Research checklist</p>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-500">
                         {(selected.contact_strategy.research_notes || []).join(" ")}
                       </p>
-                      <p className="mt-2 text-[10px] leading-relaxed text-white/35">
+                      <p className="mt-2 text-[10px] leading-relaxed text-gray-400">
                         Policy: send to role inboxes first
                         {" "}
                         {(selected.contact_strategy.communication_policy?.role_inboxes || []).join(", ") || "after domain research"}.
                         Named decision makers use first.last, first initial + last, last, and first-name patterns.
                       </p>
-                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                      <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                         Research status: {selected.contact_research?.status || selected.contact_strategy.communication_policy?.research_status || "not run"}
                       </p>
                     </div>
@@ -538,11 +538,11 @@ export default function SupplyPipeline() {
                       <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Researched decision makers</p>
                       <div className="mt-2 grid gap-2 md:grid-cols-3">
                         {(selected.contact_research?.decision_makers || []).map((person) => (
-                          <div key={`${person.first_name}-${person.last_name}-${person.source_url}`} className="rounded-lg border border-white/8 bg-black/10 p-2">
-                            <p className="text-xs font-bold text-white/80">
+                          <div key={`${person.first_name}-${person.last_name}-${person.source_url}`} className="rounded-lg border border-gray-100 bg-black/10 p-2">
+                            <p className="text-xs font-bold text-gray-800">
                               {[person.first_name, person.last_name].filter(Boolean).join(" ")}
                             </p>
-                            <p className="mt-1 text-[10px] text-white/40">{person.title || "Decision maker"}</p>
+                            <p className="mt-1 text-[10px] text-gray-500">{person.title || "Decision maker"}</p>
                             {person.source_url && (
                               <a href={person.source_url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-[10px] text-emerald-200/70 underline">
                                 Source
@@ -554,15 +554,15 @@ export default function SupplyPipeline() {
                     </div>
                   )}
                   {(selected.contact_strategy.targets || []).length > 1 && (
-                    <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
-                      <p className="text-[10px] uppercase tracking-widest text-white/30">Email candidates</p>
+                    <div className="mt-3 rounded-xl border border-gray-100 bg-black/10 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">Email candidates</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {(selected.contact_strategy.targets || []).map((target) => (
                           <button
                             key={`${target.role}-${target.contact}`}
                             type="button"
                             onClick={() => target.contact && patchDraft(selected.robot_company.id, { to: target.contact, approved: false })}
-                            className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-bold text-white/55 hover:border-amber-400/40 hover:text-amber-100"
+                            className="rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-bold text-gray-500 hover:border-amber-400/40 hover:text-amber-100"
                           >
                             {target.role}: {target.contact || "research"}
                           </button>
@@ -579,7 +579,7 @@ export default function SupplyPipeline() {
                       )}
                     </div>
                   )}
-                  <div className="mt-3 rounded-xl border border-white/8 bg-black/10 p-3">
+                  <div className="mt-3 rounded-xl border border-gray-100 bg-black/10 p-3">
                     <button
                       type="button"
                       onClick={() => patchDraft(selected.robot_company.id, { expanded: !selectedDraft.expanded })}
@@ -588,66 +588,66 @@ export default function SupplyPipeline() {
                       {selectedDraft.expanded ? "Hide details" : "Show details"}
                     </button>
                     {selectedDraft.expanded && (
-                      <div className="mt-3 grid gap-2 text-xs text-white/45 md:grid-cols-2">
-                        <p><span className="text-white/70">Website:</span> {selected.robot_company.website || "Unknown"}</p>
-                        <p><span className="text-white/70">Policy recipients:</span> {(selected.contact_strategy.recommended_to || []).join(", ") || "Research needed"}</p>
-                        <p><span className="text-white/70">Research pages:</span> {(selected.contact_research?.sources || []).length || 0}</p>
-                        <p><span className="text-white/70">LinkedIn links:</span> {(selected.contact_research?.linkedin_urls || []).length || 0}</p>
-                        <p><span className="text-white/70">Tracking ID:</span> {selectedDraft.trackingId || "Not tracked yet"}</p>
-                        <p><span className="text-white/70">Reply path:</span> {selectedDraft.replyTo || "Created on approval/send"}</p>
-                        <p><span className="text-white/70">Robot type:</span> {selected.robot_company.robot_type || "Unknown"}</p>
-                        <p><span className="text-white/70">Target market:</span> {selected.robot_company.target_market || "Unknown"}</p>
-                        <p><span className="text-white/70">Lead score:</span> {selected.robot_company.lead_score ?? "Unknown"}</p>
-                        <p><span className="text-white/70">Vendor score:</span> {selected.robot_company.vendor_list_score ?? "Unknown"}</p>
+                      <div className="mt-3 grid gap-2 text-xs text-gray-500 md:grid-cols-2">
+                        <p><span className="text-gray-600">Website:</span> {selected.robot_company.website || "Unknown"}</p>
+                        <p><span className="text-gray-600">Policy recipients:</span> {(selected.contact_strategy.recommended_to || []).join(", ") || "Research needed"}</p>
+                        <p><span className="text-gray-600">Research pages:</span> {(selected.contact_research?.sources || []).length || 0}</p>
+                        <p><span className="text-gray-600">LinkedIn links:</span> {(selected.contact_research?.linkedin_urls || []).length || 0}</p>
+                        <p><span className="text-gray-600">Tracking ID:</span> {selectedDraft.trackingId || "Not tracked yet"}</p>
+                        <p><span className="text-gray-600">Reply path:</span> {selectedDraft.replyTo || "Created on approval/send"}</p>
+                        <p><span className="text-gray-600">Robot type:</span> {selected.robot_company.robot_type || "Unknown"}</p>
+                        <p><span className="text-gray-600">Target market:</span> {selected.robot_company.target_market || "Unknown"}</p>
+                        <p><span className="text-gray-600">Lead score:</span> {selected.robot_company.lead_score ?? "Unknown"}</p>
+                        <p><span className="text-gray-600">Vendor score:</span> {selected.robot_company.vendor_list_score ?? "Unknown"}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">3 buyer lead matches for email</p>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400">3 buyer lead matches for email</p>
                   <div className="mt-3 grid gap-3 md:grid-cols-3">
                     {selected.lead_matches.slice(0, 3).map((lead) => (
-                      <div key={lead.id} className="rounded-xl border border-white/8 bg-white/[0.025] p-3">
+                      <div key={lead.id} className="rounded-xl border border-gray-100 bg-white p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm font-bold text-white/82">{lead.company_name}</p>
+                          <p className="truncate text-sm font-bold text-gray-900/82">{lead.company_name}</p>
                           <span className="font-mono text-[10px] text-emerald-300">{Math.round(lead.score || 0)}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-white/35">{lead.industry || "industry unknown"}</p>
-                        <p className="mt-2 text-[11px] leading-relaxed text-white/48">{cleanAndClampText(lead.why_match, 150)}</p>
-                        <p className="mt-2 text-[10px] leading-relaxed text-white/30">{cleanAndClampText(lead.signal, 130)}</p>
+                        <p className="mt-1 text-[11px] text-gray-400">{lead.industry || "industry unknown"}</p>
+                        <p className="mt-2 text-[11px] leading-relaxed text-gray-500">{cleanAndClampText(lead.why_match, 150)}</p>
+                        <p className="mt-2 text-[10px] leading-relaxed text-gray-400">{cleanAndClampText(lead.signal, 130)}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-[10px] uppercase tracking-widest text-white/30">Editable outreach draft</p>
+                    <p className="text-[10px] uppercase tracking-widest text-gray-400">Editable outreach draft</p>
                     <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
                       selectedDraft.sent
                         ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
                         : selectedDraft.approved
-                        ? "border-violet-400/30 bg-violet-400/10 text-violet-100"
+                        ? "border-emerald-400/30 bg-violet-400/10 text-violet-100"
                         : "border-amber-400/30 bg-amber-400/10 text-amber-100"
                     }`}>
                       {selectedDraft.sent ? "Sent" : selectedDraft.approved ? "Approved" : "Needs approval"}
                     </span>
                   </div>
                   {!!(selected.outreach_history || []).length && (
-                    <div className="mb-4 rounded-xl border border-white/8 bg-black/10 p-3">
-                      <p className="text-[10px] uppercase tracking-widest text-white/30">Tracked outreach history</p>
+                    <div className="mb-4 rounded-xl border border-gray-100 bg-black/10 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">Tracked outreach history</p>
                       <div className="mt-2 grid gap-2">
                         {(selected.outreach_history || []).slice(0, 3).map((item) => (
-                          <div key={item.id} className="rounded-lg border border-white/8 bg-white/[0.025] p-2 text-[11px] text-white/45">
+                          <div key={item.id} className="rounded-lg border border-gray-100 bg-white p-2 text-[11px] text-gray-500">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="font-bold text-white/65">{item.is_test ? "Test" : "Live"} · {deliveryLabel(item)}</span>
+                              <span className="font-bold text-gray-600">{item.is_test ? "Test" : "Live"} · {deliveryLabel(item)}</span>
                               <span>{item.sent_at || item.approved_at || item.created_at || ""}</span>
                             </div>
                             <p className="mt-1 truncate">{item.subject}</p>
                             <p className="mt-1 truncate">To: {(item.to_emails || []).join(", ")}</p>
                             {(item.resend_id || item.reply_to) && (
-                              <p className="mt-1 truncate text-white/30">
+                              <p className="mt-1 truncate text-gray-400">
                                 Resend: {item.resend_id || "pending"} · Reply: {item.reply_to || "not set"}
                               </p>
                             )}
@@ -663,32 +663,32 @@ export default function SupplyPipeline() {
                   )}
                   <div className="grid gap-3">
                     <label className="block">
-                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipients</span>
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Recipients</span>
                       <input
                         value={selectedDraft.to}
                         onChange={(e) => patchDraft(selected.robot_company.id, { to: e.target.value, approved: false })}
                         placeholder="partnerships@robotcompany.com, events@robotcompany.com, marketing@robotcompany.com, sales@robotcompany.com"
-                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                       />
-                      <span className="mt-1 block text-[10px] text-white/30">
+                      <span className="mt-1 block text-[10px] text-gray-400">
                         Separate multiple recipients with commas. Inferred role inboxes and decision-maker patterns should be verified before live send.
                       </span>
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Subject</span>
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Subject</span>
                       <input
                         value={selectedDraft.subject}
                         onChange={(e) => patchDraft(selected.robot_company.id, { subject: e.target.value, approved: false })}
-                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none"
                       />
                     </label>
                     <label className="block">
-                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Body</span>
+                      <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Body</span>
                       <textarea
                         value={selectedDraft.body}
                         onChange={(e) => patchDraft(selected.robot_company.id, { body: e.target.value, approved: false })}
                         rows={14}
-                        className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2 text-sm leading-relaxed text-white outline-none"
+                        className="w-full rounded-lg border border-gray-200 bg-black/15 px-3 py-2 text-sm leading-relaxed text-gray-900 outline-none"
                       />
                     </label>
                   </div>
@@ -697,7 +697,7 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => void approveDraft(selected)}
                       disabled={selectedDraft.sending}
-                      className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
+                      className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
                     >
                       Approve draft
                     </button>
@@ -705,7 +705,7 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => void sendOne(selected, true)}
                       disabled={selectedDraft.sending || !signedInEmail}
-                      className="rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/75 disabled:opacity-50"
+                      className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700 disabled:opacity-50"
                     >
                       Send test to me
                     </button>
@@ -713,14 +713,14 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => void sendOne(selected)}
                       disabled={selectedDraft.sending || selectedDraft.sent || !selectedDraft.approved || !selectedDraft.to}
-                      className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
+                      className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#111827] disabled:opacity-50"
                     >
                       {selectedDraft.sent ? "Sent" : selectedDraft.sending ? "Sending..." : "Send live email"}
                     </button>
                     <button
                       type="button"
                       onClick={() => void copyDraft()}
-                      className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-bold text-white/55"
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-500"
                     >
                       Copy
                     </button>
@@ -728,13 +728,13 @@ export default function SupplyPipeline() {
                       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${
                         selectedDraft.sent
                           ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
-                          : "border-white/10 bg-white/[0.025] text-white/35"
+                          : "border-gray-200 bg-white text-gray-400"
                       }`}
                       title={selectedDraft.sent ? "Outreach sent and copied to CRM sent messages." : "Live send will record this in CRM sent messages."}
                     >
                       <span
                         className={`flex h-4 w-4 items-center justify-center rounded border ${
-                          selectedDraft.sent ? "border-emerald-300 bg-emerald-400 text-[#0d0520]" : "border-white/20"
+                          selectedDraft.sent ? "border-emerald-300 bg-emerald-400 text-[#111827]" : "border-gray-200"
                         }`}
                       >
                         {selectedDraft.sent ? "✓" : ""}
@@ -751,8 +751,8 @@ export default function SupplyPipeline() {
                     </div>
                   )}
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
-                    <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.signup}</p>
-                    <p className="rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-white/45">{selected.cta.meeting}</p>
+                    <p className="rounded-xl border border-gray-100 bg-white p-3 text-xs text-gray-500">{selected.cta.signup}</p>
+                    <p className="rounded-xl border border-gray-100 bg-white p-3 text-xs text-gray-500">{selected.cta.meeting}</p>
                   </div>
                 </div>
               </section>

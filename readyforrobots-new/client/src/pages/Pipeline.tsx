@@ -1,7 +1,7 @@
 /**
  * Pipeline — ReadyForRobots
  * Two-panel layout: left = inline deal rows grouped by stage, right = selected deal detail + outreach draft
- * Violet palette: #0d0520 bg · #7c3aed accent · cream text
+ * Violet palette: #111827 bg · #059669 accent · cream text
  * Design: Linear/Raycast-inspired — dense, inline, data-forward
  */
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
@@ -205,7 +205,7 @@ interface MarketSnippet {
 const STAGES: Stage[] = ["New Signal", "Draft Ready", "Outreach Sent", "Qualified", "Meeting Set"];
 
 const STAGE_META: Record<Stage, { color: string; dot: string; label: string; desc: string }> = {
-  "New Signal":    { color: "#a78bfa", dot: "#a78bfa", label: "New Signal",    desc: "Just detected" },
+  "New Signal":    { color: "#10b981", dot: "#10b981", label: "New Signal",    desc: "Just detected" },
   "Draft Ready":   { color: "#60a5fa", dot: "#60a5fa", label: "Draft Ready",   desc: "Outreach drafted" },
   "Outreach Sent": { color: "#FFB000", dot: "#FFB000", label: "Outreach Sent", desc: "Awaiting reply" },
   "Qualified":     { color: "#34d399", dot: "#34d399", label: "Qualified",     desc: "Engaged buyer" },
@@ -223,7 +223,7 @@ const USER_BUCKETS: UserBucket[] = ["Hot Leads", "Warm Leads", "Monitoring"];
 const USER_BUCKET_META: Record<UserBucket, { color: string; dot: string; desc: string; slotCap: number }> = {
   "Hot Leads":   { color: "#34d399", dot: "#34d399", desc: "High-confidence robot-ready opportunities", slotCap: PIPELINE_HOT_SLOTS },
   "Warm Leads":  { color: "#FFB000", dot: "#FFB000", desc: "Strong signals — qualify and track", slotCap: PIPELINE_WARM_SLOTS },
-  "Monitoring":  { color: "#7c3aed", dot: "#7c3aed", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
+  "Monitoring":  { color: "#059669", dot: "#059669", desc: "Early signals SIGNAL is tracking", slotCap: PIPELINE_MONITOR_SLOTS },
 };
 
 const userBucketForDeal = (deal: Pick<Deal, "score" | "priorityTier">): UserBucket => {
@@ -240,17 +240,17 @@ const userTierBadge = (deal: Pick<Deal, "score" | "priorityTier">) => {
   const tier = (deal.priorityTier || "").toUpperCase();
   if (tier === "HOT") return { label: "HOT", color: "#34d399" };
   if (tier === "WARM") return { label: "WARM", color: "#FFB000" };
-  if (tier === "COLD") return { label: "MONITOR", color: "#7c3aed" };
+  if (tier === "COLD") return { label: "MONITOR", color: "#059669" };
   if (deal.score >= 85) return { label: "HOT", color: "#34d399" };
   if (deal.score >= 65) return { label: "WARM", color: "#FFB000" };
-  return { label: "MONITOR", color: "#7c3aed" };
+  return { label: "MONITOR", color: "#059669" };
 };
 
 const dealTierColor = (deal: Pick<Deal, "score" | "priorityTier">) =>
   USER_BUCKET_META[userBucketForDeal(deal)].color;
 
 const scoreColor = (s: number) =>
-  s >= 90 ? "#34d399" : s >= 75 ? "#a78bfa" : "#FFB000";
+  s >= 90 ? "#34d399" : s >= 75 ? "#10b981" : "#FFB000";
 
 const statusLabel = (status: string) =>
   status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -330,11 +330,11 @@ const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
   return {
     headline: "Early signal — SIGNAL is watching",
     detail: "Activity is building. SIGNAL will flag when corroboration strengthens the case.",
-    color: "#a78bfa",
+    color: "#10b981",
   };
 };
 
-const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-violet-200/90";
+const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700/90";
 
 type PipelineEntitlements = {
   plan: "anonymous" | "free" | "paid";
@@ -557,17 +557,23 @@ function PipelineMetric({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/8 px-3 py-2" style={{ background: "rgba(255,255,255,0.03)" }}>
+    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">{label}</p>
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 12px ${color}66` }} />
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400">{label}</p>
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
       </div>
-      <p className="font-mono text-xl font-bold leading-none" style={{ color, fontFamily: "'JetBrains Mono', monospace" }}>
+      <p className="font-mono-data text-xl font-bold leading-none" style={{ color }}>
         {value}
       </p>
-      <p className="mt-1 text-[10px] leading-snug text-white/35">{sub}</p>
+      <p className="mt-1 text-[10px] leading-snug text-gray-500">{sub}</p>
     </div>
   );
+}
+
+function dealRowSurface(isSelected: boolean) {
+  return isSelected
+    ? "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-100"
+    : "bg-white border-gray-200 shadow-sm hover:border-emerald-200 hover:shadow-md";
 }
 
 export default function Pipeline() {
@@ -1473,7 +1479,7 @@ export default function Pipeline() {
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
       <main className="flex-1 pt-20 pb-6 px-4 lg:px-6">
@@ -1482,23 +1488,23 @@ export default function Pipeline() {
 
           {/* ── Top bar ── */}
           {loadErr && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               {loadErr}
             </div>
           )}
           {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
-            <div className="rounded-lg border border-violet-400/25 bg-violet-400/8 px-3 py-2 text-xs text-violet-100/85">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
               Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
             </div>
           )}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>SIGNAL</p>
-                <h1 className="font-extrabold text-white text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#10b981" }}>SIGNAL</p>
+                <h1 className="font-extrabold text-gray-900 text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                 </h1>
-                <p className="text-[11px] text-white/35 mt-0.5 max-w-md">
+                <p className="text-[11px] text-gray-400 mt-0.5 max-w-md">
                   {isAdmin
                     ? "Authoritative database counts up top. Cal outreach controls below."
                     : panelPlan === "anonymous"
@@ -1512,7 +1518,7 @@ export default function Pipeline() {
 
             {/* Industry filter */}
             <div className="relative w-full sm:w-[320px]">
-              <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
+              <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
               <input
                 value={industryQuery}
                 onChange={(e) => {
@@ -1521,13 +1527,13 @@ export default function Pipeline() {
                 }}
                 list="pipeline-industries"
                 placeholder="Search industry, company, or signal…"
-                className="w-full rounded-xl border border-white/10 bg-white/[0.035] py-2.5 pl-9 pr-9 text-xs font-semibold text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
               {industryQuery && (
                 <button
                   type="button"
                   onClick={() => setIndustryQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/35 hover:text-white/70"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400 hover:text-gray-600"
                 >
                   Clear
                 </button>
@@ -1547,7 +1553,7 @@ export default function Pipeline() {
               sub={loadingSummary
                 ? "Refreshing market totals..."
                 : `${formatMetric(summary?.signals_in_database ?? summary?.total_signals)} scored buying signals`}
-              color="#ffffff"
+              color="#111827"
             />
             <PipelineMetric
               label="Hot leads"
@@ -1569,7 +1575,7 @@ export default function Pipeline() {
                 : hasActiveSearch
                   ? `${formatMetric(filteredHot)} hot · ${formatMetric(filteredWarm)} warm matching search`
                   : `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm leads loaded`}
-              color="#a78bfa"
+              color="#10b981"
             />
           </section>
 
@@ -1589,7 +1595,7 @@ export default function Pipeline() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#FFB000" }}>
                     {marketSnippet.label}
                   </p>
-                  <h2 className="mt-1 break-words text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h2 className="mt-1 break-words text-sm font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                     {marketSnippet.headline}
                   </h2>
                   <p className="mt-1 break-words text-[12px] leading-relaxed" style={{ color: "#FFB000" }}>
@@ -1609,15 +1615,15 @@ export default function Pipeline() {
 
           {/* ── SIGNAL activation queue (admin only) ── */}
           {isAdmin && (
-          <div className="rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
+          <div className="rounded-2xl border border-gray-100 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
             <div className="flex flex-col xl:flex-row">
-              <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-white/8">
+              <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>SIGNAL Queue</p>
-                    <p className="text-xs text-white/35 mt-1">Recent sales activations from Results</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#10b981" }}>SIGNAL Queue</p>
+                    <p className="text-xs text-gray-400 mt-1">Recent sales activations from Results</p>
                   </div>
-                  <span className="text-[10px] text-white/30">{loadingActivations ? "Loading…" : `${activations.length} active`}</span>
+                  <span className="text-[10px] text-gray-400">{loadingActivations ? "Loading…" : `${activations.length} active`}</span>
                 </div>
                 {activationErr && (
                   <div className="mx-4 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-100/90">
@@ -1626,9 +1632,9 @@ export default function Pipeline() {
                 )}
                 <div className="px-2 pb-3 flex xl:flex-col gap-2 overflow-x-auto">
                   {activations.length === 0 && !loadingActivations ? (
-                    <div className="m-2 rounded-xl border border-dashed border-white/8 px-4 py-4 text-center">
-                      <p className="text-xs font-semibold text-white/45">No SIGNAL activations yet</p>
-                      <p className="text-[11px] text-white/25 mt-1">Activate leads from the Results page and they will appear here.</p>
+                    <div className="m-2 rounded-xl border border-dashed border-gray-100 px-4 py-4 text-center">
+                      <p className="text-xs font-semibold text-gray-500">No SIGNAL activations yet</p>
+                      <p className="text-[11px] text-gray-400 mt-1">Activate leads from the Results page and they will appear here.</p>
                     </div>
                   ) : (
                     activations.map((activation) => {
@@ -1640,17 +1646,17 @@ export default function Pipeline() {
                           className="min-w-[260px] xl:min-w-0 text-left rounded-xl border px-3 py-2.5 transition-all"
                           style={
                             isActive
-                              ? { background: "rgba(124,58,237,0.14)", borderColor: "rgba(124,58,237,0.38)" }
+                              ? { background: "rgba(5,150,105,0.14)", borderColor: "rgba(5,150,105,0.38)" }
                               : { background: "rgba(255,255,255,0.025)", borderColor: "rgba(255,255,255,0.07)" }
                           }
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold text-white/80">{activation.leadCount} leads</span>
-                            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ background: "rgba(167,139,250,0.14)", color: "#c4b5fd" }}>
+                            <span className="text-xs font-bold text-gray-800">{activation.leadCount} leads</span>
+                            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide" style={{ background: "rgba(167,139,250,0.14)", color: "#047857" }}>
                               {statusLabel(activation.status)}
                             </span>
                           </div>
-                          <p className="mt-1 text-[11px] text-white/35 truncate">
+                          <p className="mt-1 text-[11px] text-gray-400 truncate">
                             {activation.mode} · {activation.scope} · {formatActivationTime(activation.createdAt)}
                           </p>
                         </button>
@@ -1666,15 +1672,15 @@ export default function Pipeline() {
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                          <h2 className="text-base font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                          <h2 className="text-base font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                             Activation #{selectedActivation.id}
                           </h2>
-                          <p className="mt-1 break-all text-xs text-white/40">
+                          <p className="mt-1 break-all text-xs text-gray-500">
                             {activationSourceLabel(selectedActivation.sourceUrl)}
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 shrink-0">
-                          <span className="rounded-full border border-white/10 px-2.5 py-1 text-xs font-semibold text-white/50 capitalize">
+                          <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-500 capitalize">
                             {selectedActivation.mode}
                           </span>
                           {selectedActivation.requiresAccount && (
@@ -1691,23 +1697,23 @@ export default function Pipeline() {
 
                       <div className="grid sm:grid-cols-3 gap-2">
                         <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/25">Materials</p>
-                          <p className="mt-1 text-xs font-semibold text-white/70 capitalize">{selectedActivation.material}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">Materials</p>
+                          <p className="mt-1 text-xs font-semibold text-gray-600 capitalize">{selectedActivation.material}</p>
                         </div>
                         <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/25">Scope</p>
-                          <p className="mt-1 text-xs font-semibold text-white/70 capitalize">{selectedActivation.scope}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">Scope</p>
+                          <p className="mt-1 text-xs font-semibold text-gray-600 capitalize">{selectedActivation.scope}</p>
                         </div>
                         <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/25">Next action</p>
-                          <p className="mt-1 text-xs font-semibold text-white/70">Evaluate leads</p>
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">Next action</p>
+                          <p className="mt-1 text-xs font-semibold text-gray-600">Evaluate leads</p>
                         </div>
                       </div>
 
                       <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <Clock className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Status flow</p>
+                          <Clock className="h-3.5 w-3.5" style={{ color: "#10b981" }} />
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Status flow</p>
                         </div>
                         <div className="mb-3 flex gap-1 overflow-x-auto pb-1">
                           {(selectedActivation.statusFlow || []).map((step) => (
@@ -1716,18 +1722,18 @@ export default function Pipeline() {
                               className="min-w-[96px] rounded-lg border px-2 py-1.5"
                               style={
                                 step.active
-                                  ? { background: "rgba(124,58,237,0.16)", borderColor: "rgba(124,58,237,0.4)" }
+                                  ? { background: "rgba(5,150,105,0.16)", borderColor: "rgba(5,150,105,0.4)" }
                                   : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }
                               }
                             >
-                              <p className={step.active ? "text-[10px] font-bold text-violet-200" : "text-[10px] font-semibold text-white/35"}>
+                              <p className={step.active ? "text-[10px] font-bold text-emerald-700" : "text-[10px] font-semibold text-gray-400"}>
                                 {step.label}
                               </p>
                             </div>
                           ))}
                         </div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-white/30">Work plan</p>
-                        <p className="break-words text-sm text-white/55 leading-relaxed">
+                        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-gray-400">Work plan</p>
+                        <p className="break-words text-sm text-gray-500 leading-relaxed">
                           {cleanScrapedText(selectedActivation.workPlan?.materials?.next) || "SIGNAL will evaluate the selected leads and prepare Cal outreach."}
                         </p>
                         {((selectedActivation.workPlan?.steps || []).length > 0
@@ -1735,37 +1741,37 @@ export default function Pipeline() {
                           || (selectedActivation.workPlan?.safety_requirements || []).length > 0
                           || selectedActivation.workPlan?.notification_policy) && (
                           <details className="mt-3 rounded-lg border border-white/7 bg-black/10 group">
-                            <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-white/45 hover:text-white/65 [&::-webkit-details-marker]:hidden">
+                            <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-600 [&::-webkit-details-marker]:hidden">
                               <span className="inline-flex items-center gap-1.5">
                                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
                                 Work plan details
                               </span>
                             </summary>
-                            <div className="border-t border-white/6 px-3 py-3 space-y-3">
+                            <div className="border-t border-gray-100 px-3 py-3 space-y-3">
                               {(selectedActivation.workPlan?.steps || []).length > 0 && (
                                 <div className="grid gap-2 sm:grid-cols-2">
                                   {(selectedActivation.workPlan?.steps || []).slice(0, 4).map((step) => (
-                                    <div key={step} className="flex items-start gap-2 text-xs text-white/45">
-                                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#7c3aed" }} />
+                                    <div key={step} className="flex items-start gap-2 text-xs text-gray-500">
+                                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#059669" }} />
                                       <span className="break-words">{cleanScrapedText(step)}</span>
                                     </div>
                                   ))}
                                 </div>
                               )}
                               {selectedActivation.workPlan?.deck_strategy && (
-                                <div className="rounded-lg border border-violet-400/15 bg-violet-400/5 p-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Deck strategy</p>
-                                  <p className="mt-1 text-xs font-semibold text-white/65">
+                                <div className="rounded-lg border border-emerald-400/15 bg-emerald-50 p-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700/70">Deck strategy</p>
+                                  <p className="mt-1 text-xs font-semibold text-gray-600">
                                     {cleanScrapedText(selectedActivation.workPlan.deck_strategy.recommended_format)}
                                   </p>
-                                  <p className="mt-1 text-xs text-white/40">
+                                  <p className="mt-1 text-xs text-gray-500">
                                     {cleanScrapedText(selectedActivation.workPlan.deck_strategy.positioning)}
                                   </p>
                                 </div>
                               )}
                               {(selectedActivation.workPlan?.safety_requirements || []).length > 0 && (
                                 <div className="rounded-lg border border-white/7 bg-black/10 p-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Sending guardrails</p>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sending guardrails</p>
                                   <div className="mt-2 flex flex-wrap gap-1.5">
                                     {(selectedActivation.workPlan?.safety_requirements || []).map((item) => (
                                       <span
@@ -1786,10 +1792,10 @@ export default function Pipeline() {
                               {selectedActivation.workPlan?.notification_policy && (
                                 <div className="rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
                                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
-                                  <p className="mt-1 text-xs text-white/45">
+                                  <p className="mt-1 text-xs text-gray-500">
                                     {cleanScrapedText(selectedActivation.workPlan.notification_policy.reply)}
                                   </p>
-                                  <p className="mt-1 text-xs text-white/35">
+                                  <p className="mt-1 text-xs text-gray-400">
                                     {cleanScrapedText(selectedActivation.workPlan.notification_policy.meeting)}
                                   </p>
                                 </div>
@@ -1805,7 +1811,7 @@ export default function Pipeline() {
                             </span>
                           </summary>
                           <div className="border-t border-amber-400/15 px-3 py-3">
-                            <p className="text-xs leading-relaxed text-white/45">
+                            <p className="text-xs leading-relaxed text-gray-500">
                               Pause SIGNAL or change Cal&apos;s message, timing, and cadence before any outbound step.
                             </p>
                             <div className="mt-3 grid gap-2">
@@ -1814,20 +1820,20 @@ export default function Pipeline() {
                                 onChange={(e) => setMessageNote(e.target.value)}
                                 rows={2}
                                 placeholder="Message changes, e.g. shorter, more technical, ask for call first..."
-                                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                               />
                               <div className="grid gap-2 sm:grid-cols-2">
                                 <input
                                   value={timingNote}
                                   onChange={(e) => setTimingNote(e.target.value)}
                                   placeholder="Timing, e.g. wait until next Tuesday"
-                                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                                 />
                                 <input
                                   value={cadenceNote}
                                   onChange={(e) => setCadenceNote(e.target.value)}
                                   placeholder="Cadence, e.g. follow up once after 5 days"
-                                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                                 />
                               </div>
                             </div>
@@ -1844,7 +1850,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void controlActivation("update_plan")}
                                 disabled={activationControlBusy}
-                                className="rounded-lg border border-violet-400/35 bg-violet-400/10 px-4 py-2.5 text-sm font-bold text-violet-100 disabled:opacity-50"
+                                className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-4 py-2.5 text-sm font-bold text-gray-700 disabled:opacity-50"
                               >
                                 Save adjustments
                               </button>
@@ -1866,31 +1872,31 @@ export default function Pipeline() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Users className="h-3.5 w-3.5" style={{ color: "#34d399" }} />
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Selected leads</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Selected leads</p>
                         </div>
-                        <span className="text-[10px] text-white/30">{selectedActivation.leadCount} total</span>
+                        <span className="text-[10px] text-gray-400">{selectedActivation.leadCount} total</span>
                       </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                         {selectedActivation.leads.slice(0, 6).map((lead) => (
-                          <div key={lead.id} className="rounded-lg border border-white/6 px-3 py-2" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <div key={lead.id} className="rounded-lg border border-gray-100 px-3 py-2" style={{ background: "rgba(255,255,255,0.02)" }}>
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs font-semibold text-white/75 truncate">{lead.company}</p>
+                              <p className="text-xs font-semibold text-gray-700 truncate">{lead.company}</p>
                               {typeof lead.score === "number" && (
                                 <span className="font-mono text-[10px] font-bold" style={{ color: scoreColor(lead.score), fontFamily: "'JetBrains Mono', monospace" }}>
                                   {lead.score}
                                 </span>
                               )}
                             </div>
-                            <p className="mt-1 line-clamp-2 break-words text-[11px] text-white/35">{activationLeadText(lead)}</p>
+                            <p className="mt-1 line-clamp-2 break-words text-[11px] text-gray-400">{activationLeadText(lead)}</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-white/8 px-4 py-6 text-center">
-                    <p className="text-sm font-semibold text-white/40">SIGNAL activity will appear here</p>
-                    <p className="text-[11px] text-white/25 mt-1">Use Activate SIGNAL on Results to create the first work queue item.</p>
+                  <div className="rounded-xl border border-dashed border-gray-100 px-4 py-6 text-center">
+                    <p className="text-sm font-semibold text-gray-500">SIGNAL activity will appear here</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Use Activate SIGNAL on Results to create the first work queue item.</p>
                     <Link
                       href="/results?url="
                       className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
@@ -1908,19 +1914,19 @@ export default function Pipeline() {
 
           {/* ── SIGNAL stats strip (admin only) ── */}
           {isAdmin && session?.access_token && scoutStats && (
-            <div className="flex items-center gap-3 flex-wrap text-[11px] text-white/40 px-1">
-              <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#a78bfa" }}>Cal</span>
+            <div className="flex items-center gap-3 flex-wrap text-[11px] text-gray-500 px-1">
+              <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#10b981" }}>Cal</span>
               <span>{scoutStats.drafted} drafted</span>
               <span className="text-white/15">·</span>
               <span>{scoutStats.sent} sent</span>
               <span className="text-white/15">·</span>
               <span style={{ color: scoutStats.opened > 0 ? "#34d399" : undefined }}>{scoutStats.opened} opened</span>
               <span className="text-white/15">·</span>
-              <span style={{ color: scoutStats.replied > 0 ? "#a78bfa" : undefined }}>{scoutStats.replied} replied</span>
+              <span style={{ color: scoutStats.replied > 0 ? "#10b981" : undefined }}>{scoutStats.replied} replied</span>
               <button
                 type="button"
                 onClick={() => void loadScoutStats()}
-                className="ml-auto flex items-center gap-1 text-[10px] text-white/25 hover:text-white/60 transition-all"
+                className="ml-auto flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-all"
               >
                 <RefreshCw className="h-3 w-3" />
                 Refresh
@@ -1933,14 +1939,14 @@ export default function Pipeline() {
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
               <p className="text-[11px] text-blue-100/80 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
               <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-500/20 border border-blue-400/40 text-blue-100">Run</button>
-              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white/40">Cancel</button>
+              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
           {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
               <p className="text-[11px] text-emerald-100/80 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
               <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/40 text-emerald-100">Send</button>
-              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white/40">Cancel</button>
+              <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
 
@@ -1950,9 +1956,9 @@ export default function Pipeline() {
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
               {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/8 px-6 py-12 text-center">
-                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-white/20" />
-                  <p className="mt-3 text-sm text-white/35">
+                <div className="rounded-2xl border border-dashed border-gray-100 px-6 py-12 text-center">
+                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-400" />
+                  <p className="mt-3 text-sm text-gray-400">
                     {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
                   </p>
                 </div>
@@ -1966,7 +1972,7 @@ export default function Pipeline() {
                     <div className="flex items-center gap-2 px-3 py-2 mb-1">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
                       <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage)}</span>
-                      <span className="text-[10px] text-white/25 ml-0.5">— {stageDesc(stage)}</span>
+                      <span className="text-[10px] text-gray-400 ml-0.5">— {stageDesc(stage)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -1977,23 +1983,18 @@ export default function Pipeline() {
 
                     {/* Inline deal rows */}
                     {stageDeals.length === 0 ? (
-                      <div className="mx-1 mb-2 rounded-lg border border-dashed border-white/6 px-4 py-3">
-                        <p className="text-[11px] text-white/20 italic">No deals in this stage</p>
+                      <div className="mx-1 mb-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
+                        <p className="text-[11px] text-gray-400 italic">No deals in this stage</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-0.5 mb-2">
+                      <div className="flex flex-col gap-1.5 mb-3">
                         {stageDeals.map((deal) => {
                           const isSelected = deal.id === effectiveSelectedId;
                           return (
                             <button
                               key={deal.id}
                               onClick={() => setSelectedId(deal.id)}
-                              className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group"
-                              style={
-                                isSelected
-                                  ? { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)" }
-                                  : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }
-                              }
+                              className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all group ${dealRowSurface(isSelected)}`}
                             >
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
@@ -2006,8 +2007,8 @@ export default function Pipeline() {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-sm font-semibold text-white truncate">{deal.company}</span>
-                                  <span className="text-[10px] text-white/30 shrink-0">{deal.location}</span>
+                                  <span className="text-sm font-semibold text-gray-900 truncate">{deal.company}</span>
+                                  <span className="text-[10px] text-gray-400 shrink-0">{deal.location}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: displayStageColor(deal), background: `${displayStageColor(deal)}15` }}
@@ -2020,13 +2021,13 @@ export default function Pipeline() {
                                     ) && (
                                     <span
                                       className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-                                      style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
+                                      style={{ color: "#059669", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
                                     >
                                       Humanoid
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-white/40 truncate">
+                                <p className="text-[11px] text-gray-500 truncate">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
                                 </p>
                               </div>
@@ -2048,12 +2049,11 @@ export default function Pipeline() {
                                 {deal.stage === "Draft Ready" && (
                                   <span title="Draft ready"><Mail className="h-3 w-3" style={{ color: "#60a5fa" }} /></span>
                                 )}
-                                <span className="text-[10px] text-white/20 font-mono hidden sm:block" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                                <span className="text-[10px] text-gray-400 font-mono-data hidden sm:block">
                                   {deal.updatedAt}
                                 </span>
                                 <ChevronRight
-                                  className="h-3.5 w-3.5 transition-colors"
-                                  style={{ color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.15)" }}
+                                  className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
                             </button>
@@ -2073,24 +2073,24 @@ export default function Pipeline() {
                     <div className="flex items-center gap-2 px-3 py-2 mb-1">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
                       <span className="text-xs font-bold" style={{ color: meta.color }}>{bucket}</span>
-                      <span className="text-[10px] text-white/25 ml-0.5">— {meta.desc}</span>
+                      <span className="text-[10px] text-gray-400 ml-0.5">— {meta.desc}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
                       >
                         {bucketDeals.length}
                         {!hasActiveSearch && bucketDeals.length < meta.slotCap ? (
-                          <span className="text-white/25 font-normal"> / {meta.slotCap}</span>
+                          <span className="text-gray-400 font-normal"> / {meta.slotCap}</span>
                         ) : null}
                       </span>
                     </div>
 
                     {bucketDeals.length === 0 ? (
-                      <div className="mx-1 mb-2 rounded-lg border border-dashed border-white/6 px-4 py-3">
-                        <p className="text-[11px] text-white/20 italic">No leads in this tier right now</p>
+                      <div className="mx-1 mb-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
+                        <p className="text-[11px] text-gray-400 italic">No leads in this tier right now</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-0.5 mb-2">
+                      <div className="flex flex-col gap-1.5 mb-3">
                         {bucketDeals.map((deal) => {
                           const isSelected = deal.id === effectiveSelectedId;
                           const tier = userTierBadge(deal);
@@ -2099,12 +2099,7 @@ export default function Pipeline() {
                               key={deal.id}
                               type="button"
                               onClick={() => setSelectedId(deal.id)}
-                              className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all group"
-                              style={
-                                isSelected
-                                  ? { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)" }
-                                  : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }
-                              }
+                              className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all group ${dealRowSurface(isSelected)}`}
                             >
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
@@ -2117,8 +2112,8 @@ export default function Pipeline() {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-sm font-semibold text-white truncate">{deal.company}</span>
-                                  <span className="text-[10px] text-white/30 shrink-0">{deal.industry}</span>
+                                  <span className="text-sm font-semibold text-gray-900 truncate">{deal.company}</span>
+                                  <span className="text-[10px] text-gray-400 shrink-0">{deal.industry}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: tier.color, background: `${tier.color}15` }}
@@ -2129,13 +2124,13 @@ export default function Pipeline() {
                                     ["ACTIVE_PILOT", "PILOT_INTENT"].includes(deal.humanoidPilotTier) && (
                                     <span
                                       className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
-                                      style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
+                                      style={{ color: "#059669", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.25)" }}
                                     >
                                       Humanoid
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-white/40 truncate">
+                                <p className="text-[11px] text-gray-500 truncate">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
                                 </p>
                               </div>
@@ -2148,8 +2143,7 @@ export default function Pipeline() {
                                   {deal.signalType}
                                 </span>
                                 <ChevronRight
-                                  className="h-3.5 w-3.5 transition-colors"
-                                  style={{ color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.15)" }}
+                                  className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
                                 />
                               </div>
                             </button>
@@ -2165,8 +2159,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-white/8 overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)]"
-              style={{ background: "rgba(255,255,255,0.025)", position: "sticky", top: "80px" }}
+              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] sticky top-20"
             >
               {isAdmin && (
               <ScoutActionBar
@@ -2182,16 +2175,16 @@ export default function Pipeline() {
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                   {/* Detail header */}
-                  <div className="shrink-0 px-4 py-3 border-b border-white/8">
+                  <div className="shrink-0 px-4 py-3 border-b border-gray-100">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div>
-                        <p className="text-base font-bold text-white mb-0.5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        <p className="text-base font-bold text-gray-900 mb-0.5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                           {selected.company}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-white/35">
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
-                          <span className="text-white/15">·</span>
+                          <span className="text-gray-300">·</span>
                           {selected.industry}
                         </div>
                       </div>
@@ -2227,8 +2220,8 @@ export default function Pipeline() {
                         </span>
                       )}
                       {selected.contact && (
-                        <span className="text-[11px] text-white/40">
-                          <span className="text-white/60 font-medium">{selected.contact}</span> · {selected.contactTitle}
+                        <span className="text-[11px] text-gray-500">
+                          <span className="text-gray-600 font-medium">{selected.contact}</span> · {selected.contactTitle}
                         </span>
                       )}
                     </div>
@@ -2236,14 +2229,14 @@ export default function Pipeline() {
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
                   {/* Signal block */}
-                  <div className="shrink-0 px-4 py-2 border-b border-white/6">
+                  <div className="shrink-0 px-4 py-2 border-b border-gray-100">
                     {!isAdmin && (() => {
                       const verdict = scoutVerdictForDeal(selected);
                       return (
                         <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-white/62">
                           <Zap className="h-3 w-3 shrink-0" style={{ color: verdict.color }} />
-                          <span className="font-semibold text-white/78">SIGNAL · {verdict.headline}</span>
-                          <span className="text-white/40">—</span>
+                          <span className="font-semibold text-gray-900/78">SIGNAL · {verdict.headline}</span>
+                          <span className="text-gray-500">—</span>
                           <span>{verdict.detail}</span>
                         </p>
                       );
@@ -2253,35 +2246,35 @@ export default function Pipeline() {
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: selected.signalColor }} />
                       <div>
                         <p className="text-xs font-semibold mb-0.5" style={{ color: selected.signalColor }}>{selected.signalType}</p>
-                        <p className="break-words text-[12px] leading-relaxed text-white/80">{selected.signal}</p>
+                        <p className="break-words text-[12px] leading-relaxed text-gray-800">{selected.signal}</p>
                       </div>
                     </div>
                     {(selected.projectTiming?.label || selected.projectTiming?.day_min != null) && (
-                      <div className="mt-1.5 flex items-center gap-2 text-[11px] text-white/60">
-                        <Clock className="h-3 w-3 shrink-0 text-violet-300/90" />
+                      <div className="mt-1.5 flex items-center gap-2 text-[11px] text-gray-600">
+                        <Clock className="h-3 w-3 shrink-0 text-emerald-600/90" />
                         <span>
-                          <span className="font-semibold text-white/75">Project window: </span>
+                          <span className="font-semibold text-gray-700">Project window: </span>
                           {selected.projectTiming?.day_min != null && selected.projectTiming?.day_max != null
                             ? `${selected.projectTiming.day_min}–${selected.projectTiming.day_max} days`
                             : selected.projectTiming?.label}
                           {selected.projectTiming?.source === "estimated" && (
-                            <span className="text-white/40"> · estimated from signals</span>
+                            <span className="text-gray-500"> · estimated from signals</span>
                           )}
                         </span>
                       </div>
                     )}
                   </div>
                   {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
-                    <div className="shrink-0 px-4 py-2 border-b border-white/6">
+                    <div className="shrink-0 px-4 py-2 border-b border-gray-100">
                       <button
                         type="button"
                         onClick={() => setIntelligenceOpen((open) => !open)}
-                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
+                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white"
                         aria-expanded={intelligenceOpen}
                       >
                         <span className={panelSectionLabel}>SIGNAL intelligence</span>
                         {!intelligenceOpen && (
-                          <span className="flex-1 min-w-0 text-[11px] leading-snug text-white/65 truncate">
+                          <span className="flex-1 min-w-0 text-[11px] leading-snug text-gray-600 truncate">
                             {cleanAndClampText(
                               selected.leadHighlights?.specific_problem
                                 || selected.shareSummary
@@ -2292,16 +2285,16 @@ export default function Pipeline() {
                           </span>
                         )}
                         {intelligenceOpen ? (
-                          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                          <ChevronUp className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                         ) : (
-                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                         )}
                       </button>
                       {intelligenceOpen && (
                         <div className="pt-2 space-y-2">
                           {selected.leadHighlights?.specific_problem && (
-                            <p className="break-words text-[12px] leading-relaxed text-white/80">
-                              <span className="font-semibold text-white">Problem: </span>
+                            <p className="break-words text-[12px] leading-relaxed text-gray-800">
+                              <span className="font-semibold text-gray-900">Problem: </span>
                               {cleanAndClampText(
                                 selected.leadHighlights.specific_problem,
                                 panelPlan === "anonymous" ? 220 : 280,
@@ -2309,7 +2302,7 @@ export default function Pipeline() {
                             </p>
                           )}
                           {(selected.leadHighlights?.why_lead || []).length > 0 && (
-                            <ul className="list-disc pl-4 text-[11px] leading-relaxed text-white/70 space-y-1">
+                            <ul className="list-disc pl-4 text-[11px] leading-relaxed text-gray-600 space-y-1">
                               {(selected.leadHighlights?.why_lead || [])
                                 .slice(0, panelPlan === "anonymous" ? 2 : 3)
                                 .map((line, i) => (
@@ -2318,7 +2311,7 @@ export default function Pipeline() {
                             </ul>
                           )}
                           {(selected.notes || selected.shareSummary) && (
-                            <p className="break-words text-[12px] leading-relaxed text-white/75">
+                            <p className="break-words text-[12px] leading-relaxed text-gray-700">
                               {cleanAndClampText(
                                 selected.notes || selected.shareSummary,
                                 panelPlan === "anonymous" ? 240 : 360,
@@ -2326,23 +2319,23 @@ export default function Pipeline() {
                             </p>
                           )}
                           {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
-                            <p className="text-[11px] leading-relaxed text-white/70">
-                              <span className="font-semibold text-white/90">Robot fit: </span>
+                            <p className="text-[11px] leading-relaxed text-gray-600">
+                              <span className="font-semibold text-gray-900/90">Robot fit: </span>
                               {selected.robotTypesNeeded.join(" · ")}
                             </p>
                           )}
                           {showFullPanel && (selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (
-                            <div className="space-y-1 rounded-lg border border-violet-400/15 bg-violet-400/5 p-2.5">
+                            <div className="space-y-1 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5">
                               {(selected.leadHighlights?.agent_enrichment?.rich_facts || []).slice(0, 2).map((fact, i) => (
-                                <p key={i} className="text-[11px] leading-relaxed text-violet-100/85">
+                                <p key={i} className="text-[11px] leading-relaxed text-gray-700">
                                   {cleanAndClampText(fact.claim || "", 200)}
                                 </p>
                               ))}
                             </div>
                           )}
                           {panelPlan === "anonymous" && (
-                            <p className="text-[10px] leading-relaxed text-violet-200/75">
-                              Sign up free to unlock full SIGNAL research and connect to Hubspot.
+                            <p className="text-[10px] leading-relaxed text-emerald-700">
+                              Sign up free to unlock full SIGNAL research and connect to HubSpot.
                             </p>
                           )}
                           {panelPlan !== "anonymous" && (
@@ -2363,36 +2356,36 @@ export default function Pipeline() {
 
                   {/* Latest research — paid workspace */}
                   {showFullPanel && (
-                  <div className="shrink-0 px-5 py-3 border-b border-white/6">
+                  <div className="shrink-0 px-5 py-3 border-b border-gray-100">
                     <button
                       type="button"
                       onClick={() => setResearchOpen((open) => !open)}
-                      className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white/[0.03]"
+                      className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white"
                       aria-expanded={researchOpen}
                     >
                       <span className={panelSectionLabel}>SIGNAL research</span>
                       {!researchOpen && (
-                        <span className="flex-1 min-w-0 text-[11px] text-white/55 truncate">
+                        <span className="flex-1 min-w-0 text-[11px] text-gray-500 truncate">
                           {(selected.researchUpdates || []).length > 0
                             ? `${(selected.researchUpdates || []).length} cited update(s)`
                             : "Monitoring for new material"}
                         </span>
                       )}
                       {researchOpen ? (
-                        <ChevronUp className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                        <ChevronUp className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                       ) : (
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/50" />
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                       )}
                     </button>
                     {researchOpen && (
                       <div className="pt-3">
                         {selected.lastResearchedAt && (
-                          <p className="mb-2 text-[10px] text-white/45">
+                          <p className="mb-2 text-[10px] text-gray-500">
                             Last checked {formatResearchTime(selected.lastResearchedAt)}
                           </p>
                         )}
                         {loadingResearch && !selected.researchUpdates ? (
-                          <p className="text-[11px] leading-relaxed text-white/55">SIGNAL is loading cited updates…</p>
+                          <p className="text-[11px] leading-relaxed text-gray-500">SIGNAL is loading cited updates…</p>
                         ) : (selected.researchUpdates || []).length > 0 ? (
                           <div className="space-y-2">
                             {(selected.researchUpdates || []).slice(0, 3).map((update) => (
@@ -2411,14 +2404,14 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="break-words text-[11px] leading-relaxed text-white/75">
+                                <p className="break-words text-[11px] leading-relaxed text-gray-700">
                                   {cleanAndClampText(update.summary, 220)}
                                 </p>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-[11px] leading-relaxed text-white/55">
+                          <p className="text-[11px] leading-relaxed text-gray-500">
                             SIGNAL will add cited updates when fresh signals arrive for this account.
                           </p>
                         )}
@@ -2429,27 +2422,27 @@ export default function Pipeline() {
 
                   {/* SIGNAL research upsell — free signed-in workspace */}
                   {showStandardPanel && (
-                    <div className="shrink-0 px-5 py-3 border-b border-white/6">
-                      <div className="relative overflow-hidden rounded-xl border border-violet-400/20 p-3" style={{ background: "rgba(124,58,237,0.06)" }}>
+                    <div className="shrink-0 px-5 py-3 border-b border-gray-100">
+                      <div className="relative overflow-hidden rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(5,150,105,0.06)" }}>
                         <div className="pointer-events-none select-none space-y-2 blur-[3px] opacity-60" aria-hidden>
                           <div className="rounded-lg border p-2.5" style={{ borderColor: "rgba(255,176,0,0.22)", background: "rgba(255,176,0,0.08)" }}>
                             <p className="text-[11px] font-semibold text-amber-200">Cited research update</p>
-                            <p className="mt-1 text-[11px] text-white/70">New procurement signal with source link and timing window…</p>
+                            <p className="mt-1 text-[11px] text-gray-600">New procurement signal with source link and timing window…</p>
                           </div>
                           <div className="rounded-lg border p-2.5" style={{ borderColor: "rgba(255,176,0,0.22)", background: "rgba(255,176,0,0.08)" }}>
                             <p className="text-[11px] font-semibold text-amber-200">Material change detected</p>
-                            <p className="mt-1 text-[11px] text-white/70">Budget language and deployment timeline extracted…</p>
+                            <p className="mt-1 text-[11px] text-gray-600">Budget language and deployment timeline extracted…</p>
                           </div>
                         </div>
                         <div className="relative mt-3 space-y-2">
                           <p className={panelSectionLabel}>SIGNAL research</p>
-                          <p className="text-[11px] leading-relaxed text-white/60">
+                          <p className="text-[11px] leading-relaxed text-gray-600">
                             Pro unlocks cited research updates on HOT and WARM leads — budget, timing, and source links refreshed automatically.
                           </p>
                           <Link
                             href="/pricing?reason=research"
-                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:opacity-90"
-                            style={{ background: "#7c3aed" }}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-gray-900 transition-colors hover:opacity-90"
+                            style={{ background: "#059669" }}
                           >
                             Upgrade to Pro
                             <ArrowRight className="h-3 w-3" />
@@ -2464,8 +2457,8 @@ export default function Pipeline() {
                   <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Cal&apos;s Draft</p>
+                        <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Cal&apos;s Draft</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <button
@@ -2482,7 +2475,7 @@ export default function Pipeline() {
                           style={
                             copied
                               ? { background: "rgba(52,211,153,0.12)", color: "#34d399" }
-                              : { background: "rgba(124,58,237,0.12)", color: "#a78bfa" }
+                              : { background: "rgba(5,150,105,0.12)", color: "#10b981" }
                           }
                         >
                           {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -2496,7 +2489,7 @@ export default function Pipeline() {
                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
                           <Send className="h-2.5 w-2.5" /> Sent
                         </span>
-                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-white/30" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-gray-400" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                           <Eye className="h-2.5 w-2.5" /> Tracking active
                         </span>
                       </div>
@@ -2504,20 +2497,20 @@ export default function Pipeline() {
 
                     {selected.outreachSubject && (
                       <div className="mb-2 p-2.5 rounded-lg" style={{ background: "rgba(255,176,0,0.06)", border: "1px solid rgba(255,176,0,0.18)" }}>
-                        <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Subject</p>
+                        <p className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wide">Subject</p>
                         <p className="text-xs font-semibold" style={{ color: "#FFB000" }}>{selected.outreachSubject}</p>
                       </div>
                     )}
 
                     {selected.outreachBody ? (
                       <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-white/55">
+                        <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-gray-500">
                           {selected.outreachBody}
                         </pre>
                       </div>
                     ) : (
-                      <div className="rounded-lg border border-dashed border-white/10 px-3 py-4">
-                        <p className="text-[11px] leading-relaxed text-white/35 mb-3">
+                      <div className="rounded-lg border border-dashed border-gray-200 px-3 py-4">
+                        <p className="text-[11px] leading-relaxed text-gray-400 mb-3">
                           No Cal draft yet. Run SIGNAL on this lead to refresh inference and generate outreach.
                         </p>
                         <button
@@ -2584,7 +2577,7 @@ export default function Pipeline() {
                           onClick={() => void handleSaveLead(selected)}
                           disabled={advancingLeadId === selected.id}
                           className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50 hover:brightness-110"
-                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                          style={{ color: "#111827", background: "#059669", border: "1px solid #059669" }}
                         >
                           {advancingLeadId === selected.id
                             ? <RefreshCw className="h-4 w-4 animate-spin" />
@@ -2596,7 +2589,7 @@ export default function Pipeline() {
                         <Link
                           href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
                           className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110"
-                          style={{ color: "#0d0520", background: "#03DAC5", border: "1px solid #03DAC5" }}
+                          style={{ color: "#111827", background: "#059669", border: "1px solid #059669" }}
                         >
                           Activate SIGNAL — free
                           <ArrowRight className="h-4 w-4" />
@@ -2606,11 +2599,11 @@ export default function Pipeline() {
                   )}
 
                   {showKanban && session?.access_token && selected && (
-                    <div className="shrink-0 px-5 py-3 border-t border-white/8">
+                    <div className="shrink-0 px-5 py-3 border-t border-gray-100">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5" style={{ color: "#fbbf24" }} />
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Proposal</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Proposal</p>
                         </div>
                         <button
                           type="button"
@@ -2623,7 +2616,7 @@ export default function Pipeline() {
                           {proposalBusy ? "Generating…" : "Generate"}
                         </button>
                       </div>
-                      <p className="text-[11px] text-white/40 leading-relaxed">
+                      <p className="text-[11px] text-gray-500 leading-relaxed">
                         SCOUT writes a structured proposal from this lead&apos;s signal, score, and industry — then preview or download PDF.
                       </p>
                       {proposalData && (
@@ -2641,7 +2634,7 @@ export default function Pipeline() {
 
                   {/* Action bar — workspace kanban */}
                   {showKanban && session?.access_token && (
-                  <div className="shrink-0 p-4 border-t border-white/8 flex items-center gap-2">
+                  <div className="shrink-0 p-4 border-t border-gray-100 flex items-center gap-2">
                     {
                       <>
                         {STAGES.indexOf(selected.stage) > 0 && (
@@ -2660,7 +2653,7 @@ export default function Pipeline() {
                             toast.success("Draft copied — ready to send");
                           }}
                           className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                          style={{ background: "rgba(124,58,237,0.2)", color: "#c4b5fd", border: "1px solid rgba(124,58,237,0.3)" }}
+                          style={{ background: "rgba(5,150,105,0.2)", color: "#047857", border: "1px solid rgba(5,150,105,0.3)" }}
                         >
                           <Mail className="h-3.5 w-3.5" />
                           Approve &amp; Copy
@@ -2671,9 +2664,9 @@ export default function Pipeline() {
                             disabled={advancingLeadId === selected.id}
                             className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
                             style={{
-                              background: advancingLeadId === selected.id ? "rgba(124,58,237,0.45)" : "#7c3aed",
+                              background: advancingLeadId === selected.id ? "rgba(5,150,105,0.45)" : "#059669",
                               color: "#fff",
-                              border: "1px solid #7c3aed",
+                              border: "1px solid #059669",
                             }}
                           >
                             {advancingLeadId === selected.id ? "Advancing..." : "Advance with Cal"}
@@ -2688,7 +2681,7 @@ export default function Pipeline() {
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <Target className="h-8 w-8 text-white/10 mb-3" />
-                  <p className="text-sm text-white/25">
+                  <p className="text-sm text-gray-400">
                     {pendingDeepLink && deepLinkLoadFailed
                       ? "Network interrupted while loading this lead."
                       : pendingDeepLink
@@ -2703,7 +2696,7 @@ export default function Pipeline() {
                     <button
                       type="button"
                       onClick={retryDeepLink}
-                      className="mt-4 rounded-lg border border-white/15 px-4 py-2 text-xs font-semibold text-white/70 transition-colors hover:border-white/25 hover:text-white"
+                      className="mt-4 rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900"
                     >
                       Retry loading lead
                     </button>
@@ -2724,38 +2717,38 @@ export default function Pipeline() {
         >
           <div
             className="relative w-full max-w-lg rounded-2xl border p-6 flex flex-col gap-4"
-            style={{ background: "#0d0520", borderColor: "rgba(124,58,237,0.3)", maxHeight: "85vh", overflowY: "auto" }}
+            style={{ background: "#ffffff", borderColor: "rgba(5,150,105,0.3)", maxHeight: "85vh", overflowY: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#a78bfa" }}>Email Preview</p>
-                <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{selected.company}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#10b981" }}>Email Preview</p>
+                <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{selected.company}</p>
               </div>
               <button
                 onClick={() => setPreviewOpen(false)}
-                className="text-white/30 hover:text-white/70 text-xs font-semibold px-2 py-1 rounded"
+                className="text-gray-400 hover:text-gray-600 text-xs font-semibold px-2 py-1 rounded"
               >
                 Close
               </button>
             </div>
-            <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">From</p>
-              <p className="text-xs text-white/60">Cal &lt;cal@readyforrobots.com&gt;</p>
+            <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">From</p>
+              <p className="text-xs text-gray-600">Cal &lt;cal@readyforrobots.com&gt;</p>
             </div>
             {selected.contact && (
-              <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">To</p>
-                <p className="text-xs text-white/60">{selected.contact}</p>
+              <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">To</p>
+                <p className="text-xs text-gray-600">{selected.contact}</p>
               </div>
             )}
             <div className="rounded-xl border border-amber-400/20 p-4" style={{ background: "rgba(255,176,0,0.05)" }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-1">Subject</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Subject</p>
               <p className="text-xs font-semibold" style={{ color: "#FFB000" }}>{selected.outreachSubject}</p>
             </div>
-            <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <p className="text-[10px] uppercase tracking-widest text-white/25 mb-2">Message</p>
-              <pre className="whitespace-pre-wrap break-words font-sans text-[12px] leading-loose text-white/65">
+            <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Message</p>
+              <pre className="whitespace-pre-wrap break-words font-sans text-[12px] leading-loose text-gray-600">
                 {selected.outreachBody}
               </pre>
             </div>
@@ -2765,7 +2758,7 @@ export default function Pipeline() {
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold border transition-all"
                 style={copied
                   ? { background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#6ee7b7" }
-                  : { background: "rgba(124,58,237,0.1)", borderColor: "rgba(124,58,237,0.3)", color: "#c4b5fd" }
+                  : { background: "rgba(5,150,105,0.1)", borderColor: "rgba(5,150,105,0.3)", color: "#047857" }
                 }
               >
                 {copied ? <CheckCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -2804,7 +2797,7 @@ export default function Pipeline() {
         />
       )}
       <AlertDialog open={saveLimitOpen} onOpenChange={setSaveLimitOpen}>
-        <AlertDialogContent className="border-violet-500/30 bg-[#12082a] text-cream">
+        <AlertDialogContent className="border-emerald-500/30 bg-[#12082a] text-cream">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-cream">Workspace lead limit reached</AlertDialogTitle>
             <AlertDialogDescription className="text-cream/70">
@@ -2812,11 +2805,11 @@ export default function Pipeline() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/10 bg-transparent text-cream hover:bg-white/5">
+            <AlertDialogCancel className="border-gray-200 bg-transparent text-cream hover:bg-white/5">
               Not now
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-violet-600 text-white hover:bg-violet-500"
+              className="bg-emerald-600 text-white hover:bg-emerald-600"
               onClick={() => {
                 window.location.href = "/pricing?reason=saved_leads";
               }}

@@ -51,17 +51,21 @@ const faqs = [
 const priorityNavLinks = [
   { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
   { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
-  { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
   { label: "Robots", href: "/robots", icon: ClipboardList, desc: "Humanoid benchmarks & HEIR" },
+  { label: "Pricing", href: "/pricing", icon: BriefcaseBusiness, desc: "Plans and billing" },
+];
+
+const supportNavLinks = [
   { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "Prospecting, qualifying, and outreach" },
+  { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
+  { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot live · more CRMs soon" },
+  { label: "FAQ", href: "/pricing#faq", icon: HelpCircle, desc: "Pricing and product questions" },
 ];
 
 const moreNavLinks = [
-  { label: "Intelligence", href: "/intelligence", icon: Newspaper, desc: "Report and market signals" },
+  { label: "Newsletter", href: "/newsletter", icon: Newspaper, desc: "Daily Robot Intelligence Brief" },
   { label: "Studio", href: "/social", icon: ClipboardList, desc: "Content Studio — social posts" },
   { label: "Marketplace", href: "/marketplace", icon: BriefcaseBusiness, desc: "RFPs, proposals, and quotes" },
-  { label: "Integrations", href: "/integrations", icon: BriefcaseBusiness, desc: "HubSpot live · more CRMs soon" },
-  { label: "Pricing", href: "/pricing", icon: BriefcaseBusiness, desc: "Plans and billing" },
 ];
 
 export default function Header() {
@@ -103,6 +107,10 @@ export default function Header() {
   const closeDrawer = () => setOpen(false);
   const signedInEmail = session?.user?.email;
   const moreNavActive = moreNavLinks.some((l) => location === l.href);
+  const supportNavActive = supportNavLinks.some((l) => {
+    const path = l.href.split("#", 1)[0];
+    return location === path || (typeof window !== "undefined" && l.href.includes("#") && location === path && window.location.hash === l.href.slice(l.href.indexOf("#")));
+  });
 
   const handleSignOut = async () => {
     closeDrawer();
@@ -137,12 +145,17 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              {supportNavLinks.slice(0, 2).map((link) => (
+                <Link key={link.href} href={link.href} className={navLinkClass(link.href.split("#", 1)[0])}>
+                  {link.label}
+                </Link>
+              ))}
               <div className="relative" data-nav-more>
                 <button
                   type="button"
                   onClick={() => setMoreOpen((v) => !v)}
                   className={`inline-flex items-center gap-1 px-3.5 py-2 text-sm font-medium rounded-md transition-colors ${
-                    moreNavActive || moreOpen
+                    moreNavActive || supportNavActive || moreOpen
                       ? "text-emerald-700 bg-emerald-50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
@@ -152,7 +165,21 @@ export default function Header() {
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
                 </button>
                 {moreOpen && (
-                  <div className="absolute right-0 top-full mt-2 min-w-[200px] rounded-xl border border-gray-100 bg-white py-1.5 shadow-lg z-[60]">
+                  <div className="absolute right-0 top-full mt-2 min-w-[220px] rounded-xl border border-gray-100 bg-white py-1.5 shadow-lg z-[60]">
+                    <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Support</p>
+                    {supportNavLinks.slice(2).map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`block px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 ${
+                          location === link.href.split("#", 1)[0] ? "text-emerald-700" : "text-gray-700"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    <div className="my-1 border-t border-gray-100" />
+                    <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">More</p>
                     {moreNavLinks.map((link) => (
                       <Link
                         key={link.href}
@@ -281,6 +308,27 @@ export default function Header() {
                   <p className="text-sm font-semibold leading-none">{item.label}</p>
                   <p className="text-[11px] text-gray-400 mt-0.5">{item.desc}</p>
                 </div>
+                <ChevronRight className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="px-4 py-2 border-b border-gray-100">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1 mb-2">Support</p>
+          {supportNavLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeDrawer}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm ${
+                  location === item.href.split("#", 1)[0] ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
                 <ChevronRight className="h-3.5 w-3.5 text-gray-300 shrink-0" />
               </Link>
             );

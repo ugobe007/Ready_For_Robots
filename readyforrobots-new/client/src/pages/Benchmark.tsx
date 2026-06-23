@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ShieldCheck, Zap, Eye, Cpu, Lock, Battery, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -34,8 +35,8 @@ const CRITERIA = [
   {
     number: "02",
     icon: Zap,
-    color: "#a78bfa",
-    bg: "rgba(124,58,237,0.08)",
+    color: "#10b981",
+    bg: "rgba(5,150,105,0.08)",
     border: "rgba(167,139,250,0.2)",
     label: "Complex Abilities",
     summary: "Whole-body movement, navigation, obstacle courses, and precision control.",
@@ -190,12 +191,12 @@ export default function Benchmark() {
   const toggle = (i: number) => setExpanded(expanded === i ? null : i);
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0118", color: "#fff" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
       <Header />
 
       {/* ── Hero ── */}
       <section className="mx-auto max-w-5xl px-4 pt-24 pb-16 text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white/45">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-gray-500">
           Buyer Evaluation Guide
         </div>
         <h1
@@ -203,25 +204,25 @@ export default function Benchmark() {
           style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
         >
           How to benchmark a<br />
-          <span style={{ color: "#a78bfa" }}>humanoid robot</span>
+          <span style={{ color: "#10b981" }}>humanoid robot</span>
         </h1>
-        <p className="mx-auto max-w-2xl text-base text-white/50 leading-relaxed">
+        <p className="mx-auto max-w-2xl text-base text-gray-500 leading-relaxed">
           Most vendors show demos. Independent benchmarks show reality. Fraunhofer IPA — one of Europe's
           largest applied research institutes — developed a six-criteria test framework for humanoids.
           This is what every buyer should ask for before deploying.
         </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-[12px] text-white/35">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-[12px] text-gray-400">
           <span>Source: Fraunhofer IPA, May 2026</span>
-          <span className="text-white/15">·</span>
+          <span className="text-gray-300">·</span>
           <a
             href="https://www.therobotreport.com/fraunhofer-ipa-offers-new-test-benchmark-for-humanoid-robots/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 hover:text-white/60 transition-colors"
+            className="inline-flex items-center gap-1 hover:text-gray-600 transition-colors"
           >
             Original article <ExternalLink className="h-3 w-3" />
           </a>
-          <span className="text-white/15">·</span>
+          <span className="text-gray-300">·</span>
           <span>Reference robot: Unitree G1</span>
         </div>
       </section>
@@ -234,8 +235,8 @@ export default function Benchmark() {
           return (
             <div
               key={i}
-              className="rounded-2xl border overflow-hidden transition-all"
-              style={{ borderColor: open ? c.border : "rgba(255,255,255,0.07)", background: open ? c.bg : "rgba(13,5,32,0.5)" }}
+              className={`rounded-2xl border overflow-hidden transition-all bg-white shadow-sm ${open ? "ring-1 ring-emerald-100" : ""}`}
+              style={{ borderColor: open ? c.border : "rgba(15,23,42,0.08)" }}
             >
               {/* Header row */}
               <button
@@ -251,33 +252,33 @@ export default function Benchmark() {
                 </span>
                 <Icon className="h-5 w-5 shrink-0" style={{ color: c.color }} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-white text-[15px]">{c.label}</p>
-                  <p className="text-[12px] text-white/45 mt-0.5">{c.summary}</p>
+                  <p className="font-bold text-gray-900 text-[15px]">{c.label}</p>
+                  <p className="text-[12px] text-gray-500 mt-0.5">{c.summary}</p>
                 </div>
                 {open ? (
-                  <ChevronUp className="h-4 w-4 text-white/30 shrink-0" />
+                  <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
                 ) : (
-                  <ChevronDown className="h-4 w-4 text-white/30 shrink-0" />
+                  <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
                 )}
               </button>
 
               {/* Expanded detail */}
               {open && (
-                <div className="px-6 pb-6 space-y-5 border-t border-white/7 pt-5">
-                  <p className="text-sm text-white/55 leading-relaxed">{c.description}</p>
+                <div className="px-6 pb-6 space-y-5 border-t border-gray-100 pt-5">
+                  <p className="text-sm text-gray-500 leading-relaxed">{c.description}</p>
 
                   {c.standard && (
-                    <p className="text-[11px] font-mono text-white/35">
-                      Standard: <span className="text-white/55">{c.standard}</span>
+                    <p className="text-[11px] font-mono text-gray-400">
+                      Standard: <span className="text-gray-500">{c.standard}</span>
                     </p>
                   )}
 
                   {/* Tests */}
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">What is tested</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">What is tested</p>
                     <ul className="space-y-1.5">
                       {c.tests.map((t, j) => (
-                        <li key={j} className="flex items-start gap-2 text-[12px] text-white/50">
+                        <li key={j} className="flex items-start gap-2 text-[12px] text-gray-500">
                           <span className="mt-1.5 h-1 w-1 rounded-full shrink-0" style={{ background: c.color }} />
                           {t}
                         </li>
@@ -287,7 +288,7 @@ export default function Benchmark() {
 
                   {/* G1 results */}
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
                       Unitree G1 results (reference)
                     </p>
                     <div className="grid gap-2 sm:grid-cols-2">
@@ -300,7 +301,7 @@ export default function Benchmark() {
                             border: r.warn ? "1px solid rgba(248,113,113,0.2)" : "1px solid rgba(255,255,255,0.06)",
                           }}
                         >
-                          <p className="text-[10px] text-white/35 mb-0.5">{r.label}</p>
+                          <p className="text-[10px] text-gray-400 mb-0.5">{r.label}</p>
                           <p className="text-[12px] font-semibold" style={{ color: r.warn ? "#f87171" : "rgba(255,255,255,0.75)" }}>
                             {r.value}
                           </p>
@@ -317,7 +318,7 @@ export default function Benchmark() {
                     <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: c.color }}>
                       Buyer takeaway
                     </p>
-                    <p className="text-[12px] text-white/60">{c.verdict}</p>
+                    <p className="text-[12px] text-gray-600">{c.verdict}</p>
                   </div>
                 </div>
               )}
@@ -330,65 +331,52 @@ export default function Benchmark() {
       <section
         className="mx-auto max-w-4xl px-4 pb-16"
       >
-        <div
-          className="rounded-2xl border p-8"
-          style={{ background: "rgba(124,58,237,0.06)", borderColor: "rgba(167,139,250,0.2)" }}
-        >
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a78bfa" }}>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-8">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700">
             Before you buy
           </div>
-          <h2 className="text-2xl font-extrabold text-white mb-6" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+          <h2 className="font-display text-2xl font-extrabold text-gray-900 mb-6">
             7 questions every buyer should ask
           </h2>
           <ul className="space-y-3">
             {BUYERS_CHECKLIST.map((item, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span
-                  className="shrink-0 flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-bold mt-0.5"
-                  style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa" }}
-                >
+                <span className="shrink-0 flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-bold mt-0.5 bg-emerald-100 text-emerald-700">
                   {i + 1}
                 </span>
-                <p className="text-sm text-white/60 leading-relaxed">{item}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{item}</p>
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="mx-auto max-w-4xl px-4 pb-24 text-center">
-        <div
-          className="rounded-2xl border px-8 py-12"
-          style={{ background: "rgba(13,5,32,0.7)", borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          <h2 className="text-2xl font-extrabold text-white mb-3" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+      <section className="mx-auto max-w-4xl px-4 pb-12 text-center">
+        <div className="rounded-2xl border border-gray-200 bg-white px-8 py-12 shadow-sm">
+          <h2 className="font-display text-2xl font-extrabold text-gray-900 mb-3">
             Ready to find the right robot for your operation?
           </h2>
-          <p className="text-sm text-white/45 mb-7 max-w-lg mx-auto">
+          <p className="text-sm text-gray-500 mb-7 max-w-lg mx-auto">
             Ready For Robots matches buyer requirements to vetted robot vendors — with signal data, not demos.
             We know which vendors are deploying in your industry right now.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/">
-              <a
-                className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold"
-                style={{ background: "rgba(167,139,250,0.15)", border: "1px solid rgba(167,139,250,0.35)", color: "#c4b5fd" }}
-              >
-                Scan your operation <ArrowRight className="h-4 w-4" />
-              </a>
+            <Link
+              href="/find-robots"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+            >
+              Find robots <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/intelligence">
-              <a
-                className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold"
-                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
-              >
-                View market intelligence
-              </a>
+            <Link
+              href="/intelligence"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
+            >
+              View market intelligence
             </Link>
           </div>
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }

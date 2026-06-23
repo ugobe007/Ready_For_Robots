@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, Building2, Database, FileText, Mail, Radio, Search, Send, Target, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -28,13 +29,13 @@ const scoringModel = [
   {
     label: "Robot fit",
     value: "30%",
-    color: "#03DAC5",
+    color: "#059669",
     copy: "Maps the buyer’s operating pain to robot categories like AMRs, service robots, cleaning, healthcare logistics, or food automation.",
   },
   {
     label: "Timing window",
     value: "20%",
-    color: "#a78bfa",
+    color: "#10b981",
     copy: "Prioritizes signals that imply a current buying window: new facility design, budget planning, staffing urgency, or active vendor review.",
   },
   {
@@ -49,33 +50,33 @@ const EYEBROW = "text-[10px] font-semibold uppercase tracking-[0.15em]";
 
 function IntelligenceFlow() {
   const stages = [
-    { icon: Database, label: "Source", copy: "150+ feeds", color: "#03DAC5" },
-    { icon: Radio, label: "Signal", copy: "labor + capex", color: "#a78bfa" },
+    { icon: Database, label: "Source", copy: "150+ feeds", color: "#059669" },
+    { icon: Radio, label: "Signal", copy: "labor + capex", color: "#10b981" },
     { icon: BarChart3, label: "Rank", copy: "intent score", color: "#FFB000" },
     { icon: Target, label: "Identify", copy: "sales + partner fit", color: "#34d399" },
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-white/10 p-5" style={{ background: "rgba(255,255,255,0.025)" }}>
+    <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
       <style>{`
         @keyframes rfr-scan-line { 0% { transform: translateY(-12%); opacity: .1; } 45% { opacity: .4; } 100% { transform: translateY(112%); opacity: .08; } }
         @keyframes rfr-flow-dot { 0% { left: 5%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: 92%; opacity: 0; } }
       `}</style>
-      <div className="pointer-events-none absolute left-0 right-0 h-16" style={{ top: 0, background: "linear-gradient(180deg, transparent, rgba(3,218,197,0.08), transparent)", animation: "rfr-scan-line 3.6s linear infinite" }} />
+      <div className="pointer-events-none absolute left-0 right-0 h-16" style={{ top: 0, background: "linear-gradient(180deg, transparent, rgba(5,150,105,0.08), transparent)", animation: "rfr-scan-line 3.6s linear infinite" }} />
 
       <div className="relative mb-7 flex items-center justify-between">
         <div>
-          <p className={EYEBROW} style={{ color: "#03DAC5" }}>Live intelligence loop</p>
-          <p className="mt-1.5 text-[13px] text-white/45">SIGNAL turns market noise into action.</p>
+          <p className={`section-eyebrow mb-0 ${EYEBROW}`}>Live intelligence loop</p>
+          <p className="mt-1.5 text-[13px] text-gray-500">SIGNAL turns market noise into action.</p>
         </div>
-        <span className="rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.3)", background: "rgba(255,176,0,0.05)" }}>
+        <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
           Running
         </span>
       </div>
 
       <div className="relative">
-        <div className="absolute left-[8%] right-[8%] top-7 h-px bg-white/10" />
-        <span className="absolute top-[26px] h-1.5 w-1.5 rounded-full" style={{ background: "#FFB000", animation: "rfr-flow-dot 3.6s ease-in-out infinite" }} />
+        <div className="absolute left-[8%] right-[8%] top-7 h-px bg-gray-200" />
+        <span className="absolute top-[26px] h-1.5 w-1.5 rounded-full bg-amber-500" style={{ animation: "rfr-flow-dot 3.6s ease-in-out infinite" }} />
         <div className="grid grid-cols-4 gap-3">
           {stages.map((stage) => {
             const Icon = stage.icon;
@@ -87,22 +88,22 @@ function IntelligenceFlow() {
                 >
                   <Icon className="h-[18px] w-[18px]" style={{ color: stage.color }} />
                 </div>
-                <p className="text-xs font-bold text-white">{stage.label}</p>
-                <p className="mt-0.5 text-[10px] text-white/35">{stage.copy}</p>
+                <p className="text-xs font-bold text-gray-900">{stage.label}</p>
+                <p className="mt-0.5 text-[10px] text-gray-400">{stage.copy}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/10" style={{ background: "rgba(255,255,255,0.06)" }}>
+      <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-100">
         {[
           ["sales", "capacity pain + decision timing"],
           ["partners", "integrators + channel fit"],
         ].map(([label, copy]) => (
-          <div key={label} className="p-3.5" style={{ background: "rgba(13,5,32,0.72)" }}>
-            <p className={EYEBROW} style={{ color: label === "sales" ? "#FFB000" : "#03DAC5" }}>{label}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-white/45">{copy}</p>
+          <div key={label} className="p-3.5 bg-white">
+            <p className={`${EYEBROW} ${label === "sales" ? "text-amber-600" : "text-emerald-600"}`}>{label}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">{copy}</p>
           </div>
         ))}
       </div>
@@ -166,37 +167,37 @@ export default function Intelligence() {
   }
 
   const inputClass =
-    "w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-teal-300/50";
+    "w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-emerald-500";
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="flex-1 px-6 pb-20 pt-28">
         <div className="max-w-6xl mx-auto">
           <section className="relative mb-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_420px]">
             <div>
-              <p className={`mb-4 ${EYEBROW}`} style={{ color: "#03DAC5" }}>
+              <p className={`mb-4 ${EYEBROW}`} style={{ color: "#059669" }}>
                 ReadyForRobots Intelligence
               </p>
-              <h1 className="font-extrabold leading-[1.05] tracking-tight text-white" style={{ fontSize: "clamp(2.1rem, 4.6vw, 3.6rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <h1 className="font-extrabold leading-[1.05] tracking-tight text-gray-900" style={{ fontSize: "clamp(2.1rem, 4.6vw, 3.6rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                 Robot Demand Signals, Ranked
               </h1>
-              <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/50">
+              <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-gray-500">
                 The same engine that powers <span style={{ color: "#FFB000", fontWeight: 700 }}>SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
               </p>
-              <div className="mt-6 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-lg border border-white/10" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="mt-6 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
                 {signalStats.map(([value, label]) => (
-                  <div key={label} className="p-3.5" style={{ background: "rgba(255,255,255,0.025)" }}>
-                    <p className="font-mono text-xl font-bold" style={{ color: value === "62%" ? "#FFB000" : "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-                    <p className="mt-1 text-[11px] leading-snug text-white/40">{label}</p>
+                  <div key={label} className="p-3.5 bg-white">
+                    <p className="font-mono text-xl font-bold" style={{ color: value === "62%" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
+                    <p className="mt-1 text-[11px] leading-snug text-gray-500">{label}</p>
                   </div>
                 ))}
               </div>
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
-                <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#03DAC5" }}>
+                <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#059669" }}>
                   Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </a>
-                <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-white/55 transition-colors hover:text-white/85">
+                <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-gray-500 transition-colors hover:text-gray-800">
                   Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
@@ -208,26 +209,26 @@ export default function Intelligence() {
             <IntelligenceFlow />
           </section>
 
-          <section className="mb-12 overflow-hidden rounded-lg border border-white/10" style={{ background: "rgba(255,255,255,0.025)" }}>
+          <section className="mb-12 overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="border-b border-white/8 p-6 lg:border-b-0 lg:border-r">
+              <div className="border-b border-gray-100 p-6 lg:border-b-0 lg:border-r">
                 <p className={`mb-3 ${EYEBROW}`} style={{ color: "#FFB000" }}>Lead scoring model</p>
-                <h2 className="max-w-xl text-xl font-bold leading-tight text-white lg:text-2xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h2 className="max-w-xl text-xl font-bold leading-tight text-gray-900 lg:text-2xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   We score the buyer first, then match it to the robot sales motion.
                 </h2>
-                <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-white/45">
+                <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-gray-500">
                   SIGNAL does not treat every lead as equal. It ranks the company’s buying intent, the operational problem, and the timing window, then compares that profile against the robot category or vendor URL you submit.
                 </p>
-                <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/10" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-100">
                   {[
                     ["HOT", "Act now"],
                     ["WARM", "Sequence"],
                     ["EMERGING", "Watch"],
                     ["PARTNER", "Channel fit"],
                   ].map(([tier, action]) => (
-                    <div key={tier} className="p-3" style={{ background: "rgba(13,5,32,0.72)" }}>
-                      <p className="font-mono text-[13px] font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
-                      <p className="mt-0.5 text-[11px] text-white/40">{action}</p>
+                    <div key={tier} className="p-3 bg-white">
+                      <p className="font-mono text-[13px] font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
+                      <p className="mt-0.5 text-[11px] text-gray-500">{action}</p>
                     </div>
                   ))}
                 </div>
@@ -239,12 +240,12 @@ export default function Intelligence() {
                     <div key={item.label}>
                       <div className="mb-1.5 flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-[13px] font-semibold text-white/85">{item.label}</p>
-                          <p className="mt-0.5 text-xs leading-relaxed text-white/40">{item.copy}</p>
+                          <p className="text-[13px] font-semibold text-gray-800">{item.label}</p>
+                          <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{item.copy}</p>
                         </div>
                         <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>{item.value}</span>
                       </div>
-                      <div className="h-1 overflow-hidden rounded-full bg-white/8">
+                      <div className="h-1 overflow-hidden rounded-full bg-gray-100">
                         <div className="h-full rounded-full" style={{ width: item.value, background: item.color }} />
                       </div>
                     </div>
@@ -259,14 +260,14 @@ export default function Intelligence() {
             </div>
           </section>
 
-          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-white/10 lg:grid-cols-[1fr_360px]" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <div className="p-6" style={{ background: "rgba(255,255,255,0.025)" }}>
-              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#03DAC5" }}>Enterprise Intelligence Report</p>
-              <h2 className="max-w-2xl text-2xl font-bold leading-tight text-white lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+          <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-gray-200 lg:grid-cols-[1fr_360px] bg-gray-100">
+            <div className="p-6 bg-white">
+              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#059669" }}>Enterprise Intelligence Report</p>
+              <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900 lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                 The Automation Imperative: labor-intensive industries are flashing buy signals.
               </h2>
-              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-white/45">
-                Built from real ReadyForRobots signal data: <span className="text-white/75">158 enterprises</span>, <span className="text-white/75">437 buying signals</span>, and sector-level ROI patterns for robotics vendors selling into labor-constrained operations.
+              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-gray-500">
+                Built from real ReadyForRobots signal data: <span className="text-gray-700">158 enterprises</span>, <span className="text-gray-700">437 buying signals</span>, and sector-level ROI patterns for robotics vendors selling into labor-constrained operations.
               </p>
               <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {[
@@ -275,20 +276,20 @@ export default function Intelligence() {
                   ["ROI models", "sales narrative ready"],
                 ].map(([label, copy]) => (
                   <div key={label} className="border-l px-3 py-1.5" style={{ borderColor: "rgba(3,218,197,0.45)" }}>
-                    <p className="text-[13px] font-semibold text-white/80">{label}</p>
-                    <p className="mt-0.5 text-xs text-white/40">{copy}</p>
+                    <p className="text-[13px] font-semibold text-gray-800">{label}</p>
+                    <p className="mt-0.5 text-xs text-gray-500">{copy}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="p-5" style={{ background: "rgba(13,5,32,0.82)" }}>
+            <div className="p-5 bg-slate-50">
               <div className="mb-4 flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-md border" style={{ borderColor: "rgba(3,218,197,0.35)", background: "rgba(3,218,197,0.07)" }}>
-                  <FileText className="h-4 w-4" style={{ color: "#03DAC5" }} />
+                  <FileText className="h-4 w-4" style={{ color: "#059669" }} />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-white">Download the 2026 report</p>
-                  <p className="text-[11px] text-white/40">No padded buttons. Just the data.</p>
+                  <p className="text-[13px] font-semibold text-gray-900">Download the 2026 report</p>
+                  <p className="text-[11px] text-gray-500">No padded buttons. Just the data.</p>
                 </div>
               </div>
               {reportStatus === "success" ? (
@@ -318,7 +319,7 @@ export default function Intelligence() {
                     type="submit"
                     disabled={reportStatus === "submitting"}
                     className="group inline-flex items-center gap-1.5 pt-1 text-[13px] font-semibold transition-colors hover:text-teal-200 disabled:opacity-50"
-                    style={{ color: "#03DAC5" }}
+                    style={{ color: "#059669" }}
                   >
                     {reportStatus === "submitting" ? "Requesting…" : "Download free report"}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -337,40 +338,40 @@ export default function Intelligence() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="rounded-lg border border-white/8 p-4 transition-colors hover:border-teal-300/25" style={{ background: "rgba(255,255,255,0.025)" }}>
-                  <Icon className="mb-4 h-[18px] w-[18px]" style={{ color: item.title === "Rank" ? "#FFB000" : "#03DAC5" }} />
-                  <p className="mb-1 text-[13px] font-semibold text-white">{item.title}</p>
-                  <p className="text-[13px] leading-relaxed text-white/45">{item.copy}</p>
+                <div key={item.title} className="rounded-lg border border-gray-100 p-4 transition-colors hover:border-teal-300/25 bg-white">
+                  <Icon className="mb-4 h-[18px] w-[18px]" style={{ color: item.title === "Rank" ? "#FFB000" : "#059669" }} />
+                  <p className="mb-1 text-[13px] font-semibold text-gray-900">{item.title}</p>
+                  <p className="text-[13px] leading-relaxed text-gray-500">{item.copy}</p>
                 </div>
               );
             })}
           </section>
 
-          <section id="brief" className="rounded-lg border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.025)" }}>
+          <section id="brief" className="rounded-lg border border-gray-200 p-6 bg-white">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
               <div>
-                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#a78bfa" }}>Robot Intelligence Brief</p>
-                <h2 className="max-w-2xl text-2xl font-bold leading-tight text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#10b981" }}>Robot Intelligence Brief</p>
+                <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   A weekly brief that keeps the market warm between sales cycles.
                 </h2>
-                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-white/45">
+                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-gray-500">
                   Each issue packages new signals, deployment stories, vendor movement, and ROI language so teams know where to act before the market does.
                 </p>
                 {stories.length > 0 && (
                   <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
                     {stories.slice(0, 3).map((story, i) => (
-                      <div key={`${story.title || story.company || i}`} className="rounded-md border border-white/8 p-3.5" style={{ background: "rgba(13,5,32,0.45)" }}>
-                        <p className="break-words mb-1.5 text-[13px] font-semibold text-white/85">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
-                        <p className="break-words text-xs leading-relaxed text-white/40">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
+                      <div key={`${story.title || story.company || i}`} className="rounded-md border border-gray-100 p-3.5 bg-gray-50">
+                        <p className="break-words mb-1.5 text-[13px] font-semibold text-gray-800">{cleanScrapedText(story.title || story.company) || "Signal story"}</p>
+                        <p className="break-words text-xs leading-relaxed text-gray-500">{cleanScrapedText(story.summary) || "Fresh signal intelligence from ReadyForRobots."}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <form onSubmit={subscribe} className="rounded-md border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.55)" }}>
-                <Mail className="mb-3 h-[18px] w-[18px]" style={{ color: "#03DAC5" }} />
-                <p className="mb-1.5 text-[13px] font-semibold text-white">Subscribe free</p>
-                <p className="mb-3.5 text-xs leading-relaxed text-white/40">Buying signals, deployment stories, ROI benchmarks, and SIGNAL activation prompts.</p>
+              <form onSubmit={subscribe} className="rounded-md border border-gray-100 p-4 bg-gray-50">
+                <Mail className="mb-3 h-[18px] w-[18px]" style={{ color: "#059669" }} />
+                <p className="mb-1.5 text-[13px] font-semibold text-gray-900">Subscribe free</p>
+                <p className="mb-3.5 text-xs leading-relaxed text-gray-500">Buying signals, deployment stories, ROI benchmarks, and SIGNAL activation prompts.</p>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -378,7 +379,7 @@ export default function Intelligence() {
                   placeholder="work email"
                   className={inputClass}
                 />
-                {newsletterStatus === "success" && <p className="mt-2.5 text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
+                {newsletterStatus === "success" && <p className="mt-2.5 text-xs" style={{ color: "#059669" }}>Subscribed.</p>}
                 {newsletterStatus === "error" && <p className="mt-2.5 text-xs text-red-300">Could not subscribe. Try again.</p>}
                 <button
                   type="submit"
@@ -397,12 +398,13 @@ export default function Intelligence() {
             <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
               Activate SIGNAL from live intelligence <Send className="h-3.5 w-3.5" />
             </Link>
-            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-white/50 transition-colors hover:text-white/85">
+            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-gray-500 transition-colors hover:text-gray-800">
               Browse signal types <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

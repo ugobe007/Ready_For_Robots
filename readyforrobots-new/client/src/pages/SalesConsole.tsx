@@ -82,7 +82,7 @@ function formatDate(value?: string | null) {
 }
 
 function statusColor(status: string) {
-  if (status === "sent") return "#03DAC5";
+  if (status === "sent") return "#059669";
   if (status === "failed" || status === "blocked") return "#FF6B6B";
   if (status === "awaiting_approval") return "#FFB000";
   return "rgba(255,255,255,0.6)";
@@ -278,17 +278,17 @@ export default function SalesConsole() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-[#0d0520] text-white" />;
+    return <div className="min-h-screen bg-slate-50 text-gray-900" />;
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#0d0520] text-white">
+      <div className="min-h-screen bg-slate-50 text-gray-900">
         <Header />
         <main className="max-w-3xl mx-auto px-6 pt-32">
           <h1 className="text-3xl font-bold">Sales Console</h1>
-          <p className="mt-4 text-white/60">Sign in to see buyer replies, opportunity stage movement, and next-best actions.</p>
-          <Link href="/login?next=/sales-console" className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold" style={{ background: "#03DAC5", color: "#0d0520" }}>
+          <p className="mt-4 text-gray-600">Sign in to see buyer replies, opportunity stage movement, and next-best actions.</p>
+          <Link href="/login?next=/sales-console" className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold" style={{ background: "#059669", color: "#111827" }}>
             Sign in
           </Link>
         </main>
@@ -297,20 +297,20 @@ export default function SalesConsole() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0520] text-white">
+    <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
       <main className="max-w-7xl mx-auto px-6 pt-28 pb-16">
         <AdminNav />
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#03DAC5" }}>SIGNAL sales console</p>
+            <p className="text-xs uppercase tracking-[0.25em]" style={{ color: "#059669" }}>SIGNAL sales console</p>
             <h1 className="mt-3 text-4xl md:text-5xl font-black tracking-tight">Sales Console</h1>
-            <p className="mt-3 max-w-2xl text-white/60">
+            <p className="mt-3 max-w-2xl text-gray-600">
               Review inbound replies, see what SIGNAL already sent, and decide the next action to advance each opportunity.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/crm" className="rounded-xl px-4 py-2 text-sm font-black" style={{ background: "#03DAC5", color: "#0d0520" }}>
+            <Link href="/crm" className="rounded-xl px-4 py-2 text-sm font-black" style={{ background: "#059669", color: "#111827" }}>
               Draft buyer email
             </Link>
             <Link href="/supply-pipeline" className="rounded-xl border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200">
@@ -319,7 +319,7 @@ export default function SalesConsole() {
             <button
               onClick={() => void loadRows()}
               disabled={busy}
-              className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
             >
               Refresh
             </button>
@@ -329,155 +329,155 @@ export default function SalesConsole() {
         {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">{msg}</div>}
 
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Workflow memory</p>
-            <p className="mt-3 text-3xl font-black" style={{ color: "#03DAC5" }}>
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Workflow memory</p>
+            <p className="mt-3 text-3xl font-black" style={{ color: "#059669" }}>
               {learningReport?.experience_events ?? 0}
             </p>
-            <p className="mt-1 text-sm text-white/50">sales events captured from sends, replies, failures, and escalations</p>
+            <p className="mt-1 text-sm text-gray-500">sales events captured from sends, replies, failures, and escalations</p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Best source signal</p>
-            <p className="mt-3 text-lg font-bold text-white">
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Best source signal</p>
+            <p className="mt-3 text-lg font-bold text-gray-900">
               {learningReport?.source_domain_priorities?.[0]?.key || "Waiting for replies"}
             </p>
-            <p className="mt-1 text-sm text-white/45">
+            <p className="mt-1 text-sm text-gray-500">
               SIGNAL uses positive reply history to guide scraper priorities.
             </p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Scraper guidance</p>
-            <p className="mt-3 text-sm leading-relaxed text-white/60">
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Scraper guidance</p>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
               {learningReport?.scraper_guidance?.[0] || "Guidance appears after SIGNAL observes enough outreach outcomes."}
             </p>
           </div>
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Open opportunities</p>
-            <p className="mt-2 text-3xl font-black text-white">{rows.length}</p>
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Open opportunities</p>
+            <p className="mt-2 text-3xl font-black text-gray-900">{rows.length}</p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Need action</p>
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Need action</p>
             <p className="mt-2 text-3xl font-black text-amber-200">{rows.filter((row) => row.next_best_action?.recommendation).length}</p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Buyer replies</p>
-            <p className="mt-2 text-3xl font-black" style={{ color: "#03DAC5" }}>{rows.filter((row) => row.last_inbound_at).length}</p>
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Buyer replies</p>
+            <p className="mt-2 text-3xl font-black" style={{ color: "#059669" }}>{rows.filter((row) => row.last_inbound_at).length}</p>
           </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/35">Technical escalations</p>
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Technical escalations</p>
             <p className="mt-2 text-3xl font-black text-violet-100">{rows.filter((row) => row.current_stage === "technical_escalation").length}</p>
           </div>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-white/45">Opportunities</h2>
-              <span className="text-xs text-white/35">{rows.length} active</span>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Opportunities</h2>
+              <span className="text-xs text-gray-400">{rows.length} active</span>
             </div>
             <div className="mt-4 space-y-3">
               {rows.map((row) => (
                 <button
                   key={row.id}
                   onClick={() => setSelectedId(row.id)}
-                  className="w-full rounded-2xl border p-4 text-left transition hover:bg-white/[0.06]"
+                  className="w-full rounded-2xl border p-4 text-left transition hover:bg-gray-100"
                   style={{
                     borderColor: selectedId === row.id ? "rgba(3,218,197,0.45)" : "rgba(255,255,255,0.08)",
                     background: selectedId === row.id ? "rgba(3,218,197,0.08)" : "rgba(255,255,255,0.025)",
                   }}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-bold text-white">{row.title}</p>
-                    <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase text-white/45">{row.opportunity_type}</span>
+                    <p className="font-bold text-gray-900">{row.title}</p>
+                    <span className="rounded-full border border-gray-200 px-2 py-1 text-[10px] uppercase text-gray-500">{row.opportunity_type}</span>
                   </div>
-                  <p className="mt-2 text-xs text-white/45">Stage: {row.current_stage}</p>
-                  <p className="mt-1 text-xs text-white/35">Intent: {row.next_best_action?.intent || row.latest_message?.detected_intent || "unknown"}</p>
+                  <p className="mt-2 text-xs text-gray-500">Stage: {row.current_stage}</p>
+                  <p className="mt-1 text-xs text-gray-400">Intent: {row.next_best_action?.intent || row.latest_message?.detected_intent || "unknown"}</p>
                 </button>
               ))}
               {!rows.length && !busy && (
-                <div className="rounded-2xl border border-white/10 p-5 text-sm text-white/45">
+                <div className="rounded-2xl border border-gray-200 p-5 text-sm text-gray-500">
                   No sales opportunities yet. They appear here when SIGNAL captures inbound replies.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
             {selected ? (
               <>
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/35">{selected.opportunity_type} opportunity</p>
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-400">{selected.opportunity_type} opportunity</p>
                     <h2 className="mt-2 text-3xl font-black">{selected.title}</h2>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Stage: {selected.current_stage}</span>
-                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Status: {selected.status}</span>
-                      <span className="rounded-full bg-white/8 px-3 py-1 text-white/65">Last inbound: {formatDate(selected.last_inbound_at)}</span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">Stage: {selected.current_stage}</span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">Status: {selected.status}</span>
+                      <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">Last inbound: {formatDate(selected.last_inbound_at)}</span>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-[#0d0520]/60 p-4 xl:w-80">
-                    <label className="text-xs font-bold uppercase tracking-widest text-white/35">Automation mode</label>
+                  <div className="rounded-2xl border border-gray-200 bg-slate-50/60 p-4 xl:w-80">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Automation mode</label>
                     <select
                       value={selected.automation_level}
                       onChange={(event) => void setAutomation(event.target.value)}
-                      className="mt-2 w-full rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-sm text-white outline-none"
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-900 outline-none"
                     >
                       {AUTOMATION_LEVELS.map((level) => (
-                        <option key={level.value} value={level.value} className="bg-[#0d0520]">
+                        <option key={level.value} value={level.value} className="bg-slate-50">
                           {level.label}
                         </option>
                       ))}
                     </select>
-                    <label className="mt-3 block text-xs font-bold uppercase tracking-widest text-white/35">Reply recipient</label>
+                    <label className="mt-3 block text-xs font-bold uppercase tracking-widest text-gray-400">Reply recipient</label>
                     <input
                       value={recipientOverride}
                       onChange={(event) => setRecipientOverride(event.target.value)}
                       placeholder="buyer@example.com"
-                      className="mt-2 w-full rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                      className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                     />
                     <button
                       onClick={() => void automateNext()}
                       disabled={busy}
                       className="mt-3 w-full rounded-xl px-4 py-2 text-sm font-black disabled:opacity-50"
-                      style={{ background: "#03DAC5", color: "#0d0520" }}
+                      style={{ background: "#059669", color: "#111827" }}
                     >
                       Automate next action
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-widest text-white/35">Next best action</p>
-                  <p className="mt-2 text-sm text-white/75">{selected.next_best_action?.recommendation || "SIGNAL will generate the next action from the latest conversation context."}</p>
+                <div className="mt-6 rounded-2xl border border-gray-200 bg-slate-50/50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Next best action</p>
+                  <p className="mt-2 text-sm text-gray-700">{selected.next_best_action?.recommendation || "SIGNAL will generate the next action from the latest conversation context."}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {selected.crm_account_id && (
-                      <Link href="/crm" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
+                      <Link href="/crm" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
                         Open CRM draft tools
                       </Link>
                     )}
                     {selected.opportunity_type === "supply" && (
-                      <Link href="/supply-pipeline" className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-bold text-white/70">
+                      <Link href="/supply-pipeline" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
                         Open Supply Pipeline draft tools
                       </Link>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-white/10 bg-[#0d0520]/50 p-5">
+                <div className="mt-6 rounded-2xl border border-gray-200 bg-slate-50/50 p-5">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-white/35">Apollo prospect search</p>
-                      <p className="mt-2 text-sm text-white/60">
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Apollo prospect search</p>
+                      <p className="mt-2 text-sm text-gray-600">
                         Find likely decision-makers for this opportunity and use them to route the next outreach step.
                       </p>
                     </div>
                     <button
                       onClick={() => void loadProspects()}
                       disabled={prospectBusy}
-                      className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white/75 hover:bg-white/8 disabled:opacity-50"
+                      className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                     >
                       {prospectBusy ? "Searching Apollo..." : "Find prospects"}
                     </button>
@@ -485,7 +485,7 @@ export default function SalesConsole() {
                   {prospectTitles.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {prospectTitles.map((title) => (
-                        <span key={title} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/50">
+                        <span key={title} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[11px] text-gray-500">
                           {title}
                         </span>
                       ))}
@@ -495,11 +495,11 @@ export default function SalesConsole() {
                   {prospects.length > 0 && (
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {prospects.slice(0, 6).map((person, idx) => (
-                        <div key={person.id || `${person.name}-${idx}`} className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
-                          <p className="font-bold text-white">{person.name || "Unnamed prospect"}</p>
-                          <p className="mt-1 text-xs text-white/50">{person.title || "Title unavailable"}</p>
-                          <p className="mt-1 text-xs text-white/35">{person.organization_name || person.organization_domain || "Organization unavailable"}</p>
-                          {person.email && <p className="mt-2 text-xs" style={{ color: "#03DAC5" }}>{person.email}</p>}
+                        <div key={person.id || `${person.name}-${idx}`} className="rounded-xl border border-gray-200 bg-white p-3">
+                          <p className="font-bold text-gray-900">{person.name || "Unnamed prospect"}</p>
+                          <p className="mt-1 text-xs text-gray-500">{person.title || "Title unavailable"}</p>
+                          <p className="mt-1 text-xs text-gray-400">{person.organization_name || person.organization_domain || "Organization unavailable"}</p>
+                          {person.email && <p className="mt-2 text-xs" style={{ color: "#059669" }}>{person.email}</p>}
                           {person.email && selected.crm_account_id && (
                             <button
                               onClick={() => void applyProspectContact(person)}
@@ -522,60 +522,60 @@ export default function SalesConsole() {
 
                 <div className="mt-6 grid gap-6 xl:grid-cols-2">
                   <section>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Actions</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Actions</h3>
                     <div className="mt-3 space-y-3">
                       {(selected.actions || []).map((action) => (
-                        <div key={action.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                        <div key={action.id} className="rounded-2xl border border-gray-200 bg-white p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-bold text-white">{actionLabel(action)}</p>
+                              <p className="font-bold text-gray-900">{actionLabel(action)}</p>
                               <p className="mt-1 text-xs" style={{ color: statusColor(action.status) }}>Status: {action.status}</p>
-                              <p className="mt-1 text-[11px] text-white/35">Intent: {action.detected_intent || "unknown"} · Risk: {action.risk_level || "unknown"}</p>
+                              <p className="mt-1 text-[11px] text-gray-400">Intent: {action.detected_intent || "unknown"} · Risk: {action.risk_level || "unknown"}</p>
                             </div>
                             {action.status !== "sent" && (
                               <button
                                 onClick={() => void automateAction(action)}
                                 disabled={busy}
-                                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-white/70 hover:bg-white/8 disabled:opacity-50"
+                                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                               >
                                 Automate
                               </button>
                             )}
                           </div>
-                          <p className="mt-3 text-sm text-white/60">{action.recommendation}</p>
-                          {action.draft_subject && <p className="mt-3 text-xs font-bold text-white/45">Subject: {action.draft_subject}</p>}
+                          <p className="mt-3 text-sm text-gray-600">{action.recommendation}</p>
+                          {action.draft_subject && <p className="mt-3 text-xs font-bold text-gray-500">Subject: {action.draft_subject}</p>}
                           {action.draft_body && (
-                            <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/8 bg-black/20 p-3 text-xs leading-relaxed text-white/60">
+                            <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-100 bg-black/20 p-3 text-xs leading-relaxed text-gray-600">
                               {action.draft_body}
                             </pre>
                           )}
                           {action.error && <p className="mt-2 text-xs text-red-300">{action.error}</p>}
                         </div>
                       ))}
-                      {!(selected.actions || []).length && <p className="text-sm text-white/40">No actions recorded yet.</p>}
+                      {!(selected.actions || []).length && <p className="text-sm text-gray-500">No actions recorded yet.</p>}
                     </div>
                   </section>
 
                   <section>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Messages</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">Messages</h3>
                     <div className="mt-3 space-y-3">
                       {(selected.messages || []).map((message) => (
-                        <div key={message.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                        <div key={message.id} className="rounded-2xl border border-gray-200 bg-white p-4">
                           <div className="flex items-center justify-between gap-3">
-                            <p className="font-bold text-white">{message.direction === "inbound" ? "Inbound" : "Outbound"}</p>
-                            <span className="text-xs text-white/35">{formatDate(message.created_at)}</span>
+                            <p className="font-bold text-gray-900">{message.direction === "inbound" ? "Inbound" : "Outbound"}</p>
+                            <span className="text-xs text-gray-400">{formatDate(message.created_at)}</span>
                           </div>
-                          <p className="mt-2 text-xs text-white/45">{message.subject || "No subject"}</p>
-                          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm text-white/65">{message.body_text || "No body captured."}</p>
+                          <p className="mt-2 text-xs text-gray-500">{message.subject || "No subject"}</p>
+                          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm text-gray-600">{message.body_text || "No body captured."}</p>
                         </div>
                       ))}
-                      {!(selected.messages || []).length && <p className="text-sm text-white/40">No messages recorded yet.</p>}
+                      {!(selected.messages || []).length && <p className="text-sm text-gray-500">No messages recorded yet.</p>}
                     </div>
                   </section>
                 </div>
               </>
             ) : (
-              <div className="rounded-2xl border border-white/10 p-8 text-white/45">
+              <div className="rounded-2xl border border-gray-200 p-8 text-gray-500">
                 Select an opportunity to inspect SIGNAL activity.
               </div>
             )}

@@ -1,8 +1,10 @@
 /**
- * Sign in — same Supabase flows as the legacy Next login page.
+ * Sign in — Supabase magic link + OAuth (Precision Intelligence light theme).
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
 
@@ -94,91 +96,92 @@ export default function Login() {
     }
   }
 
+  const loginSearch = typeof window !== "undefined" ? window.location.search : "";
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0d0520" }}>
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "'Sora', system-ui" }}>
-            ReadyForRobots
-          </h1>
-          <p className="text-xs text-white/40 mt-1">Sign in to work with SIGNAL</p>
-        </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header />
+      <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <p className="section-eyebrow mb-2">Sign in</p>
+            <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
+            <p className="text-sm text-gray-500 mt-2">Sign in to work with SIGNAL in your pipeline workspace.</p>
+          </div>
 
-        {status === "sent" ? (
-          <div className="rounded-lg border border-emerald-500/30 px-6 py-8 text-center" style={{ background: "rgba(52,211,153,0.06)" }}>
-            <h2 className="text-base font-semibold text-white mb-2">Check your email</h2>
-            <p className="text-sm text-white/50">
-              We sent a magic link to <span className="text-emerald-300">{email}</span>.
+          {status === "sent" ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
+              <h2 className="text-base font-semibold text-gray-900 mb-2">Check your email</h2>
+              <p className="text-sm text-gray-600">
+                We sent a magic link to <span className="font-semibold text-emerald-700">{email}</span>.
+              </p>
+              <button type="button" onClick={() => setStatus("idle")} className="mt-5 text-xs text-gray-500 hover:text-gray-800">
+                ← use a different email
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm">
+              <div className="flex flex-col gap-2 mb-5">
+                <button
+                  type="button"
+                  onClick={() => void oauth("google")}
+                  disabled={!supabase}
+                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Sign in with Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void oauth("github")}
+                  disabled={!supabase}
+                  className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Sign in with GitHub
+                </button>
+              </div>
+              <div className="flex items-center gap-3 mb-5">
+                <span className="flex-1 h-px bg-gray-200" />
+                <span className="text-[10px] text-gray-400 uppercase tracking-widest">or</span>
+                <span className="flex-1 h-px bg-gray-200" />
+              </div>
+              <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  disabled={status === "sending"}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+                />
+                {status === "error" && (
+                  <p className="text-xs text-red-600 border border-red-200 bg-red-50 rounded-lg px-3 py-2">{errMsg}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={status === "sending" || !email.trim()}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-900 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40"
+                >
+                  {status === "sending" ? "Sending…" : "Send magic link"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          <div className="mt-6 text-center space-y-3">
+            <p className="text-xs text-gray-500">
+              New to ReadyForRobots?{" "}
+              <Link href={`/signup${loginSearch}`} className="font-semibold text-emerald-600 hover:text-emerald-700">
+                Start free workspace
+              </Link>
             </p>
-            <button type="button" onClick={() => setStatus("idle")} className="mt-5 text-xs text-white/40 hover:text-white/70">
-              ← use a different email
-            </button>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-white/10 px-6 py-8" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <div className="flex flex-col gap-2 mb-5">
-              <button
-                type="button"
-                onClick={() => void oauth("google")}
-                disabled={!supabase}
-                className="w-full flex items-center justify-center gap-2 border border-white/15 rounded-lg px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 disabled:opacity-40"
-              >
-                Sign in with Google
-              </button>
-              <button
-                type="button"
-                onClick={() => void oauth("github")}
-                disabled={!supabase}
-                className="w-full flex items-center justify-center gap-2 border border-white/15 rounded-lg px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 disabled:opacity-40"
-              >
-                Sign in with GitHub
-              </button>
-            </div>
-            <div className="flex items-center gap-3 mb-5">
-              <span className="flex-1 h-px bg-white/10" />
-              <span className="text-[10px] text-white/30 uppercase">or</span>
-              <span className="flex-1 h-px bg-white/10" />
-            </div>
-            <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                disabled={status === "sending"}
-                className="w-full bg-transparent border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-violet-500/60"
-              />
-              {status === "error" && (
-                <p className="text-xs text-red-300 border border-red-500/30 rounded px-3 py-2">{errMsg}</p>
-              )}
-              <button
-                type="submit"
-                disabled={status === "sending" || !email.trim()}
-                className="w-full rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
-                style={{ background: "#7c3aed" }}
-              >
-                {status === "sending" ? "Sending…" : "Send magic link"}
-              </button>
-            </form>
-          </div>
-        )}
-
-        <div className="mt-6 text-center space-y-3">
-          <p className="text-xs text-white/40">
-            New to ReadyForRobots?{" "}
-            <Link
-              href={`/signup${typeof window !== "undefined" ? window.location.search : ""}`}
-              className="font-semibold text-violet-300 hover:text-violet-200"
-            >
-              Start free workspace
+            <Link href="/" className="block text-xs text-gray-400 hover:text-gray-600">
+              ← Back home
             </Link>
-          </p>
-          <Link href="/" className="block text-xs text-white/35 hover:text-white/60">
-            ← Back home
-          </Link>
+          </div>
         </div>
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

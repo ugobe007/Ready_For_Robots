@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { toast } from "sonner";
 
-const TEAL = "#03DAC5";
+const TEAL = "#059669";
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-[rgba(3,218,197,0.35)]";
-const labelClass = "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-white/30";
+  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[rgba(3,218,197,0.35)]";
+const labelClass = "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-gray-400";
 
 const ROBOT_TYPES = [
   { value: "humanoid", label: "Humanoid" },
@@ -77,7 +78,7 @@ export default function FindRobots() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0118", color: "#fff" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
       <Header />
 
       <section className="mx-auto max-w-2xl px-4 pt-24 pb-16">
@@ -90,7 +91,7 @@ export default function FindRobots() {
         >
           Find the right robots for your operation
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-white/50">
+        <p className="mt-3 text-sm leading-relaxed text-gray-500">
           Tell us what you are automating, which type of robot you need, and when you plan to deploy.
           Ready For Robots matches your use case to vendors, pilots, and deployment examples from our index.
         </p>
@@ -101,15 +102,15 @@ export default function FindRobots() {
             style={{ borderColor: "rgba(3,218,197,0.2)", background: "rgba(3,218,197,0.06)" }}
           >
             <CheckCircle2 className="mx-auto h-10 w-10" style={{ color: TEAL }} />
-            <h2 className="mt-4 text-lg font-bold text-white">Thank you — request received</h2>
-            <p className="mt-2 text-sm text-white/55">
+            <h2 className="mt-4 text-lg font-bold text-gray-900">Thank you — request received</h2>
+            <p className="mt-2 text-sm text-gray-500">
               Our team will review your use case and reach out with matched robots and next steps.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-              <Link href="/robots" className="text-violet-300/90 hover:text-violet-200 underline underline-offset-4">
+              <Link href="/robots" className="text-emerald-600/90 hover:text-emerald-700 underline underline-offset-4">
                 Browse humanoid index
               </Link>
-              <Link href="/" className="text-white/45 hover:text-white/70 underline underline-offset-4">
+              <Link href="/" className="text-gray-500 hover:text-gray-600 underline underline-offset-4">
                 Scan your operation
               </Link>
             </div>
@@ -244,13 +245,14 @@ export default function FindRobots() {
               <ArrowRight className="h-4 w-4" />
             </button>
 
-            <p className="text-[11px] text-white/30">
+            <p className="text-[11px] text-gray-400">
               By submitting, you agree we may contact you about robotics vendors and deployment options.
               We do not sell your information to third-party lists.
             </p>
           </form>
         )}
       </section>
+      <SiteFooter />
     </div>
   );
 }

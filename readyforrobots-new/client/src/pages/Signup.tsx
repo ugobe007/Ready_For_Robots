@@ -1,8 +1,10 @@
 /**
- * Sign up — account creation entry point using the existing Supabase auth flows.
+ * Sign up — account creation entry point using Supabase auth (Precision Intelligence light theme).
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
+import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase } from "@/lib/supabase";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
@@ -93,114 +95,113 @@ export default function Signup() {
   const loginHref = `/login${search}`;
 
   return (
-    <div className="min-h-screen px-4 py-16" style={{ background: "radial-gradient(circle at 50% 0%, rgba(255,176,0,0.12), transparent 32%), #0d0520" }}>
-      <div className="mx-auto grid min-h-[calc(100vh-8rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-        <div>
-          <Link href="/" className="mb-8 inline-flex items-center gap-2.5">
-            <img src="/logo-r.png" alt="" width={34} height={34} className="h-8 w-8 object-contain opacity-95" />
-            <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              ReadyForRobots
-            </span>
-          </Link>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: "#FFB000" }}>
-            {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Create your SIGNAL workspace"}
-          </p>
-          <h1 className="max-w-xl text-4xl font-black leading-tight text-white md:text-5xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-            {hubspotIntent
-              ? "Sign up, then SIGNAL links HubSpot automatically."
-              : "Turn robot demand signals into a working pipeline."}
-          </h1>
-          <p className="mt-5 max-w-lg text-sm leading-relaxed text-white/48">
-            {hubspotIntent
-              ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
-              : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
-          </p>
-        </div>
-
-        {status === "sent" ? (
-          <div className="rounded-3xl border border-emerald-500/30 px-6 py-8 text-center" style={{ background: "rgba(52,211,153,0.06)" }}>
-            <h2 className="text-xl font-bold text-white">Check your email</h2>
-            <p className="mt-3 text-sm text-white/50">
-              We sent a magic link to <span className="text-emerald-300">{email}</span>.
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header />
+      <main className="flex-1 px-4 pt-24 pb-16">
+        <div className="mx-auto grid w-full max-w-5xl items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div>
+            <p className="section-eyebrow mb-3">
+              {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Create your SIGNAL workspace"}
             </p>
-            <button type="button" onClick={() => setStatus("idle")} className="mt-6 text-xs text-white/40 hover:text-white/70">
-              Use a different email
-            </button>
-          </div>
-        ) : (
-          <div className="rounded-3xl border border-white/10 p-6 shadow-2xl shadow-black/40" style={{ background: "rgba(255,255,255,0.04)" }}>
-            <h2 className="text-xl font-bold text-white">{hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}</h2>
-            <p className="mt-2 text-sm text-white/42">
+            <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
               {hubspotIntent
-                ? "Email + full name required. Next step: one-click HubSpot authorize."
-                : params.get("next")
-                  ? "Continue in one tap with Google — or use a magic link below."
-                  : "Create an account with Google, GitHub, or a magic link."}
-            </p>
-            {hubspotIntent && (
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full name"
-                className="mt-4 w-full rounded-xl border border-white/15 bg-transparent px-3 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-amber-400/60"
-              />
-            )}
-            <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
-              <button
-                type="button"
-                onClick={() => void oauth("google")}
-                disabled={!supabase}
-                className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/5 disabled:opacity-40"
-              >
-                Sign up with Google
-              </button>
-              <button
-                type="button"
-                onClick={() => void oauth("github")}
-                disabled={!supabase}
-                className="w-full rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/5 disabled:opacity-40"
-              >
-                Sign up with GitHub
-              </button>
-            </div>
-            <div className="my-5 flex items-center gap-3">
-              <span className="h-px flex-1 bg-white/10" />
-              <span className="text-[10px] uppercase tracking-widest text-white/30">or</span>
-              <span className="h-px flex-1 bg-white/10" />
-            </div>
-            <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@robotcompany.com"
-                disabled={status === "sending"}
-                className="w-full rounded-xl border border-white/15 bg-transparent px-3 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-amber-400/60"
-              />
-              {status === "error" && (
-                <p className="rounded-lg border border-red-500/30 px-3 py-2 text-xs text-red-300">{errMsg}</p>
-              )}
-              <button
-                type="submit"
-                disabled={status === "sending" || !email.trim()}
-                className="w-full rounded-xl px-4 py-3 text-sm font-black text-black transition-all hover:-translate-y-0.5 disabled:opacity-40"
-                style={{ background: "#FFB000" }}
-              >
-                {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Send signup link"}
-              </button>
-            </form>
-            <p className="mt-5 text-center text-xs text-white/35">
-              Already have an account?{" "}
-              <Link href={loginHref} className="font-semibold" style={{ color: "#03DAC5" }}>
-                Sign in
-              </Link>
+                ? "Sign up, then SIGNAL links HubSpot automatically."
+                : "Turn robot demand signals into a working pipeline."}
+            </h1>
+            <p className="mt-5 max-w-lg text-sm leading-relaxed text-gray-600">
+              {hubspotIntent
+                ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
+                : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
             </p>
           </div>
-        )}
-      </div>
+
+          {status === "sent" ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center">
+              <h2 className="text-xl font-bold text-gray-900">Check your email</h2>
+              <p className="mt-3 text-sm text-gray-600">
+                We sent a magic link to <span className="font-semibold text-emerald-700">{email}</span>.
+              </p>
+              <button type="button" onClick={() => setStatus("idle")} className="mt-6 text-xs text-gray-500 hover:text-gray-800">
+                Use a different email
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="font-display text-xl font-bold text-gray-900">
+                {hubspotIntent ? "Sign up for HubSpot sync" : "Start free"}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {hubspotIntent
+                  ? "Email + full name required. Next step: one-click HubSpot authorize."
+                  : params.get("next")
+                    ? "Continue in one tap with Google — or use a magic link below."
+                    : "Create an account with Google, GitHub, or a magic link."}
+              </p>
+              {hubspotIntent && (
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Full name"
+                  className="mt-4 w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
+                />
+              )}
+              <div className={`${hubspotIntent ? "mt-4" : "mt-6"} flex flex-col gap-2`}>
+                <button
+                  type="button"
+                  onClick={() => void oauth("google")}
+                  disabled={!supabase}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Sign up with Google
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void oauth("github")}
+                  disabled={!supabase}
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                >
+                  Sign up with GitHub
+                </button>
+              </div>
+              <div className="my-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-gray-200" />
+                <span className="text-[10px] uppercase tracking-widest text-gray-400">or</span>
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
+              <form onSubmit={(e) => void magicLink(e)} className="space-y-3">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@robotcompany.com"
+                  disabled={status === "sending"}
+                  className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500"
+                />
+                {status === "error" && (
+                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">{errMsg}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={status === "sending" || !email.trim()}
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 disabled:opacity-40"
+                >
+                  {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Send signup link"}
+                </button>
+              </form>
+              <p className="mt-5 text-center text-xs text-gray-500">
+                Already have an account?{" "}
+                <Link href={loginHref} className="font-semibold text-emerald-600 hover:text-emerald-700">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 }

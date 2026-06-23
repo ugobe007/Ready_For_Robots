@@ -586,19 +586,19 @@ export default function Social() {
   const totalLeadPosts = (posts || []).filter((p) => p.company_id != null).length;
 
   return (
-    <div className="min-h-screen bg-[#0d0520] text-white">
+    <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
       <main className="max-w-4xl mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#03DAC5] mb-2">Content Studio</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#059669] mb-2">Content Studio</p>
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
             <h1 className="text-2xl font-bold">Daily Content Queue</h1>
-            <div className="text-[11px] text-white/40 font-mono flex gap-x-3">
+            <div className="text-[11px] text-gray-500 font-mono flex gap-x-3">
               {date && <span>{date}</span>}
               {generatedAt && <span>Generated {generatedAt}</span>}
             </div>
           </div>
-          <p className="text-sm text-white/55 max-w-2xl">
+          <p className="text-sm text-gray-500 max-w-2xl">
             Five SIGNAL-powered posts from today&apos;s hottest leads — built to grab attention and drive action.
             Edit, copy, publish to LinkedIn, or post to X.
           </p>
@@ -684,7 +684,7 @@ export default function Social() {
         )}
 
         {refreshing && (
-          <div className="mb-4 p-3 border border-violet-800/60 rounded-xl bg-violet-950/20 text-xs text-violet-300 font-mono">
+          <div className="mb-4 p-3 border border-violet-800/60 rounded-xl bg-violet-950/20 text-xs text-emerald-600 font-mono">
             Generating a fresh batch — usually takes 30–60 seconds. Your current posts stay visible below.
           </div>
         )}

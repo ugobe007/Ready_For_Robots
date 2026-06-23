@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight, BarChart3, Bot, Radio, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import {
   fetchWithTimeout,
   getApiBase,
@@ -106,10 +107,10 @@ function signalBullets(fullText: string | undefined): string[] {
 }
 
 
-const TEAL = "#03DAC5";
+const TEAL = "#059669";
 const AMBER = "#FFB000";
 const EMERALD = "#34d399";
-const PURPLE = "#a78bfa";
+const PURPLE = "#10b981";
 const NEWSLETTER_SESSION_KEY = "newsletter_edition_v2";
 const NEWSLETTER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_BENCH_KEY = "newsletter_humanoid_report_v1";
@@ -154,7 +155,7 @@ function NlSurface({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: accent }}>{kicker}</p>
                 {title ? (
-                  <h2 className="mt-0.5 text-[15px] font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                     {title}
                   </h2>
                 ) : null}
@@ -183,7 +184,7 @@ function NlBadge({ label, color }: { label: string; color: string }) {
 function NlStatCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div className="border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/35">{label}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-400">{label}</p>
       <p
         className="mt-1 font-mono text-lg font-semibold leading-none"
         style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}
@@ -205,7 +206,7 @@ function NlDataRow({
 }) {
   return (
     <li
-      className={`group border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-white/[0.03] ${className}`}
+      className={`group border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-white ${className}`}
       style={accent ? { borderLeft: `2px solid ${accent}55` } : undefined}
     >
       {children}
@@ -354,14 +355,14 @@ export default function Newsletter() {
   const watchItems = (brief?.watch_next || []).map((w) => (typeof w === "string" ? w : "")).filter(Boolean).slice(0, 3);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="flex-1 px-4 pb-20 pt-24 lg:px-6">
         <div className="mx-auto max-w-5xl">
 
           <header
             className="mb-6 overflow-hidden rounded-lg border border-white/[0.09]"
-            style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.06), rgba(124,58,237,0.05) 55%, rgba(255,176,0,0.03))" }}
+            style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.06), rgba(5,150,105,0.05) 55%, rgba(255,176,0,0.03))" }}
           >
             <div className="flex">
               <div className="w-[3px] shrink-0" style={{ background: TEAL }} />
@@ -370,10 +371,10 @@ export default function Newsletter() {
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: TEAL }} />
                   Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"}
                 </p>
-                <h1 className="text-2xl font-semibold leading-tight text-white lg:text-[1.75rem]" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h1 className="text-2xl font-semibold leading-tight text-gray-900 lg:text-[1.75rem]" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {headline}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">{subheadline}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">{subheadline}</p>
 
                 <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/[0.08] bg-white/[0.08] md:grid-cols-4">
                   <NlStatCell label="Edition" value={edition?.latestEdition?.edition || "—"} />
@@ -388,13 +389,13 @@ export default function Newsletter() {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     placeholder="work email"
-                    className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-teal-400/40"
+                    className="min-w-0 flex-1 rounded-md border border-gray-200 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-teal-400/40"
                   />
                   <button
                     type="submit"
                     disabled={subStatus === "submitting"}
                     className="shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
-                    style={{ color: "#0d0520", background: AMBER }}
+                    style={{ color: "#111827", background: AMBER }}
                   >
                     {subStatus === "submitting" ? "Subscribing…" : "Subscribe"}
                   </button>
@@ -406,13 +407,13 @@ export default function Newsletter() {
           </header>
 
           {loadStatus === "loading" && (
-            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-white/50">
+            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-gray-500">
               Loading today&apos;s brief… {loadSec > 3 ? `${loadSec}s` : ""}
             </div>
           )}
 
           {loadStatus === "error" && (
-            <div className="mb-5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-white/55">
+            <div className="mb-5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-gray-500">
               <p>Brief is refreshing — reload in a moment.</p>
               <button type="button" onClick={() => window.location.reload()} className="mt-2 text-xs font-semibold" style={{ color: TEAL }}>
                 Reload
@@ -422,7 +423,7 @@ export default function Newsletter() {
 
           {brief?.executive_take && (
             <NlSurface accent={PURPLE} icon={Sparkles} kicker="AI market analysis" title="Executive read">
-              <p className="text-sm leading-relaxed text-white/75">{cleanScrapedText(brief.executive_take)}</p>
+              <p className="text-sm leading-relaxed text-gray-700">{cleanScrapedText(brief.executive_take)}</p>
 
               {(macroItems.length > 0 || stratItems.length > 0) && (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -439,7 +440,7 @@ export default function Newsletter() {
                           return (
                             <NlDataRow key={i} accent={EMERALD}>
                               {title && <p className="text-sm font-medium" style={{ color: EMERALD }}>{title}</p>}
-                              {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-500">{detail}</p>}
                             </NlDataRow>
                           );
                         })}
@@ -459,7 +460,7 @@ export default function Newsletter() {
                           return (
                             <NlDataRow key={i} accent={AMBER}>
                               {title && <p className="text-sm font-medium" style={{ color: AMBER }}>{title}</p>}
-                              {detail && <p className="mt-1 text-xs leading-relaxed text-white/50">{detail}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-500">{detail}</p>}
                             </NlDataRow>
                           );
                         })}
@@ -474,7 +475,7 @@ export default function Newsletter() {
                   {riskItems.length > 0 && (
                     <div className="rounded-md border border-red-400/15 bg-red-400/[0.04] px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Risks</p>
-                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-white/55">
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-500">
                         {riskItems.map((r, i) => <li key={i}>{r}</li>)}
                       </ul>
                     </div>
@@ -482,7 +483,7 @@ export default function Newsletter() {
                   {watchItems.length > 0 && (
                     <div className="rounded-md border border-teal-400/15 bg-teal-400/[0.04] px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Watch next</p>
-                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-white/55">
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-500">
                         {watchItems.map((w, i) => <li key={i}>{w}</li>)}
                       </ul>
                     </div>
@@ -504,13 +505,13 @@ export default function Newsletter() {
                 {researchFindings.map((finding, index) => (
                   <NlDataRow key={`${finding.company_id || finding.company}-${index}`} accent={AMBER}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-white">{cleanScrapedText(finding.company) || "Lead"}</span>
+                      <span className="text-sm font-semibold text-gray-900">{cleanScrapedText(finding.company) || "Lead"}</span>
                       <NlBadge label={cleanScrapedText(finding.category) || "Research"} color={AMBER} />
                       {finding.industry && (
-                        <span className="text-[10px] text-white/35">{cleanScrapedText(finding.industry)}</span>
+                        <span className="text-[10px] text-gray-400">{cleanScrapedText(finding.industry)}</span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-white/60">
+                    <p className="mt-1.5 text-sm leading-relaxed text-gray-600">
                       {cleanScrapedText(finding.summary || finding.title)}
                     </p>
                     <div className="mt-2">
@@ -542,11 +543,11 @@ export default function Newsletter() {
                         className="rounded-md border border-white/[0.08] bg-black/20 px-3 py-3"
                         style={{ borderTop: `2px solid ${rankColor}` }}
                       >
-                        <p className="text-[9px] font-semibold uppercase tracking-widest text-white/35">
+                        <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">
                           {["Leader", "2nd", "3rd"][i]}
                         </p>
-                        <p className="mt-1 text-sm font-semibold text-white">{r.name}</p>
-                        <p className="text-xs text-white/40">{r.vendor}</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-900">{r.name}</p>
+                        <p className="text-xs text-gray-500">{r.vendor}</p>
                         <p className="mt-2 font-mono text-2xl font-bold leading-none" style={{ color: rankColor, fontFamily: "'JetBrains Mono', monospace" }}>
                           {r.score}
                         </p>
@@ -558,7 +559,7 @@ export default function Newsletter() {
 
               {((benchReport.key_findings as string[]) ?? []).length > 0 && (
                 <details className="group rounded-md border border-white/[0.07] bg-black/15">
-                  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-white/40 transition-colors hover:text-white/55 [&::-webkit-details-marker]:hidden">
+                  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-gray-500 [&::-webkit-details-marker]:hidden">
                     <span className="inline-flex items-center gap-2">
                       <span
                         className="inline-block text-[10px] transition-transform group-open:rotate-90"
@@ -567,14 +568,14 @@ export default function Newsletter() {
                         ▸
                       </span>
                       Key findings
-                      <span className="font-mono normal-case tracking-normal text-white/30">
+                      <span className="font-mono normal-case tracking-normal text-gray-400">
                         ({((benchReport.key_findings as string[]) ?? []).length})
                       </span>
                     </span>
                   </summary>
                   <ul className="space-y-2 border-t border-white/[0.06] px-3 py-3">
                     {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
-                      <li key={i} className="flex gap-2 text-sm leading-relaxed text-white/65">
+                      <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-600">
                         <span className="mt-2 h-1 w-1 shrink-0 rounded-full" style={{ background: PURPLE }} />
                         <span>{f}</span>
                       </li>
@@ -583,7 +584,7 @@ export default function Newsletter() {
                 </details>
               )}
 
-              <div className="mt-3 flex flex-wrap gap-3 text-[11px] font-mono text-white/40" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <div className="mt-3 flex flex-wrap gap-3 text-[11px] font-mono text-gray-500" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                 <span>{String(benchReport.total_robots ?? 0)} scored</span>
                 <span>{String(benchReport.available_count ?? 0)} available</span>
                 <span>{String(benchReport.pilot_count ?? 0)} pilot</span>
@@ -592,7 +593,7 @@ export default function Newsletter() {
           )}
 
           {loadStatus === "ready" && stories.length === 0 && (
-            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-white/50">
+            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-gray-500">
               Stories are still syncing — reload in a moment.
             </div>
           )}
@@ -619,7 +620,7 @@ export default function Newsletter() {
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <NlBadge label={category} color={color} />
                         {story.signalStrength ? (
-                          <span className="font-mono text-[10px] text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          <span className="font-mono text-[10px] text-gray-400" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                             {story.signalStrength}/10
                           </span>
                         ) : null}
@@ -637,15 +638,15 @@ export default function Newsletter() {
                           <span style={{ color }}>{cleanScrapedText(story.company || story.headline)}</span>
                         )}
                       </h3>
-                      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-white/55">
+                      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-gray-500">
                         {leadPreviewSentences(story.summary || story.snippet, 3, 420)
                           || "SIGNAL is tracking automation signals for this account."}
                       </p>
                       {bullets.length > 0 && (
-                        <ul className="mt-2 space-y-1 border-t border-white/[0.06] pt-2 text-[11px] text-white/45">
+                        <ul className="mt-2 space-y-1 border-t border-white/[0.06] pt-2 text-[11px] text-gray-500">
                           {bullets.slice(0, 2).map((b, bi) => (
                             <li key={bi} className="flex gap-1.5">
-                              <span className="text-white/25">·</span>
+                              <span className="text-gray-400">·</span>
                               <span>{b}</span>
                             </li>
                           ))}
@@ -667,16 +668,17 @@ export default function Newsletter() {
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
               Activate SIGNAL from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
-            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-white/40 hover:text-white/70">
+            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-gray-500 hover:text-gray-600">
               Live signals <BarChart3 className="h-4 w-4" />
             </Link>
-            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-white/40 hover:text-white/70">
+            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-gray-500 hover:text-gray-600">
               Intelligence report <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

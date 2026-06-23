@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import RobotAvatar from "@/components/RobotAvatar";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { LiveDot } from "@/components/marketing/primitives";
 
 type MarqueeRobot = {
   name: string;
@@ -31,33 +32,31 @@ const STATUS_LABEL: Record<string, string> = {
   discontinued: "Discontinued",
 };
 
-function scoreColor(score: number) {
-  if (score >= 65) return "#34d399";
-  if (score >= 45) return "#fbbf24";
-  return "#f87171";
+function scoreClass(score: number) {
+  if (score >= 65) return "text-emerald-600";
+  if (score >= 45) return "text-amber-600";
+  return "text-red-500";
 }
 
 function MarqueeItem({ robot }: { robot: MarqueeRobot }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-white/10 px-3 py-1.5" style={{ background: "rgba(255,255,255,0.03)" }}>
+    <span className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
       <RobotAvatar vendor={robot.vendor} modelSlug={robot.modelSlug} size="sm" />
       {robot.productUrl ? (
         <a
           href={robot.productUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-bold text-white/85 transition-colors hover:text-violet-200 hover:underline underline-offset-2"
+          className="text-xs font-bold text-gray-900 transition-colors hover:text-emerald-700 hover:underline underline-offset-2"
         >
           {robot.name}
         </a>
       ) : (
-        <span className="text-xs font-bold text-white/85">{robot.name}</span>
+        <span className="text-xs font-bold text-gray-900">{robot.name}</span>
       )}
-      <span className="text-[10px] text-white/30">{robot.vendor}</span>
-      <span className="font-mono text-[11px] font-bold" style={{ color: scoreColor(robot.score), fontFamily: "'JetBrains Mono', monospace" }}>
-        {robot.score}
-      </span>
-      <span className="text-[9px] font-bold uppercase tracking-wider text-white/22">
+      <span className="text-[10px] text-gray-400">{robot.vendor}</span>
+      <span className={`font-mono-data text-[11px] font-bold ${scoreClass(robot.score)}`}>{robot.score}</span>
+      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
         {STATUS_LABEL[robot.status] ?? robot.status}
       </span>
     </span>
@@ -103,18 +102,14 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
 
   return (
     <div
-      className={compact ? "border-y border-white/6" : "border-b border-white/8"}
-      style={{ background: compact ? "rgba(124,58,237,0.04)" : "rgba(13,5,32,0.65)" }}
+      className={`border-y border-gray-100 bg-emerald-50/50 ${compact ? "" : "bg-slate-50"}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className={`mx-auto flex items-center gap-4 overflow-hidden ${compact ? "max-w-6xl px-6 py-3" : "max-w-5xl px-4 py-4 lg:px-6"}`}>
+      <div className={`container flex items-center gap-4 overflow-hidden ${compact ? "py-3" : "py-4"}`}>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full animate-pulse" style={{ background: "#a78bfa" }} />
-          <p
-            className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: "#a78bfa", fontFamily: compact ? "'Inter', system-ui, sans-serif" : "'JetBrains Mono', monospace" }}
-          >
+          <LiveDot />
+          <p className="whitespace-nowrap section-eyebrow mb-0 text-[10px]">
             {compact ? "Benchmark index" : "Live humanoid scores"}
           </p>
         </div>
@@ -142,8 +137,7 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
 
         <Link
           href="/robots"
-          className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold transition-colors hover:text-white/80"
-          style={{ color: "#c4b5fd" }}
+          className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700"
         >
           {compact ? "View all" : "Full index"}
           <ArrowRight className="h-3.5 w-3.5" />

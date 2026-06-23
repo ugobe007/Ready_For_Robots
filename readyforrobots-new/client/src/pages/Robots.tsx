@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
@@ -93,7 +94,7 @@ const HEIF_LABELS: Record<(typeof HEIF_DIMS)[number], string> = {
 
 const HEIF_COLORS: Record<(typeof HEIF_DIMS)[number], string> = {
   mobility: "#93c5fd",
-  manipulation: "#a78bfa",
+  manipulation: "#10b981",
   cognition: "#34d399",
   safety: "#fbbf24",
   data_pipeline: "#6ee7b7",
@@ -113,7 +114,7 @@ const INDEX_LABELS: Record<(typeof INDEX_DIMS)[number], string> = {
 
 const INDEX_COLORS = HEIF_COLORS;
 
-const TEAL = "#03DAC5";
+const TEAL = "#059669";
 const ROBOTS_SURFACE_KEY = "humanoid_robots_v2";
 const ROBOTS_SURFACE_TTL_MS = 3 * 60 * 60 * 1000;
 
@@ -150,10 +151,10 @@ function HeifBar({ value, dim }: { value: number; dim: (typeof HEIF_DIMS)[number
   const pct = (value / 4) * 100;
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
       </div>
-      <span className="text-[10px] font-mono text-white/45 w-8 text-right">{value.toFixed(1)}</span>
+      <span className="text-[10px] font-mono text-gray-500 w-8 text-right">{value.toFixed(1)}</span>
     </div>
   );
 }
@@ -162,10 +163,10 @@ function ScoreBar({ value, dim }: { value: number; dim: (typeof INDEX_DIMS)[numb
   const color = INDEX_COLORS[dim];
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${value}%`, background: color }} />
       </div>
-      <span className="text-[10px] font-mono text-white/45 w-7 text-right">{Math.round(value)}</span>
+      <span className="text-[10px] font-mono text-gray-500 w-7 text-right">{Math.round(value)}</span>
     </div>
   );
 }
@@ -251,7 +252,7 @@ function ConfidenceChip({ robot }: { robot: RobotRow }) {
 
 function RobotNameLink({ name, url }: { name: string; url?: string }) {
   if (!url) {
-    return <p className="font-bold text-white text-base leading-tight">{name}</p>;
+    return <p className="font-bold text-gray-900 text-base leading-tight">{name}</p>;
   }
   return (
     <a
@@ -259,7 +260,7 @@ function RobotNameLink({ name, url }: { name: string; url?: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="font-bold text-white text-base leading-tight transition-colors hover:text-violet-200 underline-offset-2 hover:underline"
+      className="font-bold text-gray-900 text-base leading-tight transition-colors hover:text-emerald-700 underline-offset-2 hover:underline"
     >
       {name}
     </a>
@@ -281,30 +282,30 @@ function AiStackPanel({ stack }: { stack: AiStack }) {
     ? MODEL_FAMILY_LABELS[stack.model_family] ?? stack.model_family
     : null;
   return (
-    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-violet-300/80 mb-2">AI stack</p>
-      <p className="text-sm font-semibold text-white">{stack.primary_model}</p>
-      {family ? <p className="text-[11px] text-white/45 mt-0.5">{family}</p> : null}
+    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-emerald-500/20 bg-emerald-600/[0.06] px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/80 mb-2">AI stack</p>
+      <p className="text-sm font-semibold text-gray-900">{stack.primary_model}</p>
+      {family ? <p className="text-[11px] text-gray-500 mt-0.5">{family}</p> : null}
       {stack.stack_layers && stack.stack_layers.length > 0 ? (
-        <p className="text-[11px] text-white/50 mt-2">
-          <span className="text-white/30">Layers: </span>
+        <p className="text-[11px] text-gray-500 mt-2">
+          <span className="text-gray-400">Layers: </span>
           {stack.stack_layers.join(" → ")}
         </p>
       ) : null}
       {stack.compute ? (
-        <p className="text-[11px] text-white/50 mt-1">
-          <span className="text-white/30">Compute: </span>
+        <p className="text-[11px] text-gray-500 mt-1">
+          <span className="text-gray-400">Compute: </span>
           {stack.compute}
         </p>
       ) : null}
       {stack.third_party && stack.third_party.length > 0 ? (
-        <p className="text-[11px] text-white/50 mt-1">
-          <span className="text-white/30">Partners / platform: </span>
+        <p className="text-[11px] text-gray-500 mt-1">
+          <span className="text-gray-400">Partners / platform: </span>
           {stack.third_party.join(", ")}
         </p>
       ) : null}
       {stack.unique_claim ? (
-        <p className="text-[11px] text-white/60 mt-2 leading-relaxed border-t border-white/8 pt-2">
+        <p className="text-[11px] text-gray-600 mt-2 leading-relaxed border-t border-gray-100 pt-2">
           {stack.unique_claim}
         </p>
       ) : null}
@@ -354,7 +355,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
         style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-white/15">#{rank}</span>
+        <span className="text-xl font-black text-gray-900/15">#{rank}</span>
         <RobotAvatar
           vendor={robot.vendor}
           name={robot.name}
@@ -376,23 +377,23 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               </span>
             ) : null}
           </div>
-          <p className="text-[11px] text-white/35 mt-0.5">{robot.vendor}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{robot.vendor}</p>
           {aiStack?.primary_model ? (
-            <p className="text-[10px] text-violet-300/70 mt-1 truncate max-w-md" title={aiStack.primary_model}>
+            <p className="text-[10px] text-emerald-600/70 mt-1 truncate max-w-md" title={aiStack.primary_model}>
               {aiStack.primary_model}
             </p>
           ) : null}
           <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 max-w-md">
             {HEIF_DIMS.map((d) => (
               <div key={d}>
-                <p className="text-[8px] text-white/25 mb-0.5 uppercase tracking-wider">{HEIF_LABELS[d]}</p>
+                <p className="text-[8px] text-gray-400 mb-0.5 uppercase tracking-wider">{HEIF_LABELS[d]}</p>
                 <HeifBar value={heifValue(robot, d)} dim={d} />
               </div>
             ))}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center">
-          <span className="text-[9px] text-white/30 uppercase tracking-widest">HEIF</span>
+          <span className="text-[9px] text-gray-400 uppercase tracking-widest">HEIF</span>
           <span
             className="text-2xl font-black"
             style={{
@@ -401,10 +402,10 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           >
             {heifTotal.toFixed(1)}
           </span>
-          <span className="text-[9px] text-white/30">/ 4.0</span>
+          <span className="text-[9px] text-gray-400">/ 4.0</span>
         </div>
         <div className="flex flex-col items-center justify-center">
-          <span className="text-[9px] text-white/30 uppercase tracking-widest">Index</span>
+          <span className="text-[9px] text-gray-400 uppercase tracking-widest">Index</span>
           <span
             className="text-2xl font-black"
             style={{
@@ -413,7 +414,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           >
             {Math.round(robot.score_total)}
           </span>
-          <span className="text-[9px] text-white/30">/ 100</span>
+          <span className="text-[9px] text-gray-400">/ 100</span>
         </div>
         <div className="flex items-center justify-center gap-2">
           {robot.product_url ? (
@@ -422,23 +423,23 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-white/25 hover:text-white/60 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ) : null}
-          {open ? <ChevronUp className="h-4 w-4 text-white/25" /> : <ChevronDown className="h-4 w-4 text-white/25" />}
+          {open ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
         </div>
       </button>
 
       {open && (
         <div className="px-5 pb-5 border-t border-white/7 pt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">HEIF · 0–4</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">HEIF · 0–4</p>
             <div className="space-y-2">
               {HEIF_DIMS.map((d) => (
                 <div key={d} className="flex items-center gap-3">
-                  <span className="text-[11px] text-white/45 w-24 shrink-0">{INDEX_LABELS[d]}</span>
+                  <span className="text-[11px] text-gray-500 w-24 shrink-0">{INDEX_LABELS[d]}</span>
                   <div className="flex-1">
                     <HeifBar value={heifValue(robot, d)} dim={d} />
                   </div>
@@ -447,11 +448,11 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Live index · 0–100</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Live index · 0–100</p>
             <div className="space-y-2">
               {INDEX_DIMS.map((d) => (
                 <div key={d} className="flex items-center gap-3">
-                  <span className="text-[11px] text-white/45 w-24 shrink-0">{INDEX_LABELS[d]}</span>
+                  <span className="text-[11px] text-gray-500 w-24 shrink-0">{INDEX_LABELS[d]}</span>
                   <div className="flex-1">
                     <ScoreBar value={indexValue(robot, d)} dim={d} />
                   </div>
@@ -461,7 +462,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/25">Published specs</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Published specs</p>
               <ConfidenceChip robot={enriched} />
             </div>
             <div className="grid grid-cols-2 gap-1.5">
@@ -483,13 +484,13 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
                 .map(([label, value, key]) => {
                   const prov = provenance[key];
                   return (
-                    <div key={label} className="rounded-lg px-2.5 py-1.5 bg-white/[0.03] border border-white/6">
+                    <div key={label} className="rounded-lg px-2.5 py-1.5 bg-white border border-gray-100">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <p className="text-[9px] text-white/30">{label}</p>
+                        <p className="text-[9px] text-gray-400">{label}</p>
                         {prov ? <ProvBadge entry={prov} /> : null}
                       </div>
                       <p
-                        className="text-[11px] font-semibold text-white/70"
+                        className="text-[11px] font-semibold text-gray-600"
                         title={key === "total_dof" && specs.dof_note != null ? String(specs.dof_note) : undefined}
                       >
                         {String(value)}
@@ -589,7 +590,7 @@ export default function Robots() {
     : null;
 
   return (
-    <div className="min-h-screen" style={{ background: "#0d0520", color: "#fff" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
       <Header />
 
       {/* Compact page header */}
@@ -610,7 +611,7 @@ export default function Robots() {
                 href={r.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/40 hover:text-white/70 underline underline-offset-4 decoration-white/15"
+                className="text-gray-500 hover:text-gray-600 underline underline-offset-4 decoration-white/15"
               >
                 HEIR 2026 · {r.title} ↗
               </a>
@@ -637,13 +638,13 @@ export default function Robots() {
             <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: TEAL }}>
               Live humanoid index
             </p>
-            <h2 className="mt-1 text-xl font-bold text-white">Ranked by HEIF · dual 0–4 and 0–100</h2>
+            <h2 className="mt-1 text-xl font-bold text-gray-900">Ranked by HEIF · dual 0–4 and 0–100</h2>
             <p className="mt-1 text-[13px] text-white/38">
               Known vendors use HEIR 2026 research scores; others infer from datasheets. Index = HEIF × 25.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1 rounded-lg border border-white/10 p-0.5">
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5">
               {(["all", "available", "pilot", "research"] as const).map((f) => (
                 <button
                   key={f}
@@ -660,12 +661,12 @@ export default function Robots() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/35">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
               <span>Sort</span>
               <select
                 value={sortDim}
                 onChange={(e) => setSortDim(e.target.value)}
-                className="rounded-md border border-white/10 bg-transparent px-2 py-1 text-white/55 text-[11px] outline-none"
+                className="rounded-md border border-gray-200 bg-transparent px-2 py-1 text-gray-500 text-[11px] outline-none"
               >
                 {sortOptions.map((d) => (
                   <option key={d.value} value={d.value}>
@@ -674,17 +675,17 @@ export default function Robots() {
                 ))}
               </select>
             </div>
-            <span className="text-[11px] text-white/25">{filtered.length} robots</span>
+            <span className="text-[11px] text-gray-400">{filtered.length} robots</span>
           </div>
         </div>
 
         <div className="space-y-2">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-20 text-white/30">
+            <div className="flex items-center justify-center gap-2 py-20 text-gray-400">
               <RefreshCw className="h-4 w-4 animate-spin" /> Loading…
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-20 text-center text-white/30">No robots match this filter.</p>
+            <p className="py-20 text-center text-gray-400">No robots match this filter.</p>
           ) : (
             filtered.map((robot, i) => <RobotCard key={robot.model_slug} robot={robot} rank={i + 1} />)
           )}
@@ -701,23 +702,24 @@ export default function Robots() {
       </section>
 
       {/* Footer CTA — inline, no panel */}
-      <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-white/40">
+      <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-gray-500">
         <p>
           Looking for robots for your facility?{" "}
-          <Link href="/find-robots" className="text-violet-300/90 hover:text-violet-200 underline underline-offset-4">
+          <Link href="/find-robots" className="text-emerald-600/90 hover:text-emerald-700 underline underline-offset-4">
             Submit your use case
           </Link>
           {" · "}
-          <Link href="/" className="text-white/50 hover:text-white/75 underline underline-offset-4">
+          <Link href="/" className="text-gray-500 hover:text-gray-700 underline underline-offset-4">
             Scan your operation
           </Link>
           {" · "}
-          <Link href="/benchmark" className="text-white/50 hover:text-white/75 underline underline-offset-4">
+          <Link href="/benchmark" className="text-gray-500 hover:text-gray-700 underline underline-offset-4">
             Evaluation criteria
           </Link>
           <ArrowRight className="inline h-3.5 w-3.5 ml-1 opacity-40" />
         </p>
       </section>
+      <SiteFooter />
     </div>
   );
 }

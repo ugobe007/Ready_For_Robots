@@ -56,7 +56,7 @@ type IntegrationConnection = {
   secretRef?: string | null;
 };
 
-const cardClass = "rounded-2xl border border-white/10 bg-white/[0.025] p-5";
+const cardClass = "rounded-2xl border border-gray-200 bg-white p-5";
 
 const marketplaceTeaserFeatures = [
   {
@@ -105,8 +105,8 @@ const marketplaceTeaserFeatures = [
     ],
   },
 ];
-const inputClass = "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25";
-const labelClass = "mb-1 block text-[10px] uppercase tracking-widest text-white/30";
+const inputClass = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400";
+const labelClass = "mb-1 block text-[10px] uppercase tracking-widest text-gray-400";
 
 function splitLines(value: string) {
   return value.split("\n").map((x) => x.trim()).filter(Boolean);
@@ -416,21 +416,21 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-24">
         <AdminNav />
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Marketplace workspace
         </p>
-        <h1 className="text-2xl font-black text-white" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
           Profiles, RFPs, proposals, quotes, invoices, and connections
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/45">
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
           Build the buy-side RFP workflow and the vendor-side document exchange. SIGNAL can use this context to route official proposals, specs, quotes, invoices, and PO milestones between both sides of the marketplace.
         </p>
         {message && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{message}</p>}
-        {busy && <p className="mt-4 text-xs text-white/35">Working...</p>}
+        {busy && <p className="mt-4 text-xs text-gray-400">Working...</p>}
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <section className={cardClass}>
@@ -444,7 +444,7 @@ export default function Marketplace() {
               <Input label="Website" value={orgForm.website} onChange={(website) => setOrgForm((s) => ({ ...s, website }))} />
               <Textarea label="Description" value={orgForm.description} rows={3} onChange={(description) => setOrgForm((s) => ({ ...s, description }))} />
               <Textarea label="Decision makers JSON" value={orgForm.decision_makers} rows={3} onChange={(decision_makers) => setOrgForm((s) => ({ ...s, decision_makers }))} />
-              <button onClick={() => void saveOrganization()} className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c]">Save profile</button>
+              <button onClick={() => void saveOrganization()} className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#111827]">Save profile</button>
             </div>
           </section>
 
@@ -454,8 +454,8 @@ export default function Marketplace() {
               <select value={assetForm.asset_type} onChange={(e) => setAssetForm((s) => ({ ...s, asset_type: e.target.value }))} className={inputClass}>
                 {["deck", "product_spec", "case_study", "pricing", "compliance", "proposal", "other"].map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
-              <input type="file" onChange={(e) => setAssetFile(e.target.files?.[0] || null)} className="text-sm text-white/55" />
-              <button onClick={() => void uploadAsset()} className="rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/75">Upload asset</button>
+              <input type="file" onChange={(e) => setAssetFile(e.target.files?.[0] || null)} className="text-sm text-gray-500" />
+              <button onClick={() => void uploadAsset()} className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700">Upload asset</button>
               <ListEmpty items={assets} empty="No assets uploaded yet." render={(asset) => `${asset.assetType}: ${asset.filename}`} />
             </div>
           </section>
@@ -468,7 +468,7 @@ export default function Marketplace() {
               <Textarea label="Technical requirements, one per line" value={rfqForm.requirements} rows={4} onChange={(requirements) => setRfqForm((s) => ({ ...s, requirements }))} />
               <Input label="Due date/time" type="datetime-local" value={rfqForm.due_at} onChange={(due_at) => setRfqForm((s) => ({ ...s, due_at }))} />
               <Textarea label="Technical specs JSON" value={rfqForm.technical_specs} rows={3} onChange={(technical_specs) => setRfqForm((s) => ({ ...s, technical_specs }))} />
-              <button onClick={() => void createRfq()} className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#160b2c]">Create draft RFP</button>
+              <button onClick={() => void createRfq()} className="rounded-lg border border-amber-400 bg-amber-400 px-3 py-2 text-xs font-bold text-[#111827]">Create draft RFP</button>
               <ListEmpty
                 items={rfqs}
                 empty="No RFPs yet."
@@ -487,7 +487,7 @@ export default function Marketplace() {
               <Input label="Document title" value={docForm.title} onChange={(title) => setDocForm((s) => ({ ...s, title }))} />
               <Input label="Document number" value={docForm.document_number} onChange={(document_number) => setDocForm((s) => ({ ...s, document_number }))} />
               <Input label="Amount" value={docForm.amount} onChange={(amount) => setDocForm((s) => ({ ...s, amount }))} />
-              <button onClick={() => void createCommercialDocument()} className="rounded-lg border border-white/15 bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/75">Create document</button>
+              <button onClick={() => void createCommercialDocument()} className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700">Create document</button>
               <ListEmpty items={documents} empty="No commercial documents yet." render={(doc) => `${doc.documentType}: ${doc.title || doc.documentNumber || doc.status}`} />
             </div>
           </section>
@@ -500,7 +500,7 @@ export default function Marketplace() {
               <Input label="API base URL" value={connectionForm.base_url} onChange={(base_url) => setConnectionForm((s) => ({ ...s, base_url }))} />
               <Input label="Secret reference" value={connectionForm.secret_ref} onChange={(secret_ref) => setConnectionForm((s) => ({ ...s, secret_ref }))} />
               <Textarea label="Allowed scopes, one per line" value={connectionForm.allowed_scopes} rows={4} onChange={(allowed_scopes) => setConnectionForm((s) => ({ ...s, allowed_scopes }))} />
-              <div className="rounded-xl border border-white/8 bg-black/10 p-3 text-xs text-white/42">
+              <div className="rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-white/42">
                 Store credentials in your secret manager, then paste only a reference here. Ready For Robots stores `secret_ref`, connection URLs, scopes, and config, not raw API keys.
               </div>
             </div>
@@ -512,7 +512,7 @@ export default function Marketplace() {
                   key={connection.id}
                   type="button"
                   onClick={() => void issuePartnerApiKey(connection.id, connection.name)}
-                  className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] font-bold text-white/70"
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-[11px] font-bold text-gray-600"
                 >
                   Issue MCP API key for {connection.name}
                 </button>
@@ -527,16 +527,16 @@ export default function Marketplace() {
 
 function MarketplaceTeaser() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-24">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Robot automation marketplace
         </p>
-        <h1 className="max-w-3xl text-3xl font-black text-white sm:text-4xl" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="max-w-3xl text-3xl font-black text-gray-900 sm:text-4xl" style={{ fontFamily: "'Sora', system-ui" }}>
           RFPs, proposals, quotes, and procurement — in one workspace
         </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/45">
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-500">
           Ready For Robots connects buy-side automation teams with robot vendors through structured RFPs, shared materials,
           and official commercial documents. SIGNAL uses this context to route proposals, specs, and PO milestones between both sides.
         </p>
@@ -549,20 +549,20 @@ function MarketplaceTeaser() {
                 <div className="mb-4 flex items-start gap-3">
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                    style={{ color: "#03DAC5", background: "rgba(3,218,197,0.08)", border: "1px solid rgba(3,218,197,0.2)" }}
+                    style={{ color: "#059669", background: "rgba(3,218,197,0.08)", border: "1px solid rgba(3,218,197,0.2)" }}
                   >
                     <Icon className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-white">{feature.title}</h2>
+                    <h2 className="text-lg font-black text-gray-900">{feature.title}</h2>
                     <p className="mt-1 text-sm leading-relaxed text-white/42">{feature.desc}</p>
                   </div>
                 </div>
                 <div className="grid gap-2">
                   {feature.preview.map((row) => (
-                    <div key={row.label} className="rounded-xl border border-white/8 bg-black/10 px-3 py-2.5">
+                    <div key={row.label} className="rounded-xl border border-gray-100 bg-black/10 px-3 py-2.5">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-white/28">{row.label}</p>
-                      <p className="mt-1 text-xs text-white/55">{row.value}</p>
+                      <p className="mt-1 text-xs text-gray-500">{row.value}</p>
                     </div>
                   ))}
                 </div>
@@ -574,8 +574,8 @@ function MarketplaceTeaser() {
         <section className={`${cardClass} mt-4 border-amber-400/25 bg-amber-400/[0.04]`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-bold text-white">Ready to publish an RFP or respond as a vendor?</p>
-              <p className="mt-1 text-xs text-white/40">
+              <p className="text-sm font-bold text-gray-900">Ready to publish an RFP or respond as a vendor?</p>
+              <p className="mt-1 text-xs text-gray-500">
                 Create a free account to save profiles, upload materials, and manage official documents.
               </p>
             </div>
@@ -583,13 +583,13 @@ function MarketplaceTeaser() {
               <Link
                 href="/signup?next=/marketplace"
                 className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold"
-                style={{ color: "#160b2c", background: "#FFB000" }}
+                style={{ color: "#111827", background: "#FFB000" }}
               >
                 Create account <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <Link
                 href="/login?next=/marketplace"
-                className="inline-flex items-center rounded-xl border border-white/15 px-4 py-2.5 text-xs font-bold text-white/70"
+                className="inline-flex items-center rounded-xl border border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-600"
               >
                 Sign in
               </Link>
@@ -603,7 +603,7 @@ function MarketplaceTeaser() {
 
 function ShellMessage({ message }: { message: string }) {
   return (
-    <div className="min-h-screen px-4 pt-24 text-center text-white/50" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen px-4 pt-24 text-center text-gray-500 bg-slate-50">
       <Header />
       {message}
     </div>
@@ -613,8 +613,8 @@ function ShellMessage({ message }: { message: string }) {
 function SectionTitle({ title, kicker }: { title: string; kicker: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-lg font-black text-white">{title}</h2>
-      <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] font-bold text-white/35">{kicker}</span>
+      <h2 className="text-lg font-black text-gray-900">{title}</h2>
+      <span className="rounded-full border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-400">{kicker}</span>
     </div>
   );
 }
@@ -638,11 +638,11 @@ function Textarea({ label, value, onChange, rows }: { label: string; value: stri
 }
 
 function ListEmpty<T>({ items, empty, render, action }: { items: T[]; empty: string; render: (item: T) => string; action?: (item: T) => ReactNode }) {
-  if (!items.length) return <p className="rounded-xl border border-white/8 bg-black/10 p-3 text-xs text-white/35">{empty}</p>;
+  if (!items.length) return <p className="rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-gray-400">{empty}</p>;
   return (
     <div className="grid gap-2">
       {items.slice(0, 5).map((item, index) => (
-        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/10 p-3 text-xs text-white/50">
+        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-gray-500">
           <span className="truncate">{render(item)}</span>
           {action?.(item)}
         </div>

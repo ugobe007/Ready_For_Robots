@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import AutonomyDial from "@/components/AutonomyDial";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -145,7 +146,7 @@ export default function Profile() {
 
   if (!supabase) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center text-white/50" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 px-4 text-center text-gray-500 bg-slate-50">
         <Header />
         <p>Supabase is not configured in this build.</p>
       </div>
@@ -154,7 +155,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 text-center text-white/50" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 text-center text-gray-500 bg-slate-50">
         <Header />
         Loading…
       </div>
@@ -163,9 +164,9 @@ export default function Profile() {
 
   if (!session) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
         <Header />
-        <p className="text-white/60 mb-4">Sign in to view your workspace.</p>
+        <p className="text-gray-600 mb-4">Sign in to view your workspace.</p>
         <Link href="/login" className="text-violet-400 underline text-sm">
           Go to login
         </Link>
@@ -174,55 +175,55 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="flex-1 pt-24 pb-12 px-4 max-w-lg mx-auto w-full">
-        <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
           Your workspace
         </h1>
-        <p className="text-xs text-white/40 mb-6">Same data as before — powered by SIGNAL + FastAPI.</p>
+        <p className="text-xs text-gray-500 mb-6">Same data as before — powered by SIGNAL + FastAPI.</p>
         {err && <p className="text-sm text-red-300 mb-4 border border-red-500/30 rounded p-2">{err}</p>}
-        <div className="rounded-xl border border-white/10 p-4 space-y-2 mb-6" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <p className="text-[10px] uppercase tracking-widest text-white/30">Signed in as</p>
-          <p className="text-sm text-white font-medium">{me?.display_name || me?.email || session.user.email}</p>
-          <p className="text-xs text-white/40">{session.user.email}</p>
+        <div className="rounded-xl border border-gray-200 p-4 space-y-2 mb-6" >
+          <p className="text-[10px] uppercase tracking-widest text-gray-400">Signed in as</p>
+          <p className="text-sm text-gray-900 font-medium">{me?.display_name || me?.email || session.user.email}</p>
+          <p className="text-xs text-gray-500">{session.user.email}</p>
         </div>
         {me?.entitlements && (
-          <div className="rounded-xl border border-violet-400/20 p-4 mb-6 space-y-3" style={{ background: "rgba(124,58,237,0.06)" }}>
+          <div className="rounded-xl border border-emerald-400/20 p-4 mb-6 space-y-3" style={{ background: "rgba(5,150,105,0.06)" }}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-violet-200/70">Workspace plan</p>
-                <p className="text-sm font-semibold text-white mt-0.5">{me.entitlements.display_name || "Free workspace"}</p>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-700/70">Workspace plan</p>
+                <p className="text-sm font-semibold text-gray-900 mt-0.5">{me.entitlements.display_name || "Free workspace"}</p>
               </div>
               {me.entitlements.plan !== "paid" && (
                 <Link
                   href={me.entitlements.upgrade_url || "/pricing"}
-                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
-                  style={{ background: "#7c3aed" }}
+                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-gray-900"
+                  style={{ background: "#059669" }}
                 >
                   Upgrade
                 </Link>
               )}
             </div>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div className="rounded-lg border border-white/8 px-2.5 py-2">
-                <p className="text-white/35 uppercase text-[9px] tracking-wider">Saved leads</p>
-                <p className="font-mono font-bold text-violet-200 mt-0.5">
+              <div className="rounded-lg border border-gray-100 px-2.5 py-2">
+                <p className="text-gray-400 uppercase text-[9px] tracking-wider">Saved leads</p>
+                <p className="font-mono font-bold text-emerald-700 mt-0.5">
                   {me.entitlements.saved_count ?? counts.saved}
                   {me.entitlements.saved_limit != null ? ` / ${me.entitlements.saved_limit}` : ""}
                 </p>
               </div>
-              <div className="rounded-lg border border-white/8 px-2.5 py-2">
-                <p className="text-white/35 uppercase text-[9px] tracking-wider">Pipeline</p>
-                <p className="font-mono font-bold text-violet-200 mt-0.5">
+              <div className="rounded-lg border border-gray-100 px-2.5 py-2">
+                <p className="text-gray-400 uppercase text-[9px] tracking-wider">Pipeline</p>
+                <p className="font-mono font-bold text-emerald-700 mt-0.5">
                   {me.entitlements.pipeline_limit ?? 50} leads
                 </p>
               </div>
             </div>
             {!me.entitlements.features?.research_updates && (
-              <p className="text-[10px] leading-relaxed text-white/40">
+              <p className="text-[10px] leading-relaxed text-gray-500">
                 SIGNAL research feed unlocks on Pro.{" "}
-                <Link href="/pricing?reason=research" className="text-violet-300 hover:text-violet-200">
+                <Link href="/pricing?reason=research" className="text-emerald-600 hover:text-emerald-700">
                   See pricing
                 </Link>
               </p>
@@ -235,19 +236,19 @@ export default function Profile() {
             { n: counts.reports, l: "Reports" },
             { n: counts.lists, l: "Lists" },
           ].map((x) => (
-            <div key={x.l} className="rounded-lg border border-white/10 p-3 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
-              <p className="text-lg font-mono font-bold text-violet-300">{x.n}</p>
-              <p className="text-[10px] text-white/35 uppercase">{x.l}</p>
+            <div key={x.l} className="rounded-lg border border-gray-200 p-3 text-center" >
+              <p className="text-lg font-mono font-bold text-emerald-600">{x.n}</p>
+              <p className="text-[10px] text-gray-400 uppercase">{x.l}</p>
             </div>
           ))}
         </div>
-        <div className="rounded-xl border border-white/10 mb-6 overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
+        <div className="rounded-xl border border-gray-200 mb-6 overflow-hidden" >
           <AutonomyDial
             mode={settings.scout_automation_level}
             onChange={(mode) => void saveSettings({ scout_automation_level: mode })}
           />
           <div className="space-y-3 p-4">
-            <label className="flex items-center justify-between gap-3 text-xs text-white/55">
+            <label className="flex items-center justify-between gap-3 text-xs text-gray-500">
               Forward buyer replies to me
               <input
                 type="checkbox"
@@ -260,22 +261,22 @@ export default function Profile() {
               onChange={(e) => setSettings((s) => ({ ...s, reply_forward_email: e.target.value }))}
               onBlur={() => void saveSettings({ reply_forward_email: settings.reply_forward_email })}
               placeholder={session.user.email || "Reply forwarding email"}
-              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400"
             />
-            <p className="text-[11px] text-white/35">
+            <p className="text-[11px] text-gray-400">
               {savingSettings ? "Saving communication settings..." : "Outreach sends from the ReadyForRobots domain. Replies route back into your SIGNAL workflow and can be forwarded here."}
             </p>
           </div>
         </div>
-        <div className="rounded-xl border border-white/10 mb-6 p-4 space-y-3" style={{ background: "rgba(255,255,255,0.03)" }}>
+        <div className="rounded-xl border border-gray-200 mb-6 p-4 space-y-3" >
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/30">Outreach preferences</p>
-            <p className="mt-1 text-xs leading-relaxed text-white/45">
+            <p className="text-[10px] uppercase tracking-widest text-gray-400">Outreach preferences</p>
+            <p className="mt-1 text-xs leading-relaxed text-gray-500">
               Tell SIGNAL how you want to sound in outreach — tone, preferred next step, and who should be copied.
             </p>
           </div>
           <label className="block">
-            <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Communication style</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Communication style</span>
             <div className="mb-2 flex flex-wrap gap-1.5">
               {PERSONA_TRAITS.map((trait) => (
                 <button
@@ -285,7 +286,7 @@ export default function Profile() {
                   className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
                     traitList.includes(trait.id)
                       ? "border-amber-400 bg-amber-400/15 text-amber-100"
-                      : "border-white/10 bg-white/[0.03] text-white/45"
+                      : "border-gray-200 bg-white text-gray-500"
                   }`}
                 >
                   {trait.label}
@@ -298,15 +299,15 @@ export default function Profile() {
               onBlur={() => void saveSettings({ scout_message_style: settings.scout_message_style })}
               rows={4}
               placeholder="Example: concise, practical, warm, ask for a phone call quickly, avoid long email threads."
-              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25"
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-900 outline-none placeholder:text-gray-400"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Preferred next step</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Preferred next step</span>
             <select
               value={settings.scout_preferred_channel}
               onChange={(e) => void saveSettings({ scout_preferred_channel: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-[#160b2c] px-3 py-2 text-xs text-white outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 outline-none"
             >
               <option value="email">Email conversation</option>
               <option value="phone">Phone call</option>
@@ -318,28 +319,28 @@ export default function Profile() {
             onChange={(e) => setSettings((s) => ({ ...s, scout_meeting_preference: e.target.value }))}
             onBlur={() => void saveSettings({ scout_meeting_preference: settings.scout_meeting_preference })}
             placeholder="Meeting/call preference, e.g. ask for a 15 minute intro call Tue-Thu afternoons"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400"
           />
           <input
             value={settings.scout_default_cc}
             onChange={(e) => setSettings((s) => ({ ...s, scout_default_cc: e.target.value }))}
             onBlur={() => void saveSettings({ scout_default_cc: settings.scout_default_cc })}
             placeholder="Default CC emails, comma separated"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400"
           />
           <input
             value={settings.scout_default_bcc}
             onChange={(e) => setSettings((s) => ({ ...s, scout_default_bcc: e.target.value }))}
             onBlur={() => void saveSettings({ scout_default_bcc: settings.scout_default_bcc })}
             placeholder="Default BCC emails, comma separated"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400"
           />
           <label className="block">
-            <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Collateral policy</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Collateral policy</span>
             <select
               value={settings.scout_collateral_policy}
               onChange={(e) => void saveSettings({ scout_collateral_policy: e.target.value })}
-              className="w-full rounded-lg border border-white/10 bg-[#160b2c] px-3 py-2 text-xs text-white outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 outline-none"
             >
               <option value="none">Do not include collateral by default</option>
               <option value="selective">Suggest collateral for select leads</option>
@@ -352,9 +353,9 @@ export default function Profile() {
             onBlur={() => void saveSettings({ scout_collateral_links: settings.scout_collateral_links })}
             rows={3}
             placeholder="Marketing brochures, case studies, or third-party whitepaper URLs, one per line or comma separated"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-relaxed text-white outline-none placeholder:text-white/25"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-900 outline-none placeholder:text-gray-400"
           />
-          <label className="flex items-center justify-between gap-3 text-xs text-white/55">
+          <label className="flex items-center justify-between gap-3 text-xs text-gray-500">
             Let SIGNAL brief me with next-best-action ideas from replies, no response, new research, and customer tone
             <input
               type="checkbox"
@@ -363,9 +364,9 @@ export default function Profile() {
             />
           </label>
         </div>
-        <div className="rounded-xl border border-white/10 mb-4 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <p className="text-[10px] uppercase tracking-widest text-white/30">HubSpot sync</p>
-          <p className="mt-1 text-xs leading-relaxed text-white/45">
+        <div className="rounded-xl border border-gray-200 mb-4 p-4" >
+          <p className="text-[10px] uppercase tracking-widest text-gray-400">HubSpot sync</p>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500">
             Choose auto-sync for all saved leads or pick specific accounts to push into HubSpot via SIGNAL.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -377,13 +378,13 @@ export default function Profile() {
             </Link>
             <Link
               href="/integrations"
-              className="inline-flex rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200"
+              className="inline-flex rounded-lg border border-emerald-500/30 bg-emerald-600/10 px-3 py-2 text-xs font-bold text-emerald-700"
             >
               All integrations
             </Link>
           </div>
         </div>
-        <p className="text-xs text-white/35 mb-4">
+        <p className="text-xs text-gray-400 mb-4">
           CRM outreach is on{" "}
           <Link href="/crm" className="text-violet-400 underline">
             /crm
@@ -398,6 +399,7 @@ export default function Profile() {
           Sign out
         </button>
       </main>
+      <SiteFooter />
     </div>
   );
 }

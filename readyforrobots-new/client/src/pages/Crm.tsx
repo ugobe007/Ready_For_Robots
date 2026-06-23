@@ -327,7 +327,7 @@ export default function Crm() {
 
   if (!supabase) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-white/50" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 px-4 text-gray-500 bg-slate-50">
         <Header />
         <p>Supabase not configured.</p>
       </div>
@@ -336,7 +336,7 @@ export default function Crm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 text-white/50" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 text-gray-500 bg-slate-50">
         <Header />
         Loading…
       </div>
@@ -345,9 +345,9 @@ export default function Crm() {
 
   if (!session) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
         <Header />
-        <p className="text-white/60 mb-4">Sign in for CRM workspaces.</p>
+        <p className="text-gray-600 mb-4">Sign in for CRM workspaces.</p>
         <Link href="/login" className="text-violet-400 underline text-sm">
           Login
         </Link>
@@ -356,24 +356,24 @@ export default function Crm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
       <main className="flex-1 pt-24 pb-12 px-4 max-w-4xl mx-auto w-full">
         <AdminNav />
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
+            <h1 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
               CRM · Buyer outreach workspace
             </h1>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-gray-500">
               Review, edit, approve, and send buyer outreach through SIGNAL. Replies come back to CRM and your inbox.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/integrations" className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-xs font-bold text-violet-200">
+            <Link href="/integrations" className="rounded-lg border border-emerald-500/25 bg-emerald-600/10 px-3 py-2 text-xs font-bold text-emerald-700">
               Connect HubSpot / GitHub
             </Link>
-            <Link href="/sales-console" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-white/65">
+            <Link href="/sales-console" className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600">
               Open Sales Console
             </Link>
           </div>
@@ -387,7 +387,7 @@ export default function Crm() {
               type="button"
               onClick={() => setTeamId(t.id)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${
-                teamId === t.id ? "border-violet-500 text-violet-200 bg-violet-500/15" : "border-white/10 text-white/50"
+                teamId === t.id ? "border-emerald-500 text-emerald-700 bg-emerald-600/15" : "border-gray-200 text-gray-500"
               }`}
             >
               {t.name}
@@ -395,15 +395,15 @@ export default function Crm() {
           ))}
         </div>
 
-        <div className="rounded-xl border border-white/10 overflow-hidden" style={{ background: "rgba(255,255,255,0.02)" }}>
+        <div className="rounded-xl border border-gray-200 overflow-hidden" style={{ background: "rgba(255,255,255,0.02)" }}>
           {busy ? (
-            <p className="p-4 text-sm text-white/40">Loading accounts…</p>
+            <p className="p-4 text-sm text-gray-500">Loading accounts…</p>
           ) : accounts.length === 0 ? (
-            <p className="p-4 text-sm text-white/40">No accounts in this workspace.</p>
+            <p className="p-4 text-sm text-gray-500">No accounts in this workspace.</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10px] uppercase text-white/30 border-b border-white/10">
+                <tr className="text-left text-[10px] uppercase text-gray-400 border-b border-gray-200">
                   <th className="px-3 py-2">Account</th>
                   <th className="px-3 py-2">Company #</th>
                   <th className="px-3 py-2">Stage</th>
@@ -415,8 +415,8 @@ export default function Crm() {
                   <tr
                     key={a.id}
                     onClick={() => setSelectedAccountId(a.id)}
-                    className={`cursor-pointer border-b border-white/5 text-white/80 ${
-                      selectedAccountId === a.id ? "bg-violet-500/10" : "hover:bg-white/[0.03]"
+                    className={`cursor-pointer border-b border-white/5 text-gray-800 ${
+                      selectedAccountId === a.id ? "bg-emerald-600/10" : "hover:bg-white"
                     }`}
                   >
                     <td className="px-3 py-2" style={{ color: "#FFB000" }}>{a.name}</td>
@@ -431,35 +431,35 @@ export default function Crm() {
         </div>
         {selectedAccount && (
           <section className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px]">
-            <div className="rounded-xl border border-white/10 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <div className="rounded-xl border border-gray-200 p-4" >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">Buyer outreach checkpoint</p>
-                  <h2 className="mt-1 text-lg font-bold text-white">{selectedAccount.name}</h2>
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400">Buyer outreach checkpoint</p>
+                  <h2 className="mt-1 text-lg font-bold text-gray-900">{selectedAccount.name}</h2>
                 </div>
                 <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-200">
                   {selectedAccount.outreach_stage || "captured"}
                 </span>
               </div>
               <label className="mb-3 block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Recipient email</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Recipient email</span>
                 <input
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="buyer@example.com"
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                 />
               </label>
               <label className="mb-3 block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Subject</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Subject</span>
                 <input
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none"
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Message draft</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Message draft</span>
                 <div className="mb-2 flex flex-wrap gap-1.5">
                   {PERSONA_TRAITS.map((trait) => (
                     <button
@@ -469,7 +469,7 @@ export default function Crm() {
                       className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
                         selectedTraits.includes(trait.id)
                           ? "border-amber-400 bg-amber-400/15 text-amber-100"
-                          : "border-white/10 bg-white/[0.03] text-white/45"
+                          : "border-gray-200 bg-white text-gray-500"
                       }`}
                     >
                       {trait.label}
@@ -480,39 +480,39 @@ export default function Crm() {
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={10}
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm leading-relaxed text-gray-900 outline-none"
                 />
               </label>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <label className="block">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">CC</span>
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">CC</span>
                   <input
                     value={ccEmails}
                     onChange={(e) => setCcEmails(e.target.value)}
                     placeholder="partner@example.com, colleague@example.com"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">BCC</span>
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">BCC</span>
                   <input
                     value={bccEmails}
                     onChange={(e) => setBccEmails(e.target.value)}
                     placeholder="archive@example.com"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                   />
                 </label>
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-[180px_1fr]">
                 <label className="block">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Collateral</span>
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Collateral</span>
                   <select
                     value={collateralPolicy}
                     onChange={(e) => {
                       setCollateralPolicy(e.target.value as "none" | "selective" | "all");
                       setStyleApproved(false);
                     }}
-                    className="w-full rounded-lg border border-white/10 bg-[#160b2c] px-3 py-2 text-sm text-white outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none"
                   >
                     <option value="none">No attachments/links</option>
                     <option value="selective">Selective leads only</option>
@@ -520,7 +520,7 @@ export default function Crm() {
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">Brochures, case studies, whitepapers</span>
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Brochures, case studies, whitepapers</span>
                   <input
                     value={collateralLinks}
                     onChange={(e) => {
@@ -528,12 +528,12 @@ export default function Crm() {
                       setStyleApproved(false);
                     }}
                     placeholder="Paste URLs, comma separated"
-                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                   />
                 </label>
               </div>
               <label className="mt-3 block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/30">SIGNAL style memory</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">SIGNAL style memory</span>
                 <textarea
                   value={styleInstruction}
                   onChange={(e) => {
@@ -542,18 +542,18 @@ export default function Crm() {
                   }}
                   rows={4}
                   placeholder="Tell SIGNAL how to represent you. Example: keep emails short, ask for a phone call, copy my operations partner."
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm leading-relaxed text-white outline-none placeholder:text-white/25"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400"
                 />
               </label>
-              <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.025] p-3">
-                <p className="mb-2 text-[10px] uppercase tracking-widest text-white/30">Refine from this draft</p>
+              <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
+                <p className="mb-2 text-[10px] uppercase tracking-widest text-gray-400">Refine from this draft</p>
                 <div className="flex flex-wrap gap-1.5">
                   {VOICE_FEEDBACK.map((item) => (
                     <button
                       key={item.label}
                       type="button"
                       onClick={() => applyVoiceFeedback(item.instruction)}
-                      className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold text-white/55 hover:border-amber-300/35 hover:text-amber-100"
+                      className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[10px] font-bold text-gray-500 hover:border-amber-300/35 hover:text-amber-100"
                     >
                       {item.label}
                     </button>
@@ -561,7 +561,7 @@ export default function Crm() {
                 </div>
               </div>
               {scoutStyleGuidance() && (
-                <div className="mt-3 rounded-lg border border-violet-500/20 bg-violet-500/10 p-3 text-[11px] leading-relaxed text-violet-100/85">
+                <div className="mt-3 rounded-lg border border-emerald-500/20 bg-emerald-600/10 p-3 text-[11px] leading-relaxed text-gray-700/85">
                   {scoutStyleGuidance()}
                 </div>
               )}
@@ -578,7 +578,7 @@ export default function Crm() {
                   type="button"
                   onClick={() => void draftWithScout()}
                   disabled={busy || sending}
-                  className="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/80 disabled:opacity-50"
+                  className="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-xs font-bold text-gray-800 disabled:opacity-50"
                 >
                   Draft outreach
                 </button>
@@ -586,7 +586,7 @@ export default function Crm() {
                   type="button"
                   onClick={() => void saveDraft()}
                   disabled={busy || sending}
-                  className="rounded-lg border border-violet-500/35 bg-violet-500/15 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
+                  className="rounded-lg border border-emerald-500/35 bg-emerald-600/15 px-3 py-2 text-xs font-bold text-gray-700 disabled:opacity-50"
                 >
                   Approve Draft
                 </button>
@@ -594,38 +594,38 @@ export default function Crm() {
                   type="button"
                   onClick={() => void sendWithScout()}
                   disabled={sending || !contactEmail || !draft || !styleApproved}
-                  className="rounded-lg border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-bold text-[#160b2c] disabled:opacity-50"
+                  className="rounded-lg border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-bold text-[#111827] disabled:opacity-50"
                 >
                   {sending ? "Sending..." : "Send outreach"}
                 </button>
               </div>
               {!styleApproved && (
-                <p className="mt-2 text-[11px] text-white/35">
+                <p className="mt-2 text-[11px] text-gray-400">
                   Approve the draft first. This confirms the message and teaches SIGNAL the format and style to reuse.
                 </p>
               )}
             </div>
-            <aside className="rounded-xl border border-white/10 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+            <aside className="rounded-xl border border-gray-200 p-4" >
               <div className="mb-5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 p-3">
                 <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">SIGNAL workflow intelligence</p>
-                <p className="mt-2 text-sm font-bold text-white">
+                <p className="mt-2 text-sm font-bold text-gray-900">
                   {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-white/55">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-gray-500">
                   <span>Priority: {selectedAccount.workflow_intelligence?.priority_score ?? "—"}</span>
                   <span>Events: {selectedAccount.workflow_intelligence?.experience_count ?? 0}</span>
                   <span>Sent: {selectedAccount.workflow_intelligence?.sent_count ?? 0}</span>
                   <span>Replies: {selectedAccount.workflow_intelligence?.reply_count ?? 0}</span>
                 </div>
               </div>
-              <div className="mb-5 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[10px] uppercase tracking-widest text-white/30">Apollo prospect search</p>
-                <p className="mt-2 text-xs text-white/55">
+              <div className="mb-5 rounded-lg border border-gray-200 bg-white p-3">
+                <p className="text-[10px] uppercase tracking-widest text-gray-400">Apollo prospect search</p>
+                <p className="mt-2 text-xs text-gray-500">
                   Search target: {selectedAccount.prospect_search?.organization_domain || selectedAccount.prospect_search?.organization_name || selectedAccount.name}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {(selectedAccount.prospect_search?.recommended_titles || []).map((title) => (
-                    <span key={title} className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-white/50">
+                    <span key={title} className="rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] text-gray-500">
                       {title}
                     </span>
                   ))}
@@ -634,23 +634,23 @@ export default function Crm() {
                   Open Sales Console to find prospects
                 </Link>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-white/30">User checkpoints</p>
-              <ol className="mt-3 space-y-3 text-xs text-white/55">
-                <li><span className="font-bold text-white/80">1. Lead captured:</span> user signs in and the account is saved to CRM.</li>
-                <li><span className="font-bold text-white/80">2. Draft review:</span> user checks recipient, subject, and body before approval.</li>
-                <li><span className="font-bold text-white/80">3. Send approval:</span> outreach sends via Ready For Robots only after this action unless Auto is enabled.</li>
-                <li><span className="font-bold text-white/80">4. Reply capture:</span> buyer replies route back into CRM and move the account to replied.</li>
-                <li><span className="font-bold text-white/80">5. User follow-up:</span> SIGNAL tracks the workflow and notifies you based on Profile settings.</li>
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">User checkpoints</p>
+              <ol className="mt-3 space-y-3 text-xs text-gray-500">
+                <li><span className="font-bold text-gray-800">1. Lead captured:</span> user signs in and the account is saved to CRM.</li>
+                <li><span className="font-bold text-gray-800">2. Draft review:</span> user checks recipient, subject, and body before approval.</li>
+                <li><span className="font-bold text-gray-800">3. Send approval:</span> outreach sends via Ready For Robots only after this action unless Auto is enabled.</li>
+                <li><span className="font-bold text-gray-800">4. Reply capture:</span> buyer replies route back into CRM and move the account to replied.</li>
+                <li><span className="font-bold text-gray-800">5. User follow-up:</span> SIGNAL tracks the workflow and notifies you based on Profile settings.</li>
               </ol>
               {suggestions.length > 0 && (
-                <div className="mt-5 border-t border-white/10 pt-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">SIGNAL background ideas</p>
+                <div className="mt-5 border-t border-gray-200 pt-4">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400">SIGNAL background ideas</p>
                   <div className="mt-3 space-y-3">
                     {suggestions.map((item) => (
-                      <div key={item.trigger} className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
-                        <p className="text-[11px] font-bold text-white/80">{item.trigger}</p>
-                        <p className="mt-1 text-[11px] leading-relaxed text-white/55">{item.action}</p>
-                        <p className="mt-1 text-[10px] leading-relaxed text-white/35">{item.why}</p>
+                      <div key={item.trigger} className="rounded-lg border border-gray-200 bg-white p-2.5">
+                        <p className="text-[11px] font-bold text-gray-800">{item.trigger}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{item.action}</p>
+                        <p className="mt-1 text-[10px] leading-relaxed text-gray-400">{item.why}</p>
                       </div>
                     ))}
                   </div>

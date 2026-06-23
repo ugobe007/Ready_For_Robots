@@ -201,11 +201,11 @@ function RobotBenchmarkPanel({ api, headers }: {
   };
 
   return (
-    <div className="rounded-2xl border border-white/8 p-5 mb-3" style={{ background: "rgba(124,58,237,0.05)" }}>
+    <div className="rounded-2xl border border-gray-100 p-5 mb-3" style={{ background: "rgba(5,150,105,0.05)" }}>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#a78bfa" }}>Robot Benchmark Index</p>
-          <p className="text-[12px] text-white/40">Scrape fresh specs, update scores, generate report &amp; LinkedIn post.</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#10b981" }}>Robot Benchmark Index</p>
+          <p className="text-[12px] text-gray-500">Scrape fresh specs, update scores, generate report &amp; LinkedIn post.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -213,7 +213,7 @@ function RobotBenchmarkPanel({ api, headers }: {
             disabled={scraping}
             onClick={() => void runScrape()}
             className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold disabled:opacity-50"
-            style={{ borderColor: "rgba(167,139,250,0.35)", color: "#c4b5fd" }}
+            style={{ borderColor: "rgba(167,139,250,0.35)", color: "#047857" }}
           >
             {scraping ? "Scraping…" : "Scrape all robots"}
           </button>
@@ -227,32 +227,31 @@ function RobotBenchmarkPanel({ api, headers }: {
           </button>
           <a
             href="/robots"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-[11px] font-bold text-white/45"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500"
           >
             View index →
           </a>
         </div>
       </div>
-      {scrapeMsg && <p className="text-[11px] text-white/50 mt-1">{scrapeMsg}</p>}
+      {scrapeMsg && <p className="text-[11px] text-gray-500 mt-1">{scrapeMsg}</p>}
 
       {/* LinkedIn post modal */}
       {postOpen && linkedInPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPostOpen(false)}>
           <div
-            className="w-full max-w-xl rounded-2xl border border-white/10 p-6 max-h-[80vh] overflow-y-auto"
-            style={{ background: "#0d0520" }}
+            className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-6 max-h-[80vh] overflow-y-auto shadow-xl"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-white">LinkedIn Post</p>
-              <span className="text-[10px] text-white/30">{linkedInPost.char_count} chars</span>
+              <p className="font-bold text-gray-900">LinkedIn Post</p>
+              <span className="text-[10px] text-gray-400">{linkedInPost.char_count} chars</span>
             </div>
-            <pre className="whitespace-pre-wrap text-[12px] text-white/70 leading-relaxed mb-5 font-sans">{linkedInPost.post_text}</pre>
+            <pre className="whitespace-pre-wrap text-[12px] text-gray-600 leading-relaxed mb-5 font-sans">{linkedInPost.post_text}</pre>
             <div className="flex gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => void navigator.clipboard.writeText(linkedInPost.post_text)}
-                className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/60"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600"
               >
                 Copy text
               </button>
@@ -265,7 +264,7 @@ function RobotBenchmarkPanel({ api, headers }: {
               >
                 Open LinkedIn Share →
               </a>
-              <button type="button" onClick={() => setPostOpen(false)} className="rounded-xl border border-white/8 px-4 py-2 text-xs font-bold text-white/30">Close</button>
+              <button type="button" onClick={() => setPostOpen(false)} className="rounded-xl border border-gray-100 px-4 py-2 text-xs font-bold text-gray-400">Close</button>
             </div>
           </div>
         </div>
@@ -276,10 +275,10 @@ function RobotBenchmarkPanel({ api, headers }: {
 
 function AdminCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
+    <div className="rounded-2xl border border-gray-100 p-4" >
       <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-white/32">{label}</p>
-      <p className="mt-2 font-mono text-2xl font-bold text-white" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-white/35">{sub}</p>}
+      <p className="mt-2 font-mono text-2xl font-bold text-gray-900" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
+      {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
     </div>
   );
 }
@@ -293,8 +292,8 @@ function formatDate(value?: string) {
 
 function activityColor(type?: string) {
   if (type === "saved_company") return "#FFB000";
-  if (type === "ai_report") return "#a78bfa";
-  if (type === "newsletter_subscriber") return "#03DAC5";
+  if (type === "ai_report") return "#10b981";
+  if (type === "newsletter_subscriber") return "#059669";
   if (type === "waitlist_signup") return "#34d399";
   return "rgba(255,255,255,0.42)";
 }
@@ -837,21 +836,21 @@ export default function Admin() {
 
   if ((authLoading || meLoading) && !hasCachedUi) {
     return (
-      <div className="min-h-screen" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="mx-auto max-w-6xl px-6 pt-28 text-white/50">Loading admin...</main>
+        <main className="mx-auto max-w-6xl px-6 pt-28 text-gray-500">Loading admin...</main>
       </div>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <Shield className="mx-auto mb-4 h-7 w-7" style={{ color: "#FFB000" }} />
-          <h1 className="text-2xl font-bold text-white">Admin sign in required</h1>
-          <p className="mt-3 text-sm text-white/45">Sign in with an admin email to manage ReadyForRobots.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin sign in required</h1>
+          <p className="mt-3 text-sm text-gray-500">Sign in with an admin email to manage ReadyForRobots.</p>
           <Link href="/login" className="mt-6 inline-flex rounded-xl border px-5 py-3 text-sm font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
             Sign in
           </Link>
@@ -862,43 +861,43 @@ export default function Admin() {
 
   if (me && !me.is_admin) {
     return (
-      <div className="min-h-screen" style={{ background: "#0d0520" }}>
+      <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-300" />
-          <h1 className="text-2xl font-bold text-white">Admin access required</h1>
-          <p className="mt-3 text-sm text-white/45">{me.email || "This account"} is signed in but is not listed in `ADMIN_EMAILS`.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
+          <p className="mt-3 text-sm text-gray-500">{me.email || "This account"} is signed in but is not listed in `ADMIN_EMAILS`.</p>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen bg-slate-50">
       <Header />
       <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
         <AdminNav />
 
         {syncingSection && !(syncingSection === "cal" && calStatus) ? (
-          <p className="mb-4 rounded-xl border border-white/8 px-4 py-2 text-xs text-white/40" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <p className="mb-4 rounded-xl border border-gray-100 px-4 py-2 text-xs text-gray-500" >
             Updating {syncingSection.replace(/_/g, " ")}…
           </p>
         ) : null}
 
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
-            <p className="mt-0.5 text-[11px] text-white/35">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
+            <h1 className="text-lg font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
+            <p className="mt-0.5 text-[11px] text-gray-400">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-xl border border-white/10 p-1">
+            <div className="flex rounded-xl border border-gray-200 p-1">
               {TIME_RANGES.map((range) => (
                 <button
                   key={range.value}
                   onClick={() => setTimeRange(range.value)}
                   className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
                   style={{
-                    color: timeRange === range.value ? "#0d0520" : "rgba(255,255,255,0.52)",
+                    color: timeRange === range.value ? "#111827" : "rgba(255,255,255,0.52)",
                     background: timeRange === range.value ? "#FFB000" : "transparent",
                   }}
                 >
@@ -906,7 +905,7 @@ export default function Admin() {
                 </button>
               ))}
             </div>
-            <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-white/60">
+            <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </button>
             <a href={`${api}/api/docs`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
@@ -915,10 +914,10 @@ export default function Admin() {
           </div>
         </div>
 
-        <details className="mb-4 rounded-xl border border-white/8 px-4 py-3 group" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <summary className="cursor-pointer list-none text-[11px] font-bold text-white/50 marker:content-none">
+        <details className="mb-4 rounded-xl border border-gray-100 px-4 py-3 group" style={{ background: "rgba(255,255,255,0.02)" }}>
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-gray-500 marker:content-none">
             Reply notification email
-            <span className="ml-2 font-normal text-white/30">optional · forwards Cal replies</span>
+            <span className="ml-2 font-normal text-gray-400">optional · forwards Cal replies</span>
           </summary>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
@@ -926,7 +925,7 @@ export default function Admin() {
               value={replyForwardEmail}
               onChange={(e) => setReplyForwardEmail(e.target.value)}
               placeholder="ugobe07@gmail.com"
-              className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-400/60"
+              className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-400/60"
             />
             <button
               type="button"
@@ -936,7 +935,7 @@ export default function Admin() {
               style={
                 replySettingSaved
                   ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }
-                  : { background: "rgba(124,58,237,0.12)", borderColor: "rgba(124,58,237,0.35)", color: "#c4b5fd" }
+                  : { background: "rgba(5,150,105,0.12)", borderColor: "rgba(5,150,105,0.35)", color: "#047857" }
               }
             >
               {replySettingBusy ? "Saving…" : replySettingSaved ? "✓ Saved" : "Save"}
@@ -944,7 +943,7 @@ export default function Admin() {
           </div>
         </details>
 
-        <div className="mb-4 rounded-2xl border border-white/8 overflow-hidden" style={{ background: "rgba(13,5,32,0.6)" }}>
+        <div className="mb-4 rounded-2xl border border-gray-100 overflow-hidden" style={{ background: "rgba(13,5,32,0.6)" }}>
           <ScoutActionBar
             accessToken={session?.access_token}
             stats={calStatus?.summary ? {
@@ -968,27 +967,27 @@ export default function Admin() {
         {error && <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm text-red-200">{error}</div>}
 
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
-        <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-white/8 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
+        <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-100 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 min-w-0">
-              <Mail className="h-4 w-4 shrink-0" style={{ color: "#a78bfa" }} />
+              <Mail className="h-4 w-4 shrink-0" style={{ color: "#10b981" }} />
               <div className="min-w-0">
-                <h2 className="text-base font-extrabold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h2 className="text-base font-extrabold text-gray-900 truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   Cal outreach queue
                 </h2>
-                <p className="text-[11px] text-white/40">Draft &amp; send from SIGNAL bar above · expand a row for preview</p>
+                <p className="text-[11px] text-gray-500">Draft &amp; send from SIGNAL bar above · expand a row for preview</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-xl border border-white/10 p-1">
+              <div className="flex rounded-xl border border-gray-200 p-1">
                 {(["all", "pending", "drafted", "sent"] as const).map((f) => (
                   <button
                     key={f}
                     onClick={() => setCalFilter(f)}
                     className="rounded-lg px-2.5 py-1 text-[10px] font-bold capitalize transition"
                     style={{
-                      color: calFilter === f ? "#0d0520" : "rgba(255,255,255,0.45)",
-                      background: calFilter === f ? "#a78bfa" : "transparent",
+                      color: calFilter === f ? "#111827" : "rgba(255,255,255,0.45)",
+                      background: calFilter === f ? "#10b981" : "transparent",
                     }}
                   >
                     {f}
@@ -998,7 +997,7 @@ export default function Admin() {
               <button
                 onClick={() => void runCalBulkDraft(true)}
                 disabled={!!actionBusy}
-                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
+                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
                 title="Regenerate all drafts"
               >
                 Regenerate
@@ -1006,7 +1005,7 @@ export default function Admin() {
               <button
                 onClick={() => void runCalReinferContacts()}
                 disabled={!!actionBusy}
-                className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
+                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
               >
                 {actionBusy === "cal-reinfer" ? "Re-inferring…" : "Re-infer contacts"}
               </button>
@@ -1033,7 +1032,7 @@ export default function Admin() {
                     } finally { setActionBusy(""); }
                   })()}
                   disabled={!!actionBusy}
-                  className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] font-bold text-white/45 disabled:opacity-40"
+                  className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
                 >
                   Fix {calStatus?.summary?.no_email} emails
                 </button>
@@ -1060,7 +1059,7 @@ export default function Admin() {
                 >
                   Yes — send all now
                 </button>
-                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/45">
+                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-500">
                   Cancel
                 </button>
               </div>
@@ -1079,7 +1078,7 @@ export default function Admin() {
           {/* Prospect table */}
           <div className="max-h-[600px] overflow-y-auto pr-1">
             {!calStatus ? (
-              <p className="py-6 text-center text-xs text-white/35">
+              <p className="py-6 text-center text-xs text-gray-400">
                 {syncingSection === "cal" ? "Loading prospect draft status…" : "No Cal outreach data yet."}
               </p>
             ) : (calStatus.prospects ?? []).filter((p) => {
@@ -1088,7 +1087,7 @@ export default function Admin() {
               if (calFilter === "sent") return !!p.outreach_sent_at;
               return true;
             }).length === 0 ? (
-              <p className="py-6 text-center text-xs text-white/35">No prospects match this filter.</p>
+              <p className="py-6 text-center text-xs text-gray-400">No prospects match this filter.</p>
             ) : (
               <div className="space-y-1.5">
                 {/* Column headers */}
@@ -1109,7 +1108,7 @@ export default function Admin() {
                   })
                   .map((prospect, idx) => {
                     const isOpen = calExpanded === idx;
-                    const tierColor = prospect.tier === "HOT" ? "#FFB000" : prospect.tier === "WARM" ? "#03DAC5" : "rgba(255,255,255,0.35)";
+                    const tierColor = prospect.tier === "HOT" ? "#FFB000" : prospect.tier === "WARM" ? "#059669" : "rgba(255,255,255,0.35)";
                     return (
                       <div key={`${prospect.company_id}-${idx}`} className="rounded-xl border border-white/7" style={{ background: "rgba(13,5,32,0.55)" }}>
                         <button
@@ -1123,9 +1122,9 @@ export default function Admin() {
                           }}
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white/85">{prospect.company_name || "—"}</p>
+                            <p className="truncate text-sm font-semibold text-gray-800">{prospect.company_name || "—"}</p>
                             <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[10px] text-white/35">{prospect.industry}</span>
+                              <span className="text-[10px] text-gray-400">{prospect.industry}</span>
                               <button
                                 type="button"
                                 title="Toggle buyer / vendor"
@@ -1141,7 +1140,7 @@ export default function Admin() {
                                 className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors"
                                 style={
                                   prospect.account_type === "vendor"
-                                    ? { background: "rgba(167,139,250,0.12)", borderColor: "rgba(167,139,250,0.3)", color: "#a78bfa" }
+                                    ? { background: "rgba(167,139,250,0.12)", borderColor: "rgba(167,139,250,0.3)", color: "#10b981" }
                                     : { background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.2)", color: "#6ee7b7" }
                                 }
                               >
@@ -1150,7 +1149,7 @@ export default function Admin() {
                               {prospect.outreach_pipeline === "stagegate" && (
                                 <span
                                   className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border"
-                                  style={{ background: "rgba(3,218,197,0.1)", borderColor: "rgba(3,218,197,0.35)", color: "#03DAC5" }}
+                                  style={{ background: "rgba(3,218,197,0.1)", borderColor: "rgba(3,218,197,0.35)", color: "#059669" }}
                                   title={prospect.semantic_summary || "StageGate show-ops prospect"}
                                 >
                                   stagegate
@@ -1158,7 +1157,7 @@ export default function Admin() {
                               )}
                             </div>
                             {prospect.semantic_summary && (
-                              <p className="mt-1 truncate text-[10px] text-white/40" title={prospect.semantic_summary}>
+                              <p className="mt-1 truncate text-[10px] text-gray-500" title={prospect.semantic_summary}>
                                 {prospect.semantic_summary}
                               </p>
                             )}
@@ -1167,13 +1166,13 @@ export default function Admin() {
                             <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
                               {prospect.tier}
                             </span>
-                            <p className="mt-1 font-mono text-[10px] text-white/35">{prospect.score?.toFixed(0)}</p>
+                            <p className="mt-1 font-mono text-[10px] text-gray-400">{prospect.score?.toFixed(0)}</p>
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-mono text-[11px] text-white/55">
-                              {prospect.contact_email || <span className="text-white/25 not-italic">no contact</span>}
+                            <p className="truncate font-mono text-[11px] text-gray-500">
+                              {prospect.contact_email || <span className="text-gray-400 not-italic">no contact</span>}
                               {prospect.contact_email_source === "inferred" && (
-                                <span className="ml-1.5 text-[9px] font-normal text-violet-300/65">inferred</span>
+                                <span className="ml-1.5 text-[9px] font-normal text-emerald-600/65">inferred</span>
                               )}
                             </p>
                             {prospect.outreach_domain && !prospect.website && (
@@ -1182,7 +1181,7 @@ export default function Admin() {
                             {prospect.default_cc && <p className="truncate font-mono text-[10px] text-white/28">cc: {prospect.default_cc}</p>}
                           </div>
                           <div>
-                            <span className="text-[11px] text-white/45">
+                            <span className="text-[11px] text-gray-500">
                               {prospect.outreach_sent_at ? "sent" : prospect.outreach_stage?.replace(/_/g, " ") || "—"}
                             </span>
                             {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-white/28">{formatDate(prospect.outreach_sent_at)}</p>}
@@ -1213,7 +1212,7 @@ export default function Admin() {
                             {prospect.has_draft ? (
                               <>
                                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/28">Cal draft</p>
-                                <pre className="whitespace-pre-wrap rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3 font-mono text-[11px] leading-relaxed text-white/65">
+                                <pre className="whitespace-pre-wrap rounded-xl border border-gray-100 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-600">
                                   {prospect.crm_account_id && draftBodies[prospect.crm_account_id]
                                     ? draftBodies[prospect.crm_account_id]
                                     : draftBodyLoading === prospect.crm_account_id
@@ -1223,8 +1222,8 @@ export default function Admin() {
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
                                   {prospect.contact_email && (
                                     <div className="flex flex-wrap gap-2 text-[10px] text-white/38">
-                                      <span>TO: <span className="font-mono text-white/55">{prospect.contact_email}</span></span>
-                                      {prospect.default_cc && <span>CC: <span className="font-mono text-white/55">{prospect.default_cc}</span></span>}
+                                      <span>TO: <span className="font-mono text-gray-500">{prospect.contact_email}</span></span>
+                                      {prospect.default_cc && <span>CC: <span className="font-mono text-gray-500">{prospect.default_cc}</span></span>}
                                     </div>
                                   )}
                                   <div className="ml-auto flex gap-2">
@@ -1242,7 +1241,7 @@ export default function Admin() {
                                         >
                                           {actionBusy === "cal-send-one" ? "Sending…" : "Yes, send"}
                                         </button>
-                                        <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-white/10 px-3 py-1.5 text-[10px] text-white/40">Cancel</button>
+                                        <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-200 px-3 py-1.5 text-[10px] text-gray-500">Cancel</button>
                                       </>
                                     ) : (
                                       <button
@@ -1258,7 +1257,7 @@ export default function Admin() {
                                 </div>
                               </>
                             ) : (
-                              <p className="text-xs text-white/38">No draft yet. Click <strong className="text-white/55">Draft pending</strong> to generate.</p>
+                              <p className="text-xs text-white/38">No draft yet. Click <strong className="text-gray-500">Draft pending</strong> to generate.</p>
                             )}
                           </div>
                         )}
@@ -1286,16 +1285,16 @@ export default function Admin() {
 
         <section id="robot-benchmark" className="mb-8 scroll-mt-28">
           <div className="mb-3 flex items-center gap-2">
-            <span style={{ color: "#a78bfa", fontSize: 16 }}>🤖</span>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Robot Benchmark Index</p>
+            <span style={{ color: "#10b981", fontSize: 16 }}>🤖</span>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Robot Benchmark Index</p>
           </div>
           <RobotBenchmarkPanel api={api} headers={headers as Record<string, string | undefined>} />
         </section>
 
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" style={{ color: "#03DAC5" }} />
-            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Site metrics</p>
+            <BarChart3 className="h-4 w-4" style={{ color: "#059669" }} />
+            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Site metrics</p>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()}`} />
@@ -1307,10 +1306,10 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-2xl border border-gray-100 p-5" >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Recent users</p>
-              <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/35">{formatNumber(users.length)} shown</span>
+              <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Recent users</p>
+              <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-400">{formatNumber(users.length)} shown</span>
             </div>
             <div className="max-h-[380px] overflow-y-auto pr-1">
               <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
@@ -1320,20 +1319,20 @@ export default function Admin() {
                 <span>Last active</span>
               </div>
               {(users.length ? users : [{ email: "No users yet" }]).slice(0, 30).map((user, index) => (
-                <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-white/6 py-3 text-xs">
+                <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-gray-100 py-3 text-xs">
                   <div className="min-w-0">
                     <p className="truncate text-white/72">{user.email || "Unknown user"}</p>
                     <p className="mt-1 truncate text-[10px] text-white/28">{user.id || "—"}</p>
                   </div>
-                  <span className="font-mono text-white/45">{formatNumber(user.saved_count)}</span>
-                  <span className="font-mono text-white/45">{formatNumber(user.reports_count)}</span>
-                  <span className="text-white/35">{formatDate(user.last_active || user.created_at)}</span>
+                  <span className="font-mono text-gray-500">{formatNumber(user.saved_count)}</span>
+                  <span className="font-mono text-gray-500">{formatNumber(user.reports_count)}</span>
+                  <span className="text-gray-400">{formatDate(user.last_active || user.created_at)}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-2xl border border-gray-100 p-5" >
             <div className="mb-4 flex items-center gap-2">
               <Activity className="h-4 w-4" style={{ color: "#FFB000" }} />
               <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent activity</p>
@@ -1342,11 +1341,11 @@ export default function Admin() {
               {(activity.length ? activity : [{ label: "No recent activity yet", detail: "User saves, reports, signups, and newsletter subscribers will appear here." }]).map((item, index) => (
                 <div key={`${item.type}-${item.created_at}-${index}`} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-white/75">{item.label}</p>
+                    <p className="text-xs font-semibold text-gray-700">{item.label}</p>
                     <span className="shrink-0 text-[10px] text-white/28">{formatDate(item.created_at)}</span>
                   </div>
                   <p className="mt-1 truncate text-[11px]" style={{ color: activityColor(item.type) }}>{item.actor || "ReadyForRobots"}</p>
-                  <p className="mt-1 break-words text-[11px] text-white/35">{item.detail}</p>
+                  <p className="mt-1 break-words text-[11px] text-gray-400">{item.detail}</p>
                 </div>
               ))}
             </div>
@@ -1354,18 +1353,18 @@ export default function Admin() {
         </section>
 
         {analytics?.insights && (
-          <section className="mb-8 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.08), rgba(3,218,197,0.04))" }}>
+          <section className="mb-8 rounded-2xl border border-gray-100 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.08), rgba(3,218,197,0.04))" }}>
             <p className="mb-3 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Operator notes</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {[analytics.insights.hottest_trend, analytics.insights.opportunity, analytics.insights.action_item].filter(Boolean).map((item) => (
-                <p key={item} className="rounded-xl border border-white/8 px-3 py-3 text-xs leading-relaxed text-white/55" style={{ background: "rgba(13,5,32,0.38)" }}>{item}</p>
+                <p key={item} className="rounded-xl border border-gray-100 px-3 py-3 text-xs leading-relaxed text-gray-500" style={{ background: "rgba(13,5,32,0.38)" }}>{item}</p>
               ))}
             </div>
           </section>
         )}
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-2xl border border-gray-100 p-5" >
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>System controls</p>
             <p className="mb-4 text-xs leading-relaxed text-white/42">
               These actions use the same authenticated admin session, so failures are shown here instead of opening unauthenticated tabs.
@@ -1375,7 +1374,7 @@ export default function Admin() {
                 type="button"
                 onClick={() => void runSystemAction("cache")}
                 disabled={!!actionBusy}
-                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-50"
               >
                 {actionBusy === "cache" ? "Clearing..." : "Clear cache"}
               </button>
@@ -1383,7 +1382,7 @@ export default function Admin() {
                 type="button"
                 onClick={() => void runSystemAction("reindex")}
                 disabled={!!actionBusy}
-                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-50"
               >
                 {actionBusy === "reindex" ? "Reindexing..." : "Reindex database"}
               </button>
@@ -1391,7 +1390,7 @@ export default function Admin() {
                 type="button"
                 onClick={() => void runSystemAction("cleanup")}
                 disabled={!!actionBusy}
-                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65 disabled:opacity-50"
+                className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-50"
               >
                 {actionBusy === "cleanup" ? "Queueing..." : "Cleanup junk leads"}
               </button>
@@ -1400,7 +1399,7 @@ export default function Admin() {
                 onClick={() => void exportAllData()}
                 disabled={!!actionBusy}
                 className="rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-50"
-                style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}
+                style={{ color: "#059669", borderColor: "rgba(3,218,197,0.45)" }}
               >
                 {actionBusy === "export" ? "Exporting..." : "Export all data"}
               </button>
@@ -1408,25 +1407,25 @@ export default function Admin() {
           </div>
 
 
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Operational shortcuts</p>
+          <div className="rounded-2xl border border-gray-100 p-5" >
+            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Operational shortcuts</p>
             <p className="mb-4 text-xs leading-relaxed text-white/42">
               Admin remains the single ops home. Use these links for the dedicated work consoles.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Link href="/crm" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+              <Link href="/crm" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Buyer CRM
               </Link>
-              <Link href="/admin/prospects" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+              <Link href="/admin/prospects" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Prospects
               </Link>
-              <Link href="/sales-console" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+              <Link href="/sales-console" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Sales Console
               </Link>
-              <Link href="/supply-pipeline" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+              <Link href="/supply-pipeline" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Supply Pipeline
               </Link>
-              <Link href="/marketplace" className="rounded-xl border border-white/10 px-4 py-2 text-xs font-bold text-white/65">
+              <Link href="/marketplace" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Marketplace
               </Link>
             </div>
@@ -1441,24 +1440,24 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Industry mix</p>
+          <div className="rounded-2xl border border-gray-100 p-5" >
+            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Industry mix</p>
             <div className="space-y-2">
               {(stats?.by_industry || []).slice(0, 8).map((item) => (
                 <div key={item.industry} className="flex items-center justify-between text-sm">
                   <span className="text-white/62">{item.industry || "Unknown"}</span>
-                  <span className="font-mono text-white/35">{formatNumber(item.count)}</span>
+                  <span className="font-mono text-gray-400">{formatNumber(item.count)}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>Signal types</p>
+          <div className="rounded-2xl border border-gray-100 p-5" >
+            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Signal types</p>
             <div className="space-y-2">
               {(stats?.by_signal_type || []).slice(0, 8).map((item) => (
                 <div key={item.signal_type} className="flex items-center justify-between text-sm">
                   <span className="text-white/62">{(item.signal_type || "unknown").replace(/_/g, " ")}</span>
-                  <span className="font-mono text-white/35">{formatNumber(item.count)}</span>
+                  <span className="font-mono text-gray-400">{formatNumber(item.count)}</span>
                 </div>
               ))}
             </div>
@@ -1466,14 +1465,14 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <form onSubmit={importUrls} className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <form onSubmit={importUrls} className="rounded-2xl border border-gray-100 p-5" >
             <UploadCloud className="mb-4 h-5 w-5" style={{ color: "#FFB000" }} />
-            <p className="text-sm font-bold text-white">Import URLs</p>
-            <textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="https://example.com/feed&#10;https://example.com/news" className="mt-3 min-h-28 w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25" />
-            <select value={urlIndustry} onChange={(e) => setUrlIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#160d2a] px-3 py-2 text-xs text-white/70">
+            <p className="text-sm font-bold text-gray-900">Import URLs</p>
+            <textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="https://example.com/feed&#10;https://example.com/news" className="mt-3 min-h-28 w-full rounded-xl border border-gray-200 bg-white/[0.035] px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400" />
+            <select value={urlIndustry} onChange={(e) => setUrlIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "Auto-detect industry"}</option>)}
             </select>
-            <label className="mt-3 flex items-center gap-2 text-xs text-white/45">
+            <label className="mt-3 flex items-center gap-2 text-xs text-gray-500">
               <input type="checkbox" checked={scrapeNow} onChange={(e) => setScrapeNow(e.target.checked)} className="accent-violet-500" />
               Scrape now
             </label>
@@ -1482,22 +1481,22 @@ export default function Admin() {
             </button>
           </form>
 
-          <form onSubmit={importCompanies} className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#a78bfa" }} />
-            <p className="text-sm font-bold text-white">Import Companies</p>
-            <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="mt-3 min-h-40 w-full rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 font-mono text-[11px] text-white outline-none" />
-            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-violet-200 disabled:opacity-50">
+          <form onSubmit={importCompanies} className="rounded-2xl border border-gray-100 p-5" >
+            <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#10b981" }} />
+            <p className="text-sm font-bold text-gray-900">Import Companies</p>
+            <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="mt-3 min-h-40 w-full rounded-xl border border-gray-200 bg-white/[0.035] px-3 py-2 font-mono text-[11px] text-gray-900 outline-none" />
+            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-emerald-700 disabled:opacity-50">
               {actionBusy === "companies" ? "Importing..." : "Import Companies"}
             </button>
           </form>
 
-          <form onSubmit={triggerScrape} className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <Play className="mb-4 h-5 w-5" style={{ color: "#03DAC5" }} />
-            <p className="text-sm font-bold text-white">Trigger Scraper</p>
-            <select value={triggerScraper} onChange={(e) => setTriggerScraper(e.target.value)} className="mt-3 w-full rounded-xl border border-white/10 bg-[#160d2a] px-3 py-2 text-xs text-white/70">
+          <form onSubmit={triggerScrape} className="rounded-2xl border border-gray-100 p-5" >
+            <Play className="mb-4 h-5 w-5" style={{ color: "#059669" }} />
+            <p className="text-sm font-bold text-gray-900">Trigger Scraper</p>
+            <select value={triggerScraper} onChange={(e) => setTriggerScraper(e.target.value)} className="mt-3 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
               {SCRAPERS.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#160d2a] px-3 py-2 text-xs text-white/70">
+            <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "All industries"}</option>)}
             </select>
             <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-300/45 px-4 py-2.5 text-xs font-bold text-teal-200 disabled:opacity-50">
@@ -1506,15 +1505,15 @@ export default function Admin() {
           </form>
         </section>
 
-        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-white/8 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
+        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-gray-100 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <Bot className="h-4 w-4" style={{ color: "#03DAC5" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#03DAC5" }}>AI workflow command center</p>
+                <Bot className="h-4 w-4" style={{ color: "#059669" }} />
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>AI workflow command center</p>
               </div>
-              <h2 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
-              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-white/45">
+              <h2 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
+              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">
                 One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
               </p>
             </div>
@@ -1522,7 +1521,7 @@ export default function Admin() {
               <Link href="/sales-console" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
                 Sales Console <ExternalLink className="h-3 w-3" />
               </Link>
-              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#03DAC5", borderColor: "rgba(3,218,197,0.45)" }}>
+              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#059669", borderColor: "rgba(3,218,197,0.45)" }}>
                 Supply Pipeline <ExternalLink className="h-3 w-3" />
               </Link>
             </div>
@@ -1545,7 +1544,7 @@ export default function Admin() {
 
           <div className="mb-4 flex flex-wrap gap-2">
             {Object.entries(workflow?.by_source || {}).map(([source, count]) => (
-              <span key={source} className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] capitalize text-white/45">
+              <span key={source} className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] capitalize text-gray-500">
                 {sourceLabel(source)}: {formatNumber(count)}
               </span>
             ))}
@@ -1555,7 +1554,7 @@ export default function Admin() {
             {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
               const style = stateStyle(item.state);
               return (
-                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-white/8 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
+                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-gray-100 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -1563,16 +1562,16 @@ export default function Admin() {
                           {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
                           {stateLabel(item.state)}
                         </span>
-                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
+                        <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
                         {item.requires_approval && <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[10px] text-amber-100">approval required</span>}
                         {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
                       </div>
-                      <p className="truncate text-sm font-bold text-white/82">{item.title || "Untitled workflow action"}</p>
+                      <p className="truncate text-sm font-bold text-gray-900/82">{item.title || "Untitled workflow action"}</p>
                       <p className="mt-1 text-xs text-white/42">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
-                      {item.description && <p className="mt-2 text-xs leading-relaxed text-white/52">{item.description}</p>}
+                      {item.description && <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.description}</p>}
                     </div>
                     {item.next_action_url && (
-                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-center text-xs font-bold text-white/65">
+                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-gray-200 px-3 py-2 text-center text-xs font-bold text-gray-600">
                         {item.next_action_label || "Open"}
                       </Link>
                     )}
@@ -1585,31 +1584,31 @@ export default function Admin() {
 
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-2xl border border-gray-100 p-5" >
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent companies</p>
             <div className="space-y-3">
               {(stats?.recent_companies || []).map((company) => (
                 <div key={company.id} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
-                  <p className="text-sm font-semibold text-white/80">{company.name}</p>
-                  <p className="mt-1 text-[11px] text-white/35">{company.industry} · {company.source || "unknown"}</p>
+                  <p className="text-sm font-semibold text-gray-800">{company.name}</p>
+                  <p className="mt-1 text-[11px] text-gray-400">{company.industry} · {company.source || "unknown"}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/8 p-5" style={{ background: "rgba(255,255,255,0.03)" }}>
-            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Scrape targets</p>
+          <div className="rounded-2xl border border-gray-100 p-5" >
+            <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Scrape targets</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {Object.entries(targets?.summary || {}).map(([key, value]) => (
-                <span key={key} className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/45">{key}: {value}</span>
+                <span key={key} className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-500">{key}: {value}</span>
               ))}
             </div>
             <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
               {(targets?.targets || []).slice(0, 40).map((target, index) => (
                 <div key={`${target.url}-${index}`} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="truncate text-xs font-semibold text-white/75">{target.label || target.url}</p>
-                    <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[9px] text-white/35">{target.scraper}</span>
+                    <p className="truncate text-xs font-semibold text-gray-700">{target.label || target.url}</p>
+                    <span className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[9px] text-gray-400">{target.scraper}</span>
                   </div>
                   <p className="mt-1 break-all text-[11px] text-white/28">{target.url}</p>
                 </div>

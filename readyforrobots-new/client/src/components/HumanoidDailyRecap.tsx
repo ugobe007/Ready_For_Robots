@@ -1,6 +1,5 @@
 /**
- * Compact daily humanoid recap — 2–3 sentence summary with expandable full debrief.
- * Keeps the scrolling robot list from burying intelligence content.
+ * Compact daily humanoid recap — light emerald theme (matches Precision Intelligence home).
  */
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
@@ -10,12 +9,11 @@ import {
   isValidHumanoidReport,
   type HumanoidIntelligenceReportData,
 } from "@/lib/humanoidIntelligenceReport";
+import { LiveDot } from "@/components/marketing/primitives";
 
 function recapSummary(report: HumanoidIntelligenceReportData): string {
   const lines = report.executive_summary?.filter(Boolean) || [];
-  if (lines.length >= 2) {
-    return `${lines[0]} ${lines[1]}`.trim();
-  }
+  if (lines.length >= 2) return `${lines[0]} ${lines[1]}`.trim();
   if (lines.length === 1) return lines[0];
   const leader = report.top_ranked?.[0];
   if (leader) {
@@ -68,32 +66,20 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
   const debrief = report ? debriefParagraphs(report) : [];
 
   return (
-    <section className={`px-6 ${className}`.trim()} style={{ background: "#0d0520" }}>
-      <div className="max-w-6xl mx-auto">
-        <div
-          className="rounded-2xl border overflow-hidden"
-          style={{
-            borderColor: "rgba(124,58,237,0.22)",
-            background: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(3,218,197,0.04) 100%)",
-            boxShadow: "0 0 0 1px rgba(124,58,237,0.08)",
-          }}
-        >
+    <section className={`px-6 bg-slate-50 ${className}`.trim()}>
+      <div className="container">
+        <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm overflow-hidden">
           <div className="px-5 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#03DAC5" }}>
-                    Daily humanoid recap
-                  </p>
+                  <LiveDot />
+                  <p className="section-eyebrow mb-0">Daily humanoid recap</p>
                 </div>
-                <h3
-                  className="text-lg font-extrabold text-white sm:text-xl"
-                  style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
-                >
+                <h3 className="font-display text-lg font-bold text-gray-900 sm:text-xl">
                   {report?.title || "HEIR Humanoid Intelligence"}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
                   {loading
                     ? "Loading today's index movement and deployment signals…"
                     : summary || "Independent HEIF scoring across the humanoid fleet — updated daily."}
@@ -102,8 +88,7 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all hover:bg-white/5"
-                style={{ borderColor: "rgba(124,58,237,0.35)", color: "#c4b5fd" }}
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100"
                 aria-expanded={expanded}
               >
                 {expanded ? "Collapse debrief" : "Read full debrief"}
@@ -112,14 +97,11 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
             </div>
 
             {expanded && report && (
-              <div
-                className="mt-5 pt-5 border-t space-y-5"
-                style={{ borderColor: "rgba(124,58,237,0.15)" }}
-              >
+              <div className="mt-5 pt-5 border-t border-gray-100 space-y-5">
                 {debrief.length > 0 && (
                   <div className="space-y-2">
                     {debrief.map((para) => (
-                      <p key={para.slice(0, 40)} className="text-sm leading-relaxed text-white/50">
+                      <p key={para.slice(0, 40)} className="text-sm leading-relaxed text-gray-600">
                         {para}
                       </p>
                     ))}
@@ -128,30 +110,19 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
 
                 {top.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-white/30">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-gray-400">
                       Top rankings today
                     </p>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {top.map((robot) => (
-                        <div
-                          key={robot.name}
-                          className="rounded-lg border px-3 py-2.5"
-                          style={{
-                            borderColor: "rgba(255,255,255,0.08)",
-                            background: "rgba(0,0,0,0.2)",
-                          }}
-                        >
+                        <div key={robot.name} className="rounded-lg border border-gray-100 bg-slate-50 px-3 py-2.5">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[10px] text-white/30">#{robot.rank}</span>
-                            <span className="font-mono text-sm font-bold" style={{ color: "#03DAC5" }}>
-                              {robot.score_total}
-                            </span>
+                            <span className="font-mono-data text-[10px] text-gray-400">#{robot.rank}</span>
+                            <span className="score-number text-sm">{robot.score_total}</span>
                           </div>
-                          <p className="text-sm font-semibold text-white truncate mt-1">{robot.name}</p>
-                          <p className="text-[10px] text-white/35 truncate">{robot.vendor}</p>
-                          <p className="text-[10px] mt-1 truncate" style={{ color: "#a78bfa" }}>
-                            {robot.deployment_tier_label}
-                          </p>
+                          <p className="text-sm font-semibold text-gray-900 truncate mt-1">{robot.name}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{robot.vendor}</p>
+                          <p className="text-[10px] mt-1 truncate text-emerald-600">{robot.deployment_tier_label}</p>
                         </div>
                       ))}
                     </div>
@@ -160,13 +131,11 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
 
                 {findings.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-white/30">
-                      Key findings
-                    </p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-gray-400">Key findings</p>
                     <ul className="space-y-2">
                       {findings.map((f) => (
-                        <li key={f.title} className="text-xs text-white/45">
-                          <span className="font-semibold text-white/65">{f.title}: </span>
+                        <li key={f.title} className="text-xs text-gray-600">
+                          <span className="font-semibold text-gray-800">{f.title}: </span>
                           {f.body}
                         </li>
                       ))}
@@ -176,8 +145,7 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
 
                 <Link
                   href="/robots"
-                  className="inline-flex items-center gap-2 text-xs font-bold transition-colors hover:text-white"
-                  style={{ color: "#FFB000" }}
+                  className="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 hover:text-emerald-700"
                 >
                   Open full humanoid index
                   <ArrowRight className="h-3.5 w-3.5" />

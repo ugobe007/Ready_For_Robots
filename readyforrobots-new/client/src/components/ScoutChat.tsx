@@ -1,10 +1,9 @@
 /**
- * SIGNAL chat shell — provides openChat() for Header / mobile drawer.
- * Full LLM + history lives in FastAPI `/api/scout/*`; this UI is a lightweight placeholder until wired.
+ * SIGNAL chat shell — light emerald theme, matches site redesign.
  */
 import { createContext, useCallback, useContext, useState } from "react";
-import { useLocation } from "wouter";
-import { MessageSquare, X } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { MessageSquare, X, Zap } from "lucide-react";
 
 type ScoutChatCtx = { openChat: () => void };
 const ScoutChatContext = createContext<ScoutChatCtx>({ openChat: () => {} });
@@ -15,33 +14,38 @@ export function useScoutChat() {
 
 function ScoutPanel({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6" style={{ background: "rgba(0,0,0,0.65)" }}>
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Close" onClick={onClose} />
-      <div
-        className="relative w-full max-w-lg rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
-        style={{ background: "rgba(13,5,32,0.98)", backdropFilter: "blur(16px)" }}
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+      <div className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-emerald-50">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" style={{ color: "#FFB000" }} />
-            <span className="text-sm font-semibold text-white">SIGNAL</span>
+            <MessageSquare className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-display font-semibold text-gray-900">SIGNAL</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10"
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100"
             aria-label="Close chat"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="p-5 text-sm text-white/60 leading-relaxed">
+        <div className="p-5 text-sm text-gray-600 leading-relaxed">
           <p className="mb-3">
-            SIGNAL can scan your URL, match prospective sales leads, and queue follow-up plans from the results page. Use{" "}
-            <strong className="text-white/80">Activate SIGNAL</strong> or{" "}
-            <strong className="text-white/80">Scan URL</strong> to start.
+            SIGNAL scans your URL, matches prospective sales leads, and queues follow-up plans from the results page.
           </p>
-          <p className="text-xs text-white/35">Follow-up automation starts after you activate all matched leads or select individual leads.</p>
+          <Link
+            href="/results?url="
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            <Zap className="h-4 w-4" />
+            Activate SIGNAL
+          </Link>
+          <p className="mt-4 text-xs text-gray-400">
+            Follow-up automation starts after you activate matched leads or select individual leads on the pipeline.
+          </p>
         </div>
       </div>
     </div>
@@ -62,18 +66,14 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className={`fixed right-4 z-40 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 ${onPipeline ? "bottom-24" : "bottom-4"}`}
-          style={{
-            color: "#FFB000",
-            border: "1.5px solid #FFB000",
-            background: "rgba(13,5,32,0.85)",
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 4px 20px rgba(255,176,0,0.12)",
-          }}
+          className={`fixed right-4 z-40 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-emerald-600 bg-white text-emerald-700 shadow-lg transition-all hover:bg-emerald-50 hover:-translate-y-0.5 ${onPipeline ? "bottom-24" : "bottom-4"}`}
         >
           <MessageSquare className="h-4 w-4" />
           Signal
-          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#FFB000" }} />
+          <span className="relative inline-flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
         </button>
       )}
     </ScoutChatContext.Provider>

@@ -262,7 +262,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={reportStatus === "submitting"}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {reportStatus === "submitting" ? "Requesting..." : "Download Free Report"}
                 </button>

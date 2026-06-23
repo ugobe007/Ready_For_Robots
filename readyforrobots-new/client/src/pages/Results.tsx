@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
+import SiteFooter from "@/components/layout/SiteFooter";
 import { useAuth } from "@/contexts/AuthContext";
 import { BUYER_SIGNAL_EXPLANATION, OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
@@ -169,7 +170,7 @@ function normalizeUrl(raw: string): string {
 }
 
 function scoreColor(score: number): string {
-  return score >= 90 ? "#34d399" : score >= 75 ? "#a78bfa" : "#FFB000";
+  return score >= 90 ? "#34d399" : score >= 75 ? "#10b981" : "#FFB000";
 }
 
 function timingFromScore(score: number): string {
@@ -339,7 +340,7 @@ const fallbackProspects: Prospect[] = [
     score: 88,
     signal: "Hiring an Automation Engineer while opening two new distribution centers.",
     signalType: "Expansion signal",
-    signalColor: "#a78bfa",
+    signalColor: "#10b981",
     timing: "Decision window: 1-3 months",
     action: "Contact during facility design phase",
     relevance: "New facilities plus an automation hire indicate budget, ownership, and a near-term design window for robotics decisions.",
@@ -591,15 +592,15 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
       <main className="flex-1 pt-24 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 text-xs text-white/30 mb-8">
-            <Link href="/" className="hover:text-white/60 transition-colors">Home</Link>
+          <div className="flex items-center gap-2 text-xs text-gray-400 mb-8">
+            <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
             <span>/</span>
-            <span className="text-white/50">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
+            <span className="text-gray-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
           </div>
 
           {!submittedUrl && (
@@ -608,10 +609,10 @@ export default function Results() {
                 <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
                   Activate SIGNAL
                 </p>
-                <h1 className="font-extrabold text-white leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h1 className="font-extrabold text-gray-900 leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                   Give SIGNAL a URL first.
                 </h1>
-                <p className="text-sm text-white/45 max-w-xl mb-8">
+                <p className="text-sm text-gray-500 max-w-xl mb-8">
                   Paste your robot, company, or product URL. SIGNAL will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
                 </p>
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
@@ -619,7 +620,7 @@ export default function Results() {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
-                    className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-amber-400/70"
+                    className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-amber-400/70"
                   />
                   <button
                     type="submit"
@@ -664,14 +665,14 @@ export default function Results() {
             <>
               <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>
+                  <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-2" style={{ color: "#10b981" }}>
                     Scan complete · {prospects.length} opportunities found{usingFallback ? " · sample mode" : ""}
                   </p>
-                  <h1 className="font-extrabold text-white leading-tight" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h1 className="font-extrabold text-gray-900 leading-tight" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                     Your matched pipeline
                   </h1>
-                  <p className="text-sm text-white/40 mt-2">
-                    Based on <span className="text-white/60 font-medium">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
+                  <p className="text-sm text-gray-500 mt-2">
+                    Based on <span className="text-gray-600 font-medium">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
                   </p>
                 </div>
                 <button
@@ -685,15 +686,15 @@ export default function Results() {
               </div>
 
               {choosingScout && (
-                <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.025] px-5 py-4">
-                  <div className="flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="mb-6 rounded-2xl border border-gray-200 bg-white px-5 py-4">
+                  <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3">
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
-                        <p className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                           Activate SIGNAL sales motion
                         </p>
-                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/48">
+                        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">
                           Choose materials, lead scope, and operating mode. SIGNAL will save leads to CRM and prepare the workflow before any outbound messages or follow-ups.
                         </p>
                       </div>
@@ -711,10 +712,10 @@ export default function Results() {
                   </div>
 
                   <div className="mt-4 grid gap-4">
-                    <div className="border-b border-white/8 pb-4">
+                    <div className="border-b border-gray-100 pb-4">
                       <div className="mb-2 flex items-center gap-2">
-                        <span className="text-[10px] font-normal" style={{ color: "#c4b5fd" }}>01</span>
-                        <p className="text-[10px] font-normal uppercase tracking-widest" style={{ color: "#c4b5fd" }}>Sales materials</p>
+                        <span className="text-[10px] font-normal" style={{ color: "#047857" }}>01</span>
+                        <p className="text-[10px] font-normal uppercase tracking-widest" style={{ color: "#047857" }}>Sales materials</p>
                       </div>
                       <div className="grid gap-2 md:grid-cols-3">
                         {MATERIAL_OPTIONS.map((option) => {
@@ -725,15 +726,15 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setMaterialChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/[0.04]"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
                                 ? { borderColor: "rgba(196,181,253,0.45)", background: "rgba(196,181,253,0.08)" }
                                 : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="flex min-w-0 items-center gap-2">
-                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#c4b5fd" : "rgba(255,255,255,0.32)" }} />
-                                  <span className="truncate text-xs font-bold text-white/78">{option.title}</span>
+                                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: active ? "#047857" : "rgba(255,255,255,0.32)" }} />
+                                  <span className="truncate text-xs font-bold text-gray-900/78">{option.title}</span>
                                 </span>
                                 {active && <CheckCircle2 className="h-4 w-4 text-teal-200" />}
                               </div>
@@ -743,7 +744,7 @@ export default function Results() {
                         })}
                       </div>
                       {materialChoice === "upload" && (
-                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-white/12 bg-white/[0.025] px-3 py-2.5 text-xs text-white/50 hover:border-violet-300/35">
+                        <label className="mt-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-500 hover:border-violet-300/35">
                           <span>{deckFileName || "Choose a PDF, PPT, or deck file"}</span>
                           <span className="font-normal text-violet-200">Browse</span>
                           <input
@@ -756,13 +757,13 @@ export default function Results() {
                       )}
                     </div>
 
-                    <div className="border-b border-white/8 pb-4">
+                    <div className="border-b border-gray-100 pb-4">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-normal text-sky-200">02</span>
                           <p className="text-[10px] font-normal uppercase tracking-widest text-sky-200">Lead scope</p>
                         </div>
-                        <p className="text-[11px] text-white/35">
+                        <p className="text-[11px] text-gray-400">
                           {selectedCount} selected
                         </p>
                       </div>
@@ -774,13 +775,13 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setScopeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/[0.04]"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
                                 ? { borderColor: "rgba(56,189,248,0.42)", background: "rgba(56,189,248,0.08)" }
                                 : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-white/78">{option.title}</p>
+                                <p className="text-xs font-bold text-gray-900/78">{option.title}</p>
                                 {active && <CheckCircle2 className="h-4 w-4 text-sky-200" />}
                               </div>
                               <p className="mt-1 text-[11px] leading-relaxed text-white/38">{option.desc}</p>
@@ -790,7 +791,7 @@ export default function Results() {
                       </div>
                     </div>
 
-                    <div className="border-b border-white/8 pb-4">
+                    <div className="border-b border-gray-100 pb-4">
                       <div className="mb-2 flex items-center gap-2">
                         <span className="text-[10px] font-normal text-teal-200">03</span>
                         <p className="text-[10px] font-normal uppercase tracking-widest text-teal-200">Automation mode</p>
@@ -803,14 +804,14 @@ export default function Results() {
                               key={option.id}
                               type="button"
                               onClick={() => setModeChoice(option.id)}
-                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-white/[0.04]"
+                              className="rounded-xl border px-3 py-2.5 text-left transition-all hover:bg-gray-50"
                               style={active
                                 ? { borderColor: "rgba(45,212,191,0.42)", background: "rgba(45,212,191,0.08)" }
                                 : { borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs font-bold text-white/78">{option.title}</p>
-                                {active ? <CheckCircle2 className="h-4 w-4 text-teal-200" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-white/25" />}
+                                <p className="text-xs font-bold text-gray-900/78">{option.title}</p>
+                                {active ? <CheckCircle2 className="h-4 w-4 text-teal-200" /> : option.gated && !isSignedIn && <LockKeyhole className="h-3 w-3 text-gray-400" />}
                               </div>
                               <p className="mt-1 text-[11px] leading-relaxed text-white/38">{option.desc}</p>
                             </button>
@@ -821,15 +822,15 @@ export default function Results() {
 
                     <div>
                       <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SIGNAL starts with</p>
-                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-white/48 md:grid-cols-4">
-                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-violet-200" /> Lead evaluation</span>
+                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-500 md:grid-cols-4">
+                        <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-600" /> Lead evaluation</span>
                         <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-sky-200" /> Sales strategy</span>
                         <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-teal-200" /> Activity schedule</span>
                         <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-200" /> Reply alerts</span>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 border-t border-white/8 pt-4 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center">
                       <button
                         type="button"
                         onClick={() => activateScout()}
@@ -845,11 +846,11 @@ export default function Results() {
                           activateScout({ mode: "manual", material: "skip", scope: "top" });
                         }}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-5 py-3 text-xs font-bold text-white/65 transition-all hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white/[0.035] px-5 py-3 text-xs font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
-                      <p className="text-[11px] text-white/30 sm:ml-auto">
+                      <p className="text-[11px] text-gray-400 sm:ml-auto">
                         Auth first. CRM capture first. Sending stays gated by your review.
                       </p>
                     </div>
@@ -860,7 +861,7 @@ export default function Results() {
               {activatedCount > 0 && (
                 <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
                   <p className="text-sm font-bold text-emerald-300 mb-1">SIGNAL review queue created</p>
-                  <p className="text-xs text-white/45">
+                  <p className="text-xs text-gray-500">
                     {activationId ? `Activation #${activationId}: ` : ""}
                     Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
                   </p>
@@ -873,9 +874,9 @@ export default function Results() {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
                   return (
-                    <div key={p.id} className="rounded-2xl border border-white/8 overflow-hidden hover:border-violet-500/25 transition-colors" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <div key={p.id} className="rounded-2xl border border-gray-100 overflow-hidden hover:border-emerald-500/25 transition-colors" >
                       <div className="px-6 pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <label className="flex items-center gap-2 text-xs text-white/40 sm:pt-4">
+                        <label className="flex items-center gap-2 text-xs text-gray-500 sm:pt-4">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -890,17 +891,17 @@ export default function Results() {
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[9px] text-white/25 uppercase tracking-widest">score</span>
+                          <span className="text-[9px] text-gray-400 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h2 className="text-base font-bold text-white">{p.company}</h2>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#a78bfa", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(124,58,237,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(124,58,237,0.3)" }}>
+                            <h2 className="text-base font-bold text-gray-900">{p.company}</h2>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#10b981", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(5,150,105,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(5,150,105,0.3)" }}>
                               {isActive ? "Review Queued" : p.stage}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-white/35 mb-3">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-3">
                             <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
                             <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
                             <span>{p.industry}</span>
@@ -921,11 +922,11 @@ export default function Results() {
                           <div className="rounded-xl border border-cyan-500/15 p-3" style={{ background: "rgba(6,182,212,0.06)" }}>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/80 mb-1">Intelligence</p>
                             {p.shareSummary && (
-                              <p className="text-xs text-white/55 leading-relaxed">{p.shareSummary}</p>
+                              <p className="text-xs text-gray-500 leading-relaxed">{p.shareSummary}</p>
                             )}
                             {p.robotTypes && p.robotTypes.length > 0 && (
-                              <p className="mt-2 text-[11px] text-white/40">
-                                <span className="font-semibold text-white/55">Robots: </span>
+                              <p className="mt-2 text-[11px] text-gray-500">
+                                <span className="font-semibold text-gray-500">Robots: </span>
                                 {p.robotTypes.join(" · ")}
                               </p>
                             )}
@@ -946,23 +947,23 @@ export default function Results() {
                       )}
 
                       <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                        <div className="min-w-0 rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Why relevant</p>
+                        <div className="min-w-0 rounded-xl border border-gray-100 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Why relevant</p>
                           <p className="mb-3 block break-words rounded-lg border-l-2 px-3 py-2 text-sm font-normal leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000", background: "rgba(255,176,0,0.07)", overflowWrap: "anywhere" }}>
                             “{p.signal}”
                           </p>
-                          <p className="break-words text-xs text-white/50 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
+                          <p className="break-words text-xs text-gray-500 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
                         </div>
-                        <div className="min-w-0 rounded-xl border border-white/6 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#a78bfa" }}>Score rationale</p>
-                          <p className="text-xs text-white/50 leading-relaxed">{p.scoreReason}</p>
+                        <div className="min-w-0 rounded-xl border border-gray-100 p-3" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Score rationale</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">{p.scoreReason}</p>
                         </div>
                       </div>
 
                       <div className="px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <div className="flex items-center gap-2 flex-1">
-                          <ArrowRight className="h-3.5 w-3.5 shrink-0" style={{ color: "#7c3aed" }} />
-                          <span className="text-sm text-white/60">{p.action}</span>
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0" style={{ color: "#059669" }} />
+                          <span className="text-sm text-gray-600">{p.action}</span>
                         </div>
                         <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ color: "#34d399", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
                           {p.timing}
@@ -972,23 +973,23 @@ export default function Results() {
                       {isActive && (
                         <div className="mx-6 mb-4 rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(52,211,153,0.05)" }}>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SIGNAL follow-up plan</p>
-                          <p className="text-xs text-white/45 leading-relaxed">
+                          <p className="text-xs text-gray-500 leading-relaxed">
                             Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
                           </p>
                         </div>
                       )}
 
-                      <div className="border-t border-white/6">
+                      <div className="border-t border-gray-100">
                         <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-white/2 transition-colors">
                           <div className="flex items-center gap-2">
-                            <FileText className="h-3.5 w-3.5" style={{ color: "#7c3aed" }} />
-                            <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>View outreach draft</span>
+                            <FileText className="h-3.5 w-3.5" style={{ color: "#059669" }} />
+                            <span className="text-xs font-semibold" style={{ color: "#10b981" }}>View outreach draft</span>
                           </div>
-                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-white/25" /> : <ChevronDown className="h-3.5 w-3.5 text-white/25" />}
+                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />}
                         </button>
                         {draftOpen && (
-                          <div className="px-6 pb-5 border-t border-white/6">
-                            <pre className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          <div className="px-6 pb-5 border-t border-gray-100">
+                            <pre className="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                               {p.draft}
                             </pre>
                           </div>
@@ -1002,6 +1003,7 @@ export default function Results() {
           )}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
