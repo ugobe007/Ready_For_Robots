@@ -137,7 +137,9 @@ export default function Home() {
             <div className="animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-6">
                 <LiveDot />
-                <span className="font-mono-data">{hotLabel} hot leads active now</span>
+                <span className="font-mono-data">
+                  Live pipeline · updated daily · {hotLabel} hot
+                </span>
               </div>
 
               <h1 className="font-display text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.08] tracking-tight mb-6">
@@ -146,8 +148,9 @@ export default function Home() {
               </h1>
 
               <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
-                SIGNAL scans 150+ live sources to surface automation-ready buyers — scored, briefed, and ready to
-                contact. You approve. You show up. That&apos;s it.
+                <span className="font-semibold text-gray-800">SIGNAL</span> monitors 150+ live sources to surface
+                automation-ready buyers — scored, briefed, and ready to contact. You approve. You show up. That&apos;s
+                it.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -156,14 +159,14 @@ export default function Home() {
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-md hover:shadow-lg text-base"
                 >
                   <Zap size={18} />
-                  Activate SIGNAL
+                  Find buyers
                   <ArrowRight size={16} />
                 </Link>
                 <Link
-                  href="/signup?next=/pipeline"
+                  href="/pipeline"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border border-gray-200 transition-all duration-150 active:scale-[0.97] text-base"
                 >
-                  Start free workspace
+                  Browse the pipeline free
                   <ChevronRight size={16} />
                 </Link>
               </div>

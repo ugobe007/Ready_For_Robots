@@ -186,7 +186,7 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
               className="inline-flex items-center gap-2 px-5 py-3 text-emerald-300 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
             >
               <Zap size={16} />
-              Activate SIGNAL
+              Find buyers
             </Link>
           </div>
         </div>

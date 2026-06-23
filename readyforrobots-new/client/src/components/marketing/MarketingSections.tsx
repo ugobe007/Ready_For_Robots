@@ -3,7 +3,6 @@ import {
   BarChart3,
   CheckCircle,
   Search,
-  Send,
   Target,
   TrendingUp,
   XCircle,
@@ -42,10 +41,10 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
       statLabel: "active signals",
     },
     {
-      icon: Send,
-      title: "Deploy",
+      icon: TrendingUp,
+      title: "Close",
       description:
-        "Pipeline through trial, purchase, or rental — with follow-ups and meeting-ready intelligence.",
+        "Advance deals through follow-ups, re-engagement, and meeting-ready intelligence — from first signal to signed contract.",
       stat: "62%",
       statLabel: "strong buying intent",
     },
@@ -57,7 +56,7 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
         <div className="text-center mb-14">
           <p className="section-eyebrow mb-3">What ReadyForRobots SIGNAL Does</p>
           <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight">
-            Discover, develop, and deploy
+            Discover, develop, and close
             <br />
             robot sales — from one system.
           </h2>
@@ -494,24 +493,18 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
             href="/results?url="
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-lg text-base"
           >
-            Activate SIGNAL
+            Find buyers
             <ArrowRight size={16} />
           </Link>
           <Link
             href="/pipeline"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/20 transition-all duration-150 active:scale-[0.97] text-base"
           >
-            Open pipeline
-          </Link>
-          <Link
-            href="/signup?next=/pipeline"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-700/20 hover:bg-emerald-700/30 text-emerald-100 font-semibold rounded-xl border border-emerald-500/30 transition-all duration-150 active:scale-[0.97] text-base"
-          >
-            Start free workspace
+            Browse the pipeline free
           </Link>
         </div>
         <p className="text-slate-600 text-xs mt-5 font-mono-data">
-          Scan without signup · Free pipeline workspace · Upgrade when you save leads
+          No signup to scan · Free pipeline preview · Upgrade when you save leads
         </p>
       </div>
     </section>
