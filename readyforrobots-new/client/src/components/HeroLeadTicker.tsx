@@ -6,7 +6,7 @@ import ExperimentLeadTicker from "@/components/ExperimentLeadTicker";
 export default function HeroLeadTicker() {
   return (
     <ExperimentLeadTicker
-      maxVisible={4}
+      maxVisible={5}
       tickMs={6000}
       title="Live pipeline"
       subtitle="Verified buyer signals"

@@ -21,7 +21,7 @@ type TickerRow = TickerLead & { tickKey: number };
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_TICK_MS = 5000;
 const POOL_REFRESH_MS = 90_000;
-const ROW_HEIGHT_PX = 44;
+const ROW_HEIGHT_PX = 50;
 
 export type ExperimentLeadTickerProps = {
   maxVisible?: number;
@@ -176,7 +176,7 @@ export default function ExperimentLeadTicker({
 
   return (
     <div
-      className={`flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-white/8 ${minHeightClass}`}
+      className={`flex w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-white/8 ${minHeightClass}`}
       style={{
         background: "rgba(255,255,255,0.02)",
         boxShadow: "0 16px 48px -20px rgba(0,0,0,0.55)",
@@ -221,7 +221,7 @@ export default function ExperimentLeadTicker({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="mb-1 flex items-center gap-2 rounded-lg border border-white/5 px-2.5 py-2"
+                  className="mb-1.5 flex items-center gap-2 rounded-lg border border-white/5 px-2.5 py-2.5"
                   style={{ background: "rgba(255,255,255,0.02)" }}
                 >
                   <div className="min-w-0 flex-1">
