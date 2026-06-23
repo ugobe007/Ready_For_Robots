@@ -134,6 +134,38 @@ def add_bulk_to_blocklist(names: list[str], reason: str = "bulk_purge") -> int:
     return added
 
 
+def remove_from_blocklist(name: str) -> bool:
+    """Remove a name from the blocklist (e.g. after a false-positive quarantine)."""
+    if not name or not name.strip():
+        return False
+    key = name.strip().lower()
+    removed = False
+    try:
+        from app.database import SessionLocal
+        from app.models.scraper_blocklist import ScraperBlocklist
+
+        db = SessionLocal()
+        try:
+            row = db.query(ScraperBlocklist).filter(ScraperBlocklist.name_lower == key).first()
+            if row:
+                db.delete(row)
+                db.commit()
+                removed = True
+                logger.debug("Removed from blocklist: %r", name)
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning("Could not remove blocklist entry for %r: %s", name, e)
+
+    global _BLOCKLIST_CACHE
+    if _BLOCKLIST_CACHE is not None and key in _BLOCKLIST_CACHE:
+        _BLOCKLIST_CACHE.discard(key)
+        removed = True
+    elif removed:
+        invalidate_cache()
+    return removed
+
+
 def invalidate_cache() -> None:
     """Force reload from DB on next call."""
     global _BLOCKLIST_CACHE

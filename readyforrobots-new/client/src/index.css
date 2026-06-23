@@ -40,98 +40,82 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-emerald: var(--emerald);
+  --color-emerald-light: var(--emerald-light);
+  --color-navy: var(--navy);
+  --color-amber-brand: var(--amber-brand);
 }
 
-/* ==============================================
-   ReadyForRobots — 60/30/10 Violet Color System
-   60% → Deep violet backgrounds (#0d0520 → #1e0a4a)
-   30% → Cream/off-white text & card surfaces
-   10% → Electric violet accent (#7c3aed / #8b5cf6)
-   ============================================== */
+/* ReadyForRobots — Precision Intelligence (emerald + navy + amber) */
 :root {
-  /* Electric violet primary (10% accent) */
-  --primary: oklch(0.52 0.29 293);
-  --primary-foreground: oklch(0.98 0.01 293);
+  --emerald: oklch(0.527 0.154 162);
+  --emerald-light: oklch(0.65 0.15 162);
+  --navy: oklch(0.23 0.06 240);
+  --amber-brand: oklch(0.75 0.17 80);
 
-  /* Deep violet backgrounds (60%) */
-  --background: oklch(0.09 0.055 293);
-  --foreground: oklch(0.94 0.015 293);
-
-  /* Card surfaces — slightly lighter violet */
-  --card: oklch(0.13 0.065 293);
-  --card-foreground: oklch(0.94 0.015 293);
-  --popover: oklch(0.13 0.065 293);
-  --popover-foreground: oklch(0.94 0.015 293);
-
-  /* Secondary surfaces */
-  --secondary: oklch(0.17 0.07 293);
-  --secondary-foreground: oklch(0.85 0.025 293);
-
-  /* Muted */
-  --muted: oklch(0.16 0.065 293);
-  --muted-foreground: oklch(0.60 0.08 293);
-
-  /* Accent = same as primary */
-  --accent: oklch(0.52 0.29 293);
-  --accent-foreground: oklch(0.98 0.01 293);
-
-  /* Destructive */
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
-
-  /* Borders — subtle violet-tinted white */
-  --border: oklch(1 0 0 / 0.10);
-  --input: oklch(1 0 0 / 0.12);
-  --ring: oklch(0.60 0.26 293);
-  --radius: 0.6rem;
-
-  /* Charts — violet scale */
-  --chart-1: oklch(0.72 0.22 293);
-  --chart-2: oklch(0.60 0.26 293);
-  --chart-3: oklch(0.52 0.29 293);
-  --chart-4: oklch(0.42 0.28 293);
-  --chart-5: oklch(0.32 0.26 293);
-
-  /* Sidebar */
-  --sidebar: oklch(0.11 0.060 293);
-  --sidebar-foreground: oklch(0.94 0.015 293);
-  --sidebar-primary: oklch(0.52 0.29 293);
-  --sidebar-primary-foreground: oklch(0.98 0.01 293);
-  --sidebar-accent: oklch(0.17 0.07 293);
-  --sidebar-accent-foreground: oklch(0.94 0.015 293);
-  --sidebar-border: oklch(1 0 0 / 0.10);
-  --sidebar-ring: oklch(0.60 0.26 293);
+  --primary: oklch(0.527 0.154 162);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0.003 240);
+  --secondary-foreground: oklch(0.23 0.06 240);
+  --muted: oklch(0.965 0.003 240);
+  --muted-foreground: oklch(0.55 0.015 240);
+  --accent: oklch(0.97 0.003 240);
+  --accent-foreground: oklch(0.23 0.06 240);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.91 0.005 240);
+  --input: oklch(0.91 0.005 240);
+  --ring: oklch(0.527 0.154 162);
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.13 0.02 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.13 0.02 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.13 0.02 240);
+  --chart-1: oklch(0.527 0.154 162);
+  --chart-2: oklch(0.75 0.17 80);
+  --chart-3: oklch(0.23 0.06 240);
+  --chart-4: oklch(0.65 0.15 162);
+  --chart-5: oklch(0.55 0.015 240);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.13 0.02 240);
+  --sidebar-primary: oklch(0.527 0.154 162);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0.003 240);
+  --sidebar-accent-foreground: oklch(0.13 0.02 240);
+  --sidebar-border: oklch(0.91 0.005 240);
+  --sidebar-ring: oklch(0.527 0.154 162);
 }
 
-/* .dark mirrors :root — this is a dark-first design */
 .dark {
-  --primary: oklch(0.52 0.29 293);
-  --primary-foreground: oklch(0.98 0.01 293);
-  --background: oklch(0.09 0.055 293);
-  --foreground: oklch(0.94 0.015 293);
-  --card: oklch(0.13 0.065 293);
-  --card-foreground: oklch(0.94 0.015 293);
-  --popover: oklch(0.13 0.065 293);
-  --popover-foreground: oklch(0.94 0.015 293);
-  --secondary: oklch(0.17 0.07 293);
-  --secondary-foreground: oklch(0.85 0.025 293);
-  --muted: oklch(0.16 0.065 293);
-  --muted-foreground: oklch(0.60 0.08 293);
-  --accent: oklch(0.52 0.29 293);
-  --accent-foreground: oklch(0.98 0.01 293);
+  --primary: oklch(0.527 0.154 162);
+  --primary-foreground: oklch(1 0 0);
+  --background: oklch(0.13 0.02 240);
+  --foreground: oklch(0.97 0.003 240);
+  --card: oklch(0.17 0.025 240);
+  --card-foreground: oklch(0.97 0.003 240);
+  --popover: oklch(0.17 0.025 240);
+  --popover-foreground: oklch(0.97 0.003 240);
+  --secondary: oklch(0.22 0.03 240);
+  --secondary-foreground: oklch(0.85 0.015 240);
+  --muted: oklch(0.22 0.03 240);
+  --muted-foreground: oklch(0.65 0.015 240);
+  --accent: oklch(0.22 0.03 240);
+  --accent-foreground: oklch(0.97 0.003 240);
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 0.10);
-  --input: oklch(1 0 0 / 0.12);
-  --ring: oklch(0.60 0.26 293);
-  --sidebar: oklch(0.11 0.060 293);
-  --sidebar-foreground: oklch(0.94 0.015 293);
-  --sidebar-primary: oklch(0.52 0.29 293);
-  --sidebar-primary-foreground: oklch(0.98 0.01 293);
-  --sidebar-accent: oklch(0.17 0.07 293);
-  --sidebar-accent-foreground: oklch(0.94 0.015 293);
-  --sidebar-border: oklch(1 0 0 / 0.10);
-  --sidebar-ring: oklch(0.60 0.26 293);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.527 0.154 162);
+  --sidebar: oklch(0.15 0.025 240);
+  --sidebar-foreground: oklch(0.97 0.003 240);
+  --sidebar-primary: oklch(0.527 0.154 162);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0.03 240);
+  --sidebar-accent-foreground: oklch(0.97 0.003 240);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.527 0.154 162);
 }
 
 @layer base {
@@ -142,8 +126,9 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
   }
-  h1, h2, h3 {
-    font-family: 'Sora', system-ui, sans-serif;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
   }
   .font-mono, code, pre {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -190,7 +175,51 @@
     }
   }
 
-  /** SIGNAL wordmark — mono / telemetry (not body Sora) */
+  .font-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  .font-mono-data {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  .section-eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: oklch(0.527 0.154 162);
+  }
+
+  .badge-hot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: oklch(0.95 0.08 80);
+    color: oklch(0.5 0.15 50);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .badge-warm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: oklch(0.95 0.06 60);
+    color: oklch(0.55 0.12 50);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .score-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: oklch(0.527 0.154 162);
+  }
+
   .rfr-scout-wordmark {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-weight: 700;
@@ -199,24 +228,25 @@
   }
 
   @keyframes rfr-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes rfr-benchmark-marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .rfr-animate-fade-in {
     animation: rfr-fade-in 0.45s ease-out both;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   }
 }

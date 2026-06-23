@@ -39,7 +39,9 @@ ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
     "popeyes", "chili's", "applebee's", "shari's", "friendly's", "steak 'n shake",
     # Health plan / insurance companies that look like noun phrases
     "partnership health plan", "health plan of san joaquin",
-    "health plan of the redwoods", "molina healthcare",
+    "health plan of the redwoods",     "molina healthcare",
+    # Medical diagnostics — real company; was false-positive on headline-stub regex
+    "invivoscribe",
 })
 
 # Names that share a stable prefix (legal suffix variants: GmbH, Inc., etc.)

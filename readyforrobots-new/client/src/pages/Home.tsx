@@ -1,123 +1,47 @@
 /**
- * Home — ReadyForRobots Dark Editorial Design
- * Inspired by: Linear, Vercel, Raycast
- * Color system: #0d0520 bg · #7c3aed purple (brand/headlines) · #03DAC5 teal (action/live/CTA)
- * Typography: Sora (display) · Inter (body) · JetBrains Mono (data)
+ * Home — Precision Intelligence redesign (emerald light SaaS)
+ * Wired to live pipeline stats, homepage leads, newsletter, and report APIs.
  */
-import React, { useState, useEffect, useRef } from "react";
-import { Search, ArrowRight, Zap, Shield, TrendingUp, CheckCircle2, Globe, Target, Users, BarChart3, Sparkles, FileText, X, Quote, Mail } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, ChevronRight, X, Zap } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import PipelinePreview from "@/components/PipelinePreview";
-import HeroLeadTicker from "@/components/HeroLeadTicker";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
 import HumanoidBenchmarkMarquee from "@/components/HumanoidBenchmarkMarquee";
-import { useFadeUp, fadeUpClass } from "@/hooks/useFadeUp";
+import MarketingHeroPipeline from "@/components/marketing/MarketingHeroPipeline";
+import MarketingLivePipelineSection from "@/components/marketing/MarketingLivePipelineSection";
+import MarketingDailyBrief from "@/components/marketing/MarketingDailyBrief";
+import MarketingFooter from "@/components/marketing/MarketingFooter";
+import {
+  MarketingBeforeAfter,
+  MarketingBenchmark,
+  MarketingCaseStudies,
+  MarketingFinalCTA,
+  MarketingHowItWorks,
+  MarketingReportSection,
+  MarketingTestimonials,
+  MarketingWhatSignalDoes,
+} from "@/components/marketing/MarketingSections";
+import { LiveDot } from "@/components/marketing/primitives";
+import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { cleanScrapedText } from "@/lib/text";
 
-function useTypewriter(text: string, speed = 55, startDelay = 600) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-  const speedRef = useRef(speed);
-  const delayRef = useRef(startDelay);
-
-  useEffect(() => {
-    setDisplayed("");
-    setDone(false);
-    let i = 0;
-    let interval: ReturnType<typeof setInterval>;
-    const delay = setTimeout(() => {
-      interval = setInterval(() => {
-        i++;
-        setDisplayed(text.slice(0, i));
-        if (i >= text.length) {
-          clearInterval(interval);
-          setDone(true);
-        }
-      }, speedRef.current);
-    }, delayRef.current);
-    return () => {
-      clearTimeout(delay);
-      clearInterval(interval);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
-
-  return { displayed, done };
-}
-
-const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/rfr-dark-hero-eCRKfoUwPNDkc82gUhUXL9.webp";
-
-const testimonials = [
-  {
-    quote: "We reached the buyer 4 months before the RFP — and shaped the requirements. That deal would never have happened with a cold list.",
-    name: "VP of Sales",
-    company: "Warehouse AMR Company",
-    result: "15-robot pilot",
-  },
-  {
-    quote: "ReadyForRobots found a $2.4M logistics opportunity we had zero visibility into. The signal was an earnings call mention — we never would have caught it manually.",
-    name: "Director of Business Development",
-    company: "Industrial Robotics OEM",
-    result: "$2.4M contract",
-  },
-  {
-    quote: "Our SDR used to spend 3 days a week on prospecting. Now that time goes to closing. The pipeline quality is completely different.",
-    name: "Head of Sales",
-    company: "Service Robot Startup",
-    result: "3x pipeline velocity",
-  },
-];
-
-type NewsletterStory = {
-  category?: string;
-  company?: string;
-  headline?: string;
-  snippet?: string;
-  summary?: string;
-  impact?: string;
-  economics?: string;
-};
+const HERO_BG =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/bZbY4XZf5ZnDvj8w6Dq8Cf/rfr-hero-bg-4bNqTqw4cnY6Gmaq7G9bQp.webp";
 
 type NewsletterEdition = {
-  latestEdition?: {
-    date?: string;
-    headline?: string;
-    subheadline?: string;
-  };
-  topStories?: NewsletterStory[];
+  latestEdition?: { headline?: string; subheadline?: string };
+  topStories?: { category?: string; company?: string; headline?: string; snippet?: string; summary?: string }[];
 };
 
 type HumanoidBenchReport = {
   title?: string;
   total_robots?: number;
-  available_count?: number;
   overall_leader?: { name?: string; vendor?: string; score?: number };
-  key_findings?: string[];
 };
 
-const beforeAfter = [
-  { before: "Cold lists with no context", after: "Signal-triggered outreach with exact buying reason" },
-  { before: "Reach out and hope for the right timing", after: "Contact during the decision window, not after" },
-  { before: "Generic email templates", after: "Drafted message referencing their specific signal" },
-  { before: "3% reply rate on cold outreach", after: "Warm conversations with buyers who have a real need" },
-  { before: "Find out about deals after the RFP drops", after: "Shape requirements before competitors know it exists" },
-  { before: "SDR spends 70% of time prospecting", after: "SDR spends 100% of time on qualified conversations" },
-  { before: "No visibility into partnership opportunities", after: "Signal surfaces integrators and channel partners ready to carry your product" },
-];
-
-const agentFeatures = [
-  { icon: Search, title: "Discover", desc: "Find robot-ready companies from live market signals—monitored 24/7 across 150+ sources" },
-  { icon: Shield, title: "Develop", desc: "Score timing, fit, and intent; draft trigger-aware outreach for each opportunity" },
-  { icon: TrendingUp, title: "Close", desc: "Advance deals with follow-ups, pipeline tracking, and meeting-ready briefs" },
-  { icon: FileText, title: "Content Studio", desc: "Daily posts and outreach copy built from today's hottest leads" },
-  { icon: Users, title: "Partnership pipeline", desc: "Integrators, distributors, and channel partners in the same workflow" },
-  { icon: Globe, title: "HubSpot sync", desc: "Optional—push scored accounts into HubSpot, Salesforce, or Pipedrive when you want" },
-];
-
 export default function Home() {
-  const { displayed: typedPipeline, done: typedDone } = useTypewriter("Accelerate your Sales\nPipeline", 120, 1000);
+  const { hot, total } = usePipelineStats();
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -126,13 +50,7 @@ export default function Home() {
   const [dailyBrief, setDailyBrief] = useState<NewsletterEdition | null>(null);
   const [benchReport, setBenchReport] = useState<HumanoidBenchReport | null>(null);
 
-  const howItWorks = useFadeUp();
-  const agentPitch = useFadeUp();
-  const aboutSection = useFadeUp();
-  const intelligenceSection = useFadeUp();
-  const proofSection = useFadeUp();
-  const beforeAfterSection = useFadeUp();
-  const testimonialsSection = useFadeUp();
+  const hotLabel = formatStat(hot, "319");
 
   useEffect(() => {
     let cancelled = false;
@@ -165,11 +83,14 @@ export default function Home() {
     if (!reportForm.email.trim()) return;
     setReportStatus("submitting");
     try {
-      const res = await fetch(`${getApiBase()}/api/leads/report-download`, liveFetchInit({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reportForm),
-      }));
+      const res = await fetch(
+        `${getApiBase()}/api/leads/report-download`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reportForm),
+        }),
+      );
       if (!res.ok) throw new Error("Report request failed");
       setReportStatus("success");
     } catch {
@@ -182,11 +103,14 @@ export default function Home() {
     if (!newsletterEmail.trim()) return;
     setNewsletterStatus("submitting");
     try {
-      const res = await fetch(`${getApiBase()}/api/newsletter/subscribe`, liveFetchInit({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newsletterEmail, source: "homepage_footer" }),
-      }));
+      const res = await fetch(
+        `${getApiBase()}/api/newsletter/subscribe`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: newsletterEmail, source: "homepage_footer" }),
+        }),
+      );
       if (!res.ok) throw new Error("Newsletter signup failed");
       setNewsletterStatus("success");
       setNewsletterEmail("");
@@ -195,846 +119,150 @@ export default function Home() {
     }
   }
 
-  const briefHeadline = cleanScrapedText(dailyBrief?.latestEdition?.headline) || "Fresh robot demand signals, updated daily.";
-  const briefSubheadline = cleanScrapedText(dailyBrief?.latestEdition?.subheadline) || "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
-
-  const benchLeader = benchReport?.overall_leader;
-  const benchInlineText = benchLeader?.name
-    ? `${benchLeader.name} leads at ${benchLeader.score ?? "—"}/100${benchReport?.total_robots ? ` across ${benchReport.total_robots} humanoids` : ""}.`
-    : "Independent 6-criteria scores for every major humanoid — updated weekly.";
-
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#0d0520" }}>
+    <div className="min-h-screen bg-white">
       <Header />
 
-      {/* ── HERO ── */}
       <section
         id="hero-cta"
-        className="relative overflow-hidden py-20 lg:py-24"
-        style={{ background: "#0d0520" }}
+        className="relative pt-28 pb-20 overflow-hidden"
+        style={{
+          backgroundImage: `url(${HERO_BG})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-60"
-          style={{ backgroundImage: `url(${HERO_BG})` }}
-        />
-        {/* Radial glow center */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(124,58,237,0.12) 0%, transparent 70%)" }}
-        />
-        {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, transparent, #0d0520)" }}
-        />
+        <div className="container">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="animate-fade-in-up">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-6">
+                <LiveDot />
+                <span className="font-mono-data">{hotLabel} hot leads active now</span>
+              </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_420px] gap-6 xl:gap-8 items-start">
-          <div className="min-w-0">
-            {/* Live benchmark — product intelligence (links to /robots) */}
-            <p className="mb-4 max-w-xl text-xs leading-relaxed text-white/45" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-              <span className="font-bold uppercase tracking-[0.12em]" style={{ color: "#a78bfa" }}>Live · </span>
-              <Link href="/robots" className="font-semibold underline decoration-violet-400/35 underline-offset-2 transition-colors hover:text-white/75" style={{ color: "#c4b5fd" }}>
-                Humanoid benchmark
-              </Link>
-              {" — "}{benchInlineText}
-            </p>
+              <h1 className="font-display text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.08] tracking-tight mb-6">
+                Close Robot Deals{" "}
+                <span className="text-emerald-600">Before the RFP Drops</span>
+              </h1>
 
-            <h1
-              className="mb-5 max-w-2xl font-extrabold text-white"
-              style={{
-                fontFamily: "'Sora', system-ui, sans-serif",
-                textWrap: "balance",
-              }}
-            >
-              <span
-                className="block leading-[1.02]"
-                style={{
-                  fontSize: "clamp(2.4rem, 5.5vw, 4.25rem)",
-                  letterSpacing: "-0.045em",
-                }}
-              >
-                <span
-                  style={{
-                    background: "linear-gradient(135deg, #03DAC5 0%, #7c3aed 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
+              <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
+                SIGNAL scans 150+ live sources to surface automation-ready buyers — scored, briefed, and ready to
+                contact. You approve. You show up. That&apos;s it.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <Link
+                  href="/results?url="
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-md hover:shadow-lg text-base"
                 >
-                  Robot Revenue
-                  <br />
-                  Automation
-                </span>
-                <sup className="text-[0.42em] font-bold align-super" style={{ WebkitTextFillColor: "#a78bfa", color: "#a78bfa" }}>
-                  ™
-                </sup>
-              </span>
-              <span
-                className="mt-2 block leading-[1.08] text-white"
-                style={{
-                  fontSize: "clamp(1.65rem, 3.6vw, 2.85rem)",
-                  letterSpacing: "-0.04em",
-                  whiteSpace: "pre-line",
-                }}
-              >
-                {typedPipeline}
-                {!typedDone && (
-                  <span
-                    className="inline-block w-[3px] h-[0.85em] ml-[2px] align-middle animate-pulse"
-                    style={{ background: "#03DAC5", borderRadius: "1px", verticalAlign: "middle" }}
-                  />
-                )}
-              </span>
-            </h1>
-
-            <p
-              className="mb-7 max-w-xl text-[1.05rem] leading-relaxed text-white/65 sm:text-lg"
-              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-            >
-              The first sales intelligence and workflow platform built exclusively for robot vendors and integrators.
-            </p>
-
-            {/* Primary CTA */}
-            <div className="w-full max-w-md">
-              <Link href="/results?url=" className="block w-full">
-                <button
-                  type="button"
-                  className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl px-7 py-3.5 text-base font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                  style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
-                >
-                  <Zap className="h-4.5 w-4.5" />
+                  <Zap size={18} />
                   Activate SIGNAL
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
-              <p className="mt-2 text-center text-xs text-white/25" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  <ArrowRight size={16} />
+                </Link>
+                <Link
+                  href="/signup?next=/pipeline"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border border-gray-200 transition-all duration-150 active:scale-[0.97] text-base"
+                >
+                  Start free workspace
+                  <ChevronRight size={16} />
+                </Link>
+              </div>
+
+              <p className="text-xs text-gray-400 font-medium">
                 No signup required · Free to start · Results in seconds
               </p>
+            </div>
 
-              {/* Research report — separate from live benchmark above */}
-              <div className="mt-6 flex w-full flex-col items-center gap-1.5 border-t border-white/6 pt-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">Research report</p>
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:brightness-110"
-                  style={{ color: "#34d399", fontFamily: "'Inter', system-ui, sans-serif" }}
-                >
-                  <FileText className="h-3 w-3 shrink-0" />
-                  2026 Automation Imperative Report
-                </button>
-              </div>
+            <div className="animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+              <MarketingHeroPipeline hotCount={hot} totalCount={total} />
             </div>
           </div>
-
-          {/* Live pipeline — hero ticker, nudged toward headline */}
-          <div className="mt-6 flex justify-start lg:mt-0 lg:-ml-6 xl:-ml-10 lg:pt-4 lg:sticky lg:top-24">
-            <HeroLeadTicker />
-          </div>
-          </div>
         </div>
       </section>
 
-      {/* ── READYFORROBOTS INTRO ── */}
-      <section className="px-6 py-14 border-t border-white/6" style={{ background: "#0d0520" }}>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div>
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#FFB000" }}>
-              What ReadyForRobots does
-            </p>
-            <h2 className="max-w-xl text-3xl font-extrabold leading-tight text-white lg:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              Discover, develop, and deploy robot sales—from one system.
-            </h2>
-          </div>
+      <div id="about">
+        <MarketingWhatSignalDoes hotCount={hot} totalCount={total} />
+      </div>
+      <MarketingHowItWorks />
+      <MarketingLivePipelineSection hotCount={hot} totalCount={total} />
+      <MarketingBeforeAfter />
+      <MarketingCaseStudies />
+      <MarketingTestimonials />
 
-          <div>
-            <p className="text-base leading-relaxed text-white/50">
-              SIGNAL discovers automation-ready buyers from live market signals, develops each opportunity
-              with scored fit and tailored outreach, and advances accounts to deployment.
-              Every lead shows why it is ready, what triggered the signal, and how to move from trial to purchase or rental.
-              Sync to HubSpot when you want, or run everything in SIGNAL.
-            </p>
-            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[
-                ["Discover", "Automation-ready buyers—timing, intent, and fit from live market signals."],
-                ["Develop", "Signal briefs and tailored outreach for each account."],
-                ["Deploy", "Pipeline through trial, purchase, or rental—with follow-ups and meeting-ready intelligence."],
-              ].map(([label, copy], index) => (
-                <div key={label} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <p className="mb-2 font-mono text-xs font-bold" style={{ color: index === 1 ? "#03DAC5" : "#FFB000", fontFamily: "'JetBrains Mono', monospace" }}>{label}</p>
-                  <p className="text-xs leading-relaxed text-white/38">{copy}</p>
-                </div>
-              ))}
-            </div>
-            <Link href="/results?url=" className="mt-6 inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
-              Scan your robot URL <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-14 px-6" style={{ background: "#0d0520" }}>
-        <div className="max-w-6xl mx-auto">
-          <p ref={howItWorks.ref as React.RefObject<HTMLParagraphElement>} className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-7 ${fadeUpClass(howItWorks.visible)}`} style={{ color: "#a78bfa" }}>How it works</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: "rgba(255,255,255,0.06)" }}>
-            {[
-              { step: "01", icon: Search, title: "Discover", desc: "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.", color: "#8b5cf6" },
-              { step: "02", icon: Shield, title: "Develop", desc: "Every company is scored on fit and timing, then developed with signal-specific briefs and trigger-aware outreach drafts.", color: "#03DAC5" },
-              { step: "03", icon: CheckCircle2, title: "Close", desc: "Pipeline advances through follow-ups, re-engagement, and meeting-ready intelligence—from first signal to signed deal.", color: "#a78bfa" },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.step}
-                  className="px-6 py-7 group hover:bg-white/3 transition-colors"
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-                >
-                  <p className="font-mono text-xs font-bold mb-4" style={{ color: item.color, fontFamily: "'JetBrains Mono', monospace" }}>
-                    {item.step}
-                  </p>
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <Icon className="h-4 w-4" style={{ color: item.color }} />
-                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
-                  </div>
-                  <p className="text-sm text-white/40 leading-relaxed">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PIPELINE PREVIEW ── */}
-      <PipelinePreview />
-
-      <HumanoidDailyRecap className="py-8 border-t border-white/6" />
-
+      <HumanoidDailyRecap className="py-8 border-y border-gray-100 bg-slate-50" />
       <HumanoidBenchmarkMarquee compact />
 
-      {/* ── DAILY ROBOT INTELLIGENCE BRIEF ── */}
-      <section className="px-6 py-16 border-t border-white/6" style={{ background: "#0d0520" }}>
-        <div className="max-w-6xl mx-auto grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="rounded-3xl border border-white/10 p-6 lg:p-7" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.07), rgba(255,176,0,0.05), rgba(124,58,237,0.05))" }}>
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="mb-3 inline-flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#03DAC5" }}>
-                    Today's Robot Intelligence Brief
-                  </p>
-                </div>
-                <h2 className="max-w-2xl text-3xl font-extrabold leading-tight text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {briefHeadline}
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
-                  {briefSubheadline}
-                </p>
-              </div>
-              <Link href="/newsletter" className="inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-black transition-all hover:-translate-y-0.5 hover:bg-amber-400/6" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
-                Read the brief
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
+      <MarketingBenchmark benchReport={benchReport} />
+      <MarketingDailyBrief
+        dailyBrief={dailyBrief}
+        newsletterEmail={newsletterEmail}
+        newsletterStatus={newsletterStatus}
+        onEmailChange={setNewsletterEmail}
+        onSubmit={submitNewsletter}
+      />
+      <MarketingReportSection onOpenReport={() => setReportOpen(true)} />
+      <MarketingFinalCTA hotCount={hot} totalCount={total} />
+      <MarketingFooter
+        newsletterEmail={newsletterEmail}
+        newsletterStatus={newsletterStatus}
+        onEmailChange={setNewsletterEmail}
+        onSubmit={submitNewsletter}
+      />
 
-            {dailyBrief?.topStories?.length ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              {dailyBrief.topStories.slice(0, 3).map((story, index) => {
-                const headline = cleanScrapedText(story.headline || story.company) || "Signal story";
-                const snippet = cleanScrapedText(story.snippet || story.summary) || "Fresh signal intelligence from ReadyForRobots.";
-                return (
-                <div key={`${story.company || story.headline || index}`} className="rounded-2xl border border-white/8 p-4" style={{ background: "rgba(13,5,32,0.58)" }}>
-                  <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: index === 1 ? "#FFB000" : "#03DAC5" }}>
-                    {cleanScrapedText(story.category) || "Signal"}
-                  </p>
-                  <p className="break-words text-sm font-bold leading-snug text-white/88">{headline}</p>
-                  <p className="mt-2 line-clamp-4 break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000" }}>{snippet}</p>
-                  {(story.impact || story.economics) && (
-                    <p className="mt-4 break-words font-mono text-[10px] font-bold uppercase tracking-widest text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                      {[story.impact, story.economics].map((item) => cleanScrapedText(item)).filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                </div>
-              );
-              })}
-            </div>
-            ) : null}
-          </div>
-
-          <div className="rounded-3xl border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.035)" }}>
-            <Mail className="mb-5 h-5 w-5" style={{ color: "#03DAC5" }} />
-            <p className="text-lg font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Get the brief daily</p>
-            <p className="mt-3 text-sm leading-relaxed text-white/42">
-              A short, signal-driven digest of robot demand, buyer timing, and where Signal sees sales or partnership motion.
-            </p>
-            <form onSubmit={submitNewsletter} className="mt-5 space-y-2">
-              <input
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                type="email"
-                placeholder="work email"
-                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
-                style={{ background: "rgba(255,255,255,0.04)" }}
-              />
-              <button
-                type="submit"
-                disabled={newsletterStatus === "submitting"}
-                className="w-full rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
-                style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
-              >
-                {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
-              </button>
-            </form>
-            {newsletterStatus === "success" && <p className="mt-3 text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
-            {newsletterStatus === "error" && <p className="mt-3 text-xs text-red-300">Could not subscribe. Try again.</p>}
-          </div>
-        </div>
-      </section>
-
-      {/* ── MARKET INTELLIGENCE ── */}
-      <section
-        className="py-16 px-6 border-t border-white/6"
-        style={{ background: "linear-gradient(180deg, #0d0520 0%, #130828 100%)" }}
-      >
-        <div ref={intelligenceSection.ref as React.RefObject<HTMLDivElement>} className={`max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-center ${fadeUpClass(intelligenceSection.visible)}`}>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#03DAC5" }}>
-              Market Intelligence
-            </p>
-            <h2
-              className="font-extrabold text-white leading-tight mb-4"
-              style={{ fontSize: "clamp(1.9rem, 3.5vw, 2.8rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-            >
-              The 2026 Automation Imperative
-            </h2>
-            <p className="text-white/45 text-base leading-relaxed max-w-2xl mb-6">
-              Our enterprise intelligence report analyzes labor-intensive industries, robotics buying signals, and ROI benchmarks so sales teams know where automation demand is forming now.
-            </p>
-            <div className="grid grid-cols-3 gap-px max-w-xl mb-7" style={{ background: "rgba(255,255,255,0.08)" }}>
-              {[
-                ["158", "enterprises analyzed"],
-                ["437", "buying signals detected"],
-                ["62%", "strong buying intent"],
-              ].map(([value, label]) => (
-                <div key={label} className="p-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <p className="font-mono text-2xl font-bold" style={{ color: "#03DAC5", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-                  <p className="text-[11px] text-white/35 mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setReportOpen(true)}
-              className="inline-flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5"
-              style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
-            >
-              <FileText className="h-4 w-4" />
-              Download Free Report
-            </button>
-          </div>
-          <div className="rounded-3xl border border-white/10 p-6 shadow-2xl shadow-black/40" style={{ background: "rgba(255,255,255,0.04)" }}>
-            <div className="rounded-2xl border border-teal-300/20 p-5" style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.12), rgba(124,58,237,0.12))" }}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-8" style={{ color: "#99f6e4" }}>Enterprise Intelligence Report</p>
-              <h3 className="text-2xl font-extrabold text-white leading-tight mb-4" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                The Automation Imperative
-              </h3>
-              <p className="text-sm text-white/55 leading-relaxed mb-8">
-                Labor shortages, capital availability, and leadership commitment are creating a 2026 inflection point for robotics adoption.
-              </p>
-              <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                <span className="text-xs text-white/35">March 2026</span>
-                <span className="text-xs font-bold" style={{ color: "#03DAC5" }}>ReadyForRobots</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── AGENT PITCH ── */}
-      <section
-        className="py-16 px-6"
-        style={{ background: "linear-gradient(180deg, #0d0520 0%, #130828 100%)" }}
-      >
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left: copy */}
-          <div ref={agentPitch.ref as React.RefObject<HTMLDivElement>} className={fadeUpClass(agentPitch.visible)}>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#a78bfa" }}>The service</p>
-            <h2
-              className="font-extrabold text-white leading-tight mb-5"
-              style={{ fontSize: "clamp(2rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-            >
-              Discover, develop, and close—{" "}
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #03DAC5, #7c3aed)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >robot deals end to end
-              </span>
-            </h2>
-            <p className="text-white/45 text-base leading-relaxed mb-8">
-              Signal is ReadyForRobots&apos; complete robot sales workflow—not a lead list or a CRM plugin.
-              It discovers automation-ready buyers, develops each opportunity, and advances your pipeline to close.
-              HubSpot sync is optional when you want it.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {agentFeatures.map((f) => {
-                const Icon = f.icon;
-                return (
-                  <div
-                    key={f.title}
-                    className="flex items-start gap-3 p-4 rounded-xl border border-white/6 hover:border-violet-500/30 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.03)" }}
-                  >
-                    <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)" }}>
-                      <Icon className="h-4 w-4" style={{ color: "#a78bfa" }} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white mb-0.5">{f.title}</p>
-                      <p className="text-xs text-white/35">{f.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right: Pipeline Agent card */}
-          <div
-            className="rounded-2xl border border-white/8 overflow-hidden shadow-2xl shadow-black/60"
-            style={{ background: "rgba(255,255,255,0.03)" }}
-          >
-            {/* Card header */}
-            <div
-              className="px-5 py-4 flex items-center justify-between border-b border-white/6"
-              style={{ background: "rgba(124,58,237,0.08)" }}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: "#7c3aed" }}>
-                  <Zap className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
-                </div>
-                <span className="text-sm font-semibold text-white">Signal</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "#03DAC5" }}>
-                <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-                Active · 24/7
-              </div>
-            </div>
-
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-px border-b border-white/6" style={{ background: "rgba(255,255,255,0.06)" }}>
-              {[
-                { value: "150+", label: "Sources monitored", color: "#8b5cf6" },
-                { value: "24/7", label: "Always working", color: "#03DAC5" },
-                { value: "14", label: "Signal types tracked", color: "#8b5cf6" },
-                { value: "<48h", label: "Signal to outreach", color: "#FFB000" },
-              ].map((stat) => (
-                <div key={stat.label} className="px-5 py-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <p className="font-mono text-xl font-bold mb-0.5" style={{ color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}>
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-white/35">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Activity feed */}
-            <div className="px-5 py-4 space-y-3">
-              {[
-                { label: "New signal: Silver Peak Hospitality", time: "just now", dot: "#03DAC5" },
-                { label: "Outreach drafted: DesertLine Logistics", time: "4m ago", dot: "#8b5cf6" },
-                { label: "Follow-up queued: Apex Manufacturing", time: "1h ago", dot: "#FFB000" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: item.dot }} />
-                    <span className="text-xs text-white/55">{item.label}</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-white/25 shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                    {item.time}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── ABOUT US ── */}
-      <section
-        id="about"
-        className="py-16 px-6 border-t border-white/6"
-        style={{ background: "#130828" }}
-      >
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-16 items-start">
-          {/* Left: stats */}
-          <div ref={aboutSection.ref as React.RefObject<HTMLDivElement>} className={`flex flex-col gap-3 ${fadeUpClass(aboutSection.visible)}`}>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#a78bfa" }}>About Us</p>
-            {[
-              { icon: Target, value: "500+", label: "Robot deals influenced", color: "#8b5cf6" },
-              { icon: Users, value: "60+", label: "Robotics companies served", color: "#03DAC5" },
-              { icon: Globe, value: "12", label: "Verticals covered", color: "#8b5cf6" },
-              { icon: BarChart3, value: "150+", label: "Signal sources monitored", color: "#a78bfa" },
-            ].map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-white/6"
-                  style={{ background: "rgba(255,255,255,0.03)" }}
-                >
-                  <Icon className="h-4 w-4 shrink-0" style={{ color: stat.color }} />
-                  <div>
-                    <p className="font-mono text-lg font-bold" style={{ color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}>
-                      {stat.value}
-                    </p>
-                    <p className="text-xs text-white/35">{stat.label}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Right: copy */}
-          <div className="lg:pt-10">
-            <h2
-              className="font-extrabold text-white leading-tight mb-5"
-              style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-            >
-              Built by people<br />who've sold robots
-            </h2>
-            <p className="text-white/45 text-base leading-relaxed mb-4">
-              ReadyForRobots was founded by robotics sales veterans who spent years
-              losing deals to competitors who found the buyer first. We built the
-              system we wished we had — one that monitors the market continuously
-              and surfaces opportunities before they become RFPs.
-            </p>
-            <p className="text-white/45 text-base leading-relaxed mb-6">
-              Today we serve robotics companies across warehousing, hospitality,
-              healthcare, manufacturing, and food processing — helping them reach
-              the right buyer at the right moment with the right message.
-            </p>
-            <div
-              className="flex items-start gap-3 p-4 rounded-xl"
-              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)" }}
-            >
-              <Sparkles className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#a78bfa" }} />
-              <p className="text-sm font-medium italic" style={{ color: "#ddd6fe" }}>
-                "We reached the buyer 4 months before the RFP — and shaped the requirements."
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PROOF ── */}
-      <section
-        id="case-studies"
-        className="py-16 px-6 border-t border-white/6"
-        style={{ background: "#0d0520" }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div ref={proofSection.ref as React.RefObject<HTMLDivElement>} className={`flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 ${fadeUpClass(proofSection.visible)}`}>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: "#a78bfa" }}>Real signals. Real deals.</p>
-              <h2
-                className="font-extrabold text-white leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-              >
-                Close before the RFP
-              </h2>
-            </div>
-            <p className="text-sm text-white/30 max-w-xs text-right hidden sm:block">
-              How robotics companies use ReadyForRobots to win deals competitors never saw coming
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              {
-                signal: "\"Can't staff overnight shifts\" + \"40% housekeeping vacancy\" in earnings call",
-                action: "Reached out 4 months before RFP with overnight automation case study",
-                result: "Shaped requirements, won pilot without competition",
-                outcome: "15-robot deployment",
-                industry: "Hospitality",
-                accentColor: "#8b5cf6",
-              },
-              {
-                signal: "\"Opening 2 new DCs\" + posting for \"automation engineer\"",
-                action: "Contacted during facility design phase with layout recommendations",
-                result: "Designed automation into new buildings",
-                outcome: "$2.4M contract",
-                industry: "Logistics",
-                accentColor: "#34d399",
-              },
-            ].map((story) => (
-              <div
-                key={story.industry}
-                className="rounded-2xl border border-white/8 p-6 hover:border-white/14 transition-colors"
-                style={{ background: "rgba(255,255,255,0.03)", borderLeft: `3px solid ${story.accentColor}` }}
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <span className="text-xs font-bold text-white/30 uppercase tracking-widest">{story.industry}</span>
-                  <span
-                    className="text-xs font-bold px-2.5 py-1 rounded-full border"
-                    style={{ color: story.accentColor, background: `${story.accentColor}18`, borderColor: `${story.accentColor}40` }}
-                  >
-                    {story.outcome}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(248,113,113,0.1)" }}>
-                      <TrendingUp className="h-3.5 w-3.5 text-red-400" />
-                    </div>
-                    <p className="text-sm text-white/45 italic leading-relaxed">"{story.signal}"</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(139,92,246,0.1)" }}>
-                      <ArrowRight className="h-3.5 w-3.5" style={{ color: "#a78bfa" }} />
-                    </div>
-                    <p className="text-sm text-white/60 leading-relaxed">{story.action}</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(52,211,153,0.1)" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                    </div>
-                    <p className="text-sm font-semibold text-white leading-relaxed">{story.result}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BEFORE / AFTER ── */}
-      <section
-        className="py-16 px-6 border-t border-white/6"
-        style={{ background: "#130828" }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <p ref={beforeAfterSection.ref as React.RefObject<HTMLParagraphElement>} className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-4 ${fadeUpClass(beforeAfterSection.visible)}`} style={{ color: "#a78bfa" }}>The difference</p>
-          <h2
-            className="font-extrabold text-white leading-tight mb-8"
-            style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-          >
-            Before vs. After ReadyForRobots
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ background: "rgba(255,255,255,0.06)" }}>
-            {/* Before column */}
-            <div className="p-8" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "rgba(239,68,68,0.15)" }}>
-                  <X className="h-3.5 w-3.5 text-red-400" />
-                </div>
-                <span className="text-sm font-bold text-red-400/80 uppercase tracking-widest">Before</span>
-              </div>
-              <div className="space-y-4">
-                {beforeAfter.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-400/40 shrink-0 mt-2" />
-                    <p className="text-sm text-white/35 leading-relaxed">{item.before}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* After column */}
-            <div className="p-8" style={{ background: "rgba(124,58,237,0.05)" }}>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="h-6 w-6 rounded-full flex items-center justify-center" style={{ background: "rgba(3,218,197,0.12)" }}>
-                  <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "#03DAC5" }} />
-                </div>
-                <span className="text-sm font-bold uppercase tracking-widest" style={{ color: "#03DAC5", opacity: 0.8 }}>With ReadyForRobots</span>
-              </div>
-              <div className="space-y-4">
-                {beforeAfter.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-2" style={{ background: "rgba(3,218,197,0.6)" }} />
-                    <p className="text-sm text-white/70 leading-relaxed font-medium">{item.after}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section
-        className="py-16 px-6 border-t border-white/6"
-        style={{ background: "#0d0520" }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <p ref={testimonialsSection.ref as React.RefObject<HTMLParagraphElement>} className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-4 ${fadeUpClass(testimonialsSection.visible)}`} style={{ color: "#a78bfa" }}>What they say</p>
-          <h2
-            className="font-extrabold text-white leading-tight mb-8"
-            style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-          >
-            From the sales floor
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-white/8 p-6 flex flex-col gap-4 hover:border-violet-500/30 transition-colors"
-                style={{ background: "rgba(255,255,255,0.03)" }}
-              >
-                <div style={{ color: "#7c3aed", opacity: 0.5 }}>
-                  <Quote className="h-5 w-5" />
-                </div>
-                <p className="text-sm text-white/60 leading-relaxed italic flex-1">"{t.quote}"</p>
-                <div className="flex items-center justify-between pt-2 border-t border-white/6">
-                  <div>
-                    <p className="text-xs font-semibold text-white/70">{t.name}</p>
-                    <p className="text-[10px] text-white/30">{t.company}</p>
-                  </div>
-                  <span
-                    className="text-[10px] font-bold px-2 py-1 rounded-full"
-                    style={{ color: "#a78bfa", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}
-                  >
-                    {t.result}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BOTTOM CTA ── */}
-      <section
-        className="py-16 px-6 border-t border-white/6 relative overflow-hidden"
-        style={{ background: "#0d0520" }}
-      >
-        {/* Glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 60% 50% at 50% 100%, rgba(124,58,237,0.15) 0%, transparent 70%)" }}
-        />
-        <div className="relative max-w-2xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] mb-5" style={{ color: "#c4b5fd" }}>
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#7c3aed" }} />
-            Ready to automate
-          </div>
-          <h2
-            className="font-extrabold text-white mb-3"
-            style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.75rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-          >
-            Discover. Develop. Close robot deals.
-          </h2>
-          <p className="text-white/35 text-sm mb-8">
-            Robot sales automated to closure. HubSpot sync optional.
-          </p>
-
-          {/* CTA — Activate SIGNAL + free workspace */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/results?url=">
-              <button
-                className="inline-flex items-center gap-3 text-base font-bold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
-              >
-                <Zap className="h-5 w-5" />
-                Activate SIGNAL
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-            <Link href="/signup?next=/pipeline">
-              <button
-                className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-4 rounded-2xl border border-white/12 text-white/70 transition-all hover:border-violet-400/35 hover:text-white"
-                style={{ background: "rgba(255,255,255,0.03)" }}
-              >
-                Start free workspace
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-          </div>
-          <p className="mt-4 text-white/20 text-xs">Scan without signup · Free pipeline workspace · Upgrade when you save leads</p>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-white/6 py-8 px-6" style={{ background: "#0d0520" }}>
-        <div className="max-w-6xl mx-auto mb-8 rounded-2xl border border-white/8 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4" style={{ background: "rgba(255,255,255,0.03)" }}>
-          <div>
-            <p className="text-sm font-bold text-white">Get the weekly Robot Intelligence Brief</p>
-            <p className="text-xs text-white/35 mt-1">Buying signals, deployment stories, and ROI benchmarks. Free.</p>
-          </div>
-          <form onSubmit={submitNewsletter} className="flex flex-col sm:flex-row gap-2 min-w-0 lg:min-w-[420px]">
-            <input
-              value={newsletterEmail}
-              onChange={(e) => setNewsletterEmail(e.target.value)}
-              type="email"
-              placeholder="work email"
-              className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-teal-300/50"
-              style={{ background: "rgba(255,255,255,0.04)" }}
-            />
-            <button
-              type="submit"
-              disabled={newsletterStatus === "submitting"}
-              className="rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
-              style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
-            >
-              {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
-            </button>
-          </form>
-          {newsletterStatus === "success" && <p className="text-xs" style={{ color: "#03DAC5" }}>Subscribed.</p>}
-          {newsletterStatus === "error" && <p className="text-xs text-red-300">Could not subscribe. Try again.</p>}
-        </div>
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <img src="/logo-r.png" alt="" width={24} height={24} className="h-6 w-6 object-contain opacity-90" />
-            <span className="text-sm font-semibold text-white/50">ReadyForRobots</span>
-          </div>
-          <p className="text-xs text-white/20">© 2026 ReadyForRobots · Signal for robotics sales.</p>
-        </div>
-      </footer>
       {reportOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)" }}>
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 p-6 shadow-2xl" style={{ background: "#130828" }}>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4 mb-5">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#03DAC5" }}>Free Report</p>
-                <h3 className="text-2xl font-extrabold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Download the Automation Imperative</h3>
-                <p className="mt-2 text-sm text-white/45">Get the enterprise intelligence report and join the Robot Intelligence Brief.</p>
+                <p className="section-eyebrow mb-2">Free Report</p>
+                <h3 className="text-2xl font-display font-bold text-gray-900">Download the Automation Imperative</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Get the enterprise intelligence report and join the Robot Intelligence Brief.
+                </p>
               </div>
-              <button type="button" onClick={() => setReportOpen(false)} className="rounded-xl p-2 text-white/40 hover:text-white hover:bg-white/8">
+              <button
+                type="button"
+                onClick={() => setReportOpen(false)}
+                className="rounded-xl p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             {reportStatus === "success" ? (
-              <div className="rounded-2xl border border-teal-300/20 p-5" style={{ background: "rgba(3,218,197,0.06)" }}>
-                <p className="font-bold" style={{ color: "#03DAC5" }}>Report requested.</p>
-                <p className="mt-2 text-sm text-white/45">We saved your request and will send the report using the configured ReadyForRobots email sender.</p>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                <p className="font-bold text-emerald-700">Report requested.</p>
+                <p className="mt-2 text-sm text-gray-600">
+                  We saved your request and will send the report using the configured ReadyForRobots email sender.
+                </p>
               </div>
             ) : (
               <form onSubmit={submitReportDownload} className="space-y-3">
-                {[
-                  ["name", "Name", "text"],
-                  ["email", "Work email", "email"],
-                  ["company", "Company", "text"],
-                  ["robotCategory", "Robot category", "text"],
-                ].map(([key, label, type]) => (
+                {(
+                  [
+                    ["name", "Name", "text"],
+                    ["email", "Work email", "email"],
+                    ["company", "Company", "text"],
+                    ["robotCategory", "Robot category", "text"],
+                  ] as const
+                ).map(([key, label, type]) => (
                   <label key={key} className="block">
-                    <span className="mb-1.5 block text-xs font-semibold text-white/45">{label}</span>
+                    <span className="mb-1.5 block text-xs font-semibold text-gray-500">{label}</span>
                     <input
                       type={type}
                       required={key === "email"}
-                      value={reportForm[key as keyof typeof reportForm]}
+                      value={reportForm[key]}
                       onChange={(e) => setReportForm((current) => ({ ...current, [key]: e.target.value }))}
-                      className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-teal-300/50"
-                      style={{ background: "rgba(255,255,255,0.04)" }}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none focus:border-emerald-500"
                     />
                   </label>
                 ))}
-                {reportStatus === "error" && <p className="text-xs text-red-300">Could not request the report. Please try again.</p>}
+                {reportStatus === "error" && (
+                  <p className="text-xs text-red-600">Could not request the report. Please try again.</p>
+                )}
                 <button
                   type="submit"
                   disabled={reportStatus === "submitting"}
-                  className="w-full rounded-xl px-4 py-3 text-sm font-bold transition-all disabled:opacity-50"
-                  style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.05)" }}
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {reportStatus === "submitting" ? "Requesting..." : "Download Free Report"}
                 </button>

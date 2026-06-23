@@ -74,6 +74,19 @@ def test_tracegains_maps_to_food_processing():
     assert value == "Food Processing & Manufacturing"
 
 
+def test_invivoscribe_not_quarantined():
+    """Invivoscribe is a real medical diagnostics company (invivoscribe.com)."""
+    ok, _ = is_unknown_industry_headline_stub("Invivoscribe")
+    assert not ok
+    action, value, _ = unknown_industry_rescue_action(
+        "Invivoscribe",
+        "Unknown",
+        [SimpleNamespace(signal_text="Invivoscribe molecular diagnostics expansion", signal_type="news")],
+    )
+    assert action == "apply"
+    assert value == "Medical Technology"
+
+
 def test_market_research_signals_quarantined():
     action, _, reason = unknown_industry_rescue_action(
         "Industrial Monorails Sector",

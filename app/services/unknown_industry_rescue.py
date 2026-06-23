@@ -43,7 +43,7 @@ _HEADLINE_STUB_RES = (
     re.compile(r"(?i)^(overtime:\s*as|uk firm|wsu'?s)\b"),
     re.compile(r"(?i)\b(strategic business|disinfection product|port infrastructure)\b"),
     re.compile(r"(?i)^(drum dollies|guide rings|uvc disinfection)\b"),
-    re.compile(r"(?i)^(oracle q2|invivoscribe|yann lecun)\b"),
+    re.compile(r"(?i)^(oracle q2|yann lecun)\b"),
     re.compile(r"(?i)\b(apple-picker|inflatable robotic)\b"),
     re.compile(r"(?i)^(redevelopment commission|otc welcomes|faa approves|eu pressures)\b"),
     re.compile(r"(?i)^(food dairy corn|fish freezing plant|major european tissue|rok profitable)\b"),
