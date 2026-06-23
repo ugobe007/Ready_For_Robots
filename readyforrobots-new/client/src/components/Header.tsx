@@ -202,13 +202,22 @@ export default function Header() {
             </span>
 
             {!session ? (
-              <Link
-                href="/signup"
-                className="hidden sm:inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
-              >
-                Sign up
-              </Link>
+              <>
+                <Link
+                  href="/signup?next=/pipeline"
+                  className="inline-flex sm:hidden items-center rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition-all active:scale-95"
+                  style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "rgba(255,176,0,0.06)" }}
+                >
+                  Sign up
+                </Link>
+                <Link
+                  href="/signup?next=/pipeline"
+                  className="hidden sm:inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                  style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+                >
+                  Sign up
+                </Link>
+              </>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
                 <Link
@@ -315,6 +324,17 @@ export default function Header() {
             <BriefcaseBusiness className="h-4 w-4" />
             Find Robots
           </Link>
+          {!session && (
+            <Link
+              href="/signup?next=/pipeline"
+              onClick={closeDrawer}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all active:scale-[0.98]"
+              style={{ color: "#FFB000", border: "1.5px solid rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.06)" }}
+            >
+              <UserRound className="h-4 w-4" />
+              Start free workspace
+            </Link>
+          )}
         </div>
 
         {/* Priority nav */}

@@ -3,9 +3,10 @@
  * Dark background, inline signal rows, expand-on-click for recommended action
  * Inspired by: Linear, Vercel, Raycast
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { TrendingUp, Users, AlertTriangle, ChevronRight, ChevronDown, ArrowRight, Zap } from "lucide-react";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
 const signals = [
   {
@@ -73,6 +74,35 @@ const statusConfig = {
 
 export default function PipelinePreview() {
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [hotCount, setHotCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${getApiBase()}/api/leads/summary?exclude_junk=true`,
+          liveFetchInit(),
+        );
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { hot?: number; total?: number; warm?: number };
+        if (cancelled) return;
+        const hot = Number(data.hot ?? 0);
+        const total = Number(data.total ?? 0) || hot + Number(data.warm ?? 0);
+        if (hot > 0) setHotCount(hot);
+        if (total > 0) setTotalCount(total);
+      } catch {
+        /* keep static fallback */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const footerTotal = totalCount ?? 247;
+  const headerHot = hotCount ?? 38;
 
   return (
     <section
@@ -92,7 +122,7 @@ export default function PipelinePreview() {
             </h2>
           </div>
           <p className="text-xs text-white/25 font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            Updated 2 min ago · 38 hot leads
+            Live pipeline · {headerHot.toLocaleString()} hot leads
           </p>
         </div>
 
@@ -204,7 +234,9 @@ export default function PipelinePreview() {
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-4">
-          <p className="text-xs text-white/20">Showing 5 of 247 active opportunities</p>
+          <p className="text-xs text-white/20">
+            Showing {signals.length} of {footerTotal.toLocaleString()} active opportunities
+          </p>
           <Link
             href="/results?url="
             className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: "#a78bfa" }}

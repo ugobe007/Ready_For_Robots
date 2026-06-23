@@ -136,12 +136,9 @@ See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents mus
 | ~~1~~ | ~~`entitlement-honesty`~~ | ProductSurface | ✅ **Done 2026-06-23** — Free/Pro/Premium pricing; `/me` entitlements; profile meters. |
 | ~~2~~ | ~~`pipeline-research-upsell`~~ | ProductSurface | ✅ **Done 2026-06-23** — blurred research teaser + Pro CTA for free users. |
 | 1 | `profile-usage-meters` | ProductSurface | ✅ folded into entitlement-honesty |
-| 2 | `mobile-signup-cta` | ProductSurface | Signup hidden on mobile header. |
-| ~~2~~ | ~~`lead-inference-rescue`~~ | LeadQuality | ✅ **Done 2026-06-23** — skip buyer gate on refresh; inference rescue batch. |
+| ~~2~~ | ~~`mobile-signup-cta`~~ | ProductSurface | ✅ **Done 2026-06-23** — mobile header pill + drawer workspace CTA. |
 
-*Harness re-rank 2026-06-23: top data gaps **contact** 30 > **crm_descriptors** 28 > **lead_inference** 23.*
-
-*Next: entitlement-honesty; Apollo plan upgrade; residual CRM/inference sweeps; prod cache refresh after deploys.*
+*Next: Apollo plan upgrade for contact search; periodic prod cache refresh after deploys; lead quality sweeps when gaps shift.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

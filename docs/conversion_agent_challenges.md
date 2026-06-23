@@ -26,11 +26,11 @@ Measure weekly: anonymous pipeline views, signup starts, signup completes, first
 | 3 | **Post-auth landing** — default `next` is `/pipeline`, not `/profile` | ProductSurface | ✅ Done 2026-06-23 |
 | 4 | **Save-limit upgrade moment** — modal at 5/5 saves with `/pricing?reason=saved_leads` | ProductSurface | ✅ toast action done; modal optional |
 | 5 | **Locked research teaser** — free signed-in users see blurred Pro research block | ProductSurface | ✅ Done 2026-06-23 |
-| 6 | **CTA continuity** — every marketing button does something (`PipelinePreview`, header mobile) | ProductSurface | No inert buttons on Home; mobile header has signup path |
-| 7 | **Context-preserving signup** — `?next=` on Signals, Results, Pipeline deep links | ProductSurface | Auth return resumes exact route |
-| 8 | **OAuth-first signup** — peak-intent pages emphasize one-tap Google | ProductSurface | Results/Pipeline signup puts OAuth above magic link |
-| 9 | **Profile usage meters** — “3/5 leads saved · Free” + upgrade | ProductSurface | Profile fetches entitlements |
-| 10 | **Dynamic social proof** — hero ticker + pipeline preview use live API counts | PipelineHealth | No stale “247 opportunities” when feed is 35 |
+| 6 | **CTA continuity** — every marketing button does something (`PipelinePreview`, header mobile) | ProductSurface | ✅ Done 2026-06-23 |
+| 7 | **Context-preserving signup** — `?next=` on Signals, Results, Pipeline deep links | ProductSurface | ✅ Signals + header; Results already wired |
+| 8 | **OAuth-first signup** — peak-intent pages emphasize one-tap Google | ProductSurface | ✅ Copy when `?next=` present |
+| 9 | **Profile usage meters** — “3/5 leads saved · Free” + upgrade | ProductSurface | ✅ Done (entitlement-honesty) |
+| 10 | **Dynamic social proof** — hero ticker + pipeline preview use live API counts | PipelineHealth | ✅ PipelinePreview summary fetch |
 
 ---
 

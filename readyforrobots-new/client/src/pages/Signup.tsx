@@ -133,7 +133,9 @@ export default function Signup() {
             <p className="mt-2 text-sm text-white/42">
               {hubspotIntent
                 ? "Email + full name required. Next step: one-click HubSpot authorize."
-                : "Create an account with Google, GitHub, or a magic link."}
+                : params.get("next")
+                  ? "Continue in one tap with Google — or use a magic link below."
+                  : "Create an account with Google, GitHub, or a magic link."}
             </p>
             {hubspotIntent && (
               <input
