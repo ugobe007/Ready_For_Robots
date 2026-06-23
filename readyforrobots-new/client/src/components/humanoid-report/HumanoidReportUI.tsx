@@ -145,7 +145,7 @@ export function ReportBtnDownload({
         className={className}
         style={{
           background: RR.teal,
-          color: RR.bg,
+          color: "#ffffff",
         }}
       >
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
@@ -173,8 +173,8 @@ export function ReportLink({
     <a
       href={href}
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="font-medium underline underline-offset-4 decoration-white/20 hover:decoration-violet-400/50"
-      style={{ color: "rgba(167,139,250,0.95)" }}
+      className="font-medium underline underline-offset-4 decoration-gray-300 hover:decoration-emerald-500/50"
+      style={{ color: "#047857" }}
     >
       {children}
     </a>
@@ -193,7 +193,7 @@ export function ReportFindingCard({ title, body }: { title: string; body: string
   return (
     <div
       className="rounded-md border px-3 py-2.5"
-      style={{ borderColor: RR.border, background: "rgba(255,255,255,0.02)" }}
+      style={{ borderColor: RR.border, background: RR.bg }}
     >
       <p className="text-[12px] font-bold" style={{ color: RR.teal }}>
         {title}

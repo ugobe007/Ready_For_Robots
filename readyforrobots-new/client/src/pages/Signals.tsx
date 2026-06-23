@@ -333,10 +333,10 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: MARKET_COLORS.emeraldBright }}>
             SIGNAL market radar
           </p>
-          <h2 className="text-3xl font-extrabold leading-tight text-gray-900 md:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+          <h2 className="text-3xl font-extrabold leading-tight text-white md:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
             Live Robot Demand Radar
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/42">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/75">
             SIGNAL turns live sales leads into signal-strength bars. The bars rebalance as the featured opportunity changes.
           </p>
         </div>
@@ -349,7 +349,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
           ].map(([label, value, color]) => (
             <div key={String(label)} className="rounded-xl border border-gray-100 px-3 py-2 text-right" style={{ background: "rgba(255,255,255,0.035)" }}>
               <div className="font-mono text-lg font-black" style={{ color: String(color) }}>{value}</div>
-              <div className="text-[9px] font-bold uppercase tracking-widest text-white/28">{label}</div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-white/60">{label}</div>
             </div>
           ))}
         </div>
@@ -359,11 +359,11 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
         <div className="relative min-h-[390px] overflow-hidden border p-4" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018))", borderColor: "rgba(255,255,255,0.1)", borderRadius: 18 }}>
           <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "42px 42px" }} />
           <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4" style={{ background: "linear-gradient(90deg, transparent, rgba(16,185,129,0.2), rgba(255,176,0,0.12), transparent)", animation: "rfr-radar-sweep 10s linear infinite" }} />
-          <div className="relative mb-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">
+          <div className="relative mb-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
             <span>{loading ? "Syncing scored leads" : "150+ sources scanning"}</span>
             <span style={{ color: MARKET_COLORS.emeraldBright }}>lead-driven bars</span>
           </div>
-          <div className="relative mb-4 rounded-2xl border border-gray-100 px-3 py-2 text-xs leading-relaxed text-white/42" >
+          <div className="relative mb-4 rounded-2xl border border-white/10 px-3 py-2 text-xs leading-relaxed text-white/70" >
             Each bar is a signal type. Its length shows live opportunity strength, and the amber/emerald emphasis shifts with the company currently being scored.
           </div>
 
@@ -394,17 +394,17 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                         {activeLane && <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }} />}
                         <span>{row.label}</span>
                       </div>
-                      <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                      <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/55">
                         {row.track} motion
                       </div>
                     </div>
 
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="truncate text-xs font-semibold text-gray-500">
+                        <span className="truncate text-xs font-semibold text-white/80">
                           {activeLane ? `Matched to ${activeSignal?.company}` : `${row.delta} scored signals`}
                         </span>
-                        <span className="font-mono text-xs font-bold text-gray-500">{Math.round(adjustedValue * 100)}%</span>
+                        <span className="font-mono text-xs font-bold text-white/90">{Math.round(adjustedValue * 100)}%</span>
                       </div>
                       <div className="relative h-3 overflow-hidden rounded-full bg-white/[0.075]">
                         <div
@@ -428,7 +428,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
 
                     <div className="font-mono text-left text-sm font-black md:text-right" style={{ color: row.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
                       {Math.round(adjustedValue * 100)}
-                      <span className="ml-1 text-[10px] font-bold text-gray-400">strength</span>
+                      <span className="ml-1 text-[10px] font-bold text-white/55">strength</span>
                     </div>
                   </div>
                 </div>
@@ -444,14 +444,14 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
               <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: activeSignal.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright }}>
                 Scoring now
               </p>
-              <h3 className="text-2xl font-black leading-tight text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <h3 className="text-2xl font-black leading-tight text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                 {activeSignal.company}
               </h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest" style={{ borderColor: activeSignal.track === "Partnership" ? "rgba(255,176,0,0.34)" : "rgba(16,185,129,0.34)", color: activeSignal.track === "Partnership" ? MARKET_COLORS.amberBright : MARKET_COLORS.emeraldBright, background: activeSignal.track === "Partnership" ? "rgba(255,176,0,0.08)" : "rgba(16,185,129,0.08)" }}>
                   {activeSignal.track}
                 </span>
-                <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/38">
+                <span className="rounded-full border border-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/75">
                   {activeSignal.industry}
                 </span>
               </div>
@@ -460,19 +460,19 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                   <div className="font-mono text-6xl font-black leading-none" style={{ color: activeSignal.color }}>
                     {activeSignal.score}
                   </div>
-                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/28">intent score</div>
+                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/60">intent score</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-gray-900/78">{activeSignal.type}</div>
-                  <div className="text-[10px] text-gray-400">{activeSignal.time}</div>
+                  <div className="text-sm font-bold text-white/90">{activeSignal.type}</div>
+                  <div className="text-[10px] text-white/60">{activeSignal.time}</div>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-white/56">
+              <p className="text-sm leading-relaxed text-white/80">
                 {activeSignal.text}
               </p>
               {activeSignal.robotTypes && activeSignal.robotTypes.length > 0 && (
-                <p className="mt-3 text-xs text-gray-500">
-                  <span className="font-semibold text-gray-500">Robots needed: </span>
+                <p className="mt-3 text-xs text-emerald-100/90">
+                  <span className="font-semibold text-emerald-200">Robots needed: </span>
                   {activeSignal.robotTypes.slice(0, 4).join(" · ")}
                 </p>
               )}
@@ -490,9 +490,9 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
                   />
                 </div>
               )}
-              <div className="mt-5 rounded-2xl border border-gray-100 p-3" style={{ background: "rgba(0,0,0,0.18)" }}>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/26">Recommended motion</div>
-                <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              <div className="mt-5 rounded-2xl border border-white/10 p-3" style={{ background: "rgba(0,0,0,0.18)" }}>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/55">Recommended motion</div>
+                <p className="mt-2 text-xs leading-relaxed text-white/75">
                   {activeSignal.track === "Partnership"
                     ? "Qualify channel fit, coverage overlap, and co-sell timing while this partner signal is fresh."
                     : "Prioritize outreach now with a use-case tied directly to this buying trigger."}
@@ -615,7 +615,7 @@ export default function Signals() {
             >
               What we watch for
             </h1>
-            <p className="text-sm text-gray-500 max-w-xl">
+            <p className="text-sm text-gray-600 max-w-xl">
               150+ sources monitored continuously. Every signal is scored, categorized, and matched to your robot category before it reaches your pipeline.
             </p>
           </div>
@@ -636,8 +636,7 @@ export default function Signals() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search signals…"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 outline-none focus:border-emerald-500/50 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.04)", fontFamily: "'Inter', system-ui, sans-serif" }}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 bg-white outline-none focus:border-emerald-500/50 transition-colors"
                   />
                 </div>
 
@@ -648,12 +647,11 @@ export default function Signals() {
                     <button
                       key={cat}
                       onClick={() => setCategory(cat)}
-                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all"
-                      style={
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
                         category === cat
-                          ? { background: "#059669", borderColor: "#059669", color: "#fff" }
-                          : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }
-                      }
+                          ? "bg-emerald-600 border-emerald-600 text-white"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:text-emerald-700"
+                      }`}
                     >
                       {cat}
                     </button>
@@ -667,12 +665,11 @@ export default function Signals() {
                     <button
                       key={ind}
                       onClick={() => setIndustry(ind)}
-                      className="text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all"
-                      style={
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
                         industry === ind
-                          ? { background: "rgba(5,150,105,0.3)", borderColor: "#059669", color: "#047857" }
-                          : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }
-                      }
+                          ? "bg-emerald-50 border-emerald-400 text-emerald-800"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:text-emerald-700"
+                      }`}
                     >
                       {ind}
                     </button>
@@ -708,13 +705,13 @@ export default function Signals() {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-bold text-gray-900">{sig.name}</span>
                             <span
-                              className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest"
-                              style={{ color: sig.color, background: `${sig.color}15`, border: `1px solid ${sig.color}25` }}
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border"
+                              style={{ color: "#374151", background: `${sig.color}20`, borderColor: `${sig.color}45` }}
                             >
                               {sig.category}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 leading-relaxed">{sig.description}</p>
+                          <p className="text-xs text-gray-600 leading-relaxed">{sig.description}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
                           <span
@@ -723,7 +720,7 @@ export default function Signals() {
                           >
                             {sig.avgScore}
                           </span>
-                          <span className="text-[9px] text-white/20">avg score</span>
+                          <span className="text-[9px] text-gray-400">avg score</span>
                         </div>
                       </button>
 
@@ -781,10 +778,7 @@ export default function Signals() {
 
             {/* Right: Live signal feed */}
             <div className="flex flex-col gap-4">
-              <div
-                className="rounded-2xl border border-gray-100 p-5"
-                style={{ background: "rgba(255,255,255,0.02)" }}
-              >
+              <div className="rounded-2xl border border-gray-100 bg-white p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Zap className="h-3.5 w-3.5" style={{ color: MARKET_COLORS.amberBright }} />
                   <span className="text-xs font-bold text-gray-600 uppercase tracking-widest">Live feed</span>
@@ -795,8 +789,8 @@ export default function Signals() {
                     <div key={sig.id} className="flex items-start gap-3">
                       <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-1.5" style={{ background: sig.color }} />
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-gray-600">{sig.company}</p>
-                        <p className="text-[10px] text-gray-400">{sig.type} · {sig.track}</p>
+                        <p className="text-xs font-semibold text-gray-700">{sig.company}</p>
+                        <p className="text-[10px] text-gray-500">{sig.type} · {sig.track}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5">
                         <span
@@ -805,7 +799,7 @@ export default function Signals() {
                         >
                           {sig.score}
                         </span>
-                        <span className="text-[9px] text-white/20">{sig.time}</span>
+                        <span className="text-[9px] text-gray-400">{sig.time}</span>
                       </div>
                     </div>
                   ))}
@@ -814,10 +808,9 @@ export default function Signals() {
 
               {/* Stats */}
               <div
-                className="rounded-2xl border border-gray-100 p-5"
-                style={{ background: "rgba(255,255,255,0.02)" }}
+                className="rounded-2xl border border-gray-100 bg-white p-5"
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">This week</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">This week</p>
                 <div className="space-y-3">
                   {[
                     { label: "Signals detected", value: "1,204", color: "#10b981" },
@@ -826,7 +819,7 @@ export default function Signals() {
                     { label: "Sources monitored", value: "150+", color: MARKET_COLORS.amber },
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{stat.label}</span>
+                      <span className="text-xs text-gray-600">{stat.label}</span>
                       <span
                         className="font-mono text-sm font-bold"
                         style={{ color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}

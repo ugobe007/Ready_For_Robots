@@ -250,7 +250,7 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
                       className="rounded-md border overflow-hidden"
                       style={{
                         borderColor: open ? RR.tealBorder : RR.border,
-                        background: open ? RR.tealMuted : "rgba(255,255,255,0.02)",
+                        background: open ? RR.tealMuted : RR.bg,
                       }}
                     >
                       <button
@@ -336,7 +336,7 @@ export default function HumanoidIntelligenceReport({ report, loading, error }: P
                                   <div
                                     key={key}
                                     className="rounded-md border px-2.5 py-1.5"
-                                    style={{ borderColor: RR.border, background: "rgba(255,255,255,0.02)" }}
+                                    style={{ borderColor: RR.border, background: RR.bgElevated }}
                                   >
                                     <div className="flex justify-between text-[10px]">
                                       <span className="font-semibold" style={{ color: RR.textMuted }}>

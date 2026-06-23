@@ -89,7 +89,7 @@ function IntelligenceFlow() {
                   <Icon className="h-[18px] w-[18px]" style={{ color: stage.color }} />
                 </div>
                 <p className="text-xs font-bold text-gray-900">{stage.label}</p>
-                <p className="mt-0.5 text-[10px] text-gray-400">{stage.copy}</p>
+                <p className="mt-0.5 text-[10px] text-gray-600">{stage.copy}</p>
               </div>
             );
           })}
@@ -103,7 +103,7 @@ function IntelligenceFlow() {
         ].map(([label, copy]) => (
           <div key={label} className="p-3.5 bg-white">
             <p className={`${EYEBROW} ${label === "sales" ? "text-amber-600" : "text-emerald-600"}`}>{label}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">{copy}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-gray-600">{copy}</p>
           </div>
         ))}
       </div>
@@ -228,7 +228,7 @@ export default function Intelligence() {
                   ].map(([tier, action]) => (
                     <div key={tier} className="p-3 bg-white">
                       <p className="font-mono text-[13px] font-bold" style={{ color: tier === "HOT" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{tier}</p>
-                      <p className="mt-0.5 text-[11px] text-gray-500">{action}</p>
+                      <p className="mt-0.5 text-[11px] text-gray-600">{action}</p>
                     </div>
                   ))}
                 </div>

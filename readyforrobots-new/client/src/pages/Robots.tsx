@@ -173,10 +173,10 @@ function ScoreBar({ value, dim }: { value: number; dim: (typeof INDEX_DIMS)[numb
 
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { label: string; color: string; bg: string }> = {
-    available: { label: "Available", color: "#34d399", bg: "rgba(52,211,153,0.12)" },
-    pilot: { label: "Pilot", color: "#fbbf24", bg: "rgba(251,191,36,0.12)" },
-    research: { label: "Research", color: "#93c5fd", bg: "rgba(96,165,250,0.12)" },
-    discontinued: { label: "Discontinued", color: "#f87171", bg: "rgba(248,113,113,0.12)" },
+    available: { label: "Available", color: "#047857", bg: "rgba(5,150,105,0.12)" },
+    pilot: { label: "Pilot", color: "#b45309", bg: "rgba(245,158,11,0.15)" },
+    research: { label: "Research", color: "#1d4ed8", bg: "rgba(59,130,246,0.12)" },
+    discontinued: { label: "Discontinued", color: "#b91c1c", bg: "rgba(239,68,68,0.12)" },
   };
   const s = cfg[status] ?? cfg.research;
   return (
@@ -343,10 +343,10 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
 
   return (
     <div
-      className="rounded-xl border overflow-hidden transition-colors"
+      className="rounded-xl border overflow-hidden transition-colors bg-white"
       style={{
-        borderColor: open ? "rgba(3,218,197,0.2)" : "rgba(255,255,255,0.08)",
-        background: open ? "rgba(3,218,197,0.04)" : "rgba(255,255,255,0.02)",
+        borderColor: open ? "rgba(5,150,105,0.35)" : "#e5e7eb",
+        background: open ? "rgba(5,150,105,0.04)" : "#ffffff",
       }}
     >
       <button
@@ -355,7 +355,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
         style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-gray-900/15">#{rank}</span>
+        <span className="text-xl font-black text-gray-300">#{rank}</span>
         <RobotAvatar
           vendor={robot.vendor}
           name={robot.name}
@@ -377,7 +377,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               </span>
             ) : null}
           </div>
-          <p className="text-[11px] text-gray-400 mt-0.5">{robot.vendor}</p>
+          <p className="text-[11px] text-gray-600 mt-0.5">{robot.vendor}</p>
           {aiStack?.primary_model ? (
             <p className="text-[10px] text-emerald-600/70 mt-1 truncate max-w-md" title={aiStack.primary_model}>
               {aiStack.primary_model}
@@ -386,14 +386,14 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 max-w-md">
             {HEIF_DIMS.map((d) => (
               <div key={d}>
-                <p className="text-[8px] text-gray-400 mb-0.5 uppercase tracking-wider">{HEIF_LABELS[d]}</p>
+                <p className="text-[8px] text-gray-500 mb-0.5 uppercase tracking-wider">{HEIF_LABELS[d]}</p>
                 <HeifBar value={heifValue(robot, d)} dim={d} />
               </div>
             ))}
           </div>
         </div>
         <div className="flex flex-col items-center justify-center">
-          <span className="text-[9px] text-gray-400 uppercase tracking-widest">HEIF</span>
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest">HEIF</span>
           <span
             className="text-2xl font-black"
             style={{
@@ -402,10 +402,10 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           >
             {heifTotal.toFixed(1)}
           </span>
-          <span className="text-[9px] text-gray-400">/ 4.0</span>
+          <span className="text-[9px] text-gray-500">/ 4.0</span>
         </div>
         <div className="flex flex-col items-center justify-center">
-          <span className="text-[9px] text-gray-400 uppercase tracking-widest">Index</span>
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest">Index</span>
           <span
             className="text-2xl font-black"
             style={{
@@ -414,7 +414,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
           >
             {Math.round(robot.score_total)}
           </span>
-          <span className="text-[9px] text-gray-400">/ 100</span>
+          <span className="text-[9px] text-gray-500">/ 100</span>
         </div>
         <div className="flex items-center justify-center gap-2">
           {robot.product_url ? (
@@ -600,7 +600,7 @@ export default function Robots() {
             <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
               Humanoid Robot Index
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-white/42">
+            <p className="mt-2 max-w-xl text-sm text-gray-600">
               HEIR benchmarking, market signals, and live rankings — updated monthly.
             </p>
           </div>
@@ -611,7 +611,7 @@ export default function Robots() {
                 href={r.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-600 underline underline-offset-4 decoration-white/15"
+                className="text-gray-600 hover:text-emerald-700 underline underline-offset-4 decoration-gray-300"
               >
                 HEIR 2026 · {r.title} ↗
               </a>
@@ -639,7 +639,7 @@ export default function Robots() {
               Live humanoid index
             </p>
             <h2 className="mt-1 text-xl font-bold text-gray-900">Ranked by HEIF · dual 0–4 and 0–100</h2>
-            <p className="mt-1 text-[13px] text-white/38">
+            <p className="mt-1 text-[13px] text-gray-600">
               Known vendors use HEIR 2026 research scores; others infer from datasheets. Index = HEIF × 25.
             </p>
           </div>
@@ -650,18 +650,17 @@ export default function Robots() {
                   key={f}
                   type="button"
                   onClick={() => setFilter(f)}
-                  className="px-3 py-1 rounded-md text-[11px] font-bold capitalize transition-colors"
-                  style={
+                  className={`px-3 py-1 rounded-md text-[11px] font-bold capitalize transition-colors ${
                     filter === f
-                      ? { background: "rgba(3,218,197,0.12)", color: TEAL }
-                      : { color: "rgba(255,255,255,0.35)" }
-                  }
+                      ? "bg-emerald-50 text-emerald-800"
+                      : "text-gray-600 hover:text-emerald-700"
+                  }`}
                 >
                   {f}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
               <span>Sort</span>
               <select
                 value={sortDim}
@@ -675,7 +674,7 @@ export default function Robots() {
                 ))}
               </select>
             </div>
-            <span className="text-[11px] text-gray-400">{filtered.length} robots</span>
+            <span className="text-[11px] text-gray-500">{filtered.length} robots</span>
           </div>
         </div>
 

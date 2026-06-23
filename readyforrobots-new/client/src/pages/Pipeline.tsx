@@ -559,13 +559,13 @@ function PipelineMetric({
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400">{label}</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-500">{label}</p>
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
       </div>
       <p className="font-mono-data text-xl font-bold leading-none" style={{ color }}>
         {value}
       </p>
-      <p className="mt-1 text-[10px] leading-snug text-gray-500">{sub}</p>
+      <p className="mt-1 text-[10px] leading-snug text-gray-600">{sub}</p>
     </div>
   );
 }
@@ -1504,7 +1504,7 @@ export default function Pipeline() {
                 <h1 className="font-extrabold text-gray-900 text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                 </h1>
-                <p className="text-[11px] text-gray-400 mt-0.5 max-w-md">
+                <p className="text-[11px] text-gray-600 mt-0.5 max-w-md">
                   {isAdmin
                     ? "Authoritative database counts up top. Cal outreach controls below."
                     : panelPlan === "anonymous"
@@ -1592,21 +1592,20 @@ export default function Pipeline() {
                   <Newspaper className="h-4 w-4" style={{ color: marketSnippet.color }} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#FFB000" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-800">
                     {marketSnippet.label}
                   </p>
                   <h2 className="mt-1 break-words text-sm font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                     {marketSnippet.headline}
                   </h2>
-                  <p className="mt-1 break-words text-[12px] leading-relaxed" style={{ color: "#FFB000" }}>
+                  <p className="mt-1 break-words text-[12px] leading-relaxed text-gray-700">
                     {marketSnippet.detail}
                   </p>
                 </div>
               </div>
               <Link
                 href="/newsletter"
-                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold"
-                style={{ color: "#FFB000" }}
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900"
               >
                 Read daily brief <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -2113,7 +2112,7 @@ export default function Pipeline() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                   <span className="text-sm font-semibold text-gray-900 truncate">{deal.company}</span>
-                                  <span className="text-[10px] text-gray-400 shrink-0">{deal.industry}</span>
+                                  <span className="text-[10px] text-gray-500 shrink-0">{deal.industry}</span>
                                   <span
                                     className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wide"
                                     style={{ color: tier.color, background: `${tier.color}15` }}
@@ -2181,7 +2180,7 @@ export default function Pipeline() {
                         <p className="text-base font-bold text-gray-900 mb-0.5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                           {selected.company}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
                           <span className="text-gray-300">·</span>
@@ -2233,11 +2232,11 @@ export default function Pipeline() {
                     {!isAdmin && (() => {
                       const verdict = scoutVerdictForDeal(selected);
                       return (
-                        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-white/62">
+                        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] leading-snug text-gray-700">
                           <Zap className="h-3 w-3 shrink-0" style={{ color: verdict.color }} />
-                          <span className="font-semibold text-gray-900/78">SIGNAL · {verdict.headline}</span>
-                          <span className="text-gray-500">—</span>
-                          <span>{verdict.detail}</span>
+                          <span className="font-semibold text-gray-900">SIGNAL · {verdict.headline}</span>
+                          <span className="text-gray-400">—</span>
+                          <span className="text-gray-600">{verdict.detail}</span>
                         </p>
                       );
                     })()}
