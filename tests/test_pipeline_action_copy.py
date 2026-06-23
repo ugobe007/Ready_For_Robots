@@ -64,3 +64,33 @@ def test_fmt_pipeline_card_includes_pipeline_action():
     card = _fmt_pipeline_card(company, False, "", pri, fast=False)
     assert card.get("pipeline_action")
     assert "Hospitality" in card.get("industry", "") or card.get("share_summary")
+
+
+def test_fmt_pipeline_card_includes_robot_types_needed():
+    from types import SimpleNamespace
+
+    from app.api.leads import _fmt_pipeline_card
+
+    company = SimpleNamespace(
+        id=2,
+        name="FedEx Supply Chain",
+        industry="Logistics",
+        location_city="Memphis",
+        location_state="TN",
+        employee_estimate=5000,
+        crm_metadata=None,
+        automation_profile=None,
+        signals=[
+            SimpleNamespace(
+                signal_type="expansion",
+                signal_text="FedEx deploys AMR warehouse automation pilot.",
+                signal_strength=0.85,
+            )
+        ],
+        scores=[SimpleNamespace(overall_intent_score=82.0)],
+    )
+    pri = SimpleNamespace(tier="HOT", score=82.0)
+    card = _fmt_pipeline_card(company, False, "", pri, fast=False)
+    robots = card.get("robot_types_needed") or []
+    assert isinstance(robots, list)
+    assert len(robots) >= 1

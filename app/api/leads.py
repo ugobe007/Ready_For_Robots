@@ -870,6 +870,21 @@ def _fmt_pipeline_card(
     hp = assess_humanoid_pilot_language(sigs, industry=industry_display)
     if hp.tier in ("ACTIVE_PILOT", "PILOT_INTENT") and hp.action:
         pipeline_action = f"Humanoid · {hp.action}"
+
+    raw_stored = (c.industry or "").strip()
+    ov = industry_display if industry_display != raw_stored else None
+    automation_profile = get_automation_profile_for_response(c, industry_override=ov)
+    from app.services.signal_text_normalize import strip_signal_html
+
+    robot_types_needed = humanize_robot_types(
+        automation_profile,
+        industry=industry_display,
+        signal_blob=" ".join(
+            strip_signal_html(getattr(s, "signal_text", None) or "")
+            for s in (sigs or [])[:8]
+        ),
+    )
+
     payload = {
         "id": c.id,
         "company_name": c.name,
@@ -884,6 +899,7 @@ def _fmt_pipeline_card(
         "share_summary": share_summary or None,
         "share_blurb": share_blurb or None,
         "pipeline_action": pipeline_action or None,
+        "robot_types_needed": robot_types_needed,
         "pipeline_slim": True,
         **hp.as_dict(),
     }

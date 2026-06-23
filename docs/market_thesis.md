@@ -2,7 +2,7 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-23 (unknown-industry residual sweep — active Unknown w/ signals cleared to 0)
+**Last updated:** 2026-06-23 (hero Live pipeline panel + robot types surface + OEM/contact missions)
 
 ---
 
@@ -117,8 +117,14 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`next-actions-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — home hero + pipeline right rail; `GET /api/leads/pipeline-next-actions`. |
 | ~~1~~ | ~~`humanoid-pilot-ranking`~~ | LeadQuality + ProductSurface | ✅ **Done 2026-06-23** — `humanoid_pilot_*` tiers on cards; humanoid leads boost next-actions + pipeline badge. |
 | ~~1~~ | ~~`unknown-industry-residual-sweep`~~ | LeadQuality | ✅ **Done 2026-06-23** — **8** industries applied, **48** quarantined; active Unknown w/ signals **56→0**. |
+| ~~1~~ | ~~`hero-live-pipeline-panel`~~ | ProductSurface | ✅ **Done 2026-06-23** — Supabase-like hero panel; amber Live pipeline headline tied to Activate SIGNAL. |
+| ~~1~~ | ~~`pipeline-robot-types-surface`~~ | PipelineHealth | ✅ **Done 2026-06-23** — `robot_types_needed` on slim pipeline cards; **35/35** feed rows. |
+| ~~1~~ | ~~`vendor-oem-live-flow`~~ | LeadQuality | ✅ **Done 2026-06-23** — broad OEM quarantine; **19** pattern/blocklist rows hidden. |
+| ~~2~~ | ~~`contact-gap-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--require-gap contact`; batch filled **3** contacts (Apollo key still needed for scale). |
 
-*Backlog empty after unknown-industry-residual-sweep — next: harness snapshot + friction re-rank (`pipeline-robot-types-surface`, `vendor-oem-live-flow`, `contact-gap-backfill`).*
+*Standing directive (all ProductSurface missions): continually improve site design and conversion paths — hero clarity, CTA continuity, pipeline proof density — so visitors activate SIGNAL without friction.*
+
+*Next: harness snapshot re-rank; ingest-time OEM PR gate; Apollo contact backfill on HOT/WARM surface.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
@@ -128,7 +134,7 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 
 | Frequency | Action |
 |-----------|--------|
-| **Each mission** | Read snapshot `intelligence`; update backlog ranks if friction shifted |
+| **Each mission** | Read snapshot `intelligence`; update backlog ranks if friction shifted; **ProductSurface:** tighten conversion (CTA continuity, proof density, friction on signup path) |
 | **Weekly** | `MarketIntel` mission — external scan → update Emerging + Puck sections |
 | **Monthly** | Kill one bet, promote one from backlog |
 | **Quarterly** | Puck review — still aligned with Detect→Advance? |

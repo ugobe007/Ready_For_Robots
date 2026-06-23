@@ -12,6 +12,7 @@ export default function HeroLeadTicker() {
       title="Live pipeline"
       subtitle="SIGNAL · robot demand"
       showPipelineLink
+      heroVariant
     />
   );
 }

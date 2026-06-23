@@ -39,11 +39,12 @@ if _shell_database_url and database_url_is_template_or_sqlite(_loaded_after_dote
 
 from app.database import SessionLocal
 from app.models.company import Company
-from app.services.lead_filter import is_junk
 from app.services.pipeline_delete_policy import is_quarantined
 from app.services.rectifier import quarantine
+from app.services.robot_vendor_names import vendor_oem_junk_match
 
-_VENDOR_REASON = "robotics vendor / OEM (not a buyer opportunity)"
+def _vendor_match(name: str) -> tuple[bool, str]:
+    return vendor_oem_junk_match(name, mode="buyer")
 
 
 def main() -> None:
@@ -63,8 +64,8 @@ def main() -> None:
             name = (company.name or "").strip()
             if not name:
                 continue
-            junk, reason = is_junk(name, mode="buyer")
-            if junk and reason == _VENDOR_REASON:
+            junk, reason = _vendor_match(name)
+            if junk:
                 rows.append((company.id, name, reason, is_quarantined(company)))
     finally:
         db.close()

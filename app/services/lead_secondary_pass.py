@@ -10,7 +10,7 @@ Secondary logic — five-pillar second pass (decoupled from primary scrapers).
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
@@ -408,6 +408,7 @@ def run_secondary_pass_batch(
     cooldown_hours: int = 24,
     progress: bool = False,
     sales_leads_only: bool = True,
+    require_gaps: Optional[Iterable[str]] = None,
 ) -> Dict[str, Any]:
     """
     Nightly rescue batch: select gap-ranked leads, run decoupled passes, optional rescore.
@@ -419,6 +420,7 @@ def run_secondary_pass_batch(
         db,
         limit=lim,
         min_score=min_score,
+        require_gaps=require_gaps,
         progress=progress,
         sales_leads_only=sales_leads_only,
     )

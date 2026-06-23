@@ -2,7 +2,7 @@
 import pytest
 
 from app.services.lead_filter import is_junk
-from app.services.robot_vendor_names import is_known_robotics_vendor_name
+from app.services.robot_vendor_names import is_known_robotics_vendor_name, vendor_oem_junk_match
 
 
 @pytest.mark.parametrize(
@@ -47,3 +47,9 @@ def test_tesla_allowlisted_in_buyer_pipeline():
     junk, _ = is_junk("Tesla", mode="buyer")
     assert junk is False
     assert is_known_robotics_vendor_name("Tesla") is False
+
+
+def test_vendor_oem_junk_match_includes_pattern_vendors():
+    ok, reason = vendor_oem_junk_match("RoboCorp Automation")
+    assert ok
+    assert "vendor" in reason.lower()

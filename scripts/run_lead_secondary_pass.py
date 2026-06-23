@@ -55,6 +55,13 @@ def main() -> int:
         action="store_true",
         help="Include headline/junk Unknown rows (default: pipeline sales-lead filter only)",
     )
+    parser.add_argument(
+        "--require-gap",
+        action="append",
+        dest="require_gaps",
+        metavar="GAP",
+        help="Only repair leads with this gap (repeatable, e.g. --require-gap contact)",
+    )
     args = parser.parse_args()
 
     sales_leads_only = not args.all_leads
@@ -68,6 +75,7 @@ def main() -> int:
                 db,
                 limit=args.limit,
                 min_score=args.min_score,
+                require_gaps=args.require_gaps or None,
                 progress=not args.quiet,
                 sales_leads_only=sales_leads_only,
             )
@@ -85,6 +93,7 @@ def main() -> int:
             cooldown_hours=args.cooldown_hours,
             progress=not args.quiet,
             sales_leads_only=sales_leads_only,
+            require_gaps=args.require_gaps or None,
         )
         print(json.dumps(stats, indent=2, default=str))
         return 0

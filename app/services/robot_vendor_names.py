@@ -269,3 +269,21 @@ def is_known_robotics_vendor_name(name: Optional[str]) -> bool:
             return True
 
     return False
+
+
+def vendor_oem_junk_match(name: Optional[str], *, mode: str = "buyer") -> tuple[bool, str]:
+    """
+    True when ``is_junk`` rejects ``name`` as a robotics vendor/OEM (buyer pipeline).
+    Covers blocklist hits and pattern-inferred automation vendors.
+    """
+    from app.services.lead_filter import is_junk
+
+    junk, reason = is_junk(name, mode=mode)
+    if not junk:
+        return False, ""
+    rl = (reason or "").lower()
+    if "robotics vendor" in rl or "known robotics vendor" in rl:
+        return True, reason
+    if "automation/robotics vendor" in rl:
+        return True, reason
+    return False, ""
