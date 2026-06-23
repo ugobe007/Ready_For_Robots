@@ -58,3 +58,15 @@ def test_rejects_market_report_without_buyer_intent():
         context_text="The global robotics market size is expected to reach $50 billion by 2030.",
     )
     assert d.is_lead is False
+
+
+def test_rejects_oem_funding_pr_article():
+    d = evaluate_lead_candidate(
+        company_name="Midwest Fulfillment Group",
+        context_text=(
+            "Figure AI raises $675M in funding round as robotics startup "
+            "accelerates humanoid production and factory expansion."
+        ),
+    )
+    assert d.is_lead is False
+    assert "seller" in (d.junk_reason or "").lower() or "vendor" in (d.junk_reason or "").lower()

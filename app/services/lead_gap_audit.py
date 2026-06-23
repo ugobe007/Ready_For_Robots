@@ -280,6 +280,7 @@ def select_gap_repair_candidates(
     limit: int = 100,
     min_score: float = 0.0,
     require_gaps: Optional[Iterable[str]] = None,
+    priority_tiers: Optional[Iterable[str]] = None,
     progress: bool = False,
     sales_leads_only: bool = True,
 ) -> List[LeadGapReport]:
@@ -296,6 +297,7 @@ def select_gap_repair_candidates(
     )
 
     require = set(require_gaps or [])
+    tier_filter = {str(t).strip().upper() for t in (priority_tiers or []) if str(t).strip()}
     reports: List[LeadGapReport] = []
 
     for idx, company in enumerate(rows, start=1):
@@ -316,8 +318,21 @@ def select_gap_repair_candidates(
         if sales_leads_only:
             from app.services.lead_filter import classify_lead
 
-            junk, _, _ = classify_lead(company, company.scores, signals)
+            junk, _, pri = classify_lead(company, company.scores, signals)
             if junk:
+                continue
+            if tier_filter:
+                lead_tier = (getattr(pri, "tier", None) or "COLD").upper()
+                if lead_tier not in tier_filter:
+                    continue
+        elif tier_filter:
+            from app.services.lead_filter import classify_lead
+
+            junk, _, pri = classify_lead(company, company.scores, signals)
+            if junk:
+                continue
+            lead_tier = (getattr(pri, "tier", None) or "COLD").upper()
+            if lead_tier not in tier_filter:
                 continue
 
         score_row = pick_primary_score(company.scores)

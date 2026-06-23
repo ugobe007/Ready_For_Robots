@@ -62,6 +62,13 @@ def main() -> int:
         metavar="GAP",
         help="Only repair leads with this gap (repeatable, e.g. --require-gap contact)",
     )
+    parser.add_argument(
+        "--priority-tier",
+        action="append",
+        dest="priority_tiers",
+        metavar="TIER",
+        help="Only repair leads in this tier (repeatable: HOT, WARM, COLD)",
+    )
     args = parser.parse_args()
 
     sales_leads_only = not args.all_leads
@@ -76,6 +83,7 @@ def main() -> int:
                 limit=args.limit,
                 min_score=args.min_score,
                 require_gaps=args.require_gaps or None,
+                priority_tiers=args.priority_tiers or None,
                 progress=not args.quiet,
                 sales_leads_only=sales_leads_only,
             )
@@ -94,6 +102,7 @@ def main() -> int:
             progress=not args.quiet,
             sales_leads_only=sales_leads_only,
             require_gaps=args.require_gaps or None,
+            priority_tiers=args.priority_tiers or None,
         )
         print(json.dumps(stats, indent=2, default=str))
         return 0

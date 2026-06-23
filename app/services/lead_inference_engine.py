@@ -100,6 +100,25 @@ def _gate_lead_vs_junk(name: str, context_text: str) -> Optional[LeadInferenceDo
 
     # Article-level: is there buyer intent in the surrounding text?
     if context_text:
+        from app.services.lead_filter import _buyer_opportunity_gate
+
+        class _Sig:
+            def __init__(self, text: str):
+                self.signal_type = "news"
+                self.signal_text = text
+
+        ok_buyer, buyer_reason = _buyer_opportunity_gate(
+            [_Sig(context_text[:3000])],
+            company_name=name,
+        )
+        if not ok_buyer:
+            return _reject(
+                name,
+                buyer_reason or "oem_pr_article_gate",
+                [buyer_reason or "buyer opportunity gate"],
+                confidence=0.78,
+            )
+
         intent = analyze(context_text[:3000])
         if intent.overall_intent < 0.08:
             return _reject(

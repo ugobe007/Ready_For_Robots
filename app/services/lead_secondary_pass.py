@@ -409,6 +409,7 @@ def run_secondary_pass_batch(
     progress: bool = False,
     sales_leads_only: bool = True,
     require_gaps: Optional[Iterable[str]] = None,
+    priority_tiers: Optional[Iterable[str]] = None,
 ) -> Dict[str, Any]:
     """
     Nightly rescue batch: select gap-ranked leads, run decoupled passes, optional rescore.
@@ -421,6 +422,7 @@ def run_secondary_pass_batch(
         limit=lim,
         min_score=min_score,
         require_gaps=require_gaps,
+        priority_tiers=priority_tiers,
         progress=progress,
         sales_leads_only=sales_leads_only,
     )

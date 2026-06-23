@@ -2,7 +2,7 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-23 (hero Live pipeline panel + robot types surface + OEM/contact missions)
+**Last updated:** 2026-06-23 (harness re-rank + ingest OEM PR gate + prod cache refresh)
 
 ---
 
@@ -121,10 +121,12 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~1~~ | ~~`pipeline-robot-types-surface`~~ | PipelineHealth | ✅ **Done 2026-06-23** — `robot_types_needed` on slim pipeline cards; **35/35** feed rows. |
 | ~~1~~ | ~~`vendor-oem-live-flow`~~ | LeadQuality | ✅ **Done 2026-06-23** — broad OEM quarantine; **19** pattern/blocklist rows hidden. |
 | ~~2~~ | ~~`contact-gap-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--require-gap contact`; batch filled **3** contacts (Apollo key still needed for scale). |
+| ~~1~~ | ~~`ingest-oem-pr-gate`~~ | LeadQuality | ✅ **Done 2026-06-23** — `_buyer_opportunity_gate` on article context at ingest. |
+| ~~2~~ | ~~`apollo-contact-hot-warm`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--priority-tier HOT/WARM`; **0** fills (surface mostly covered; Apollo key missing). |
 
-*Standing directive (all ProductSurface missions): continually improve site design and conversion paths — hero clarity, CTA continuity, pipeline proof density — so visitors activate SIGNAL without friction.*
+*Harness re-rank 2026-06-23: Unknown w/ signals **1**; pipeline `robot_types` populated; junk sample **11%** vendor/OEM; top gap **crm_descriptors** 30 > **contact** 29.*
 
-*Next: harness snapshot re-rank; ingest-time OEM PR gate; Apollo contact backfill on HOT/WARM surface.*
+*Next: add `APOLLO_API_KEY`; `crm-descriptors-backfill`; periodic prod cache refresh after deploys.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 

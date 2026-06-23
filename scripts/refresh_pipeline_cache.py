@@ -42,27 +42,30 @@ def main() -> int:
         if not admin_key:
             print("ADMIN_KEY missing from .env — cannot call admin API", file=sys.stderr)
             return 1
-        import urllib.request
+        import subprocess
 
         base = args.api_base.rstrip("/")
-        for method, url in (
-            ("POST", f"{base}/api/admin/leads/refresh-pipeline-cache"),
-            ("GET", f"{base}/api/scraper/cron/refresh-pipeline"),
-        ):
-            req = urllib.request.Request(
-                url,
-                method=method,
-                headers={"X-Admin-Key": admin_key},
+        url = f"{base}/api/admin/leads/refresh-pipeline-cache"
+        try:
+            proc = subprocess.run(
+                [
+                    "curl",
+                    "-sS",
+                    "-X",
+                    "POST",
+                    url,
+                    "-H",
+                    f"X-Admin-Key: {admin_key}",
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
             )
-            try:
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    body = resp.read().decode()
-                print(body)
-                return 0
-            except Exception as exc:
-                last_err = exc
-        print(f"Remote refresh failed: {last_err}", file=sys.stderr)
-        return 1
+            print(proc.stdout)
+            return 0
+        except subprocess.CalledProcessError as exc:
+            print(f"Remote refresh failed: {exc.stderr or exc.stdout}", file=sys.stderr)
+            return 1
 
     from app.database import SessionLocal
     from app.services.public_surface_cache import refresh_pipeline_surface_caches
