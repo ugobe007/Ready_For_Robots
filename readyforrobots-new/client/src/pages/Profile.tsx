@@ -18,7 +18,19 @@ const PERSONA_TRAITS = [
 
 export default function Profile() {
   const { session, loading } = useAuth();
-  const [me, setMe] = useState<{ email?: string; display_name?: string | null } | null>(null);
+  const [me, setMe] = useState<{
+    email?: string;
+    display_name?: string | null;
+    entitlements?: {
+      display_name?: string;
+      plan?: string;
+      saved_count?: number;
+      saved_limit?: number | null;
+      pipeline_limit?: number;
+      features?: { research_updates?: boolean; unlimited_saves?: boolean };
+      upgrade_url?: string;
+    };
+  } | null>(null);
   const [settings, setSettings] = useState({
     scout_automation_level: "assisted" as AutonomyMode,
     reply_forwarding_enabled: true,
@@ -175,6 +187,48 @@ export default function Profile() {
           <p className="text-sm text-white font-medium">{me?.display_name || me?.email || session.user.email}</p>
           <p className="text-xs text-white/40">{session.user.email}</p>
         </div>
+        {me?.entitlements && (
+          <div className="rounded-xl border border-violet-400/20 p-4 mb-6 space-y-3" style={{ background: "rgba(124,58,237,0.06)" }}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-violet-200/70">Workspace plan</p>
+                <p className="text-sm font-semibold text-white mt-0.5">{me.entitlements.display_name || "Free workspace"}</p>
+              </div>
+              {me.entitlements.plan !== "paid" && (
+                <Link
+                  href={me.entitlements.upgrade_url || "/pricing"}
+                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white"
+                  style={{ background: "#7c3aed" }}
+                >
+                  Upgrade
+                </Link>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="rounded-lg border border-white/8 px-2.5 py-2">
+                <p className="text-white/35 uppercase text-[9px] tracking-wider">Saved leads</p>
+                <p className="font-mono font-bold text-violet-200 mt-0.5">
+                  {me.entitlements.saved_count ?? counts.saved}
+                  {me.entitlements.saved_limit != null ? ` / ${me.entitlements.saved_limit}` : ""}
+                </p>
+              </div>
+              <div className="rounded-lg border border-white/8 px-2.5 py-2">
+                <p className="text-white/35 uppercase text-[9px] tracking-wider">Pipeline</p>
+                <p className="font-mono font-bold text-violet-200 mt-0.5">
+                  {me.entitlements.pipeline_limit ?? 50} leads
+                </p>
+              </div>
+            </div>
+            {!me.entitlements.features?.research_updates && (
+              <p className="text-[10px] leading-relaxed text-white/40">
+                SIGNAL research feed unlocks on Pro.{" "}
+                <Link href="/pricing?reason=research" className="text-violet-300 hover:text-violet-200">
+                  See pricing
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2 mb-8">
           {[
             { n: counts.saved, l: "Saved" },

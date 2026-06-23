@@ -10,25 +10,25 @@ import { useState } from "react";
 
 const tiers = [
   {
-    name: "Starter",
-    price: "$19",
-    period: "/month",
-    tagline: "Signal — start finding robot-ready buyers",
+    name: "Free",
+    price: "$0",
+    period: "",
+    tagline: "Start browsing the live pipeline — no card required",
     color: "#03DAC5",
     icon: Zap,
-    cta: "Start Starter",
+    cta: "Start free workspace",
     ctaAction: "signup",
     features: [
       "URL scan and buyer matching",
-      "Starter pipeline view",
-      "Signal type identification",
+      "50 live pipeline leads (HOT / WARM / monitor mix)",
       "Lead score and why-now context",
+      "Save up to 5 leads to your workspace",
       "Outreach draft previews",
       "Daily newsletter and market signal brief",
     ],
     limitations: [
-      "No Signal research feed",
-      "Manual Signal workflow",
+      "No SIGNAL research feed",
+      "HubSpot connect only — auto-sync on Pro",
     ],
     highlight: false,
   },
@@ -36,18 +36,18 @@ const tiers = [
     name: "Pro",
     price: "$49",
     period: "/month",
-    tagline: "Full pipeline + Signal workspace for active sellers",
+    tagline: "Full pipeline + cited research for active sellers",
     color: "#FFB000",
     icon: Cpu,
-    cta: "Start Pro",
+    cta: "Upgrade to Pro",
     ctaAction: "trial",
     features: [
-      "Everything in Starter",
-      "Expanded lead matching",
-      "Research agent updates on WARM and HOT leads",
+      "Everything in Free",
+      "Unlimited saved leads",
+      "SIGNAL research updates on WARM and HOT leads",
+      "HubSpot auto-sync (push score, trigger, brief)",
       "Pipeline Kanban board",
       "Improved outreach drafts by industry",
-      "CRM profile enrichment",
       "Weekly pipeline and research summary",
     ],
     limitations: [],
@@ -61,12 +61,11 @@ const tiers = [
     tagline: "For teams ready to act on more accounts",
     color: "#a78bfa",
     icon: Shield,
-    cta: "Start Premium",
+    cta: "Talk to sales",
     ctaAction: "sales",
     features: [
       "Everything in Pro",
-      "50 live pipeline leads",
-      "Priority Signal research coverage",
+      "Priority SIGNAL research coverage",
       "Team workflow + priority support",
       "Premium signal monitoring",
       "Advanced CRM-ready lead context",
@@ -100,11 +99,11 @@ const supportServices = [
 const faqs = [
   {
     q: "Is there a contract or commitment?",
-    a: "No. Starter, Pro, and Premium are month-to-month. You can cancel any time.",
+    a: "No. Pro and Premium are month-to-month when billing is enabled. The Free workspace stays free — no card required to browse and save up to 5 leads.",
   },
   {
     q: "Which plan should I start with?",
-    a: "Starter is best for testing the workflow. Pro is best for active sales teams. Premium is best when you want more research coverage, team workflow, and priority support.",
+    a: "Start on Free — scan URLs, browse 50 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
   },
   {
     q: "How do you define a 'matched prospect'?",
@@ -112,7 +111,7 @@ const faqs = [
   },
   {
     q: "Can I use this with my existing CRM?",
-    a: "Yes — that is the point. Signal is ReadyForRobots' pipeline service on top of your stack. Pro and Premium add HubSpot sync (push qualified leads with score, trigger, and brief). No CRM? Use the native Signal workspace. Salesforce and Pipedrive use the same sync pattern—shipping after HubSpot.",
+    a: "Yes. Signal sits on top of your stack. Free workspace can connect HubSpot manually; Pro and Premium add automatic sync (push qualified leads with score, trigger, and brief). No CRM? Use the native Signal workspace.",
   },
   {
     q: "What if we use Salesforce or Pipedrive instead of HubSpot?",
@@ -145,7 +144,7 @@ export default function Pricing() {
     const next = encodeURIComponent("/pipeline");
     const query =
       action === "trial"
-        ? `/signup?plan=pro&trial=1&next=${next}`
+        ? `/signup?plan=pro&next=${next}`
         : `/signup?plan=${plan}&next=${next}`;
     setLocation(query);
   };

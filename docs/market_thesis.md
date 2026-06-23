@@ -133,10 +133,10 @@ See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents mus
 | Rank | Mission slug | Agent | Rationale |
 |------|--------------|-------|-----------|
 | ~~1~~ | ~~`conversion-funnel-pass`~~ | ProductSurface | ✅ **Done 2026-06-23** — Pricing→signup, default `/pipeline`, dual home CTA, save-limit upgrade toast. |
-| 1 | `entitlement-honesty` | ProductSurface | Pricing tiers vs `plan_entitlements.py` mismatch erodes trust at upgrade. |
-| 2 | `pipeline-research-upsell` | ProductSurface | Free users see empty research panel — no Pro teaser. |
-| 3 | `profile-usage-meters` | ProductSurface | No “3/5 saves” visibility before hard limit. |
-| 4 | `mobile-signup-cta` | ProductSurface | Signup hidden on mobile header. |
+| ~~1~~ | ~~`entitlement-honesty`~~ | ProductSurface | ✅ **Done 2026-06-23** — Free/Pro/Premium pricing; `/me` entitlements; profile meters. |
+| ~~2~~ | ~~`pipeline-research-upsell`~~ | ProductSurface | ✅ **Done 2026-06-23** — blurred research teaser + Pro CTA for free users. |
+| 1 | `profile-usage-meters` | ProductSurface | ✅ folded into entitlement-honesty |
+| 2 | `mobile-signup-cta` | ProductSurface | Signup hidden on mobile header. |
 | ~~2~~ | ~~`lead-inference-rescue`~~ | LeadQuality | ✅ **Done 2026-06-23** — skip buyer gate on refresh; inference rescue batch. |
 
 *Harness re-rank 2026-06-23: top data gaps **contact** 30 > **crm_descriptors** 28 > **lead_inference** 23.*

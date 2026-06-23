@@ -190,6 +190,8 @@ def _handle_db_schema_not_ready(ex: Exception):
 
 @router.get("/me")
 def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+    from app.services.plan_entitlements import user_workspace_entitlements
+
     try:
         _ensure_profile(db, _uid(user), user["email"])
         row = db.execute(
@@ -208,6 +210,7 @@ def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
         "display_name": row.display_name,
         "created_at":   row.created_at.isoformat() if row.created_at else None,
         "is_admin":     _is_admin(email_for_admin),
+        "entitlements": user_workspace_entitlements(user, db),
     }
 
 

@@ -106,3 +106,20 @@ def test_sanitize_anonymous_keeps_scout_teaser():
 def test_saved_limit_free():
     assert saved_leads_limit_for_plan(PLAN_FREE) == 5
     assert saved_leads_limit_for_plan(PLAN_PAID) is None
+
+
+def test_plan_feature_flags():
+    from app.services.plan_entitlements import plan_feature_flags, user_workspace_entitlements
+
+    assert plan_feature_flags(PLAN_PAID)["research_updates"] is True
+    assert plan_feature_flags(PLAN_FREE)["research_updates"] is False
+    assert plan_feature_flags(PLAN_ANONYMOUS)["full_lead_intel"] is False
+
+    anon = user_workspace_entitlements(None)
+    assert anon["plan"] == PLAN_ANONYMOUS
+    assert anon["saved_limit"] == 0
+
+    free = user_workspace_entitlements({"email": "buyer@example.com", "uid": "00000000-0000-0000-0000-000000000001"})
+    assert free["plan"] == PLAN_FREE
+    assert free["display_name"] == "Free workspace"
+    assert free["saved_limit"] == 5

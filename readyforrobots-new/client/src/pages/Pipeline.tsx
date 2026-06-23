@@ -321,6 +321,12 @@ type PipelineEntitlements = {
   visible_count: number;
   saved_limit: number | null;
   upgrade_url: string;
+  features?: {
+    research_updates?: boolean;
+    hubspot_auto_sync?: boolean;
+    unlimited_saves?: boolean;
+    full_lead_intel?: boolean;
+  };
 };
 
 const PIPELINE_LIMIT_FREE = 50;
@@ -2376,6 +2382,38 @@ export default function Pipeline() {
                       </div>
                     )}
                   </div>
+                  )}
+
+                  {/* SIGNAL research upsell — free signed-in workspace */}
+                  {showStandardPanel && (
+                    <div className="shrink-0 px-5 py-3 border-b border-white/6">
+                      <div className="relative overflow-hidden rounded-xl border border-violet-400/20 p-3" style={{ background: "rgba(124,58,237,0.06)" }}>
+                        <div className="pointer-events-none select-none space-y-2 blur-[3px] opacity-60" aria-hidden>
+                          <div className="rounded-lg border p-2.5" style={{ borderColor: "rgba(255,176,0,0.22)", background: "rgba(255,176,0,0.08)" }}>
+                            <p className="text-[11px] font-semibold text-amber-200">Cited research update</p>
+                            <p className="mt-1 text-[11px] text-white/70">New procurement signal with source link and timing window…</p>
+                          </div>
+                          <div className="rounded-lg border p-2.5" style={{ borderColor: "rgba(255,176,0,0.22)", background: "rgba(255,176,0,0.08)" }}>
+                            <p className="text-[11px] font-semibold text-amber-200">Material change detected</p>
+                            <p className="mt-1 text-[11px] text-white/70">Budget language and deployment timeline extracted…</p>
+                          </div>
+                        </div>
+                        <div className="relative mt-3 space-y-2">
+                          <p className={panelSectionLabel}>SIGNAL research</p>
+                          <p className="text-[11px] leading-relaxed text-white/60">
+                            Pro unlocks cited research updates on HOT and WARM leads — budget, timing, and source links refreshed automatically.
+                          </p>
+                          <Link
+                            href="/pricing?reason=research"
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:opacity-90"
+                            style={{ background: "#7c3aed" }}
+                          >
+                            Upgrade to Pro
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   {/* Cal outreach — workspace users */}

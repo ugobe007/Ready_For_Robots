@@ -17,8 +17,15 @@ PLAN_ANONYMOUS = "anonymous"
 PLAN_FREE = "free"
 PLAN_PAID = "paid"
 
-# Pro/Premium unlock full pipeline + research; Starter is paid billing but free-tier caps until upgraded.
+# Pro/Premium unlock full pipeline + research; Starter slug is billing-only until Stripe maps it.
 PAID_PIPELINE_SLUGS = frozenset({"pro", "premium", "paid"})
+BILLING_TIER_LABELS = {
+    "free": "Free workspace",
+    "starter": "Starter (billing pending)",
+    "pro": "Pro",
+    "premium": "Premium",
+    "paid": "Pro",
+}
 
 PIPELINE_HOT_SLOTS = int(os.getenv("PIPELINE_HOT_SLOTS", "15"))
 PIPELINE_WARM_SLOTS = int(os.getenv("PIPELINE_WARM_SLOTS", "20"))
@@ -59,6 +66,72 @@ def resolve_plan_tier(user: Optional[dict]) -> str:
     if slug in PAID_PIPELINE_SLUGS:
         return PLAN_PAID
     return PLAN_FREE
+
+
+def resolve_billing_tier_slug(user: Optional[dict]) -> str:
+    """JWT / env billing slug — may differ from effective workspace plan."""
+    if not user:
+        return "anonymous"
+    email = (user.get("email") or "").strip()
+    if email and _is_admin_email(email):
+        return "pro"
+    slug = (user.get("plan_tier") or user.get("plan") or "").strip().lower()
+    return slug or "free"
+
+
+def plan_feature_flags(plan: str) -> dict[str, bool]:
+    """Feature gates exposed to UI — must match sanitize_lead_for_plan behavior."""
+    if plan == PLAN_PAID:
+        return {
+            "research_updates": True,
+            "hubspot_auto_sync": True,
+            "unlimited_saves": True,
+            "full_lead_intel": True,
+        }
+    if plan == PLAN_FREE:
+        return {
+            "research_updates": False,
+            "hubspot_auto_sync": False,
+            "unlimited_saves": False,
+            "full_lead_intel": True,
+        }
+    return {
+        "research_updates": False,
+        "hubspot_auto_sync": False,
+        "unlimited_saves": False,
+        "full_lead_intel": False,
+    }
+
+
+def user_workspace_entitlements(user: Optional[dict], db=None) -> dict[str, Any]:
+    """Workspace entitlements for /api/user/me and profile meters."""
+    plan = resolve_plan_tier(user)
+    billing = resolve_billing_tier_slug(user)
+    saved_limit = saved_leads_limit_for_plan(plan)
+    saved_count = 0
+    if user and db is not None and plan != PLAN_ANONYMOUS:
+        try:
+            from uuid import UUID
+
+            uid = user.get("uid")
+            if uid:
+                saved_count = count_workspace_leads(db, UUID(str(uid)))
+        except Exception:
+            saved_count = 0
+    features = plan_feature_flags(plan)
+    label = BILLING_TIER_LABELS.get(billing if plan == PLAN_PAID else "free", "Free workspace")
+    if plan == PLAN_PAID and billing in BILLING_TIER_LABELS:
+        label = BILLING_TIER_LABELS[billing]
+    return {
+        "plan": plan,
+        "billing_tier": billing,
+        "display_name": label,
+        "pipeline_limit": pipeline_limit_for_plan(plan),
+        "saved_limit": saved_limit,
+        "saved_count": saved_count,
+        "features": features,
+        "upgrade_url": "/pricing",
+    }
 
 
 def pipeline_limit_for_plan(plan: str) -> int:
@@ -138,6 +211,7 @@ def entitlements_payload(
         "visible_count": visible_count,
         "saved_limit": saved_limit,
         "upgrade_url": "/pricing",
+        "features": plan_feature_flags(plan),
     }
     if tier_mix:
         payload["tier_mix"] = tier_mix
