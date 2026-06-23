@@ -363,7 +363,35 @@ type PipelineFeedPayload = {
   summary?: LeadSummary;
   leads?: ApiLead[];
   entitlements?: PipelineEntitlements;
+  cache_pending?: boolean;
 };
+
+async function fetchPipelineLeadsFallback(base: string, headers?: HeadersInit): Promise<ApiLead[]> {
+  const res = await fetchWithTimeoutRetry(
+    `${base}/api/leads?limit=50&sort=score&exclude_junk=true`,
+    liveFetchInit({ headers }),
+    PIPELINE_TIMEOUT,
+    { retries: 2, retryDelayMs: 1000 },
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  if (Array.isArray(data)) return data as ApiLead[];
+  if (Array.isArray((data as { leads?: unknown }).leads)) {
+    return (data as { leads: ApiLead[] }).leads;
+  }
+  return [];
+}
+
+async function fetchPipelineSummaryFallback(base: string): Promise<LeadSummary | null> {
+  const res = await fetchWithTimeoutRetry(
+    `${base}/api/leads/summary?exclude_junk=true`,
+    liveFetchInit(),
+    PIPELINE_TIMEOUT,
+    { retries: 2, retryDelayMs: 1000 },
+  );
+  if (!res.ok) return null;
+  return (await res.json()) as LeadSummary;
+}
 
 function mapPipelineRows(apiRows: ApiLead[], crmStages: Record<number, string> = {}): Deal[] {
   const mapped: Deal[] = [];
@@ -710,8 +738,29 @@ export default function Pipeline() {
         { retries: 3, retryDelayMs: 1500 },
       );
       if (!res.ok) throw new Error("Could not load pipeline");
-      const payload = (await res.json()) as PipelineFeedPayload;
+      let payload = (await res.json()) as PipelineFeedPayload;
       if (cancelled) return;
+
+      const leadRows = Array.isArray(payload.leads) ? payload.leads : [];
+      if (leadRows.length === 0) {
+        const fallbackLeads = await fetchPipelineLeadsFallback(base, headers);
+        if (cancelled) return;
+        if (fallbackLeads.length > 0) {
+          payload = { ...payload, leads: fallbackLeads };
+          const summaryStale =
+            !payload.summary?.hot &&
+            !payload.summary?.companies_in_database &&
+            !payload.summary?.signals_in_database;
+          if (summaryStale) {
+            const summary = await fetchPipelineSummaryFallback(base);
+            if (cancelled) return;
+            if (summary && (summary.hot ?? summary.companies_in_database)) {
+              payload = { ...payload, summary };
+            }
+          }
+        }
+      }
+
       writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
       const painted = applyPipelineFeed(payload, feedSetters);
       if (!painted && (payload.summary?.hot ?? 0) > 0) {

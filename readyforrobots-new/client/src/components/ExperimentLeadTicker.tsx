@@ -176,10 +176,12 @@ export default function ExperimentLeadTicker({
 
   return (
     <div
-      className={`flex w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-white/8 ${minHeightClass}`}
+      className={`relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border ${minHeightClass}`}
       style={{
-        background: "rgba(255,255,255,0.02)",
-        boxShadow: "0 16px 48px -20px rgba(0,0,0,0.55)",
+        background: "rgba(255,255,255,0.025)",
+        borderColor: "rgba(124,58,237,0.22)",
+        boxShadow:
+          "0 0 0 1px rgba(3,218,197,0.08), 0 0 24px rgba(124,58,237,0.14), 0 0 48px rgba(3,218,197,0.06), 0 16px 40px -16px rgba(0,0,0,0.55)",
       }}
     >
       <div

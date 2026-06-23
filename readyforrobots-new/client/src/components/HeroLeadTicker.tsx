@@ -8,7 +8,7 @@ export default function HeroLeadTicker() {
     <ExperimentLeadTicker
       maxVisible={5}
       tickMs={6000}
-      title="Live pipeline"
+      title="Pipeline"
       subtitle="Verified buyer signals"
       showPipelineLink
     />
