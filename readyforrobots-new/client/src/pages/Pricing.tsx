@@ -5,8 +5,7 @@
  */
 import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle } from "lucide-react";
 import Header from "@/components/Header";
-import { Link } from "wouter";
-import { toast } from "sonner";
+import { Link, useLocation } from "wouter";
 import { useState } from "react";
 
 const tiers = [
@@ -135,11 +134,20 @@ const faqs = [
 
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
 
   const handleCta = (action: string, tier: string) => {
-    if (action === "signup") toast.success("Creating your free account…");
-    else if (action === "trial") toast.success("Starting your 14-day free trial…");
-    else toast.success("Connecting you with our sales team…");
+    const plan = tier.toLowerCase();
+    if (action === "sales") {
+      window.location.href = "mailto:sales@readyforrobots.com?subject=Premium%20workspace%20inquiry";
+      return;
+    }
+    const next = encodeURIComponent("/pipeline");
+    const query =
+      action === "trial"
+        ? `/signup?plan=pro&trial=1&next=${next}`
+        : `/signup?plan=${plan}&next=${next}`;
+    setLocation(query);
   };
 
   return (
@@ -165,6 +173,9 @@ export default function Pricing() {
               {" — robotics prospecting, qualifying, and outreach synced to "}
               <span style={{ color: "#FFB000", fontWeight: 700 }}>HubSpot</span>
               {" or your CRM."}
+            </p>
+            <p className="mt-3 text-xs text-white/30 max-w-lg mx-auto">
+              Paid billing is rolling out — every plan starts with a free workspace. Create an account, browse the pipeline, then upgrade when you are ready.
             </p>
           </div>
 

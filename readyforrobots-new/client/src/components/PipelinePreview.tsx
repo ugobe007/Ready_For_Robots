@@ -187,9 +187,13 @@ export default function PipelinePreview() {
                           <p className="text-sm text-white/65">{s.action}</p>
                         </div>
                       </div>
-                      <button className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors" style={{ background: "#7c3aed" }}>
-                        Approve
-                      </button>
+                      <Link
+                        href="/signup?next=/pipeline"
+                        className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
+                        style={{ background: "#7c3aed" }}
+                      >
+                        Save to workspace
+                      </Link>
                     </div>
                   </div>
                 )}

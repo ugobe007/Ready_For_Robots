@@ -929,18 +929,29 @@ export default function Home() {
             Robot sales automated to closure. HubSpot sync optional.
           </p>
 
-          {/* CTA — Activate SIGNAL */}
-          <Link href="/results?url=">
-            <button
-              className="inline-flex items-center gap-3 text-base font-bold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-              style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
-            >
-              <Zap className="h-5 w-5" />
-              Activate SIGNAL
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </Link>
-          <p className="mt-4 text-white/20 text-xs">No signup required · Free to start · Results in seconds</p>
+          {/* CTA — Activate SIGNAL + free workspace */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/results?url=">
+              <button
+                className="inline-flex items-center gap-3 text-base font-bold px-8 py-4 rounded-2xl transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
+                style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+              >
+                <Zap className="h-5 w-5" />
+                Activate SIGNAL
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+            <Link href="/signup?next=/pipeline">
+              <button
+                className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-4 rounded-2xl border border-white/12 text-white/70 transition-all hover:border-violet-400/35 hover:text-white"
+                style={{ background: "rgba(255,255,255,0.03)" }}
+              >
+                Start free workspace
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </Link>
+          </div>
+          <p className="mt-4 text-white/20 text-xs">Scan without signup · Free pipeline workspace · Upgrade when you save leads</p>
         </div>
       </section>
 

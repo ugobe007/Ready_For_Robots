@@ -13,9 +13,9 @@ export default function Login() {
   const [errMsg, setErrMsg] = useState("");
 
   const nextPath = () => {
-    if (typeof window === "undefined") return "/profile";
+    if (typeof window === "undefined") return "/pipeline";
     const next = new URLSearchParams(window.location.search).get("next");
-    return next && next.startsWith("/") ? next : "/profile";
+    return next && next.startsWith("/") ? next : "/pipeline";
   };
 
   useEffect(() => {
@@ -164,8 +164,17 @@ export default function Login() {
           </div>
         )}
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-xs text-white/35 hover:text-white/60">
+        <div className="mt-6 text-center space-y-3">
+          <p className="text-xs text-white/40">
+            New to ReadyForRobots?{" "}
+            <Link
+              href={`/signup${typeof window !== "undefined" ? window.location.search : ""}`}
+              className="font-semibold text-violet-300 hover:text-violet-200"
+            >
+              Start free workspace
+            </Link>
+          </p>
+          <Link href="/" className="block text-xs text-white/35 hover:text-white/60">
             ← Back home
           </Link>
         </div>

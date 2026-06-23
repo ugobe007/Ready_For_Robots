@@ -19,9 +19,9 @@ export default function Signup() {
   const hubspotIntent = params.get("intent") === "hubspot";
 
   const nextPath = () => {
-    if (typeof window === "undefined") return "/profile";
+    if (typeof window === "undefined") return "/pipeline";
     const next = params.get("next");
-    return next && next.startsWith("/") ? next : "/profile";
+    return next && next.startsWith("/") ? next : "/pipeline";
   };
 
   const persistFullName = () => {

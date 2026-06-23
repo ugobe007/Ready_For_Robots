@@ -91,7 +91,12 @@ def _reject(name: str, reason: str, evidence: List[str], confidence: float = 0.8
     )
 
 
-def _gate_lead_vs_junk(name: str, context_text: str) -> Optional[LeadInferenceDossier]:
+def _gate_lead_vs_junk(
+    name: str,
+    context_text: str,
+    *,
+    enforce_buyer_gate: bool = True,
+) -> Optional[LeadInferenceDossier]:
     """Return rejection dossier if candidate fails boolean name gates (before ontology)."""
     name = (name or "").strip()
     ok, reason = check_lead_name(name)
@@ -99,7 +104,7 @@ def _gate_lead_vs_junk(name: str, context_text: str) -> Optional[LeadInferenceDo
         return _reject(name, reason, [reason])
 
     # Article-level: is there buyer intent in the surrounding text?
-    if context_text:
+    if enforce_buyer_gate and context_text:
         from app.services.lead_filter import _buyer_opportunity_gate
 
         class _Sig:
@@ -255,7 +260,11 @@ def evaluate_lead_candidate(
     Full logic pass on a candidate name + article context.
     Call before INSERT in scrapers; call refresh_company_inference after signals exist.
     """
-    rejection = _gate_lead_vs_junk(company_name, context_text)
+    rejection = _gate_lead_vs_junk(
+        company_name,
+        context_text,
+        enforce_buyer_gate=is_new_company,
+    )
     if rejection:
         return rejection
 

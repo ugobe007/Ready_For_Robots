@@ -1109,7 +1109,14 @@ export default function Pipeline() {
           const parsed = JSON.parse(errText) as { detail?: { code?: string; message?: string } | string };
           const detail = parsed.detail;
           if (typeof detail === "object" && detail?.code === "saved_leads_limit") {
-            toast.error(detail.message || "Free workspace lead limit reached.");
+            toast.error(detail.message || "Free workspace lead limit reached.", {
+              action: {
+                label: "Upgrade",
+                onClick: () => {
+                  window.location.href = "/pricing?reason=saved_leads";
+                },
+              },
+            });
             return;
           }
         } catch {

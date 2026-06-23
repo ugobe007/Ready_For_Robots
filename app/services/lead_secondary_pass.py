@@ -168,7 +168,9 @@ def _run_inference_rescue(company: Company, signals: List[Signal], db: Session) 
     from app.services.lead_inference_engine import refresh_company_inference
 
     dossier = refresh_company_inference(company, signals, db)
-    if dossier.is_lead and dossier.to_dict().get("specific_problem"):
+    inf = (company.crm_metadata or {}).get("lead_inference")
+    has_inference = isinstance(inf, dict) and bool(inf.get("specific_problem"))
+    if dossier.is_lead and (dossier.to_dict().get("specific_problem") or has_inference):
         return "filled", ["lead_inference"]
     return "failed", []
 

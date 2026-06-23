@@ -126,9 +126,22 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~2~~ | ~~`apollo-contact-hot-warm`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--priority-tier HOT/WARM`; Apollo key present but **403** on free plan search API. |
 | ~~2~~ | ~~`crm-descriptors-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — robot-fit fallback in CRM extractor; **4** fills; gap **30→28**. |
 
-*Harness re-rank 2026-06-23: Unknown w/ signals **1**; pipeline `robot_types` populated; junk sample **11%** vendor/OEM; top gap **contact** 30 > **crm_descriptors** 28.*
+### Conversion funnel (browse → signup) — standing ProductSurface directive
 
-*Next: upgrade Apollo plan for contact search; periodic prod cache refresh after deploys; inference pass for residual CRM gaps.*
+See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents must tighten CTA continuity, post-auth landing, and upgrade moments every mission.
+
+| Rank | Mission slug | Agent | Rationale |
+|------|--------------|-------|-----------|
+| ~~1~~ | ~~`conversion-funnel-pass`~~ | ProductSurface | ✅ **Done 2026-06-23** — Pricing→signup, default `/pipeline`, dual home CTA, save-limit upgrade toast. |
+| 1 | `entitlement-honesty` | ProductSurface | Pricing tiers vs `plan_entitlements.py` mismatch erodes trust at upgrade. |
+| 2 | `pipeline-research-upsell` | ProductSurface | Free users see empty research panel — no Pro teaser. |
+| 3 | `profile-usage-meters` | ProductSurface | No “3/5 saves” visibility before hard limit. |
+| 4 | `mobile-signup-cta` | ProductSurface | Signup hidden on mobile header. |
+| ~~2~~ | ~~`lead-inference-rescue`~~ | LeadQuality | ✅ **Done 2026-06-23** — skip buyer gate on refresh; inference rescue batch. |
+
+*Harness re-rank 2026-06-23: top data gaps **contact** 30 > **crm_descriptors** 28 > **lead_inference** 23.*
+
+*Next: entitlement-honesty; Apollo plan upgrade; residual CRM/inference sweeps; prod cache refresh after deploys.*
 
 *Re-ranked 2026-06-23 (friction-baseline): vendor/OEM promoted to #1 because the live slice shows it is the dominant recent-flow leak, whereas no-intent (69%) is a historical-backlog cleanup. `hospitality-headline-filter` folded into rank 2 (RSS/HTML strip covers hotel/geo header merges). `pipeline-cache-refresh-health` added — feed is empty.*
 
