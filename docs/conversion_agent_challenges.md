@@ -24,7 +24,7 @@ Measure weekly: anonymous pipeline views, signup starts, signup completes, first
 | 1 | **Pricing → signup wiring** — no dead-end toasts; honest free-workspace copy until Stripe | ProductSurface | ✅ Done 2026-06-23 |
 | 2 | **Entitlement honesty** — UI tier names match `plan_entitlements.py` | ProductSurface + backend | ✅ Done 2026-06-23 |
 | 3 | **Post-auth landing** — default `next` is `/pipeline`, not `/profile` | ProductSurface | ✅ Done 2026-06-23 |
-| 4 | **Save-limit upgrade moment** — modal at 5/5 saves with `/pricing?reason=saved_leads` | ProductSurface | ✅ toast action done; modal optional |
+| 4 | **Save-limit upgrade moment** — modal at 5/5 saves with `/pricing?reason=saved_leads` | ProductSurface | ✅ Done 2026-06-23 — AlertDialog on pipeline save |
 | 5 | **Locked research teaser** — free signed-in users see blurred Pro research block | ProductSurface | ✅ Done 2026-06-23 |
 | 6 | **CTA continuity** — every marketing button does something (`PipelinePreview`, header mobile) | ProductSurface | ✅ Done 2026-06-23 |
 | 7 | **Context-preserving signup** — `?next=` on Signals, Results, Pipeline deep links | ProductSurface | ✅ Signals + header; Results already wired |

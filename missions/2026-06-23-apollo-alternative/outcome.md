@@ -30,22 +30,18 @@ Apollo renewal **$588/yr** — declined. Contact gaps on HOT/WARM leads still ne
 
 Free workspace: [Clay workspace](https://app.clay.com/workspaces/1240854/chats/cc_0th3ba5YhA69u9mJ6vK) — manual enrichment / future API export; not wired in this mission.
 
-## Ops
+## Ops results (2026-06-23)
 
-Set secrets:
+- `HUNTER_API_KEY` live on Fly + local `.env`; API smoke test OK
+- Contact backfill: last HOT/WARM contact gap filled
+- Signal backfill (12 HOT/WARM `low_signals`): 0 new signals — headline-style names
+- Pipeline cache refreshed
 
-```bash
-fly secrets set HUNTER_API_KEY=your_key -a ready-2-robot
-```
+## Next
 
-Contact backfill:
-
-```bash
-python3 scripts/run_lead_secondary_pass.py \
-  --require-gap contact --no-apollo \
-  --priority-tier HOT --priority-tier WARM \
-  --limit 30 --cooldown-hours 0
-```
+- Quarantine headline-junk HOT rows or tighten ingest title filter
+- Hunter credits: upgrade role-inbox leads where decision makers exist
+- Clay workspace for manual bulk enrich parallel to API
 
 ## Files
 

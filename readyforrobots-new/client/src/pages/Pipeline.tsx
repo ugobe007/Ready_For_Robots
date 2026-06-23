@@ -34,6 +34,16 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Stage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -90,15 +100,28 @@ interface Deal {
     why_lead?: string[];
     procurement?: Record<string, unknown>;
     problem_size?: Record<string, unknown>;
-    robot_categories?: string[];
-    application_areas?: string[];
-    agent_enrichment?: {
-      rich_facts?: Array<{ claim?: string; evidence_span?: string }>;
-      procurement_clues?: string[];
-      timing_clues?: string[];
-      ontology_gaps?: string[];
-    };
+  robot_categories?: string[];
+  application_areas?: string[];
+  agent_enrichment?: {
+    rich_facts?: Array<{ claim?: string; evidence_span?: string }>;
+    procurement_clues?: string[];
+    timing_clues?: string[];
+    ontology_gaps?: string[];
   };
+};
+
+function parseSavedLeadsLimitMessage(errText: string): string | null {
+  try {
+    const parsed = JSON.parse(errText) as { detail?: { code?: string; message?: string } | string };
+    const detail = parsed.detail;
+    if (typeof detail === "object" && detail?.code === "saved_leads_limit") {
+      return detail.message || "Free workspace lead limit reached.";
+    }
+  } catch {
+    /* not JSON */
+  }
+  return null;
+}
 }
 
 interface ScoutActivationLead {
@@ -589,6 +612,8 @@ export default function Pipeline() {
   const [proposalOpen, setProposalOpen] = useState(false);
   const [proposalData, setProposalData] = useState<ProposalData | null>(null);
   const [proposalBusy, setProposalBusy] = useState(false);
+  const [saveLimitOpen, setSaveLimitOpen] = useState(false);
+  const [saveLimitMessage, setSaveLimitMessage] = useState("");
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
@@ -1154,22 +1179,11 @@ export default function Pipeline() {
       );
       if (!createResponse.ok) {
         const errText = await createResponse.text();
-        try {
-          const parsed = JSON.parse(errText) as { detail?: { code?: string; message?: string } | string };
-          const detail = parsed.detail;
-          if (typeof detail === "object" && detail?.code === "saved_leads_limit") {
-            toast.error(detail.message || "Free workspace lead limit reached.", {
-              action: {
-                label: "Upgrade",
-                onClick: () => {
-                  window.location.href = "/pricing?reason=saved_leads";
-                },
-              },
-            });
-            return;
-          }
-        } catch {
-          /* not JSON */
+        const limitMessage = parseSavedLeadsLimitMessage(errText);
+        if (limitMessage) {
+          setSaveLimitMessage(limitMessage);
+          setSaveLimitOpen(true);
+          return;
         }
         throw new Error(errText);
       }
@@ -2789,6 +2803,29 @@ export default function Pipeline() {
           }
         />
       )}
+      <AlertDialog open={saveLimitOpen} onOpenChange={setSaveLimitOpen}>
+        <AlertDialogContent className="border-violet-500/30 bg-[#12082a] text-cream">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-cream">Workspace lead limit reached</AlertDialogTitle>
+            <AlertDialogDescription className="text-cream/70">
+              {saveLimitMessage || "Upgrade to Pro to save more pipeline leads and unlock research."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 bg-transparent text-cream hover:bg-white/5">
+              Not now
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-violet-600 text-white hover:bg-violet-500"
+              onClick={() => {
+                window.location.href = "/pricing?reason=saved_leads";
+              }}
+            >
+              Upgrade to Pro
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
