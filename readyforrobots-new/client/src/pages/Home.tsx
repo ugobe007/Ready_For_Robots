@@ -25,6 +25,7 @@ import {
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
 import HeroUrlScan from "@/components/marketing/HeroUrlScan";
+import { LiveDot } from "@/components/marketing/primitives";
 import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
