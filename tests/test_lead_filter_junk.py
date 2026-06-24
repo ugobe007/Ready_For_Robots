@@ -495,6 +495,10 @@ def test_ontology_descriptor_names_fail_logic_engine(name):
         "text_classifier" in reason
         or "inference gate" in reason
         or "structural" in reason.lower()
+        # "headline shape" is a newer reject path that fires before the
+        # classifiers above for headline-fragment ontology stubs; the name is
+        # still correctly junked (ok is False), so accept it here too.
+        or "headline shape" in reason.lower()
     ), reason
 
 

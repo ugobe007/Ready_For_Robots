@@ -23,6 +23,64 @@ if _shell_database_url and database_url_is_template_or_sqlite(_loaded):
     os.environ["DATABASE_URL"] = _shell_database_url
 
 
+_HTTP_STATUS_MARKER = "__HTTP_STATUS__:"
+
+
+def _auth_header_args(admin_key: str) -> list[str]:
+    """Pick the correct auth header for the admin API.
+
+    A JWT (Supabase access token, starts with ``eyJ``) must go in
+    ``Authorization: Bearer``; the server rejects JWTs sent via ``X-Admin-Key``.
+    The raw ADMIN_KEY secret goes in ``X-Admin-Key``.
+    """
+    key = (admin_key or "").strip()
+    if key.startswith("eyJ"):
+        return ["-H", f"Authorization: Bearer {key}"]
+    return ["-H", f"X-Admin-Key: {key}"]
+
+
+def _should_wait_after_post(http_status: int) -> bool:
+    """Only poll for a rebuilt cache when the trigger POST actually succeeded."""
+    return 200 <= http_status < 300
+
+
+def _post_remote_refresh(url: str, admin_key: str) -> tuple[int, str]:
+    """POST the refresh trigger; return (http_status, response_body).
+
+    Uses ``curl -w`` to capture the HTTP status even on 4xx/5xx (plain
+    ``curl -sS`` exits 0 on an HTTP error, so the caller would otherwise
+    treat a 401 as success and poll uselessly until timeout).
+    """
+    import subprocess
+
+    proc = subprocess.run(
+        [
+            "curl",
+            "-sS",
+            "-X",
+            "POST",
+            url,
+            *_auth_header_args(admin_key),
+            "-w",
+            f"\n{_HTTP_STATUS_MARKER}%{{http_code}}",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    out = proc.stdout
+    status = 0
+    body = out
+    marker = out.rfind(_HTTP_STATUS_MARKER)
+    if marker != -1:
+        body = out[:marker].rstrip("\n")
+        try:
+            status = int(out[marker + len(_HTTP_STATUS_MARKER):].strip())
+        except ValueError:
+            status = 0
+    return status, body
+
+
 def _pipeline_cache_status(api_base: str) -> dict:
     import httpx
 
@@ -115,24 +173,30 @@ def main() -> int:
         base = args.api_base.rstrip("/")
         url = f"{base}/api/admin/leads/refresh-pipeline-cache"
         try:
-            proc = subprocess.run(
-                [
-                    "curl",
-                    "-sS",
-                    "-X",
-                    "POST",
-                    url,
-                    "-H",
-                    f"X-Admin-Key: {admin_key}",
-                ],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            print(proc.stdout)
+            status, body = _post_remote_refresh(url, admin_key)
         except subprocess.CalledProcessError as exc:
             print(f"Remote refresh failed: {exc.stderr or exc.stdout}", file=sys.stderr)
             return 1
+
+        if not _should_wait_after_post(status):
+            # curl exits 0 on HTTP errors, so without this guard --wait would
+            # poll uselessly for the full timeout and report a misleading
+            # "timed out" instead of the real auth/server failure.
+            print(
+                f"Remote refresh trigger returned HTTP {status}: {body}",
+                file=sys.stderr,
+            )
+            if status in (401, 403):
+                print(
+                    "Auth rejected. ADMIN_KEY in .env must be the server's raw "
+                    "ADMIN_KEY secret (not a Supabase service_role/anon JWT), or "
+                    "use an admin user's Bearer access token. Sync with: "
+                    "fly secrets set ADMIN_KEY='<secret>' -a ready-2-robot",
+                    file=sys.stderr,
+                )
+            return 1
+
+        print(body or f"Refresh triggered (HTTP {status}).")
 
         if args.wait:
             return _wait_for_remote_cache(
