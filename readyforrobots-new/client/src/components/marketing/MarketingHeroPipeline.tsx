@@ -103,53 +103,56 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const rows = visible.slice(0, 3);
 
   return (
-    <div className="hero-widget-glow bg-slate-900 rounded-2xl overflow-hidden border border-white/10">
-      <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10">
+    <div className="hero-widget-glow surface-card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-emerald-50/80 to-white px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="text-white font-semibold text-sm font-display">LIVE PIPELINE</span>
+          <span className="font-display text-sm font-semibold text-gray-900">Live pipeline</span>
         </div>
-        <span className="font-mono-data text-xs text-emerald-400 font-semibold">{hotLabel} HOT</span>
+        <span className="font-mono-data text-xs font-bold text-emerald-700">{hotLabel} HOT</span>
       </div>
 
-      <div>
+      <div className="bg-white">
         {rows.map((lead, rowIndex) => {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           return (
             <div
               key={`${lead.id}-${rowIndex}`}
-              className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-all duration-500 ${
+              className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 transition-all duration-500 last:border-0 hover:bg-emerald-50/40 sm:gap-4 sm:px-5 sm:py-4 ${
                 rowIndex === 2 ? "hidden sm:flex" : ""
               }`}
             >
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
-                <Icon size={16} className="text-slate-300" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50">
+                <Icon size={16} className="text-emerald-700" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-white font-semibold text-sm truncate font-display">
+              <div className="min-w-0 flex-1">
+                <div className="mb-0.5 flex items-center gap-2">
+                  <span className="truncate font-display text-sm font-semibold text-gray-900">
                     {lead.company_name}
                   </span>
                   <HeatBadge heat={tier} />
                 </div>
-                <p className="text-slate-400 text-xs truncate">{signalLine(lead)}</p>
+                <p className="truncate text-xs text-gray-600">{signalLine(lead)}</p>
               </div>
-              <div className="flex-shrink-0 text-right">
-                <div className="score-number text-2xl leading-none text-emerald-400">{scoreOf(lead)}</div>
-                <div className="text-slate-500 text-xs mt-0.5 font-mono-data">{live ? "live" : "demo"}</div>
+              <div className="shrink-0 text-right">
+                <div className="score-number text-2xl leading-none text-emerald-700">{scoreOf(lead)}</div>
+                <div className="mt-0.5 font-mono-data text-xs text-gray-500">{live ? "live" : "demo"}</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="px-4 sm:px-5 py-2.5 sm:py-3 border-t border-white/10 flex items-center justify-between">
-        <span className="text-slate-400 text-[10px] sm:text-xs font-mono-data">
+      <div className="flex items-center justify-between border-t border-gray-200 bg-slate-50 px-4 py-2.5 sm:px-5 sm:py-3">
+        <span className="font-mono-data text-[10px] text-gray-600 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
-          {!live && <span className="text-slate-500"> · preview</span>}
+          {!live && <span className="text-gray-500"> · preview</span>}
         </span>
-        <Link href="/pipeline" className="text-emerald-400 text-xs font-semibold hover:text-emerald-300 flex items-center gap-1">
+        <Link
+          href="/pipeline"
+          className="flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+        >
           View all <ArrowRight size={12} />
         </Link>
       </div>

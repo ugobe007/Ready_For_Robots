@@ -176,7 +176,7 @@ export default function Home() {
             <div className="animate-fade-in-up order-2 lg:order-2" style={{ animationDelay: "120ms" }}>
               <div className="relative max-md:mt-2">
                 <div
-                  className="absolute -inset-3 sm:-inset-5 rounded-3xl bg-emerald-400/25 blur-2xl sm:blur-3xl pointer-events-none"
+                  className="absolute -inset-3 sm:-inset-5 rounded-3xl bg-emerald-200/30 blur-2xl sm:blur-3xl pointer-events-none"
                   aria-hidden
                 />
                 <div className="relative">
