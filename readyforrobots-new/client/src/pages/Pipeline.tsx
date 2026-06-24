@@ -562,10 +562,10 @@ function PipelineMetric({
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">{label}</p>
         <span className="h-2 w-2 rounded-full ring-2 ring-white" style={{ background: color }} />
       </div>
-      <p className="pl-2 font-mono-data text-2xl font-bold leading-none" style={{ color }}>
+      <p className="pl-2 font-mono-data text-xl font-semibold leading-none" style={{ color }}>
         {value}
       </p>
-      <p className="mt-1.5 pl-2 text-[10px] leading-snug text-stone-700">{sub}</p>
+      <p className="mt-1 pl-2 text-[10px] leading-snug text-gray-600">{sub}</p>
     </div>
   );
 }
@@ -1480,8 +1480,8 @@ export default function Pipeline() {
     <div className="pipeline-page-bg flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 px-4 pb-8 pt-20 lg:px-6">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
+      <main className="flex-1 px-4 pb-6 pt-20 lg:px-6">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-2">
           {isAdmin && <AdminNav />}
 
           <div className="pipeline-workspace">
@@ -1489,11 +1489,11 @@ export default function Pipeline() {
             <div className="pipeline-page-header">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">SIGNAL · Sales intelligence</p>
-                  <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  <p className="sb-kicker mb-0.5 text-emerald-700">SIGNAL · Sales intelligence</p>
+                  <h1 className="font-display text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
                     {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                   </h1>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
+                  <p className="mt-1 max-w-xl text-xs leading-relaxed text-gray-600 sm:text-sm">
                     {isAdmin
                       ? "Authoritative database counts up top. Cal outreach controls below."
                       : panelPlan === "anonymous"
@@ -1514,7 +1514,7 @@ export default function Pipeline() {
                     }}
                     list="pipeline-industries"
                     placeholder="Search industry, company, or signal…"
-                    className="w-full rounded-xl border border-stone-500/40 bg-white/95 py-3 pl-10 pr-10 text-sm font-medium text-gray-900 shadow-inner outline-none placeholder:text-stone-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30"
+                    className="sb-input py-2 pl-9 pr-10"
                   />
                   {industryQuery && (
                     <button
@@ -1536,7 +1536,7 @@ export default function Pipeline() {
 
             {/* ── Alerts ── */}
             {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
-              <div className="space-y-2 border-b border-stone-200 px-4 py-3 sm:px-6">
+              <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
                     {loadErr}
@@ -1583,7 +1583,7 @@ export default function Pipeline() {
             />
           </section>
 
-          <section className="mx-4 mb-4 rounded-xl border border-amber-300/60 bg-gradient-to-r from-amber-50 to-stone-50 px-4 py-3 sm:mx-6">
+          <section className="mx-3 mb-2 rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2 sm:mx-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <div
@@ -1951,10 +1951,10 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="flex min-h-0 gap-0 border-t border-stone-300 lg:gap-0" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div className="flex min-h-0 gap-2 border-t border-gray-200 p-2 sm:p-3" style={{ minHeight: "calc(100vh - 200px)" }}>
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
-            <div className="pipeline-list-shell mx-4 mb-4 flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto sm:mx-6">
+            <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
               <div className="pipeline-list-columns">
                 <div className="col-span-5">Company</div>
                 <div className="col-span-4 hidden md:block">Signal</div>
@@ -2000,7 +2000,7 @@ export default function Pipeline() {
                             <button
                               key={deal.id}
                               onClick={() => setSelectedId(deal.id)}
-                              className={`group w-full rounded-xl text-left flex items-center gap-3 px-3 py-3 transition-all ${dealRowSurface(isSelected)}`}
+                              className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <div
@@ -2106,7 +2106,7 @@ export default function Pipeline() {
                               key={deal.id}
                               type="button"
                               onClick={() => setSelectedId(deal.id)}
-                              className={`group w-full rounded-xl text-left flex items-center gap-3 px-3 py-3 transition-all ${dealRowSurface(isSelected)}`}
+                              className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <div
@@ -2167,7 +2167,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="pipeline-detail-shell mx-4 mb-4 flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:mx-0 lg:mr-6 lg:w-[400px] xl:w-[420px] lg:sticky lg:top-20 lg:border-l lg:border-stone-300 lg:rounded-none lg:rounded-r-2xl lg:shadow-none"
+              className="pipeline-detail-shell flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:w-[380px] xl:w-[400px] lg:sticky lg:top-20"
             >
               {isAdmin && (
               <ScoutActionBar
@@ -2186,21 +2186,21 @@ export default function Pipeline() {
                   <div className="pipeline-detail-header">
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
-                        <p className="mb-1 font-display text-lg font-bold text-white">
+                        <p className="mb-0.5 font-display text-base font-semibold text-gray-900">
                           {selected.company}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-slate-300">
+                        <div className="flex items-center gap-2 text-[11px] text-gray-600">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
-                          <span className="text-slate-500">·</span>
+                          <span className="text-gray-400">·</span>
                           {selected.industry}
                         </div>
                       </div>
                       <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-white/10"
-                        style={{ boxShadow: `0 0 0 2px ${dealTierColor(selected)}55` }}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-white shadow-sm"
+                        style={{ borderColor: dealTierColor(selected), background: `${dealTierColor(selected)}14` }}
                       >
-                        <span className="font-mono text-sm font-bold text-white" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span className="font-mono text-sm font-bold" style={{ color: dealTierColor(selected), fontFamily: "'JetBrains Mono', monospace" }}>
                           {selected.score}
                         </span>
                       </div>
@@ -2570,37 +2570,32 @@ export default function Pipeline() {
                   </div>
 
                   {!showKanban && (
-                    <div
-                      className="shrink-0 z-20 px-3 py-2.5 pb-12 border-t border-teal-400/20 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]"
-                      style={{ background: "linear-gradient(180deg, rgba(3,218,197,0.12) 0%, rgba(13,5,32,0.98) 50%)" }}
-                    >
+                    <div className="pipeline-detail-actions">
                       <HubSpotCtaLink
                         connected={hubspotIntegration?.connected}
                         hasSession={Boolean(session?.access_token)}
-                        className="w-full px-4 py-3 text-base"
+                        className="sb-btn"
                       />
                       {session?.access_token ? (
                         <button
                           type="button"
                           onClick={() => void handleSaveLead(selected)}
                           disabled={advancingLeadId === selected.id}
-                          className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-50 hover:brightness-110"
-                          style={{ color: "#111827", background: "#059669", border: "1px solid #059669" }}
+                          className="sb-btn sb-btn-primary"
                         >
                           {advancingLeadId === selected.id
-                            ? <RefreshCw className="h-4 w-4 animate-spin" />
-                            : <Zap className="h-4 w-4" />
+                            ? <RefreshCw className="h-3 w-3 animate-spin" />
+                            : <Zap className="h-3 w-3" />
                           }
-                          {advancingLeadId === selected.id ? "Saving…" : "Save to SIGNAL workspace"}
+                          {advancingLeadId === selected.id ? "Saving…" : "Save to workspace"}
                         </button>
                       ) : (
                         <Link
                           href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
-                          className="mt-1.5 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110"
-                          style={{ color: "#111827", background: "#059669", border: "1px solid #059669" }}
+                          className="sb-btn sb-btn-primary"
                         >
-                          Activate SIGNAL — free
-                          <ArrowRight className="h-4 w-4" />
+                          Activate SIGNAL
+                          <ArrowRight className="h-3 w-3" />
                         </Link>
                       )}
                     </div>
@@ -2641,47 +2636,37 @@ export default function Pipeline() {
                   )}
 
                   {/* Action bar — workspace kanban */}
-                  {showKanban && session?.access_token && (
-                  <div className="shrink-0 p-4 border-t border-gray-100 flex items-center gap-2">
-                    {
-                      <>
-                        {STAGES.indexOf(selected.stage) > 0 && (
-                          <button
-                            onClick={() => moveStage(selected.id, -1)}
-                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all"
-                          >
-                            <ArrowLeft className="h-3 w-3" />
-                            Back
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            copyDraft();
-                            toast.success("Draft copied — ready to send");
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                          style={{ background: "rgba(5,150,105,0.2)", color: "#047857", border: "1px solid rgba(5,150,105,0.3)" }}
-                        >
-                          <Mail className="h-3.5 w-3.5" />
-                          Approve &amp; Copy
-                        </button>
-                        {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
-                          <button
-                            onClick={() => void handleAdvanceLead(selected)}
-                            disabled={advancingLeadId === selected.id}
-                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all"
-                            style={{
-                              background: advancingLeadId === selected.id ? "rgba(5,150,105,0.45)" : "#059669",
-                              color: "#fff",
-                              border: "1px solid #059669",
-                            }}
-                          >
-                            {advancingLeadId === selected.id ? "Advancing..." : "Advance with Cal"}
-                            <ArrowRight className="h-3 w-3" />
-                          </button>
-                        )}
-                      </>
-                    }
+                  {showKanban && session?.access_token && selected && (
+                  <div className="pipeline-detail-actions">
+                    {STAGES.indexOf(selected.stage) > 0 && (
+                      <button
+                        onClick={() => moveStage(selected.id, -1)}
+                        className="sb-btn"
+                      >
+                        <ArrowLeft className="h-3 w-3" />
+                        Back
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        copyDraft();
+                        toast.success("Draft copied — ready to send");
+                      }}
+                      className="sb-btn"
+                    >
+                      <Mail className="h-3 w-3" />
+                      Approve &amp; Copy
+                    </button>
+                    {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
+                      <button
+                        onClick={() => void handleAdvanceLead(selected)}
+                        disabled={advancingLeadId === selected.id}
+                        className="sb-btn sb-btn-primary"
+                      >
+                        {advancingLeadId === selected.id ? "Advancing..." : "Advance with Cal"}
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                   )}
                 </div>

@@ -344,76 +344,112 @@
     @apply bg-stone-50;
   }
 
-  .pipeline-list-shell {
-    @apply rounded-2xl border border-stone-300 bg-stone-100/90 p-3 shadow-sm;
+  /* Supabase-style surfaces & controls (dashboard: tight, bordered, inline actions) */
+  .sb-surface {
+    @apply overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm;
   }
 
-  /* Sales Pipeline page — professional workspace shell */
+  .sb-surface-rail {
+    @apply w-[3px] shrink-0 bg-emerald-600;
+  }
+
+  .sb-surface-body {
+    @apply p-3;
+  }
+
+  .sb-kicker {
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500;
+  }
+
+  .sb-label {
+    @apply text-[11px] font-medium text-gray-600;
+  }
+
+  .sb-input {
+    @apply w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30;
+  }
+
+  .sb-btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50;
+  }
+
+  .sb-btn-primary {
+    @apply border-emerald-600 bg-emerald-600 text-white hover:border-emerald-700 hover:bg-emerald-700;
+  }
+
+  .sb-btn-ghost {
+    @apply border-transparent bg-transparent text-emerald-700 hover:bg-emerald-50;
+  }
+
+  /* Sales Pipeline page — Supabase-style workspace */
   .pipeline-page-bg {
-    @apply min-h-screen bg-gradient-to-b from-stone-200 via-stone-100 to-slate-200;
-    background-image:
-      linear-gradient(to bottom, rgb(231 229 228 / 0.95), rgb(241 245 249 / 0.9)),
-      linear-gradient(rgba(5, 150, 105, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(5, 150, 105, 0.04) 1px, transparent 1px);
-    background-size: auto, 32px 32px, 32px 32px;
+    @apply min-h-screen bg-gray-50;
   }
 
   .pipeline-workspace {
-    @apply overflow-hidden rounded-2xl border border-stone-400/80 bg-white shadow-xl shadow-stone-900/10;
+    @apply overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm;
   }
 
   .pipeline-page-header {
-    @apply border-b border-stone-300 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 px-5 py-5 sm:px-6;
+    @apply border-b border-gray-200 bg-white px-4 py-3 sm:px-4;
   }
 
   .pipeline-metrics-grid {
-    @apply grid grid-cols-2 gap-3 border-b border-stone-200 bg-stone-50/80 p-4 lg:grid-cols-4;
+    @apply grid grid-cols-2 gap-2 border-b border-gray-200 bg-gray-50/80 p-3 lg:grid-cols-4;
   }
 
   .pipeline-metric-card {
-    @apply relative overflow-hidden rounded-xl border border-stone-300 bg-white px-3.5 py-3 shadow-sm;
+    @apply relative overflow-hidden rounded-md border border-gray-200 bg-white px-2.5 py-2;
   }
 
   .pipeline-metric-card::before {
     content: "";
-    @apply absolute inset-y-0 left-0 w-1 rounded-l-xl;
+    @apply absolute inset-y-0 left-0 w-[3px];
     background: var(--metric-accent, #10b981);
   }
 
   .pipeline-tier-header {
-    @apply sticky top-0 z-10 mx-1 mb-2 flex items-center gap-2 rounded-lg border border-stone-300 bg-stone-200/90 px-3 py-2 backdrop-blur-sm;
+    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-100 px-2 py-1.5;
   }
 
   .pipeline-list-columns {
-    @apply mx-1 mb-2 hidden grid-cols-12 gap-2 rounded-lg border border-stone-300 bg-stone-100 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-600 sm:grid;
+    @apply mb-1 hidden grid-cols-12 gap-2 rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:grid;
   }
 
   .pipeline-deal-row {
-    @apply border border-stone-300 bg-white shadow-sm transition-all;
-    border-left-width: 4px;
+    @apply rounded-md border border-gray-200 bg-white transition-colors;
+    border-left-width: 3px;
   }
 
   .pipeline-deal-row-selected {
-    @apply border-emerald-500 bg-emerald-50/80 shadow-md ring-1 ring-emerald-200;
+    @apply border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-100;
   }
 
   .pipeline-deal-row-hover {
-    @apply hover:border-stone-400 hover:bg-stone-50 hover:shadow-md;
+    @apply hover:border-gray-300 hover:bg-gray-50;
+  }
+
+  .pipeline-list-shell {
+    @apply rounded-md border border-gray-200 bg-gray-50 p-2;
   }
 
   .pipeline-detail-shell {
-    @apply shrink-0 overflow-hidden rounded-2xl border border-stone-400 bg-white shadow-xl shadow-stone-900/10;
+    @apply shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm;
   }
 
   .pipeline-detail-header {
-    @apply shrink-0 border-b border-emerald-900/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 px-4 py-4;
+    @apply shrink-0 border-b border-gray-200 bg-gray-50 px-3 py-2.5;
   }
 
   .pipeline-detail-section {
-    @apply shrink-0 border-b border-stone-200 bg-white px-4 py-3;
+    @apply shrink-0 border-b border-gray-200 bg-white px-3 py-2;
   }
 
   .pipeline-detail-section-muted {
-    @apply shrink-0 border-b border-stone-200 bg-stone-50 px-4 py-3;
+    @apply shrink-0 border-b border-gray-200 bg-gray-50/80 px-3 py-2;
+  }
+
+  .pipeline-detail-actions {
+    @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-gray-200 bg-gray-50 px-3 py-2;
   }
 }
