@@ -127,9 +127,9 @@ export default function HowItWorks() {
               <div className="mb-10 flex flex-wrap items-center gap-4">
                 <Link
                   href="/results?url="
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-5 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 hover:-translate-y-0.5"
                 >
-                  Activate SIGNAL <Zap size={15} />
+                  Find buyers <Zap size={15} />
                 </Link>
                 <Link
                   href="/intelligence"
@@ -335,9 +335,9 @@ export default function HowItWorks() {
             </div>
             <Link
               href="/results?url="
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 hover:-translate-y-0.5"
             >
-              Activate SIGNAL <ArrowRight size={15} />
+              Find buyers <ArrowRight size={15} />
             </Link>
           </div>
         </div>

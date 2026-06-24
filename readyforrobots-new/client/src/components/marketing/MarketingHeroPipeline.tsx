@@ -101,10 +101,11 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
 
   const hotLabel = formatStat(hotCount, "319");
   const totalLabel = formatStat(totalCount, "3,957");
+  const rows = visible.slice(0, 3);
 
   return (
-    <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+    <div className="hero-widget-glow bg-slate-900 rounded-2xl overflow-hidden border border-white/10">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10">
         <div className="flex items-center gap-2">
           <LiveDot />
           <span className="text-white font-semibold text-sm font-display">LIVE PIPELINE</span>
@@ -113,13 +114,15 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       </div>
 
       <div>
-        {visible.map((lead) => {
+        {rows.map((lead, rowIndex) => {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           return (
             <div
               key={lead.id}
-              className="flex items-center gap-4 px-5 py-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-colors duration-150"
+              className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-colors duration-150 ${
+                rowIndex === 2 ? "hidden sm:flex" : ""
+              }`}
             >
               <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
                 <Icon size={16} className="text-slate-300" />
@@ -142,9 +145,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         })}
       </div>
 
-      <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
-        <span className="text-slate-400 text-xs font-mono-data">
-          Showing {visible.length} of {totalLabel} active opportunities
+      <div className="px-4 sm:px-5 py-2.5 sm:py-3 border-t border-white/10 flex items-center justify-between">
+        <span className="text-slate-400 text-[10px] sm:text-xs font-mono-data">
+          Showing {rows.length} of {totalLabel} active opportunities
           {!live && <span className="text-slate-500"> · preview</span>}
         </span>
         <Link href="/pipeline" className="text-emerald-400 text-xs font-semibold hover:text-emerald-300 flex items-center gap-1">

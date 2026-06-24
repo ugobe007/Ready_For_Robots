@@ -249,4 +249,60 @@
   .animate-fade-in-up {
     animation: fadeInUp 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   }
+
+  .hero-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: clamp(2.25rem, 5.5vw, 5rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+
+  .section-headline {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 2rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-mesh-bg {
+    background:
+      radial-gradient(ellipse 80% 60% at 85% 15%, rgba(16, 185, 129, 0.14), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 10% 85%, rgba(5, 150, 105, 0.1), transparent 50%),
+      linear-gradient(180deg, rgba(236, 253, 245, 0.65) 0%, #ffffff 45%, #f8fafc 100%);
+  }
+
+  .hero-grid-texture {
+    background-image:
+      linear-gradient(rgba(5, 150, 105, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(5, 150, 105, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 20%, transparent 75%);
+  }
+
+  .hero-widget-glow {
+    box-shadow:
+      0 0 0 1px rgba(16, 185, 129, 0.12),
+      0 4px 24px rgba(5, 150, 105, 0.12),
+      0 24px 64px rgba(15, 23, 42, 0.18);
+  }
+
+  .btn-secondary-hero {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-gray-800 font-semibold rounded-xl border-2 border-gray-300 transition-all duration-200 active:scale-[0.97] text-base;
+  }
+
+  .btn-secondary-hero .btn-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .btn-secondary-hero:hover .btn-arrow {
+    transform: translateX(4px);
+  }
+
+  .signal-strength-track {
+    @apply h-1 w-16 rounded-full bg-gray-200 overflow-hidden;
+  }
+
+  .signal-strength-fill {
+    @apply h-full rounded-full bg-emerald-500 transition-all duration-500;
+  }
 }

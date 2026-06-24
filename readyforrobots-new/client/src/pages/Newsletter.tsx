@@ -136,13 +136,12 @@ function NlSurface({
 }) {
   return (
     <section
-      className={`mb-5 overflow-hidden rounded-lg border border-white/[0.09] shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] ${className}`}
-      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)" }}
+      className={`mb-5 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm ${className}`}
     >
       <div className="flex">
         <div className="w-[3px] shrink-0" style={{ background: accent }} />
         <div className="min-w-0 flex-1 p-4 lg:p-5">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.06] pb-3">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 pb-3">
             <div className="flex items-start gap-2.5">
               {Icon ? (
                 <span
@@ -183,8 +182,8 @@ function NlBadge({ label, color }: { label: string; color: string }) {
 
 function NlStatCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <div className="border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-400">{label}</p>
+    <div className="border border-gray-200 bg-gray-50 px-3 py-2.5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-500">{label}</p>
       <p
         className="mt-1 font-mono text-lg font-semibold leading-none"
         style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}
@@ -206,7 +205,7 @@ function NlDataRow({
 }) {
   return (
     <li
-      className={`group border-b border-white/[0.06] px-3 py-3 transition-colors last:border-b-0 hover:bg-white ${className}`}
+      className={`group border-b border-gray-100 px-3 py-3 transition-colors last:border-b-0 hover:bg-gray-50 ${className}`}
       style={accent ? { borderLeft: `2px solid ${accent}55` } : undefined}
     >
       {children}
@@ -361,8 +360,8 @@ export default function Newsletter() {
         <div className="mx-auto max-w-5xl">
 
           <header
-            className="mb-6 overflow-hidden rounded-lg border border-white/[0.09]"
-            style={{ background: "linear-gradient(135deg, rgba(3,218,197,0.06), rgba(5,150,105,0.05) 55%, rgba(255,176,0,0.03))" }}
+            className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+            style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(255,255,255,1) 55%, rgba(255,176,0,0.05))" }}
           >
             <div className="flex">
               <div className="w-[3px] shrink-0" style={{ background: TEAL }} />
@@ -374,9 +373,9 @@ export default function Newsletter() {
                 <h1 className="text-2xl font-semibold leading-tight text-gray-900 lg:text-[1.75rem]" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
                   {headline}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">{subheadline}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">{subheadline}</p>
 
-                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/[0.08] bg-white/[0.08] md:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-200 md:grid-cols-4">
                   <NlStatCell label="Edition" value={edition?.latestEdition?.edition || "—"} />
                   <NlStatCell label="Updated" value={edition?.latestEdition?.date || "Daily"} accent={PURPLE} />
                   <NlStatCell label="Hot leads" value={String(edition?.summary?.total_leads ?? stories.length)} accent={AMBER} />
@@ -389,7 +388,7 @@ export default function Newsletter() {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     placeholder="work email"
-                    className="min-w-0 flex-1 rounded-md border border-gray-200 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-teal-400/40"
+                    className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
                   />
                   <button
                     type="submit"
@@ -401,19 +400,19 @@ export default function Newsletter() {
                   </button>
                 </form>
                 {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>Subscribed.</p>}
-                {subStatus === "error" && <p className="mt-2 text-xs text-red-300">Could not subscribe — try again.</p>}
+                {subStatus === "error" && <p className="mt-2 text-xs text-red-600">Could not subscribe — try again.</p>}
               </div>
             </div>
           </header>
 
           {loadStatus === "loading" && (
-            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-gray-500">
+            <div className="mb-5 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
               Loading today&apos;s brief… {loadSec > 3 ? `${loadSec}s` : ""}
             </div>
           )}
 
           {loadStatus === "error" && (
-            <div className="mb-5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-sm text-gray-500">
+            <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-gray-700">
               <p>Brief is refreshing — reload in a moment.</p>
               <button type="button" onClick={() => window.location.reload()} className="mt-2 text-xs font-semibold" style={{ color: TEAL }}>
                 Reload
@@ -428,8 +427,8 @@ export default function Newsletter() {
               {(macroItems.length > 0 || stratItems.length > 0) && (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {macroItems.length > 0 && (
-                    <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
-                      <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+                    <div className="overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                      <div className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
                         <TrendingUp className="h-3.5 w-3.5" style={{ color: EMERALD }} />
                         <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: EMERALD }}>Macro trends</p>
                       </div>
@@ -440,7 +439,7 @@ export default function Newsletter() {
                           return (
                             <NlDataRow key={i} accent={EMERALD}>
                               {title && <p className="text-sm font-medium" style={{ color: EMERALD }}>{title}</p>}
-                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-500">{detail}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-600">{detail}</p>}
                             </NlDataRow>
                           );
                         })}
@@ -448,8 +447,8 @@ export default function Newsletter() {
                     </div>
                   )}
                   {stratItems.length > 0 && (
-                    <div className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
-                      <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+                    <div className="overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                      <div className="flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
                         <Radio className="h-3.5 w-3.5" style={{ color: AMBER }} />
                         <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: AMBER }}>Strategic implications</p>
                       </div>
@@ -460,7 +459,7 @@ export default function Newsletter() {
                           return (
                             <NlDataRow key={i} accent={AMBER}>
                               {title && <p className="text-sm font-medium" style={{ color: AMBER }}>{title}</p>}
-                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-500">{detail}</p>}
+                              {detail && <p className="mt-1 text-xs leading-relaxed text-gray-600">{detail}</p>}
                             </NlDataRow>
                           );
                         })}
@@ -473,17 +472,17 @@ export default function Newsletter() {
               {(riskItems.length > 0 || watchItems.length > 0) && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {riskItems.length > 0 && (
-                    <div className="rounded-md border border-red-400/15 bg-red-400/[0.04] px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-red-400/80">Risks</p>
-                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-500">
+                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-red-700">Risks</p>
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-700">
                         {riskItems.map((r, i) => <li key={i}>{r}</li>)}
                       </ul>
                     </div>
                   )}
                   {watchItems.length > 0 && (
-                    <div className="rounded-md border border-teal-400/15 bg-teal-400/[0.04] px-3 py-2.5">
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Watch next</p>
-                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-500">
+                      <ul className="mt-2 space-y-1 text-xs leading-relaxed text-gray-700">
                         {watchItems.map((w, i) => <li key={i}>{w}</li>)}
                       </ul>
                     </div>
@@ -501,7 +500,7 @@ export default function Newsletter() {
               title="Account changes worth actioning"
               action={<NlLink href="/pipeline" color={AMBER}>Pipeline</NlLink>}
             >
-              <ul className="overflow-hidden rounded-md border border-white/[0.07] bg-black/15">
+              <ul className="overflow-hidden rounded-md border border-gray-200 bg-gray-50">
                 {researchFindings.map((finding, index) => (
                   <NlDataRow key={`${finding.company_id || finding.company}-${index}`} accent={AMBER}>
                     <div className="flex flex-wrap items-center gap-2">
@@ -540,10 +539,10 @@ export default function Newsletter() {
                     return (
                       <div
                         key={r.name}
-                        className="rounded-md border border-white/[0.08] bg-black/20 px-3 py-3"
+                        className="rounded-md border border-gray-200 bg-white px-3 py-3 shadow-sm"
                         style={{ borderTop: `2px solid ${rankColor}` }}
                       >
-                        <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">
+                        <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-500">
                           {["Leader", "2nd", "3rd"][i]}
                         </p>
                         <p className="mt-1 text-sm font-semibold text-gray-900">{r.name}</p>
@@ -558,8 +557,8 @@ export default function Newsletter() {
               )}
 
               {((benchReport.key_findings as string[]) ?? []).length > 0 && (
-                <details className="group rounded-md border border-white/[0.07] bg-black/15">
-                  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-gray-500 [&::-webkit-details-marker]:hidden">
+                <details className="group rounded-md border border-gray-200 bg-gray-50">
+                  <summary className="cursor-pointer list-none px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600 transition-colors hover:text-gray-900 [&::-webkit-details-marker]:hidden">
                     <span className="inline-flex items-center gap-2">
                       <span
                         className="inline-block text-[10px] transition-transform group-open:rotate-90"
@@ -568,12 +567,12 @@ export default function Newsletter() {
                         ▸
                       </span>
                       Key findings
-                      <span className="font-mono normal-case tracking-normal text-gray-400">
+                      <span className="font-mono normal-case tracking-normal text-gray-500">
                         ({((benchReport.key_findings as string[]) ?? []).length})
                       </span>
                     </span>
                   </summary>
-                  <ul className="space-y-2 border-t border-white/[0.06] px-3 py-3">
+                  <ul className="space-y-2 border-t border-gray-200 bg-white px-3 py-3">
                     {((benchReport.key_findings as string[]) ?? []).map((f, i) => (
                       <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-600">
                         <span className="mt-2 h-1 w-1 shrink-0 rounded-full" style={{ background: PURPLE }} />
@@ -593,7 +592,7 @@ export default function Newsletter() {
           )}
 
           {loadStatus === "ready" && stories.length === 0 && (
-            <div className="mb-5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-gray-500">
+            <div className="mb-5 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
               Stories are still syncing — reload in a moment.
             </div>
           )}
@@ -614,22 +613,22 @@ export default function Newsletter() {
                   return (
                     <article
                       key={`${story.company || story.headline || index}`}
-                      className="group flex flex-col rounded-md border border-white/[0.08] bg-black/20 p-3 transition-colors hover:border-white/[0.14] hover:bg-black/30"
+                      className="group flex flex-col rounded-md border border-gray-200 bg-white p-3 shadow-sm transition-colors hover:border-emerald-200 hover:shadow-md"
                       style={{ borderLeft: `3px solid ${color}` }}
                     >
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <NlBadge label={category} color={color} />
                         {story.signalStrength ? (
-                          <span className="font-mono text-[10px] text-gray-400" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          <span className="font-mono text-[10px] text-gray-500" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                             {story.signalStrength}/10
                           </span>
                         ) : null}
                       </div>
-                      <h3 className="text-sm font-semibold leading-snug">
+                      <h3 className="text-sm font-semibold leading-snug text-gray-900">
                         {story.company_id ? (
                           <Link
                             href={`/pipeline?lead=${story.company_id}`}
-                            className="transition-opacity hover:opacity-85"
+                            className="transition-colors hover:opacity-85"
                             style={{ color }}
                           >
                             {cleanScrapedText(story.company || story.headline)}
@@ -638,12 +637,12 @@ export default function Newsletter() {
                           <span style={{ color }}>{cleanScrapedText(story.company || story.headline)}</span>
                         )}
                       </h3>
-                      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-gray-500">
+                      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-gray-600">
                         {leadPreviewSentences(story.summary || story.snippet, 3, 420)
                           || "SIGNAL is tracking automation signals for this account."}
                       </p>
                       {bullets.length > 0 && (
-                        <ul className="mt-2 space-y-1 border-t border-white/[0.06] pt-2 text-[11px] text-gray-500">
+                        <ul className="mt-2 space-y-1 border-t border-gray-100 pt-2 text-[11px] text-gray-600">
                           {bullets.slice(0, 2).map((b, bi) => (
                             <li key={bi} className="flex gap-1.5">
                               <span className="text-gray-400">·</span>
@@ -664,14 +663,14 @@ export default function Newsletter() {
             </NlSurface>
           )}
 
-          <div className="mt-6 flex flex-wrap gap-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm">
+          <div className="mt-6 flex flex-wrap gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
             <Link href="/results?url=" className="inline-flex items-center gap-2 font-bold" style={{ color: AMBER }}>
-              Activate SIGNAL from today&apos;s brief <Zap className="h-4 w-4" />
+              Find buyers from today&apos;s brief <Zap className="h-4 w-4" />
             </Link>
-            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-gray-500 hover:text-gray-600">
+            <Link href="/signals" className="inline-flex items-center gap-2 font-bold text-gray-600 hover:text-gray-900">
               Live signals <BarChart3 className="h-4 w-4" />
             </Link>
-            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-gray-500 hover:text-gray-600">
+            <Link href="/intelligence" className="inline-flex items-center gap-2 font-bold text-gray-600 hover:text-gray-900">
               Intelligence report <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

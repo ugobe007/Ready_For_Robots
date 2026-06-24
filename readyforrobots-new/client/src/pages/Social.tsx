@@ -87,19 +87,19 @@ const POST_TYPE_META: Record<
   PostType,
   { label: string; border: string; text: string; bg: string }
 > = {
-  hot_lead: { label: "🔥 Buyer Spotlight", border: "border-red-800", text: "text-red-400", bg: "bg-red-950/30" },
-  signal_alert: { label: "📊 Buyer Alert", border: "border-amber-800", text: "text-amber-400", bg: "bg-amber-950/30" },
-  industry_insight: { label: "🧠 Industry Brief", border: "border-cyan-800", text: "text-cyan-400", bg: "bg-cyan-950/20" },
-  market_trend: { label: "📈 Market Trend", border: "border-violet-800", text: "text-violet-400", bg: "bg-violet-950/20" },
-  thought_leadership: { label: "🤖 Thought Leadership", border: "border-emerald-800", text: "text-emerald-400", bg: "bg-emerald-950/20" },
+  hot_lead: { label: "🔥 Buyer Spotlight", border: "border-red-200", text: "text-red-700", bg: "bg-red-50" },
+  signal_alert: { label: "📊 Buyer Alert", border: "border-amber-200", text: "text-amber-800", bg: "bg-amber-50" },
+  industry_insight: { label: "🧠 Industry Brief", border: "border-sky-200", text: "text-sky-800", bg: "bg-sky-50" },
+  market_trend: { label: "📈 Market Trend", border: "border-violet-200", text: "text-violet-800", bg: "bg-violet-50" },
+  thought_leadership: { label: "🤖 Thought Leadership", border: "border-emerald-200", text: "text-emerald-800", bg: "bg-emerald-50" },
 };
 
 const TWITTER_SOFT_LIMIT = 257;
 
 function charColor(len: number) {
-  if (len <= 200) return "text-emerald-400";
-  if (len <= 240) return "text-yellow-400";
-  return "text-red-400";
+  if (len <= 200) return "text-emerald-700";
+  if (len <= 240) return "text-amber-700";
+  return "text-red-600";
 }
 
 function CopyButton({ text, label = "Copy", successLabel = "Copied!" }: { text: string; label?: string; successLabel?: string }) {
@@ -115,8 +115,8 @@ function CopyButton({ text, label = "Copy", successLabel = "Copied!" }: { text: 
       }}
       className={`text-xs px-3 py-1.5 rounded border transition-colors font-mono ${
         copied
-          ? "border-emerald-600 text-emerald-400 bg-emerald-950/40"
-          : "border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+          ? "border-emerald-300 text-emerald-700 bg-emerald-50"
+          : "border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-900 bg-white"
       }`}
     >
       {copied ? successLabel : label}
@@ -149,22 +149,22 @@ function PostCard({
   const shareUrl = post.share_url || "https://readyforrobots.com";
 
   return (
-    <div className={`border ${isPosted ? "border-neutral-800 opacity-60" : meta.border} rounded-xl overflow-hidden transition-opacity`}>
-      <div className={`${isPosted ? "bg-neutral-900/20" : meta.bg} border-b ${isPosted ? "border-neutral-800" : meta.border} px-4 py-3 flex items-center justify-between gap-3 flex-wrap`}>
+    <div className={`border bg-white shadow-sm ${isPosted ? "border-gray-200 opacity-70" : meta.border} rounded-xl overflow-hidden transition-opacity`}>
+      <div className={`${isPosted ? "bg-gray-50" : meta.bg} border-b ${isPosted ? "border-gray-200" : meta.border} px-4 py-3 flex items-center justify-between gap-3 flex-wrap`}>
         <div className="flex items-center gap-3">
-          <span className="text-neutral-500 font-mono text-xs tabular-nums">#{index + 1}</span>
-          <span className={`text-sm font-semibold ${isPosted ? "text-neutral-500" : meta.text}`}>
+          <span className="text-gray-500 font-mono text-xs tabular-nums">#{index + 1}</span>
+          <span className={`text-sm font-semibold ${isPosted ? "text-gray-500" : meta.text}`}>
             {isPosted ? "✓ Posted — " : ""}
             {meta.label}
           </span>
-          {post.source_name && <span className="text-xs text-neutral-400 truncate max-w-[200px]">{post.source_name}</span>}
+          {post.source_name && <span className="text-xs text-gray-600 truncate max-w-[200px]">{post.source_name}</span>}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {post.source_industry && (
-            <span className="text-[10px] border border-neutral-700 text-neutral-500 px-2 py-0.5 rounded font-mono">{post.source_industry}</span>
+            <span className="text-[10px] border border-gray-200 bg-white text-gray-600 px-2 py-0.5 rounded font-mono">{post.source_industry}</span>
           )}
           {post.score != null && (
-            <span className="text-[10px] border border-neutral-700 text-neutral-500 px-2 py-0.5 rounded font-mono">Score {post.score}/100</span>
+            <span className="text-[10px] border border-gray-200 bg-white text-gray-600 px-2 py-0.5 rounded font-mono">Score {post.score}/100</span>
           )}
           {!isPosted && post.company_id && (
             <button
@@ -175,7 +175,7 @@ function PostCard({
                 setMarking(false);
               }}
               disabled={marking}
-              className="text-[10px] px-2 py-0.5 rounded border border-emerald-900 text-emerald-600 hover:border-emerald-700 hover:text-emerald-400 transition-colors font-mono disabled:opacity-50"
+              className="text-[10px] px-2 py-0.5 rounded border border-emerald-200 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 transition-colors font-mono disabled:opacity-50"
             >
               {marking ? "…" : "✓ Mark as posted"}
             </button>
@@ -183,18 +183,18 @@ function PostCard({
         </div>
       </div>
 
-      <div className="flex border-b border-neutral-800">
+      <div className="flex border-b border-gray-200 bg-gray-50">
         <button
           type="button"
           onClick={() => setActiveTab("twitter")}
-          className={`flex-1 text-xs py-2.5 transition-colors ${activeTab === "twitter" ? "text-sky-400 border-b-2 border-sky-500 bg-sky-950/20" : "text-neutral-500 hover:text-neutral-300"}`}
+          className={`flex-1 text-xs py-2.5 transition-colors ${activeTab === "twitter" ? "text-sky-700 border-b-2 border-sky-500 bg-sky-50" : "text-gray-500 hover:text-gray-800"}`}
         >
           𝕏 Twitter / X
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("linkedin")}
-          className={`flex-1 text-xs py-2.5 transition-colors ${activeTab === "linkedin" ? "text-blue-400 border-b-2 border-blue-500 bg-blue-950/20" : "text-neutral-500 hover:text-neutral-300"}`}
+          className={`flex-1 text-xs py-2.5 transition-colors ${activeTab === "linkedin" ? "text-blue-700 border-b-2 border-blue-500 bg-blue-50" : "text-gray-500 hover:text-gray-800"}`}
         >
           in LinkedIn
         </button>
@@ -207,12 +207,12 @@ function PostCard({
               value={twitterText}
               onChange={(e) => setTwitterText(e.target.value)}
               rows={6}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-sm text-neutral-200 font-mono resize-y focus:outline-none focus:border-sky-700 leading-relaxed"
+              className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-800 font-mono resize-y focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200 leading-relaxed"
             />
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className={`text-xs font-mono tabular-nums ${charColor(twitterText.length)}`}>
                 {twitterText.length} chars
-                {twitterText.length > TWITTER_SOFT_LIMIT && <span className="ml-1 text-red-400">⚠ may be truncated</span>}
+                {twitterText.length > TWITTER_SOFT_LIMIT && <span className="ml-1 text-red-600">⚠ may be truncated</span>}
               </span>
               <div className="flex gap-2 flex-wrap">
                 <CopyButton text={`${twitterText}\n\n${shareUrl}`} label="Copy post" successLabel="✓ Copied" />
@@ -220,7 +220,7 @@ function PostCard({
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${twitterText}\n\n${shareUrl}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs px-3 py-1.5 rounded border border-sky-800 text-sky-400 hover:border-sky-600 font-mono"
+                  className="text-xs px-3 py-1.5 rounded border border-sky-200 text-sky-700 hover:border-sky-400 hover:bg-sky-50 font-mono bg-white"
                 >
                   Post on X ↗
                 </a>
@@ -233,17 +233,17 @@ function PostCard({
               value={linkedinText}
               onChange={(e) => setLinkedinText(e.target.value)}
               rows={10}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-sm text-neutral-200 resize-y focus:outline-none focus:border-blue-700 leading-relaxed whitespace-pre-wrap"
+              className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-800 resize-y focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 leading-relaxed whitespace-pre-wrap"
             />
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="text-xs font-mono text-neutral-500 tabular-nums">{linkedinText.length} chars</span>
+              <span className="text-xs font-mono text-gray-500 tabular-nums">{linkedinText.length} chars</span>
               <div className="flex gap-2 flex-wrap">
                 <CopyButton text={linkedinText} label="Copy post" successLabel="✓ Copied" />
                 <a
                   href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent((post.title || post.source_name || "").slice(0, 200))}&summary=${encodeURIComponent(linkedinText.slice(0, 700))}&source=readyforrobots.com`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs px-3 py-1.5 rounded border border-blue-800 text-blue-400 hover:border-blue-600 font-mono"
+                  className="text-xs px-3 py-1.5 rounded border border-blue-200 text-blue-700 hover:border-blue-400 hover:bg-blue-50 font-mono bg-white"
                 >
                   Share on LinkedIn ↗
                 </a>
@@ -252,7 +252,7 @@ function PostCard({
                     type="button"
                     onClick={() => onPublishLinkedIn(linkedinText, shareUrl)}
                     disabled={publishing}
-                    className="text-xs px-3 py-1.5 rounded border border-emerald-800 text-emerald-400 hover:border-emerald-600 font-mono disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 rounded border border-emerald-200 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 font-mono disabled:opacity-50 bg-white"
                   >
                     {publishing ? "Publishing…" : "Publish to LinkedIn ↗"}
                   </button>
@@ -266,7 +266,7 @@ function PostCard({
       {post.hashtags && post.hashtags.length > 0 && (
         <div className="px-4 pb-3 flex gap-2 flex-wrap">
           {post.hashtags.map((tag) => (
-            <span key={tag} className="text-[10px] font-mono text-neutral-600">
+            <span key={tag} className="text-[10px] font-mono text-gray-500">
               #{tag}
             </span>
           ))}
@@ -603,22 +603,22 @@ export default function Social() {
             Edit, copy, publish to LinkedIn, or post to X.
           </p>
           {cacheStatus === "stale" && (
-            <p className="mt-2 text-xs text-amber-400/90 font-mono">
+            <p className="mt-2 text-xs text-amber-700 font-mono">
               Showing cached posts while a fresh batch generates in the background.
             </p>
           )}
           {apiSlow && !error && (
-            <p className="mt-2 text-xs text-amber-400/90 font-mono">
+            <p className="mt-2 text-xs text-amber-700 font-mono">
               SIGNAL API is catching up — showing cached posts and retrying in the background.
             </p>
           )}
         </div>
 
-        <div className="mb-6 p-4 border border-blue-900/60 rounded-xl bg-blue-950/20">
+        <div className="mb-6 p-4 border border-blue-200 rounded-xl bg-blue-50 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-blue-300">LinkedIn Publishing</p>
-              <p className="text-xs text-neutral-400 mt-1">
+              <p className="text-sm font-semibold text-blue-900">LinkedIn Publishing</p>
+              <p className="text-xs text-gray-600 mt-1">
                 {linkedinStatus?.connected
                   ? linkedinStatus.member_posting
                     ? `Connected as ${linkedinStatus.member_name || "your profile"} — personal feed until Marketing API is approved.`
@@ -628,20 +628,20 @@ export default function Social() {
                     : "Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the API server"}
               </p>
               {linkedinMsg && (
-                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>{linkedinMsg}</p>
+                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-600" : "text-emerald-700"}`}>{linkedinMsg}</p>
               )}
             </div>
             <div className="flex gap-2 flex-wrap items-end">
               {!linkedinStatus?.connected && (
                 <label className="flex flex-col gap-1 min-w-[220px]">
-                  <span className="text-[10px] uppercase tracking-wide text-neutral-500">Admin key</span>
+                  <span className="text-[10px] uppercase tracking-wide text-gray-500">Admin key</span>
                   <input
                     type="password"
                     value={adminKey}
                     onChange={(e) => persistAdminKey(e.target.value)}
                     placeholder="Same as Fly ADMIN_KEY"
                     autoComplete="off"
-                    className="text-xs px-3 py-1.5 rounded border border-neutral-700 bg-neutral-950 text-neutral-200 font-mono"
+                    className="text-xs px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
                   />
                 </label>
               )}
@@ -649,7 +649,7 @@ export default function Social() {
                 href={linkedinStatus?.organization_url || "https://www.linkedin.com/company/114404417/admin/dashboard/"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded border border-neutral-700 text-neutral-400 hover:text-neutral-200"
+                className="text-xs px-3 py-1.5 rounded border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-white bg-white"
               >
                 Open Page Admin ↗
               </a>
@@ -658,7 +658,7 @@ export default function Social() {
                   type="button"
                   onClick={connectLinkedIn}
                   disabled={connecting}
-                  className="text-xs px-3 py-1.5 rounded border border-blue-700 text-blue-300 hover:border-blue-500 disabled:opacity-50"
+                  className="text-xs px-3 py-1.5 rounded border border-blue-300 text-blue-700 hover:border-blue-500 hover:bg-blue-100 bg-white disabled:opacity-50"
                 >
                   {connecting ? "Connecting…" : "Connect LinkedIn"}
                 </button>
@@ -668,15 +668,15 @@ export default function Social() {
         </div>
 
         {!loading && !error && posts && posts.length > 0 && (
-          <div className="mb-6 flex items-center justify-between gap-3 flex-wrap p-4 border border-neutral-800 rounded-xl bg-neutral-900/30">
-            <span className="text-xs text-neutral-500">
+          <div className="mb-6 flex items-center justify-between gap-3 flex-wrap p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+            <span className="text-xs text-gray-600">
               {batchPosted ? "✓ All posts marked as shared" : `${postedCount} of ${totalLeadPosts} lead posts marked`}
             </span>
             <div className="flex gap-2">
-              <button type="button" onClick={markAllPosted} disabled={batchPosted || refreshing} className="text-xs px-3 py-1.5 rounded border border-emerald-900 text-emerald-500 disabled:opacity-40">
+              <button type="button" onClick={markAllPosted} disabled={batchPosted || refreshing} className="text-xs px-3 py-1.5 rounded border border-emerald-200 text-emerald-700 hover:bg-emerald-50 disabled:opacity-40 bg-white">
                 ✓ Mark all as posted
               </button>
-              <button type="button" onClick={getNewPosts} disabled={refreshing || loading} className="text-xs px-4 py-1.5 rounded border border-violet-700 text-violet-400 disabled:opacity-50 font-semibold">
+              <button type="button" onClick={getNewPosts} disabled={refreshing || loading} className="text-xs px-4 py-1.5 rounded border border-violet-200 text-violet-700 hover:bg-violet-50 disabled:opacity-50 font-semibold bg-white">
                 {refreshing ? "⟳ Generating…" : "⟳ Get New Posts"}
               </button>
             </div>
@@ -684,7 +684,7 @@ export default function Social() {
         )}
 
         {refreshing && (
-          <div className="mb-4 p-3 border border-violet-800/60 rounded-xl bg-violet-950/20 text-xs text-emerald-600 font-mono">
+          <div className="mb-4 p-3 border border-violet-200 rounded-xl bg-violet-50 text-xs text-violet-800 font-mono">
             Generating a fresh batch — usually takes 30–60 seconds. Your current posts stay visible below.
           </div>
         )}
@@ -692,15 +692,15 @@ export default function Social() {
         {loading && !posts?.length && (
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="border border-neutral-800 rounded-xl h-48 animate-pulse bg-neutral-900/40" />
+              <div key={i} className="border border-gray-200 rounded-xl h-48 animate-pulse bg-gray-100" />
             ))}
           </div>
         )}
 
         {error && !loading && !refreshing && !posts?.length && (
-          <div className="border border-red-900 rounded-xl p-6 text-center">
-            <p className="text-red-400 text-sm mb-3">Failed to load posts: {error}</p>
-            <button type="button" onClick={fetchPosts} className="text-xs border border-neutral-700 px-3 py-1.5 rounded">
+          <div className="border border-red-200 bg-red-50 rounded-xl p-6 text-center">
+            <p className="text-red-700 text-sm mb-3">Failed to load posts: {error}</p>
+            <button type="button" onClick={fetchPosts} className="text-xs border border-gray-300 px-3 py-1.5 rounded bg-white text-gray-700 hover:bg-gray-50">
               Try again
             </button>
           </div>
@@ -720,13 +720,13 @@ export default function Social() {
                 publishing={publishing}
               />
             ))}
-            <div className="border border-neutral-800 rounded-xl p-4 text-center text-xs text-neutral-600 space-y-2">
+            <div className="border border-gray-200 bg-white rounded-xl p-4 text-center text-xs text-gray-600 space-y-2 shadow-sm">
               <p>Posts refresh every 4 hours. Mark as posted to rotate companies for 7 days.</p>
               <div className="flex justify-center gap-4">
-                <Link href="/pipeline" className="text-emerald-400 hover:text-emerald-300">
+                <Link href="/pipeline" className="text-emerald-700 hover:text-emerald-900 font-semibold">
                   View Pipeline →
                 </Link>
-                <Link href="/newsletter" className="text-cyan-400 hover:text-cyan-300">
+                <Link href="/newsletter" className="text-sky-700 hover:text-sky-900 font-semibold">
                   View Newsletter →
                 </Link>
               </div>

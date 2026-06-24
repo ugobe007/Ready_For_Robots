@@ -2,13 +2,19 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle,
+  CheckCircle2,
+  Cpu,
+  FileText,
+  Mail,
   Search,
+  Shield,
   Target,
   TrendingUp,
   XCircle,
+  Zap,
 } from "lucide-react";
-import { Link } from "wouter";
-import { formatStat } from "@/hooks/usePipelineStats";
+import { Link, useLocation } from "wouter";
+import AnimatedStat, { statTarget } from "@/components/marketing/AnimatedStat";
 import { HeatBadge } from "@/components/marketing/primitives";
 
 type BenchReport = {
@@ -21,15 +27,15 @@ type StatsProps = {
   totalCount: number | null;
 };
 
-export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
-  const totalLabel = formatStat(totalCount, "3,957");
+export function MarketingWhatSignalDoes({ totalCount }: StatsProps) {
   const features = [
     {
       icon: Search,
       title: "Discover",
       description:
         "Automation-ready buyers — timing, intent, and fit from live market signals. 150+ sources scanned 24/7.",
-      stat: "150+",
+      statValue: 150,
+      statSuffix: "+",
       statLabel: "live sources",
     },
     {
@@ -37,7 +43,8 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
       title: "Develop",
       description:
         "Signal briefs and tailored outreach for each account. Every company scored on fit and timing.",
-      stat: totalLabel,
+      statValue: statTarget(totalCount, 3957),
+      statSuffix: "",
       statLabel: "active signals",
     },
     {
@@ -45,7 +52,8 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
       title: "Close",
       description:
         "Advance deals through follow-ups, re-engagement, and meeting-ready intelligence — from first signal to signed contract.",
-      stat: "62%",
+      statValue: 62,
+      statSuffix: "%",
       statLabel: "strong buying intent",
     },
   ];
@@ -55,7 +63,7 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
       <div className="container">
         <div className="text-center mb-14">
           <p className="section-eyebrow mb-3">What ReadyForRobots SIGNAL Does</p>
-          <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight">
+          <h2 className="section-headline font-bold text-gray-900">
             Discover, develop, and close
             <br />
             robot sales — from one system.
@@ -74,7 +82,11 @@ export function MarketingWhatSignalDoes({ hotCount, totalCount }: StatsProps) {
                     <Icon size={22} className="text-emerald-600" />
                   </div>
                   <div className="text-right">
-                    <div className="score-number text-2xl">{f.stat}</div>
+                    <AnimatedStat
+                      value={f.statValue}
+                      suffix={f.statSuffix}
+                      className="score-number text-2xl block"
+                    />
                     <div className="text-gray-500 text-xs font-mono-data">{f.statLabel}</div>
                   </div>
                 </div>
@@ -97,6 +109,13 @@ export function MarketingHowItWorks() {
       description:
         "150+ sources scanned 24/7 for labor shortages, expansion, CapEx, and hiring patterns that indicate robot-ready buyers.",
       icon: Search,
+      mockup: {
+        kicker: "Signal detected",
+        title: "Apex Logistics",
+        lines: ["3 DC expansions · Midwest US", "Labor shortage filing · match"],
+        accent: "text-emerald-600",
+        bar: 72,
+      },
     },
     {
       num: "02",
@@ -104,6 +123,13 @@ export function MarketingHowItWorks() {
       description:
         "Every company is scored on fit and timing, then developed with signal-specific briefs and trigger-aware outreach drafts.",
       icon: Target,
+      mockup: {
+        kicker: "Fit score",
+        title: "91 / 100",
+        lines: ["Confidence 88 · Urgency 72", "Automation fit · warehouse AMR"],
+        accent: "text-amber-600",
+        bar: 91,
+      },
     },
     {
       num: "03",
@@ -111,41 +137,80 @@ export function MarketingHowItWorks() {
       description:
         "Pipeline advances through follow-ups, re-engagement, and meeting-ready intelligence — from first signal to signed deal.",
       icon: TrendingUp,
+      mockup: {
+        kicker: "Draft outreach",
+        title: "Hi Sarah — saw Apex is expanding",
+        lines: ["three DCs in Q3. We help 3PLs deploy", "AMRs before the RFP drops."],
+        accent: "text-emerald-700",
+        bar: 100,
+      },
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-slate-50">
+    <section id="how-it-works" className="py-20 bg-slate-50 overflow-hidden">
       <div className="container">
-        <div className="mb-14">
+        <div className="mb-14 max-w-2xl">
           <p className="section-eyebrow mb-3">How It Works</p>
-          <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight max-w-xl">
+          <h2 className="section-headline font-bold text-gray-900">
             From signal to signed deal — automated.
           </h2>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <div key={step.num} className="relative">
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-6 left-[calc(100%-1rem)] w-8 h-px bg-gray-200 z-10" />
-                )}
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
-                      <Icon size={20} className="text-white" />
+
+        <div className="relative">
+          <div
+            className="hidden lg:block absolute top-[4.25rem] left-[12%] right-[12%] h-0.5 bg-gradient-to-r from-emerald-200 via-emerald-500 to-emerald-200"
+            aria-hidden
+          />
+
+          <div className="grid lg:grid-cols-3 gap-10 lg:gap-8">
+            {steps.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.num} className="relative flex flex-col">
+                  <div className="flex flex-col items-center text-center mb-5">
+                    <div className="relative z-10 mb-4">
+                      <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/25 ring-4 ring-white">
+                        <Icon size={28} className="text-white" />
+                      </div>
+                      <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white border border-emerald-200 font-mono-data text-[10px] font-bold text-emerald-700 shadow-sm">
+                        {step.num}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed max-w-xs">{step.description}</p>
+                  </div>
+
+                  <div className="mt-auto rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-100">
+                      <span className="text-[10px] font-mono-data font-semibold uppercase tracking-widest text-gray-500">
+                        {step.mockup.kicker}
+                      </span>
+                      <FileText size={14} className="text-emerald-500 shrink-0" />
+                    </div>
+                    <p className={`text-sm font-semibold mb-2 ${step.mockup.accent}`}>{step.mockup.title}</p>
+                    <div className="space-y-1">
+                      {step.mockup.lines.map((line) => (
+                        <p key={line} className="text-xs text-gray-600 leading-relaxed font-mono-data">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="signal-strength-track flex-1 max-w-none">
+                        <div className="signal-strength-fill" style={{ width: `${step.mockup.bar}%` }} />
+                      </div>
+                      {i < steps.length - 1 && (
+                        <span className="hidden lg:inline text-gray-300" aria-hidden>
+                          →
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <div className="font-mono-data text-xs text-gray-500 font-semibold mb-1">{step.num}</div>
-                    <h3 className="font-display text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{step.description}</p>
-                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
@@ -173,16 +238,24 @@ export function MarketingBeforeAfter() {
   ];
 
   return (
-    <section className="py-20 bg-white">
-      <div className="container">
-        <div className="mb-14">
-          <p className="section-eyebrow mb-3">The Difference</p>
-          <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight">
+    <section className="py-20 bg-emerald-700 relative overflow-hidden">
+      <div
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.25) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)",
+        }}
+      />
+      <div className="container relative">
+        <div className="mb-14 max-w-2xl">
+          <p className="text-emerald-100/90 text-xs font-semibold uppercase tracking-[0.1em] mb-3">The Difference</p>
+          <h2 className="section-headline font-bold text-white">
             Before vs. After ReadyForRobots
           </h2>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-red-50 border border-red-100 rounded-2xl p-8">
+          <div className="bg-white border border-red-100 rounded-2xl p-8 shadow-lg shadow-emerald-900/10">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center">
                 <XCircle size={16} className="text-red-500" />
@@ -200,7 +273,7 @@ export function MarketingBeforeAfter() {
               ))}
             </ul>
           </div>
-          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-8">
+          <div className="bg-white border border-emerald-100 rounded-2xl p-8 shadow-lg shadow-emerald-900/10">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
                 <CheckCircle size={16} className="text-emerald-600" />
@@ -253,7 +326,7 @@ export function MarketingCaseStudies() {
       <div className="container">
         <div className="mb-14">
           <p className="section-eyebrow mb-3">Real Signals. Real Deals.</p>
-          <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight">Close before the RFP.</h2>
+          <h2 className="section-headline font-bold text-gray-900 tracking-tight">Close before the RFP.</h2>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           {cases.map((c) => (
@@ -317,18 +390,26 @@ export function MarketingTestimonials() {
       <div className="container">
         <div className="mb-14">
           <p className="section-eyebrow mb-3">From the Sales Floor</p>
-          <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight">
+          <h2 className="section-headline font-bold text-gray-900 tracking-tight">
             What sales teams are saying.
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
             <div key={t.name} className="bg-slate-50 rounded-2xl p-7 border border-gray-100 flex flex-col">
-              <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
-                <span className="text-xs font-mono-data text-gray-500">{t.signal}</span>
-                <div className="flex items-center gap-2">
-                  <span className="score-number text-xl">{t.signalScore}</span>
+              <div className="mb-5 pb-4 border-b border-gray-100">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span className="text-xs font-mono-data text-gray-500">{t.signal}</span>
                   <HeatBadge heat="HOT" />
+                </div>
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <span className="score-number text-2xl leading-none">{t.signalScore}</span>
+                    <p className="text-[10px] font-mono-data text-gray-500 mt-1 uppercase tracking-wide">Signal strength</p>
+                  </div>
+                  <div className="signal-strength-track w-24">
+                    <div className="signal-strength-fill" style={{ width: `${t.signalScore}%` }} />
+                  </div>
                 </div>
               </div>
               <p className="text-gray-700 text-sm leading-relaxed flex-1 mb-6">{t.quote}</p>
@@ -366,7 +447,7 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <p className="section-eyebrow mb-3">Humanoid Intelligence</p>
-            <h2 className="font-display text-4xl font-bold text-gray-900 tracking-tight mb-4">
+            <h2 className="section-headline font-bold text-gray-900 tracking-tight mb-4">
               {total} humanoids benchmarked. Know your product landscape.
             </h2>
             <p className="text-gray-600 text-base leading-relaxed mb-6">
@@ -463,24 +544,160 @@ export function MarketingReportSection({ onOpenReport }: { onOpenReport: () => v
   );
 }
 
+const HOME_PRICING_TIERS = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "",
+    tagline: "Browse the live pipeline — no card required",
+    icon: Zap,
+    accent: "border-gray-200",
+    iconBg: "bg-emerald-50 text-emerald-600",
+    cta: "Start free",
+    href: "/signup?plan=free&next=%2Fpipeline",
+    features: ["URL scan & buyer matching", "50 live pipeline leads", "Save up to 5 leads"],
+    highlight: false,
+  },
+  {
+    name: "Pro",
+    price: "$49",
+    period: "/mo",
+    tagline: "Full pipeline + SIGNAL research for active sellers",
+    icon: Cpu,
+    accent: "border-emerald-300 ring-1 ring-emerald-200 shadow-lg shadow-emerald-100/40",
+    iconBg: "bg-amber-50 text-amber-600",
+    cta: "Upgrade to Pro",
+    href: "/signup?plan=pro&next=%2Fpipeline",
+    features: ["Unlimited saved leads", "SIGNAL research on HOT/WARM", "HubSpot auto-sync"],
+    highlight: true,
+    badge: "Most popular",
+  },
+  {
+    name: "Enterprise",
+    price: "$129",
+    period: "/mo",
+    tagline: "Teams ready to act on more accounts",
+    icon: Shield,
+    accent: "border-gray-200",
+    iconBg: "bg-slate-100 text-slate-700",
+    cta: "Talk to sales",
+    href: "mailto:sales@readyforrobots.com?subject=Enterprise%20workspace%20inquiry",
+    external: true,
+    features: ["Priority research coverage", "Team workflow", "Priority support"],
+    highlight: false,
+  },
+] as const;
+
+export function MarketingPricing() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <section id="pricing" className="py-20 bg-slate-50 border-t border-gray-100">
+      <div className="container">
+        <div className="text-center mb-12 max-w-2xl mx-auto">
+          <p className="section-eyebrow mb-3">Pricing</p>
+          <h2 className="section-headline font-bold text-gray-900 mb-3">
+            Simple plans for robot sales teams
+          </h2>
+          <p className="text-sm text-gray-600">
+            Start free — scan URLs, browse the pipeline, upgrade when you need research and CRM sync.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto mb-8">
+          {HOME_PRICING_TIERS.map((tier) => {
+            const Icon = tier.icon;
+            return (
+              <div
+                key={tier.name}
+                className={`relative flex flex-col rounded-2xl border bg-white p-6 ${tier.accent} ${
+                  tier.highlight ? "md:-translate-y-1" : ""
+                }`}
+              >
+                {tier.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                    {tier.badge}
+                  </div>
+                )}
+                <div className="flex items-center gap-2.5 mb-4 mt-1">
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${tier.iconBg}`}>
+                    <Icon size={18} />
+                  </div>
+                  <span className="font-display font-bold text-gray-900">{tier.name}</span>
+                </div>
+                <div className="mb-2 flex items-baseline gap-1">
+                  <span className="font-mono-data text-3xl font-bold text-gray-900">{tier.price}</span>
+                  {tier.period && <span className="text-sm text-gray-500">{tier.period}</span>}
+                </div>
+                <p className="text-xs text-gray-600 mb-5 leading-relaxed">{tier.tagline}</p>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-xs text-gray-700">
+                      <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                {"external" in tier && tier.external ? (
+                  <a
+                    href={tier.href}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-slate-100"
+                  >
+                    {tier.cta}
+                    <ArrowRight size={14} />
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setLocation(tier.href)}
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] ${
+                      tier.highlight
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"
+                        : "border-2 border-gray-300 bg-white text-gray-800 hover:bg-gray-50"
+                    }`}
+                  >
+                    {tier.cta}
+                    <ArrowRight size={14} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="text-center text-xs text-gray-500">
+          Month-to-month when billing is enabled.{" "}
+          <Link href="/pricing" className="font-semibold text-emerald-700 hover:text-emerald-800">
+            Compare all features →
+          </Link>
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
-  const hotLabel = formatStat(hotCount, "319");
-  const totalLabel = formatStat(totalCount, "3,957");
+  const hotTarget = statTarget(hotCount, 319);
+  const totalTarget = statTarget(totalCount, 3957);
 
   return (
     <section className="py-24 bg-slate-900">
       <div className="container text-center">
-        <h2 className="font-display text-5xl font-bold text-white tracking-tight mb-4">
+        <h2 className="font-display text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
           Discover. Develop. Close robot deals.
         </h2>
         <div className="flex items-center justify-center gap-8 mb-8 flex-wrap">
           {[
-            { value: hotLabel, label: "hot leads now" },
-            { value: totalLabel, label: "active signals" },
-            { value: "62%", label: "buying intent" },
+            { value: hotTarget, suffix: "", label: "hot leads now" },
+            { value: totalTarget, suffix: "", label: "active signals" },
+            { value: 62, suffix: "%", label: "buying intent" },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <div className="score-number text-3xl text-emerald-400">{s.value}</div>
+              <AnimatedStat
+                value={s.value}
+                suffix={s.suffix}
+                className="score-number text-3xl text-emerald-400 block"
+              />
               <div className="text-slate-500 text-xs font-mono-data mt-0.5">{s.label}</div>
             </div>
           ))}
@@ -506,6 +723,77 @@ export function MarketingFinalCTA({ hotCount, totalCount }: StatsProps) {
         <p className="text-slate-600 text-xs mt-5 font-mono-data">
           No signup to scan · Free pipeline preview · Upgrade when you save leads
         </p>
+      </div>
+    </section>
+  );
+}
+
+type NewsletterBandProps = {
+  newsletterEmail: string;
+  newsletterStatus: "idle" | "submitting" | "success" | "error";
+  onEmailChange: (v: string) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+};
+
+export function MarketingNewsletterBand({
+  newsletterEmail,
+  newsletterStatus,
+  onEmailChange,
+  onSubmit,
+}: NewsletterBandProps) {
+  return (
+    <section className="relative overflow-hidden bg-slate-950 border-t border-white/5">
+      <div
+        className="absolute inset-0 opacity-40 pointer-events-none"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 70% 80% at 50% 0%, rgba(16,185,129,0.18), transparent 60%)",
+        }}
+      />
+      <div className="container relative py-16 lg:py-20">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono-data font-semibold uppercase tracking-widest mb-6">
+            <Mail size={14} />
+            Weekly brief
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-white tracking-tight mb-4 leading-tight">
+            Get the Weekly Robot Intelligence Brief
+          </h2>
+          <p className="text-slate-400 text-base leading-relaxed mb-8 max-w-xl mx-auto">
+            Buying signals, deployment moves, and strategic hires — curated daily for robotics sales teams. Free.
+          </p>
+          <form onSubmit={onSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+            <input
+              type="email"
+              value={newsletterEmail}
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder="work email"
+              required
+              className="flex-1 min-w-0 px-4 py-3.5 bg-white/5 border border-white/15 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={newsletterStatus === "submitting"}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/30"
+            >
+              {newsletterStatus === "submitting" ? "Subscribing…" : "Subscribe free"}
+              <Zap size={16} />
+            </button>
+          </form>
+          {newsletterStatus === "success" && (
+            <p className="text-emerald-400 text-sm mt-4 font-medium">You&apos;re subscribed — check your inbox.</p>
+          )}
+          {newsletterStatus === "error" && (
+            <p className="text-red-400 text-sm mt-4">Could not subscribe. Try again.</p>
+          )}
+          <Link
+            href="/newsletter"
+            className="inline-flex items-center gap-1.5 mt-6 text-sm text-slate-500 hover:text-emerald-400 transition-colors"
+          >
+            Read today&apos;s edition <ArrowRight size={14} />
+          </Link>
+        </div>
       </div>
     </section>
   );

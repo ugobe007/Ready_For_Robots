@@ -3,7 +3,7 @@
  * Wired to live pipeline stats, homepage leads, newsletter, and report APIs.
  */
 import { useEffect, useState } from "react";
-import { ArrowRight, ChevronRight, X, Zap } from "lucide-react";
+import { ArrowRight, ChevronRight, X } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import HumanoidDailyRecap from "@/components/HumanoidDailyRecap";
@@ -18,16 +18,15 @@ import {
   MarketingCaseStudies,
   MarketingFinalCTA,
   MarketingHowItWorks,
+  MarketingNewsletterBand,
+  MarketingPricing,
   MarketingReportSection,
   MarketingTestimonials,
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
-import { LiveDot } from "@/components/marketing/primitives";
+import HeroUrlScan from "@/components/marketing/HeroUrlScan";
 import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-
-const HERO_BG =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/bZbY4XZf5ZnDvj8w6Dq8Cf/rfr-hero-bg-4bNqTqw4cnY6Gmaq7G9bQp.webp";
 
 type NewsletterEdition = {
   latestEdition?: { headline?: string; subheadline?: string };
@@ -108,7 +107,7 @@ export default function Home() {
         liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: newsletterEmail, source: "homepage_footer" }),
+          body: JSON.stringify({ email: newsletterEmail, source: "homepage_newsletter_band" }),
         }),
       );
       if (!res.ok) throw new Error("Newsletter signup failed");
@@ -125,51 +124,45 @@ export default function Home() {
 
       <section
         id="hero-cta"
-        className="relative pt-28 pb-20 overflow-hidden"
-        style={{
-          backgroundImage: `url(${HERO_BG})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className="relative pt-24 pb-14 sm:pt-28 sm:pb-20 overflow-hidden hero-mesh-bg"
       >
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div className="animate-fade-in-up">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-6">
+        <div className="absolute inset-0 hero-grid-texture pointer-events-none" aria-hidden />
+        <div
+          className="absolute inset-0 opacity-[0.35] pointer-events-none mix-blend-soft-light"
+          aria-hidden
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 30%, rgba(16,185,129,0.15) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(5,150,105,0.1) 0%, transparent 35%)",
+          }}
+        />
+
+        <div className="container relative">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div className="animate-fade-in-up order-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50/90 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-5 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
                   Live pipeline · updated daily · {hotLabel} hot
                 </span>
               </div>
 
-              <h1 className="font-display text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.08] tracking-tight mb-6">
+              <h1 className="hero-display font-bold text-gray-900 mb-5 sm:mb-6">
                 Close Robot Deals{" "}
                 <span className="text-emerald-600">Before the RFP Drops</span>
               </h1>
 
-              <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-lg">
+              <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 max-w-lg">
                 <span className="font-semibold text-gray-800">SIGNAL</span> monitors 150+ live sources to surface
                 automation-ready buyers — scored, briefed, and ready to contact. You approve. You show up. That&apos;s
                 it.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <Link
-                  href="/results?url="
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-150 active:scale-[0.97] shadow-md hover:shadow-lg text-base"
-                >
-                  <Zap size={18} />
-                  Find buyers
-                  <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/pipeline"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-xl border border-gray-200 transition-all duration-150 active:scale-[0.97] text-base"
-                >
-                  Browse the pipeline free
-                  <ChevronRight size={16} />
-                </Link>
-              </div>
+              <HeroUrlScan />
+
+              <Link href="/pipeline" className="btn-secondary-hero mb-4">
+                Browse the pipeline free
+                <ChevronRight size={16} className="btn-arrow" />
+              </Link>
 
               <p className="text-xs text-gray-500 font-medium mb-1">
                 No signup required · Free to start · Results in seconds
@@ -179,8 +172,16 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="animate-fade-in-up" style={{ animationDelay: "120ms" }}>
-              <MarketingHeroPipeline hotCount={hot} totalCount={total} />
+            <div className="animate-fade-in-up order-2 lg:order-2" style={{ animationDelay: "120ms" }}>
+              <div className="relative max-md:mt-2">
+                <div
+                  className="absolute -inset-3 sm:-inset-5 rounded-3xl bg-emerald-400/25 blur-2xl sm:blur-3xl pointer-events-none"
+                  aria-hidden
+                />
+                <div className="relative">
+                  <MarketingHeroPipeline hotCount={hot} totalCount={total} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -207,13 +208,15 @@ export default function Home() {
         onSubmit={submitNewsletter}
       />
       <MarketingReportSection onOpenReport={() => setReportOpen(true)} />
+      <MarketingPricing />
       <MarketingFinalCTA hotCount={hot} totalCount={total} />
-      <MarketingFooter
+      <MarketingNewsletterBand
         newsletterEmail={newsletterEmail}
         newsletterStatus={newsletterStatus}
         onEmailChange={setNewsletterEmail}
         onSubmit={submitNewsletter}
       />
+      <MarketingFooter />
 
       {reportOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">

@@ -28,6 +28,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { useAuth } from "@/contexts/AuthContext";
 import { BUYER_SIGNAL_EXPLANATION, OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
+import { normalizeUrl } from "@/lib/normalizeUrl";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
@@ -162,12 +163,6 @@ const MODE_OPTIONS: Array<{
   { id: "assisted", title: "Assisted", desc: "SIGNAL drafts outreach, asks before sending, then tracks replies.", gated: true },
   { id: "autopilot", title: "Autopilot", desc: "SIGNAL sends approved messages, follows up, and escalates technical questions when needed.", gated: true },
 ];
-
-function normalizeUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "";
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-}
 
 function scoreColor(score: number): string {
   return score >= 90 ? "#34d399" : score >= 75 ? "#10b981" : "#FFB000";

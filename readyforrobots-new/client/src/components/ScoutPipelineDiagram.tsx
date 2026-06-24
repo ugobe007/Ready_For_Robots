@@ -25,16 +25,16 @@ const STEPS: {
     title: "Signal Detection",
     tag: "150+ sources · 24/7",
     icon: Search,
-    accent: "#a78bfa",
-    glow: "rgba(167, 139, 250, 0.35)",
+    accent: "#059669",
+    glow: "rgba(5, 150, 105, 0.12)",
   },
   {
     num: "02",
     title: "AI Scoring",
     tag: "Confidence · Urgency · Fit",
     icon: Cpu,
-    accent: "#818cf8",
-    glow: "rgba(129, 140, 248, 0.35)",
+    accent: "#10b981",
+    glow: "rgba(16, 185, 129, 0.12)",
   },
   {
     num: "03",
@@ -42,27 +42,27 @@ const STEPS: {
     tag: "Trigger-aware outreach",
     icon: FileText,
     accent: "#FFB000",
-    glow: "rgba(255, 176, 0, 0.45)",
+    glow: "rgba(255, 176, 0, 0.14)",
   },
   {
     num: "04",
     title: "You Review",
     tag: "Manual · Assisted · Auto",
     icon: CheckCircle,
-    accent: "#c4b5fd",
-    glow: "rgba(196, 181, 253, 0.3)",
+    accent: "#047857",
+    glow: "rgba(4, 120, 87, 0.12)",
   },
   {
     num: "05",
     title: "Pipeline Advances",
     tag: "Track · follow-up · escalate",
     icon: TrendingUp,
-    accent: "#03DAC5",
-    glow: "rgba(3, 218, 197, 0.4)",
+    accent: "#34d399",
+    glow: "rgba(52, 211, 153, 0.14)",
   },
 ];
 
-const STAGE_LABELS = ["Identify", "Develop", "Connect"] as const;
+const STAGE_LABELS = ["Discover", "Develop", "Close"] as const;
 
 /** Steps highlighted per workflow animation stage */
 const STAGE_HIGHLIGHTS: Record<ScoutWorkflowStage, number[]> = {
@@ -104,11 +104,7 @@ export default function ScoutPipelineDiagram({
     <div className={embedded ? "px-2 py-2 flex-1" : rail ? "px-2 py-2" : "px-3 py-3 sm:px-4 sm:py-4"}>
           <div className="relative flex flex-col gap-0.5">
             <div
-              className="absolute left-[18px] top-2 bottom-2 w-px pointer-events-none"
-              style={{
-                background: "linear-gradient(180deg, #7c3aed 0%, #FFB000 38%, #03DAC5 100%)",
-                opacity: 0.5,
-              }}
+              className="absolute left-[18px] top-2 bottom-2 w-px pointer-events-none bg-gradient-to-b from-emerald-300 via-amber-300 to-emerald-400 opacity-70"
             />
 
             {STEPS.map((step, i) => {
@@ -129,20 +125,18 @@ export default function ScoutPipelineDiagram({
                   }`}
                   style={{
                     padding: rail ? "5px 4px 5px 2px" : "7px 8px 7px 4px",
-                    background: isActive
-                      ? `linear-gradient(90deg, ${step.glow} 0%, rgba(13,5,32,0.35) 72%)`
-                      : "transparent",
+                    background: isActive ? step.glow : "transparent",
                     border: isActive
-                      ? `1px solid ${isScout && isActive ? "rgba(255,176,0,0.5)" : "rgba(124,58,237,0.3)"}`
+                      ? `1px solid ${isScout && isActive ? "rgba(255,176,0,0.45)" : `${step.accent}33`}`
                       : "1px solid transparent",
-                    opacity: synced && !isActive ? 0.42 : 1,
+                    opacity: synced && !isActive ? 0.55 : 1,
                   }}
                 >
                   <div className={`flex flex-col items-center shrink-0 ${rail ? "w-9" : "w-11"} pt-0.5`}>
                     <span
                       className="font-mono text-[10px] font-bold leading-none mb-1"
                       style={{
-                        color: isActive ? step.accent : "rgba(124,58,237,0.3)",
+                        color: isActive ? step.accent : "#9ca3af",
                         fontFamily: "JetBrains Mono, monospace",
                       }}
                     >
@@ -151,14 +145,14 @@ export default function ScoutPipelineDiagram({
                     <div
                       className={`flex items-center justify-center rounded-md transition-all duration-500 ${rail ? "h-7 w-7" : "h-8 w-8"}`}
                       style={{
-                        background: isActive ? `${step.accent}22` : "rgba(124,58,237,0.06)",
-                        border: `1px solid ${isActive ? step.accent : "rgba(124,58,237,0.15)"}`,
+                        background: isActive ? `${step.accent}18` : "rgba(243,244,246,0.9)",
+                        border: `1px solid ${isActive ? `${step.accent}44` : "#e5e7eb"}`,
                       }}
                     >
                       <Icon
                         size={rail ? 13 : 15}
                         strokeWidth={2.25}
-                        style={{ color: isActive ? step.accent : "#6b7280" }}
+                        style={{ color: isActive ? step.accent : "#9ca3af" }}
                       />
                     </div>
                   </div>
@@ -168,7 +162,7 @@ export default function ScoutPipelineDiagram({
                       className={`font-bold leading-tight truncate ${rail ? "text-[11px]" : "text-[13px]"}`}
                       style={{
                         fontFamily: "Sora, sans-serif",
-                        color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
+                        color: isActive ? "#111827" : "#6b7280",
                       }}
                     >
                       {step.title}
@@ -220,40 +214,19 @@ export default function ScoutPipelineDiagram({
         .scout-pipeline-step-active { animation: scout-pipeline-pop 2.4s ease-in-out infinite; }
       `}</style>
 
-      <div
-        className="overflow-hidden h-full"
-        style={{
-          background: "linear-gradient(145deg, #130d2a 0%, #0d0520 55%, #0a1628 100%)",
-          border: synced ? "1px solid rgba(3, 218, 197, 0.22)" : "1px solid rgba(124, 58, 237, 0.28)",
-          borderRadius: rail ? 14 : 18,
-          boxShadow: synced
-            ? "0 0 32px rgba(3,218,197,0.08), 0 16px 40px rgba(0,0,0,0.45)"
-            : "0 0 0 1px rgba(255,176,0,0.06), 0 0 60px rgba(124,58,237,0.18), 0 28px 56px rgba(0,0,0,0.55)",
-        }}
-      >
-        <div
-          className="flex items-center justify-between px-3 py-2"
-          style={{
-            borderBottom: "1px solid rgba(124,58,237,0.18)",
-            background: "rgba(124,58,237,0.07)",
-          }}
-        >
-          <span
-            className="text-[9px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: "rgba(255,255,255,0.45)", fontFamily: "JetBrains Mono, monospace" }}
-          >
+      <div className="overflow-hidden h-full rounded-2xl border border-gray-200 bg-white shadow-lg shadow-emerald-100/30">
+        <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50 px-3 py-2">
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500 font-mono-data">
             {rail ? "5 stages" : "signal · 5-stage engine"}
           </span>
           {synced ? (
-            <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "#03DAC5" }}>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700">
               {STAGE_LABELS[workflowStage!]}
             </span>
           ) : (
             <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-              <span className="text-[9px] font-bold" style={{ color: "#03DAC5" }}>
-                LIVE
-              </span>
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse bg-emerald-500" />
+              <span className="text-[9px] font-bold text-emerald-600">LIVE</span>
             </span>
           )}
         </div>
@@ -261,19 +234,11 @@ export default function ScoutPipelineDiagram({
         {stepsBlock}
 
         {!rail && (
-          <div
-            className="flex items-center justify-between gap-2 px-4 py-2"
-            style={{
-              borderTop: "1px solid rgba(124,58,237,0.12)",
-              background: "rgba(0,0,0,0.25)",
-            }}
-          >
-            <span className="text-[9px] uppercase tracking-[0.18em]" style={{ color: "#6b7280" }}>
+          <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-slate-50 px-4 py-2">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-gray-500">
               signal → score → draft → approve → close
             </span>
-            <span className="text-[10px] font-mono font-bold" style={{ color: "#FFB000" }}>
-              &lt;2 min
-            </span>
+            <span className="text-[10px] font-mono font-bold text-amber-600">&lt;2 min</span>
           </div>
         )}
       </div>

@@ -45,7 +45,7 @@ const CYCLES: Cycle[] = [
     company: "Meridian Integrators",
     industry: "Systems Integrator · 6 regions",
     robotType: "Industrial Arm",
-    robotColor: "#a78bfa",
+    robotColor: "#059669",
     signal: "Hiring automation engineers · CapEx signal",
     score: 87,
     scoreLabel: "Strong channel fit",
@@ -79,7 +79,7 @@ const STAGE_DURATIONS = [4000, 4500, 5000] as const;
 const BETWEEN_CYCLES = 900;
 
 export type ScoutWorkflowStage = 0 | 1 | 2;
-const STAGE_LABELS = ["Identify", "Develop", "Connect"];
+const STAGE_LABELS = ["Discover", "Develop", "Close"];
 
 type ScoutWorkflowAnimationProps = {
   onStageChange?: (stage: ScoutWorkflowStage) => void;
@@ -246,82 +246,109 @@ export default function ScoutWorkflowAnimation({
       )}
 
       <div
-        className="px-4 py-3 shrink-0"
-        style={{
-          borderBottom: "1px solid rgba(124,58,237,0.12)",
-          background: "rgba(124,58,237,0.06)",
-        }}
+        className={`px-4 py-3 shrink-0 ${embedded ? "border-b border-gray-100 bg-emerald-50/60" : ""}`}
+        style={
+          embedded
+            ? undefined
+            : {
+                borderBottom: "1px solid rgba(124,58,237,0.12)",
+                background: "rgba(124,58,237,0.06)",
+              }
+        }
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-bold text-white">{cycle.company}</span>
+          <span className={`text-sm font-bold ${embedded ? "text-gray-900" : "text-white"}`}>{cycle.company}</span>
           <span
             className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm"
             style={{
               color: cycle.robotColor,
-              background: `${cycle.robotColor}1a`,
-              border: `1px solid ${cycle.robotColor}40`,
+              background: `${cycle.robotColor}${embedded ? "14" : "1a"}`,
+              border: `1px solid ${cycle.robotColor}${embedded ? "33" : "40"}`,
             }}
           >
             {cycle.robotType}
           </span>
           <span
             className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm"
-            style={{
-              color: isPartnership ? "#a78bfa" : "rgba(255,255,255,0.4)",
-              background: isPartnership ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.06)",
-              border: isPartnership ? "1px solid rgba(167,139,250,0.3)" : "1px solid rgba(255,255,255,0.1)",
-            }}
+            style={
+              isPartnership
+                ? {
+                    color: embedded ? "#047857" : "#a78bfa",
+                    background: embedded ? "rgba(4,120,87,0.08)" : "rgba(167,139,250,0.12)",
+                    border: embedded ? "1px solid rgba(4,120,87,0.22)" : "1px solid rgba(167,139,250,0.3)",
+                  }
+                : embedded
+                  ? { color: "#6b7280", background: "#f3f4f6", border: "1px solid #e5e7eb" }
+                  : { color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }
+            }
           >
             {cycle.trackLabel}
           </span>
         </div>
-        <p className="text-[11px] text-white/35 mt-1">{cycle.industry}</p>
+        <p className={`text-[11px] mt-1 ${embedded ? "text-gray-500" : "text-white/35"}`}>{cycle.industry}</p>
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-2.5 shrink-0" style={{ borderBottom: "1px solid rgba(124,58,237,0.1)" }}>
-        <span className="text-[10px] font-bold uppercase tracking-widest shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>
+      <div
+        className={`flex items-center gap-3 px-4 py-2.5 shrink-0 ${embedded ? "border-b border-gray-100 bg-white" : ""}`}
+        style={embedded ? undefined : { borderBottom: "1px solid rgba(124,58,237,0.1)" }}
+      >
+        <span
+          className={`text-[10px] font-bold uppercase tracking-widest shrink-0 ${embedded ? "text-emerald-700" : ""}`}
+          style={embedded ? undefined : { color: "rgba(255,255,255,0.25)" }}
+        >
           signal
         </span>
-        <span className="text-[11px] text-white/60 truncate">{cycle.signal}</span>
+        <span className={`text-[11px] truncate ${embedded ? "text-gray-700" : "text-white/60"}`}>{cycle.signal}</span>
       </div>
 
       <div className="flex-1 px-4 py-4 flex flex-col gap-3" style={{ minHeight: "130px" }}>
         {stage === 0 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
             <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#03DAC5" }} />
-              <span className="text-[11px]" style={{ color: "#03DAC5" }}>
+              <span className={`h-1.5 w-1.5 rounded-full animate-pulse shrink-0 ${embedded ? "bg-emerald-500" : ""}`} style={embedded ? undefined : { background: "#03DAC5" }} />
+              <span className={`text-[11px] ${embedded ? "text-emerald-700" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
                 Scanning 150+ sources for buying signals…
               </span>
             </div>
             <div
-              className="flex flex-col divide-y"
-              style={{
-                background: "rgba(124,58,237,0.06)",
-                border: "1px solid rgba(124,58,237,0.15)",
-                borderRadius: "4px",
-              }}
+              className={`flex flex-col divide-y rounded ${embedded ? "border border-gray-200 bg-gray-50 divide-gray-200" : ""}`}
+              style={
+                embedded
+                  ? undefined
+                  : {
+                      background: "rgba(124,58,237,0.06)",
+                      border: "1px solid rgba(124,58,237,0.15)",
+                      borderRadius: "4px",
+                    }
+              }
             >
               {sources.map((src, i) => (
                 <div
                   key={src}
-                  className="flex items-center gap-3 px-3 py-2 transition-all duration-500"
-                  style={{
-                    borderBottom: i < sources.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                    background: i < 2 ? "rgba(3,218,197,0.03)" : "transparent",
-                  }}
+                  className={`flex items-center gap-3 px-3 py-2 transition-all duration-500 ${embedded && i < 2 ? "bg-emerald-50/80" : ""}`}
+                  style={
+                    embedded
+                      ? undefined
+                      : {
+                          borderBottom: i < sources.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                          background: i < 2 ? "rgba(3,218,197,0.03)" : "transparent",
+                        }
+                  }
                 >
                   <span
-                    className="text-[11px] w-4 text-center font-bold shrink-0"
-                    style={{ color: i < 2 ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
+                    className={`text-[11px] w-4 text-center font-bold shrink-0 ${embedded ? (i < 2 ? "text-emerald-600" : "text-gray-300") : ""}`}
+                    style={embedded ? undefined : { color: i < 2 ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
                   >
                     {i < 2 ? "✓" : "·"}
                   </span>
-                  <span className="text-[11px] flex-1" style={{ color: i < 2 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)" }}>
+                  <span
+                    className={`text-[11px] flex-1 ${embedded ? (i < 2 ? "text-gray-800" : "text-gray-400") : ""}`}
+                    style={embedded ? undefined : { color: i < 2 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)" }}
+                  >
                     {src}
                   </span>
                   {i < 2 && (
-                    <span className="text-[10px]" style={{ color: "#03DAC5" }}>
+                    <span className={`text-[10px] ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
                       match
                     </span>
                   )}
@@ -334,33 +361,38 @@ export default function ScoutWorkflowAnimation({
         {stage === 1 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`} style={embedded ? undefined : { color: "rgba(255,255,255,0.3)" }}>
                 fit_score
               </span>
               <div className="flex items-end gap-1.5">
-                <span className="text-2xl font-extrabold tabular-nums leading-none" style={{ color: "#03DAC5" }}>
+                <span className={`text-2xl font-extrabold tabular-nums leading-none ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
                   {scoreProgress}
                 </span>
-                <span className="text-xs text-white/25 mb-0.5">/ 100</span>
+                <span className={`text-xs mb-0.5 ${embedded ? "text-gray-400" : "text-white/25"}`}>/ 100</span>
               </div>
             </div>
-            <div className="h-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.08)", borderRadius: "2px" }}>
+            <div className={`h-1.5 overflow-hidden rounded-sm ${embedded ? "bg-gray-200" : ""}`} style={embedded ? undefined : { background: "rgba(255,255,255,0.08)", borderRadius: "2px" }}>
               <div
-                className="h-full transition-all duration-75"
+                className="h-full transition-all duration-75 rounded-sm"
                 style={{
                   width: `${scoreProgress}%`,
-                  background: `linear-gradient(90deg, #03DAC5, ${cycle.robotColor})`,
-                  borderRadius: "2px",
+                  background: embedded
+                    ? `linear-gradient(90deg, #059669, ${cycle.robotColor})`
+                    : `linear-gradient(90deg, #03DAC5, ${cycle.robotColor})`,
                 }}
               />
             </div>
             <div
-              className="flex flex-col"
-              style={{
-                background: "rgba(124,58,237,0.06)",
-                border: "1px solid rgba(124,58,237,0.15)",
-                borderRadius: "4px",
-              }}
+              className={`flex flex-col rounded ${embedded ? "border border-gray-200 bg-gray-50" : ""}`}
+              style={
+                embedded
+                  ? undefined
+                  : {
+                      background: "rgba(124,58,237,0.06)",
+                      border: "1px solid rgba(124,58,237,0.15)",
+                      borderRadius: "4px",
+                    }
+              }
             >
               {[
                 { key: "labor_pain", val: "high", threshold: 30 },
@@ -371,22 +403,26 @@ export default function ScoutWorkflowAnimation({
                 return (
                   <div
                     key={key}
-                    className="flex items-center gap-3 px-3 py-2 transition-all duration-300"
-                    style={{
-                      borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                      background: done ? "rgba(3,218,197,0.03)" : "transparent",
-                    }}
+                    className={`flex items-center gap-3 px-3 py-2 transition-all duration-300 ${embedded && done ? "bg-emerald-50/80" : ""}`}
+                    style={
+                      embedded
+                        ? { borderBottom: i < 2 ? "1px solid #e5e7eb" : "none" }
+                        : {
+                            borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                            background: done ? "rgba(3,218,197,0.03)" : "transparent",
+                          }
+                    }
                   >
                     <span
-                      className="text-[11px] w-4 text-center font-bold shrink-0 transition-colors duration-300"
-                      style={{ color: done ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
+                      className={`text-[11px] w-4 text-center font-bold shrink-0 transition-colors duration-300 ${embedded ? (done ? "text-emerald-600" : "text-gray-300") : ""}`}
+                      style={embedded ? undefined : { color: done ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
                     >
                       {done ? "✓" : "·"}
                     </span>
-                    <span className="text-[11px] flex-1 text-white/40">{key}</span>
+                    <span className={`text-[11px] flex-1 ${embedded ? "text-gray-600" : "text-white/40"}`}>{key}</span>
                     <span
-                      className="text-[11px] font-bold transition-colors duration-300"
-                      style={{ color: done ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.18)" }}
+                      className={`text-[11px] font-bold transition-colors duration-300 ${embedded ? (done ? "text-gray-900" : "text-gray-400") : ""}`}
+                      style={embedded ? undefined : { color: done ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.18)" }}
                     >
                       {val}
                     </span>
@@ -402,24 +438,28 @@ export default function ScoutWorkflowAnimation({
 
         {stage === 2 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`} style={embedded ? undefined : { color: "rgba(255,255,255,0.3)" }}>
               draft_outreach
             </span>
             <div
-              className="flex flex-col gap-1 px-3 py-3"
-              style={{
-                background: "rgba(124,58,237,0.06)",
-                border: "1px solid rgba(124,58,237,0.15)",
-                borderRadius: "4px",
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}
+              className={`flex flex-col gap-1 px-3 py-3 rounded ${embedded ? "border border-gray-200 bg-gray-50" : ""}`}
+              style={
+                embedded
+                  ? { fontFamily: "'Inter', system-ui, sans-serif" }
+                  : {
+                      background: "rgba(124,58,237,0.06)",
+                      border: "1px solid rgba(124,58,237,0.15)",
+                      borderRadius: "4px",
+                      fontFamily: "'Inter', system-ui, sans-serif",
+                    }
+              }
             >
               {cycle.outreachLines.map((line, i) => (
                 <p
                   key={i}
                   className="text-[12px] leading-relaxed transition-all duration-500"
                   style={{
-                    color: i < outreachIdx ? "rgba(255,255,255,0.72)" : "transparent",
+                    color: i < outreachIdx ? (embedded ? "#374151" : "rgba(255,255,255,0.72)") : "transparent",
                     transform: i < outreachIdx ? "translateY(0)" : "translateY(4px)",
                   }}
                 >
@@ -429,15 +469,19 @@ export default function ScoutWorkflowAnimation({
             </div>
             {sent && (
               <div
-                className="flex items-center gap-2 px-3 py-2 rfr-animate-fade-in"
-                style={{
-                  background: "rgba(3,218,197,0.07)",
-                  border: "1px solid rgba(3,218,197,0.2)",
-                  borderRadius: "4px",
-                }}
+                className={`flex items-center gap-2 px-3 py-2 rfr-animate-fade-in rounded ${embedded ? "border border-emerald-200 bg-emerald-50" : ""}`}
+                style={
+                  embedded
+                    ? undefined
+                    : {
+                        background: "rgba(3,218,197,0.07)",
+                        border: "1px solid rgba(3,218,197,0.2)",
+                        borderRadius: "4px",
+                      }
+                }
               >
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "#03DAC5" }} />
-                <span className="text-[11px] font-semibold" style={{ color: "#03DAC5" }}>
+                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }} />
+                <span className={`text-[11px] font-semibold ${embedded ? "text-emerald-700" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
                   {cycle.sentLabel}
                 </span>
               </div>
