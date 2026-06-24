@@ -1614,7 +1614,7 @@ export default function Pipeline() {
 
           {/* ── SIGNAL activation queue (admin only) ── */}
           {isAdmin && (
-          <div className="rounded-2xl border border-gray-100 overflow-hidden" style={{ background: "rgba(255,255,255,0.025)" }}>
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="flex flex-col xl:flex-row">
               <div className="xl:w-[360px] border-b xl:border-b-0 xl:border-r border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
@@ -1625,7 +1625,7 @@ export default function Pipeline() {
                   <span className="text-[10px] text-gray-400">{loadingActivations ? "Loading…" : `${activations.length} active`}</span>
                 </div>
                 {activationErr && (
-                  <div className="mx-4 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-100/90">
+                  <div className="mx-4 mb-3 rounded-lg border border-amber-500/30 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
                     {activationErr}
                   </div>
                 )}
@@ -1646,7 +1646,7 @@ export default function Pipeline() {
                           style={
                             isActive
                               ? { background: "rgba(5,150,105,0.14)", borderColor: "rgba(5,150,105,0.38)" }
-                              : { background: "rgba(255,255,255,0.025)", borderColor: "rgba(255,255,255,0.07)" }
+                              : { background: "#ffffff", borderColor: "#e5e7eb" }
                           }
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -1683,7 +1683,7 @@ export default function Pipeline() {
                             {selectedActivation.mode}
                           </span>
                           {selectedActivation.requiresAccount && (
-                            <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: "rgba(251,146,60,0.12)", color: "#fdba74" }}>
+                            <span className="rounded-full px-2.5 py-1 text-xs font-bold text-amber-800" style={{ background: "rgba(251,146,60,0.12)" }}>
                               Account required
                             </span>
                           )}
@@ -1695,21 +1695,21 @@ export default function Pipeline() {
                       </div>
 
                       <div className="grid sm:grid-cols-3 gap-2">
-                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
                           <p className="text-[10px] uppercase tracking-widest text-gray-400">Materials</p>
                           <p className="mt-1 text-xs font-semibold text-gray-600 capitalize">{selectedActivation.material}</p>
                         </div>
-                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
                           <p className="text-[10px] uppercase tracking-widest text-gray-400">Scope</p>
                           <p className="mt-1 text-xs font-semibold text-gray-600 capitalize">{selectedActivation.scope}</p>
                         </div>
-                        <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
                           <p className="text-[10px] uppercase tracking-widest text-gray-400">Next action</p>
                           <p className="mt-1 text-xs font-semibold text-gray-600">Evaluate leads</p>
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock className="h-3.5 w-3.5" style={{ color: "#10b981" }} />
                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Status flow</p>
@@ -1722,7 +1722,7 @@ export default function Pipeline() {
                               style={
                                 step.active
                                   ? { background: "rgba(5,150,105,0.16)", borderColor: "rgba(5,150,105,0.4)" }
-                                  : { background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }
+                                  : { background: "#f9fafb", borderColor: "#e5e7eb" }
                               }
                             >
                               <p className={step.active ? "text-[10px] font-bold text-emerald-700" : "text-[10px] font-semibold text-gray-400"}>
@@ -1739,7 +1739,7 @@ export default function Pipeline() {
                           || selectedActivation.workPlan?.deck_strategy
                           || (selectedActivation.workPlan?.safety_requirements || []).length > 0
                           || selectedActivation.workPlan?.notification_policy) && (
-                          <details className="mt-3 rounded-lg border border-white/7 bg-black/10 group">
+                          <details className="mt-3 rounded-lg border border-gray-200 bg-gray-50 group">
                             <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-600 [&::-webkit-details-marker]:hidden">
                               <span className="inline-flex items-center gap-1.5">
                                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
@@ -1769,7 +1769,7 @@ export default function Pipeline() {
                                 </div>
                               )}
                               {(selectedActivation.workPlan?.safety_requirements || []).length > 0 && (
-                                <div className="rounded-lg border border-white/7 bg-black/10 p-3">
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                                   <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Sending guardrails</p>
                                   <div className="mt-2 flex flex-wrap gap-1.5">
                                     {(selectedActivation.workPlan?.safety_requirements || []).map((item) => (
@@ -1778,8 +1778,8 @@ export default function Pipeline() {
                                         className="rounded-full border px-2 py-1 text-[10px] font-semibold"
                                         style={
                                           item.required
-                                            ? { borderColor: "rgba(251,146,60,0.25)", color: "#fdba74", background: "rgba(251,146,60,0.08)" }
-                                            : { borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.02)" }
+                                            ? { borderColor: "rgba(251,146,60,0.4)", color: "#92400e", background: "rgba(251,146,60,0.12)" }
+                                            : { borderColor: "#e5e7eb", color: "#6b7280", background: "#f9fafb" }
                                         }
                                       >
                                         {item.label}
@@ -1790,7 +1790,7 @@ export default function Pipeline() {
                               )}
                               {selectedActivation.workPlan?.notification_policy && (
                                 <div className="rounded-lg border border-emerald-400/15 bg-emerald-400/5 p-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/70">Notifications</p>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800">Notifications</p>
                                   <p className="mt-1 text-xs text-gray-500">
                                     {cleanScrapedText(selectedActivation.workPlan.notification_policy.reply)}
                                   </p>
@@ -1803,7 +1803,7 @@ export default function Pipeline() {
                           </details>
                         )}
                         <details className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 group">
-                          <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-200/80 hover:text-amber-100 [&::-webkit-details-marker]:hidden">
+                          <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-800 hover:text-amber-900 [&::-webkit-details-marker]:hidden">
                             <span className="inline-flex items-center gap-1.5">
                               <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
                               Adjust SIGNAL
@@ -1841,7 +1841,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void controlActivation("pause")}
                                 disabled={activationControlBusy}
-                                className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-sm font-bold text-amber-100 disabled:opacity-50"
+                                className="rounded-lg border border-amber-400/40 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-900 disabled:opacity-50"
                               >
                                 Pause SIGNAL
                               </button>
@@ -1857,7 +1857,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void controlActivation("resume")}
                                 disabled={activationControlBusy}
-                                className="rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-4 py-2.5 text-sm font-bold text-emerald-100 disabled:opacity-50"
+                                className="rounded-lg border border-emerald-400/35 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800 disabled:opacity-50"
                               >
                                 Resume review queue
                               </button>
@@ -1867,7 +1867,7 @@ export default function Pipeline() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/7 bg-white/[0.02] p-3">
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Users className="h-3.5 w-3.5" style={{ color: "#34d399" }} />
@@ -1877,7 +1877,7 @@ export default function Pipeline() {
                       </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                         {selectedActivation.leads.slice(0, 6).map((lead) => (
-                          <div key={lead.id} className="rounded-lg border border-gray-100 px-3 py-2" style={{ background: "rgba(255,255,255,0.02)" }}>
+                          <div key={lead.id} className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                             <div className="flex items-center justify-between gap-2">
                               <p className="text-xs font-semibold text-gray-700 truncate">{lead.company}</p>
                               {typeof lead.score === "number" && (
@@ -1916,11 +1916,11 @@ export default function Pipeline() {
             <div className="flex items-center gap-3 flex-wrap text-[11px] text-gray-500 px-1">
               <span className="font-bold uppercase tracking-[0.15em] text-[10px]" style={{ color: "#10b981" }}>Cal</span>
               <span>{scoutStats.drafted} drafted</span>
-              <span className="text-white/15">·</span>
+              <span className="text-gray-300">·</span>
               <span>{scoutStats.sent} sent</span>
-              <span className="text-white/15">·</span>
+              <span className="text-gray-300">·</span>
               <span style={{ color: scoutStats.opened > 0 ? "#34d399" : undefined }}>{scoutStats.opened} opened</span>
-              <span className="text-white/15">·</span>
+              <span className="text-gray-300">·</span>
               <span style={{ color: scoutStats.replied > 0 ? "#10b981" : undefined }}>{scoutStats.replied} replied</span>
               <button
                 type="button"
@@ -1936,15 +1936,15 @@ export default function Pipeline() {
           {/* Confirm modals for bulk actions (admin only) */}
           {isAdmin && scoutConfirm === "draft" && (
             <div className="rounded-xl border border-blue-400/30 bg-blue-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-blue-100/80 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
-              <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-500/20 border border-blue-400/40 text-blue-100">Run</button>
+              <p className="text-[11px] text-blue-900 flex-1">Cal will draft outreach emails for all HOT and WARM prospects that don't have one yet. Continue?</p>
+              <button onClick={() => void runScoutDraftAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-50 border border-blue-400/40 text-blue-800">Run</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
           {isAdmin && scoutConfirm === "send" && (
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/8 px-4 py-3 flex items-center gap-3">
-              <p className="text-[11px] text-emerald-100/80 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
-              <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 border border-emerald-400/40 text-emerald-100">Send</button>
+              <p className="text-[11px] text-emerald-900 flex-1">Cal will send all drafted outreach emails. This triggers live sends via Resend. Continue?</p>
+              <button onClick={() => void runScoutSendAll()} className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 border border-emerald-400/40 text-emerald-800">Send</button>
               <button onClick={() => setScoutConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500">Cancel</button>
             </div>
           )}
@@ -2488,7 +2488,7 @@ export default function Pipeline() {
                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>
                           <Send className="h-2.5 w-2.5" /> Sent
                         </span>
-                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-gray-400" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full text-gray-600 bg-gray-100 border border-gray-200">
                           <Eye className="h-2.5 w-2.5" /> Tracking active
                         </span>
                       </div>
@@ -2502,7 +2502,7 @@ export default function Pipeline() {
                     )}
 
                     {selected.outreachBody ? (
-                      <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
                         <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-gray-500">
                           {selected.outreachBody}
                         </pre>
@@ -2517,7 +2517,7 @@ export default function Pipeline() {
                           disabled={developingLeadId === selected.id}
                           onClick={() => void developLeadWithScout(selected)}
                           className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
-                          style={{ background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)", color: "#6ee7d7" }}
+                          style={{ background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)", color: "#047857" }}
                         >
                           {developingLeadId === selected.id
                             ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -2546,7 +2546,7 @@ export default function Pipeline() {
                         disabled={sendingLeadId === selected.id}
                         onClick={() => void sendOneLead(selected)}
                         className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
-                        style={{ background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.28)", color: "#6ee7b7" }}
+                        style={{ background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.28)", color: "#047857" }}
                       >
                         {sendingLeadId === selected.id
                           ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -2622,7 +2622,7 @@ export default function Pipeline() {
                         <button
                           type="button"
                           onClick={() => setProposalOpen(true)}
-                          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-200 underline"
+                          className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-800 underline"
                         >
                           <Download className="h-3 w-3" />
                           Open last proposal preview
@@ -2639,8 +2639,7 @@ export default function Pipeline() {
                         {STAGES.indexOf(selected.stage) > 0 && (
                           <button
                             onClick={() => moveStage(selected.id, -1)}
-                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all"
-                            style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.03)" }}
+                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all"
                           >
                             <ArrowLeft className="h-3 w-3" />
                             Back
@@ -2679,7 +2678,7 @@ export default function Pipeline() {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                  <Target className="h-8 w-8 text-white/10 mb-3" />
+                  <Target className="h-8 w-8 text-gray-300 mb-3" />
                   <p className="text-sm text-gray-400">
                     {pendingDeepLink && deepLinkLoadFailed
                       ? "Network interrupted while loading this lead."
@@ -2731,12 +2730,12 @@ export default function Pipeline() {
                 Close
               </button>
             </div>
-            <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">From</p>
               <p className="text-xs text-gray-600">Cal &lt;cal@readyforrobots.com&gt;</p>
             </div>
             {selected.contact && (
-              <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">To</p>
                 <p className="text-xs text-gray-600">{selected.contact}</p>
               </div>
@@ -2745,7 +2744,7 @@ export default function Pipeline() {
               <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Subject</p>
               <p className="text-xs font-semibold" style={{ color: "#FFB000" }}>{selected.outreachSubject}</p>
             </div>
-            <div className="rounded-xl border border-gray-100 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Message</p>
               <pre className="whitespace-pre-wrap break-words font-sans text-[12px] leading-loose text-gray-600">
                 {selected.outreachBody}
@@ -2756,7 +2755,7 @@ export default function Pipeline() {
                 onClick={copyDraft}
                 className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold border transition-all"
                 style={copied
-                  ? { background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#6ee7b7" }
+                  ? { background: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)", color: "#047857" }
                   : { background: "rgba(5,150,105,0.1)", borderColor: "rgba(5,150,105,0.3)", color: "#047857" }
                 }
               >

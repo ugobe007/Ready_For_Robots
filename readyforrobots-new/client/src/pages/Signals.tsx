@@ -688,7 +688,7 @@ export default function Signals() {
                   return (
                     <div
                       key={sig.id}
-                      className="rounded-2xl border border-gray-100 overflow-hidden hover:border-emerald-500/20 transition-colors"
+                      className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:border-emerald-500/20 transition-colors"
                       
                     >
                       <button
@@ -732,8 +732,7 @@ export default function Signals() {
                               {sig.sources.map((src) => (
                                 <span
                                   key={src}
-                                  className="text-[10px] px-2 py-0.5 rounded-full border border-gray-200 text-gray-500"
-                                  style={{ background: "rgba(255,255,255,0.04)" }}
+                                  className="text-[10px] px-2 py-0.5 rounded-full border border-gray-200 bg-gray-50 text-gray-600"
                                 >
                                   {src}
                                 </span>

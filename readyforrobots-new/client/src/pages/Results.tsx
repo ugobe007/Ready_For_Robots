@@ -590,24 +590,24 @@ export default function Results() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
-      <main className="flex-1 pt-24 pb-20 px-6">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 text-xs text-gray-400 mb-8">
+          <div className="flex items-center gap-2 text-xs text-gray-600 mb-6 sm:mb-8">
             <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
             <span>/</span>
             <span className="text-gray-500">{submittedUrl ? `Results for ${submittedUrl}` : "Activate SIGNAL"}</span>
           </div>
 
           {!submittedUrl && (
-            <section className="py-16">
-              <div className="rounded-3xl border border-amber-400/25 p-8 sm:p-10" style={{ background: "rgba(255,176,0,0.035)" }}>
+            <section className="py-10 sm:py-16">
+              <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-10 shadow-sm">
                 <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
                   Activate SIGNAL
                 </p>
                 <h1 className="font-extrabold text-gray-900 leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                   Give SIGNAL a URL first.
                 </h1>
-                <p className="text-sm text-gray-500 max-w-xl mb-8">
+                <p className="text-sm text-gray-700 max-w-xl mb-8">
                   Paste your robot, company, or product URL. SIGNAL will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
                 </p>
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
@@ -615,12 +615,11 @@ export default function Results() {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder="https://your-robot-company.com/product"
-                    className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-amber-400/70"
+                    className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base sm:text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
                   />
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                    style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500 px-5 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 hover:border-amber-400"
                   >
                     Scan URL <Zap className="h-4 w-4" />
                   </button>
@@ -640,41 +639,47 @@ export default function Results() {
               </div>
 
               <div className="w-full max-w-sm space-y-2">
-                {SCAN_STEPS.slice(0, scanStep + 1).map((step, i) => (
-                  <div key={step} className="flex items-center gap-3 text-sm" style={{ opacity: i === scanStep ? 1 : 0.35 }}>
-                    {i < scanStep ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                {SCAN_STEPS.slice(0, scanStep + 1).map((step, i) => {
+                  const done = i < scanStep;
+                  const active = i === scanStep;
+                  return (
+                  <div key={step} className="flex items-center gap-3 text-sm">
+                    {done ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                     ) : (
-                      <div className="h-3.5 w-3.5 rounded-full border border-amber-400/70 shrink-0 animate-pulse" />
+                      <div className={`h-3.5 w-3.5 rounded-full border shrink-0 ${active ? "border-amber-500 animate-pulse" : "border-gray-300"}`} />
                     )}
-                    <span className="font-mono text-xs font-normal" style={{ color: i === scanStep ? "#FFB000" : "#ffffff55", fontFamily: "'JetBrains Mono', monospace" }}>
+                    <span
+                      className={`font-mono text-xs font-medium ${active ? "text-amber-700" : done ? "text-emerald-700" : "text-gray-600"}`}
+                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    >
                       {step}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
           {submittedUrl && !loading && !scanning && (
             <>
-              <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-2" style={{ color: "#10b981" }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-emerald-700">
                     Scan complete · {prospects.length} opportunities found{usingFallback ? " · sample mode" : ""}
                   </p>
-                  <h1 className="font-extrabold text-gray-900 leading-tight" style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h1 className="font-extrabold text-gray-900 leading-tight" style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
                     Your matched pipeline
                   </h1>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Based on <span className="text-gray-600 font-medium">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
+                  <p className="text-sm text-gray-700 mt-2">
+                    Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setChoosingScout((current) => !current)}
-                  className="inline-flex items-center justify-center gap-2.5 rounded-2xl border px-6 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-amber-400/6"
-                  style={{ color: "#FFB000", border: "1.5px solid #FFB000", background: "transparent" }}
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl border-2 border-amber-500 bg-amber-500 px-6 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-amber-400 sm:shrink-0"
                 >
                   <Bot className="h-4 w-4" /> Activate SIGNAL
                 </button>
@@ -695,11 +700,11 @@ export default function Results() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2.5 py-1 text-[10px] font-bold text-emerald-100/70">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800">
                         <CheckCircle2 className="h-3 w-3" /> {activationIdsForScope().length} leads selected for review
                       </span>
                       {!isSignedIn && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-100/75">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-900">
                           <LockKeyhole className="h-3 w-3" /> Account required to send
                         </span>
                       )}
@@ -758,7 +763,7 @@ export default function Results() {
                           <span className="text-[10px] font-normal text-emerald-700">02</span>
                           <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-700">Lead scope</p>
                         </div>
-                        <p className="text-[11px] text-gray-400">
+                        <p className="text-[11px] text-gray-600">
                           {selectedCount} selected
                         </p>
                       </div>
@@ -816,12 +821,12 @@ export default function Results() {
                     </div>
 
                     <div>
-                      <p className="mb-2 text-[10px] font-normal uppercase tracking-widest text-emerald-200">SIGNAL starts with</p>
-                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-500 md:grid-cols-4">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-800">SIGNAL starts with</p>
+                      <div className="grid gap-x-4 gap-y-1.5 text-[11px] text-gray-700 md:grid-cols-4">
                         <span className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-emerald-600" /> Lead evaluation</span>
                         <span className="flex items-center gap-1.5"><Presentation className="h-3.5 w-3.5 text-emerald-600" /> Sales strategy</span>
                         <span className="flex items-center gap-1.5"><CalendarCheck className="h-3.5 w-3.5 text-emerald-600" /> Activity schedule</span>
-                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-200" /> Reply alerts</span>
+                        <span className="flex items-center gap-1.5"><Bell className="h-3.5 w-3.5 text-emerald-600" /> Reply alerts</span>
                       </div>
                     </div>
 
@@ -830,8 +835,7 @@ export default function Results() {
                         type="button"
                         onClick={() => activateScout()}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all hover:bg-amber-400/6 disabled:cursor-not-allowed disabled:opacity-60"
-                        style={{ color: "#FFB000", borderColor: "#FFB000", background: "transparent" }}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-500 px-4 py-2.5 text-xs font-bold text-gray-900 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {activatingScout ? "Creating activation..." : "Start SIGNAL activation"} <Send className="h-3.5 w-3.5" />
                       </button>
@@ -841,11 +845,11 @@ export default function Results() {
                           activateScout({ mode: "manual", material: "skip", scope: "top" });
                         }}
                         disabled={activatingScout}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white/[0.035] px-5 py-3 text-xs font-bold text-gray-600 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-5 py-3 text-xs font-bold text-gray-800 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Skip setup and draft only <MousePointer2 className="h-3.5 w-3.5" />
                       </button>
-                      <p className="text-[11px] text-gray-400 sm:ml-auto">
+                      <p className="text-[11px] text-gray-600 sm:ml-auto">
                         Auth first. CRM capture first. Sending stays gated by your review.
                       </p>
                     </div>
@@ -854,9 +858,9 @@ export default function Results() {
               )}
 
               {activatedCount > 0 && (
-                <div className="mb-5 rounded-2xl border border-emerald-400/20 p-5" style={{ background: "rgba(52,211,153,0.06)" }}>
-                  <p className="text-sm font-bold text-emerald-300 mb-1">SIGNAL review queue created</p>
-                  <p className="text-xs text-gray-500">
+                <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                  <p className="text-sm font-bold text-emerald-900 mb-1">SIGNAL review queue created</p>
+                  <p className="text-xs text-gray-700">
                     {activationId ? `Activation #${activationId}: ` : ""}
                     Leads were saved to CRM. Review SIGNAL&apos;s workflow, draft outreach, timing, and cadence before any outbound action begins.
                   </p>
@@ -869,9 +873,9 @@ export default function Results() {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
                   return (
-                    <div key={p.id} className="rounded-2xl border border-gray-100 overflow-hidden hover:border-emerald-500/25 transition-colors" >
-                      <div className="px-6 pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                        <label className="flex items-center gap-2 text-xs text-gray-500 sm:pt-4">
+                    <div key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:border-emerald-300 transition-colors">
+                      <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <label className="flex items-center gap-2 text-xs text-gray-700 sm:pt-4">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -886,7 +890,7 @@ export default function Results() {
                               {p.score}
                             </span>
                           </div>
-                          <span className="text-[9px] text-gray-400 uppercase tracking-widest">score</span>
+                          <span className="text-[9px] text-gray-600 uppercase tracking-widest">score</span>
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -896,7 +900,7 @@ export default function Results() {
                               {isActive ? "Review Queued" : p.stage}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-3">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-3">
                             <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
                             <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
                             <span>{p.industry}</span>
@@ -913,15 +917,15 @@ export default function Results() {
                       </div>
 
                       {(p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
-                        <div className="px-6 pb-2">
-                          <div className="rounded-xl border border-cyan-500/15 p-3" style={{ background: "rgba(6,182,212,0.06)" }}>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-400/80 mb-1">Intelligence</p>
+                        <div className="px-4 sm:px-6 pb-2">
+                          <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-800 mb-1">Intelligence</p>
                             {p.shareSummary && (
-                              <p className="text-xs text-gray-500 leading-relaxed">{p.shareSummary}</p>
+                              <p className="text-xs text-gray-700 leading-relaxed">{p.shareSummary}</p>
                             )}
                             {p.robotTypes && p.robotTypes.length > 0 && (
-                              <p className="mt-2 text-[11px] text-gray-500">
-                                <span className="font-semibold text-gray-500">Robots: </span>
+                              <p className="mt-2 text-[11px] text-gray-700">
+                                <span className="font-semibold text-gray-900">Robots: </span>
                                 {p.robotTypes.join(" · ")}
                               </p>
                             )}
@@ -941,50 +945,50 @@ export default function Results() {
                         </div>
                       )}
 
-                      <div className="px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                        <div className="min-w-0 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Why relevant</p>
-                          <p className="mb-3 block break-words rounded-lg border-l-2 px-3 py-2 text-sm font-normal leading-relaxed" style={{ color: "#FFB000", borderColor: "#FFB000", background: "rgba(255,176,0,0.07)", overflowWrap: "anywhere" }}>
+                      <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
+                        <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Why relevant</p>
+                          <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-500 bg-amber-50 px-3 py-2 text-sm font-medium leading-relaxed text-amber-900" style={{ overflowWrap: "anywhere" }}>
                             “{p.signal}”
                           </p>
-                          <p className="break-words text-xs text-gray-500 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
+                          <p className="break-words text-xs text-gray-700 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
                         </div>
-                        <div className="min-w-0 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                          <p className="text-[10px] font-normal uppercase tracking-widest mb-1" style={{ color: "#10b981" }}>Score rationale</p>
-                          <p className="text-xs text-gray-500 leading-relaxed">{p.scoreReason}</p>
+                        <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Score rationale</p>
+                          <p className="text-xs text-gray-700 leading-relaxed">{p.scoreReason}</p>
                         </div>
                       </div>
 
-                      <div className="px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <div className="flex items-center gap-2 flex-1">
-                          <ArrowRight className="h-3.5 w-3.5 shrink-0" style={{ color: "#059669" }} />
-                          <span className="text-sm text-gray-600">{p.action}</span>
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                          <span className="text-sm text-gray-800">{p.action}</span>
                         </div>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ color: "#34d399", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
                           {p.timing}
                         </span>
                       </div>
 
                       {isActive && (
-                        <div className="mx-6 mb-4 rounded-xl border border-emerald-400/20 p-3" style={{ background: "rgba(52,211,153,0.05)" }}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-1">SIGNAL follow-up plan</p>
-                          <p className="text-xs text-gray-500 leading-relaxed">
+                        <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-900 mb-1">SIGNAL follow-up plan</p>
+                          <p className="text-xs text-gray-700 leading-relaxed">
                             Draft signal-specific outreach, send first touch after approval, follow up in 3 business days, track response, and escalate technical questions when needed.
                           </p>
                         </div>
                       )}
 
                       <div className="border-t border-gray-100">
-                        <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-white/2 transition-colors">
+                        <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 text-left hover:bg-gray-50 transition-colors">
                           <div className="flex items-center gap-2">
-                            <FileText className="h-3.5 w-3.5" style={{ color: "#059669" }} />
-                            <span className="text-xs font-semibold" style={{ color: "#10b981" }}>View outreach draft</span>
+                            <FileText className="h-3.5 w-3.5 text-emerald-600" />
+                            <span className="text-xs font-semibold text-emerald-800">View outreach draft</span>
                           </div>
-                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-gray-400" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-400" />}
+                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-gray-600" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-600" />}
                         </button>
                         {draftOpen && (
-                          <div className="px-6 pb-5 border-t border-gray-100">
-                            <pre className="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          <div className="px-4 sm:px-6 pb-5 border-t border-gray-100">
+                            <pre className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                               {p.draft}
                             </pre>
                           </div>

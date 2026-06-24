@@ -305,4 +305,17 @@
   .signal-strength-fill {
     @apply h-full rounded-full bg-emerald-500 transition-all duration-500;
   }
+
+  /* Readable copy on white / slate-50 — prefer these over text-gray-400 or text-white/xx on light pages */
+  .text-body {
+    @apply text-gray-800;
+  }
+
+  .text-caption {
+    @apply text-gray-600;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+  }
 }

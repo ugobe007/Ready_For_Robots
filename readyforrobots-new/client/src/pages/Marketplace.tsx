@@ -455,7 +455,7 @@ export default function Marketplace() {
                 {["deck", "product_spec", "case_study", "pricing", "compliance", "proposal", "other"].map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
               <input type="file" onChange={(e) => setAssetFile(e.target.files?.[0] || null)} className="text-sm text-gray-500" />
-              <button onClick={() => void uploadAsset()} className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700">Upload asset</button>
+              <button onClick={() => void uploadAsset()} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-sm">Upload asset</button>
               <ListEmpty items={assets} empty="No assets uploaded yet." render={(asset) => `${asset.assetType}: ${asset.filename}`} />
             </div>
           </section>
@@ -487,7 +487,7 @@ export default function Marketplace() {
               <Input label="Document title" value={docForm.title} onChange={(title) => setDocForm((s) => ({ ...s, title }))} />
               <Input label="Document number" value={docForm.document_number} onChange={(document_number) => setDocForm((s) => ({ ...s, document_number }))} />
               <Input label="Amount" value={docForm.amount} onChange={(amount) => setDocForm((s) => ({ ...s, amount }))} />
-              <button onClick={() => void createCommercialDocument()} className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700">Create document</button>
+              <button onClick={() => void createCommercialDocument()} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-sm">Create document</button>
               <ListEmpty items={documents} empty="No commercial documents yet." render={(doc) => `${doc.documentType}: ${doc.title || doc.documentNumber || doc.status}`} />
             </div>
           </section>
@@ -500,11 +500,11 @@ export default function Marketplace() {
               <Input label="API base URL" value={connectionForm.base_url} onChange={(base_url) => setConnectionForm((s) => ({ ...s, base_url }))} />
               <Input label="Secret reference" value={connectionForm.secret_ref} onChange={(secret_ref) => setConnectionForm((s) => ({ ...s, secret_ref }))} />
               <Textarea label="Allowed scopes, one per line" value={connectionForm.allowed_scopes} rows={4} onChange={(allowed_scopes) => setConnectionForm((s) => ({ ...s, allowed_scopes }))} />
-              <div className="rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-white/42">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
                 Store credentials in your secret manager, then paste only a reference here. Ready For Robots stores `secret_ref`, connection URLs, scopes, and config, not raw API keys.
               </div>
             </div>
-            <button onClick={() => void createConnection()} className="mt-3 rounded-lg border border-amber-400/35 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100">Create connection reference</button>
+            <button onClick={() => void createConnection()} className="mt-3 rounded-lg border border-amber-400/35 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Create connection reference</button>
             <div className="mt-3 space-y-2">
               <ListEmpty items={connections} empty="No connections yet." render={(connection) => `${connection.connectionType}: ${connection.name} (${connection.status})`} />
               {connections.map((connection) => (
@@ -638,11 +638,11 @@ function Textarea({ label, value, onChange, rows }: { label: string; value: stri
 }
 
 function ListEmpty<T>({ items, empty, render, action }: { items: T[]; empty: string; render: (item: T) => string; action?: (item: T) => ReactNode }) {
-  if (!items.length) return <p className="rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-gray-400">{empty}</p>;
+  if (!items.length) return <p className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">{empty}</p>;
   return (
     <div className="grid gap-2">
       {items.slice(0, 5).map((item, index) => (
-        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-black/10 p-3 text-xs text-gray-500">
+        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
           <span className="truncate">{render(item)}</span>
           {action?.(item)}
         </div>

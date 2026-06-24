@@ -415,7 +415,7 @@ export default function Crm() {
                   <tr
                     key={a.id}
                     onClick={() => setSelectedAccountId(a.id)}
-                    className={`cursor-pointer border-b border-white/5 text-gray-800 ${
+                    className={`cursor-pointer border-b border-gray-100 text-gray-800 ${
                       selectedAccountId === a.id ? "bg-emerald-600/10" : "hover:bg-white"
                     }`}
                   >
@@ -437,7 +437,7 @@ export default function Crm() {
                   <p className="text-[10px] uppercase tracking-widest text-gray-400">Buyer outreach checkpoint</p>
                   <h2 className="mt-1 text-lg font-bold text-gray-900">{selectedAccount.name}</h2>
                 </div>
-                <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-200">
+                <span className="rounded-full border border-amber-500/25 bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">
                   {selectedAccount.outreach_stage || "captured"}
                 </span>
               </div>
@@ -468,7 +468,7 @@ export default function Crm() {
                       onClick={() => toggleTrait(trait.id)}
                       className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
                         selectedTraits.includes(trait.id)
-                          ? "border-amber-400 bg-amber-400/15 text-amber-100"
+                          ? "border-amber-400 bg-amber-50 text-amber-900"
                           : "border-gray-200 bg-white text-gray-500"
                       }`}
                     >
@@ -553,7 +553,7 @@ export default function Crm() {
                       key={item.label}
                       type="button"
                       onClick={() => applyVoiceFeedback(item.instruction)}
-                      className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[10px] font-bold text-gray-500 hover:border-amber-300/35 hover:text-amber-100"
+                      className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[10px] font-bold text-gray-500 hover:border-amber-300/35 hover:text-amber-800"
                     >
                       {item.label}
                     </button>
@@ -570,7 +570,7 @@ export default function Crm() {
                   type="button"
                   onClick={() => void generatePlan()}
                   disabled={busy || sending}
-                  className="rounded-lg border border-emerald-500/35 bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-100 disabled:opacity-50"
+                  className="rounded-lg border border-emerald-500/35 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 disabled:opacity-50"
                 >
                   Generate sales plan
                 </button>
@@ -607,7 +607,7 @@ export default function Crm() {
             </div>
             <aside className="rounded-xl border border-gray-200 p-4" >
               <div className="mb-5 rounded-lg border border-emerald-400/20 bg-emerald-400/10 p-3">
-                <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">SIGNAL workflow intelligence</p>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-800">SIGNAL workflow intelligence</p>
                 <p className="mt-2 text-sm font-bold text-gray-900">
                   {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}
                 </p>

@@ -313,7 +313,7 @@ export default function SalesConsole() {
             <Link href="/crm" className="rounded-xl px-4 py-2 text-sm font-black" style={{ background: "#059669", color: "#111827" }}>
               Draft buyer email
             </Link>
-            <Link href="/supply-pipeline" className="rounded-xl border border-amber-400 px-4 py-2 text-sm font-bold text-amber-200">
+            <Link href="/supply-pipeline" className="rounded-xl border border-amber-400 px-4 py-2 text-sm font-bold text-amber-800">
               Draft robot-company email
             </Link>
             <button
@@ -326,17 +326,17 @@ export default function SalesConsole() {
           </div>
         </div>
 
-        {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">{msg}</div>}
+        {msg && <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-50 p-4 text-sm text-amber-900">{msg}</div>}
 
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Workflow memory</p>
             <p className="mt-3 text-3xl font-black" style={{ color: "#059669" }}>
               {learningReport?.experience_events ?? 0}
             </p>
             <p className="mt-1 text-sm text-gray-500">sales events captured from sends, replies, failures, and escalations</p>
           </div>
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Best source signal</p>
             <p className="mt-3 text-lg font-bold text-gray-900">
               {learningReport?.source_domain_priorities?.[0]?.key || "Waiting for replies"}
@@ -345,7 +345,7 @@ export default function SalesConsole() {
               SIGNAL uses positive reply history to guide scraper priorities.
             </p>
           </div>
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Scraper guidance</p>
             <p className="mt-3 text-sm leading-relaxed text-gray-600">
               {learningReport?.scraper_guidance?.[0] || "Guidance appears after SIGNAL observes enough outreach outcomes."}
@@ -354,26 +354,26 @@ export default function SalesConsole() {
         </section>
 
         <section className="mt-8 grid gap-4 md:grid-cols-4">
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Open opportunities</p>
             <p className="mt-2 text-3xl font-black text-gray-900">{rows.length}</p>
           </div>
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Need action</p>
-            <p className="mt-2 text-3xl font-black text-amber-200">{rows.filter((row) => row.next_best_action?.recommendation).length}</p>
+            <p className="mt-2 text-3xl font-black text-amber-800">{rows.filter((row) => row.next_best_action?.recommendation).length}</p>
           </div>
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Buyer replies</p>
             <p className="mt-2 text-3xl font-black" style={{ color: "#059669" }}>{rows.filter((row) => row.last_inbound_at).length}</p>
           </div>
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Technical escalations</p>
-            <p className="mt-2 text-3xl font-black text-violet-100">{rows.filter((row) => row.current_stage === "technical_escalation").length}</p>
+            <p className="mt-2 text-3xl font-black text-violet-800">{rows.filter((row) => row.current_stage === "technical_escalation").length}</p>
           </div>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-4">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Opportunities</h2>
               <span className="text-xs text-gray-400">{rows.length} active</span>
@@ -383,10 +383,10 @@ export default function SalesConsole() {
                 <button
                   key={row.id}
                   onClick={() => setSelectedId(row.id)}
-                  className="w-full rounded-2xl border p-4 text-left transition hover:bg-gray-100"
+                  className="w-full rounded-2xl border p-4 text-left transition hover:bg-gray-50"
                   style={{
-                    borderColor: selectedId === row.id ? "rgba(3,218,197,0.45)" : "rgba(255,255,255,0.08)",
-                    background: selectedId === row.id ? "rgba(3,218,197,0.08)" : "rgba(255,255,255,0.025)",
+                    borderColor: selectedId === row.id ? "rgba(3,218,197,0.45)" : "#e5e7eb",
+                    background: selectedId === row.id ? "rgba(3,218,197,0.08)" : "#ffffff",
                   }}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -405,7 +405,7 @@ export default function SalesConsole() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5">
             {selected ? (
               <>
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -491,7 +491,7 @@ export default function SalesConsole() {
                       ))}
                     </div>
                   )}
-                  {prospectMsg && <p className="mt-3 text-xs text-amber-100/80">{prospectMsg}</p>}
+                  {prospectMsg && <p className="mt-3 text-xs text-amber-800">{prospectMsg}</p>}
                   {prospects.length > 0 && (
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {prospects.slice(0, 6).map((person, idx) => (
@@ -504,13 +504,13 @@ export default function SalesConsole() {
                             <button
                               onClick={() => void applyProspectContact(person)}
                               disabled={busy}
-                              className="mt-2 rounded-lg border border-emerald-400/30 px-2 py-1 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10 disabled:opacity-50"
+                              className="mt-2 rounded-lg border border-emerald-400/30 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
                             >
                               Use as contact
                             </button>
                           )}
                           {person.linkedin_url && (
-                            <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs text-amber-200 underline">
+                            <a href={person.linkedin_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs text-amber-800 underline">
                               LinkedIn
                             </a>
                           )}
