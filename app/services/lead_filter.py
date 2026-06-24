@@ -904,6 +904,14 @@ _JUNK_PATTERNS = [
     r"(?i)^[\w\s]+(manufacturing|fabrication|processing)\s+plant\s+(dpr|setup|project|brief|report|study)\s*$",
 
     # ── Editorial deck / headline fragments (user-reported, Apr 2026) ─────────
+    # User-reported headline junk (Jun 2026) — RSS titles stored as company.name
+    r"(?i)\bBecomes\s+(?:First|Official|Certified)\b",
+    r"(?i)\bForklifts?\s+Engineering\s+Precision\b",
+    r"(?i)\bEngineering\s+Precision\b",
+    r"(?i)\bFactory\s+Os\b",
+    r"(?i)^(?:Beverage|Food|Snack|Contract|Regional|Private[-\s]?Label)\s+Co-?Packer\s*$",
+    r"(?i)^Co-?Packer\s*$",
+    r"(?i)'s\s+(?:MedTech|Medtech|deeptech|deep\s*tech)\s+startup\b",
     # "Meet Betty Bot" — article / profile intro, not a legal entity name
     r"(?i)^meet\s+",
     # "New MIT Mecalux" — news-deck collaboration line (university + partner), not a company row
@@ -1055,6 +1063,12 @@ _JUNK_EXACT = frozenset({
     "melonee wise",
     "flexkeeping rollout following",
     "kentucky distribution center",
+    # User-reported headline junk (Jun 2026)
+    "becomes first certified operator",
+    "engineering precision",
+    "factory os",
+    "beverage co-packer",
+    "medtech startup",
     # Location + facility stubs (not operating companies)
     "tampa plant", "tampa facility", "german facility", "german plant",
     "french facility", "japanese facility", "chinese facility",

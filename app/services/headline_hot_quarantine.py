@@ -39,6 +39,11 @@ _HEADLINE_LEAK_RES = [
     re.compile(r"(?i)^all-inclusive\b"),
     re.compile(r"(?i)^faraway\b"),
     re.compile(r"(?i)^tavern\s+tap\b"),
+    re.compile(r"(?i)\bBecomes\s+(?:First|Official|Certified)\b"),
+    re.compile(r"(?i)\bFactory\s+Os\b"),
+    re.compile(r"(?i)\bEngineering\s+Precision\b"),
+    re.compile(r"(?i)^(?:Beverage|Food|Snack|Contract)\s+Co-?Packer\b"),
+    re.compile(r"(?i)'s\s+(?:MedTech|Medtech)\s+startup\b"),
 ]
 _SENTENCE_VERB = re.compile(
     r"(?i)\b(is|are|was|were|has|have|begins|announces|highlights|approves|proves|locks|using|demonstrates)\b"

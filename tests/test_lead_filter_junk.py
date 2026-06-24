@@ -363,6 +363,11 @@ def test_headline_fragments_user_reported_may_2026(name):
         "Chinese humanoids",
         "Dutch hospitality operating system Mews",
         "California health workers helps patients",
+        "SunRobi Becomes First Certified Operator",
+        "Linde Forklifts Engineering Precision",
+        "Tetra Pak Factory Os",
+        "Beverage Co-Packer",
+        "Eindhoven's MedTech startup Xyall",
     ],
 )
 def test_user_reported_scraper_headline_junk_apr_2026(name):

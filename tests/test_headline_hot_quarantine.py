@@ -1,4 +1,5 @@
 """Tests for HOT/WARM headline quarantine heuristics."""
+import pytest
 from types import SimpleNamespace
 
 from app.services.headline_hot_quarantine import headline_hot_leak_reason
@@ -35,4 +36,32 @@ def test_real_company_not_flagged():
 
 def test_new_york_not_flagged():
     ok, _ = headline_hot_leak_reason("New York")
+    assert ok is False
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "SunRobi Becomes First Certified Operator",
+        "Linde Forklifts Engineering Precision",
+        "Tetra Pak Factory Os",
+        "Beverage Co-Packer",
+        "Eindhoven's MedTech startup Xyall",
+    ],
+)
+def test_user_reported_jun_2026_headline_leaks(name):
+    ok, reason = headline_hot_leak_reason(name)
+    assert ok is True, reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Tetra Pak",
+        "Linde Material Handling",
+        "Xyall",
+    ],
+)
+def test_real_brands_not_headline_leak(name):
+    ok, _ = headline_hot_leak_reason(name)
     assert ok is False
