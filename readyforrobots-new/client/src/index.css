@@ -281,9 +281,9 @@
 
   .hero-widget-glow {
     box-shadow:
-      0 0 0 1px rgba(16, 185, 129, 0.12),
-      0 4px 24px rgba(5, 150, 105, 0.12),
-      0 24px 64px rgba(15, 23, 42, 0.18);
+      0 0 0 1px rgba(5, 150, 105, 0.22),
+      0 4px 24px rgba(5, 150, 105, 0.16),
+      0 24px 64px rgba(15, 23, 42, 0.22);
   }
 
   .btn-secondary-hero {
@@ -317,5 +317,34 @@
 
   .surface-card {
     @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  /* Sales / hero pipeline panels — stone base so rows read on light marketing pages */
+  .pipeline-panel {
+    @apply overflow-hidden rounded-2xl border border-stone-300 bg-stone-100 shadow-md;
+  }
+
+  .pipeline-panel-header {
+    @apply border-b border-stone-300 bg-gradient-to-r from-emerald-100/90 via-stone-100 to-stone-50;
+  }
+
+  .pipeline-panel-footer {
+    @apply border-t border-stone-300 bg-stone-100;
+  }
+
+  .pipeline-panel-row {
+    @apply border-b border-stone-200 transition-colors duration-500 last:border-0 hover:bg-emerald-50/60;
+  }
+
+  .pipeline-panel-row:nth-child(odd) {
+    @apply bg-white;
+  }
+
+  .pipeline-panel-row:nth-child(even) {
+    @apply bg-stone-50;
+  }
+
+  .pipeline-list-shell {
+    @apply rounded-2xl border border-stone-300 bg-stone-100/90 p-3 shadow-sm;
   }
 }

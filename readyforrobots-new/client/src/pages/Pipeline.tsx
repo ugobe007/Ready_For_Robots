@@ -557,7 +557,7 @@ function PipelineMetric({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
+    <div className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2.5 shadow-sm">
       <div className="mb-1 flex items-center justify-between gap-2">
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-500">{label}</p>
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
@@ -572,8 +572,8 @@ function PipelineMetric({
 
 function dealRowSurface(isSelected: boolean) {
   return isSelected
-    ? "bg-emerald-50 border-emerald-300 shadow-sm ring-1 ring-emerald-100"
-    : "bg-white border-gray-200 shadow-sm hover:border-emerald-200 hover:shadow-md";
+    ? "bg-emerald-50 border-emerald-400 shadow-md ring-1 ring-emerald-200"
+    : "bg-white border-stone-300 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-md";
 }
 
 export default function Pipeline() {
@@ -1953,7 +1953,7 @@ export default function Pipeline() {
           <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 200px)" }}>
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
-            <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
+            <div className="pipeline-list-shell flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
               {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-100 px-6 py-12 text-center">
                   <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-400" />
@@ -2158,7 +2158,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-gray-200 bg-white shadow-lg overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] sticky top-20"
+              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-stone-300 bg-stone-50 shadow-lg overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] sticky top-20"
             >
               {isAdmin && (
               <ScoutActionBar

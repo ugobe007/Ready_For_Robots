@@ -103,28 +103,30 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const rows = visible.slice(0, 3);
 
   return (
-    <div className="hero-widget-glow surface-card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-emerald-50/80 to-white px-4 py-3 sm:px-5 sm:py-4">
+    <div className="hero-widget-glow pipeline-panel">
+      <div className="pipeline-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
           <span className="font-display text-sm font-semibold text-gray-900">Live pipeline</span>
         </div>
-        <span className="font-mono-data text-xs font-bold text-emerald-700">{hotLabel} HOT</span>
+        <span className="rounded-full border border-emerald-300/70 bg-emerald-100 px-2.5 py-0.5 font-mono-data text-xs font-bold text-emerald-800">
+          {hotLabel} HOT
+        </span>
       </div>
 
-      <div className="bg-white">
+      <div>
         {rows.map((lead, rowIndex) => {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           return (
             <div
               key={`${lead.id}-${rowIndex}`}
-              className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 transition-all duration-500 last:border-0 hover:bg-emerald-50/40 sm:gap-4 sm:px-5 sm:py-4 ${
+              className={`pipeline-panel-row flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
                 rowIndex === 2 ? "hidden sm:flex" : ""
               }`}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50">
-                <Icon size={16} className="text-emerald-700" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-100/80 shadow-sm">
+                <Icon size={16} className="text-emerald-800" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-0.5 flex items-center gap-2">
@@ -133,25 +135,27 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   </span>
                   <HeatBadge heat={tier} />
                 </div>
-                <p className="truncate text-xs text-gray-600">{signalLine(lead)}</p>
+                <p className="truncate text-xs text-gray-700">{signalLine(lead)}</p>
               </div>
               <div className="shrink-0 text-right">
-                <div className="score-number text-2xl leading-none text-emerald-700">{scoreOf(lead)}</div>
-                <div className="mt-0.5 font-mono-data text-xs text-gray-500">{live ? "live" : "demo"}</div>
+                <div className="score-number text-2xl leading-none text-emerald-800">{scoreOf(lead)}</div>
+                <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-stone-600">
+                  {live ? "live" : "demo"}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-200 bg-slate-50 px-4 py-2.5 sm:px-5 sm:py-3">
-        <span className="font-mono-data text-[10px] text-gray-600 sm:text-xs">
+      <div className="pipeline-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
+        <span className="font-mono-data text-[10px] text-stone-700 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
-          {!live && <span className="text-gray-500"> · preview</span>}
+          {!live && <span className="text-stone-500"> · preview</span>}
         </span>
         <Link
           href="/pipeline"
-          className="flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+          className="flex items-center gap-1 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
         >
           View all <ArrowRight size={12} />
         </Link>
