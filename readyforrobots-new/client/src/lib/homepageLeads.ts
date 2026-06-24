@@ -1,3 +1,5 @@
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+
 export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v2";
 /** Match server daily edition — rolls at 6am America/Los_Angeles. */
 export const HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -71,4 +73,32 @@ export function dedupeHomepageLeads<
     for (const key of keys) seen.add(key);
     return true;
   });
+}
+
+/** Merge homepage spotlight + HOT feed for hero / live pipeline rotation. */
+export async function fetchHomepageLeadPool<
+  T extends { id?: number; company_name?: string; website?: string | null; website_domain?: string | null },
+>(fallback: T[]): Promise<{ leads: T[]; live: boolean; summary?: { total?: number; hot?: number } }> {
+  try {
+    const [homepageRes, hotRes] = await Promise.all([
+      fetch(`${getApiBase()}/api/leads/homepage`, liveFetchInit()),
+      fetch(`${getApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`, liveFetchInit()),
+    ]);
+    const merged: T[] = [];
+    let summary: { total?: number; hot?: number } | undefined;
+    if (homepageRes.ok) {
+      const data = (await homepageRes.json()) as { hotLeads?: T[]; summary?: { total?: number; hot?: number } };
+      if (Array.isArray(data.hotLeads)) merged.push(...data.hotLeads);
+      if (data.summary) summary = data.summary;
+    }
+    if (hotRes.ok) {
+      const hotData = await hotRes.json();
+      if (Array.isArray(hotData)) merged.push(...(hotData as T[]));
+    }
+    const deduped = dedupeHomepageLeads(merged);
+    if (deduped.length) return { leads: deduped, live: true, summary };
+  } catch {
+    /* fallback */
+  }
+  return { leads: fallback, live: false };
 }

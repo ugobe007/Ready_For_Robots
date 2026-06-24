@@ -237,59 +237,91 @@ export function MarketingBeforeAfter() {
     "Signal surfaces integrators and channel partners",
   ];
 
+  const robotBefore = "/marketing/robot-industrial.jpg";
+  const robotAfter =
+    "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/robot-hiw-Yopt6ezNpbmPkaFHBTsEx6.webp";
+
   return (
-    <section className="py-20 bg-emerald-700 relative overflow-hidden">
+    <section className="py-20 bg-emerald-800 relative overflow-hidden">
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0 opacity-25 pointer-events-none"
         aria-hidden
         style={{
           backgroundImage:
-            "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.25) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(0,0,0,0.15) 0%, transparent 40%)",
+            "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.2) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(0,0,0,0.2) 0%, transparent 40%)",
         }}
       />
       <div className="container relative">
         <div className="mb-14 max-w-2xl">
-          <p className="text-emerald-100/90 text-xs font-semibold uppercase tracking-[0.1em] mb-3">The Difference</p>
+          <p className="text-emerald-100 text-xs font-semibold uppercase tracking-[0.1em] mb-3">The Difference</p>
           <h2 className="section-headline font-bold text-white">
             Before vs. After ReadyForRobots
           </h2>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white border border-red-100 rounded-2xl p-8 shadow-lg shadow-emerald-900/10">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center">
-                <XCircle size={16} className="text-red-500" />
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+          <div className="overflow-hidden rounded-2xl border-2 border-red-300/70 bg-stone-200 shadow-inner shadow-stone-400/30">
+            <div className="relative h-40 sm:h-48">
+              <img
+                src={robotBefore}
+                alt="Industrial robot on a factory floor without buyer signal context"
+                className="h-full w-full object-cover grayscale contrast-90 opacity-80"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-300 via-stone-200/40 to-transparent" />
+              <div className="absolute bottom-3 left-4 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                Blind outreach
               </div>
-              <span className="font-display font-bold text-red-700 uppercase text-xs tracking-widest">
-                Without SIGNAL
-              </span>
             </div>
-            <ul className="space-y-3">
-              {before.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-gray-700">
-                  <XCircle size={15} className="text-red-400 flex-shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="p-8 pt-5">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-7 h-7 bg-red-200 rounded-full flex items-center justify-center">
+                  <XCircle size={16} className="text-red-700" />
+                </div>
+                <span className="font-display font-bold text-red-800 uppercase text-xs tracking-widest">
+                  Without SIGNAL
+                </span>
+              </div>
+              <ul className="space-y-3">
+                {before.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-stone-800">
+                    <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div className="bg-white border border-emerald-100 rounded-2xl p-8 shadow-lg shadow-emerald-900/10">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
-                <CheckCircle size={16} className="text-emerald-600" />
+          <div className="overflow-hidden rounded-2xl border-2 border-emerald-300 bg-white shadow-xl shadow-emerald-950/25 ring-4 ring-emerald-400/30">
+            <div className="relative h-40 sm:h-48">
+              <img
+                src={robotAfter}
+                alt="Humanoid robot deployed with SIGNAL-driven buyer intelligence"
+                className="h-full w-full object-cover object-[center_20%]"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+              <div className="absolute bottom-3 left-4 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+                Signal-matched buyers
               </div>
-              <span className="font-display font-bold text-emerald-700 uppercase text-xs tracking-widest">
-                With SIGNAL
-              </span>
             </div>
-            <ul className="space-y-3">
-              {after.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle size={15} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="p-8 pt-5">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <CheckCircle size={16} className="text-emerald-700" />
+                </div>
+                <span className="font-display font-bold text-emerald-800 uppercase text-xs tracking-widest">
+                  With SIGNAL
+                </span>
+              </div>
+              <ul className="space-y-3">
+                {after.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-gray-800">
+                    <CheckCircle size={15} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>

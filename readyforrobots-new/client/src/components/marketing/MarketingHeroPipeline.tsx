@@ -1,11 +1,10 @@
 /**
  * Hero live pipeline widget — emerald redesign skin, /api/leads/homepage data.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils } from "lucide-react";
 import { Link } from "wouter";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { dedupeHomepageLeads } from "@/lib/homepageLeads";
+import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { HeatBadge, LiveDot } from "@/components/marketing/primitives";
 import { formatStat } from "@/hooks/usePipelineStats";
@@ -65,24 +64,18 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
   const [pool, setPool] = useState<LeadRow[]>(FALLBACK);
   const [visible, setVisible] = useState<LeadRow[]>(FALLBACK.slice(0, 3));
   const [live, setLive] = useState(false);
+  const poolCursor = useRef(3);
+  const rotateSlot = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const r = await fetch(`${getApiBase()}/api/leads/homepage`, liveFetchInit());
-        if (!r.ok || cancelled) return;
-        const data = (await r.json()) as { hotLeads?: LeadRow[] };
-        const hl = data.hotLeads;
-        if (Array.isArray(hl) && hl.length && !cancelled) {
-          const deduped = dedupeHomepageLeads(hl) as LeadRow[];
-          setPool(deduped);
-          setVisible(deduped.slice(0, 3));
-          setLive(true);
-        }
-      } catch {
-        /* fallback */
-      }
+      const { leads, live: isLive } = await fetchHomepageLeadPool(FALLBACK);
+      if (cancelled) return;
+      setPool(leads);
+      setVisible(leads.slice(0, 3));
+      poolCursor.current = Math.min(3, leads.length);
+      setLive(isLive);
     })();
     return () => {
       cancelled = true;
@@ -91,11 +84,17 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
 
   useEffect(() => {
     if (pool.length <= 3) return;
-    let idx = 0;
     const timer = window.setInterval(() => {
-      idx = (idx + 1) % pool.length;
-      setVisible([...pool.slice(idx), ...pool.slice(0, idx)].slice(0, 3));
-    }, 4000);
+      setVisible((current) => {
+        const next = [...current];
+        const pick = pool[poolCursor.current % pool.length];
+        poolCursor.current = (poolCursor.current + 1) % pool.length;
+        const slot = rotateSlot.current % 3;
+        rotateSlot.current += 1;
+        next[slot] = pick;
+        return next;
+      });
+    }, 2800);
     return () => window.clearInterval(timer);
   }, [pool]);
 
@@ -119,8 +118,8 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           const tier = (lead.priority_tier || "WARM").toUpperCase();
           return (
             <div
-              key={lead.id}
-              className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-colors duration-150 ${
+              key={`${lead.id}-${rowIndex}`}
+              className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-all duration-500 ${
                 rowIndex === 2 ? "hidden sm:flex" : ""
               }`}
             >

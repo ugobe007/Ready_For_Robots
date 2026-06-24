@@ -1,11 +1,10 @@
 /**
  * Full-width live pipeline table — emerald redesign, /api/leads/homepage data.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils, Zap } from "lucide-react";
 import { Link } from "wouter";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import { dedupeHomepageLeads } from "@/lib/homepageLeads";
+import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { HeatBadge, LiveDot } from "@/components/marketing/primitives";
 import { formatStat } from "@/hooks/usePipelineStats";
@@ -59,39 +58,48 @@ type Props = {
 };
 
 export default function MarketingLivePipelineSection({ hotCount, totalCount }: Props) {
-  const [rows, setRows] = useState<LeadRow[]>(FALLBACK);
+  const [pool, setPool] = useState<LeadRow[]>(FALLBACK);
+  const [rows, setRows] = useState<LeadRow[]>(FALLBACK.slice(0, 5));
   const [live, setLive] = useState(false);
   const [resolvedTotal, setResolvedTotal] = useState<number | null>(null);
   const [resolvedHot, setResolvedHot] = useState<number | null>(null);
+  const poolCursor = useRef(5);
+  const rotateSlot = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const res = await fetch(`${getApiBase()}/api/leads/homepage`, liveFetchInit());
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as {
-          hotLeads?: LeadRow[];
-          summary?: { total?: number; hot?: number };
-        };
-        const raw = Array.isArray(data.hotLeads) ? data.hotLeads : [];
-        const mapped = raw.filter((r) => r.company_name && r.id).slice(0, 8) as LeadRow[];
-        if (mapped.length && !cancelled) {
-          setRows(dedupeHomepageLeads(mapped).slice(0, 5) as LeadRow[]);
-          setLive(true);
-        }
-        if (!cancelled && data.summary) {
-          if (typeof data.summary.total === "number") setResolvedTotal(data.summary.total);
-          if (typeof data.summary.hot === "number") setResolvedHot(data.summary.hot);
-        }
-      } catch {
-        /* fallback */
+      const { leads, live: isLive, summary } = await fetchHomepageLeadPool(FALLBACK);
+      if (cancelled) return;
+      setPool(leads);
+      setRows(leads.slice(0, 5));
+      poolCursor.current = Math.min(5, leads.length);
+      setLive(isLive);
+      if (summary) {
+        if (typeof summary.total === "number") setResolvedTotal(summary.total);
+        if (typeof summary.hot === "number") setResolvedHot(summary.hot);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (pool.length <= 5) return;
+    const timer = window.setInterval(() => {
+      setRows((current) => {
+        const next = [...current];
+        const pick = pool[poolCursor.current % pool.length];
+        poolCursor.current = (poolCursor.current + 1) % pool.length;
+        const slot = rotateSlot.current % 5;
+        rotateSlot.current += 1;
+        next[slot] = pick;
+        return next;
+      });
+    }, 3200);
+    return () => window.clearInterval(timer);
+  }, [pool]);
 
   const hotLabel = formatStat(resolvedHot ?? hotCount, "319");
   const totalLabel = formatStat(resolvedTotal ?? totalCount, "3,957");
@@ -113,10 +121,10 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
               )}
             </div>
             <h2 className="font-display text-4xl font-bold text-white tracking-tight">
-              Your pipeline is already moving.
+              Find robot buyers before they hit the RFP.
             </h2>
-            <p className="mt-2 max-w-xl text-sm text-slate-400">
-              SIGNAL-ranked buyers with scores, signals, and timing — updated from the same feed as your workspace pipeline.
+            <p className="mt-2 max-w-xl text-sm text-slate-300">
+              ReadyForRobots helps robot companies find buyers using live market signals — who is ready to purchase, and when the buying window opens.
             </p>
           </div>
           <div className="text-slate-400 text-sm font-mono-data">
@@ -139,9 +147,9 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
             const href = lead.id > 0 ? `/pipeline?lead=${lead.id}` : "/pipeline";
             return (
               <Link
-                key={lead.id}
+                key={`${lead.id}-${lead.company_name}`}
                 href={href}
-                className="grid grid-cols-12 px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors duration-150 items-center group"
+                className="grid grid-cols-12 px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-all duration-500 items-center group"
               >
                 <div className="col-span-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
