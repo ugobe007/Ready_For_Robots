@@ -21,6 +21,14 @@ python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
 python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baseline
 ```
 
+## Daily automation
+
+```bash
+python3 scripts/harness_daily.py
+```
+
+GitHub Actions runs this at 14:00 UTC (`.github/workflows/harness-daily.yml`). macOS: `./scripts/install_harness_launchd.sh`.
+
 ## Compaction — always preserve
 
 When summarizing conversation history, keep:

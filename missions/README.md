@@ -18,6 +18,18 @@ python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baselin
 
 Or use the wrapper: `./scripts/harness python3 scripts/harness_snapshot.py`
 
+### Daily automation
+
+```bash
+# Full loop once (creates missions/YYYY-MM-DD-daily-cycle/ if needed)
+python3 scripts/harness_daily.py
+
+# GitHub Actions: .github/workflows/harness-daily.yml (14:00 UTC daily)
+# macOS: ./scripts/install_harness_launchd.sh
+```
+
+Required secrets for CI: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`.
+
 ### Intelligence loop (start here)
 
 1. **Observe** — `python3 scripts/harness_snapshot.py` (includes `intelligence` slice)

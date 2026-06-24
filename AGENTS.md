@@ -75,6 +75,7 @@ One mission = one primary goal. Split hero swap from pipeline cleanup.
 | `scripts/harness_snapshot.py` | Writes `reports/harness_snapshot_latest.json` |
 | `scripts/harness_env.py` | Loads `.env` / `HARNESS_DATABASE_URL` for all harness scripts |
 | `scripts/run_mission.py` | Agent SDK mission runner (Orchestrator entry) |
+| `scripts/harness_daily.py` | Full daily loop: snapshot → mission → notify |
 | `scripts/harness_notify.py` | Post-mission notification (file + optional email) |
 
 Run observe before every mission:
@@ -84,6 +85,21 @@ python3 scripts/harness_snapshot.py   # requires DATABASE_URL or HARNESS_DATABAS
 python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
 python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baseline
 ```
+
+### Daily automation (recommended)
+
+One command runs the full loop (snapshot → cache refresh if needed → agent mission → notify):
+
+```bash
+python3 scripts/harness_daily.py
+```
+
+| Method | When | Setup |
+|--------|------|--------|
+| **GitHub Actions** | 14:00 UTC daily + manual dispatch | Add secrets: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`. Optional: `FLY_API_TOKEN`, `RESEND_API_KEY`. Workflow: `.github/workflows/harness-daily.yml` |
+| **macOS launchd** | 7:00 local daily | `./scripts/install_harness_launchd.sh` (uses `.venv-harness` + repo `.env`) |
+
+Pipeline cache refresh is async on Fly (~15–20 min). Use `python3 scripts/refresh_pipeline_cache.py --remote --wait` to block until `built_at` is set.
 
 If snapshot shows `database.telemetry.status: unavailable`, set `DATABASE_URL` in repo-root `.env` or export `HARNESS_DATABASE_URL` before running missions.
 
