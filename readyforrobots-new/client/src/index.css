@@ -347,4 +347,73 @@
   .pipeline-list-shell {
     @apply rounded-2xl border border-stone-300 bg-stone-100/90 p-3 shadow-sm;
   }
+
+  /* Sales Pipeline page — professional workspace shell */
+  .pipeline-page-bg {
+    @apply min-h-screen bg-gradient-to-b from-stone-200 via-stone-100 to-slate-200;
+    background-image:
+      linear-gradient(to bottom, rgb(231 229 228 / 0.95), rgb(241 245 249 / 0.9)),
+      linear-gradient(rgba(5, 150, 105, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(5, 150, 105, 0.04) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+  }
+
+  .pipeline-workspace {
+    @apply overflow-hidden rounded-2xl border border-stone-400/80 bg-white shadow-xl shadow-stone-900/10;
+  }
+
+  .pipeline-page-header {
+    @apply border-b border-stone-300 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 px-5 py-5 sm:px-6;
+  }
+
+  .pipeline-metrics-grid {
+    @apply grid grid-cols-2 gap-3 border-b border-stone-200 bg-stone-50/80 p-4 lg:grid-cols-4;
+  }
+
+  .pipeline-metric-card {
+    @apply relative overflow-hidden rounded-xl border border-stone-300 bg-white px-3.5 py-3 shadow-sm;
+  }
+
+  .pipeline-metric-card::before {
+    content: "";
+    @apply absolute inset-y-0 left-0 w-1 rounded-l-xl;
+    background: var(--metric-accent, #10b981);
+  }
+
+  .pipeline-tier-header {
+    @apply sticky top-0 z-10 mx-1 mb-2 flex items-center gap-2 rounded-lg border border-stone-300 bg-stone-200/90 px-3 py-2 backdrop-blur-sm;
+  }
+
+  .pipeline-list-columns {
+    @apply mx-1 mb-2 hidden grid-cols-12 gap-2 rounded-lg border border-stone-300 bg-stone-100 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-stone-600 sm:grid;
+  }
+
+  .pipeline-deal-row {
+    @apply border border-stone-300 bg-white shadow-sm transition-all;
+    border-left-width: 4px;
+  }
+
+  .pipeline-deal-row-selected {
+    @apply border-emerald-500 bg-emerald-50/80 shadow-md ring-1 ring-emerald-200;
+  }
+
+  .pipeline-deal-row-hover {
+    @apply hover:border-stone-400 hover:bg-stone-50 hover:shadow-md;
+  }
+
+  .pipeline-detail-shell {
+    @apply shrink-0 overflow-hidden rounded-2xl border border-stone-400 bg-white shadow-xl shadow-stone-900/10;
+  }
+
+  .pipeline-detail-header {
+    @apply shrink-0 border-b border-emerald-900/30 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 px-4 py-4;
+  }
+
+  .pipeline-detail-section {
+    @apply shrink-0 border-b border-stone-200 bg-white px-4 py-3;
+  }
+
+  .pipeline-detail-section-muted {
+    @apply shrink-0 border-b border-stone-200 bg-stone-50 px-4 py-3;
+  }
 }

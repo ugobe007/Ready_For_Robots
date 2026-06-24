@@ -334,7 +334,7 @@ const scoutVerdictForDeal = (deal: Pick<Deal, "score">) => {
   };
 };
 
-const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-700/90";
+const panelSectionLabel = "text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-800";
 
 type PipelineEntitlements = {
   plan: "anonymous" | "free" | "paid";
@@ -557,23 +557,21 @@ function PipelineMetric({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-stone-300 bg-stone-50 px-3 py-2.5 shadow-sm">
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-500">{label}</p>
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+    <div className="pipeline-metric-card" style={{ ["--metric-accent" as string]: color }}>
+      <div className="mb-1.5 flex items-center justify-between gap-2 pl-2">
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">{label}</p>
+        <span className="h-2 w-2 rounded-full ring-2 ring-white" style={{ background: color }} />
       </div>
-      <p className="font-mono-data text-xl font-bold leading-none" style={{ color }}>
+      <p className="pl-2 font-mono-data text-2xl font-bold leading-none" style={{ color }}>
         {value}
       </p>
-      <p className="mt-1 text-[10px] leading-snug text-gray-600">{sub}</p>
+      <p className="mt-1.5 pl-2 text-[10px] leading-snug text-stone-700">{sub}</p>
     </div>
   );
 }
 
 function dealRowSurface(isSelected: boolean) {
-  return isSelected
-    ? "bg-emerald-50 border-emerald-400 shadow-md ring-1 ring-emerald-200"
-    : "bg-white border-stone-300 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-md";
+  return isSelected ? "pipeline-deal-row pipeline-deal-row-selected" : "pipeline-deal-row pipeline-deal-row-hover";
 }
 
 export default function Pipeline() {
@@ -1479,74 +1477,80 @@ export default function Pipeline() {
   const queuedActivations = activations.filter((a) => ["queued", "evaluating", "drafted", "awaiting_approval"].includes(a.status)).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="pipeline-page-bg flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 pt-20 pb-6 px-4 lg:px-6">
-        <div className="max-w-[1500px] mx-auto flex flex-col gap-4">
+      <main className="flex-1 px-4 pb-8 pt-20 lg:px-6">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-4">
           {isAdmin && <AdminNav />}
 
-          {/* ── Top bar ── */}
-          {loadErr && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              {loadErr}
-            </div>
-          )}
-          {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-              Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
-            </div>
-          )}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#10b981" }}>SIGNAL</p>
-                <h1 className="font-extrabold text-gray-900 text-xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
-                </h1>
-                <p className="text-[11px] text-gray-600 mt-0.5 max-w-md">
-                  {isAdmin
-                    ? "Authoritative database counts up top. Cal outreach controls below."
-                    : panelPlan === "anonymous"
-                      ? `Preview ${entitlements?.pipeline_limit ?? 12} SIGNAL-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SIGNAL on your workspace.`
-                      : panelPlan === "free"
-                        ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
-                        : `${PIPELINE_HOT_SLOTS} hot · ${PIPELINE_WARM_SLOTS} warm · ${PIPELINE_MONITOR_SLOTS} monitoring — ranked by buyer intent and timing.`}
-                </p>
+          <div className="pipeline-workspace">
+            {/* ── Page header ── */}
+            <div className="pipeline-page-header">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">SIGNAL · Sales intelligence</p>
+                  <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                    {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
+                  </h1>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
+                    {isAdmin
+                      ? "Authoritative database counts up top. Cal outreach controls below."
+                      : panelPlan === "anonymous"
+                        ? `Preview ${entitlements?.pipeline_limit ?? 12} SIGNAL-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SIGNAL on your workspace.`
+                        : panelPlan === "free"
+                          ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
+                          : `${PIPELINE_HOT_SLOTS} hot · ${PIPELINE_WARM_SLOTS} warm · ${PIPELINE_MONITOR_SLOTS} monitoring — ranked by buyer intent and timing.`}
+                  </p>
+                </div>
+
+                <div className="relative w-full sm:w-[340px]">
+                  <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <input
+                    value={industryQuery}
+                    onChange={(e) => {
+                      setIndustryQuery(e.target.value);
+                      setFilter("All");
+                    }}
+                    list="pipeline-industries"
+                    placeholder="Search industry, company, or signal…"
+                    className="w-full rounded-xl border border-stone-500/40 bg-white/95 py-3 pl-10 pr-10 text-sm font-medium text-gray-900 shadow-inner outline-none placeholder:text-stone-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/30"
+                  />
+                  {industryQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setIndustryQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-stone-500 hover:text-stone-800"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <datalist id="pipeline-industries">
+                    {searchSuggestions.map((ind) => (
+                      <option key={ind} value={ind} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
             </div>
 
-            {/* Industry filter */}
-            <div className="relative w-full sm:w-[320px]">
-              <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-              <input
-                value={industryQuery}
-                onChange={(e) => {
-                  setIndustryQuery(e.target.value);
-                  setFilter("All");
-                }}
-                list="pipeline-industries"
-                placeholder="Search industry, company, or signal…"
-                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-xs font-semibold text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-              />
-              {industryQuery && (
-                <button
-                  type="button"
-                  onClick={() => setIndustryQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400 hover:text-gray-600"
-                >
-                  Clear
-                </button>
-              )}
-              <datalist id="pipeline-industries">
-                {searchSuggestions.map((ind) => (
-                  <option key={ind} value={ind} />
-                ))}
-              </datalist>
-            </div>
-          </div>
+            {/* ── Alerts ── */}
+            {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
+              <div className="space-y-2 border-b border-stone-200 px-4 py-3 sm:px-6">
+                {loadErr && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+                    {loadErr}
+                  </div>
+                )}
+                {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900">
+                    Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
+                  </div>
+                )}
+              </div>
+            )}
 
-          <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <section className="pipeline-metrics-grid">
             <PipelineMetric
               label={isAdmin ? "Database total" : "Market watchlist"}
               value={formatMetric(dbTotal)}
@@ -1579,10 +1583,7 @@ export default function Pipeline() {
             />
           </section>
 
-          <section
-            className="rounded-2xl border px-4 py-3"
-            style={{ background: "rgba(255,176,0,0.045)", borderColor: "rgba(255,176,0,0.16)" }}
-          >
+          <section className="mx-4 mb-4 rounded-xl border border-amber-300/60 bg-gradient-to-r from-amber-50 to-stone-50 px-4 py-3 sm:mx-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <div
@@ -1950,14 +1951,20 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div className="flex min-h-0 gap-0 border-t border-stone-300 lg:gap-0" style={{ minHeight: "calc(100vh - 200px)" }}>
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
-            <div className="pipeline-list-shell flex-1 flex flex-col gap-2 overflow-y-auto min-w-0">
+            <div className="pipeline-list-shell mx-4 mb-4 flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto sm:mx-6">
+              <div className="pipeline-list-columns">
+                <div className="col-span-5">Company</div>
+                <div className="col-span-4 hidden md:block">Signal</div>
+                <div className="col-span-1 text-center">Score</div>
+                <div className="col-span-2 text-right">Tier</div>
+              </div>
               {(loadingLeads || serverSearchLoading) && filtered.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-100 px-6 py-12 text-center">
-                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-400" />
-                  <p className="mt-3 text-sm text-gray-400">
+                <div className="mx-1 mb-2 rounded-xl border border-dashed border-stone-400 bg-stone-100/80 px-4 py-8 text-center">
+                  <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600" />
+                  <p className="mt-3 text-sm font-medium text-stone-700">
                     {serverSearchLoading ? `Searching for "${activeSearchQuery}"…` : "Loading sales pipeline…"}
                   </p>
                 </div>
@@ -1968,10 +1975,10 @@ export default function Pipeline() {
                 return (
                   <div key={stage}>
                     {/* Stage header row */}
-                    <div className="flex items-center gap-2 px-3 py-2 mb-1">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
+                    <div className="pipeline-tier-header">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
                       <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage)}</span>
-                      <span className="text-[10px] text-gray-400 ml-0.5">— {stageDesc(stage)}</span>
+                      <span className="ml-0.5 text-[10px] font-medium text-stone-600">— {stageDesc(stage)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -1993,7 +2000,8 @@ export default function Pipeline() {
                             <button
                               key={deal.id}
                               onClick={() => setSelectedId(deal.id)}
-                              className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all group ${dealRowSurface(isSelected)}`}
+                              className={`group w-full rounded-xl text-left flex items-center gap-3 px-3 py-3 transition-all ${dealRowSurface(isSelected)}`}
+                              style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
@@ -2026,7 +2034,7 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-gray-500 truncate">
+                                <p className="truncate text-[11px] text-stone-700">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
                                 </p>
                               </div>
@@ -2069,10 +2077,10 @@ export default function Pipeline() {
                 const meta = USER_BUCKET_META[bucket];
                 return (
                   <div key={bucket}>
-                    <div className="flex items-center gap-2 px-3 py-2 mb-1">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
+                    <div className="pipeline-tier-header">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
                       <span className="text-xs font-bold" style={{ color: meta.color }}>{bucket}</span>
-                      <span className="text-[10px] text-gray-400 ml-0.5">— {meta.desc}</span>
+                      <span className="ml-0.5 text-[10px] font-medium text-stone-600">— {meta.desc}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}
@@ -2098,7 +2106,8 @@ export default function Pipeline() {
                               key={deal.id}
                               type="button"
                               onClick={() => setSelectedId(deal.id)}
-                              className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl border transition-all group ${dealRowSurface(isSelected)}`}
+                              className={`group w-full rounded-xl text-left flex items-center gap-3 px-3 py-3 transition-all ${dealRowSurface(isSelected)}`}
+                              style={{ borderLeftColor: dealTierColor(deal) }}
                             >
                               <div
                                 className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
@@ -2129,7 +2138,7 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-gray-500 truncate">
+                                <p className="truncate text-[11px] text-stone-700">
                                   {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
                                 </p>
                               </div>
@@ -2158,7 +2167,7 @@ export default function Pipeline() {
 
             {/* RIGHT: selected lead detail */}
             <div
-              className="w-[380px] xl:w-[420px] shrink-0 rounded-2xl border border-stone-300 bg-stone-50 shadow-lg overflow-hidden flex flex-col h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] sticky top-20"
+              className="pipeline-detail-shell mx-4 mb-4 flex h-[calc(100vh-100px)] max-h-[calc(100vh-100px)] w-full shrink-0 flex-col overflow-hidden lg:mx-0 lg:mr-6 lg:w-[400px] xl:w-[420px] lg:sticky lg:top-20 lg:border-l lg:border-stone-300 lg:rounded-none lg:rounded-r-2xl lg:shadow-none"
             >
               {isAdmin && (
               <ScoutActionBar
@@ -2174,24 +2183,24 @@ export default function Pipeline() {
               {selected ? (
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                   {/* Detail header */}
-                  <div className="shrink-0 px-4 py-3 border-b border-gray-100">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="pipeline-detail-header">
+                    <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-base font-bold text-gray-900 mb-0.5" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        <p className="mb-1 font-display text-lg font-bold text-white">
                           {selected.company}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                        <div className="flex items-center gap-2 text-[11px] text-slate-300">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
-                          <span className="text-gray-300">·</span>
+                          <span className="text-slate-500">·</span>
                           {selected.industry}
                         </div>
                       </div>
                       <div
-                        className="h-10 w-10 rounded-full border flex items-center justify-center shrink-0"
-                        style={{ borderColor: dealTierColor(selected), background: `${dealTierColor(selected)}12` }}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-white/10"
+                        style={{ boxShadow: `0 0 0 2px ${dealTierColor(selected)}55` }}
                       >
-                        <span className="font-mono text-sm font-bold" style={{ color: dealTierColor(selected), fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span className="font-mono text-sm font-bold text-white" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                           {selected.score}
                         </span>
                       </div>
@@ -2228,7 +2237,7 @@ export default function Pipeline() {
 
                   <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col">
                   {/* Signal block */}
-                  <div className="shrink-0 px-4 py-2 border-b border-gray-100">
+                  <div className="pipeline-detail-section">
                     {!isAdmin && (() => {
                       const verdict = scoutVerdictForDeal(selected);
                       return (
@@ -2264,7 +2273,7 @@ export default function Pipeline() {
                     )}
                   </div>
                   {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
-                    <div className="shrink-0 px-4 py-2 border-b border-gray-100">
+                    <div className="pipeline-detail-section-muted">
                       <button
                         type="button"
                         onClick={() => setIntelligenceOpen((open) => !open)}
@@ -2677,9 +2686,9 @@ export default function Pipeline() {
                   )}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                  <Target className="h-8 w-8 text-gray-300 mb-3" />
-                  <p className="text-sm text-gray-400">
+                <div className="flex flex-1 flex-col items-center justify-center bg-stone-50 p-8 text-center">
+                  <Target className="mb-3 h-10 w-10 text-stone-400" />
+                  <p className="text-sm font-medium text-stone-700">
                     {pendingDeepLink && deepLinkLoadFailed
                       ? "Network interrupted while loading this lead."
                       : pendingDeepLink
@@ -2702,6 +2711,7 @@ export default function Pipeline() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
       </main>

@@ -148,8 +148,8 @@ export default function Home() {
               </div>
 
               <h1 className="hero-display font-bold text-gray-900 mb-5 sm:mb-6">
-                Close Robot Deals{" "}
-                <span className="text-emerald-600">Before the RFP Drops</span>
+                Find Customers Ready for
+                <span className="text-emerald-600">… Robots.</span>
               </h1>
 
               <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 max-w-lg">
