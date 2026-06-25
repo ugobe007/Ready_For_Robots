@@ -636,7 +636,79 @@ function dealToShareLead(deal: Deal) {
     share_summary: deal.shareSummary || deal.signal,
     share_blurb: deal.shareBlurb,
     signal_type: deal.signalType,
+    pipeline_action: deal.pipelineAction,
+    robot_types_needed: robotTypesForDeal(deal),
   };
+}
+
+function robotTypesForDeal(deal: Deal): string[] {
+  const fromApi = (deal.robotTypesNeeded || []).filter(Boolean);
+  if (fromApi.length) return fromApi;
+  const highlights = deal.leadHighlights;
+  const fallback = [
+    ...(highlights?.robot_categories || []),
+    ...(highlights?.application_areas || []),
+  ].filter(Boolean) as string[];
+  return fallback;
+}
+
+function robotPriorityForDeal(deal: Deal): string | null {
+  const action = cleanAndClampText(deal.pipelineAction, 480);
+  if (action) return action;
+  const humanoid = deal.humanoidPilotAction || deal.humanoidPilotLabel;
+  if (humanoid) return cleanAndClampText(String(humanoid), 480);
+  return null;
+}
+
+function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
+  const priorityLine = robotPriorityForDeal(deal);
+  const robotTypes = robotTypesForDeal(deal);
+  const hasHumanoid =
+    deal.humanoidPilotTier &&
+    ["ACTIVE_PILOT", "PILOT_INTENT"].includes(String(deal.humanoidPilotTier));
+
+  if (!priorityLine && robotTypes.length === 0 && !hasHumanoid) return null;
+
+  const priorityPrefix = priorityLine?.split(":")[0]?.trim();
+  const priorityBody =
+    priorityLine && priorityLine.includes(":")
+      ? priorityLine.slice(priorityLine.indexOf(":") + 1).trim()
+      : priorityLine;
+
+  return (
+    <div className="pipeline-detail-section">
+      <p className={`${panelSectionLabel} mb-1.5`}>Robot priority</p>
+      {priorityLine && (
+        <p className="text-[12px] leading-relaxed text-gray-800">
+          {priorityPrefix && priorityBody ? (
+            <>
+              <span className="font-bold text-emerald-800">{priorityPrefix}:</span> {priorityBody}
+            </>
+          ) : (
+            priorityLine
+          )}
+        </p>
+      )}
+      {robotTypes.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {robotTypes.map((type) => (
+            <span
+              key={type}
+              className="pipeline-robot-type-chip"
+            >
+              {type}
+            </span>
+          ))}
+        </div>
+      )}
+      {hasHumanoid && (
+        <p className="mt-2 text-[11px] text-emerald-800">
+          <span className="font-semibold">Humanoid signal:</span>{" "}
+          {cleanAndClampText(deal.humanoidPilotLabel || "Active pilot intent", 120)}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function Pipeline() {
@@ -2386,6 +2458,8 @@ export default function Pipeline() {
                     )}
                   </div>
 
+                  <PipelineRobotPriorityPanel deal={selected} />
+
                   <div className="pipeline-detail-section-muted">
                     <LeadShareBar panel lead={dealToShareLead(selected)} />
                   </div>
@@ -2442,12 +2516,6 @@ export default function Pipeline() {
                                 selected.notes || selected.shareSummary,
                                 panelPlan === "anonymous" ? 240 : 360,
                               )}
-                            </p>
-                          )}
-                          {selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0 && (
-                            <p className="text-[11px] leading-relaxed text-gray-600">
-                              <span className="font-semibold text-gray-900/90">Robot fit: </span>
-                              {selected.robotTypesNeeded.join(" · ")}
                             </p>
                           )}
                           {showFullPanel && (selected.leadHighlights?.agent_enrichment?.rich_facts || []).length > 0 && (

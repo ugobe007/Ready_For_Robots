@@ -16,8 +16,19 @@ export type LeadShareInput = {
   share_summary?: string | null;
   share_blurb?: string | null;
   signal_type?: string | null;
+  pipeline_action?: string | null;
+  robot_types_needed?: string[];
   signals?: Array<{ signal_label?: string; signal_type?: string }>;
 };
+
+function robotShareLines(lead: LeadShareInput): string[] {
+  const lines: string[] = [];
+  const action = (lead.pipeline_action || "").trim();
+  if (action) lines.push(action);
+  const robots = (lead.robot_types_needed || []).filter(Boolean);
+  if (robots.length) lines.push(`Robots needed: ${robots.join(" · ")}`);
+  return lines;
+}
 
 export function buildLeadSharePost(lead: LeadShareInput): { tweetText: string; shareUrl: string; fullSummary: string } {
   const name = lead.company_name || "Sales lead";
@@ -40,12 +51,19 @@ export function buildLeadSharePost(lead: LeadShareInput): { tweetText: string; s
       : body.slice(0, Math.max(30, maxBody - 1)).trim() + "…";
   const tweetText = trimmed ? `${headline}\n\n${trimmed}` : headline;
   const shareUrl = `${SITE_URL}/pipeline${lead.id != null ? `?lead=${lead.id}` : ""}`;
-  const fullSummary =
-    lead.share_summary ||
-    lead.share_blurb ||
-    `${lead.company_name || "Company"} — automation signals · Ready For Robots`;
+  const robotLines = robotShareLines(lead);
+  const tweetWithRobots =
+    robotLines.length > 0
+      ? `${tweetText}\n\n${robotLines.join("\n")}`.slice(0, 280)
+      : tweetText;
+  const fullSummary = [
+    lead.share_summary || lead.share_blurb || `${lead.company_name || "Company"} — automation signals · Ready For Robots`,
+    ...robotLines,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
-  return { tweetText, shareUrl, fullSummary };
+  return { tweetText: tweetWithRobots, shareUrl, fullSummary };
 }
 
 type Props = {
