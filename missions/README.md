@@ -32,11 +32,12 @@ Required secrets for CI: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`.
 
 ### Intelligence loop (start here)
 
-1. **Observe** — `python3 scripts/harness_snapshot.py` (includes `intelligence` slice)
-2. **Orient** — read `docs/market_thesis.md` + snapshot deltas
-3. **Research mission** — FrictionMiner / MarketIntel → update thesis + backlog
-4. **Build mission** — LeadQuality / ProductSurface / Deploy → code + deploy
-5. **Notify** — `harness_notify.py` (email if Resend configured)
+1. **Orient on PMF** — read `docs/product_market_fit.md` (automated sales pipeline for robot companies)
+2. **Observe** — `python3 scripts/harness_snapshot.py` (includes `intelligence` slice)
+3. **Orient** — read `docs/market_thesis.md` + snapshot deltas
+4. **Research mission** — FrictionMiner / MarketIntel → update thesis + backlog
+5. **Build mission** — LeadQuality / ProductSurface / Deploy → code + deploy (prefer conversion/activation unless P0 junk)
+6. **Notify** — `harness_notify.py` (email if Resend configured)
 
 ## Mission types
 
@@ -102,6 +103,7 @@ What this mission must not touch.
 
 | Slug | Agent | Type | Notes |
 |------|-------|------|-------|
+| `2026-06-16-pmf-conversion-focus` | Orchestrator → ProductSurface | build | **Directive** — PMF docs + next conversion/activation build |
 | `2026-06-23-friction-baseline` | FrictionMiner | research | **Done** — thesis + backlog from sweep reports |
 | `2026-06-23-snapshot-db-telemetry` | PipelineHealth | build | **Done** — `harness_env.py`, DB telemetry in snapshot |
 | `buyer-intent-gate-triage` | LeadQuality | build | **Done** — assess/stamp/triage; dry-run ~55% no-intent |

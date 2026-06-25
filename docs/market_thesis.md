@@ -2,19 +2,21 @@
 
 Living document for the agent harness **intelligence loop**. Updated by research missions (`MarketIntel`, `FrictionMiner`, `ProductThesis`). Execution missions must align with active bets unless fixing a P0 blocker (empty pipeline, broken deploy).
 
-**Last updated:** 2026-06-23 (harness re-rank + ingest OEM PR gate + prod cache refresh)
+**Last updated:** 2026-06-16 (PMF focus: automated sales pipeline for robot companies)
 
 ---
 
 ## What we sell
 
-**Time-to-first-meeting on verified robot buyer intent** — not raw news, not vendor PR, not headline scrapes dressed as companies.
+**The automated sales pipeline for robot companies** — OEMs and integrators sign up to automate their sales funnel on verified buyer intent.
 
-Product shape (from `docs/readyforrobots-ux.md`):
+They run deals in our **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**. We win on intent + autonomy, not dashboard parity with Salesforce.
+
+Product shape (from `docs/readyforrobots-ux.md` and `docs/product_market_fit.md`):
 
 **Detect → Qualify → Engage → Advance**
 
-Users want deals moving forward without doing the work. The control surface is autonomy + next actions, not another dashboard.
+Hero narrative: **“Automate Your Sales Pipeline.”** Users want deals moving forward without doing the work — SIGNAL-ranked leads, pipeline actions, outreach, and stage advance — not another news feed.
 
 ---
 
@@ -66,11 +68,12 @@ Active bets the Orchestrator should prefer when choosing build missions:
 
 | # | Bet | Why now | Success signal |
 |---|-----|---------|----------------|
-| 1 | **Clean buyer identity layer** | Everything downstream is wasted on headline junk | ↓ junk reasons in snapshot; ↑ pipeline rows passing rectification |
-| 2 | **Live actionable surface** | Hero ticker + pipeline prove "real leads exist" | Rep can name company + robot type in <60s from home |
-| 3 | **Autonomous next actions** | UX north star is Advance, not browse | Activate CTR, time-to-first-outreach (when instrumented) |
-| 4 | **Vertical-aware copy** | Hospitality vs warehouse pain differs | Tier blurbs match industry; A/B on SIGNAL activation |
-| 5 | **Humanoid readiness lane** | Category inflection; we have catalog asset | Distinct ranking/copy for humanoid pilot language |
+| 1 | **PMF: robot-company signup → activated pipeline** | Category is sales automation for OEMs, not news | ↑ signup complete; ↑ first save; HubSpot connect attempts |
+| 2 | **Clean buyer identity layer** | Everything downstream is wasted on headline junk | ↓ junk reasons in snapshot; ↑ pipeline rows passing rectification |
+| 3 | **Live actionable surface** | Hero ticker + pipeline prove "real leads exist" | Rep can name company + robot type in <60s from home |
+| 4 | **Autonomous next actions** | UX north star is Advance, not browse | Activate CTR, time-to-first-outreach (when instrumented) |
+| 5 | **Vertical-aware copy** | Hospitality vs warehouse pain differs | Tier blurbs match industry; A/B on SIGNAL activation |
+| 6 | **Humanoid readiness lane** | Category inflection; we have catalog asset | Distinct ranking/copy for humanoid pilot language |
 
 ---
 
@@ -126,9 +129,9 @@ Re-ranked 2026-06-23 from friction baseline. Ranks now follow **volume × north-
 | ~~2~~ | ~~`apollo-contact-hot-warm`~~ | LeadQuality | ✅ **Done 2026-06-23** — `--priority-tier HOT/WARM`; Apollo key present but **403** on free plan search API. |
 | ~~2~~ | ~~`crm-descriptors-backfill`~~ | LeadQuality | ✅ **Done 2026-06-23** — robot-fit fallback in CRM extractor; **4** fills; gap **30→28**. |
 
-### Conversion funnel (browse → signup) — standing ProductSurface directive
+### Conversion funnel (browse → signup → CRM) — standing ProductSurface directive
 
-See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents must tighten CTA continuity, post-auth landing, and upgrade moments every mission.
+See [product_market_fit.md](product_market_fit.md) and [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents must drive robot OEM/integrator signup → funnel automation → native CRM or HubSpot every mission.
 
 | Rank | Mission slug | Agent | Rationale |
 |------|--------------|-------|-----------|
@@ -148,15 +151,16 @@ See [conversion_agent_challenges.md](conversion_agent_challenges.md). Agents mus
 
 | Frequency | Action |
 |-----------|--------|
-| **Each mission** | Read snapshot `intelligence`; update backlog ranks if friction shifted; **ProductSurface:** tighten conversion (CTA continuity, proof density, friction on signup path) |
+| **Each mission** | Read `docs/product_market_fit.md` + snapshot `intelligence`; update backlog ranks if friction shifted; **ProductSurface:** conversion + activation (CRM/HubSpot paths) |
 | **Weekly** | `MarketIntel` mission — external scan → update Emerging + Puck sections |
 | **Monthly** | Kill one bet, promote one from backlog |
-| **Quarterly** | Puck review — still aligned with Detect→Advance? |
+| **Quarterly** | Puck review — still aligned with PMF (automated sales pipeline for robot companies) and Detect→Advance? |
 
 ---
 
 ## Related docs
 
+- [product_market_fit.md](product_market_fit.md)
 - [lead_quality_north_star.md](lead_quality_north_star.md)
 - [readyforrobots-ux.md](readyforrobots-ux.md)
 - [pipeline_process_and_scripts.md](pipeline_process_and_scripts.md)

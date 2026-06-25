@@ -50,17 +50,29 @@ def _market_thesis_text() -> str:
     return thesis.read_text(encoding="utf-8")
 
 
+def _product_market_fit_text() -> str:
+    pmf = _root / "docs" / "product_market_fit.md"
+    if not pmf.is_file():
+        return "(no PMF doc — see docs/product_market_fit.md)"
+    return pmf.read_text(encoding="utf-8")
+
+
 def _build_prompt(mission_dir: Path) -> str:
     brief = _load_mission_brief(mission_dir)
     snapshot = _latest_snapshot_text()
     thesis = _market_thesis_text()
+    pmf = _product_market_fit_text()
     return f"""You are the Ready For Robots Orchestrator. Follow AGENTS.md and CLAUDE.md.
 
 ## Mission brief
 
 {brief}
 
-## Market thesis (read before orienting)
+## Product / market fit (primary — read before orienting)
+
+{pmf}
+
+## Market thesis
 
 {thesis}
 
@@ -73,7 +85,7 @@ def _build_prompt(mission_dir: Path) -> str:
 ## Instructions
 
 1. Run `python3 scripts/harness_snapshot.py` if snapshot is missing or stale (>6h pipeline cache).
-2. Orient against north star (names/events first) and `docs/market_thesis.md` backlog.
+2. Orient against `docs/product_market_fit.md` first, then north star (names/events) and `docs/market_thesis.md` backlog.
 3. Execute this mission using the assigned subagent role from the brief.
 4. Run verification gates from `harness/gates.yaml` where applicable.
 5. **Autonomous mode:** commit, push, and deploy when the mission requires it — do not wait for human approval.

@@ -10,6 +10,21 @@ Continuously improve **ReadyForRobots** toward product success by running closed
 
 The harness operates **autonomously**: commit, push, deploy, and apply scripts when missions require it. The operator is **notified after changes**, not asked for approval before each step.
 
+## Product / market fit (primary focus)
+
+Read `docs/product_market_fit.md` before every mission. **All agents optimize toward this outcome:**
+
+> ReadyForRobots is the **automated sales pipeline for robot companies**. Customers sign up to **automate their sales funnel** (SIGNAL-ranked leads, outreach, deal advance). They run in the **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**.
+
+| Lens | Question every mission must answer |
+|------|-----------------------------------|
+| **ICP** | Does this help a robot OEM/integrator sell more robots? |
+| **Activation** | Does this move browse → signup → first saved lead → pipeline motion? |
+| **CRM path** | Does this work for native CRM *and* HubSpot-connected teams? |
+| **Trust** | Does the pipeline surface defensible buyer intent (not junk/news)? |
+
+Lead-quality north star (below) is **infrastructure for PMF** — fix junk before ranking tweaks, but do not confuse data cleanup with product success. ProductSurface missions default to the conversion funnel in `docs/conversion_agent_challenges.md`.
+
 ## North star (strict priority)
 
 From `docs/lead_quality_north_star.md` — optimize in this order:
@@ -36,7 +51,7 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 
 | Agent | Scope | Primary docs |
 |-------|--------|--------------|
-| **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot |
+| **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `docs/product_market_fit.md`, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot |
 | **MarketIntel** | External scan: earnings, trade press, competitor moves, category trends | `docs/market_thesis.md` (Emerging + Puck sections) |
 | **FrictionMiner** | Internal friction: junk patterns, gaps, quarantine, rectification failures | Snapshot `intelligence`, `docs/lead_quality_north_star.md` |
 | **ProductThesis** | Synthesize intel + friction → update thesis backlog ranks | `docs/market_thesis.md` |
@@ -157,7 +172,9 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 
 ## Related docs
 
+- [docs/product_market_fit.md](docs/product_market_fit.md)
 - [docs/market_thesis.md](docs/market_thesis.md)
+- [docs/conversion_agent_challenges.md](docs/conversion_agent_challenges.md)
 - [docs/lead_quality_north_star.md](docs/lead_quality_north_star.md)
 - [docs/pipeline_process_and_scripts.md](docs/pipeline_process_and_scripts.md)
 - [docs/agent-spec.md](docs/agent-spec.md) — CRM copilot (separate from harness Orchestrator)

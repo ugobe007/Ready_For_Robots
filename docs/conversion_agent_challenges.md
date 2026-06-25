@@ -1,6 +1,12 @@
 # Conversion agent challenges
 
-Standing directive for **ProductSurface**, **FrictionMiner**, and **PipelineHealth** agents: every mission should ask *“Does this reduce friction from casual browse → signup → first saved lead?”*
+Standing directive for **ProductSurface**, **FrictionMiner**, and **PipelineHealth** agents.
+
+**PMF context:** ReadyForRobots is the **automated sales pipeline for robot companies**. See [product_market_fit.md](product_market_fit.md). Every mission should ask:
+
+> *Does this help a robot OEM/integrator sign up, automate their funnel, and get value in native CRM or HubSpot?*
+
+Funnel question: *Does this reduce friction from casual browse → signup → first saved lead → pipeline motion?*
 
 ## North-star funnel
 
@@ -62,6 +68,7 @@ Measure weekly: anonymous pipeline views, signup starts, signup completes, first
 
 ## Related
 
+- [product_market_fit.md](product_market_fit.md) — canonical PMF statement
 - [market_thesis.md](market_thesis.md) — ranked backlog
 - [readyforrobots-ux.md](readyforrobots-ux.md) — design system
 - `app/services/plan_entitlements.py` — source of truth for gates
