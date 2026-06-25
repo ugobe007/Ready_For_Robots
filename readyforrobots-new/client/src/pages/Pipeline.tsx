@@ -574,12 +574,68 @@ function dealRowSurface(isSelected: boolean) {
   return isSelected ? "pipeline-deal-row pipeline-deal-row-selected" : "pipeline-deal-row pipeline-deal-row-hover";
 }
 
+function buildRotatedPipelineDeals(source: Deal[], offset: number): Deal[] {
+  const out: Deal[] = [];
+  for (const [bucketIndex, bucket] of USER_BUCKETS.entries()) {
+    const pool = source.filter((d) => userBucketForDeal(d) === bucket);
+    const cap = USER_BUCKET_META[bucket].slotCap;
+    if (pool.length <= cap) {
+      out.push(...pool);
+      continue;
+    }
+    const start = (offset + bucketIndex * 7) % pool.length;
+    for (let i = 0; i < cap; i += 1) {
+      out.push(pool[(start + i) % pool.length]);
+    }
+  }
+  return out;
+}
+
+function pickRotatingWindow(source: Deal[], limit: number, offset: number): Deal[] {
+  if (source.length <= limit) return source;
+  const start = offset % source.length;
+  const out: Deal[] = [];
+  for (let i = 0; i < limit; i += 1) {
+    out.push(source[(start + i) % source.length]);
+  }
+  return out;
+}
+
+function bucketPoolCanRotate(source: Deal[]): boolean {
+  return USER_BUCKETS.some((bucket) => {
+    const count = source.filter((d) => userBucketForDeal(d) === bucket).length;
+    return count > USER_BUCKET_META[bucket].slotCap;
+  });
+}
+
+function PipelineScoreBadge({
+  score,
+  deal,
+  size = "sm",
+}: {
+  score: number;
+  deal?: Pick<Deal, "score" | "priorityTier">;
+  size?: "sm" | "lg";
+}) {
+  const accent = deal ? dealTierColor(deal) : scoreColor(score);
+  return (
+    <div
+      className={size === "lg" ? "pipeline-score-badge pipeline-score-badge-lg" : "pipeline-score-badge"}
+      style={{ borderColor: accent }}
+    >
+      <span>{score}</span>
+    </div>
+  );
+}
+
 export default function Pipeline() {
   const { session } = useAuth();
   const search = useSearch();
   const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [rotationPool, setRotationPool] = useState<Deal[]>([]);
+  const [rotateOffset, setRotateOffset] = useState(0);
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [marketSnippet, setMarketSnippet] = useState<MarketSnippet>(DEFAULT_MARKET_SNIPPET);
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
@@ -829,6 +885,54 @@ export default function Pipeline() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Extended lead pool for tier-slot rotation (anonymous bucket view).
+  useEffect(() => {
+    let cancelled = false;
+    const base = getApiBase();
+    const headers = session?.access_token ? authHeader(session.access_token) : undefined;
+    void fetchPipelineLeadsFallback(base, headers).then((rows) => {
+      if (cancelled || rows.length === 0) return;
+      setRotationPool(mapPipelineRows(rows, crmStageByCompanyId));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token, crmStageByCompanyId]);
+
+  // Keep pipeline feed fresh — server rotation slot advances on the cache clock.
+  useEffect(() => {
+    const base = getApiBase();
+    let cancelled = false;
+    const refresh = () => {
+      const token = session?.access_token;
+      const headers = token ? authHeader(token) : undefined;
+      void fetchWithTimeoutRetry(
+        `${base}/api/leads/pipeline`,
+        liveFetchInit({ headers }),
+        PIPELINE_TIMEOUT,
+        { retries: 1, retryDelayMs: 800 },
+      )
+        .then(async (res) => {
+          if (cancelled || !res.ok) return;
+          const payload = (await res.json()) as PipelineFeedPayload;
+          writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
+          applyPipelineFeed(payload, {
+            setDeals,
+            setSelectedId,
+            setSummary,
+            setEntitlements,
+            setMarketSnippet,
+          }, crmStageByCompanyId);
+        })
+        .catch(() => undefined);
+    };
+    const timer = window.setInterval(refresh, 2 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [session?.access_token, crmStageByCompanyId]);
 
   useEffect(() => {
     setDeepLinkLoadFailed(false);
@@ -1083,15 +1187,39 @@ export default function Pipeline() {
   );
   const activeSearchQuery = industryQuery.trim() || (filter !== "All" ? filter : "");
   const hasActiveSearch = Boolean(activeSearchQuery);
+  const pipelineSource = rotationPool.length > deals.length ? rotationPool : deals;
+  const previewLimit = entitlements?.pipeline_limit ?? 12;
+  const rotationSource = useMemo(() => {
+    if (hasActiveSearch || showKanban) return pipelineSource;
+    if (panelPlan === "anonymous" && pipelineSource.length > previewLimit) {
+      return pickRotatingWindow(pipelineSource, previewLimit, rotateOffset);
+    }
+    return pipelineSource;
+  }, [hasActiveSearch, showKanban, panelPlan, pipelineSource, previewLimit, rotateOffset]);
+  const rotatedDeals = useMemo(() => {
+    if (hasActiveSearch || showKanban) return null;
+    return buildRotatedPipelineDeals(rotationSource, rotateOffset);
+  }, [hasActiveSearch, showKanban, rotationSource, rotateOffset]);
+  const listDeals = rotatedDeals ?? deals;
   const clientSearchMatches = useMemo(
-    () => (hasActiveSearch ? deals.filter((d) => dealMatchesSearchQuery(d, activeSearchQuery)) : deals),
-    [deals, hasActiveSearch, activeSearchQuery],
+    () => (hasActiveSearch ? listDeals.filter((d) => dealMatchesSearchQuery(d, activeSearchQuery)) : listDeals),
+    [listDeals, hasActiveSearch, activeSearchQuery],
   );
   const filtered = useMemo(() => {
-    if (!hasActiveSearch) return deals;
+    if (!hasActiveSearch) return listDeals;
     if (serverSearchDeals.length > 0) return serverSearchDeals;
     return clientSearchMatches;
-  }, [deals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
+  }, [listDeals, hasActiveSearch, serverSearchDeals, clientSearchMatches]);
+
+  useEffect(() => {
+    if (hasActiveSearch || showKanban) return;
+    const canRotate =
+      bucketPoolCanRotate(rotationSource) ||
+      (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
+    if (!canRotate) return;
+    const timer = window.setInterval(() => setRotateOffset((offset) => offset + 1), 4500);
+    return () => window.clearInterval(timer);
+  }, [hasActiveSearch, showKanban, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
@@ -2003,14 +2131,7 @@ export default function Pipeline() {
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
-                              <div
-                                className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
-                                style={{ borderColor: scoreColor(deal.score), background: `${scoreColor(deal.score)}10` }}
-                              >
-                                <span className="font-mono text-[10px] font-bold" style={{ color: scoreColor(deal.score), fontFamily: "'JetBrains Mono', monospace" }}>
-                                  {deal.score}
-                                </span>
-                              </div>
+                              <PipelineScoreBadge score={deal.score} deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -2109,14 +2230,7 @@ export default function Pipeline() {
                               className={`group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${dealRowSurface(isSelected)}`}
                               style={{ borderLeftColor: dealTierColor(deal) }}
                             >
-                              <div
-                                className="h-7 w-7 rounded-full border flex items-center justify-center shrink-0"
-                                style={{ borderColor: dealTierColor(deal), background: `${dealTierColor(deal)}10` }}
-                              >
-                                <span className="font-mono text-[10px] font-bold" style={{ color: dealTierColor(deal), fontFamily: "'JetBrains Mono', monospace" }}>
-                                  {deal.score}
-                                </span>
-                              </div>
+                              <PipelineScoreBadge score={deal.score} deal={deal} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
@@ -2184,26 +2298,21 @@ export default function Pipeline() {
                 <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
                   {/* Detail header */}
                   <div className="pipeline-detail-header">
+                    <div className="pipeline-detail-header-inner">
                     <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
-                        <p className="mb-0.5 font-display text-base font-semibold text-gray-900">
+                        <p className="sb-kicker mb-0.5 text-emerald-800">CRM · Lead workspace</p>
+                        <p className="font-display text-base font-semibold text-gray-900">
                           {selected.company}
                         </p>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-600">
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-600">
                           <MapPin className="h-3 w-3" />
                           {selected.location}
                           <span className="text-gray-400">·</span>
                           {selected.industry}
                         </div>
                       </div>
-                      <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 bg-white shadow-sm"
-                        style={{ borderColor: dealTierColor(selected), background: `${dealTierColor(selected)}14` }}
-                      >
-                        <span className="font-mono text-sm font-bold" style={{ color: dealTierColor(selected), fontFamily: "'JetBrains Mono', monospace" }}>
-                          {selected.score}
-                        </span>
-                      </div>
+                      <PipelineScoreBadge score={selected.score} deal={selected} size="lg" />
                     </div>
 
                     {/* Tier / stage badge + contact inline */}
@@ -2232,6 +2341,7 @@ export default function Pipeline() {
                           <span className="text-gray-600 font-medium">{selected.contact}</span> · {selected.contactTitle}
                         </span>
                       )}
+                    </div>
                     </div>
                   </div>
 
