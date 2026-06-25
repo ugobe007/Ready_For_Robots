@@ -242,39 +242,31 @@ export function MarketingBeforeAfter() {
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/robot-hiw-Yopt6ezNpbmPkaFHBTsEx6.webp";
 
   return (
-    <section className="py-20 bg-emerald-800 relative overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-25 pointer-events-none"
-        aria-hidden
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 15% 20%, rgba(255,255,255,0.2) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(0,0,0,0.2) 0%, transparent 40%)",
-        }}
-      />
+    <section className="before-after-section relative overflow-hidden">
       <div className="container relative">
         <div className="mb-14 max-w-2xl">
-          <p className="text-emerald-100 text-xs font-semibold uppercase tracking-[0.1em] mb-3">The Difference</p>
-          <h2 className="section-headline font-bold text-white">
+          <p className="section-eyebrow mb-3">The Difference</p>
+          <h2 className="section-headline font-bold text-gray-900">
             Before vs. After ReadyForRobots
           </h2>
         </div>
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-          <div className="overflow-hidden rounded-2xl border-2 border-red-200 bg-white shadow-md shadow-red-950/5">
-            <div className="relative h-40 sm:h-48">
+          <div className="before-after-panel-before">
+            <div className="relative h-40 sm:h-48 bg-white">
               <img
                 src={robotBefore}
                 alt="Industrial robot on a factory floor without buyer signal context"
-                className="h-full w-full object-cover grayscale contrast-90 opacity-80"
+                className="h-full w-full object-cover grayscale contrast-90 opacity-85"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
-              <div className="absolute bottom-3 left-4 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-                Blind outreach
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
             </div>
-            <div className="border-t border-red-100 bg-white p-8 pt-5">
+            <div className="before-after-panel-before-header">
+              <span className="before-after-badge-before">Blind outreach</span>
+            </div>
+            <div className="before-after-panel-before-body">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-7 h-7 bg-red-200 rounded-full flex items-center justify-center">
+                <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center">
                   <XCircle size={16} className="text-red-700" />
                 </div>
                 <span className="font-display font-bold text-red-800 uppercase text-xs tracking-widest">
@@ -283,7 +275,7 @@ export function MarketingBeforeAfter() {
               </div>
               <ul className="space-y-3">
                 {before.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-stone-800">
+                  <li key={item} className="flex items-start gap-3 text-sm text-gray-900">
                     <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
@@ -291,32 +283,32 @@ export function MarketingBeforeAfter() {
               </ul>
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-sky-100/80 to-sky-50 shadow-lg shadow-sky-950/10 ring-2 ring-sky-200/60">
-            <div className="relative h-40 sm:h-48">
+          <div className="before-after-panel-after">
+            <div className="relative h-40 sm:h-48 bg-sky-300">
               <img
                 src={robotAfter}
                 alt="Humanoid robot deployed with SIGNAL-driven buyer intelligence"
                 className="h-full w-full object-cover object-[center_20%]"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-sky-100 via-sky-50/40 to-transparent" />
-              <div className="absolute bottom-3 left-4 rounded-full bg-sky-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
-                Signal-matched buyers
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-sky-300 via-sky-200/40 to-transparent" />
             </div>
-            <div className="border-t border-sky-200 bg-sky-50/90 p-8 pt-5">
+            <div className="before-after-panel-after-header">
+              <span className="before-after-badge-after">Signal-matched buyers</span>
+            </div>
+            <div className="before-after-panel-after-body">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-7 h-7 bg-sky-100 rounded-full flex items-center justify-center">
-                  <CheckCircle size={16} className="text-sky-700" />
+                <div className="w-7 h-7 bg-sky-100 rounded-full flex items-center justify-center ring-1 ring-sky-400/50">
+                  <CheckCircle size={16} className="text-sky-800" />
                 </div>
-                <span className="font-display font-bold text-sky-900 uppercase text-xs tracking-widest">
+                <span className="font-display font-bold text-sky-950 uppercase text-xs tracking-widest">
                   With SIGNAL
                 </span>
               </div>
               <ul className="space-y-3">
                 {after.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-sky-950">
-                    <CheckCircle size={15} className="text-sky-600 flex-shrink-0 mt-0.5" />
+                    <CheckCircle size={15} className="text-sky-700 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
