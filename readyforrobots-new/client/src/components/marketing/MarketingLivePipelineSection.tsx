@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import { HeatBadge, LiveDot } from "@/components/marketing/primitives";
+import LeadShareBar from "@/components/LeadShareBar";
 import { formatStat } from "@/hooks/usePipelineStats";
 
 type LeadRow = {
@@ -168,7 +169,18 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                 <div className="col-span-2 text-center">
                   <span className="score-number text-2xl text-emerald-400">{score}</span>
                 </div>
-                <div className="col-span-2 flex items-center justify-end">
+                <div className="col-span-2 flex items-center justify-end gap-2">
+                  <LeadShareBar
+                    compact
+                    variant="dark"
+                    lead={{
+                      id: lead.id,
+                      company_name: lead.company_name,
+                      priority_tier: tier,
+                      share_summary: lead.share_summary,
+                      share_blurb: lead.core_need,
+                    }}
+                  />
                   <HeatBadge heat={tier} />
                 </div>
               </Link>

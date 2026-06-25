@@ -527,4 +527,8 @@
   .pipeline-detail-actions {
     @apply shrink-0 flex flex-wrap items-center gap-1.5 border-t border-gray-200 bg-gray-50 px-3 py-2;
   }
+
+  .pipeline-detail-share {
+    @apply rounded-md border border-emerald-200 bg-gradient-to-br from-emerald-50/90 to-white px-3 py-3;
+  }
 }

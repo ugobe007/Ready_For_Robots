@@ -628,6 +628,17 @@ function PipelineScoreBadge({
   );
 }
 
+function dealToShareLead(deal: Deal) {
+  return {
+    id: deal.id,
+    company_name: deal.company,
+    priority_tier: deal.priorityTier,
+    share_summary: deal.shareSummary || deal.signal,
+    share_blurb: deal.shareBlurb,
+    signal_type: deal.signalType,
+  };
+}
+
 export default function Pipeline() {
   const { session } = useAuth();
   const search = useSearch();
@@ -2161,16 +2172,7 @@ export default function Pipeline() {
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                <LeadShareBar
-                                  compact
-                                  lead={{
-                                    id: deal.id,
-                                    company_name: deal.company,
-                                    priority_tier: deal.priorityTier,
-                                    share_summary: deal.shareSummary,
-                                    share_blurb: deal.shareBlurb,
-                                  }}
-                                />
+                                <LeadShareBar compact lead={dealToShareLead(deal)} />
                                 {deal.stage === "Outreach Sent" && (
                                   <span title="Email sent"><Send className="h-3 w-3" style={{ color: "#34d399" }} /></span>
                                 )}
@@ -2257,7 +2259,8 @@ export default function Pipeline() {
                                 </p>
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <LeadShareBar compact lead={dealToShareLead(deal)} />
                                 <span
                                   className="hidden sm:inline text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
                                   style={{ color: deal.signalColor, background: `${deal.signalColor}12` }}
@@ -2382,6 +2385,11 @@ export default function Pipeline() {
                       </div>
                     )}
                   </div>
+
+                  <div className="pipeline-detail-section-muted">
+                    <LeadShareBar panel lead={dealToShareLead(selected)} />
+                  </div>
+
                   {(selected.notes || selected.shareSummary || selected.leadHighlights || (selected.robotTypesNeeded && selected.robotTypesNeeded.length > 0)) && (
                     <div className="pipeline-detail-section-muted">
                       <button
@@ -2455,17 +2463,6 @@ export default function Pipeline() {
                             <p className="text-[10px] leading-relaxed text-emerald-700">
                               Sign up free to unlock full SIGNAL research and connect to HubSpot.
                             </p>
-                          )}
-                          {panelPlan !== "anonymous" && (
-                            <LeadShareBar
-                              lead={{
-                                id: selected.id,
-                                company_name: selected.company,
-                                priority_tier: selected.priorityTier,
-                                share_summary: selected.shareSummary,
-                                share_blurb: selected.shareBlurb,
-                              }}
-                            />
                           )}
                         </div>
                       )}
