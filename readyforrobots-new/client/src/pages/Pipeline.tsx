@@ -1487,13 +1487,13 @@ export default function Pipeline() {
           <div className="pipeline-workspace">
             {/* ── Page header ── */}
             <div className="pipeline-page-header">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
-                  <p className="sb-kicker mb-0.5 text-emerald-700">SIGNAL · Sales intelligence</p>
+                  <p className="sb-kicker mb-0.5 text-emerald-800">SIGNAL · Sales intelligence</p>
                   <h1 className="font-display text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
                     {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
                   </h1>
-                  <p className="mt-1 max-w-xl text-xs leading-relaxed text-gray-600 sm:text-sm">
+                  <p className="mt-1 max-w-xl text-xs leading-relaxed text-gray-700 sm:text-sm">
                     {isAdmin
                       ? "Authoritative database counts up top. Cal outreach controls below."
                       : panelPlan === "anonymous"
