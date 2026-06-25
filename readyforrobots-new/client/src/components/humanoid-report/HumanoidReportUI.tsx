@@ -39,7 +39,7 @@ export function ReportSectionLabel({ children }: { children: ReactNode }) {
 
 type PanelProps = {
   children: ReactNode;
-  accent?: "purple" | "teal" | "none";
+  accent?: "purple" | "teal" | "emerald" | "none";
   className?: string;
 };
 
@@ -47,16 +47,23 @@ export function ReportPanel({ children, accent = "purple", className = "" }: Pan
   const borderLeft =
     accent === "teal"
       ? `3px solid ${RR.teal}`
-      : accent === "purple"
-        ? `3px solid ${RR.purple}`
-        : "3px solid transparent";
+      : accent === "emerald"
+        ? "3px solid #059669"
+        : accent === "purple"
+          ? `3px solid ${RR.purple}`
+          : "3px solid transparent";
+  const background =
+    accent === "emerald"
+      ? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 55%, #ecfdf5 100%)"
+      : RR.bgElevated;
+  const borderColor = accent === "emerald" ? "#a7f3d0" : RR.border;
   return (
     <div
       className={`rounded-lg border px-4 py-3.5 ${className}`}
       style={{
-        borderColor: RR.border,
+        borderColor,
         borderLeft,
-        background: RR.bgElevated,
+        background,
       }}
     >
       {children}

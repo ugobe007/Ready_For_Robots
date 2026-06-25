@@ -62,7 +62,7 @@ export default function HumanoidIndexSummaryIntro({
 
   return (
     <section aria-labelledby="index-summary-heading" className="mx-auto max-w-5xl px-4 pb-4">
-      <ReportPanel accent="purple" className="!px-4 !py-4">
+      <ReportPanel accent="emerald" className="!px-4 !py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <ReportKicker>Monthly report</ReportKicker>

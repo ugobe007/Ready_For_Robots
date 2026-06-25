@@ -341,12 +341,15 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
     };
   }, [open, detail, robot.model_slug]);
 
+  const cardBg = rank <= 3 ? "#f0fdf4" : rank % 2 === 0 ? "#f8fafc" : "#ffffff";
+  const cardBorder = open ? "rgba(5,150,105,0.35)" : rank <= 3 ? "#bbf7d0" : "#d1d5db";
+
   return (
     <div
-      className="rounded-xl border overflow-hidden transition-colors bg-white"
+      className="rounded-xl border overflow-hidden transition-colors shadow-sm"
       style={{
-        borderColor: open ? "rgba(5,150,105,0.35)" : "#e5e7eb",
-        background: open ? "rgba(5,150,105,0.04)" : "#ffffff",
+        borderColor: cardBorder,
+        background: open ? "rgba(5,150,105,0.04)" : cardBg,
       }}
     >
       <button
@@ -355,7 +358,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
         style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-gray-300">#{rank}</span>
+        <span className="text-xl font-black text-gray-900 tabular-nums">#{rank}</span>
         <RobotAvatar
           vendor={robot.vendor}
           name={robot.name}

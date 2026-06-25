@@ -259,7 +259,7 @@ export function MarketingBeforeAfter() {
           </h2>
         </div>
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-          <div className="overflow-hidden rounded-2xl border-2 border-red-300/70 bg-stone-200 shadow-inner shadow-stone-400/30">
+          <div className="overflow-hidden rounded-2xl border-2 border-red-200 bg-white shadow-md shadow-red-950/5">
             <div className="relative h-40 sm:h-48">
               <img
                 src={robotBefore}
@@ -267,12 +267,12 @@ export function MarketingBeforeAfter() {
                 className="h-full w-full object-cover grayscale contrast-90 opacity-80"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-300 via-stone-200/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
               <div className="absolute bottom-3 left-4 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
                 Blind outreach
               </div>
             </div>
-            <div className="p-8 pt-5">
+            <div className="border-t border-red-100 bg-white p-8 pt-5">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-7 h-7 bg-red-200 rounded-full flex items-center justify-center">
                   <XCircle size={16} className="text-red-700" />
@@ -291,7 +291,7 @@ export function MarketingBeforeAfter() {
               </ul>
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border-2 border-emerald-300 bg-white shadow-xl shadow-emerald-950/25 ring-4 ring-emerald-400/30">
+          <div className="overflow-hidden rounded-2xl border-2 border-sky-300 bg-gradient-to-br from-sky-50 via-sky-100/80 to-sky-50 shadow-lg shadow-sky-950/10 ring-2 ring-sky-200/60">
             <div className="relative h-40 sm:h-48">
               <img
                 src={robotAfter}
@@ -299,24 +299,24 @@ export function MarketingBeforeAfter() {
                 className="h-full w-full object-cover object-[center_20%]"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
-              <div className="absolute bottom-3 left-4 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-t from-sky-100 via-sky-50/40 to-transparent" />
+              <div className="absolute bottom-3 left-4 rounded-full bg-sky-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
                 Signal-matched buyers
               </div>
             </div>
-            <div className="p-8 pt-5">
+            <div className="border-t border-sky-200 bg-sky-50/90 p-8 pt-5">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <CheckCircle size={16} className="text-emerald-700" />
+                <div className="w-7 h-7 bg-sky-100 rounded-full flex items-center justify-center">
+                  <CheckCircle size={16} className="text-sky-700" />
                 </div>
-                <span className="font-display font-bold text-emerald-800 uppercase text-xs tracking-widest">
+                <span className="font-display font-bold text-sky-900 uppercase text-xs tracking-widest">
                   With SIGNAL
                 </span>
               </div>
               <ul className="space-y-3">
                 {after.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-gray-800">
-                    <CheckCircle size={15} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <li key={item} className="flex items-start gap-3 text-sm text-sky-950">
+                    <CheckCircle size={15} className="text-sky-600 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
@@ -499,9 +499,11 @@ export function MarketingBenchmark({ benchReport }: { benchReport: BenchReport |
               {robots.map((robot, i) => (
                 <div
                   key={robot.name}
-                  className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-slate-50 transition-colors"
+                  className={`flex items-center gap-4 px-6 py-4 border-b border-gray-100 last:border-0 transition-colors ${
+                    i % 2 === 0 ? "bg-white hover:bg-slate-50" : "bg-slate-50/80 hover:bg-slate-100/80"
+                  }`}
                 >
-                  <span className="font-mono-data text-gray-400 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
+                  <span className="font-mono-data text-gray-900 text-sm font-bold w-5 text-right flex-shrink-0">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-display font-semibold text-gray-900 text-sm truncate">{robot.name}</div>
                     <div className="text-gray-500 text-xs">{robot.vendor}</div>
