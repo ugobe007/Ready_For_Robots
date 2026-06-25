@@ -27,6 +27,7 @@ This mission is a **directive mission**: update docs and pick the next highest-i
 | 2 | `signup-robot-company-copy` | Hero/subcopy should speak to OEMs/integrators automating sales, not generic “robotics” | Home + signup pages mention automate sales funnel + CRM choice |
 | 3 | `pipeline-first-workspace` | Post-auth workspace should feel like a running sales machine | `/pipeline` default landing shows kanban + next actions + save CTA above settings |
 | 4 | `crm-native-vs-hubspot-parity` | Both CRM paths visible in nav/onboarding | Clear “Use our CRM” vs “Connect HubSpot” fork without dead ends |
+| 5 | `competitive-proof-on-pipeline` | Users compare to Explee/data tools | Every lead row shows pipeline_action + robot types; pricing FAQ answers comparison |
 
 ## Context
 

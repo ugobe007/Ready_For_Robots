@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils } from "lucide-react";
 import { Link } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
-import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
+import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import { HeatBadge, LiveDot } from "@/components/marketing/primitives";
 import { formatStat } from "@/hooks/usePipelineStats";
 
@@ -16,14 +16,40 @@ type LeadRow = {
   priority_tier?: string;
   core_need?: string | null;
   share_summary?: string | null;
+  pipeline_action?: string | null;
+  robot_types_needed?: string[];
   signals?: { display_text?: string }[];
   score?: { overall_score?: number };
 };
 
 const FALLBACK: LeadRow[] = [
-  { id: -1, company_name: "Lineage Logistics", industry: "Logistics", priority_tier: "HOT", score: { overall_score: 84 }, core_need: "Labor shortage + 2 new DCs" },
-  { id: -2, company_name: "Hyatt Hotels Corp.", industry: "Hospitality", priority_tier: "HOT", score: { overall_score: 79 }, core_need: "Staffing crisis + expansion" },
-  { id: -3, company_name: "FedEx Supply Chain", industry: "Logistics", priority_tier: "HOT", score: { overall_score: 88 }, core_need: "New distribution centers announced" },
+  {
+    id: -1,
+    company_name: "Lineage Logistics",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    score: { overall_score: 84 },
+    pipeline_action: "Priority: Pitch AMR fleet for new distribution centers",
+    robot_types_needed: ["mobile robots (AMRs)", "warehouse automation"],
+  },
+  {
+    id: -2,
+    company_name: "Hyatt Hotels Corp.",
+    industry: "Hospitality",
+    priority_tier: "HOT",
+    score: { overall_score: 79 },
+    pipeline_action: "Priority: Lead with overnight cleaning robots — confirm facilities owner",
+    robot_types_needed: ["service robots", "cleaning robots"],
+  },
+  {
+    id: -3,
+    company_name: "FedEx Supply Chain",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    score: { overall_score: 88 },
+    pipeline_action: "Priority: Sortation + AMR pilot for new DC rollout",
+    robot_types_needed: ["sortation robots", "mobile robots (AMRs)"],
+  },
 ];
 
 const industryIcon: Record<string, React.ElementType> = {
@@ -40,14 +66,6 @@ function iconForIndustry(industry?: string) {
     if (key.includes(k)) return Icon;
   }
   return Building2;
-}
-
-function signalLine(lead: LeadRow): string {
-  const summary = leadPreviewSentences(lead.share_summary, 1, 120);
-  if (summary) return summary;
-  const need = cleanAndClampText(lead.core_need, 90);
-  if (need) return need;
-  return cleanAndClampText(lead.signals?.[0]?.display_text, 90) || lead.industry || "Automation-ready signal";
 }
 
 function scoreOf(lead: LeadRow): number | string {
@@ -121,21 +139,21 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
           return (
             <div
               key={`${lead.id}-${rowIndex}`}
-              className={`pipeline-panel-row flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
+              className={`pipeline-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
                 rowIndex === 2 ? "hidden sm:flex" : ""
               }`}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-100/80 shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-100/80 shadow-sm mt-0.5">
                 <Icon size={16} className="text-emerald-800" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-0.5 flex items-center gap-2">
+                <div className="mb-1 flex items-center gap-2">
                   <span className="truncate font-display text-sm font-semibold text-gray-900">
                     {lead.company_name}
                   </span>
                   <HeatBadge heat={tier} />
                 </div>
-                <p className="truncate text-xs text-gray-700">{signalLine(lead)}</p>
+                <PipelineLeadActionMeta lead={lead} variant="compact" />
               </div>
               <div className="shrink-0 text-right">
                 <div className="score-number text-2xl leading-none text-emerald-800">{scoreOf(lead)}</div>

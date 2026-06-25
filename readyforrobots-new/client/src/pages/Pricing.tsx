@@ -4,7 +4,7 @@
 import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useState } from "react";
 
 const tiers = [
@@ -122,6 +122,10 @@ const faqs = [
     a: "Revenue operating systems replace CRM, engagement, and intelligence in one platform—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. Signal adds a robotics wedge: find robot-ready buyers from live signals, score timing, run outreach, and push context into HubSpot or your CRM. No stack rip-and-replace.",
   },
   {
+    q: "How is this different from Explee, Apollo, or other company search tools?",
+    a: "Those tools help you find accounts and export contacts—we help robot sales teams run the full funnel. ReadyForRobots surfaces buyers showing live robot intent (capex, labor, deployment signals), ranks HOT/WARM timing, tells you which robot categories to pitch, and advances deals in our pipeline or HubSpot. You are not buying another stale list; you are automating a sales pipeline built for robotics. See our full comparison at /compare.",
+  },
+  {
     q: "Do you help with robot deployment services?",
     a: "Yes. Customer support, technical support, integration, and installation support can be arranged as add-on services through qualified local partners.",
   },
@@ -169,7 +173,10 @@ export default function Pricing() {
               {" or your CRM."}
             </p>
             <p className="mt-3 text-xs text-gray-500 max-w-lg mx-auto">
-              Paid billing is rolling out — every plan starts with a free workspace. Create an account, browse the pipeline, then upgrade when you are ready.
+              Paid billing is rolling out — every plan starts with a free workspace. Create an account, browse the pipeline, then upgrade when you are ready.{" "}
+              <Link href="/compare" className="text-emerald-700 font-semibold hover:underline">
+                Compare vs data tools
+              </Link>
             </p>
           </div>
 

@@ -22,6 +22,7 @@ const LINKS = {
   Support: [
     { label: "How It Works", href: "/how-it-works" },
     { label: "Pricing", href: "/pricing" },
+    { label: "Compare", href: "/compare" },
     { label: "Intelligence", href: "/intelligence" },
     { label: "Integrations", href: "/integrations" },
     { label: "FAQ", href: "/pricing#faq" },

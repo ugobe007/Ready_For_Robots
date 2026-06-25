@@ -52,7 +52,7 @@ Snapshot `intelligence` slice (junk reasons, gap frequency, industry deltas) dri
 | Agent | Scope | Primary docs |
 |-------|--------|--------------|
 | **Orchestrator** | Pick one mission per cycle; spawn subagents; enforce budgets; notify | This file, `docs/product_market_fit.md`, `harness/gates.yaml`, `docs/market_thesis.md`, latest snapshot |
-| **MarketIntel** | External scan: earnings, trade press, competitor moves, category trends | `docs/market_thesis.md` (Emerging + Puck sections) |
+| **MarketIntel** | External scan: earnings, trade press, competitor moves (Explee, Apollo, Clay), category trends | `docs/market_thesis.md`, `docs/competitive_positioning.md` |
 | **FrictionMiner** | Internal friction: junk patterns, gaps, quarantine, rectification failures | Snapshot `intelligence`, `docs/lead_quality_north_star.md` |
 | **ProductThesis** | Synthesize intel + friction → update thesis backlog ranks | `docs/market_thesis.md` |
 | **PipelineHealth** | Cache freshness, empty feed, tier mix, refresh scripts | `docs/pipeline_process_and_scripts.md` |
@@ -173,6 +173,7 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 ## Related docs
 
 - [docs/product_market_fit.md](docs/product_market_fit.md)
+- [docs/competitive_positioning.md](docs/competitive_positioning.md)
 - [docs/market_thesis.md](docs/market_thesis.md)
 - [docs/conversion_agent_challenges.md](docs/conversion_agent_challenges.md)
 - [docs/lead_quality_north_star.md](docs/lead_quality_north_star.md)

@@ -90,12 +90,30 @@ When choosing or executing a mission, prefer work in this order:
 4. **Lead quality** — only when snapshot shows junk blocking trust (names/events first)
 5. **Market intel / catalog** — supports pitch specificity, not primary PMF
 
-**Anti-patterns:** robotics news aggregator, OEM-as-buyer pipeline, dashboard parity with Salesforce, volume over quality.
+**Anti-patterns:** robotics news aggregator, OEM-as-buyer pipeline, dashboard parity with Salesforce, volume over quality, **horizontal GTM data parity** (Explee/Apollo-style “105M companies” — see [competitive_positioning.md](competitive_positioning.md)).
+
+---
+
+## Competitive frame (vs Explee and data tools)
+
+Users will compare us to [Explee](https://explee.com/landing-search) and similar GTM data providers. **Do not compete on database size.** Compete on:
+
+| We lose if judged on… | We win when judged on… |
+|------------------------|-------------------------|
+| Company/people count | **Robot buyer intent** with HOT/WARM timing |
+| Search filters & lookalikes | **`pipeline_action`** + **`robot_types_needed`** |
+| CSV export & API runs | **Automated funnel** — save, outreach, kanban, HubSpot |
+| Generic deep research | **SIGNAL** cited research on qualified robot buyers |
+
+**Positioning line:** Explee helps you find accounts. ReadyForRobots helps robot companies **close** them.
+
+Full comparison: [competitive_positioning.md](competitive_positioning.md).
 
 ---
 
 ## Related docs
 
+- [competitive_positioning.md](competitive_positioning.md) — vs Explee, Apollo, Clay
 - [market_thesis.md](market_thesis.md) — ranked backlog and puck bets
 - [conversion_agent_challenges.md](conversion_agent_challenges.md) — funnel challenges for ProductSurface
 - [readyforrobots-ux.md](readyforrobots-ux.md) — Detect → Qualify → Engage → Advance

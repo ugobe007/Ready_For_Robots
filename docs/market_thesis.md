@@ -83,6 +83,7 @@ Active bets the Orchestrator should prefer when choosing build missions:
 - **OEM/vendor prospecting** as default buyer pipeline (mode=`buyer` filter exists for a reason)
 - **Volume over quality** — more pipeline rows while `built_at` fresh but names broken
 - **Dashboard parity** with Salesforce/HubSpot — we win on intent + autonomy
+- **Horizontal GTM data parity** — Explee/Apollo-style company & people search at 100M+ scale ([competitive_positioning.md](competitive_positioning.md)); we win on robot pipeline outcomes, not list size
 
 ---
 

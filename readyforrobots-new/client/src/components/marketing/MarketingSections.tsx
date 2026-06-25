@@ -219,6 +219,7 @@ export function MarketingHowItWorks() {
 
 export function MarketingBeforeAfter() {
   const before = [
+    "105M-company search — still no idea who is buying robots now",
     "Cold lists with no context",
     "Reach out and hope for the right timing",
     "Generic email templates",

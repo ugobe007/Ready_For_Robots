@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
 import Pipeline from "./pages/Pipeline";
+import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
 import HowItWorks from "./pages/HowItWorks";
 import Intelligence from "./pages/Intelligence";
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/results" component={Results} />
       <Route path="/pipeline" component={Pipeline} />
+      <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
       <Route path="/intelligence" component={Intelligence} />
       <Route path="/newsletter" component={Newsletter} />

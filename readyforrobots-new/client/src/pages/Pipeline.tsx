@@ -34,6 +34,8 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
+import HubSpotOnboardingBanner from "@/components/HubSpotOnboardingBanner";
+import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1745,6 +1747,13 @@ export default function Pipeline() {
               </div>
             </div>
 
+            <div className="px-3 sm:px-4 pt-2">
+              <HubSpotOnboardingBanner
+                connected={hubspotIntegration?.connected}
+                hasSession={Boolean(session?.access_token)}
+              />
+            </div>
+
             {/* ── Alerts ── */}
             {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
@@ -2238,9 +2247,7 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="truncate text-[11px] text-stone-700">
-                                  {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
-                                </p>
+                                <PipelineLeadActionMeta lead={deal} variant="compact" />
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -2326,9 +2333,7 @@ export default function Pipeline() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="truncate text-[11px] text-stone-700">
-                                  {cleanAndClampText(deal.pipelineAction || deal.signal, 160)}
-                                </p>
+                                <PipelineLeadActionMeta lead={deal} variant="compact" />
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>

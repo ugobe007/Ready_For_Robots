@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Building2, Factory, Heart, Hotel, Truck, Utensils, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
-import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
+import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import { HeatBadge, LiveDot } from "@/components/marketing/primitives";
 import LeadShareBar from "@/components/LeadShareBar";
 import { formatStat } from "@/hooks/usePipelineStats";
@@ -17,16 +17,58 @@ type LeadRow = {
   priority_tier?: string;
   core_need?: string | null;
   share_summary?: string | null;
+  pipeline_action?: string | null;
+  robot_types_needed?: string[];
   signals?: { display_text?: string }[];
   score?: { overall_score?: number };
 };
 
 const FALLBACK: LeadRow[] = [
-  { id: -1, company_name: "Silver Peak Hospitality", industry: "Hospitality", priority_tier: "HOT", score: { overall_score: 94 }, core_need: "Housekeeping vacancy rate hit 43%" },
-  { id: -2, company_name: "DesertLine Logistics", industry: "Logistics", priority_tier: "HOT", score: { overall_score: 88 }, core_need: "Announced 2 new distribution centers" },
-  { id: -3, company_name: "Apex Food Processing", industry: "Food Processing", priority_tier: "WARM", score: { overall_score: 76 }, core_need: "OSHA citation on line 4" },
-  { id: -4, company_name: "NovaCare Health Systems", industry: "Healthcare", priority_tier: "WARM", score: { overall_score: 71 }, core_need: "Hiring 12 pharmacy techs" },
-  { id: -5, company_name: "Summit Manufacturing", industry: "Manufacturing", priority_tier: "WARM", score: { overall_score: 65 }, core_need: "CapEx budget increased 28% YoY" },
+  {
+    id: -1,
+    company_name: "Silver Peak Hospitality",
+    industry: "Hospitality",
+    priority_tier: "HOT",
+    score: { overall_score: 94 },
+    pipeline_action: "Priority: Pitch overnight cleaning robots — 43% housekeeping vacancy",
+    robot_types_needed: ["cleaning robots", "service robots"],
+  },
+  {
+    id: -2,
+    company_name: "DesertLine Logistics",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    score: { overall_score: 88 },
+    pipeline_action: "Priority: AMR fleet for 2 new distribution centers",
+    robot_types_needed: ["mobile robots (AMRs)", "warehouse automation"],
+  },
+  {
+    id: -3,
+    company_name: "Apex Food Processing",
+    industry: "Food Processing",
+    priority_tier: "WARM",
+    score: { overall_score: 76 },
+    pipeline_action: "Priority: Line 4 packaging automation after OSHA citation",
+    robot_types_needed: ["pick-and-place robots", "packaging automation"],
+  },
+  {
+    id: -4,
+    company_name: "NovaCare Health Systems",
+    industry: "Healthcare",
+    priority_tier: "WARM",
+    score: { overall_score: 71 },
+    pipeline_action: "Priority: AMR delivery for pharmacy expansion",
+    robot_types_needed: ["mobile robots (AMRs)", "service robots"],
+  },
+  {
+    id: -5,
+    company_name: "Summit Manufacturing",
+    industry: "Manufacturing",
+    priority_tier: "WARM",
+    score: { overall_score: 65 },
+    pipeline_action: "Priority: CapEx window — pitch palletizing for new line",
+    robot_types_needed: ["palletizing robots", "industrial arms"],
+  },
 ];
 
 const industryIcon: Record<string, React.ElementType> = {
@@ -43,14 +85,6 @@ function iconForIndustry(industry?: string) {
     if (key.includes(k)) return Icon;
   }
   return Building2;
-}
-
-function signalLine(lead: LeadRow): string {
-  const summary = leadPreviewSentences(lead.share_summary, 1, 140);
-  if (summary) return summary;
-  const need = cleanAndClampText(lead.core_need, 100);
-  if (need) return need;
-  return cleanAndClampText(lead.signals?.[0]?.display_text, 100) || lead.industry || "";
 }
 
 type Props = {
@@ -122,10 +156,10 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
               )}
             </div>
             <h2 className="font-display text-4xl font-bold text-white tracking-tight">
-              Find robot buyers before they hit the RFP.
+              Every lead shows what to pitch — not just who to call.
             </h2>
             <p className="mt-2 max-w-xl text-sm text-slate-300">
-              ReadyForRobots helps robot companies find buyers using live market signals — who is ready to purchase, and when the buying window opens.
+              Pipeline actions and robot categories on every row. No company search — a running sales funnel for robot OEMs.
             </p>
           </div>
           <div className="text-slate-400 text-sm font-mono-data">
@@ -135,8 +169,8 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
 
         <div className="bg-slate-800/50 rounded-2xl border border-white/10 overflow-hidden">
           <div className="grid grid-cols-12 px-6 py-3 border-b border-white/10 text-slate-400 text-xs font-mono-data uppercase tracking-widest">
-            <div className="col-span-4">Company</div>
-            <div className="col-span-4 hidden md:block">Signal</div>
+            <div className="col-span-3">Company</div>
+            <div className="col-span-5 hidden md:block">Next action · Robot types</div>
             <div className="col-span-2 text-center">Score</div>
             <div className="col-span-2 text-right">Status</div>
           </div>
@@ -152,19 +186,19 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                 href={href}
                 className="grid grid-cols-12 px-6 py-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-all duration-500 items-center group"
               >
-                <div className="col-span-4 flex items-center gap-3">
+                <div className="col-span-3 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
                     <Icon size={16} className="text-slate-300" />
                   </div>
-                  <div>
-                    <div className="text-white font-semibold text-sm font-display group-hover:text-emerald-300 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold text-sm font-display group-hover:text-emerald-300 transition-colors truncate">
                       {lead.company_name}
                     </div>
-                    <div className="text-slate-400 text-xs font-mono-data uppercase">{lead.industry}</div>
+                    <div className="text-slate-400 text-xs font-mono-data uppercase truncate">{lead.industry}</div>
                   </div>
                 </div>
-                <div className="col-span-4 hidden md:block">
-                  <p className="text-slate-300 text-sm truncate pr-4">{signalLine(lead)}</p>
+                <div className="col-span-5 hidden md:block pr-4">
+                  <PipelineLeadActionMeta lead={lead} variant="dark" />
                 </div>
                 <div className="col-span-2 text-center">
                   <span className="score-number text-2xl text-emerald-400">{score}</span>
@@ -179,6 +213,8 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
                       priority_tier: tier,
                       share_summary: lead.share_summary,
                       share_blurb: lead.core_need,
+                      pipeline_action: lead.pipeline_action,
+                      robot_types_needed: lead.robot_types_needed,
                     }}
                   />
                   <HeatBadge heat={tier} />
@@ -202,11 +238,17 @@ export default function MarketingLivePipelineSection({ hotCount, totalCount }: P
               <ArrowRight size={14} />
             </Link>
             <Link
+              href="/compare"
+              className="inline-flex items-center gap-2 px-5 py-3 text-slate-200 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
+            >
+              vs data tools
+            </Link>
+            <Link
               href="/results?url="
               className="inline-flex items-center gap-2 px-5 py-3 text-emerald-300 hover:text-white font-semibold rounded-xl border border-white/15 hover:border-emerald-400/40 transition-all text-sm"
             >
               <Zap size={16} />
-              Find buyers
+              URL scan
             </Link>
           </div>
         </div>

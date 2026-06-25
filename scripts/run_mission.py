@@ -57,11 +57,19 @@ def _product_market_fit_text() -> str:
     return pmf.read_text(encoding="utf-8")
 
 
+def _competitive_positioning_text() -> str:
+    comp = _root / "docs" / "competitive_positioning.md"
+    if not comp.is_file():
+        return "(no competitive doc — see docs/competitive_positioning.md)"
+    return comp.read_text(encoding="utf-8")
+
+
 def _build_prompt(mission_dir: Path) -> str:
     brief = _load_mission_brief(mission_dir)
     snapshot = _latest_snapshot_text()
     thesis = _market_thesis_text()
     pmf = _product_market_fit_text()
+    competitive = _competitive_positioning_text()
     return f"""You are the Ready For Robots Orchestrator. Follow AGENTS.md and CLAUDE.md.
 
 ## Mission brief
@@ -71,6 +79,10 @@ def _build_prompt(mission_dir: Path) -> str:
 ## Product / market fit (primary — read before orienting)
 
 {pmf}
+
+## Competitive positioning (vs Explee / GTM data tools — do not chase list size)
+
+{competitive}
 
 ## Market thesis
 
