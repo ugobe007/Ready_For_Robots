@@ -133,7 +133,13 @@ def crm_workflow_intelligence(db: Session, account: CrmAccount) -> dict[str, Any
     }
 
 
-def recommend_crm_next_action(db: Session, account: CrmAccount, events: list[SalesExperienceEvent] | None = None) -> WorkflowRecommendation:
+def recommend_crm_next_action(
+    db: Session,
+    account: CrmAccount,
+    events: list[SalesExperienceEvent] | None = None,
+    *,
+    signal_count: int | None = None,
+) -> WorkflowRecommendation:
     events = events if events is not None else (
         db.query(SalesExperienceEvent)
         .filter(SalesExperienceEvent.crm_account_id == _uuid_value(db, account.id))
@@ -149,7 +155,8 @@ def recommend_crm_next_action(db: Session, account: CrmAccount, events: list[Sal
     score = 45.0 + positives * 12.0 - negatives * 15.0
     rationale: list[str] = []
     if account.company_id:
-        signal_count = db.query(func.count(Signal.id)).filter(Signal.company_id == account.company_id).scalar() or 0
+        if signal_count is None:
+            signal_count = db.query(func.count(Signal.id)).filter(Signal.company_id == account.company_id).scalar() or 0
         score += min(20.0, float(signal_count) * 3.0)
         if signal_count:
             rationale.append(f"{signal_count} buying signal(s) are connected to this account.")

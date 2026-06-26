@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -15,7 +16,8 @@ from app.models.outreach import OutreachMessage, OutreachReply
 from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportunity
 from app.models.sales_learning import SalesExperienceEvent
 from app.models.scout_chat import ScoutActivation
-from app.services.sales_learning_agent import crm_workflow_intelligence
+from app.models.signal import Signal
+from app.services.sales_learning_agent import POSITIVE_OUTCOMES, recommend_crm_next_action
 
 
 @dataclass
@@ -63,6 +65,131 @@ def _team_account_company_ids(db: Session, team_ids: list[Any]) -> set[int]:
     return {int(row[0]) for row in rows if row[0]}
 
 
+def _batch_account_events(
+    db: Session,
+    account_ids: list[Any],
+    *,
+    per_account: int = 50,
+) -> dict[Any, list[SalesExperienceEvent]]:
+    if not account_ids:
+        return {}
+    rows = (
+        db.query(SalesExperienceEvent)
+        .filter(SalesExperienceEvent.crm_account_id.in_(account_ids))
+        .order_by(desc(SalesExperienceEvent.created_at))
+        .all()
+    )
+    grouped: dict[Any, list[SalesExperienceEvent]] = defaultdict(list)
+    for row in rows:
+        bucket = grouped[row.crm_account_id]
+        if len(bucket) < per_account:
+            bucket.append(row)
+    return grouped
+
+
+def _batch_signal_counts(db: Session, company_ids: list[int]) -> dict[int, int]:
+    if not company_ids:
+        return {}
+    rows = (
+        db.query(Signal.company_id, func.count(Signal.id))
+        .filter(Signal.company_id.in_(company_ids))
+        .group_by(Signal.company_id)
+        .all()
+    )
+    return {int(cid): int(cnt) for cid, cnt in rows}
+
+
+def _batch_accounts_with_replies(db: Session, account_ids: list[Any]) -> set[Any]:
+    if not account_ids:
+        return set()
+    rows = (
+        db.query(OutreachReply.crm_account_id)
+        .filter(OutreachReply.crm_account_id.in_(account_ids))
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows if row[0]}
+
+
+def _account_workflow_intel(
+    db: Session,
+    account: CrmAccount,
+    events: list[SalesExperienceEvent],
+    signal_count: int,
+) -> dict[str, Any]:
+    rec = recommend_crm_next_action(db, account, events, signal_count=signal_count)
+    positives = sum(1 for event in events if event.outcome in POSITIVE_OUTCOMES)
+    negatives = sum(1 for event in events if event.outcome in NEGATIVE_OUTCOMES)
+    sent = sum(1 for event in events if event.outcome == "sent")
+    replied = sum(1 for event in events if event.outcome == "replied")
+    last = events[0] if events else None
+    return {
+        "experience_count": len(events),
+        "positive_outcomes": positives,
+        "negative_outcomes": negatives,
+        "sent_count": sent,
+        "reply_count": replied,
+        "last_outcome": last.outcome if last else None,
+        "last_event_type": last.event_type if last else None,
+        "priority_score": rec.priority_score,
+        "recommended_action": rec.recommended_action,
+        "automation_mode": rec.automation_mode,
+        "confidence": rec.confidence,
+        "rationale": rec.rationale,
+    }
+
+
+def _hot_unsaved_lead_actions(
+    db: Session,
+    *,
+    saved_company_ids: set[int],
+    limit: int = 5,
+) -> list[WorkflowAction]:
+    """Lightweight HOT pipeline suggestions — avoids full build_public_leads_list."""
+    try:
+        from app.api.leads import _lead_rows_query_limited, _row_is_junk, _row_priority
+    except Exception:
+        return []
+
+    actions: list[WorkflowAction] = []
+    try:
+        rows = _lead_rows_query_limited(db, 80).all()
+    except Exception:
+        return []
+
+    for row in rows:
+        if len(actions) >= limit:
+            break
+        cid = int(getattr(row, "id", 0) or 0)
+        if not cid or cid in saved_company_ids:
+            continue
+        junk, _ = _row_is_junk(getattr(row, "name", None))
+        if junk:
+            continue
+        pri = _row_priority(row)
+        if pri.tier != "HOT":
+            continue
+        score = float(getattr(pri, "score", 0) or 0)
+        actions.append(
+            WorkflowAction(
+                id=f"hot:{cid}",
+                action_type="add_to_crm",
+                label="Add HOT lead to CRM workspace",
+                company_name=getattr(row, "name", None) or "Unknown",
+                priority=_priority_bucket(score),
+                route="/pipeline",
+                entity_type="company",
+                entity_id=str(cid),
+                score=score,
+                meta={
+                    "tier": pri.tier,
+                    "signal_count": int(getattr(row, "signal_count", 0) or 0),
+                },
+            )
+        )
+    return actions
+
+
 def collect_next_actions(
     db: Session,
     *,
@@ -79,11 +206,19 @@ def collect_next_actions(
         db.query(CrmAccount)
         .filter(CrmAccount.team_id.in_(team_ids))
         .order_by(desc(CrmAccount.updated_at))
-        .limit(200)
+        .limit(75)
         .all()
     )
+    account_ids = [acct.id for acct in accounts]
+    company_ids = [int(acct.company_id) for acct in accounts if acct.company_id]
+    events_by_account = _batch_account_events(db, account_ids)
+    signal_counts = _batch_signal_counts(db, company_ids)
+    accounts_with_replies = _batch_accounts_with_replies(db, account_ids)
+
     for acct in accounts:
-        intel = crm_workflow_intelligence(db, acct)
+        events = events_by_account.get(acct.id, [])
+        signal_count = signal_counts.get(int(acct.company_id), 0) if acct.company_id else 0
+        intel = _account_workflow_intel(db, acct, events, signal_count)
         base_score = float(intel.get("priority_score") or 40.0)
         stage = (acct.outreach_stage or "").lower()
 
@@ -107,13 +242,7 @@ def collect_next_actions(
             sent_at = acct.outreach_sent_at
             if sent_at.tzinfo is None:
                 sent_at = sent_at.replace(tzinfo=timezone.utc)
-            reply_exists = (
-                db.query(OutreachReply.id)
-                .filter(OutreachReply.crm_account_id == acct.id)
-                .limit(1)
-                .first()
-            )
-            if not reply_exists and sent_at < followup_cutoff:
+            if acct.id not in accounts_with_replies and sent_at < followup_cutoff:
                 actions.append(
                     WorkflowAction(
                         id=f"followup:{acct.id}",
@@ -212,32 +341,8 @@ def collect_next_actions(
             )
         )
 
-    try:
-        from app.api.leads import build_public_leads_list
-
-        hot_leads = build_public_leads_list(db, limit=30, tier="HOT", sort="score")
-        saved_ids = _team_account_company_ids(db, team_ids)
-        for lead in hot_leads:
-            cid = lead.get("id")
-            if not cid or int(cid) in saved_ids:
-                continue
-            score = float(lead.get("priority_score") or 0)
-            actions.append(
-                WorkflowAction(
-                    id=f"hot:{cid}",
-                    action_type="add_to_crm",
-                    label="Add HOT lead to CRM workspace",
-                    company_name=lead.get("company_name") or "Unknown",
-                    priority=_priority_bucket(score),
-                    route="/pipeline",
-                    entity_type="company",
-                    entity_id=str(cid),
-                    score=score,
-                    meta={"tier": lead.get("priority_tier"), "signal_count": lead.get("signal_count")},
-                )
-            )
-    except Exception:
-        pass
+    saved_ids = _team_account_company_ids(db, team_ids)
+    actions.extend(_hot_unsaved_lead_actions(db, saved_company_ids=saved_ids, limit=5))
 
     actions.sort(key=lambda item: item.score, reverse=True)
     seen: set[str] = set()
