@@ -5,6 +5,7 @@ export type PipelineStats = {
   hot: number | null;
   warm: number | null;
   total: number | null;
+  totalSignals: number | null;
   loading: boolean;
 };
 
@@ -12,6 +13,7 @@ export function usePipelineStats(): PipelineStats {
   const [hot, setHot] = useState<number | null>(null);
   const [warm, setWarm] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
+  const [totalSignals, setTotalSignals] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,14 +25,22 @@ export function usePipelineStats(): PipelineStats {
           liveFetchInit(),
         );
         if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { hot?: number; warm?: number; total?: number };
+        const data = (await res.json()) as {
+          hot?: number;
+          warm?: number;
+          total?: number;
+          total_signals?: number;
+          signals_in_database?: number;
+        };
         if (cancelled) return;
         const h = Number(data.hot ?? 0);
         const w = Number(data.warm ?? 0);
         const t = Number(data.total ?? 0) || h + w;
+        const signals = Number(data.total_signals ?? data.signals_in_database ?? 0);
         if (h > 0) setHot(h);
         if (w > 0) setWarm(w);
         if (t > 0) setTotal(t);
+        if (signals > 0) setTotalSignals(signals);
       } catch {
         /* keep null fallbacks */
       } finally {
@@ -42,7 +52,7 @@ export function usePipelineStats(): PipelineStats {
     };
   }, []);
 
-  return { hot, warm, total, loading };
+  return { hot, warm, total, totalSignals, loading };
 }
 
 export function formatStat(n: number | null, fallback: string): string {

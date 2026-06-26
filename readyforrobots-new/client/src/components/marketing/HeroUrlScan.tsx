@@ -41,6 +41,10 @@ export default function HeroUrlScan() {
           <ArrowRight size={16} />
         </button>
       </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-gray-600">
+        See who is buying robots like yours —{" "}
+        <span className="font-semibold text-amber-800">before your competitor&apos;s SDR does.</span>
+      </p>
     </form>
   );
 }

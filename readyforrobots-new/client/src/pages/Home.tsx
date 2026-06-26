@@ -25,6 +25,7 @@ import {
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
 import HeroUrlScan from "@/components/marketing/HeroUrlScan";
+import HeroFomoTicker from "@/components/marketing/HeroFomoTicker";
 import { LiveDot } from "@/components/marketing/primitives";
 import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -41,7 +42,7 @@ type HumanoidBenchReport = {
 };
 
 export default function Home() {
-  const { hot, total } = usePipelineStats();
+  const { hot, total, totalSignals } = usePipelineStats();
   const [reportOpen, setReportOpen] = useState(false);
   const [reportForm, setReportForm] = useState({ name: "", email: "", company: "", robotCategory: "" });
   const [reportStatus, setReportStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -51,6 +52,7 @@ export default function Home() {
   const [benchReport, setBenchReport] = useState<HumanoidBenchReport | null>(null);
 
   const hotLabel = formatStat(hot, "319");
+  const signalsLabel = formatStat(totalSignals, "2,000+");
 
   useEffect(() => {
     let cancelled = false;
@@ -143,7 +145,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50/90 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-5 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
-                  Live pipeline · updated daily · {hotLabel} hot
+                  {hotLabel} HOT · {signalsLabel} live signals · updated daily
                 </span>
               </div>
 
@@ -159,6 +161,7 @@ export default function Home() {
               </p>
 
               <HeroUrlScan />
+              <HeroFomoTicker />
 
               <Link href="/pipeline" className="btn-secondary-hero mb-4">
                 Browse the pipeline free

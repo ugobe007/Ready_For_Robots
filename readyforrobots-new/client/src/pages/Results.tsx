@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import ResultsValueStrip from "@/components/results/ResultsValueStrip";
+import ResultsFomoBanner, { RESULTS_ANONYMOUS_UNLOCK } from "@/components/results/ResultsFomoBanner";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -78,6 +79,7 @@ type ApiLead = {
   value_proposition?: string;
   recommended_action?: string;
   key_signals?: string[];
+  created_at?: string | null;
 };
 
 type RobotReadyResponse = {
@@ -118,6 +120,7 @@ type Prospect = {
   shareSummary?: string;
   priorityTier?: string;
   robotTypes?: string[];
+  signalAge?: string;
 };
 
 type MaterialChoice = "upload" | "suggest" | "skip";
@@ -206,6 +209,18 @@ function cleanRelevanceCopy(raw: string, quotedSignal: string): string {
     .trim();
 }
 
+function formatSignalAge(iso?: string | null): string | undefined {
+  if (!iso) return undefined;
+  const parsed = Date.parse(iso);
+  if (Number.isNaN(parsed)) return undefined;
+  const days = Math.floor((Date.now() - parsed) / 86_400_000);
+  if (days <= 0) return "Signal today";
+  if (days === 1) return "Signal 1d ago";
+  if (days < 14) return `Signal ${days}d ago`;
+  if (days < 60) return `Signal ${Math.floor(days / 7)}w ago`;
+  return `Signal ${Math.floor(days / 30)}mo ago`;
+}
+
 function mapApiLead(lead: ApiLead, index: number): Prospect {
   const score = Math.round(
     lead.match_score ??
@@ -252,6 +267,7 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     shareSummary: lead.share_summary || undefined,
     priorityTier: lead.priority_tier || undefined,
     robotTypes: lead.robot_types_needed,
+    signalAge: formatSignalAge(lead.created_at),
   };
   const outreach = buildOutreachFields(prospect);
   prospect.outreachSubject = outreach.outreachSubject;
@@ -402,10 +418,11 @@ export default function Results() {
   const selectedCount = selectedIds.size;
   const activatedCount = activatedIds.size;
   const isSignedIn = Boolean(session);
-  const topProspect = useMemo(
-    () => [...prospects].sort((a, b) => b.score - a.score)[0] ?? null,
+  const sortedProspects = useMemo(
+    () => [...prospects].sort((a, b) => b.score - a.score),
     [prospects],
   );
+  const anonymousUnlockedCount = Math.min(RESULTS_ANONYMOUS_UNLOCK, sortedProspects.length);
 
   const resultsSignupNext = submittedUrl
     ? `/results?url=${encodeURIComponent(submittedUrl)}`
@@ -695,15 +712,20 @@ export default function Results() {
 
           {submittedUrl && !loading && !scanning && (
             <>
+              <ResultsFomoBanner
+                prospects={sortedProspects}
+                isSignedIn={isSignedIn}
+                scanUrl={submittedUrl}
+              />
+
               <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-emerald-700">
-                    Scan complete · {prospects.length} opportunities found{usingFallback ? " · sample mode" : ""}
-                  </p>
-                  <h1 className="font-extrabold text-gray-900 leading-tight" style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
-                    Your matched pipeline
-                  </h1>
-                  <p className="text-sm text-gray-700 mt-2">
+                  {usingFallback && (
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-2 text-gray-500">
+                      Sample mode · connect live pipeline for real matches
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-700">
                     Based on <span className="text-gray-900 font-medium break-all">{submittedUrl}</span>. Select the leads you want SIGNAL to develop.
                   </p>
                 </div>
@@ -717,24 +739,11 @@ export default function Results() {
               </div>
 
               {!isSignedIn && (
-                <ResultsValueStrip leadCount={prospects.length} scanUrl={submittedUrl} />
-              )}
-
-              {topProspect && !isSignedIn && (
-                <div className="mb-6">
-                  <PipelineOutreachValuePanel
-                    deal={{
-                      id: topProspect.leadId ?? 0,
-                      company: topProspect.company,
-                      outreachSubject: topProspect.outreachSubject,
-                      outreachBody: topProspect.outreachBody,
-                    }}
-                    hasSession={false}
-                    copied={copiedProspectId === topProspect.id}
-                    onCopy={() => copyProspectDraft(topProspect)}
-                    signupNext={resultsSignupNext}
-                  />
-                </div>
+                <ResultsValueStrip
+                  leadCount={sortedProspects.length}
+                  scanUrl={submittedUrl}
+                  unlockedCount={anonymousUnlockedCount}
+                />
               )}
 
               {choosingScout && (
@@ -920,11 +929,17 @@ export default function Results() {
               )}
 
               <div className="space-y-4">
-                {prospects.map((p) => {
+                {sortedProspects.map((p, index) => {
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
+                  const isLocked = !isSignedIn && index >= RESULTS_ANONYMOUS_UNLOCK;
                   return (
-                    <div key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:border-emerald-300 transition-colors">
+                    <div
+                      key={p.id}
+                      className={`rounded-2xl border bg-white shadow-sm overflow-hidden transition-colors ${
+                        isLocked ? "border-blue-200 hover:border-blue-300" : "border-gray-200 hover:border-emerald-300"
+                      }`}
+                    >
                       <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 flex flex-col sm:flex-row sm:items-start gap-4">
                         <label className="flex items-center gap-2 text-xs text-gray-700 sm:pt-4">
                           <input
@@ -946,28 +961,59 @@ export default function Results() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h2 className="text-base font-bold text-gray-900">{p.company}</h2>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#10b981", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(5,150,105,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(5,150,105,0.3)" }}>
-                              {isActive ? "Review Queued" : p.stage}
-                            </span>
+                            <h2 className={`text-base font-bold ${isLocked ? "text-gray-500" : "text-gray-900"}`}>
+                              {isLocked ? `Locked lead · ${p.industry}` : p.company}
+                            </h2>
+                            {!isLocked && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: isActive ? "#34d399" : "#10b981", background: isActive ? "rgba(52,211,153,0.12)" : "rgba(5,150,105,0.15)", border: isActive ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(5,150,105,0.3)" }}>
+                                {isActive ? "Review Queued" : p.stage}
+                              </span>
+                            )}
+                            {isLocked && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-blue-900 bg-blue-50 border border-blue-200">
+                                <LockKeyhole className="h-3 w-3" /> Sign up to unlock
+                              </span>
+                            )}
+                            {p.signalAge && !isLocked && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-amber-900 bg-amber-50 border border-amber-200">
+                                {p.signalAge}
+                              </span>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-3">
-                            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
-                            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
+                            {!isLocked && (
+                              <>
+                                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{p.location}</span>
+                                <span className="flex items-center gap-1"><Users className="h-3 w-3" />{p.employees} employees</span>
+                              </>
+                            )}
                             <span>{p.industry}</span>
+                            {isLocked && p.priorityTier && (
+                              <span className="font-semibold text-amber-800">{p.priorityTier}</span>
+                            )}
                           </div>
 
-                          <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
-                            <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
-                            <div className="min-w-0">
-                              <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
-                              <span className="mt-1 block break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000", overflowWrap: "anywhere" }}>{p.signal}</span>
+                          {isLocked ? (
+                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl border border-blue-200 bg-blue-50/70">
+                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-800" />
+                              <p className="text-xs leading-relaxed text-blue-950">
+                                {p.priorityTier ? `${p.priorityTier} · ` : ""}
+                                {p.industry} buyer with robot-fit signal — sign up to read the full evidence and outreach draft.
+                              </p>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="flex min-w-0 items-start gap-2.5 overflow-hidden p-3 rounded-xl" style={{ background: `${p.signalColor}0d`, border: `1px solid ${p.signalColor}25` }}>
+                              <TrendingUp className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: p.signalColor }} />
+                              <div className="min-w-0">
+                                <span className="text-[10px] font-bold uppercase tracking-widest mr-2" style={{ color: p.signalColor }}>{p.signalType}</span>
+                                <span className="mt-1 block break-words text-xs font-normal leading-relaxed" style={{ color: "#FFB000", overflowWrap: "anywhere" }}>{p.signal}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {(p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
+                      {!isLocked && (p.shareSummary || (p.robotTypes && p.robotTypes.length > 0)) && (
                         <div className="px-4 sm:px-6 pb-2">
                           <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-800 mb-1">Intelligence</p>
@@ -996,29 +1042,33 @@ export default function Results() {
                         </div>
                       )}
 
-                      <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
-                        <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Why relevant</p>
-                          <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-500 bg-amber-50 px-3 py-2 text-sm font-medium leading-relaxed text-amber-900" style={{ overflowWrap: "anywhere" }}>
-                            “{p.signal}”
-                          </p>
-                          <p className="break-words text-xs text-gray-700 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
+                      {!isLocked && (
+                        <div className="px-4 sm:px-6 pb-4 grid gap-3 sm:grid-cols-2">
+                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Why relevant</p>
+                            <p className="mb-3 block break-words rounded-lg border-l-2 border-amber-500 bg-amber-50 px-3 py-2 text-sm font-medium leading-relaxed text-amber-900" style={{ overflowWrap: "anywhere" }}>
+                              “{p.signal}”
+                            </p>
+                            <p className="break-words text-xs text-gray-700 leading-relaxed" style={{ overflowWrap: "anywhere" }}>{p.relevance}</p>
+                          </div>
+                          <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Score rationale</p>
+                            <p className="text-xs text-gray-700 leading-relaxed">{p.scoreReason}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-widest mb-1 text-emerald-800">Score rationale</p>
-                          <p className="text-xs text-gray-700 leading-relaxed">{p.scoreReason}</p>
-                        </div>
-                      </div>
+                      )}
 
-                      <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <div className="flex items-center gap-2 flex-1">
-                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                          <span className="text-sm text-gray-800">{p.action}</span>
+                      {!isLocked && (
+                        <div className="px-4 sm:px-6 pb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                          <div className="flex items-center gap-2 flex-1">
+                            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                            <span className="text-sm text-gray-800">{p.action}</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
+                            {p.timing}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 text-emerald-800 bg-emerald-50 border border-emerald-200">
-                          {p.timing}
-                        </span>
-                      </div>
+                      )}
 
                       {isActive && (
                         <div className="mx-4 sm:mx-6 mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
@@ -1042,6 +1092,7 @@ export default function Results() {
                           onCopy={() => copyProspectDraft(p)}
                           signupNext={resultsSignupNext}
                           variant="compact"
+                          locked={isLocked}
                         />
                       </div>
                     </div>

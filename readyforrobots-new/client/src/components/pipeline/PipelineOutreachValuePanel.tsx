@@ -1,7 +1,7 @@
 /**
  * Outreach draft preview — prove value before signup (value-first principle).
  */
-import { ArrowRight, Copy, CheckCheck, Mail, Eye } from "lucide-react";
+import { ArrowRight, Copy, CheckCheck, Mail, Eye, LockKeyhole } from "lucide-react";
 import { Link } from "wouter";
 import { cleanAndClampText } from "@/lib/text";
 
@@ -21,6 +21,8 @@ type Props = {
   variant?: "inline" | "compact";
   /** Override signup return path (e.g. URL scan results). */
   signupNext?: string;
+  /** Hide draft body and show unlock CTA (anonymous results gate). */
+  locked?: boolean;
 };
 
 export default function PipelineOutreachValuePanel({
@@ -31,12 +33,44 @@ export default function PipelineOutreachValuePanel({
   onPreview,
   variant = "inline",
   signupNext,
+  locked = false,
 }: Props) {
-  if (!deal.outreachBody && !deal.outreachSubject) return null;
+  if (!deal.outreachBody && !deal.outreachSubject && !locked) return null;
 
   const signupHref = `/signup?next=${encodeURIComponent(
     signupNext ?? `/pipeline?lead=${deal.id}`,
   )}`;
+
+  if (locked) {
+    return (
+      <div
+        className={
+          variant === "compact"
+            ? "rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50/90 to-white px-3 py-3"
+            : "pipeline-detail-section border-blue-200/60 bg-gradient-to-br from-blue-50/80 to-white"
+        }
+      >
+        <div className="flex items-start gap-2">
+          <LockKeyhole className="h-4 w-4 shrink-0 text-blue-800 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-900">
+              Outreach draft ready
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-blue-950">
+              SIGNAL wrote a rep-voice email for {deal.company}. Sign up free to read the full draft, copy it, and save this lead.
+            </p>
+            <Link
+              href={signupHref}
+              className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 py-2 text-[11px] font-bold text-white hover:bg-blue-800"
+            >
+              Unlock draft
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
