@@ -2,7 +2,7 @@
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { outreachInsightForIndustry } from "@/lib/industryContext";
-import { OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
+import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 
 export type PipelineStage = "New Signal" | "Draft Ready" | "Outreach Sent" | "Qualified" | "Meeting Set";
 
@@ -151,28 +151,25 @@ function outreachBody(lead: ApiLead, signalType: string, signalText: string): st
   const company = lead.company_name || "your team";
   const lowerType = signalType.toLowerCase();
   const industry = (lead.industry || "your industry").toLowerCase();
+  const action = (lead.pipeline_action || "").trim();
 
-  // Signal hook — one grounded observation
   let hook: string;
-  if (lowerType.includes("labor") || lowerType.includes("job")) {
-    hook = `We picked up a labor signal on ${company} — looks like staffing pressure in ${industry}. That's usually when automation starts making sense.`;
+  if (action) {
+    const actionBody = action.includes(":") ? action.slice(action.indexOf(":") + 1).trim() : action;
+    const normalized =
+      actionBody.length > 0
+        ? `${actionBody.charAt(0).toLowerCase()}${actionBody.slice(1)}`
+        : actionBody;
+    hook = `I've been following ${company} — ${normalized}`;
+  } else if (lowerType.includes("labor") || lowerType.includes("job")) {
+    hook = `I've been watching staffing pressure at ${company} in ${industry} — that's usually when teams start looking at automation on the floor.`;
   } else if (lowerType.includes("expansion") || lowerType.includes("capex") || lowerType.includes("funding")) {
-    hook = `We saw some expansion and CapEx signals on ${company}. ${industry.charAt(0).toUpperCase() + industry.slice(1)} teams in that position usually have at least one workflow where automation pays for itself.`;
+    hook = `I noticed expansion and CapEx activity around ${company}. In ${industry}, that's often when one workflow automation project makes the case for itself.`;
   } else {
-    hook = `${company} came up in our signal tracking. There may be an automation angle in ${industry} worth a quick look.`;
+    hook = `I've had ${company} on my radar in ${industry} — there may be an automation angle worth a quick look on your side.`;
   }
 
-  return [
-    "Hey,",
-    "",
-    OUTREACH_INTRO,
-    "",
-    hook,
-    "",
-    "Worth a quick reply if there's any interest?",
-    "",
-    OUTREACH_SIGNATURE,
-  ].join("\n");
+  return ["Hey,", "", hook, "", OUTREACH_CTA, "", OUTREACH_SIGNATURE].join("\n");
 }
 
 export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineStage | null {

@@ -30,6 +30,13 @@ CAL_VENDOR_OFFRAMP_LINE = (
 )
 CAL_VENDOR_STRATEGY_CALL_CTA = "Worth a quick strategy call this week?"
 
+# Customer-facing rep voice (robot sales rep → buyer ops). No Ready For Robots branding.
+REP_OUTREACH_CTA = "Worth a quick reply if you're the right person to explore this?"
+
+
+def rep_outreach_signature() -> str:
+    return "Best,\n[Your name]"
+
 
 def cal_signature() -> str:
     return "— Cal\nReady For Robots"

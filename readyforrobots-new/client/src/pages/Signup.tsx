@@ -116,7 +116,7 @@ export default function Signup() {
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : pipelineIntent
-                  ? "Free workspace: save up to 5 HOT/WARM leads, copy Cal outreach drafts, and sync to HubSpot when you are ready. No card required."
+                  ? "Free workspace: save up to 5 HOT/WARM leads, copy outreach drafts, and sync to HubSpot when you are ready. No card required."
                   : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
             </p>
             {pipelineIntent && !hubspotIntent && (

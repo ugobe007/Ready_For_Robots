@@ -17,7 +17,7 @@ export default function AnonymousValueStrip({ leadCount, limit }: Props) {
         <div>
           <p className="text-xs font-bold text-emerald-900">See value before you sign up</p>
           <p className="text-[11px] leading-relaxed text-emerald-800/90 mt-0.5">
-            Browse {Math.min(leadCount, limit)} live leads with pitch actions, robot types, and Cal outreach drafts —
+            Browse {Math.min(leadCount, limit)} live leads with pitch actions, robot types, and outreach drafts —
             no account required. Free workspace adds save, copy, and HubSpot sync.
           </p>
         </div>

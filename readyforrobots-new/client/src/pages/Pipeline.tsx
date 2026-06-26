@@ -2551,7 +2551,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-emerald-700">
-                              Free workspace unlocks full research, save up to 5 leads, and copy Cal drafts.
+                              Free workspace unlocks full research, save up to 5 leads, and copy outreach drafts.
                             </p>
                           )}
                         </div>
@@ -2663,7 +2663,7 @@ export default function Pipeline() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Cal&apos;s Draft</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Your outreach draft</p>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <button
@@ -2716,7 +2716,7 @@ export default function Pipeline() {
                     ) : (
                       <div className="rounded-lg border border-dashed border-gray-200 px-3 py-4">
                         <p className="text-[11px] leading-relaxed text-gray-400 mb-3">
-                          No Cal draft yet. Run SIGNAL on this lead to refresh inference and generate outreach.
+                          No draft yet. Run SIGNAL on this lead to refresh inference and generate outreach.
                         </p>
                         <button
                           type="button"
@@ -2924,7 +2924,7 @@ export default function Pipeline() {
             </div>
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">From</p>
-              <p className="text-xs text-gray-600">Cal &lt;cal@readyforrobots.com&gt;</p>
+              <p className="text-xs text-gray-600">[Your name] &lt;you@company.com&gt;</p>
             </div>
             {selected.contact && (
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">

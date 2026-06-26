@@ -27,7 +27,7 @@ import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { useAuth } from "@/contexts/AuthContext";
-import { BUYER_SIGNAL_EXPLANATION, OUTREACH_INTRO, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
+import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
@@ -175,21 +175,17 @@ function timingFromScore(score: number): string {
 }
 
 function draftOutreach(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">): string {
+  const hook = p.action
+    ? `I've been following ${p.company} — ${p.action.charAt(0).toLowerCase()}${p.action.slice(1)}`
+    : `${p.company} stood out because ${p.relevance.toLowerCase()} The strongest signal: ${p.signal}`;
+
   return `Subject: Automation opportunity at ${p.company}
 
 Hello,
 
-${OUTREACH_INTRO}
+${hook}
 
-${BUYER_SIGNAL_EXPLANATION}
-
-${p.company} stood out because ${p.relevance.toLowerCase()}
-
-The strongest signal we found: ${p.signal}
-
-The practical next step may be: ${p.action}
-
-Worth a quick exchange to see whether there is a useful automation angle here?
+${OUTREACH_CTA}
 
 ${OUTREACH_SIGNATURE}`;
 }

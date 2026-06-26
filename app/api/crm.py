@@ -56,7 +56,7 @@ from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement, CrmTask, CrmNote
 from app.models.outreach import OutreachMessage
-from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature
+from app.services.agent_messaging import CAL_INTRO, REP_OUTREACH_CTA, cal_signature, rep_outreach_signature
 from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -377,50 +377,47 @@ def _draft_subject(acct: CrmAccount) -> str:
 
 
 def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
-    """Email to a BUYER company — offer robot company introductions, not a lecture on why they need robots."""
+    """Email from robot sales rep to buyer ops — first person, no platform branding."""
     industry = (acct.industry or "your industry").strip()
     name = (acct.name or "your team").strip()
-    selected_traits = set(traits)
+    industry_lower = industry.lower()
 
-    lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
+    lines: list[str] = ["Hey,", ""]
 
-    if "robot_examples" in selected_traits or "insightful" in selected_traits:
+    if industry_lower in ("logistics", "warehousing"):
         lines.append(
-            f"We've been mapping the robot vendor landscape for {industry} operations — "
-            f"AMRs, delivery robots, task automation — and {name} fits the profile of teams "
-            f"that see real ROI on this stuff. We know which vendors are actually deploying in your space."
+            f"I've been following what's happening at {name} in logistics — "
+            f"teams in that space often have at least one workflow where floor automation pays for itself."
         )
-        lines.extend(["", pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits)])
-    elif "humor" in selected_traits:
-        lines.append(pick_cal_insight(company_name=name, allow_humor=True))
+    elif industry_lower in ("hospitality", "hotels", "casinos & gaming"):
         lines.append(
-            f"We track which robot companies are actually solving {industry} problems right now — "
-            f"and I think a couple of them are a match for {name}."
+            f"I've been watching labor and overnight coverage pressure at {name} — "
+            f"that's usually when hospitality teams start evaluating service and cleaning automation."
+        )
+    elif industry_lower in ("healthcare", "medical technology"):
+        lines.append(
+            f"I've had {name} on my radar in healthcare — "
+            f"there's often an AMR or logistics automation angle when clinical ops scale."
+        )
+    elif industry_lower in ("food service", "food processing & manufacturing"):
+        lines.append(
+            f"I noticed operational signals around {name} in food service — "
+            f"back-of-house and line automation tend to come up when throughput is tight."
         )
     else:
         lines.append(
-            f"We track robot companies by deployment type and industry fit. "
-            f"Based on {name}'s profile, I have a short list of vendors worth a look — "
-            f"ones that are active in {industry} and have real deployments, not just demos."
+            f"I've had {name} on my radar in {industry} — "
+            f"there may be an automation angle worth a quick look on your side."
         )
 
     lines.append("")
-
-    if "inquisitive" in selected_traits:
-        lines.append("What's the main bottleneck right now — labor coverage, throughput, or something else? I can narrow the list.")
-    else:
-        channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
-        meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
-        if channel in ("phone", "meeting"):
-            lines.append(meeting or "Worth a 15-minute call? I can walk through the vendor shortlist.")
-        else:
-            lines.append("Want me to send over the shortlist? Quick reply is all it takes.")
+    lines.append(REP_OUTREACH_CTA)
 
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
-        lines.extend(["", collateral])
+        lines.extend(["", collateral.replace("I can also send", "Happy to send").replace("I’m including", "I can include")])
 
-    lines.extend(["", cal_signature()])
+    lines.extend(["", rep_outreach_signature()])
     return "\n".join(lines)
 
 

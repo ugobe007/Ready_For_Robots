@@ -45,7 +45,7 @@ export default function PipelineOutreachValuePanel({
         <div className="flex items-center gap-1.5">
           <Mail className="h-3.5 w-3.5 text-emerald-700" />
           <p className={variant === "compact" ? "text-[10px] font-bold uppercase tracking-widest text-gray-500" : "text-[10px] font-bold uppercase tracking-widest text-gray-400"}>
-            Cal&apos;s draft — ready to send
+            Your outreach draft — ready to send
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -95,7 +95,7 @@ export default function PipelineOutreachValuePanel({
       {!hasSession && (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[11px] leading-relaxed text-emerald-800">
-            This draft is generated from live buyer signals. Sign up free to copy, save, and track this lead.
+            This draft is written in your voice for this buyer. Sign up free to copy, save, and track this lead.
           </p>
           <Link
             href={signupHref}
