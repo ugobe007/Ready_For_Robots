@@ -36,6 +36,8 @@ import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
 import HubSpotOnboardingBanner from "@/components/HubSpotOnboardingBanner";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
+import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
+import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1748,13 +1750,19 @@ export default function Pipeline() {
             </div>
 
             <div className="px-3 sm:px-4 pt-2">
-              <HubSpotOnboardingBanner
-                connected={hubspotIntegration?.connected}
-                hasSession={Boolean(session?.access_token)}
-              />
+              {panelPlan === "anonymous" && (
+                <AnonymousValueStrip
+                  leadCount={deals.length}
+                  limit={entitlements?.pipeline_limit ?? previewLimit}
+                />
+              )}
+              <div className={panelPlan === "anonymous" ? "mt-2" : ""}>
+                <HubSpotOnboardingBanner
+                  connected={hubspotIntegration?.connected}
+                  hasSession={Boolean(session?.access_token)}
+                />
+              </div>
             </div>
-
-            {/* ── Alerts ── */}
             {(loadErr || (!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0)) && (
               <div className="space-y-1.5 border-b border-gray-200 px-3 py-2 sm:px-4">
                 {loadErr && (
@@ -2465,6 +2473,15 @@ export default function Pipeline() {
 
                   <PipelineRobotPriorityPanel deal={selected} />
 
+                  {!session?.access_token && selected && (
+                    <PipelineOutreachValuePanel
+                      deal={selected}
+                      hasSession={false}
+                      copied={copied}
+                      onCopy={copyDraft}
+                    />
+                  )}
+
                   <div className="pipeline-detail-section-muted">
                     <LeadShareBar panel lead={dealToShareLead(selected)} />
                   </div>
@@ -2534,7 +2551,7 @@ export default function Pipeline() {
                           )}
                           {panelPlan === "anonymous" && (
                             <p className="text-[10px] leading-relaxed text-emerald-700">
-                              Sign up free to unlock full SIGNAL research and connect to HubSpot.
+                              Free workspace unlocks full research, save up to 5 leads, and copy Cal drafts.
                             </p>
                           )}
                         </div>
@@ -2774,7 +2791,7 @@ export default function Pipeline() {
                           href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
                           className="sb-btn sb-btn-primary"
                         >
-                          Activate SIGNAL
+                          Sign up free — save &amp; copy
                           <ArrowRight className="h-3 w-3" />
                         </Link>
                       )}

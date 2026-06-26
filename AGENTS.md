@@ -12,7 +12,9 @@ The harness operates **autonomously**: commit, push, deploy, and apply scripts w
 
 ## Product / market fit (primary focus)
 
-Read `docs/product_market_fit.md` before every mission. **All agents optimize toward this outcome:**
+Read `docs/product_market_fit.md` and **`docs/value_first_principle.md`** before every mission. **Users do not buy unless they see value** — prove outcomes (live leads, pitch actions, outreach drafts) before signup or upgrade asks.
+
+**All agents optimize toward this outcome:**
 
 > ReadyForRobots is the **automated sales pipeline for robot companies**. Customers sign up to **automate their sales funnel** (SIGNAL-ranked leads, outreach, deal advance). They run in the **native CRM** (`/pipeline`, `/crm`) or **sync to HubSpot**.
 
@@ -22,6 +24,7 @@ Read `docs/product_market_fit.md` before every mission. **All agents optimize to
 | **Activation** | Does this move browse → signup → first saved lead → pipeline motion? |
 | **CRM path** | Does this work for native CRM *and* HubSpot-connected teams? |
 | **Trust** | Does the pipeline surface defensible buyer intent (not junk/news)? |
+| **Value proof** | Can an anonymous user see a concrete win (draft, action, robot SKU) before signup? |
 
 Lead-quality north star (below) is **infrastructure for PMF** — fix junk before ranking tweaks, but do not confuse data cleanup with product success. ProductSurface missions default to the conversion funnel in `docs/conversion_agent_challenges.md`.
 
@@ -172,6 +175,7 @@ Legacy `frontend/nextjs/` — avoid new product work unless explicitly requested
 
 ## Related docs
 
+- [docs/value_first_principle.md](docs/value_first_principle.md)
 - [docs/product_market_fit.md](docs/product_market_fit.md)
 - [docs/competitive_positioning.md](docs/competitive_positioning.md)
 - [docs/market_thesis.md](docs/market_thesis.md)

@@ -19,6 +19,8 @@ export default function Signup() {
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const hubspotIntent = params.get("intent") === "hubspot";
+  const nextRaw = params.get("next") || "";
+  const pipelineIntent = nextRaw.startsWith("/pipeline");
 
   const nextPath = () => {
     if (typeof window === "undefined") return "/pipeline";
@@ -106,13 +108,33 @@ export default function Signup() {
             <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
-                : "Turn robot demand signals into a working pipeline."}
+                : pipelineIntent
+                  ? "Copy the draft. Save the lead. Run your pipeline."
+                  : "Turn robot demand signals into a working pipeline."}
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-gray-600">
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
-                : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
+                : pipelineIntent
+                  ? "Free workspace: save up to 5 HOT/WARM leads, copy Cal outreach drafts, and sync to HubSpot when you are ready. No card required."
+                  : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
             </p>
+            {pipelineIntent && !hubspotIntent && (
+              <ul className="mt-4 space-y-2 text-xs text-gray-600">
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  Pick up exactly where you left off — same lead after signup
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  Copy signal-matched outreach drafts in one click
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  50 live pipeline leads · pitch actions · robot categories
+                </li>
+              </ul>
+            )}
           </div>
 
           {status === "sent" ? (

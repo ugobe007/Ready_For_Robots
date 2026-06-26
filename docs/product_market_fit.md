@@ -84,11 +84,13 @@ Lead quality (`docs/lead_quality_north_star.md`) is **infrastructure for PMF**, 
 
 When choosing or executing a mission, prefer work in this order:
 
-1. **Conversion to signup** — CTA continuity, post-auth landing on `/pipeline`, friction removal ([conversion_agent_challenges.md](conversion_agent_challenges.md))
-2. **Activation** — first save, CRM account creation, HubSpot connect flow
-3. **Pipeline motion** — rotate/preview leads, kanban, next actions, share/amplify
-4. **Lead quality** — only when snapshot shows junk blocking trust (names/events first)
-5. **Market intel / catalog** — supports pitch specificity, not primary PMF
+1. **Value proof (anonymous)** — live lead + pipeline_action + outreach draft before signup ([value_first_principle.md](value_first_principle.md))
+2. **Conversion to signup** — CTA continuity, post-auth landing on `/pipeline`, friction removal ([conversion_agent_challenges.md](conversion_agent_challenges.md))
+3. **Activation** — first save, copy draft, CRM account, HubSpot connect flow
+4. **Pipeline motion** — rotate/preview leads, kanban, next actions, share/amplify
+5. **Earned upgrade** — paywall only after free value consumed (save limit, research teaser)
+6. **Lead quality** — only when snapshot shows junk blocking trust (names/events first)
+7. **Market intel / catalog** — supports pitch specificity, not primary PMF
 
 **Anti-patterns:** robotics news aggregator, OEM-as-buyer pipeline, dashboard parity with Salesforce, volume over quality, **horizontal GTM data parity** (Explee/Apollo-style “105M companies” — see [competitive_positioning.md](competitive_positioning.md)).
 
@@ -113,6 +115,7 @@ Full comparison: [competitive_positioning.md](competitive_positioning.md).
 
 ## Related docs
 
+- [value_first_principle.md](value_first_principle.md) — show value before signup/pay
 - [competitive_positioning.md](competitive_positioning.md) — vs Explee, Apollo, Clay
 - [market_thesis.md](market_thesis.md) — ranked backlog and puck bets
 - [conversion_agent_challenges.md](conversion_agent_challenges.md) — funnel challenges for ProductSurface
