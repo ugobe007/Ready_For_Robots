@@ -25,7 +25,6 @@ import {
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
 import HeroUrlScan from "@/components/marketing/HeroUrlScan";
-import HeroFomoTicker from "@/components/marketing/HeroFomoTicker";
 import { LiveDot } from "@/components/marketing/primitives";
 import { usePipelineStats, formatStat } from "@/hooks/usePipelineStats";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -161,7 +160,6 @@ export default function Home() {
               </p>
 
               <HeroUrlScan />
-              <HeroFomoTicker />
 
               <Link href="/pipeline" className="btn-secondary-hero mb-4">
                 Browse the pipeline free
