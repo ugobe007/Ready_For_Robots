@@ -386,7 +386,7 @@ export default function Crm() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 pt-24 pb-8">
+      <main className="admin-workspace flex-1 w-full max-w-4xl mx-auto px-4 pt-24 pb-8">
         <AdminNav />
         <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>

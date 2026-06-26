@@ -299,7 +299,7 @@ export default function SalesConsole() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
-      <main className="max-w-7xl mx-auto px-6 pt-28 pb-16">
+      <main className="admin-workspace max-w-7xl mx-auto px-6 pt-28 pb-16">
         <AdminNav />
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
@@ -545,7 +545,7 @@ export default function SalesConsole() {
                           <p className="mt-3 text-sm text-gray-600">{action.recommendation}</p>
                           {action.draft_subject && <p className="mt-3 text-xs font-bold text-gray-500">Subject: {action.draft_subject}</p>}
                           {action.draft_body && (
-                            <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-100 bg-black/20 p-3 text-xs leading-relaxed text-gray-600">
+                            <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-300 bg-gray-50 p-3 text-xs leading-relaxed text-gray-800">
                               {action.draft_body}
                             </pre>
                           )}

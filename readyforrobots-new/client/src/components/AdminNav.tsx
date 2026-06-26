@@ -29,7 +29,7 @@ export default function AdminNav() {
   return (
     <nav className="mb-5 overflow-x-auto rounded-xl border border-gray-300 bg-white p-2 shadow-sm">
       <div className="flex min-w-max items-center gap-2">
-        <span className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">Workspace</span>
+        <span className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-700">Workspace</span>
         {ADMIN_LINKS.map((link) => {
           const active = isActive(location, link.href);
           return (

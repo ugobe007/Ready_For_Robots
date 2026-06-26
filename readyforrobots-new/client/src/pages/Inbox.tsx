@@ -86,11 +86,11 @@ export default function Inbox() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
-      <main className="mx-auto max-w-7xl px-6 pb-16 pt-28">
+      <main className="admin-workspace mx-auto max-w-7xl px-6 pb-16 pt-28">
         <AdminNav />
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Operator inbox</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-800">Operator inbox</p>
             <h1 className="mt-2 text-4xl font-black">Replies</h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-500">
               Buyer and robot-company replies land here before you decide whether SIGNAL should respond or you should take over.
@@ -100,7 +100,7 @@ export default function Inbox() {
             Refresh
           </button>
         </div>
-        {err && <p className="mt-5 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-sm text-red-100">{err}</p>}
+        {err && <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{err}</p>}
         <section className="mt-8 grid gap-5 lg:grid-cols-[380px_1fr]">
           <aside className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -113,11 +113,11 @@ export default function Inbox() {
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedId(item.id)}
-                  className="w-full rounded-2xl border p-4 text-left transition"
-                  style={{
-                    borderColor: selectedId === item.id ? "rgba(255,176,0,0.5)" : "rgba(255,255,255,0.08)",
-                    background: selectedId === item.id ? "rgba(255,176,0,0.08)" : "rgba(255,255,255,0.025)",
-                  }}
+                  className={`w-full rounded-2xl border p-4 text-left transition ${
+                    selectedId === item.id
+                      ? "border-amber-400 bg-amber-50"
+                      : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-white"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-bold text-gray-800">{item.title}</p>
@@ -148,7 +148,7 @@ export default function Inbox() {
                     </Link>
                   </div>
                 </div>
-                <div className="mt-5 rounded-2xl border border-gray-100 bg-black/15 p-4">
+                <div className="mt-5 rounded-2xl border border-gray-300 bg-gray-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Incoming message</p>
                   <p className="mt-2 text-sm font-bold text-gray-700">{selected.subject || "No subject"}</p>
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{selected.body_text || "No body captured."}</p>
@@ -157,7 +157,7 @@ export default function Inbox() {
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-100/70">Recommended next step</p>
                   <p className="mt-2 text-sm text-emerald-100/85">{selected.next_best_action?.recommendation || "Review the reply and decide whether to respond or schedule a meeting."}</p>
                   {selected.latest_action?.draft_body && (
-                    <pre className="mt-3 max-h-60 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-100 bg-black/20 p-3 text-xs leading-relaxed text-gray-600">
+                    <pre className="mt-3 max-h-60 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-300 bg-white p-3 text-xs leading-relaxed text-gray-800">
                       {selected.latest_action.draft_body}
                     </pre>
                   )}

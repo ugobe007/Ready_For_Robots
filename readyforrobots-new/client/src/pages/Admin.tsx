@@ -201,11 +201,11 @@ function RobotBenchmarkPanel({ api, headers }: {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-100 p-5 mb-3" style={{ background: "rgba(5,150,105,0.05)" }}>
+    <div className="rounded-2xl border border-gray-200 p-5 mb-3" style={{ background: "rgba(5,150,105,0.05)" }}>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "#10b981" }}>Robot Benchmark Index</p>
-          <p className="text-[12px] text-gray-500">Scrape fresh specs, update scores, generate report &amp; LinkedIn post.</p>
+          <p className="text-[12px] font-medium text-gray-700">Scrape fresh specs, update scores, generate report &amp; LinkedIn post.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -227,7 +227,7 @@ function RobotBenchmarkPanel({ api, headers }: {
           </button>
           <a
             href="/robots"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-[11px] font-bold text-gray-500"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 px-3 py-1.5 text-[11px] font-bold text-gray-800"
           >
             View index →
           </a>
@@ -264,7 +264,7 @@ function RobotBenchmarkPanel({ api, headers }: {
               >
                 Open LinkedIn Share →
               </a>
-              <button type="button" onClick={() => setPostOpen(false)} className="rounded-xl border border-gray-100 px-4 py-2 text-xs font-bold text-gray-400">Close</button>
+              <button type="button" onClick={() => setPostOpen(false)} className="rounded-xl border border-gray-300 px-4 py-2 text-xs font-bold text-gray-700">Close</button>
             </div>
           </div>
         </div>
@@ -879,7 +879,7 @@ export default function Admin() {
         <AdminNav />
 
         {syncingSection && !(syncingSection === "cal" && calStatus) ? (
-          <p className="mb-4 rounded-xl border border-gray-100 px-4 py-2 text-xs text-gray-500" >
+          <p className="mb-4 rounded-xl border border-gray-200 px-4 py-2 text-xs text-gray-500" >
             Updating {syncingSection.replace(/_/g, " ")}…
           </p>
         ) : null}
@@ -914,7 +914,7 @@ export default function Admin() {
           </div>
         </div>
 
-        <details className="mb-4 rounded-xl border border-gray-100 px-4 py-3 group" style={{ background: "rgba(255,255,255,0.02)" }}>
+        <details className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 group">
           <summary className="cursor-pointer list-none text-[11px] font-bold text-gray-500 marker:content-none">
             Reply notification email
             <span className="ml-2 font-normal text-gray-400">optional · forwards Cal replies</span>
@@ -934,7 +934,7 @@ export default function Admin() {
               className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold border transition-all disabled:opacity-50"
               style={
                 replySettingSaved
-                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }
+                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#047857" }
                   : { background: "rgba(5,150,105,0.12)", borderColor: "rgba(5,150,105,0.35)", color: "#047857" }
               }
             >
@@ -967,7 +967,7 @@ export default function Admin() {
         {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{error}</div>}
 
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
-        <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-100 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
+        <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-200 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 min-w-0">
               <Mail className="h-4 w-4 shrink-0" style={{ color: "#10b981" }} />
@@ -1141,7 +1141,7 @@ export default function Admin() {
                                 style={
                                   prospect.account_type === "vendor"
                                     ? { background: "rgba(167,139,250,0.12)", borderColor: "rgba(167,139,250,0.3)", color: "#10b981" }
-                                    : { background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.2)", color: "#6ee7b7" }
+                                    : { background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.2)", color: "#047857" }
                                 }
                               >
                                 {prospect.account_type === "vendor" ? "vendor" : "buyer"}
@@ -1212,7 +1212,7 @@ export default function Admin() {
                             {prospect.has_draft ? (
                               <>
                                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Cal draft</p>
-                                <pre className="whitespace-pre-wrap rounded-xl border border-gray-100 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-600">
+                                <pre className="whitespace-pre-wrap rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-600">
                                   {prospect.crm_account_id && draftBodies[prospect.crm_account_id]
                                     ? draftBodies[prospect.crm_account_id]
                                     : draftBodyLoading === prospect.crm_account_id
@@ -1294,7 +1294,7 @@ export default function Admin() {
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
             <BarChart3 className="h-4 w-4" style={{ color: "#059669" }} />
-            <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Site metrics</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900">Site metrics</p>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()} · page views + SCOUT sessions`} />
@@ -1306,7 +1306,7 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <div className="mb-4 flex items-center justify-between gap-3">
               <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Recent users</p>
               <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-400">{formatNumber(users.length)} shown</span>
@@ -1319,7 +1319,7 @@ export default function Admin() {
                 <span>Last active</span>
               </div>
               {(users.length ? users : [{ email: "No users yet" }]).slice(0, 30).map((user, index) => (
-                <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-gray-100 py-3 text-xs">
+                <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-gray-200 py-3 text-xs">
                   <div className="min-w-0">
                     <p className="truncate text-gray-900">{user.email || "Unknown user"}</p>
                     <p className="mt-1 truncate text-[10px] text-gray-500">{user.id || "—"}</p>
@@ -1332,7 +1332,7 @@ export default function Admin() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <div className="mb-4 flex items-center gap-2">
               <Activity className="h-4 w-4" style={{ color: "#FFB000" }} />
               <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent activity</p>
@@ -1353,7 +1353,7 @@ export default function Admin() {
         </section>
 
         {analytics?.insights && (
-          <section className="mb-8 rounded-2xl border border-gray-100 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.08), rgba(3,218,197,0.04))" }}>
+          <section className="mb-8 rounded-2xl border border-gray-200 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.08), rgba(3,218,197,0.04))" }}>
             <p className="mb-3 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Operator notes</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {[analytics.insights.hottest_trend, analytics.insights.opportunity, analytics.insights.action_item].filter(Boolean).map((item) => (
@@ -1364,7 +1364,7 @@ export default function Admin() {
         )}
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>System controls</p>
             <p className="mb-4 text-xs leading-relaxed text-gray-600">
               These actions use the same authenticated admin session, so failures are shown here instead of opening unauthenticated tabs.
@@ -1407,7 +1407,7 @@ export default function Admin() {
           </div>
 
 
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Operational shortcuts</p>
             <p className="mb-4 text-xs leading-relaxed text-gray-600">
               Admin remains the single ops home. Use these links for the dedicated work consoles.
@@ -1440,7 +1440,7 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Industry mix</p>
             <div className="space-y-2">
               {(stats?.by_industry || []).slice(0, 8).map((item) => (
@@ -1451,7 +1451,7 @@ export default function Admin() {
               ))}
             </div>
           </div>
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Signal types</p>
             <div className="space-y-2">
               {(stats?.by_signal_type || []).slice(0, 8).map((item) => (
@@ -1465,7 +1465,7 @@ export default function Admin() {
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <form onSubmit={importUrls} className="rounded-2xl border border-gray-100 p-5" >
+          <form onSubmit={importUrls} className="rounded-2xl border border-gray-200 p-5" >
             <UploadCloud className="mb-4 h-5 w-5" style={{ color: "#FFB000" }} />
             <p className="text-sm font-bold text-gray-900">Import URLs</p>
             <textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="https://example.com/feed&#10;https://example.com/news" className="sb-input mt-3 min-h-28 text-xs" />
@@ -1481,7 +1481,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <form onSubmit={importCompanies} className="rounded-2xl border border-gray-100 p-5" >
+          <form onSubmit={importCompanies} className="rounded-2xl border border-gray-200 p-5" >
             <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#10b981" }} />
             <p className="text-sm font-bold text-gray-900">Import Companies</p>
             <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="sb-input mt-3 min-h-40 font-mono text-[11px]" />
@@ -1490,7 +1490,7 @@ export default function Admin() {
             </button>
           </form>
 
-          <form onSubmit={triggerScrape} className="rounded-2xl border border-gray-100 p-5" >
+          <form onSubmit={triggerScrape} className="rounded-2xl border border-gray-200 p-5" >
             <Play className="mb-4 h-5 w-5" style={{ color: "#059669" }} />
             <p className="text-sm font-bold text-gray-900">Trigger Scraper</p>
             <select value={triggerScraper} onChange={(e) => setTriggerScraper(e.target.value)} className="sb-input mt-3 text-xs">
@@ -1499,18 +1499,18 @@ export default function Admin() {
             <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="sb-input mt-2 text-xs">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "All industries"}</option>)}
             </select>
-            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-300/45 px-4 py-2.5 text-xs font-bold text-teal-200 disabled:opacity-50">
+            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-600 bg-teal-50 px-4 py-2.5 text-xs font-bold text-teal-900 disabled:opacity-50">
               {actionBusy === "scraper" ? "Queueing..." : "Queue Scraper"}
             </button>
           </form>
         </section>
 
-        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-gray-100 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
+        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-gray-200 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <Bot className="h-4 w-4" style={{ color: "#059669" }} />
-                <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>AI workflow command center</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900">AI workflow command center</p>
               </div>
               <h2 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
               <p className="mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">
@@ -1537,7 +1537,7 @@ export default function Admin() {
           </div>
 
           {workflow?.errors?.length ? (
-            <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-xs text-red-200">
+            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-xs font-medium text-red-900">
               Some workflow sources could not load: {workflow.errors.map((item) => sourceLabel(item.source)).join(", ")}
             </div>
           ) : null}
@@ -1564,9 +1564,9 @@ export default function Admin() {
                         </span>
                         <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] capitalize text-gray-600">{sourceLabel(item.source)}</span>
                         {item.requires_approval && <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-900">approval required</span>}
-                        {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
+                        {item.priority === "high" && <span className="rounded-full border border-red-400 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-900">high priority</span>}
                       </div>
-                      <p className="truncate text-sm font-bold text-gray-900/82">{item.title || "Untitled workflow action"}</p>
+                      <p className="truncate text-sm font-bold text-gray-900">{item.title || "Untitled workflow action"}</p>
                       <p className="mt-1 text-xs text-gray-600">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
                       {item.description && <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.description}</p>}
                     </div>
@@ -1584,7 +1584,7 @@ export default function Admin() {
 
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent companies</p>
             <div className="space-y-3">
               {(stats?.recent_companies || []).map((company) => (
@@ -1596,7 +1596,7 @@ export default function Admin() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-100 p-5" >
+          <div className="rounded-2xl border border-gray-200 p-5" >
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#10b981" }}>Scrape targets</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {Object.entries(targets?.summary || {}).map(([key, value]) => (

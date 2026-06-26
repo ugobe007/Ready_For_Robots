@@ -155,7 +155,7 @@ export default function ScoutActionBar({
           1 · Draft emails
         </button>
 
-        <span className="text-xs text-gray-400">→</span>
+        <span className="text-xs font-semibold text-gray-600">→</span>
 
         {/* Step 2 — Send */}
         <button
@@ -169,7 +169,7 @@ export default function ScoutActionBar({
           2 · Send all{stats?.drafted ? ` (${stats.drafted})` : ""}
         </button>
 
-        <span className="text-xs text-gray-400">→</span>
+        <span className="text-xs font-semibold text-gray-600">→</span>
 
         {/* Step 3 — Track */}
         <button

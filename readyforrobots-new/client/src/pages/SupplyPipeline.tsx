@@ -368,7 +368,7 @@ export default function SupplyPipeline() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="flex-1 px-4 pb-12 pt-24">
+      <main className="admin-workspace flex-1 px-4 pb-12 pt-24">
         <div className="mx-auto max-w-6xl">
           <AdminNav />
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
@@ -395,7 +395,7 @@ export default function SupplyPipeline() {
             <button
               type="button"
               onClick={approveAll}
-              className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100"
+              className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-900"
             >
               Bulk approve drafts
             </button>
@@ -408,14 +408,14 @@ export default function SupplyPipeline() {
             </button>
             <p className="text-[11px] text-gray-400">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
           </div>
-          {err && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{err}</p>}
+          {err && <p className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{err}</p>}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-4 py-3">
                 <p className="text-xs font-bold text-gray-700">{loading ? "Loading..." : `${visibleRows.length} shown · ${rows.length} total`}</p>
                 <p className="mt-1 text-[11px] text-gray-400">Unsent prospects are separated from companies SIGNAL already contacted.</p>
-                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-gray-100 bg-black/10 p-1">
+                <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl border border-gray-300 bg-gray-100 p-1">
                   {[
                     { key: "needs_action", label: "Unsent", count: needsActionCount },
                     { key: "sent", label: "Sent", count: sentCount },
@@ -452,14 +452,13 @@ export default function SupplyPipeline() {
                       key={company.id}
                       type="button"
                       onClick={() => setSelectedId(company.id)}
-                      className="mb-2 w-full rounded-xl border px-3 py-2.5 text-left"
-                      style={
+                      className={`mb-2 w-full rounded-xl border px-3 py-2.5 text-left ${
                         active
-                          ? { borderColor: "rgba(255,176,0,0.45)", background: "rgba(255,176,0,0.08)" }
+                          ? "border-amber-400 bg-amber-50"
                           : draft?.sent
-                          ? { borderColor: "rgba(52,211,153,0.22)", background: "rgba(52,211,153,0.045)" }
-                          : { borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }
-                      }
+                          ? "border-emerald-300 bg-emerald-50"
+                          : "border-gray-300 bg-white hover:border-gray-400"
+                      }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-bold text-gray-800">{company.company_name}</p>
@@ -472,16 +471,16 @@ export default function SupplyPipeline() {
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {draft?.approved && !draft.sent && (
-                          <span className="rounded-full bg-violet-400/12 px-2 py-0.5 text-[9px] font-bold text-violet-100">Approved</span>
+                          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-bold text-violet-900">Approved</span>
                         )}
                         {draft?.sent && (
-                          <span className="rounded-full bg-emerald-400/12 px-2 py-0.5 text-[9px] font-bold text-emerald-100">Contacted · {sentLabel}</span>
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-900">Contacted · {sentLabel}</span>
                         )}
                         {draft?.lastAction && !draft.sent && (
                           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-bold text-gray-500">{draft.lastAction}</span>
                         )}
                         {!draft?.to && (
-                          <span className="rounded-full bg-amber-400/12 px-2 py-0.5 text-[9px] font-bold text-amber-100">Needs email</span>
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">Needs email</span>
                         )}
                       </div>
                     </button>
@@ -535,10 +534,10 @@ export default function SupplyPipeline() {
                   </div>
                   {!!(selected.contact_research?.decision_makers || []).length && (
                     <div className="mt-3 rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3">
-                      <p className="text-[10px] uppercase tracking-widest text-emerald-100/70">Researched decision makers</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-900">Researched decision makers</p>
                       <div className="mt-2 grid gap-2 md:grid-cols-3">
                         {(selected.contact_research?.decision_makers || []).map((person) => (
-                          <div key={`${person.first_name}-${person.last_name}-${person.source_url}`} className="rounded-lg border border-gray-100 bg-black/10 p-2">
+                          <div key={`${person.first_name}-${person.last_name}-${person.source_url}`} className="rounded-lg border border-gray-300 bg-gray-50 p-2">
                             <p className="text-xs font-bold text-gray-800">
                               {[person.first_name, person.last_name].filter(Boolean).join(" ")}
                             </p>
@@ -554,7 +553,7 @@ export default function SupplyPipeline() {
                     </div>
                   )}
                   {(selected.contact_strategy.targets || []).length > 1 && (
-                    <div className="mt-3 rounded-xl border border-gray-100 bg-black/10 p-3">
+                    <div className="mt-3 rounded-xl border border-gray-300 bg-gray-50 p-3">
                       <p className="text-[10px] uppercase tracking-widest text-gray-400">Email candidates</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {(selected.contact_strategy.targets || []).map((target) => (
@@ -562,7 +561,7 @@ export default function SupplyPipeline() {
                             key={`${target.role}-${target.contact}`}
                             type="button"
                             onClick={() => target.contact && patchDraft(selected.robot_company.id, { to: target.contact, approved: false })}
-                            className="rounded-full border border-gray-200 bg-white px-2 py-1 text-[10px] font-bold text-gray-500 hover:border-amber-400/40 hover:text-amber-100"
+                            className="rounded-full border border-gray-300 bg-white px-2 py-1 text-[10px] font-bold text-gray-700 hover:border-amber-400 hover:text-amber-900"
                           >
                             {target.role}: {target.contact || "research"}
                           </button>
@@ -572,18 +571,18 @@ export default function SupplyPipeline() {
                         <button
                           type="button"
                           onClick={() => patchDraft(selected.robot_company.id, { to: selected.contact_strategy.recommended_to?.join(", ") || "", approved: false })}
-                          className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[10px] font-bold text-amber-100"
+                          className="mt-3 rounded-lg border border-amber-400 bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-950"
                         >
                           Use policy recipients
                         </button>
                       )}
                     </div>
                   )}
-                  <div className="mt-3 rounded-xl border border-gray-100 bg-black/10 p-3">
+                  <div className="mt-3 rounded-xl border border-gray-300 bg-gray-50 p-3">
                     <button
                       type="button"
                       onClick={() => patchDraft(selected.robot_company.id, { expanded: !selectedDraft.expanded })}
-                      className="text-xs font-bold text-amber-300 underline"
+                      className="text-xs font-bold text-amber-800 underline"
                     >
                       {selectedDraft.expanded ? "Hide details" : "Show details"}
                     </button>
@@ -626,10 +625,10 @@ export default function SupplyPipeline() {
                     <p className="text-[10px] uppercase tracking-widest text-gray-400">Editable outreach draft</p>
                     <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
                       selectedDraft.sent
-                        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+                        ? "border-emerald-400 bg-emerald-50 text-emerald-900"
                         : selectedDraft.approved
-                        ? "border-emerald-400/30 bg-violet-400/10 text-violet-100"
-                        : "border-amber-400/30 bg-amber-400/10 text-amber-100"
+                        ? "border-emerald-400 bg-emerald-50 text-emerald-900"
+                        : "border-amber-400 bg-amber-50 text-amber-950"
                     }`}>
                       {selectedDraft.sent ? "Sent" : selectedDraft.approved ? "Approved" : "Needs approval"}
                     </span>
@@ -652,7 +651,7 @@ export default function SupplyPipeline() {
                               </p>
                             )}
                             {(item.problem_reason || item.cal_delivery_action) && (
-                              <p className="mt-1 rounded border border-amber-400/20 bg-amber-400/5 px-2 py-1 text-amber-100/80">
+                              <p className="mt-1 rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-950">
                                 {item.cal_delivery_action || item.problem_reason}
                               </p>
                             )}
@@ -688,7 +687,7 @@ export default function SupplyPipeline() {
                         value={selectedDraft.body}
                         onChange={(e) => patchDraft(selected.robot_company.id, { body: e.target.value, approved: false })}
                         rows={14}
-                        className="w-full rounded-lg border border-gray-200 bg-black/15 px-3 py-2 text-sm leading-relaxed text-gray-900 outline-none"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm leading-relaxed text-gray-900 outline-none"
                       />
                     </label>
                   </div>
@@ -697,7 +696,7 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => void approveDraft(selected)}
                       disabled={selectedDraft.sending}
-                      className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-100 disabled:opacity-50"
+                      className="rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-900 disabled:opacity-50"
                     >
                       Approve draft
                     </button>
@@ -727,7 +726,7 @@ export default function SupplyPipeline() {
                     <div
                       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${
                         selectedDraft.sent
-                          ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900"
                           : "border-gray-200 bg-white text-gray-400"
                       }`}
                       title={selectedDraft.sent ? "Outreach sent and copied to CRM sent messages." : "Live send will record this in CRM sent messages."}
@@ -743,9 +742,9 @@ export default function SupplyPipeline() {
                     </div>
                   </div>
                   {selectedDraft.sent && (
-                    <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/8 p-3 text-xs text-emerald-100">
-                      <p className="font-bold">Workflow checkpoint complete: email sent and activity copied to CRM sent messages.</p>
-                      <p className="mt-1 text-emerald-100/70">
+                    <div className="mt-3 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-medium text-emerald-950">
+                      <p className="font-bold text-emerald-900">Workflow checkpoint complete: email sent and activity copied to CRM sent messages.</p>
+                      <p className="mt-1 text-emerald-800">
                         CRM account: {selectedDraft.crmAccountId || "tracked"} · Message: {selectedDraft.crmOutreachMessageId || selectedDraft.trackingId || "tracked"}
                       </p>
                     </div>

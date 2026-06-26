@@ -539,41 +539,63 @@
   /* Admin workspace — high-contrast light theme (readable on bg-slate-50) */
   .admin-workspace {
     @apply text-gray-900;
+    color-scheme: light;
   }
 
-  .admin-card {
-    @apply rounded-xl border border-gray-200 bg-white p-4 shadow-sm;
-  }
-
-  .admin-card-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500;
-  }
-
-  .admin-card-value {
-    @apply mt-2 font-mono text-2xl font-bold text-gray-900;
-  }
-
-  .admin-card-sub {
-    @apply mt-1 text-xs text-gray-600;
-  }
-
-  .admin-panel {
-    @apply rounded-xl border border-gray-200 bg-white p-4 shadow-sm;
-  }
-
-  .admin-table-head {
-    @apply border-b border-gray-200 pb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500;
-  }
-
-  .admin-table-row {
-    @apply rounded-xl border border-gray-200 bg-gray-50/80 transition-colors hover:bg-white;
-  }
-
-  .admin-muted {
+  /* Bump muted Tailwind grays one step darker inside admin surfaces */
+  .admin-workspace :where(.text-gray-400) {
     @apply text-gray-600;
   }
 
+  .admin-workspace :where(.text-gray-500) {
+    @apply text-gray-700;
+  }
+
+  .admin-workspace :where(.border-gray-100) {
+    @apply border-gray-200;
+  }
+
+  .admin-card {
+    @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
+  }
+
+  .admin-card-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-gray-700;
+  }
+
+  .admin-card-value {
+    @apply mt-2 font-mono text-2xl font-bold text-gray-950;
+  }
+
+  .admin-card-sub {
+    @apply mt-1 text-xs font-medium text-gray-700;
+  }
+
+  .admin-panel {
+    @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
+  }
+
+  .admin-table-head {
+    @apply border-b-2 border-gray-300 pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-700;
+  }
+
+  .admin-table-row {
+    @apply rounded-xl border border-gray-300 bg-white transition-colors hover:border-gray-400 hover:bg-gray-50;
+  }
+
+  .admin-muted {
+    @apply text-gray-700;
+  }
+
   .admin-kicker {
-    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800;
+    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900;
+  }
+
+  .admin-section {
+    @apply rounded-2xl border border-gray-300 bg-white p-5 shadow-sm;
+  }
+
+  .admin-caption {
+    @apply text-[11px] font-medium text-gray-700;
   }
 }

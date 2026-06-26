@@ -93,7 +93,7 @@ export default function SalesWorkflow() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="admin-workspace min-h-screen bg-neutral-50">
       <Header />
       <AdminNav />
       <main className="max-w-6xl mx-auto px-4 py-8">

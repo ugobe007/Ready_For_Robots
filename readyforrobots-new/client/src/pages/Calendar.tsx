@@ -131,11 +131,11 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
-      <main className="mx-auto max-w-7xl px-6 pb-16 pt-28">
+      <main className="admin-workspace mx-auto max-w-7xl px-6 pb-16 pt-28">
         <AdminNav />
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-300">Internal calendar</p>
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-800">Internal calendar</p>
             <h1 className="mt-2 text-4xl font-black">Calendar</h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-500">Schedule meetings and send `.ics` invites. Events are stored internally and ready for future Google Calendar sync.</p>
           </div>
@@ -144,7 +144,7 @@ export default function CalendarPage() {
           </button>
         </div>
         <section className="mt-8 grid gap-6 lg:grid-cols-[420px_1fr]">
-          <form onSubmit={(event) => void createEvent(event)} className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <form onSubmit={(event) => void createEvent(event)} className="rounded-3xl border border-gray-300 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Schedule meeting</h2>
             {[
               ["title", "Title"],

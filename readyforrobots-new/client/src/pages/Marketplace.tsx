@@ -418,7 +418,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-24">
+      <main className="admin-workspace mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-24">
         <AdminNav />
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Marketplace workspace
@@ -429,7 +429,7 @@ export default function Marketplace() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
           Build the buy-side RFP workflow and the vendor-side document exchange. SIGNAL can use this context to route official proposals, specs, quotes, invoices, and PO milestones between both sides of the marketplace.
         </p>
-        {message && <p className="mt-4 rounded-lg border border-red-500/30 p-3 text-sm text-red-200">{message}</p>}
+        {message && <p className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{message}</p>}
         {busy && <p className="mt-4 text-xs text-gray-400">Working...</p>}
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -473,7 +473,7 @@ export default function Marketplace() {
                 items={rfqs}
                 empty="No RFPs yet."
                 render={(rfq) => `${rfq.status}: ${rfq.title}`}
-                action={(rfq) => <button onClick={() => void createScheduleEvent(rfq)} className="text-[10px] font-bold text-amber-300 underline">Schedule deadline</button>}
+                action={(rfq) => <button onClick={() => void createScheduleEvent(rfq)} className="text-[10px] font-bold text-amber-800 underline">Schedule deadline</button>}
               />
             </div>
           </section>

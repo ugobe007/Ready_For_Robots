@@ -120,7 +120,7 @@ export default function DailyBriefPanel({ data, loading }: Props) {
                   <span className="text-[10px] font-medium text-gray-600">{s.label}</span>
                 </div>
                 <div className="font-mono text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                <div className="mt-0.5 text-[10px] text-gray-500">{s.sub}</div>
+                <div className="mt-0.5 text-[10px] font-medium text-gray-700">{s.sub}</div>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function DailyBriefPanel({ data, loading }: Props) {
                       <strong className="font-mono text-amber-700">{step.count}</strong>
                       {" "}{step.label}
                     </span>
-                    <ArrowRight size={14} className="shrink-0 text-gray-400" />
+                    <ArrowRight size={14} className="shrink-0 text-gray-600" />
                   </a>
                 ))}
               </div>
