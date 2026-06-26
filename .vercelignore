@@ -17,3 +17,10 @@ Dockerfile
 fly.toml
 readyforrobots-new/server/
 readyforrobots-new/dist/index.js
+reports/
+readyforrobots-redesign/
+missions/
+**/node_modules/
+.venv/
+.venv_new/
+venv/
