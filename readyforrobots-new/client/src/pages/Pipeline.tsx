@@ -357,6 +357,8 @@ type PipelineEntitlements = {
 
 const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
+/** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
+const PIPELINE_LEAD_READ_MS = 10_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v4";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */
@@ -1308,9 +1310,23 @@ export default function Pipeline() {
       bucketPoolCanRotate(rotationSource) ||
       (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
     if (!canRotate) return;
-    const timer = window.setInterval(() => setRotateOffset((offset) => offset + 1), 4500);
+    const timer = window.setInterval(
+      () => setRotateOffset((offset) => offset + 1),
+      PIPELINE_LEAD_READ_MS,
+    );
     return () => window.clearInterval(timer);
   }, [hasActiveSearch, showKanban, rotationSource, pipelineSource.length, panelPlan, previewLimit]);
+
+  // Keep CRM detail panel in sync with the rotating spotlight lead.
+  useEffect(() => {
+    if (hasActiveSearch || showKanban || deepLinkLeadId != null) return;
+    const canRotate =
+      bucketPoolCanRotate(rotationSource) ||
+      (panelPlan === "anonymous" && pipelineSource.length > previewLimit);
+    if (!canRotate || filtered.length === 0) return;
+    setSelectedId(filtered[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
+  }, [rotateOffset]);
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
