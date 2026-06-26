@@ -154,8 +154,8 @@ export default function SalesWorkflow() {
   return (
     <div className="admin-workspace min-h-screen bg-neutral-50">
       <Header />
-      <AdminNav />
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 pt-28 pb-8">
+        <AdminNav />
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-950">Sales Workflow</h1>

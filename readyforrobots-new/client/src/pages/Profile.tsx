@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import SiteFooter from "@/components/layout/SiteFooter";
 import AutonomyDial from "@/components/AutonomyDial";
 import { useAuth } from "@/contexts/AuthContext";
@@ -175,9 +176,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="admin-workspace min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="flex-1 pt-24 pb-12 px-4 max-w-lg mx-auto w-full">
+      <main className="flex-1 pt-28 pb-12 px-4 max-w-lg mx-auto w-full">
+        <AdminNav />
         <h1 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
           Your workspace
         </h1>

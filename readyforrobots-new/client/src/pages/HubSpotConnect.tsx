@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Check, ExternalLink, Link2, Loader2, Zap } from "lucide-react";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -189,9 +190,10 @@ export default function HubSpotConnect() {
   const connected = setup?.connection?.connected;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="admin-workspace min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-24">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-28">
+        <AdminNav />
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           HubSpot integration
         </p>

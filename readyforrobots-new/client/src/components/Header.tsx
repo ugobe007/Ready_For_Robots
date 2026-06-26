@@ -21,6 +21,11 @@ import {
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import {
+  ADMIN_WORKSPACE_SECTIONS,
+  isAdminNavActive,
+  isAdminWorkspacePath,
+} from "@/lib/adminNavLinks";
 
 function smoothScroll(href: string) {
   if (href.startsWith("#")) {
@@ -72,6 +77,7 @@ const moreNavLinks = [
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -93,6 +99,7 @@ export default function Header() {
 
   useEffect(() => {
     setMoreOpen(false);
+    setWorkspaceOpen(false);
   }, [location]);
 
   useEffect(() => {
@@ -105,8 +112,19 @@ export default function Header() {
     return () => document.removeEventListener("click", onDoc);
   }, [moreOpen]);
 
+  useEffect(() => {
+    if (!workspaceOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest("[data-nav-workspace]")) setWorkspaceOpen(false);
+    };
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, [workspaceOpen]);
+
   const closeDrawer = () => setOpen(false);
   const signedInEmail = session?.user?.email;
+  const workspaceNavActive = isAdminWorkspacePath(location);
   const moreNavActive = moreNavLinks.some((l) => location === l.href);
   const supportNavActive = supportNavLinks.some((l) => {
     const path = l.href.split("#", 1)[0];
@@ -220,6 +238,45 @@ export default function Header() {
                 </>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
+                  <div className="relative" data-nav-workspace>
+                    <button
+                      type="button"
+                      onClick={() => setWorkspaceOpen((v) => !v)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition ${
+                        workspaceNavActive || workspaceOpen
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50"
+                      }`}
+                      aria-expanded={workspaceOpen}
+                    >
+                      <LayoutDashboard className="h-3.5 w-3.5" />
+                      Workspace
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${workspaceOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {workspaceOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-lg z-[60]">
+                        {ADMIN_WORKSPACE_SECTIONS.map((section) => (
+                          <div key={section.label} className="px-2 py-1">
+                            <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                              {section.label}
+                            </p>
+                            {section.links.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => setWorkspaceOpen(false)}
+                                className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-50 ${
+                                  isAdminNavActive(location, link.href) ? "bg-emerald-50 text-emerald-700" : "text-gray-700"
+                                }`}
+                              >
+                                {link.label}
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Link
                     href="/profile"
                     className="max-w-[140px] truncate rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -352,6 +409,30 @@ export default function Header() {
             </Link>
           ))}
         </div>
+
+        {session && (
+          <div className="px-4 py-2 border-b border-gray-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1 mb-2">Workspace</p>
+            {ADMIN_WORKSPACE_SECTIONS.map((section) => (
+              <div key={section.label} className="mb-2">
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">{section.label}</p>
+                {section.links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeDrawer}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm ${
+                      isAdminNavActive(location, link.href) ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {link.label}
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-300 ml-auto" />
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="px-4 py-3">
           {!session ? (

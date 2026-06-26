@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { getApiBase, getDirectApiBase, liveFetchInit, readSurfaceCache, writeSurfaceCache } from "@/lib/apiBase";
 
 const SOCIAL_SESSION_KEY = "social_daily_posts_v1";
@@ -586,9 +587,10 @@ export default function Social() {
   const totalLeadPosts = (posts || []).filter((p) => p.company_id != null).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900">
+    <div className="admin-workspace min-h-screen bg-slate-50 text-gray-900">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 py-8 pt-24">
+      <main className="max-w-4xl mx-auto px-4 pb-8 pt-28">
+        <AdminNav />
         <div className="mb-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-[#059669] mb-2">Content Studio</p>
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
