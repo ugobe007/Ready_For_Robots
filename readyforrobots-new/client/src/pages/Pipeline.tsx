@@ -358,7 +358,7 @@ type PipelineEntitlements = {
 const PIPELINE_LIMIT_FREE = 50;
 const PIPELINE_LIMIT_PAID = 50;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
-const PIPELINE_LEAD_READ_MS = 10_000;
+const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v4";
 const PIPELINE_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Stale paint while API revalidates — avoids blank page when Fly is slow. */

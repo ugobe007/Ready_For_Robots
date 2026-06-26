@@ -496,12 +496,12 @@ export default function SupplyPipeline() {
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <h2 className="text-xl font-black text-gray-900">{selected.robot_company.company_name}</h2>
-                      <p className="mt-1 text-sm text-white/42">
+                      <p className="mt-1 text-sm text-gray-600">
                         {selected.robot_company.robot_type || "Robotics"} for {selected.robot_company.target_market || "target market review"}
                       </p>
                     </div>
                     {selected.robot_company.website && (
-                      <a href={selected.robot_company.website} target="_blank" rel="noreferrer" className="text-xs font-bold text-amber-300 underline">
+                      <a href={selected.robot_company.website} target="_blank" rel="noreferrer" className="text-xs font-bold text-emerald-700 underline">
                         Website
                       </a>
                     )}
@@ -512,7 +512,7 @@ export default function SupplyPipeline() {
                       <p className="mt-1 text-sm font-bold text-gray-800">{selected.contact_strategy.primary?.role || "Partnerships"}</p>
                       <p className="mt-1 break-all text-xs text-gray-500">{selected.contact_strategy.primary?.contact || selected.robot_company.contact_email || "Research contact first"}</p>
                       {selected.contact_strategy.primary?.needs_verification && (
-                        <p className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2 py-1 text-[10px] font-bold text-amber-100">
+                        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-900">
                           Inferred email. Verify before sending.
                         </p>
                       )}
@@ -705,7 +705,7 @@ export default function SupplyPipeline() {
                       type="button"
                       onClick={() => void sendOne(selected, true)}
                       disabled={selectedDraft.sending || !signedInEmail}
-                      className="rounded-lg border border-gray-200 bg-white/[0.05] px-3 py-2 text-xs font-bold text-gray-700 disabled:opacity-50"
+                      className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-800 disabled:opacity-50"
                     >
                       Send test to me
                     </button>

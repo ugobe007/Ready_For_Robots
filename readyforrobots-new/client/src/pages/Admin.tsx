@@ -221,7 +221,7 @@ function RobotBenchmarkPanel({ api, headers }: {
             type="button"
             onClick={() => void generatePost()}
             className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold"
-            style={{ borderColor: "rgba(52,211,153,0.35)", color: "#6ee7b7" }}
+            style={{ borderColor: "rgba(52,211,153,0.35)", color: "#047857" }}
           >
             Generate LinkedIn post
           </button>
@@ -275,10 +275,10 @@ function RobotBenchmarkPanel({ api, headers }: {
 
 function AdminCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-gray-100 p-4" >
-      <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-white/32">{label}</p>
-      <p className="mt-2 font-mono text-2xl font-bold text-gray-900" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
+    <div className="admin-card">
+      <p className="admin-card-label">{label}</p>
+      <p className="admin-card-value" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
+      {sub && <p className="admin-card-sub">{sub}</p>}
     </div>
   );
 }
@@ -295,7 +295,7 @@ function activityColor(type?: string) {
   if (type === "ai_report") return "#10b981";
   if (type === "newsletter_subscriber") return "#059669";
   if (type === "waitlist_signup") return "#34d399";
-  return "rgba(255,255,255,0.42)";
+  return "#6b7280";
 }
 
 function stateLabel(state?: string) {
@@ -303,12 +303,12 @@ function stateLabel(state?: string) {
 }
 
 function stateStyle(state?: string) {
-  if (state === "failed") return { color: "#fecaca", borderColor: "rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.08)" };
-  if (state === "needs_approval") return { color: "#fde68a", borderColor: "rgba(251,191,36,0.38)", background: "rgba(251,191,36,0.08)" };
-  if (state === "queued") return { color: "#bfdbfe", borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)" };
-  if (state === "in_process") return { color: "#99f6e4", borderColor: "rgba(45,212,191,0.35)", background: "rgba(45,212,191,0.08)" };
-  if (state === "completed") return { color: "#bbf7d0", borderColor: "rgba(74,222,128,0.35)", background: "rgba(74,222,128,0.08)" };
-  return { color: "rgba(255,255,255,0.58)", borderColor: "rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)" };
+  if (state === "failed") return { color: "#b91c1c", borderColor: "#fecaca", background: "#fef2f2" };
+  if (state === "needs_approval") return { color: "#b45309", borderColor: "#fde68a", background: "#fffbeb" };
+  if (state === "queued") return { color: "#1d4ed8", borderColor: "#bfdbfe", background: "#eff6ff" };
+  if (state === "in_process") return { color: "#047857", borderColor: "#a7f3d0", background: "#ecfdf5" };
+  if (state === "completed") return { color: "#15803d", borderColor: "#bbf7d0", background: "#f0fdf4" };
+  return { color: "#374151", borderColor: "#e5e7eb", background: "#f9fafb" };
 }
 
 function sourceLabel(source?: string) {
@@ -875,7 +875,7 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
-      <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
+      <main className="admin-workspace mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
         <AdminNav />
 
         {syncingSection && !(syncingSection === "cal" && calStatus) ? (
@@ -887,7 +887,7 @@ export default function Admin() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-lg font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
-            <p className="mt-0.5 text-[11px] text-gray-400">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
+            <p className="mt-0.5 text-[11px] text-gray-600">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-xl border border-gray-200 p-1">
@@ -897,7 +897,7 @@ export default function Admin() {
                   onClick={() => setTimeRange(range.value)}
                   className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
                   style={{
-                    color: timeRange === range.value ? "#111827" : "rgba(255,255,255,0.52)",
+                    color: timeRange === range.value ? "#111827" : "#4b5563",
                     background: timeRange === range.value ? "#FFB000" : "transparent",
                   }}
                 >
@@ -943,7 +943,7 @@ export default function Admin() {
           </div>
         </details>
 
-        <div className="mb-4 rounded-2xl border border-gray-100 overflow-hidden" style={{ background: "rgba(13,5,32,0.6)" }}>
+        <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <ScoutActionBar
             accessToken={session?.access_token}
             stats={calStatus?.summary ? {
@@ -963,8 +963,8 @@ export default function Admin() {
 
         <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
 
-        {message && <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-200">{message}</div>}
-        {error && <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm text-red-200">{error}</div>}
+        {message && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">{message}</div>}
+        {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{error}</div>}
 
         {/* ── Cal Outreach: draft status for 166 HOT+WARM prospects ── */}
         <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-100 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
@@ -986,7 +986,7 @@ export default function Admin() {
                     onClick={() => setCalFilter(f)}
                     className="rounded-lg px-2.5 py-1 text-[10px] font-bold capitalize transition"
                     style={{
-                      color: calFilter === f ? "#111827" : "rgba(255,255,255,0.45)",
+                      color: calFilter === f ? "#111827" : "#6b7280",
                       background: calFilter === f ? "#10b981" : "transparent",
                     }}
                   >
@@ -1042,24 +1042,24 @@ export default function Admin() {
 
           {/* ── Bulk-send confirm modal ── */}
           {sendConfirm === "bulk" && (
-            <div className="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/8 p-4">
-              <p className="mb-1 text-sm font-bold text-amber-200">Confirm bulk send</p>
-              <p className="mb-3 text-xs text-amber-100/60">
+            <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <p className="mb-1 text-sm font-bold text-amber-900">Confirm bulk send</p>
+              <p className="mb-3 text-xs text-amber-950/80">
                 <strong>{calStatus?.summary?.sendable ?? 0} emails will go out</strong> via Resend
                 {(calStatus?.summary?.no_email ?? 0) > 0 && (
-                  <span className="text-amber-300/70"> · {calStatus?.summary?.no_email} contacts skipped (no email address on file)</span>
+                  <span className="text-amber-800"> · {calStatus?.summary?.no_email} contacts skipped (no email address on file)</span>
                 )}
-                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-100/40"> · {calStatus?.summary?.sent} already sent (no duplicates)</span>}
+                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-700"> · {calStatus?.summary?.sent} already sent (no duplicates)</span>}
                 {". "}Cannot be undone.
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => void runCalBulkSend()}
-                  className="rounded-xl border border-amber-400/50 px-4 py-2 text-xs font-bold text-amber-200"
+                  className="rounded-xl border border-amber-500 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-950"
                 >
                   Yes — send all now
                 </button>
-                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-500">
+                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700">
                   Cancel
                 </button>
               </div>
@@ -1091,7 +1091,7 @@ export default function Admin() {
             ) : (
               <div className="space-y-1.5">
                 {/* Column headers */}
-                <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
+                <div className="admin-table-head grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3">
                   <span>Company</span>
                   <span>Tier / Score</span>
                   <span>Contact</span>
@@ -1108,9 +1108,9 @@ export default function Admin() {
                   })
                   .map((prospect, idx) => {
                     const isOpen = calExpanded === idx;
-                    const tierColor = prospect.tier === "HOT" ? "#FFB000" : prospect.tier === "WARM" ? "#059669" : "rgba(255,255,255,0.35)";
+                    const tierColor = prospect.tier === "HOT" ? "#b45309" : prospect.tier === "WARM" ? "#047857" : "#6b7280";
                     return (
-                      <div key={`${prospect.company_id}-${idx}`} className="rounded-xl border border-white/7" style={{ background: "rgba(13,5,32,0.55)" }}>
+                      <div key={`${prospect.company_id}-${idx}`} className="admin-table-row">
                         <button
                           className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 px-4 py-3 text-left"
                           onClick={() => {
@@ -1176,21 +1176,21 @@ export default function Admin() {
                               )}
                             </p>
                             {prospect.outreach_domain && !prospect.website && (
-                              <p className="truncate font-mono text-[10px] text-white/22">@{prospect.outreach_domain}</p>
+                              <p className="truncate font-mono text-[10px] text-gray-500">@{prospect.outreach_domain}</p>
                             )}
-                            {prospect.default_cc && <p className="truncate font-mono text-[10px] text-white/28">cc: {prospect.default_cc}</p>}
+                            {prospect.default_cc && <p className="truncate font-mono text-[10px] text-gray-500">cc: {prospect.default_cc}</p>}
                           </div>
                           <div>
                             <span className="text-[11px] text-gray-500">
                               {prospect.outreach_sent_at ? "sent" : prospect.outreach_stage?.replace(/_/g, " ") || "—"}
                             </span>
-                            {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-white/28">{formatDate(prospect.outreach_sent_at)}</p>}
+                            {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-gray-500">{formatDate(prospect.outreach_sent_at)}</p>}
                           </div>
                           <div className="flex items-center">
                             {prospect.has_draft ? (
                               <CheckCircle2 className="h-4 w-4" style={{ color: "#34d399" }} />
                             ) : (
-                              <Clock3 className="h-4 w-4 text-white/20" />
+                              <Clock3 className="h-4 w-4 text-gray-400" />
                             )}
                           </div>
                           <div className="flex items-center">
@@ -1203,15 +1203,15 @@ export default function Admin() {
                             ) : (prospect as Record<string, unknown>).email_delivery_status === "sent" || (prospect as Record<string, unknown>).email_delivery_status === "delivered" ? (
                               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(96,165,250,0.1)", color: "#93c5fd" }}>sent</span>
                             ) : (
-                              <span className="text-[9px] text-white/20">—</span>
+                              <span className="text-[9px] text-gray-400">—</span>
                             )}
                           </div>
                         </button>
                         {isOpen && (
-                          <div className="border-t border-white/7 px-4 pb-4 pt-3">
+                          <div className="border-t border-gray-200 px-4 pb-4 pt-3">
                             {prospect.has_draft ? (
                               <>
-                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-white/28">Cal draft</p>
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Cal draft</p>
                                 <pre className="whitespace-pre-wrap rounded-xl border border-gray-100 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-600">
                                   {prospect.crm_account_id && draftBodies[prospect.crm_account_id]
                                     ? draftBodies[prospect.crm_account_id]
@@ -1221,23 +1221,23 @@ export default function Admin() {
                                 </pre>
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
                                   {prospect.contact_email && (
-                                    <div className="flex flex-wrap gap-2 text-[10px] text-white/38">
+                                    <div className="flex flex-wrap gap-2 text-[10px] text-gray-600">
                                       <span>TO: <span className="font-mono text-gray-500">{prospect.contact_email}</span></span>
                                       {prospect.default_cc && <span>CC: <span className="font-mono text-gray-500">{prospect.default_cc}</span></span>}
                                     </div>
                                   )}
                                   <div className="ml-auto flex gap-2">
                                     {prospect.outreach_sent_at ? (
-                                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 px-2.5 py-1 text-[10px] text-emerald-300">
+                                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-800">
                                         <CheckCircle2 className="h-3 w-3" /> Sent {formatDate(prospect.outreach_sent_at)}
                                       </span>
                                     ) : sendConfirm === prospect.crm_account_id ? (
                                       <>
-                                        <span className="text-[10px] text-amber-200/70">Send to {prospect.contact_email}?</span>
+                                        <span className="text-[10px] text-amber-800">Send to {prospect.contact_email}?</span>
                                         <button
                                           onClick={() => prospect.crm_account_id && prospect.contact_email && void runCalSendOne(prospect.crm_account_id, prospect.contact_email)}
                                           disabled={!!actionBusy}
-                                          className="rounded-xl border border-amber-400/40 px-3 py-1.5 text-[10px] font-bold text-amber-200 disabled:opacity-40"
+                                          className="rounded-xl border border-amber-400 bg-amber-100 px-3 py-1.5 text-[10px] font-bold text-amber-950 disabled:opacity-40"
                                         >
                                           {actionBusy === "cal-send-one" ? "Sending…" : "Yes, send"}
                                         </button>
@@ -1257,7 +1257,7 @@ export default function Admin() {
                                 </div>
                               </>
                             ) : (
-                              <p className="text-xs text-white/38">No draft yet. Click <strong className="text-gray-500">Draft pending</strong> to generate.</p>
+                              <p className="text-xs text-gray-600">No draft yet. Click <strong className="text-gray-500">Draft pending</strong> to generate.</p>
                             )}
                           </div>
                         )}
@@ -1312,7 +1312,7 @@ export default function Admin() {
               <span className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] text-gray-400">{formatNumber(users.length)} shown</span>
             </div>
             <div className="max-h-[380px] overflow-y-auto pr-1">
-              <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-white/7 pb-2 text-[10px] uppercase tracking-widest text-white/28">
+              <div className="admin-table-head grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3">
                 <span>User</span>
                 <span>Saved</span>
                 <span>Reports</span>
@@ -1321,8 +1321,8 @@ export default function Admin() {
               {(users.length ? users : [{ email: "No users yet" }]).slice(0, 30).map((user, index) => (
                 <div key={user.id || `${user.email}-${index}`} className="grid grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr] gap-3 border-b border-gray-100 py-3 text-xs">
                   <div className="min-w-0">
-                    <p className="truncate text-white/72">{user.email || "Unknown user"}</p>
-                    <p className="mt-1 truncate text-[10px] text-white/28">{user.id || "—"}</p>
+                    <p className="truncate text-gray-900">{user.email || "Unknown user"}</p>
+                    <p className="mt-1 truncate text-[10px] text-gray-500">{user.id || "—"}</p>
                   </div>
                   <span className="font-mono text-gray-500">{formatNumber(user.saved_count)}</span>
                   <span className="font-mono text-gray-500">{formatNumber(user.reports_count)}</span>
@@ -1339,10 +1339,10 @@ export default function Admin() {
             </div>
             <div className="max-h-[380px] space-y-2 overflow-y-auto pr-1">
               {(activity.length ? activity : [{ label: "No recent activity yet", detail: "User saves, reports, signups, and newsletter subscribers will appear here." }]).map((item, index) => (
-                <div key={`${item.type}-${item.created_at}-${index}`} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
+                <div key={`${item.type}-${item.created_at}-${index}`} className="admin-table-row px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-xs font-semibold text-gray-700">{item.label}</p>
-                    <span className="shrink-0 text-[10px] text-white/28">{formatDate(item.created_at)}</span>
+                    <span className="shrink-0 text-[10px] text-gray-500">{formatDate(item.created_at)}</span>
                   </div>
                   <p className="mt-1 truncate text-[11px]" style={{ color: activityColor(item.type) }}>{item.actor || "ReadyForRobots"}</p>
                   <p className="mt-1 break-words text-[11px] text-gray-400">{item.detail}</p>
@@ -1357,7 +1357,7 @@ export default function Admin() {
             <p className="mb-3 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Operator notes</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {[analytics.insights.hottest_trend, analytics.insights.opportunity, analytics.insights.action_item].filter(Boolean).map((item) => (
-                <p key={item} className="rounded-xl border border-gray-100 px-3 py-3 text-xs leading-relaxed text-gray-500" style={{ background: "rgba(13,5,32,0.38)" }}>{item}</p>
+                <p key={item} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-xs leading-relaxed text-gray-700">{item}</p>
               ))}
             </div>
           </section>
@@ -1366,7 +1366,7 @@ export default function Admin() {
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
           <div className="rounded-2xl border border-gray-100 p-5" >
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>System controls</p>
-            <p className="mb-4 text-xs leading-relaxed text-white/42">
+            <p className="mb-4 text-xs leading-relaxed text-gray-600">
               These actions use the same authenticated admin session, so failures are shown here instead of opening unauthenticated tabs.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -1409,7 +1409,7 @@ export default function Admin() {
 
           <div className="rounded-2xl border border-gray-100 p-5" >
             <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Operational shortcuts</p>
-            <p className="mb-4 text-xs leading-relaxed text-white/42">
+            <p className="mb-4 text-xs leading-relaxed text-gray-600">
               Admin remains the single ops home. Use these links for the dedicated work consoles.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -1445,7 +1445,7 @@ export default function Admin() {
             <div className="space-y-2">
               {(stats?.by_industry || []).slice(0, 8).map((item) => (
                 <div key={item.industry} className="flex items-center justify-between text-sm">
-                  <span className="text-white/62">{item.industry || "Unknown"}</span>
+                  <span className="text-gray-800">{item.industry || "Unknown"}</span>
                   <span className="font-mono text-gray-400">{formatNumber(item.count)}</span>
                 </div>
               ))}
@@ -1456,7 +1456,7 @@ export default function Admin() {
             <div className="space-y-2">
               {(stats?.by_signal_type || []).slice(0, 8).map((item) => (
                 <div key={item.signal_type} className="flex items-center justify-between text-sm">
-                  <span className="text-white/62">{(item.signal_type || "unknown").replace(/_/g, " ")}</span>
+                  <span className="text-gray-800">{(item.signal_type || "unknown").replace(/_/g, " ")}</span>
                   <span className="font-mono text-gray-400">{formatNumber(item.count)}</span>
                 </div>
               ))}
@@ -1468,8 +1468,8 @@ export default function Admin() {
           <form onSubmit={importUrls} className="rounded-2xl border border-gray-100 p-5" >
             <UploadCloud className="mb-4 h-5 w-5" style={{ color: "#FFB000" }} />
             <p className="text-sm font-bold text-gray-900">Import URLs</p>
-            <textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="https://example.com/feed&#10;https://example.com/news" className="mt-3 min-h-28 w-full rounded-xl border border-gray-200 bg-white/[0.035] px-3 py-2 text-xs text-gray-900 outline-none placeholder:text-gray-400" />
-            <select value={urlIndustry} onChange={(e) => setUrlIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
+            <textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="https://example.com/feed&#10;https://example.com/news" className="sb-input mt-3 min-h-28 text-xs" />
+            <select value={urlIndustry} onChange={(e) => setUrlIndustry(e.target.value)} className="sb-input mt-2 text-xs">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "Auto-detect industry"}</option>)}
             </select>
             <label className="mt-3 flex items-center gap-2 text-xs text-gray-500">
@@ -1484,7 +1484,7 @@ export default function Admin() {
           <form onSubmit={importCompanies} className="rounded-2xl border border-gray-100 p-5" >
             <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#10b981" }} />
             <p className="text-sm font-bold text-gray-900">Import Companies</p>
-            <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="mt-3 min-h-40 w-full rounded-xl border border-gray-200 bg-white/[0.035] px-3 py-2 font-mono text-[11px] text-gray-900 outline-none" />
+            <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="sb-input mt-3 min-h-40 font-mono text-[11px]" />
             <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-emerald-700 disabled:opacity-50">
               {actionBusy === "companies" ? "Importing..." : "Import Companies"}
             </button>
@@ -1493,10 +1493,10 @@ export default function Admin() {
           <form onSubmit={triggerScrape} className="rounded-2xl border border-gray-100 p-5" >
             <Play className="mb-4 h-5 w-5" style={{ color: "#059669" }} />
             <p className="text-sm font-bold text-gray-900">Trigger Scraper</p>
-            <select value={triggerScraper} onChange={(e) => setTriggerScraper(e.target.value)} className="mt-3 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
+            <select value={triggerScraper} onChange={(e) => setTriggerScraper(e.target.value)} className="sb-input mt-3 text-xs">
               {SCRAPERS.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-200 bg-[#160d2a] px-3 py-2 text-xs text-gray-600">
+            <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="sb-input mt-2 text-xs">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "All industries"}</option>)}
             </select>
             <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-300/45 px-4 py-2.5 text-xs font-bold text-teal-200 disabled:opacity-50">
@@ -1554,7 +1554,7 @@ export default function Admin() {
             {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
               const style = stateStyle(item.state);
               return (
-                <div key={`${item.source}-${item.id}`} className="rounded-xl border border-gray-100 px-4 py-3" style={{ background: "rgba(13,5,32,0.55)" }}>
+                <div key={`${item.source}-${item.id}`} className="admin-panel">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -1562,12 +1562,12 @@ export default function Admin() {
                           {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
                           {stateLabel(item.state)}
                         </span>
-                        <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] capitalize text-white/38">{sourceLabel(item.source)}</span>
-                        {item.requires_approval && <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[10px] text-amber-100">approval required</span>}
+                        <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] capitalize text-gray-600">{sourceLabel(item.source)}</span>
+                        {item.requires_approval && <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-900">approval required</span>}
                         {item.priority === "high" && <span className="rounded-full border border-red-300/25 px-2 py-0.5 text-[10px] text-red-100">high priority</span>}
                       </div>
                       <p className="truncate text-sm font-bold text-gray-900/82">{item.title || "Untitled workflow action"}</p>
-                      <p className="mt-1 text-xs text-white/42">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
+                      <p className="mt-1 text-xs text-gray-600">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
                       {item.description && <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.description}</p>}
                     </div>
                     {item.next_action_url && (
@@ -1588,7 +1588,7 @@ export default function Admin() {
             <p className="mb-4 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#FFB000" }}>Recent companies</p>
             <div className="space-y-3">
               {(stats?.recent_companies || []).map((company) => (
-                <div key={company.id} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
+                <div key={company.id} className="admin-table-row px-3 py-2">
                   <p className="text-sm font-semibold text-gray-800">{company.name}</p>
                   <p className="mt-1 text-[11px] text-gray-400">{company.industry} · {company.source || "unknown"}</p>
                 </div>
@@ -1605,12 +1605,12 @@ export default function Admin() {
             </div>
             <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
               {(targets?.targets || []).slice(0, 40).map((target, index) => (
-                <div key={`${target.url}-${index}`} className="rounded-xl border border-white/7 px-3 py-2" style={{ background: "rgba(13,5,32,0.45)" }}>
+                <div key={`${target.url}-${index}`} className="admin-table-row px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="truncate text-xs font-semibold text-gray-700">{target.label || target.url}</p>
                     <span className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[9px] text-gray-400">{target.scraper}</span>
                   </div>
-                  <p className="mt-1 break-all text-[11px] text-white/28">{target.url}</p>
+                  <p className="mt-1 break-all text-[11px] text-gray-500">{target.url}</p>
                 </div>
               ))}
             </div>

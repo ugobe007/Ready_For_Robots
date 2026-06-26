@@ -140,48 +140,42 @@ export default function ScoutActionBar({
   return (
     <>
       {/* ── Action bar ── */}
-      <div
-        className="flex items-center gap-2 flex-wrap px-4 py-3 border-b border-white/8"
-        style={{ background: "rgba(124,58,237,0.06)" }}
-      >
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] mr-2" style={{ color: "#a78bfa" }}>SIGNAL</span>
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">SIGNAL</span>
 
         {/* Step 1 — Draft */}
         <button
           type="button"
           disabled={!!busy}
           onClick={onRunScout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50 hover:-translate-y-px"
-          style={{ borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.08)", color: "#93c5fd" }}
+          className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-800 transition-all hover:-translate-y-px disabled:opacity-50"
           title="Step 1 — Write Cal outreach emails for all prospects (buyer & vendor templates)"
         >
           {busy === "draft" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
           1 · Draft emails
         </button>
 
-        <span className="text-white/20 text-xs">→</span>
+        <span className="text-xs text-gray-400">→</span>
 
         {/* Step 2 — Send */}
         <button
           type="button"
           disabled={!!busy}
           onClick={onActivateScout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50 hover:-translate-y-px"
-          style={{ borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "#6ee7b7" }}
+          className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800 transition-all hover:-translate-y-px disabled:opacity-50"
           title="Step 2 — Send all drafted emails via Resend (all at once)"
         >
           {busy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
           2 · Send all{stats?.drafted ? ` (${stats.drafted})` : ""}
         </button>
 
-        <span className="text-white/20 text-xs">→</span>
+        <span className="text-xs text-gray-400">→</span>
 
         {/* Step 3 — Track */}
         <button
           type="button"
           onClick={onTrackScout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all hover:-translate-y-px"
-          style={{ borderColor: "rgba(255,176,0,0.35)", background: "rgba(255,176,0,0.07)", color: "#fbbf24" }}
+          className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-900 transition-all hover:-translate-y-px"
           title="Step 3 — Refresh open / click / reply stats"
         >
           <BarChart2 className="h-3 w-3" />
@@ -192,8 +186,7 @@ export default function ScoutActionBar({
         <button
           type="button"
           onClick={() => void openTest()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all hover:-translate-y-px ml-auto"
-          style={{ borderColor: "rgba(167,139,250,0.35)", background: "rgba(167,139,250,0.07)", color: "#c4b5fd" }}
+          className="ml-auto flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-[11px] font-bold text-violet-800 transition-all hover:-translate-y-px"
           title="Run workflow diagnostic — check reply routing, webhooks, and delivery stats"
         >
           <FlaskConical className="h-3 w-3" />

@@ -102,7 +102,7 @@ export default function Inbox() {
         </div>
         {err && <p className="mt-5 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-sm text-red-100">{err}</p>}
         <section className="mt-8 grid gap-5 lg:grid-cols-[380px_1fr]">
-          <aside className="rounded-3xl border border-gray-200 bg-white/[0.035] p-4">
+          <aside className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Inbound replies</p>
               <span className="text-xs text-gray-400">{items.length}</span>
@@ -130,7 +130,7 @@ export default function Inbox() {
               {!items.length && !busy && <p className="rounded-2xl border border-gray-200 p-4 text-sm text-gray-500">No inbound replies yet.</p>}
             </div>
           </aside>
-          <section className="rounded-3xl border border-gray-200 bg-white/[0.035] p-5">
+          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
             {selected ? (
               <>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

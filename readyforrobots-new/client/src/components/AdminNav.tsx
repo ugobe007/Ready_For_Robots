@@ -27,19 +27,19 @@ export default function AdminNav() {
   const [location] = useLocation();
 
   return (
-    <nav className="mb-5 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+    <nav className="mb-5 overflow-x-auto rounded-xl border border-gray-300 bg-white p-2 shadow-sm">
       <div className="flex min-w-max items-center gap-2">
-        <span className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Workspace</span>
+        <span className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">Workspace</span>
         {ADMIN_LINKS.map((link) => {
           const active = isActive(location, link.href);
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${
+              className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
                 active
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-emerald-200 hover:text-emerald-700"
+                  ? "border-emerald-700 bg-emerald-700 text-white shadow-sm"
+                  : "border-gray-200 bg-gray-50 text-gray-800 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900"
               }`}
             >
               {link.label}
