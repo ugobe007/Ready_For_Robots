@@ -48,7 +48,7 @@ const HASH_FOREGROUND: Record<string, AdminSectionName[]> = {
   workflow: ["workflow", "daily_brief"],
 };
 
-const DEFAULT_FOREGROUND: AdminSectionName[] = ["daily_brief", "cal"];
+const DEFAULT_FOREGROUND: AdminSectionName[] = ["daily_brief", "cal", "analytics"];
 
 /** Sections to check for deltas after first paint — rest load in idle time. */
 export function foregroundSectionsForHash(hash: string): AdminSectionName[] {

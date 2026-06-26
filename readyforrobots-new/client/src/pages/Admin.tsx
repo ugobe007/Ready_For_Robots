@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Activity, AlertTriangle, BarChart3, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
+import { Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
 import AdminNav from "@/components/AdminNav";
 import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPanel";
 import Header from "@/components/Header";
 import ScoutActionBar from "@/components/ScoutActionBar";
+import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
@@ -62,6 +63,7 @@ type SiteAnalytics = {
   hot_count?: number;
   warm_count?: number;
   cold_count?: number;
+  total_signals?: number;
   new_companies?: number;
   new_signals?: number;
   insights?: {
@@ -760,20 +762,27 @@ export default function Admin() {
     }
   }
 
+  const loadAnalyticsDirect = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch(`/api/analytics?range=${timeRange}`);
+      if (!res.ok) return;
+      const data = await res.json() as SiteAnalytics;
+      setAnalytics(data);
+    } catch {
+      /* snapshot path remains primary */
+    }
+  }, [adminFetch, session?.access_token, timeRange]);
+
   const loadScoutStatus = useCallback(async () => {
     await refreshSection("scout", true);
   }, [refreshSection]);
 
-  const timeRangeInitial = useRef(true);
-
   useEffect(() => {
     if (!me?.is_admin || !session?.access_token) return;
-    if (timeRangeInitial.current) {
-      timeRangeInitial.current = false;
-      return;
-    }
     void refreshSection("analytics", true);
-  }, [me?.is_admin, refreshSection, session?.access_token, timeRange]);
+    void loadAnalyticsDirect();
+  }, [me?.is_admin, refreshSection, session?.access_token, timeRange, loadAnalyticsDirect]);
 
   async function runScoutBulkActivate() {
     setMessage(""); setError(""); setActionBusy("scout-activate");
@@ -1291,19 +1300,20 @@ export default function Admin() {
           <RobotBenchmarkPanel api={api} headers={headers as Record<string, string | undefined>} />
         </section>
 
-        <section className="mb-8">
-          <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" style={{ color: "#059669" }} />
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900">Site metrics</p>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-            <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()} · page views + SCOUT sessions`} />
-            <AdminCard label="URL Scans & ROI" value={formatNumber(analytics?.total_calculations)} sub={`${formatNumber(analytics?.email_captures)} emails captured`} />
-            <AdminCard label="Buyer Intake" value={formatNumber(analytics?.robot_searches)} sub="Find robots + search events" />
-            <AdminCard label="Conversion" value={`${analytics?.conversion_rate ?? 0}%`} sub="Email capture vs funnel activity" />
-            <AdminCard label="Lead Mix" value={formatNumber((analytics?.hot_count || 0) + (analytics?.warm_count || 0))} sub={`${formatNumber(analytics?.hot_count)} hot · ${formatNumber(analytics?.warm_count)} warm`} />
-          </div>
-        </section>
+        <SiteMetricsPanel
+          loading={syncingSection === "analytics"}
+          timeRangeLabel={timeRange.toUpperCase()}
+          data={{
+            siteVisits: analytics?.site_visits,
+            funnelRuns: analytics?.total_calculations,
+            buyerIntake: analytics?.robot_searches,
+            emailCaptures: analytics?.email_captures,
+            conversionRate: analytics?.conversion_rate,
+            hotCount: analytics?.hot_count,
+            warmCount: analytics?.warm_count,
+            totalSignals: analytics?.total_signals ?? stats?.totals?.signals,
+          }}
+        />
 
         <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-2xl border border-gray-200 p-5" >

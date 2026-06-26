@@ -35,7 +35,7 @@ SECTION_NAMES = (
 
 # Per-section staleness before a ?refresh=1 rebuild is worthwhile.
 # Lightweight sections — build synchronously on first miss instead of 503 + empty UI.
-_FAST_SYNC_SECTIONS = frozenset({"stats", "targets", "user_stats"})
+_FAST_SYNC_SECTIONS = frozenset({"stats", "targets", "user_stats", "analytics"})
 
 _SECTION_TTL_SEC: dict[str, int] = {
     "cal": 120,
