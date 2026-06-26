@@ -52,6 +52,7 @@ from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
+import app.models.site_analytics_event
 from app.db_events import register_db_events
 
 register_db_events()

@@ -8,6 +8,14 @@ from app.models.signal import Signal
 from app.models.score import Score
 from app.services.daily_analytics_service import get_daily_analytics, format_report_markdown
 from app.services.industry_brief_service import build_industry_brief_payload
+from app.services.site_analytics_service import (
+    EVENT_ROI,
+    EVENT_ROBOT_SEARCH,
+    EVENT_URL_SCAN,
+    EVENT_VISIT,
+    aggregate_site_metrics,
+    record_site_event,
+)
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 
@@ -25,39 +33,56 @@ site_visits = []
 
 @router.post("/track/visit")
 async def track_visit(data: dict):
-    """Track site visits (page views)"""
-    site_visits.append({
-        **data,
-        "timestamp": datetime.now().isoformat(),
-    })
+    """Track site visits (page views)."""
+    site_visits.append({**data, "timestamp": datetime.now().isoformat()})
+    db = SessionLocal()
+    try:
+        record_site_event(db, EVENT_VISIT, data)
+    finally:
+        db.close()
     return {"status": "tracked"}
 
 
 @router.post("/track/roi-calculation")
 async def track_roi_calculation(data: dict):
-    """Track ROI calculator usage"""
-    calculator_usage.append({
-        **data,
-        'timestamp': datetime.now().isoformat()
-    })
+    """Track ROI calculator usage."""
+    calculator_usage.append({**data, "timestamp": datetime.now().isoformat()})
+    db = SessionLocal()
+    try:
+        record_site_event(db, EVENT_ROI, data)
+    finally:
+        db.close()
     return {"status": "tracked"}
+
 
 @router.post("/track/robot-search")
 async def track_robot_search(data: dict):
-    """Track robot search usage"""
-    robot_searches.append({
-        **data,
-        'timestamp': datetime.now().isoformat()
-    })
+    """Track robot search / buyer intake."""
+    robot_searches.append({**data, "timestamp": datetime.now().isoformat()})
+    db = SessionLocal()
+    try:
+        record_site_event(db, EVENT_ROBOT_SEARCH, data)
+    finally:
+        db.close()
+    return {"status": "tracked"}
+
+
+@router.post("/track/url-scan")
+async def track_url_scan(data: dict):
+    """Track product URL scans on /results."""
+    db = SessionLocal()
+    try:
+        record_site_event(db, EVENT_URL_SCAN, data)
+    finally:
+        db.close()
     return {"status": "tracked"}
 
 @router.get("/analytics")
 async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
     """
     Get platform analytics — sourced from live database (signals, companies, scores).
-    In-memory tracking (calculator_usage, robot_searches, site_visits) supplements with
-    user-interaction events for the current server process; database rows are the primary
-    persistent data source.
+    Site funnel metrics combine persistent site_analytics_events with supplemental tables
+    (shared_calculations, robot_buyer_leads, waitlist, newsletter, scout_sessions).
     Cached in-process for 2 minutes to avoid repeated full-table scans on every admin load.
     """
     cached = _ANALYTICS_CACHE.get(range)
@@ -205,36 +230,29 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
             for r in top_hot
         ]
 
-        # ── In-memory tracking (non-persistent; supplemental) ─────────────────
-        # Convert cutoff to naive for in-memory list comparison (stored as isoformat without tz)
+        # ── Site funnel metrics (DB-backed + supplemental tables) ─────────────
         cutoff_naive = cutoff.replace(tzinfo=None)
-        prev_cutoff_naive = prev_cutoff.replace(tzinfo=None)
         filtered_calcs = [c for c in calculator_usage
                           if datetime.fromisoformat(c["timestamp"]) >= cutoff_naive]
         filtered_searches = [s for s in robot_searches
                               if datetime.fromisoformat(s["timestamp"]) >= cutoff_naive]
         filtered_visits = [v for v in site_visits
                            if datetime.fromisoformat(v["timestamp"]) >= cutoff_naive]
-        prev_calcs = [c for c in calculator_usage
-                      if prev_cutoff_naive <= datetime.fromisoformat(c["timestamp"]) < cutoff_naive]
 
-        total_calculations = len(filtered_calcs)
-        calculation_growth = 0
-        if prev_calcs:
-            calculation_growth = round(((total_calculations - len(prev_calcs)) / len(prev_calcs)) * 100)
-        elif total_calculations > 0:
-            calculation_growth = 100
-
-        avg_payback_months = 0
-        avg_robot_cost = 0
-        if filtered_calcs:
-            paybacks = [c.get("payback_months", 0) for c in filtered_calcs if c.get("payback_months")]
-            costs = [c.get("robot_cost", 0) for c in filtered_calcs if c.get("robot_cost")]
-            avg_payback_months = round(sum(paybacks) / len(paybacks), 1) if paybacks else 0
-            avg_robot_cost = round(sum(costs) / len(costs)) if costs else 0
-
-        email_captures = len([c for c in filtered_calcs if c.get("email")])
-        conversion_rate = round((email_captures / total_calculations) * 100) if total_calculations else 0
+        site_metrics = aggregate_site_metrics(
+            db,
+            cutoff=cutoff,
+            prev_cutoff=prev_cutoff,
+            in_memory_calcs=filtered_calcs,
+            in_memory_searches=filtered_searches,
+            in_memory_visits=filtered_visits,
+        )
+        total_calculations = site_metrics["total_calculations"]
+        calculation_growth = site_metrics["calculation_growth"]
+        avg_payback_months = site_metrics["avg_payback_months"]
+        avg_robot_cost = site_metrics["avg_robot_cost"]
+        email_captures = site_metrics["email_captures"]
+        conversion_rate = site_metrics["conversion_rate"]
 
         # ── Insights ──────────────────────────────────────────────────────────
         insights = {
@@ -263,11 +281,11 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         "signal_type_breakdown": signal_type_breakdown,
         "score_distribution": score_dist,
         "top_hot_leads": top_hot_leads,
-        # In-session user interaction metrics (non-persistent)
+        # Site funnel metrics (persistent + supplemental tables)
         "total_calculations": total_calculations,
         "calculation_growth": calculation_growth,
-        "robot_searches": len(filtered_searches),
-        "site_visits": len(filtered_visits),
+        "robot_searches": site_metrics["robot_searches"],
+        "site_visits": site_metrics["site_visits"],
         "avg_payback_months": avg_payback_months,
         "avg_robot_cost": avg_robot_cost,
         "email_captures": email_captures,

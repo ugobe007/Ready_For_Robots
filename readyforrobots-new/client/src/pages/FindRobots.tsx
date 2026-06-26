@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { trackRobotSearch } from "@/lib/siteAnalytics";
 import { toast } from "sonner";
 
 const TEAL = "#059669";
@@ -67,6 +68,12 @@ export default function FindRobots() {
       if (!res.ok) {
         throw new Error((data as { detail?: string }).detail || "Could not submit request");
       }
+      trackRobotSearch({
+        source: "find_robots",
+        robotType: form.robotType,
+        implementationTimeline: form.implementationTimeline,
+        hasEmail: Boolean(form.email),
+      });
       setSubmitted(true);
       setForm(emptyForm);
       toast.success("Request received — we'll follow up shortly.");

@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
+import { trackUrlScan } from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
@@ -421,6 +422,7 @@ export default function Results() {
 
   useEffect(() => {
     if (!submittedUrl) return;
+    trackUrlScan(submittedUrl, "results");
     setScanStep(1);
     setScanning(true);
     setLoading(true);

@@ -1297,10 +1297,10 @@ export default function Admin() {
             <p className="text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Site metrics</p>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-            <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()}`} />
-            <AdminCard label="ROI Runs" value={formatNumber(analytics?.total_calculations)} sub={`${formatNumber(analytics?.email_captures)} emails captured`} />
-            <AdminCard label="Robot Searches" value={formatNumber(analytics?.robot_searches)} />
-            <AdminCard label="Conversion" value={`${analytics?.conversion_rate ?? 0}%`} sub="Email capture rate" />
+            <AdminCard label="Site Visits" value={formatNumber(analytics?.site_visits)} sub={`Range: ${timeRange.toUpperCase()} · page views + SCOUT sessions`} />
+            <AdminCard label="URL Scans & ROI" value={formatNumber(analytics?.total_calculations)} sub={`${formatNumber(analytics?.email_captures)} emails captured`} />
+            <AdminCard label="Buyer Intake" value={formatNumber(analytics?.robot_searches)} sub="Find robots + search events" />
+            <AdminCard label="Conversion" value={`${analytics?.conversion_rate ?? 0}%`} sub="Email capture vs funnel activity" />
             <AdminCard label="Lead Mix" value={formatNumber((analytics?.hot_count || 0) + (analytics?.warm_count || 0))} sub={`${formatNumber(analytics?.hot_count)} hot · ${formatNumber(analytics?.warm_count)} warm`} />
           </div>
         </section>

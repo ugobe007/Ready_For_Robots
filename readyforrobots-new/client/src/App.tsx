@@ -33,6 +33,7 @@ import Social from "./pages/Social";
 import ExperimentIdeas from "./pages/ExperimentIdeas";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ScoutChat } from "./components/ScoutChat";
+import VisitTracker from "./components/VisitTracker";
 
 function Router() {
   return (
@@ -85,10 +86,12 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <AuthProvider>
           <ScoutChat>
+            <VisitTracker>
             <TooltipProvider>
               <Toaster />
               <Router />
             </TooltipProvider>
+            </VisitTracker>
           </ScoutChat>
         </AuthProvider>
       </ThemeProvider>

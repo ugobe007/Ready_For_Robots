@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowRight, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { normalizeUrl } from "@/lib/normalizeUrl";
+import { trackUrlScan } from "@/lib/siteAnalytics";
 
 export default function HeroUrlScan() {
   const [, setLocation] = useLocation();
@@ -11,6 +12,7 @@ export default function HeroUrlScan() {
     e.preventDefault();
     const normalized = normalizeUrl(url);
     if (!normalized) return;
+    trackUrlScan(normalized, "home_hero");
     setLocation(`/results?url=${encodeURIComponent(normalized)}`);
   }
 
