@@ -19,6 +19,8 @@ type Props = {
   onCopy: () => void;
   onPreview?: () => void;
   variant?: "inline" | "compact";
+  /** Override signup return path (e.g. URL scan results). */
+  signupNext?: string;
 };
 
 export default function PipelineOutreachValuePanel({
@@ -28,10 +30,13 @@ export default function PipelineOutreachValuePanel({
   onCopy,
   onPreview,
   variant = "inline",
+  signupNext,
 }: Props) {
   if (!deal.outreachBody && !deal.outreachSubject) return null;
 
-  const signupHref = `/signup?next=${encodeURIComponent(`/pipeline?lead=${deal.id}`)}`;
+  const signupHref = `/signup?next=${encodeURIComponent(
+    signupNext ?? `/pipeline?lead=${deal.id}`,
+  )}`;
 
   return (
     <div

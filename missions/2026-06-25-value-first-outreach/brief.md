@@ -16,8 +16,9 @@ Users do not buy unless they see value. Anonymous visitors must **read a real Ca
 - [x] Signup from pipeline restates save + copy unlock (`Signup.tsx` when `?next=/pipeline`)
 - [x] CTA copy: "Sign up free — save & copy" (not "Activate SIGNAL")
 - [x] Longer anonymous `pipeline_action` teaser (200 chars in `plan_entitlements.py`)
-- [ ] **Next:** First-save nudge for signed-in users with 0 CRM accounts
-- [ ] **Next:** URL scan `/results` shows sample draft before signup (parity with pipeline)
+- [x] **Next:** First-save nudge for signed-in users with 0 CRM accounts — `FirstSaveNudge`
+- [x] **Next:** URL scan `/results` shows sample draft before signup — `ResultsValueStrip` + outreach panels
+- [x] **Next:** CRM fork after first save — `CrmPathFork` on pipeline + `/crm`
 
 ## Context
 

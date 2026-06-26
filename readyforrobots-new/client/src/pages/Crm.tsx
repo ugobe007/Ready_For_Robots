@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -88,6 +89,7 @@ export default function Crm() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(false);
+  const [hubspotConnected, setHubspotConnected] = useState(false);
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -128,6 +130,32 @@ export default function Crm() {
       }
     })();
   }, [session?.access_token, authFetch]);
+
+  useEffect(() => {
+    if (!session?.access_token) {
+      setHubspotConnected(false);
+      return;
+    }
+    let cancelled = false;
+    void fetch(
+      `${getApiBase()}/api/integrations`,
+      liveFetchInit({ headers: { ...authHeader(session.access_token) } }),
+    )
+      .then(async (res) => {
+        if (cancelled || !res.ok) return;
+        const payload = (await res.json()) as {
+          integrations?: Array<{ provider: string; connected?: boolean }>;
+        };
+        const hubspot = (payload.integrations || []).find((row) => row.provider === "hubspot");
+        setHubspotConnected(Boolean(hubspot?.connected));
+      })
+      .catch(() => {
+        if (!cancelled) setHubspotConnected(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token]);
 
   useEffect(() => {
     if (!session?.access_token || !teamId) return;
@@ -384,6 +412,15 @@ export default function Crm() {
             {msg}
           </p>
         )}
+
+        <div className="mb-3">
+          <CrmPathFork
+            connected={hubspotConnected}
+            hasSession
+            savedCount={accounts.length}
+            variant="compact"
+          />
+        </div>
 
         <div className="mb-3 flex flex-wrap gap-1.5">
           {teams.map((t) => (

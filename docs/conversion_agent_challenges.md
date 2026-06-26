@@ -43,7 +43,9 @@ Measure weekly: anonymous pipeline views, signup starts, signup completes, first
 | 11 | **OAuth-first signup** — peak-intent pages emphasize one-tap Google | ProductSurface | ✅ Copy when `?next=` present |
 | 12 | **Profile usage meters** — “3/5 leads saved · Free” + upgrade | ProductSurface | ✅ Done (entitlement-honesty) |
 | 13 | **Dynamic social proof** — hero ticker + pipeline preview use live API counts | PipelineHealth | ✅ PipelinePreview summary fetch |
-| 14 | **First-save nudge** — signed-in user with 0 saves sees prompt on pipeline | ProductSurface | Next — post-signup activation |
+| 14 | **First-save nudge** — signed-in user with 0 saves sees prompt on pipeline | ProductSurface | ✅ Done 2026-06-26 — `FirstSaveNudge` on `/pipeline` |
+| 15 | **URL scan outreach parity** — `/results` shows full draft before signup | ProductSurface | ✅ Done 2026-06-26 — `ResultsValueStrip` + `PipelineOutreachValuePanel` |
+| 16 | **CRM path fork** — native CRM vs HubSpot after first save | ProductSurface | ✅ Done 2026-06-26 — `CrmPathFork` on pipeline + `/crm` |
 
 ---
 

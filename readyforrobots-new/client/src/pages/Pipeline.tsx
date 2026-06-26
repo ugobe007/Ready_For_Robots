@@ -34,7 +34,8 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
-import HubSpotOnboardingBanner from "@/components/HubSpotOnboardingBanner";
+import CrmPathFork from "@/components/pipeline/CrmPathFork";
+import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
@@ -762,6 +763,7 @@ export default function Pipeline() {
   const [saveLimitOpen, setSaveLimitOpen] = useState(false);
   const [saveLimitMessage, setSaveLimitMessage] = useState("");
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
+  const [savedLeadCount, setSavedLeadCount] = useState(0);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -789,6 +791,7 @@ export default function Pipeline() {
   useEffect(() => {
     if (!session?.access_token) {
       setCrmStageByCompanyId({});
+      setSavedLeadCount(0);
       return;
     }
     let cancelled = false;
@@ -817,6 +820,7 @@ export default function Pipeline() {
           if (acct.company_id && acct.outreach_stage) next[acct.company_id] = acct.outreach_stage;
         }
         setCrmStageByCompanyId(next);
+        setSavedLeadCount(accounts.filter((acct) => acct.company_id).length);
         setDeals((prev) =>
           prev.map((deal) => {
             const stage = next[deal.id];
@@ -1407,7 +1411,8 @@ export default function Pipeline() {
         throw new Error(errText);
       }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
-      toast.success("SIGNAL saved this lead to your workspace.");
+      setSavedLeadCount((count) => count + 1);
+      toast.success("Lead saved — copy your draft in CRM or connect HubSpot.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
     } finally {
@@ -1756,10 +1761,20 @@ export default function Pipeline() {
                   limit={entitlements?.pipeline_limit ?? previewLimit}
                 />
               )}
-              <div className={panelPlan === "anonymous" ? "mt-2" : ""}>
-                <HubSpotOnboardingBanner
+              {session?.access_token && savedLeadCount === 0 && selected && (
+                <div className={panelPlan === "anonymous" ? "mt-2" : "mt-0 mb-2"}>
+                  <FirstSaveNudge
+                    deal={selected}
+                    saving={advancingLeadId === selected.id}
+                    onSave={() => void handleSaveLead(selected)}
+                  />
+                </div>
+              )}
+              <div className={panelPlan === "anonymous" ? "mt-2" : savedLeadCount === 0 ? "" : "mt-2"}>
+                <CrmPathFork
                   connected={hubspotIntegration?.connected}
                   hasSession={Boolean(session?.access_token)}
+                  savedCount={savedLeadCount}
                 />
               </div>
             </div>

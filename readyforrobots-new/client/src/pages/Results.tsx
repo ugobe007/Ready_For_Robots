@@ -2,15 +2,13 @@
  * Results — ReadyForRobots
  * URL request → scan → matched prospect cards → SIGNAL activation.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Bell,
   Bot,
   CalendarCheck,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   FileText,
   LockKeyhole,
   MapPin,
@@ -35,6 +33,8 @@ import { authHeader } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
 import { toast } from "sonner";
 import LeadShareBar from "@/components/LeadShareBar";
+import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
+import ResultsValueStrip from "@/components/results/ResultsValueStrip";
 
 const SCAN_STEPS = [
   "Waiting for your robot or company URL…",
@@ -110,6 +110,8 @@ type Prospect = {
   relevance: string;
   scoreReason: string;
   draft: string;
+  outreachSubject: string;
+  outreachBody: string;
   stage: string;
   leadId?: number;
   shareSummary?: string;
@@ -174,20 +176,15 @@ function timingFromScore(score: number): string {
   return "Decision window: 3-6 months";
 }
 
-function draftOutreach(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">): string {
+function buildOutreachFields(p: Pick<Prospect, "company" | "signal" | "relevance" | "action">) {
   const hook = p.action
     ? `I've been following ${p.company} — ${p.action.charAt(0).toLowerCase()}${p.action.slice(1)}`
     : `${p.company} stood out because ${p.relevance.toLowerCase()} The strongest signal: ${p.signal}`;
 
-  return `Subject: Automation opportunity at ${p.company}
-
-Hello,
-
-${hook}
-
-${OUTREACH_CTA}
-
-${OUTREACH_SIGNATURE}`;
+  const outreachSubject = `Automation opportunity at ${p.company}`;
+  const outreachBody = `Hey,\n\n${hook}\n\n${OUTREACH_CTA}\n\n${OUTREACH_SIGNATURE}`;
+  const draft = `Subject: ${outreachSubject}\n\n${outreachBody}`;
+  return { outreachSubject, outreachBody, draft };
 }
 
 function formatEmployees(value: number | null | undefined): string {
@@ -247,13 +244,18 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     relevance,
     scoreReason,
     draft: "",
+    outreachSubject: "",
+    outreachBody: "",
     stage,
     leadId: typeof lead.id === "number" ? lead.id : undefined,
     shareSummary: lead.share_summary || undefined,
     priorityTier: lead.priority_tier || undefined,
     robotTypes: lead.robot_types_needed,
   };
-  prospect.draft = draftOutreach(prospect);
+  const outreach = buildOutreachFields(prospect);
+  prospect.outreachSubject = outreach.outreachSubject;
+  prospect.outreachBody = outreach.outreachBody;
+  prospect.draft = outreach.draft;
   return prospect;
 }
 
@@ -296,11 +298,16 @@ function mapScoutProspect(row: ScoutProspectRow, index: number): Prospect {
       "matched via SIGNAL scan-for-results",
     ].filter(Boolean).join(" · "),
     draft: "",
+    outreachSubject: "",
+    outreachBody: "",
     stage: row.tier ? `${row.tier} Lead` : score >= 85 ? "Draft Ready" : "New Signal",
     leadId: row.id && /^\d+$/.test(String(row.id)) ? Number(row.id) : undefined,
     priorityTier: row.tier,
   };
-  prospect.draft = draftOutreach(prospect);
+  const outreach = buildOutreachFields(prospect);
+  prospect.outreachSubject = outreach.outreachSubject;
+  prospect.outreachBody = outreach.outreachBody;
+  prospect.draft = outreach.draft;
   return prospect;
 }
 
@@ -320,6 +327,8 @@ const fallbackProspects: Prospect[] = [
     relevance: "Hospitality labor pressure maps directly to service and cleaning automation, and the staffing gap is urgent enough for immediate outreach.",
     scoreReason: "94/100 match score · labor pain · urgent timing · high operational fit",
     draft: "",
+    outreachSubject: "",
+    outreachBody: "",
     stage: "HOT Lead",
   },
   {
@@ -337,6 +346,8 @@ const fallbackProspects: Prospect[] = [
     relevance: "New facilities plus an automation hire indicate budget, ownership, and a near-term design window for robotics decisions.",
     scoreReason: "88/100 match score · expansion · automation owner identified · strong timing",
     draft: "",
+    outreachSubject: "",
+    outreachBody: "",
     stage: "WARM Lead",
   },
   {
@@ -354,9 +365,14 @@ const fallbackProspects: Prospect[] = [
     relevance: "Safety incidents and process improvement hiring create a clear reason to discuss automation for repetitive workflows.",
     scoreReason: "79/100 match score · safety pain · process owner hiring · moderate timing",
     draft: "",
+    outreachSubject: "",
+    outreachBody: "",
     stage: "Review Lead",
   },
-].map((p) => ({ ...p, draft: draftOutreach(p) }));
+].map((p) => {
+  const outreach = buildOutreachFields(p);
+  return { ...p, ...outreach };
+});
 
 export default function Results() {
   const search = useSearch();
@@ -370,7 +386,7 @@ export default function Results() {
   const [scanning, setScanning] = useState(Boolean(initialUrl));
   const [loading, setLoading] = useState(Boolean(initialUrl));
   const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [expandedDraft, setExpandedDraft] = useState<string | null>(null);
+  const [copiedProspectId, setCopiedProspectId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [choosingScout, setChoosingScout] = useState(false);
   const [activatedIds, setActivatedIds] = useState<Set<string>>(new Set());
@@ -385,6 +401,23 @@ export default function Results() {
   const selectedCount = selectedIds.size;
   const activatedCount = activatedIds.size;
   const isSignedIn = Boolean(session);
+  const topProspect = useMemo(
+    () => [...prospects].sort((a, b) => b.score - a.score)[0] ?? null,
+    [prospects],
+  );
+
+  const resultsSignupNext = submittedUrl
+    ? `/results?url=${encodeURIComponent(submittedUrl)}`
+    : "/results";
+
+  const copyProspectDraft = (prospect: Prospect) => {
+    const text = `Subject: ${prospect.outreachSubject}\n\n${prospect.outreachBody}`;
+    void navigator.clipboard.writeText(text).then(() => {
+      setCopiedProspectId(prospect.id);
+      toast.success("Draft copied to clipboard");
+      window.setTimeout(() => setCopiedProspectId(null), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!submittedUrl) return;
@@ -681,6 +714,27 @@ export default function Results() {
                 </button>
               </div>
 
+              {!isSignedIn && (
+                <ResultsValueStrip leadCount={prospects.length} scanUrl={submittedUrl} />
+              )}
+
+              {topProspect && !isSignedIn && (
+                <div className="mb-6">
+                  <PipelineOutreachValuePanel
+                    deal={{
+                      id: topProspect.leadId ?? 0,
+                      company: topProspect.company,
+                      outreachSubject: topProspect.outreachSubject,
+                      outreachBody: topProspect.outreachBody,
+                    }}
+                    hasSession={false}
+                    copied={copiedProspectId === topProspect.id}
+                    onCopy={() => copyProspectDraft(topProspect)}
+                    signupNext={resultsSignupNext}
+                  />
+                </div>
+              )}
+
               {choosingScout && (
                 <div className="mb-6 rounded-2xl border border-gray-200 bg-white px-5 py-4">
                   <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -865,7 +919,6 @@ export default function Results() {
 
               <div className="space-y-4">
                 {prospects.map((p) => {
-                  const draftOpen = expandedDraft === p.id;
                   const isSelected = selectedIds.has(p.id);
                   const isActive = activatedIds.has(p.id);
                   return (
@@ -974,21 +1027,20 @@ export default function Results() {
                         </div>
                       )}
 
-                      <div className="border-t border-gray-100">
-                        <button onClick={() => setExpandedDraft(draftOpen ? null : p.id)} className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 text-left hover:bg-gray-50 transition-colors">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-3.5 w-3.5 text-emerald-600" />
-                            <span className="text-xs font-semibold text-emerald-800">View outreach draft</span>
-                          </div>
-                          {draftOpen ? <ChevronUp className="h-3.5 w-3.5 text-gray-600" /> : <ChevronDown className="h-3.5 w-3.5 text-gray-600" />}
-                        </button>
-                        {draftOpen && (
-                          <div className="px-4 sm:px-6 pb-5 border-t border-gray-100">
-                            <pre className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap pt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                              {p.draft}
-                            </pre>
-                          </div>
-                        )}
+                      <div className="px-4 sm:px-6 pb-5 border-t border-gray-100">
+                        <PipelineOutreachValuePanel
+                          deal={{
+                            id: p.leadId ?? 0,
+                            company: p.company,
+                            outreachSubject: p.outreachSubject,
+                            outreachBody: p.outreachBody,
+                          }}
+                          hasSession={isSignedIn}
+                          copied={copiedProspectId === p.id}
+                          onCopy={() => copyProspectDraft(p)}
+                          signupNext={resultsSignupNext}
+                          variant="compact"
+                        />
                       </div>
                     </div>
                   );
