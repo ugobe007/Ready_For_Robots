@@ -11,7 +11,7 @@ type Props = {
 
 export default function AnonymousValueStrip({ leadCount, limit }: Props) {
   return (
-    <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="pipeline-value-strip flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="flex items-start gap-2 flex-1 min-w-0">
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
         <div>

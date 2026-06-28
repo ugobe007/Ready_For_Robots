@@ -49,7 +49,7 @@ const scoringModel = [
 
 const EYEBROW = "text-[10px] font-semibold uppercase tracking-[0.15em]";
 
-function IntelligenceFlow() {
+function IntelligenceFlow({ dark = false }: { dark?: boolean }) {
   const stages = [
     { icon: Database, label: "Source", copy: "150+ feeds", color: "#059669" },
     { icon: Radio, label: "Signal", copy: "labor + capex", color: "#10b981" },
@@ -57,8 +57,20 @@ function IntelligenceFlow() {
     { icon: Target, label: "Identify", copy: "sales + partner fit", color: "#34d399" },
   ];
 
+  const shellClass = dark ? "intelligence-flow-dark" : "relative overflow-hidden rounded-lg border border-gray-200 bg-white p-5 shadow-sm";
+  const eyebrowClass = dark ? "text-emerald-400" : "text-gray-500";
+  const titleClass = dark ? "text-slate-400" : "text-gray-500";
+  const stageLabelClass = dark ? "text-white" : "text-gray-900";
+  const stageCopyClass = dark ? "text-slate-500" : "text-gray-600";
+  const trackClass = dark ? "bg-white/10" : "bg-gray-200";
+  const panelBg = dark ? "bg-[#0f172a]" : "bg-white";
+  const panelText = dark ? "text-slate-400" : "text-gray-600";
+  const runningBadge = dark
+    ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+    : "border-amber-200 bg-amber-50 text-amber-700";
+
   return (
-    <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <div className={shellClass}>
       <style>{`
         @keyframes rfr-scan-line { 0% { transform: translateY(-12%); opacity: .1; } 45% { opacity: .4; } 100% { transform: translateY(112%); opacity: .08; } }
         @keyframes rfr-flow-dot { 0% { left: 5%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: 92%; opacity: 0; } }
@@ -67,16 +79,16 @@ function IntelligenceFlow() {
 
       <div className="relative mb-7 flex items-center justify-between">
         <div>
-          <p className={`section-eyebrow mb-0 ${EYEBROW}`}>Live intelligence loop</p>
-          <p className="mt-1.5 text-[13px] text-gray-500">SIGNAL turns market noise into action.</p>
+          <p className={`section-eyebrow mb-0 ${EYEBROW} ${eyebrowClass}`}>Live intelligence loop</p>
+          <p className={`mt-1.5 text-[13px] ${titleClass}`}>SIGNAL turns market noise into action.</p>
         </div>
-        <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+        <span className={`rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${runningBadge}`}>
           Running
         </span>
       </div>
 
       <div className="relative">
-        <div className="absolute left-[8%] right-[8%] top-7 h-px bg-gray-200" />
+        <div className={`absolute left-[8%] right-[8%] top-7 h-px ${trackClass}`} />
         <span className="absolute top-[26px] h-1.5 w-1.5 rounded-full bg-amber-500" style={{ animation: "rfr-flow-dot 3.6s ease-in-out infinite" }} />
         <div className="grid grid-cols-4 gap-3">
           {stages.map((stage) => {
@@ -89,22 +101,22 @@ function IntelligenceFlow() {
                 >
                   <Icon className="h-[18px] w-[18px]" style={{ color: stage.color }} />
                 </div>
-                <p className="text-xs font-bold text-gray-900">{stage.label}</p>
-                <p className="mt-0.5 text-[10px] text-gray-600">{stage.copy}</p>
+                <p className={`text-xs font-bold ${stageLabelClass}`}>{stage.label}</p>
+                <p className={`mt-0.5 text-[10px] ${stageCopyClass}`}>{stage.copy}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-100">
+      <div className={`mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-md border ${dark ? "border-white/10 bg-white/10" : "border-gray-200 bg-gray-100"}`}>
         {[
           ["sales", "capacity pain + decision timing"],
           ["partners", "integrators + channel fit"],
         ].map(([label, copy]) => (
-          <div key={label} className="p-3.5 bg-white">
-            <p className={`${EYEBROW} ${label === "sales" ? "text-amber-600" : "text-emerald-600"}`}>{label}</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-gray-600">{copy}</p>
+          <div key={label} className={`p-3.5 ${dark ? "bg-[#0f172a]" : "bg-white"}`}>
+            <p className={`${EYEBROW} ${label === "sales" ? (dark ? "text-amber-400" : "text-amber-600") : (dark ? "text-emerald-400" : "text-emerald-600")}`}>{label}</p>
+            <p className={`mt-1.5 text-xs leading-relaxed ${panelText}`}>{copy}</p>
           </div>
         ))}
       </div>
@@ -182,26 +194,35 @@ export default function Intelligence() {
             The same engine that powers <span className="font-bold text-amber-400">SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
           </>
         }
-        stats={signalStats.map(([value, label]) => ({
-          label,
-          value,
-          tone: value === "62%" ? "amber" : "emerald",
-        }))}
         innerClassName="pb-8"
       >
-        <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_420px]">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
-            <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300">
-              Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </a>
-            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
-              Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
-              Activate SIGNAL <Zap className="h-3.5 w-3.5" />
-            </Link>
+        <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="min-w-0 space-y-6">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {signalStats.map(([value, label]) => (
+                <div key={label} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  <div className={`font-mono text-xl font-black ${value === "62%" ? "text-amber-400" : "text-emerald-400"}`}>
+                    {value}
+                  </div>
+                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
+              <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300">
+                Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </a>
+              <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
+                Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
+                Activate SIGNAL <Zap className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
-          <IntelligenceFlow />
+          <div className="lg:sticky lg:top-24">
+            <IntelligenceFlow dark />
+          </div>
         </div>
       </PageHeroDark>
       <div className="page-hero-fade" aria-hidden />

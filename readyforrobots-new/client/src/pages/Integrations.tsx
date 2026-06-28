@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ExternalLink, Github, Link2, Plug, Unplug } from "lucide-react";
+import { Check, ExternalLink, Github, Link2, Unplug } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
@@ -24,7 +25,7 @@ type IntegrationCard = {
   entitlement_message?: string | null;
 };
 
-const cardClass = "rounded-2xl border border-gray-200 bg-white p-5";
+const cardClass = "workspace-surface-card";
 
 function HubSpotMark() {
   return (
@@ -39,10 +40,7 @@ function HubSpotMark() {
 
 function GitHubMark() {
   return (
-    <div
-      className="flex h-11 w-11 items-center justify-center rounded-xl"
-      style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}
-    >
+    <div className="integrations-github-mark">
       <Github className="h-5 w-5" />
     </div>
   );
@@ -188,14 +186,13 @@ export default function Integrations() {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <Header />
-        <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-24 text-center">
-          <Plug className="mx-auto mb-4 h-8 w-8 text-emerald-600" />
-          <h1 className="text-2xl font-black text-gray-900">
-            Connect your stack
-          </h1>
-          <p className="mt-3 text-sm text-gray-500">
-            Sign in to connect HubSpot (live) and GitHub. Salesforce and Pipedrive are next—run Signal in the native workspace until your CRM connector ships.
-          </p>
+        <PageHeroDark
+          maxWidthClass="max-w-2xl"
+          eyebrow="Integrations"
+          title="Connect your stack"
+          description="HubSpot sync is live today. GitHub connects for repo context. Salesforce and Pipedrive are next — run Signal in the native workspace until your CRM connector ships."
+          innerClassName="pb-8 pt-20 text-center"
+        >
           <Link
             href="/login?next=/integrations"
             className="mt-6 inline-flex rounded-xl px-4 py-2.5 text-xs font-bold"
@@ -203,28 +200,39 @@ export default function Integrations() {
           >
             Sign in to connect
           </Link>
-        </main>
+        </PageHeroDark>
+        <div className="page-hero-fade" aria-hidden />
+        <SiteFooter />
       </div>
     );
   }
 
+  const connectedCount = integrations.filter((i) => i.connected).length;
+
   return (
     <div className="admin-workspace min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-28">
+      <PageHeroDark
+        maxWidthClass="max-w-3xl"
+        eyebrow="Integrations"
+        title="Connect Signal to your stack"
+        description={
+          <>
+            <span className="font-semibold text-emerald-400">HubSpot</span> OAuth sync is live — no manual app setup.
+            Use the native Signal workspace for other CRMs until Salesforce and Pipedrive ship.
+          </>
+        }
+        stats={[
+          { label: "Connected", value: connectedCount, tone: "emerald" },
+          { label: "Available", value: integrations.length, tone: "white" },
+          { label: "Coming", value: "2", tone: "amber" },
+        ]}
+        innerClassName="pb-6 pt-20"
+      />
+      <div className="page-hero-fade" aria-hidden />
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-6">
         <AdminNav />
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-          Integrations
-        </p>
-        <h1 className="text-2xl font-black text-gray-900">
-          Connect Signal to your stack
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">
-          <span className="font-semibold text-gray-600">HubSpot</span> sync is live—OAuth connect, no manual app setup.
-          Use the native Signal workspace if you run another CRM today; Salesforce and Pipedrive connectors are coming soon.
-        </p>
-
-        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Available now</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">Available now</p>
         <div className="mt-3 space-y-4">
           {integrations.map((integration) => {
             const Icon = integration.provider === "github" ? GitHubMark : HubSpotMark;
@@ -238,23 +246,23 @@ export default function Integrations() {
                       <div className="flex items-center gap-2">
                         <h2 className="text-lg font-black text-gray-900">{integration.name}</h2>
                         {integration.connected ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
                             <Check className="h-3 w-3" /> Connected
                           </span>
                         ) : (
-                          <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                          <span className="rounded-full border border-gray-300 bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
                             Not connected
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 max-w-xl text-sm text-gray-500">{integration.description}</p>
+                      <p className="mt-1 max-w-xl text-sm text-gray-700">{integration.description}</p>
                       {integration.connected && (integration.account_login || integration.account_name) && (
-                        <p className="mt-2 text-xs text-gray-500">
-                          Account: <span className="font-mono text-gray-700">{integration.account_login || integration.account_name}</span>
+                        <p className="mt-2 text-xs text-gray-600">
+                          Account: <span className="font-mono font-medium text-gray-900">{integration.account_login || integration.account_name}</span>
                         </p>
                       )}
                       {!integration.entitled && integration.entitlement_message && (
-                        <p className="mt-2 text-xs text-amber-300/90">{integration.entitlement_message}</p>
+                        <p className="mt-2 text-xs font-medium text-amber-800">{integration.entitlement_message}</p>
                       )}
                       <a
                         href={integration.docs_url}
@@ -302,7 +310,7 @@ export default function Integrations() {
                     ) : (
                       <Link
                         href="/pricing"
-                        className="inline-flex items-center gap-2 rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-2 text-xs font-bold text-amber-100"
+                        className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900"
                       >
                         Upgrade to connect
                       </Link>
@@ -314,7 +322,7 @@ export default function Integrations() {
           })}
         </div>
 
-        <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">CRM connectors · coming soon</p>
+        <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">CRM connectors · coming soon</p>
         <div className="mt-3 space-y-4">
           {upcomingCrms.map((crm) => (
             <section key={crm.id} className={cardClass}>
@@ -345,19 +353,19 @@ export default function Integrations() {
           ))}
         </div>
 
-        <section className={`${cardClass} mt-6 border-teal-400/15 bg-teal-400/[0.04]`}>
+        <section className={`${cardClass} mt-6 border-emerald-200 bg-gradient-to-r from-emerald-50 to-white`}>
           <p className="text-sm font-bold text-gray-900">No external CRM yet?</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-700">
             Signal includes a native pipeline for prospecting, qualifying, and outreach. Connect{" "}
-            <span style={{ color: "#FFB000", fontWeight: 600 }}>HubSpot</span> when you are ready—your system of record stays yours.
+            <span className="font-semibold text-emerald-800">HubSpot</span> when you are ready—your system of record stays yours.
           </p>
         </section>
 
-        <section className={`${cardClass} mt-4 border-emerald-500/20 bg-emerald-600/[0.04]`}>
+        <section className={`${cardClass} mt-4 border-amber-200 bg-gradient-to-r from-amber-50/80 to-white`}>
           <p className="text-sm font-bold text-gray-900">Need ERP or MCP partner keys?</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-700">
             Advanced marketplace connections (scoped MCP servers, secret references) live on the{" "}
-            <Link href="/marketplace" className="text-emerald-600 underline">
+            <Link href="/marketplace" className="font-semibold text-emerald-800 underline">
               Marketplace workspace
             </Link>
             .

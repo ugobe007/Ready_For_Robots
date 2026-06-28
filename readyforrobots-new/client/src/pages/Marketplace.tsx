@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { ArrowRight, BriefcaseBusiness, FileText, Link2, Upload, Users } from "lucide-react";
 import AdminNav from "@/components/AdminNav";
 import Header from "@/components/Header";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -56,7 +57,9 @@ type IntegrationConnection = {
   secretRef?: string | null;
 };
 
-const cardClass = "rounded-2xl border border-gray-200 bg-white p-5";
+const cardClass = "workspace-surface-card";
+const inputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30";
+const labelClass = "mb-1 block text-[10px] font-bold uppercase tracking-widest text-gray-600";
 
 const marketplaceTeaserFeatures = [
   {
@@ -105,8 +108,6 @@ const marketplaceTeaserFeatures = [
     ],
   },
 ];
-const inputClass = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400";
-const labelClass = "mb-1 block text-[10px] uppercase tracking-widest text-gray-400";
 
 function splitLines(value: string) {
   return value.split("\n").map((x) => x.trim()).filter(Boolean);
@@ -418,19 +419,24 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="admin-workspace mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-24">
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        eyebrow="Marketplace workspace"
+        title="Profiles, RFPs, quotes, and procurement"
+        description="Build the buy-side RFP workflow and vendor document exchange. SIGNAL routes official proposals, specs, quotes, invoices, and PO milestones between both sides."
+        stats={[
+          { label: "RFPs", value: rfqs.length, tone: "amber" },
+          { label: "Assets", value: assets.length, tone: "emerald" },
+          { label: "Documents", value: documents.length, tone: "white" },
+          { label: "Connections", value: connections.length, tone: "emerald" },
+        ]}
+        innerClassName="pb-6 pt-20"
+      />
+      <div className="page-hero-fade" aria-hidden />
+      <main className="admin-workspace mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-6">
         <AdminNav />
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-          Marketplace workspace
-        </p>
-        <h1 className="text-2xl font-black text-gray-900">
-          Profiles, RFPs, proposals, quotes, invoices, and connections
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
-          Build the buy-side RFP workflow and the vendor-side document exchange. SIGNAL can use this context to route official proposals, specs, quotes, invoices, and PO milestones between both sides of the marketplace.
-        </p>
-        {message && <p className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{message}</p>}
-        {busy && <p className="mt-4 text-xs text-gray-400">Working...</p>}
+        {message && <p className="mt-2 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{message}</p>}
+        {busy && <p className="mt-4 text-xs font-medium text-gray-600">Working...</p>}
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <section className={cardClass}>
@@ -529,19 +535,26 @@ function MarketplaceTeaser() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-24">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
-          Robot automation marketplace
-        </p>
-        <h1 className="max-w-3xl text-3xl font-black text-gray-900 sm:text-4xl">
-          RFPs, proposals, quotes, and procurement — in one workspace
-        </h1>
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-500">
-          Ready For Robots connects buy-side automation teams with robot vendors through structured RFPs, shared materials,
-          and official commercial documents. SIGNAL uses this context to route proposals, specs, and PO milestones between both sides.
-        </p>
-
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        eyebrow="Robot automation marketplace"
+        title={
+          <>
+            RFPs, proposals, quotes —{" "}
+            <span className="text-emerald-400">one workspace</span>
+          </>
+        }
+        description="Connect buy-side automation teams with robot vendors through structured RFPs, shared materials, and official commercial documents."
+        stats={[
+          { label: "Workflow", value: "RFP", tone: "amber" },
+          { label: "Assets", value: "Specs", tone: "emerald" },
+          { label: "Docs", value: "PO", tone: "white" },
+        ]}
+        innerClassName="pb-6 pt-20"
+      />
+      <div className="page-hero-fade" aria-hidden />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6">
+        <div className="grid gap-4 lg:grid-cols-2">
           {marketplaceTeaserFeatures.map((feature) => {
             const Icon = feature.icon;
             return (
@@ -560,9 +573,9 @@ function MarketplaceTeaser() {
                 </div>
                 <div className="grid gap-2">
                   {feature.preview.map((row) => (
-                    <div key={row.label} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{row.label}</p>
-                      <p className="mt-1 text-xs text-gray-500">{row.value}</p>
+                    <div key={row.label} className="rounded-xl border border-gray-200 bg-slate-50 px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">{row.label}</p>
+                      <p className="mt-1 text-xs font-medium text-gray-800">{row.value}</p>
                     </div>
                   ))}
                 </div>
@@ -571,7 +584,7 @@ function MarketplaceTeaser() {
           })}
         </div>
 
-        <section className={`${cardClass} mt-4 border-amber-400/25 bg-amber-400/[0.04]`}>
+        <section className={`${cardClass} mt-4 border-amber-300 bg-gradient-to-r from-amber-50 to-white`}>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-gray-900">Ready to publish an RFP or respond as a vendor?</p>
@@ -614,7 +627,7 @@ function SectionTitle({ title, kicker }: { title: string; kicker: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
       <h2 className="text-lg font-black text-gray-900">{title}</h2>
-      <span className="rounded-full border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-400">{kicker}</span>
+      <span className="rounded-full border border-gray-300 bg-slate-50 px-2 py-1 text-[10px] font-bold text-gray-600">{kicker}</span>
     </div>
   );
 }
@@ -638,11 +651,11 @@ function Textarea({ label, value, onChange, rows }: { label: string; value: stri
 }
 
 function ListEmpty<T>({ items, empty, render, action }: { items: T[]; empty: string; render: (item: T) => string; action?: (item: T) => ReactNode }) {
-  if (!items.length) return <p className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">{empty}</p>;
+  if (!items.length) return <p className="rounded-xl border border-gray-200 bg-slate-50 p-3 text-xs font-medium text-gray-600">{empty}</p>;
   return (
     <div className="grid gap-2">
       {items.slice(0, 5).map((item, index) => (
-        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+        <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-800">
           <span className="truncate">{render(item)}</span>
           {action?.(item)}
         </div>

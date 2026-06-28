@@ -129,22 +129,53 @@ export default function HowItWorks() {
         innerClassName="pb-0"
       >
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16 pt-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href="/results?url="
-              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-500 hover:-translate-y-0.5"
-            >
-              <Zap size={16} />
-              Activate SIGNAL
-              <ArrowRight size={16} />
-            </Link>
-            <Link
-              href="/pipeline"
-              className="btn-secondary-hero"
-            >
-              Browse live pipeline
-              <ArrowRight size={16} className="btn-arrow" />
-            </Link>
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "150+", label: "Sources monitored" },
+                { value: "<2 min", label: "Outreach draft" },
+                { value: "24/7", label: "Signal scanning" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center">
+                  <div className="font-mono text-lg font-black text-emerald-400">{item.value}</div>
+                  <div className="mt-1 text-[9px] font-bold uppercase tracking-widest text-slate-500">{item.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-white">Five stages, one continuous pipeline</p>
+              <ol className="space-y-2">
+                {processSteps.slice(0, 3).map((step, index) => (
+                  <li key={step.title} className="flex gap-3 text-sm text-slate-400">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-bold text-emerald-300">
+                      {index + 1}
+                    </span>
+                    <span>
+                      <span className="font-semibold text-slate-200">{step.title}</span>
+                      {" — "}
+                      {step.body.slice(0, 88)}…
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/results?url="
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-500 hover:-translate-y-0.5"
+              >
+                <Zap size={16} />
+                Activate SIGNAL
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/pipeline"
+                className="btn-secondary-hero"
+              >
+                Browse live pipeline
+                <ArrowRight size={16} className="btn-arrow" />
+              </Link>
+            </div>
           </div>
           <ScoutHeroShowcase />
         </div>

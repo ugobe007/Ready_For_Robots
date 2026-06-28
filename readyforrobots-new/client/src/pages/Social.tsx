@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { getApiBase, getDirectApiBase, liveFetchInit, readSurfaceCache, writeSurfaceCache } from "@/lib/apiBase";
 
 const SOCIAL_SESSION_KEY = "social_daily_posts_v1";
@@ -589,38 +590,41 @@ export default function Social() {
   return (
     <div className="admin-workspace min-h-screen bg-slate-50 text-gray-900">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 pb-8 pt-28">
+      <PageHeroDark
+        maxWidthClass="max-w-4xl"
+        eyebrow="Content Studio"
+        title="Daily Content Queue"
+        description="Five SIGNAL-powered posts from today's hottest leads — edit, copy, publish to LinkedIn, or post to X."
+        stats={[
+          { label: "Posts / day", value: posts?.length ?? "5", tone: "emerald" },
+          { label: "Marked", value: `${postedCount}/${totalLeadPosts || "—"}`, tone: "amber" },
+          { label: "Refresh", value: "4h", tone: "white" },
+        ]}
+        innerClassName="pb-4 pt-20"
+      />
+      <div className="page-hero-fade -mt-2" aria-hidden />
+      <main className="max-w-4xl mx-auto px-4 pb-8 pt-4">
         <AdminNav />
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#059669] mb-2">Content Studio</p>
-          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-            <h1 className="text-2xl font-bold">Daily Content Queue</h1>
-            <div className="text-[11px] text-gray-500 font-mono flex gap-x-3">
-              {date && <span>{date}</span>}
-              {generatedAt && <span>Generated {generatedAt}</span>}
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 max-w-2xl">
-            Five SIGNAL-powered posts from today&apos;s hottest leads — built to grab attention and drive action.
-            Edit, copy, publish to LinkedIn, or post to X.
-          </p>
-          {cacheStatus === "stale" && (
-            <p className="mt-2 text-xs text-amber-700 font-mono">
-              Showing cached posts while a fresh batch generates in the background.
-            </p>
-          )}
-          {apiSlow && !error && (
-            <p className="mt-2 text-xs text-amber-700 font-mono">
-              SIGNAL API is catching up — showing cached posts and retrying in the background.
-            </p>
-          )}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-600 font-mono">
+          {date && <span>{date}</span>}
+          {generatedAt && <span>Generated {generatedAt}</span>}
         </div>
+        {cacheStatus === "stale" && (
+          <p className="mb-3 text-xs text-amber-800 font-medium rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            Showing cached posts while a fresh batch generates in the background.
+          </p>
+        )}
+        {apiSlow && !error && (
+          <p className="mb-3 text-xs text-amber-800 font-medium rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            SIGNAL API is catching up — showing cached posts and retrying in the background.
+          </p>
+        )}
 
-        <div className="mb-6 p-4 border border-blue-200 rounded-xl bg-blue-50 shadow-sm">
+        <div className="workspace-panel-dark mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-blue-900">LinkedIn Publishing</p>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-sm font-semibold text-white">LinkedIn Publishing</p>
+              <p className="text-xs text-slate-400 mt-1">
                 {linkedinStatus?.connected
                   ? linkedinStatus.member_posting
                     ? `Connected as ${linkedinStatus.member_name || "your profile"} — personal feed until Marketing API is approved.`
@@ -630,20 +634,20 @@ export default function Social() {
                     : "Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the API server"}
               </p>
               {linkedinMsg && (
-                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-600" : "text-emerald-700"}`}>{linkedinMsg}</p>
+                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>{linkedinMsg}</p>
               )}
             </div>
             <div className="flex gap-2 flex-wrap items-end">
               {!linkedinStatus?.connected && (
                 <label className="flex flex-col gap-1 min-w-[220px]">
-                  <span className="text-[10px] uppercase tracking-wide text-gray-500">Admin key</span>
+                  <span className="text-[10px] uppercase tracking-wide text-slate-500">Admin key</span>
                   <input
                     type="password"
                     value={adminKey}
                     onChange={(e) => persistAdminKey(e.target.value)}
                     placeholder="Same as Fly ADMIN_KEY"
                     autoComplete="off"
-                    className="text-xs px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                    className="text-xs px-3 py-1.5 rounded border border-white/15 bg-white/10 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
                   />
                 </label>
               )}
@@ -651,7 +655,7 @@ export default function Social() {
                 href={linkedinStatus?.organization_url || "https://www.linkedin.com/company/114404417/admin/dashboard/"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-white bg-white"
+                className="text-xs px-3 py-1.5 rounded border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 bg-white/5"
               >
                 Open Page Admin ↗
               </a>
@@ -660,7 +664,7 @@ export default function Social() {
                   type="button"
                   onClick={connectLinkedIn}
                   disabled={connecting}
-                  className="text-xs px-3 py-1.5 rounded border border-blue-300 text-blue-700 hover:border-blue-500 hover:bg-blue-100 bg-white disabled:opacity-50"
+                  className="text-xs px-3 py-1.5 rounded border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:bg-blue-500/10 bg-white/5 disabled:opacity-50"
                 >
                   {connecting ? "Connecting…" : "Connect LinkedIn"}
                 </button>

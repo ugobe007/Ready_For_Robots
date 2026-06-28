@@ -1851,7 +1851,7 @@ export default function Pipeline() {
             />
           </section>
 
-          <section className="mx-3 mb-2 rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2 sm:mx-4">
+          <section className="pipeline-market-snippet">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <div
@@ -2531,7 +2531,7 @@ export default function Pipeline() {
                       <button
                         type="button"
                         onClick={() => setIntelligenceOpen((open) => !open)}
-                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-white"
+                        className="w-full flex items-center gap-2 text-left rounded-lg py-1 transition-colors hover:bg-slate-100"
                         aria-expanded={intelligenceOpen}
                       >
                         <span className={panelSectionLabel}>SIGNAL intelligence</span>

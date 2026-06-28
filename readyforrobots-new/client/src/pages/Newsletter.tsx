@@ -180,13 +180,13 @@ function NlBadge({ label, color }: { label: string; color: string }) {
   );
 }
 
-function NlStatCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function NlStatCell({ label, value, accent, dark }: { label: string; value: string; accent?: string; dark?: boolean }) {
   return (
-    <div className="border border-gray-200 bg-gray-50 px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-gray-500">{label}</p>
+    <div className={dark ? "border border-white/10 bg-white/[0.04] px-3 py-2.5" : "border border-gray-200 bg-gray-50 px-3 py-2.5"}>
+      <p className={`text-[9px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-gray-500"}`}>{label}</p>
       <p
         className="mt-1 font-mono text-lg font-semibold leading-none"
-        style={{ color: accent || TEAL, fontFamily: "'JetBrains Mono', monospace" }}
+        style={{ color: accent || (dark ? "#34d399" : TEAL), fontFamily: "'JetBrains Mono', monospace" }}
       >
         {value}
       </p>
@@ -359,27 +359,24 @@ export default function Newsletter() {
       <main className="flex-1 px-4 pb-20 pt-24 lg:px-6">
         <div className="mx-auto max-w-5xl">
 
-          <header
-            className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
-            style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(255,255,255,1) 55%, rgba(255,176,0,0.05))" }}
-          >
+          <header className="newsletter-hero-dark">
             <div className="flex">
-              <div className="w-[3px] shrink-0" style={{ background: TEAL }} />
+              <div className="w-[3px] shrink-0 bg-emerald-500" />
               <div className="flex-1 p-4 lg:p-6">
-                <p className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: TEAL }}>
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: TEAL }} />
+                <p className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
                   Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"}
                 </p>
-                <h1 className="text-2xl font-semibold leading-tight text-gray-900 lg:text-[1.75rem]">
+                <h1 className="text-2xl font-semibold leading-tight text-white lg:text-[1.75rem]">
                   {headline}
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">{subheadline}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">{subheadline}</p>
 
-                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-gray-200 bg-gray-200 md:grid-cols-4">
-                  <NlStatCell label="Edition" value={edition?.latestEdition?.edition || "—"} />
-                  <NlStatCell label="Updated" value={edition?.latestEdition?.date || "Daily"} accent={PURPLE} />
-                  <NlStatCell label="Hot leads" value={String(edition?.summary?.total_leads ?? stories.length)} accent={AMBER} />
-                  <NlStatCell label="Stories" value={String(stories.length || (loadStatus === "loading" ? "…" : "—"))} />
+                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-white/10 bg-white/10 md:grid-cols-4">
+                  <NlStatCell label="Edition" value={edition?.latestEdition?.edition || "—"} dark />
+                  <NlStatCell label="Updated" value={edition?.latestEdition?.date || "Daily"} accent={PURPLE} dark />
+                  <NlStatCell label="Hot leads" value={String(edition?.summary?.total_leads ?? stories.length)} accent={AMBER} dark />
+                  <NlStatCell label="Stories" value={String(stories.length || (loadStatus === "loading" ? "…" : "—"))} dark />
                 </div>
 
                 <form onSubmit={subscribe} className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -388,19 +385,18 @@ export default function Newsletter() {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     placeholder="work email"
-                    className="min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
+                    className="min-w-0 flex-1 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
                   />
                   <button
                     type="submit"
                     disabled={subStatus === "submitting"}
-                    className="shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-opacity disabled:opacity-50"
-                    style={{ color: "#111827", background: AMBER }}
+                    className="shrink-0 rounded-md bg-amber-400 px-4 py-2 text-sm font-semibold text-gray-950 transition-opacity hover:bg-amber-300 disabled:opacity-50"
                   >
                     {subStatus === "submitting" ? "Subscribing…" : "Subscribe"}
                   </button>
                 </form>
-                {subStatus === "success" && <p className="mt-2 text-xs" style={{ color: TEAL }}>Subscribed.</p>}
-                {subStatus === "error" && <p className="mt-2 text-xs text-red-600">Could not subscribe — try again.</p>}
+                {subStatus === "success" && <p className="mt-2 text-xs text-emerald-400">Subscribed.</p>}
+                {subStatus === "error" && <p className="mt-2 text-xs text-red-400">Could not subscribe — try again.</p>}
               </div>
             </div>
           </header>
