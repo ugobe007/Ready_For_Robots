@@ -40,6 +40,7 @@ import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
+import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1739,6 +1740,14 @@ export default function Pipeline() {
             ]}
             innerClassName="pb-6 pt-20"
           />
+
+          {session?.access_token && (
+            <WorkspaceQuickLinks
+              savedCount={savedLeadCount}
+              hubspotConnected={hubspotIntegration?.connected}
+              queuedActions={queuedActivations}
+            />
+          )}
 
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}

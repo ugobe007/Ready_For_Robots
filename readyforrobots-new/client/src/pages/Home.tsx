@@ -154,9 +154,8 @@ export default function Home() {
               </h1>
 
               <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-6 sm:mb-8 max-w-lg">
-                <span className="font-semibold text-slate-200">SIGNAL</span> monitors 150+ live sources to surface
-                automation-ready buyers — scored, briefed, and ready to contact. You approve. You show up. That&apos;s
-                it.
+                <span className="font-semibold text-slate-200">SIGNAL</span> is the automated sales pipeline for robot
+                OEMs and integrators — ranked buyer intent, outreach drafts, and deal advance in native CRM or HubSpot.
               </p>
 
               <HeroUrlScan onDark />

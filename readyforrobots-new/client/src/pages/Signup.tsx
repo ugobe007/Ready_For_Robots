@@ -104,7 +104,7 @@ export default function Signup() {
         <div className="mx-auto grid w-full max-w-5xl items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <p className="section-eyebrow mb-3">
-              {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Create your SIGNAL workspace"}
+              {hubspotIntent ? "HubSpot + SIGNAL workspace" : "Robot OEMs & integrators"}
             </p>
             <h1 className="max-w-xl font-display text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
               {hubspotIntent
@@ -113,7 +113,7 @@ export default function Signup() {
                   ? "Save the lead. Copy the draft. Run your pipeline."
                   : resultsIntent
                     ? "Unlock your matched buyers in one workspace."
-                    : "Turn robot demand signals into a working pipeline."}
+                    : "Automate your robot sales funnel."}
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-gray-600">
               {hubspotIntent
@@ -122,8 +122,24 @@ export default function Signup() {
                   ? "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
                   : resultsIntent
                     ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
-                    : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
+                    : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
             </p>
+            {!hubspotIntent && !pipelineIntent && !resultsIntent && (
+              <ul className="mt-4 space-y-2 text-xs text-gray-600">
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  Native pipeline + kanban — or connect HubSpot in one click
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  HOT/WARM buyers with pitch actions and robot categories
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-emerald-700">✓</span>
+                  Free to start · no credit card
+                </li>
+              </ul>
+            )}
             {(pipelineIntent || resultsIntent) && !hubspotIntent && (
               <ul className="mt-4 space-y-2 text-xs text-gray-600">
                 <li className="flex gap-2">

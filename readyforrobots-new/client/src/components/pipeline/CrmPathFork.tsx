@@ -1,5 +1,5 @@
 /**
- * Native CRM vs HubSpot fork — shown after first save or on CRM workspace.
+ * Native CRM vs HubSpot fork — shown for signed-in users on pipeline and CRM.
  */
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
@@ -27,7 +27,7 @@ export default function CrmPathFork({
     setDismissed(window.localStorage.getItem(DISMISS_KEY) === "1");
   }, []);
 
-  if (!hasSession || connected || dismissed || savedCount < 1) return null;
+  if (!hasSession || connected || dismissed) return null;
 
   const dismiss = () => {
     window.localStorage.setItem(DISMISS_KEY, "1");
@@ -35,6 +35,7 @@ export default function CrmPathFork({
   };
 
   const isCompact = variant === "compact";
+  const preSave = savedCount < 1;
 
   return (
     <div
@@ -53,10 +54,12 @@ export default function CrmPathFork({
         <X className="h-4 w-4" />
       </button>
       <p className="text-[10px] font-bold uppercase tracking-widest text-amber-800">
-        {savedCount === 1 ? "Lead saved — pick your CRM path" : "Choose your CRM path"}
+        {preSave ? "Choose your CRM path" : savedCount === 1 ? "Lead saved — pick your CRM path" : "Choose your CRM path"}
       </p>
       <p className={`mt-1 max-w-2xl text-gray-700 ${isCompact ? "text-xs" : "text-sm"}`}>
-        Run deals in our native pipeline or sync scored leads into HubSpot — same buyer intelligence either way.
+        {preSave
+          ? "Run deals in our native pipeline or connect HubSpot — same SIGNAL-ranked buyers either way. You can switch anytime."
+          : "Run deals in our native pipeline or sync scored leads into HubSpot — same buyer intelligence either way."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Link

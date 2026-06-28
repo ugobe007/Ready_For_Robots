@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import SiteFooter from "@/components/layout/SiteFooter";
 import AutonomyDial from "@/components/AutonomyDial";
+import HubSpotConnectPanel, { type HubSpotIntegrationStatus } from "@/components/HubSpotConnectPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -48,6 +49,8 @@ export default function Profile() {
     scout_background_briefing_enabled: true,
   });
   const [counts, setCounts] = useState({ saved: 0, reports: 0, lists: 0 });
+  const [hubspotStatus, setHubspotStatus] = useState<HubSpotIntegrationStatus | null>(null);
+  const [hubspotLoading, setHubspotLoading] = useState(false);
   const [err, setErr] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -58,12 +61,14 @@ export default function Profile() {
     (async () => {
       setErr("");
       try {
-        const [rMe, rSettings, rSaved, rReports, rLists] = await Promise.all([
+        setHubspotLoading(true);
+        const [rMe, rSettings, rSaved, rReports, rLists, rIntegrations] = await Promise.all([
           fetch(`${base}/api/user/me`, liveFetchInit({ headers: { ...authHeader(t) } })),
           fetch(`${base}/api/user/settings`, liveFetchInit({ headers: { ...authHeader(t) } })),
           fetch(`${base}/api/user/saved`, liveFetchInit({ headers: { ...authHeader(t) } })),
           fetch(`${base}/api/user/reports`, liveFetchInit({ headers: { ...authHeader(t) } })),
           fetch(`${base}/api/user/lists`, liveFetchInit({ headers: { ...authHeader(t) } })),
+          fetch(`${base}/api/integrations`, liveFetchInit({ headers: { ...authHeader(t) } })),
         ]);
         if (!rMe.ok) throw new Error(await rMe.text());
         setMe(await rMe.json());
@@ -92,8 +97,34 @@ export default function Profile() {
           reports: reports ?? c.reports,
           lists: lists ?? c.lists,
         }));
+        if (rIntegrations.ok) {
+          const payload = (await rIntegrations.json()) as {
+            integrations?: Array<{
+              provider: string;
+              connected?: boolean;
+              entitled?: boolean;
+              entitlement_message?: string | null;
+              account_login?: string | null;
+              account_name?: string | null;
+            }>;
+          };
+          const hubspot = (payload.integrations || []).find((row) => row.provider === "hubspot");
+          setHubspotStatus(
+            hubspot
+              ? {
+                  connected: hubspot.connected,
+                  entitled: hubspot.entitled,
+                  entitlement_message: hubspot.entitlement_message,
+                  account_login: hubspot.account_login,
+                  account_name: hubspot.account_name,
+                }
+              : null,
+          );
+        }
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Failed to load profile");
+      } finally {
+        setHubspotLoading(false);
       }
     })();
   }, [session, loading]);
@@ -184,7 +215,7 @@ export default function Profile() {
           Your workspace
         </h1>
         <p className="text-xs text-gray-500 mb-6">Same data as before — powered by SIGNAL + FastAPI.</p>
-        {err && <p className="text-sm text-red-300 mb-4 border border-red-500/30 rounded p-2">{err}</p>}
+        {err && <p className="text-sm text-red-700 mb-4 border border-red-200 bg-red-50 rounded p-2">{err}</p>}
         <div className="rounded-xl border border-gray-200 p-4 space-y-2 mb-6" >
           <p className="text-[10px] uppercase tracking-widest text-gray-400">Signed in as</p>
           <p className="text-sm text-gray-900 font-medium">{me?.display_name || me?.email || session.user.email}</p>
@@ -366,25 +397,13 @@ export default function Profile() {
             />
           </label>
         </div>
-        <div className="rounded-xl border border-gray-200 mb-4 p-4" >
-          <p className="text-[10px] uppercase tracking-widest text-gray-400">HubSpot sync</p>
-          <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            Choose auto-sync for all saved leads or pick specific accounts to push into HubSpot via SIGNAL.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href="/integrations/hubspot"
-              className="inline-flex rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-100"
-            >
-              HubSpot connection
-            </Link>
-            <Link
-              href="/integrations"
-              className="inline-flex rounded-lg border border-emerald-500/30 bg-emerald-600/10 px-3 py-2 text-xs font-bold text-emerald-700"
-            >
+        <div className="mb-4">
+          <HubSpotConnectPanel status={hubspotStatus} loading={hubspotLoading} />
+          <p className="mt-2 text-center text-[11px] text-gray-500">
+            <Link href="/integrations" className="text-emerald-700 underline">
               All integrations
             </Link>
-          </div>
+          </p>
         </div>
         <p className="text-xs text-gray-400 mb-4">
           CRM outreach is on{" "}
