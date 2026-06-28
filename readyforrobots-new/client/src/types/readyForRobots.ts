@@ -44,4 +44,6 @@ export type DailySummary = {
   outreachDraftsCreated: number;
   followupsSent: number;
   opportunitiesAdvanced: number;
+  repliesReceived?: number;
+  highlights?: NextAction[];
 };

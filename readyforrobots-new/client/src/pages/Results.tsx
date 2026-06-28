@@ -423,10 +423,11 @@ export default function Results() {
     [prospects],
   );
   const anonymousUnlockedCount = Math.min(RESULTS_ANONYMOUS_UNLOCK, sortedProspects.length);
+  const topLeadId = sortedProspects[0]?.leadId;
 
-  const resultsSignupNext = submittedUrl
-    ? `/results?url=${encodeURIComponent(submittedUrl)}`
-    : "/results";
+  const resultsSignupNext = topLeadId
+    ? `/pipeline?lead=${topLeadId}`
+    : "/pipeline";
 
   const copyProspectDraft = (prospect: Prospect) => {
     const text = `Subject: ${prospect.outreachSubject}\n\n${prospect.outreachBody}`;
@@ -575,8 +576,9 @@ export default function Results() {
 
   async function activateScout(overrides: { scope?: ScopeChoice; mode?: ModeChoice; material?: MaterialChoice } = {}) {
     if (!session?.access_token) {
-      const next = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/results";
-      toast.info("Sign up or sign in before SIGNAL can save leads to CRM or prepare outbound work.");
+      const top = [...prospects].sort((a, b) => b.score - a.score)[0];
+      const next = top?.leadId ? `/pipeline?lead=${top.leadId}` : resultsSignupNext;
+      toast.info("Sign up free to save this lead, copy the draft, and run it in your pipeline.");
       window.location.href = `/signup?next=${encodeURIComponent(next)}`;
       return;
     }

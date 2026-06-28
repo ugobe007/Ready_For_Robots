@@ -192,6 +192,7 @@ def test_workflow_summary_since_zero(db_session, seeded_workspace):
     )
     assert summary["signalsDetected"] == 0
     assert "repliesReceived" in summary
+    assert summary["highlights"] == []
 
 
 @_DB_SKIP
@@ -236,6 +237,7 @@ def test_sales_workflow_summary_route(api_client):
         "followupsSent",
         "opportunitiesAdvanced",
         "repliesReceived",
+        "highlights",
     ):
         assert key in resp.json()
 

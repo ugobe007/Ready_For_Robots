@@ -32,6 +32,7 @@ type WorkflowPayload = {
   actions: NextAction[];
   activities: ActivityItem[];
   summary: DailySummary;
+  highlights: NextAction[];
 };
 
 function applySummary(payload: DailySummary & { repliesReceived?: number }): DailySummary {
@@ -60,6 +61,7 @@ export default function SalesWorkflow() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [summary, setSummary] = useState<DailySummary>(EMPTY_SUMMARY);
   const [awayOpen, setAwayOpen] = useState(false);
+  const [highlights, setHighlights] = useState<NextAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const hydratedRef = useRef(false);
@@ -72,6 +74,7 @@ export default function SalesWorkflow() {
     setActions(cached.data.actions);
     setActivities(cached.data.activities);
     setSummary(cached.data.summary);
+    setHighlights(cached.data.highlights ?? cached.data.summary.highlights ?? []);
     setLoading(false);
   }, []);
 
@@ -95,6 +98,7 @@ export default function SalesWorkflow() {
       let nextActions: NextAction[] = [];
       let nextActivities: ActivityItem[] = [];
       let nextSummary: DailySummary = EMPTY_SUMMARY;
+      let nextHighlights: NextAction[] = [];
 
       if (actionsRes.ok) {
         const payload = (await actionsRes.json()) as { actions?: NextAction[] };
@@ -107,16 +111,19 @@ export default function SalesWorkflow() {
         setActivities(nextActivities);
       }
       if (summaryRes.ok) {
-        const payload = (await summaryRes.json()) as DailySummary & { repliesReceived?: number };
+        const payload = (await summaryRes.json()) as DailySummary & { repliesReceived?: number; highlights?: NextAction[] };
         nextSummary = applySummary(payload);
+        nextHighlights = payload.highlights ?? [];
         setSummary(nextSummary);
-        if (summaryActivityTotal(payload) > 0) setAwayOpen(true);
+        setHighlights(nextHighlights);
+        if (summaryActivityTotal(payload) > 0 || nextHighlights.length > 0) setAwayOpen(true);
       }
 
       writeSurfaceCache(WORKFLOW_CACHE_KEY, {
         actions: nextActions,
         activities: nextActivities,
         summary: nextSummary,
+        highlights: nextHighlights,
       });
       hydratedRef.current = true;
     } finally {
@@ -184,8 +191,10 @@ export default function SalesWorkflow() {
       </main>
       <WhileYouWereAway
         summary={summary}
+        highlights={highlights}
         isOpen={awayOpen}
         onClose={() => setAwayOpen(false)}
+        onOpen={() => setAwayOpen(true)}
       />
     </div>
   );

@@ -816,6 +816,18 @@ def create_account(
             db.add(row)
             db.commit()
             db.refresh(row)
+            record_sales_experience(
+                db,
+                event_type="crm_lead_saved",
+                outcome="qualified",
+                team_id=row.team_id,
+                user_id=uid,
+                crm_account_id=row.id,
+                company_id=row.company_id,
+                channel="crm",
+                confidence=0.85,
+                payload={"source": "crm_create_account"},
+            )
         pl = None
         if row.company_id:
             co = (
@@ -962,6 +974,18 @@ def draft_account_outreach(
             },
         )
         db.commit()
+        record_sales_experience(
+            db,
+            event_type="crm_draft_created",
+            outcome="observed",
+            team_id=acct.team_id,
+            user_id=uid,
+            crm_account_id=acct.id,
+            company_id=acct.company_id,
+            channel="email",
+            confidence=0.78,
+            payload={"subject": subject, "stage": "draft_ready"},
+        )
         default_to = acct.contact_email
         default_cc = inferred_cc if not explicit_contact else []
         return {

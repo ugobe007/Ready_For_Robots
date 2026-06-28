@@ -375,6 +375,13 @@ def execute_sales_agent_action(
     if action.requires_approval and opportunity.automation_level not in {"auto", "full_auto"}:
         action.status = "awaiting_approval"
         action.error = "Approval required by automation policy"
+        capture_sales_action_experience(
+            db,
+            opportunity=opportunity,
+            action=action,
+            outcome="observed",
+            payload={"awaiting_approval": True},
+        )
         return action
     try:
         action_payload = action.payload or {}
@@ -587,6 +594,14 @@ def _handle_first_response(
     )
     db.add(action)
     db.flush()
+    if action.status == "planned" and action.requires_approval:
+        capture_sales_action_experience(
+            db,
+            opportunity=opportunity,
+            action=action,
+            outcome="observed",
+            payload={"awaiting_approval": True, "inbound_source": source_type},
+        )
     if action.status == "skipped":
         return action
     if not recipient or "@" not in recipient:

@@ -475,6 +475,120 @@ def collect_activity_feed(
     return items[:limit]
 
 
+def collect_workflow_highlights(
+    db: Session,
+    *,
+    team_ids: list[Any],
+    since: datetime,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    """One-click items for 'while you were away' — recent replies, drafts, approvals."""
+    highlights: list[dict[str, Any]] = []
+
+    reply_rows = (
+        db.query(OutreachReply, CrmAccount)
+        .join(CrmAccount, OutreachReply.crm_account_id == CrmAccount.id)
+        .filter(OutreachReply.team_id.in_(team_ids), OutreachReply.received_at >= since)
+        .order_by(desc(OutreachReply.received_at))
+        .limit(3)
+        .all()
+    )
+    for reply, acct in reply_rows:
+        highlights.append(
+            {
+                "id": f"highlight:reply:{reply.id}",
+                "label": "Reply received — review SIGNAL draft",
+                "companyName": acct.name,
+                "priority": "high",
+                "route": "/inbox",
+                "entity_type": "crm_account",
+                "entity_id": str(acct.id),
+            }
+        )
+
+    draft_rows = (
+        db.query(CrmAccount)
+        .filter(
+            CrmAccount.team_id.in_(team_ids),
+            CrmAccount.outreach_draft.isnot(None),
+            CrmAccount.outreach_sent_at.is_(None),
+            CrmAccount.updated_at >= since,
+        )
+        .order_by(desc(CrmAccount.updated_at))
+        .limit(3)
+        .all()
+    )
+    for acct in draft_rows:
+        highlights.append(
+            {
+                "id": f"highlight:draft:{acct.id}",
+                "label": "Outreach draft ready — approve and send",
+                "companyName": acct.name,
+                "priority": "high",
+                "route": "/crm",
+                "entity_type": "crm_account",
+                "entity_id": str(acct.id),
+            }
+        )
+
+    pending_rows = (
+        db.query(SalesAgentAction, SalesOpportunity)
+        .join(SalesOpportunity, SalesAgentAction.sales_opportunity_id == SalesOpportunity.id)
+        .filter(
+            SalesOpportunity.team_id.in_(team_ids),
+            SalesAgentAction.created_at >= since,
+            SalesAgentAction.status.in_(("planned", "awaiting_approval", "drafted")),
+            SalesAgentAction.requires_approval.is_(True),
+        )
+        .order_by(desc(SalesAgentAction.created_at))
+        .limit(3)
+        .all()
+    )
+    for action, opp in pending_rows:
+        highlights.append(
+            {
+                "id": f"highlight:agent:{action.id}",
+                "label": (action.recommendation or "Approve automated reply")[:120],
+                "companyName": opp.title,
+                "priority": "high",
+                "route": "/sales-console",
+                "entity_type": "sales_opportunity",
+                "entity_id": str(opp.id),
+                "meta": {"action_id": str(action.id)},
+            }
+        )
+
+    send_rows = (
+        db.query(OutreachMessage, CrmAccount)
+        .join(CrmAccount, OutreachMessage.crm_account_id == CrmAccount.id)
+        .filter(OutreachMessage.team_id.in_(team_ids), OutreachMessage.sent_at >= since)
+        .order_by(desc(OutreachMessage.sent_at))
+        .limit(2)
+        .all()
+    )
+    for msg, acct in send_rows:
+        highlights.append(
+            {
+                "id": f"highlight:sent:{msg.id}",
+                "label": "Outreach sent — monitor for reply",
+                "companyName": acct.name,
+                "priority": "medium",
+                "route": "/crm",
+                "entity_type": "crm_account",
+                "entity_id": str(acct.id),
+            }
+        )
+
+    seen: set[str] = set()
+    deduped: list[dict[str, Any]] = []
+    for item in highlights:
+        if item["id"] in seen:
+            continue
+        seen.add(item["id"])
+        deduped.append(item)
+    return deduped[:limit]
+
+
 def workflow_summary_since(
     db: Session,
     *,
@@ -534,4 +648,5 @@ def workflow_summary_since(
         "followupsSent": int(sends),
         "opportunitiesAdvanced": int(advanced),
         "repliesReceived": int(replies),
+        "highlights": collect_workflow_highlights(db, team_ids=team_ids, since=since_naive, limit=5),
     }

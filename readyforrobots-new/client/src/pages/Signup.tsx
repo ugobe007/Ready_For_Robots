@@ -20,7 +20,8 @@ export default function Signup() {
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const hubspotIntent = params.get("intent") === "hubspot";
   const nextRaw = params.get("next") || "";
-  const pipelineIntent = nextRaw.startsWith("/pipeline");
+  const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
+  const resultsIntent = nextRaw.startsWith("/results");
 
   const nextPath = () => {
     if (typeof window === "undefined") return "/pipeline";
@@ -109,21 +110,25 @@ export default function Signup() {
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
                 : pipelineIntent
-                  ? "Copy the draft. Save the lead. Run your pipeline."
-                  : "Turn robot demand signals into a working pipeline."}
+                  ? "Save the lead. Copy the draft. Run your pipeline."
+                  : resultsIntent
+                    ? "Unlock your matched buyers in one workspace."
+                    : "Turn robot demand signals into a working pipeline."}
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-gray-600">
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : pipelineIntent
-                  ? "Free workspace: save up to 5 HOT/WARM leads, copy outreach drafts, and sync to HubSpot when you are ready. No card required."
-                  : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
+                  ? "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
+                  : resultsIntent
+                    ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
+                    : "Save matched leads, review signal context, and let SIGNAL prioritize the workflow from signal to outreach."}
             </p>
-            {pipelineIntent && !hubspotIntent && (
+            {(pipelineIntent || resultsIntent) && !hubspotIntent && (
               <ul className="mt-4 space-y-2 text-xs text-gray-600">
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  Pick up exactly where you left off — same lead after signup
+                  Pick up on the same lead after signup — draft waiting in pipeline
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>

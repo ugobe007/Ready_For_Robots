@@ -469,6 +469,7 @@ def get_workflow_summary(
             "followupsSent": 0,
             "opportunitiesAdvanced": 0,
             "repliesReceived": 0,
+            "highlights": [],
         }
     if team_id:
         requested = _db_uuid(db, team_id)

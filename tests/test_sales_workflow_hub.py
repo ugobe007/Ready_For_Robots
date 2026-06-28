@@ -42,3 +42,4 @@ def test_workflow_summary_since_zero(db_session):
     )
     assert summary["signalsDetected"] == 0
     assert summary["followupsSent"] == 0
+    assert summary["highlights"] == []
