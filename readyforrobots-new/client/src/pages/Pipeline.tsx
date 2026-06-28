@@ -568,13 +568,11 @@ function PipelineMetric({
   return (
     <div className="pipeline-metric-card" style={{ ["--metric-accent" as string]: color }}>
       <div className="mb-1.5 flex items-center justify-between gap-2 pl-2">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-        <span className="h-2 w-2 rounded-full ring-2 ring-[#121826]" style={{ background: color }} />
+        <p className="pipeline-metric-label">{label}</p>
+        <span className="h-2 w-2 rounded-full ring-2 ring-slate-200" style={{ background: color }} />
       </div>
-      <p className="pl-2 font-mono-data text-xl font-semibold leading-none text-white">
-        {value}
-      </p>
-      <p className="mt-1 pl-2 text-[10px] leading-snug text-slate-500">{sub}</p>
+      <p className="pipeline-metric-value font-mono-data pl-2">{value}</p>
+      <p className="pipeline-metric-sub mt-1 pl-2">{sub}</p>
     </div>
   );
 }
@@ -1755,7 +1753,7 @@ export default function Pipeline() {
               <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="min-w-0">
                   <p className="sb-kicker mb-0.5">Filter pipeline</p>
-                  <p className="text-xs text-gray-600">Search industry, company, or signal</p>
+                  <p className="pipeline-filter-hint">Search industry, company, or signal</p>
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
@@ -1891,7 +1889,7 @@ export default function Pipeline() {
                   <Newspaper className="h-4 w-4" style={{ color: marketSnippet.color }} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-800">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-800 pipeline-market-kicker">
                     {marketSnippet.label}
                   </p>
                   <h2 className="mt-1 break-words text-sm font-bold text-gray-900">
@@ -2275,8 +2273,8 @@ export default function Pipeline() {
                     {/* Stage header row */}
                     <div className="pipeline-tier-header">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
-                      <span className="text-xs font-bold" style={{ color: meta.color }}>{stageLabel(stage)}</span>
-                      <span className="ml-0.5 text-[10px] font-medium text-stone-600">— {stageDesc(stage)}</span>
+                      <span className="pipeline-tier-title">{stageLabel(stage)}</span>
+                      <span className="ml-0.5 text-[10px] font-medium text-slate-600">— {stageDesc(stage)}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded"
                         style={{ color: meta.color, background: `${meta.color}15` }}
@@ -2359,8 +2357,8 @@ export default function Pipeline() {
                   <div key={bucket}>
                     <div className="pipeline-tier-header">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
-                      <span className="text-xs font-bold" style={{ color: meta.color }}>{bucket}</span>
-                      <span className="ml-0.5 text-[10px] font-medium text-stone-600">— {meta.desc}</span>
+                      <span className="pipeline-tier-title">{bucket}</span>
+                      <span className="ml-0.5 text-[10px] font-medium text-slate-600">— {meta.desc}</span>
                       <span
                         className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
                         style={{ color: meta.color, background: `${meta.color}15`, fontFamily: "'JetBrains Mono', monospace" }}

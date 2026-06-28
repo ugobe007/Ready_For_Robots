@@ -487,43 +487,67 @@
 
   /* Home — Before vs After ReadyForRobots comparison cards */
   .before-after-section {
-    @apply bg-slate-100 py-20;
+    @apply bg-slate-50 py-16 sm:py-20;
   }
 
   .before-after-panel-before {
-    @apply overflow-hidden rounded-2xl border-2 border-red-200 bg-white shadow-lg shadow-red-950/10;
-    border-left-width: 6px;
-    border-left-color: #ef4444;
+    @apply overflow-hidden rounded-2xl border border-red-200 bg-white shadow-sm;
+    border-left-width: 5px;
+    border-left-color: #dc2626;
   }
 
   .before-after-panel-before-header {
-    @apply border-b border-red-100 bg-white px-6 py-3;
+    @apply border-b border-red-100 bg-red-50/80 px-6 py-3.5;
   }
 
   .before-after-panel-before-body {
-    @apply bg-white px-8 pb-8 pt-5;
+    @apply bg-white px-6 pb-7 pt-5 sm:px-8;
   }
 
   .before-after-panel-after {
-    @apply overflow-hidden rounded-2xl border-2 border-sky-400 bg-sky-200 shadow-lg shadow-sky-950/15;
-    border-left-width: 6px;
-    border-left-color: #0284c7;
+    @apply overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm;
+    border-left-width: 5px;
+    border-left-color: #059669;
   }
 
   .before-after-panel-after-header {
-    @apply border-b border-sky-400/60 bg-sky-300 px-6 py-3;
+    @apply border-b border-emerald-100 bg-emerald-50/90 px-6 py-3.5;
   }
 
   .before-after-panel-after-body {
-    @apply bg-sky-200 px-8 pb-8 pt-5;
+    @apply bg-white px-6 pb-7 pt-5 sm:px-8;
   }
 
   .before-after-badge-before {
-    @apply inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-red-700 ring-1 ring-red-200;
+    @apply inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-red-800 ring-1 ring-red-200;
   }
 
   .before-after-badge-after {
-    @apply inline-flex rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-sky-950 ring-1 ring-sky-500/40;
+    @apply inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-900 ring-1 ring-emerald-200;
+  }
+
+  .before-after-panel-label {
+    @apply mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-widest;
+  }
+
+  .before-after-panel-label-before {
+    @apply text-red-900;
+  }
+
+  .before-after-panel-label-after {
+    @apply text-emerald-900;
+  }
+
+  .before-after-list-item {
+    @apply flex items-start gap-3 text-sm leading-relaxed;
+  }
+
+  .before-after-list-item-before {
+    @apply text-slate-800;
+  }
+
+  .before-after-list-item-after {
+    @apply text-slate-800;
   }
 
   /* Supabase-style surfaces & controls (dashboard: tight, bordered, inline actions) */
@@ -587,7 +611,35 @@
   }
 
   .pipeline-page-header .sb-kicker {
-    @apply text-emerald-800;
+    @apply font-bold text-slate-800;
+  }
+
+  .pipeline-page-header .pipeline-filter-hint {
+    @apply text-xs text-slate-600;
+  }
+
+  .pipeline-metric-label {
+    @apply text-[9px] font-bold uppercase tracking-[0.16em] text-slate-700;
+  }
+
+  .pipeline-metric-value {
+    @apply font-mono text-xl font-semibold leading-none text-slate-900;
+  }
+
+  .pipeline-metric-sub {
+    @apply text-[10px] leading-snug text-slate-600;
+  }
+
+  .pipeline-value-strip-title {
+    @apply text-xs font-bold text-slate-900;
+  }
+
+  .pipeline-value-strip-body {
+    @apply mt-0.5 text-[11px] leading-relaxed text-slate-700;
+  }
+
+  .pipeline-market-kicker {
+    @apply text-slate-800;
   }
 
   .pipeline-page-header h1 {
@@ -613,7 +665,11 @@
   }
 
   .pipeline-tier-header {
-    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-slate-100 px-2 py-1.5 text-gray-700;
+    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-slate-100 px-2 py-1.5 text-slate-700;
+  }
+
+  .pipeline-tier-title {
+    @apply text-xs font-bold text-slate-800;
   }
 
   .pipeline-list-columns {

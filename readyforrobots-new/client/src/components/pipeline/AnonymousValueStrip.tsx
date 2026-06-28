@@ -15,8 +15,8 @@ export default function AnonymousValueStrip({ leadCount, limit }: Props) {
       <div className="flex items-start gap-2 flex-1 min-w-0">
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
         <div>
-          <p className="text-xs font-bold text-emerald-900">See value before you sign up</p>
-          <p className="text-[11px] leading-relaxed text-emerald-800/90 mt-0.5">
+          <p className="pipeline-value-strip-title">See value before you sign up</p>
+          <p className="pipeline-value-strip-body">
             Browse {Math.min(leadCount, limit)} live leads with pitch actions, robot types, and outreach drafts —
             no account required. Free workspace adds save, copy, and HubSpot sync.
           </p>

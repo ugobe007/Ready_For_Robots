@@ -238,46 +238,32 @@ export function MarketingBeforeAfter() {
     "Signal surfaces integrators and channel partners",
   ];
 
-  const robotBefore = "/marketing/robot-industrial.jpg";
-  const robotAfter =
-    "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/64MkMTSKNNGyC2kuruR8g2/robot-hiw-Yopt6ezNpbmPkaFHBTsEx6.webp";
-
   return (
     <section className="before-after-section relative overflow-hidden">
       <div className="container relative">
-        <div className="mb-14 max-w-2xl">
+        <div className="mb-10 max-w-2xl">
           <p className="section-eyebrow mb-3">The Difference</p>
-          <h2 className="section-headline font-bold text-gray-900">
+          <h2 className="section-headline font-bold text-slate-900">
             Before vs. After ReadyForRobots
           </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+            Same sales team — different pipeline when buyer intent leads the motion.
+          </p>
         </div>
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           <div className="before-after-panel-before">
-            <div className="relative h-40 sm:h-48 bg-white">
-              <img
-                src={robotBefore}
-                alt="Industrial robot on a factory floor without buyer signal context"
-                className="h-full w-full object-cover grayscale contrast-90 opacity-85"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
-            </div>
             <div className="before-after-panel-before-header">
               <span className="before-after-badge-before">Blind outreach</span>
             </div>
             <div className="before-after-panel-before-body">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center">
-                  <XCircle size={16} className="text-red-700" />
-                </div>
-                <span className="font-display font-bold text-red-800 uppercase text-xs tracking-widest">
-                  Without SIGNAL
-                </span>
+              <div className="before-after-panel-label before-after-panel-label-before font-display">
+                <XCircle size={16} className="text-red-600" aria-hidden />
+                <span>Without SIGNAL</span>
               </div>
               <ul className="space-y-3">
                 {before.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-gray-900">
-                    <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+                  <li key={item} className="before-after-list-item before-after-list-item-before">
+                    <XCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" aria-hidden />
                     {item}
                   </li>
                 ))}
@@ -285,31 +271,18 @@ export function MarketingBeforeAfter() {
             </div>
           </div>
           <div className="before-after-panel-after">
-            <div className="relative h-40 sm:h-48 bg-sky-300">
-              <img
-                src={robotAfter}
-                alt="Humanoid robot deployed with SIGNAL-driven buyer intelligence"
-                className="h-full w-full object-cover object-[center_20%]"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-sky-300 via-sky-200/40 to-transparent" />
-            </div>
             <div className="before-after-panel-after-header">
               <span className="before-after-badge-after">Signal-matched buyers</span>
             </div>
             <div className="before-after-panel-after-body">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-7 h-7 bg-sky-100 rounded-full flex items-center justify-center ring-1 ring-sky-400/50">
-                  <CheckCircle size={16} className="text-sky-800" />
-                </div>
-                <span className="font-display font-bold text-sky-950 uppercase text-xs tracking-widest">
-                  With SIGNAL
-                </span>
+              <div className="before-after-panel-label before-after-panel-label-after font-display">
+                <CheckCircle size={16} className="text-emerald-700" aria-hidden />
+                <span>With SIGNAL</span>
               </div>
               <ul className="space-y-3">
                 {after.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-sky-950">
-                    <CheckCircle size={15} className="text-sky-700 flex-shrink-0 mt-0.5" />
+                  <li key={item} className="before-after-list-item before-after-list-item-after">
+                    <CheckCircle size={15} className="text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden />
                     {item}
                   </li>
                 ))}
