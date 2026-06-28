@@ -20,7 +20,7 @@ const tiers = [
     ctaAction: "signup",
     features: [
       "URL scan and buyer matching",
-      "50 live pipeline leads (HOT / WARM / monitor mix)",
+      "10 live pipeline leads (HOT / WARM / monitor mix)",
       "Lead score and why-now context",
       "Save up to 5 leads to your workspace",
       "Outreach draft previews",
@@ -100,7 +100,7 @@ const faqs = [
   },
   {
     q: "Which plan should I start with?",
-    a: "Start on Free — scan URLs, browse 50 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
+    a: "Start on Free — scan URLs, browse 10 live pipeline leads, and save your first 5 accounts. Upgrade to Pro when you need cited SIGNAL research and HubSpot auto-sync.",
   },
   {
     q: "How do you define a 'matched prospect'?",

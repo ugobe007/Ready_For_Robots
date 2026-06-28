@@ -357,7 +357,7 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_FREE = 50;
+const PIPELINE_LIMIT_FREE = 10;
 const PIPELINE_LIMIT_PAID = 50;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;

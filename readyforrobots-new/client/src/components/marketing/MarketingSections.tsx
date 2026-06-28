@@ -555,7 +555,7 @@ const HOME_PRICING_TIERS = [
     iconBg: "bg-emerald-50 text-emerald-600",
     cta: "Start free",
     href: "/signup?plan=free&next=%2Fpipeline",
-    features: ["URL scan & buyer matching", "50 live pipeline leads", "Save up to 5 leads"],
+    features: ["URL scan & buyer matching", "10 live pipeline leads", "Save up to 5 leads"],
     highlight: false,
   },
   {

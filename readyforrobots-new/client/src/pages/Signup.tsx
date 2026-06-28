@@ -152,7 +152,7 @@ export default function Signup() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  50 live pipeline leads · pitch actions · robot categories
+                  10 live pipeline leads · pitch actions · robot categories
                 </li>
               </ul>
             )}

@@ -30,7 +30,20 @@ def test_pipeline_limits():
     assert pipeline_limit_for_plan(PLAN_ANONYMOUS) == 12
     assert pipeline_limit_for_plan(PLAN_FREE) == PIPELINE_LIMIT_FREE
     assert pipeline_limit_for_plan(PLAN_PAID) == PIPELINE_LIMIT_PAID
-    assert PIPELINE_LIMIT_FREE == 50
+    assert PIPELINE_LIMIT_FREE == 10
+
+
+def test_trim_pipeline_leads_free_tier_capped_at_ten():
+    leads = (
+        [{"id": i, "priority_tier": "HOT"} for i in range(20)]
+        + [{"id": 100 + i, "priority_tier": "WARM"} for i in range(20)]
+        + [{"id": 200 + i, "priority_tier": "COLD"} for i in range(20)]
+    )
+    trimmed, mix = trim_pipeline_leads_by_tier(leads, PLAN_FREE)
+    assert len(trimmed) == 10
+    assert mix["hot"]["shown"] == 4
+    assert mix["warm"]["shown"] == 4
+    assert mix["monitoring"]["shown"] == 2
 
 
 def test_trim_pipeline_leads_by_tier_preserves_buckets():
@@ -74,10 +87,11 @@ def test_apply_pipeline_entitlements_trims_and_tags():
         ],
     }
     out = apply_pipeline_entitlements(feed, PLAN_FREE)
-    assert len(out["leads"]) == 35
+    assert len(out["leads"]) == 8
     assert out["entitlements"]["plan"] == PLAN_FREE
-    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 15
-    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 20
+    assert out["entitlements"]["pipeline_limit"] == 10
+    assert out["entitlements"]["tier_mix"]["hot"]["shown"] == 4
+    assert out["entitlements"]["tier_mix"]["warm"]["shown"] == 4
     assert out["entitlements"]["tier_mix"]["monitoring"]["shown"] == 0
     assert "share_summary" in out["leads"][0]
 
