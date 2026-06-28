@@ -3,6 +3,7 @@ import { ArrowRight, BarChart3, Building2, Database, FileText, Mail, Radio, Sear
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanScrapedText } from "@/lib/text";
 
@@ -172,42 +173,41 @@ export default function Intelligence() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
-      <main className="flex-1 px-6 pb-20 pt-28">
-        <div className="max-w-6xl mx-auto">
-          <section className="relative mb-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_420px]">
-            <div>
-              <p className={`mb-4 ${EYEBROW}`} style={{ color: "#059669" }}>
-                ReadyForRobots Intelligence
-              </p>
-              <h1 className="font-extrabold leading-[1.05] tracking-tight text-gray-900" style={{ fontSize: "clamp(2.1rem, 4.6vw, 3.6rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
-                Robot Demand Signals, Ranked
-              </h1>
-              <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-gray-500">
-                The same engine that powers <span style={{ color: "#FFB000", fontWeight: 700 }}>SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
-              </p>
-              <div className="mt-6 grid max-w-xl grid-cols-3 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
-                {signalStats.map(([value, label]) => (
-                  <div key={label} className="p-3.5 bg-white">
-                    <p className="font-mono text-xl font-bold" style={{ color: value === "62%" ? "#FFB000" : "#059669", fontFamily: "'JetBrains Mono', monospace" }}>{value}</p>
-                    <p className="mt-1 text-[11px] leading-snug text-gray-500">{label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
-                <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#059669" }}>
-                  Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </a>
-                <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-gray-500 transition-colors hover:text-gray-800">
-                  Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold transition-colors" style={{ color: "#FFB000" }}>
-                  Activate SIGNAL <Zap className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </div>
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        eyebrow="ReadyForRobots Intelligence"
+        title="Robot Demand Signals, Ranked"
+        description={
+          <>
+            The same engine that powers <span className="font-bold text-amber-400">SIGNAL</span> watches labor pressure, expansion plans, CapEx hints, automation hiring, and deployment news, then turns those signals into sales and partnership opportunities.
+          </>
+        }
+        stats={signalStats.map(([value, label]) => ({
+          label,
+          value,
+          tone: value === "62%" ? "amber" : "emerald",
+        }))}
+        innerClassName="pb-8"
+      >
+        <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_420px]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
+            <a href="#report" className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300">
+              Download report <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </a>
+            <Link href="/signals" className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white">
+              Explore robot signals <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link href="/results?url=" className="group inline-flex items-center gap-1.5 font-semibold text-amber-400 transition-colors hover:text-amber-300">
+              Activate SIGNAL <Zap className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <IntelligenceFlow />
+        </div>
+      </PageHeroDark>
+      <div className="page-hero-fade" aria-hidden />
 
-            <IntelligenceFlow />
-          </section>
+      <main className="flex-1 px-6 pb-20">
+        <div className="max-w-6xl mx-auto">
 
           <section className="mb-12 overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">

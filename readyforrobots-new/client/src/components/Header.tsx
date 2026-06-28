@@ -26,6 +26,7 @@ import {
   isAdminNavActive,
   isAdminWorkspacePath,
 } from "@/lib/adminNavLinks";
+import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
 
 function smoothScroll(href: string) {
   if (href.startsWith("#")) {
@@ -125,6 +126,8 @@ export default function Header() {
   const closeDrawer = () => setOpen(false);
   const signedInEmail = session?.user?.email;
   const workspaceNavActive = isAdminWorkspacePath(location);
+  const darkHero = isDarkHeroRoute(location);
+  const onDarkSurface = darkHero && !scrolled;
   const moreNavActive = moreNavLinks.some((l) => location === l.href);
   const supportNavActive = supportNavLinks.some((l) => {
     const path = l.href.split("#", 1)[0];
@@ -137,25 +140,36 @@ export default function Header() {
     window.location.href = "/";
   };
 
-  const navLinkClass = (href: string) =>
-    `px-3.5 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
-      location === href
-        ? "text-emerald-700 bg-emerald-50"
-        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+  const navLinkClass = (href: string) => {
+    const active = location === href;
+    if (onDarkSurface) {
+      return `px-3.5 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+        active ? "text-emerald-300 bg-white/10" : "text-slate-300 hover:text-white hover:bg-white/5"
+      }`;
+    }
+    return `px-3.5 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
+      active ? "text-emerald-700 bg-emerald-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
     }`;
+  };
 
   return (
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100" : "bg-white/80 backdrop-blur-md"
+          scrolled
+            ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100"
+            : onDarkSurface
+              ? "bg-transparent border-b border-white/5"
+              : "bg-white/80 backdrop-blur-md"
         }`}
       >
         <div className="container">
           <div className="flex items-center justify-between h-16 gap-4">
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 object-contain" />
-              <span className="font-display font-bold text-gray-900 text-[15px] tracking-tight">ReadyForRobots</span>
+              <span className={`font-display font-bold text-[15px] tracking-tight ${onDarkSurface ? "text-white" : "text-gray-900"}`}>
+                ReadyForRobots
+              </span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1 min-w-0">
@@ -174,9 +188,13 @@ export default function Header() {
                   type="button"
                   onClick={() => setMoreOpen((v) => !v)}
                   className={`inline-flex items-center gap-1 px-3.5 py-2 text-sm font-medium rounded-md transition-colors ${
-                    moreNavActive || supportNavActive || moreOpen
-                      ? "text-emerald-700 bg-emerald-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    onDarkSurface
+                      ? moreNavActive || supportNavActive || moreOpen
+                        ? "text-emerald-300 bg-white/10"
+                        : "text-slate-300 hover:text-white hover:bg-white/5"
+                      : moreNavActive || supportNavActive || moreOpen
+                        ? "text-emerald-700 bg-emerald-50"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                   aria-expanded={moreOpen}
                 >
@@ -225,7 +243,7 @@ export default function Header() {
 
               {!session ? (
                 <>
-                  <Link href="/login" className="hidden md:inline text-sm font-medium text-gray-600 hover:text-gray-900">
+                  <Link href="/login" className={`hidden md:inline text-sm font-medium ${onDarkSurface ? "text-slate-300 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                     Sign in
                   </Link>
                   <Link
@@ -297,7 +315,7 @@ export default function Header() {
 
               <button
                 onClick={() => setOpen(!open)}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+                className={`lg:hidden p-2 rounded-md ${onDarkSurface ? "text-slate-300 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"}`}
                 aria-label={open ? "Close menu" : "Open menu"}
               >
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

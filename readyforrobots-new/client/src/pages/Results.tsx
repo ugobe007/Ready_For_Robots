@@ -24,6 +24,7 @@ import {
 import { Link, useSearch } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
@@ -640,7 +641,36 @@ export default function Results() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
-      <main className="flex-1 pt-20 sm:pt-24 pb-16 sm:pb-20 px-4 sm:px-6">
+      {!submittedUrl ? (
+        <>
+          <PageHeroDark
+            maxWidthClass="max-w-4xl"
+            eyebrow="Activate SIGNAL"
+            title="Give SIGNAL a URL first."
+            description="Paste your robot, company, or product URL. SIGNAL will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity."
+            innerClassName="pb-10"
+          />
+          <div className="page-hero-fade" aria-hidden />
+        </>
+      ) : (
+        <>
+          <PageHeroDark
+            maxWidthClass="max-w-4xl"
+            badge={<div className="page-hero-badge">Scan complete · matched buyers ready</div>}
+            eyebrow="SIGNAL results"
+            title={scanning ? "Scanning for matched buyers…" : "Your matched buyers"}
+            description={
+              submittedUrl
+                ? `Results for ${submittedUrl} — save leads, copy outreach drafts, and run them in your pipeline.`
+                : undefined
+            }
+            innerClassName="pb-8"
+          />
+          <div className="page-hero-fade" aria-hidden />
+        </>
+      )}
+
+      <main className="flex-1 pb-16 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2 text-xs text-gray-600 mb-6 sm:mb-8">
             <Link href="/" className="hover:text-gray-600 transition-colors">Home</Link>
@@ -649,17 +679,8 @@ export default function Results() {
           </div>
 
           {!submittedUrl && (
-            <section className="py-10 sm:py-16">
-              <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-10 shadow-sm">
-                <p className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3" style={{ color: "#FFB000" }}>
-                  Activate SIGNAL
-                </p>
-                <h1 className="font-extrabold text-gray-900 leading-tight mb-3" style={{ fontSize: "clamp(2rem, 4vw, 3.25rem)", fontFamily: "'Sora', system-ui, sans-serif" }}>
-                  Give SIGNAL a URL first.
-                </h1>
-                <p className="text-sm text-gray-700 max-w-xl mb-8">
-                  Paste your robot, company, or product URL. SIGNAL will scan it, match prospective sales leads, explain why each one is relevant, and score the opportunity.
-                </p>
+            <section className="py-4 sm:py-8">
+              <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-sm">
                 <form onSubmit={submitUrl} className="flex flex-col sm:flex-row gap-3">
                   <input
                     value={urlInput}

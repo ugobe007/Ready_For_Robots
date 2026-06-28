@@ -220,6 +220,30 @@
     color: oklch(0.527 0.154 162);
   }
 
+  .badge-hot-on-dark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(251, 191, 36, 0.25);
+  }
+
+  .badge-warm-on-dark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: rgba(251, 146, 60, 0.14);
+    color: #fb923c;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(251, 146, 60, 0.22);
+  }
+
   .rfr-scout-wordmark {
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-weight: 700;
@@ -264,19 +288,75 @@
     letter-spacing: -0.02em;
   }
 
+  /* Dark hero band — navy shell + emerald mesh (New_Ready mockups) */
+  .page-hero-dark {
+    @apply relative overflow-hidden text-white;
+    background:
+      radial-gradient(ellipse 80% 55% at 88% 8%, rgba(16, 185, 129, 0.14), transparent 52%),
+      radial-gradient(ellipse 65% 45% at 4% 92%, rgba(5, 150, 105, 0.1), transparent 48%),
+      linear-gradient(180deg, #0b0f17 0%, #0f172a 52%, #111827 100%);
+  }
+
+  .page-hero-dark-inner {
+    @apply relative pt-24 pb-10 sm:pt-28 sm:pb-12;
+  }
+
+  .page-hero-dark-grid {
+    @apply absolute inset-0;
+    background-image:
+      linear-gradient(rgba(16, 185, 129, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 92% 72% at 50% 28%, black 18%, transparent 78%);
+  }
+
+  .section-eyebrow-on-dark {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.14 162);
+  }
+
+  .page-hero-title {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: clamp(1.875rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .page-hero-description {
+    @apply text-sm leading-relaxed text-slate-400 sm:text-base;
+  }
+
+  .page-hero-badge {
+    @apply mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300;
+  }
+
+  .page-hero-stat-card {
+    @apply rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right shadow-sm backdrop-blur-sm;
+  }
+
+  .page-hero-fade {
+    @apply h-8 bg-gradient-to-b from-[#111827] to-slate-50;
+  }
+
   .hero-mesh-bg {
     background:
-      radial-gradient(ellipse 80% 60% at 85% 15%, rgba(16, 185, 129, 0.14), transparent 55%),
-      radial-gradient(ellipse 70% 50% at 10% 85%, rgba(5, 150, 105, 0.1), transparent 50%),
-      linear-gradient(180deg, rgba(236, 253, 245, 0.65) 0%, #ffffff 45%, #f8fafc 100%);
+      radial-gradient(ellipse 80% 55% at 88% 8%, rgba(16, 185, 129, 0.14), transparent 52%),
+      radial-gradient(ellipse 65% 45% at 4% 92%, rgba(5, 150, 105, 0.1), transparent 48%),
+      linear-gradient(180deg, #0b0f17 0%, #0f172a 52%, #111827 100%);
   }
 
   .hero-grid-texture {
     background-image:
-      linear-gradient(rgba(5, 150, 105, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(5, 150, 105, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(16, 185, 129, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.06) 1px, transparent 1px);
     background-size: 48px 48px;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 20%, transparent 75%);
+    mask-image: radial-gradient(ellipse 92% 72% at 50% 28%, black 18%, transparent 78%);
   }
 
   .hero-widget-glow {
@@ -287,7 +367,7 @@
   }
 
   .btn-secondary-hero {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-gray-800 font-semibold rounded-xl border-2 border-gray-300 transition-all duration-200 active:scale-[0.97] text-base;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-white/15 transition-all duration-200 active:scale-[0.97] text-base;
   }
 
   .btn-secondary-hero .btn-arrow {
@@ -319,29 +399,33 @@
     @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
   }
 
-  /* Sales / hero pipeline panels — stone base so rows read on light marketing pages */
+  /* Hero pipeline widget — dark panel on navy heroes */
   .pipeline-panel {
-    @apply overflow-hidden rounded-2xl border border-stone-300 bg-stone-100 shadow-md;
+    @apply overflow-hidden rounded-2xl border border-white/10 bg-[#121826] shadow-xl;
   }
 
   .pipeline-panel-header {
-    @apply border-b border-stone-300 bg-gradient-to-r from-emerald-100/90 via-stone-100 to-stone-50;
+    @apply border-b border-white/10 bg-white/5;
   }
 
   .pipeline-panel-footer {
-    @apply border-t border-stone-300 bg-stone-100;
+    @apply border-t border-white/10 bg-white/[0.03];
   }
 
   .pipeline-panel-row {
-    @apply border-b border-stone-200 transition-colors duration-500 last:border-0 hover:bg-emerald-50/60;
+    @apply border-b border-white/10 transition-colors duration-500 last:border-0 hover:bg-white/5;
   }
 
   .pipeline-panel-row:nth-child(odd) {
-    @apply bg-white;
+    @apply bg-transparent;
   }
 
   .pipeline-panel-row:nth-child(even) {
-    @apply bg-stone-50;
+    @apply bg-white/[0.02];
+  }
+
+  .pipeline-panel .score-number {
+    color: oklch(0.72 0.14 162);
   }
 
   /* Home — Before vs After ReadyForRobots comparison cards */
@@ -432,7 +516,7 @@
   }
 
   .pipeline-page-header {
-    @apply relative overflow-hidden border-b border-emerald-200/90 bg-gradient-to-r from-emerald-100 via-emerald-50 to-stone-100 px-4 py-4 sm:px-5;
+    @apply relative overflow-hidden border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-5;
   }
 
   .pipeline-page-header::before {
@@ -442,6 +526,22 @@
 
   .pipeline-page-header-inner {
     @apply relative pl-3;
+  }
+
+  .pipeline-page-header .sb-kicker {
+    @apply text-emerald-800;
+  }
+
+  .pipeline-page-header h1 {
+    @apply text-gray-900;
+  }
+
+  .pipeline-page-header p {
+    @apply text-gray-600;
+  }
+
+  .pipeline-page-header .sb-input {
+    @apply border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-emerald-500/30;
   }
 
   .pipeline-metrics-grid {

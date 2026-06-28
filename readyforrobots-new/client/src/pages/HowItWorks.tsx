@@ -5,6 +5,7 @@
 
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import ScoutHeroShowcase from "@/components/ScoutHeroShowcase";
 import { Link } from "wouter";
 import {
@@ -108,57 +109,47 @@ export default function HowItWorks() {
     <div className="min-h-screen flex flex-col bg-white text-gray-900">
       <Header />
 
-      <section className="relative overflow-hidden pt-28 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16">
-            <div className="pt-4 lg:py-4">
-              <p className="section-eyebrow mb-6">Signal</p>
-              <h1 className="font-display font-bold leading-none mb-6 text-[clamp(2.4rem,4.5vw,3.8rem)] text-gray-900">
-                How Signal turns market signals into{" "}
-                <span className="text-emerald-600">sales motion.</span>
-              </h1>
-              <p className="text-base leading-relaxed mb-10 max-w-xl text-gray-600">
-                <span className="font-bold uppercase tracking-widest text-emerald-700">Signal</span>
-                {" — robotics prospecting, qualifying, and outreach synced to "}
-                <span className="font-bold text-amber-600">HubSpot</span>
-                {" or your CRM."}
-              </p>
-
-              <div className="mb-10 flex flex-wrap items-center gap-4">
-                <Link
-                  href="/results?url="
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 hover:-translate-y-0.5"
-                >
-                  Find buyers <Zap size={15} />
-                </Link>
-                <Link
-                  href="/intelligence"
-                  className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 transition-colors hover:text-gray-900"
-                >
-                  See the scoring model <ArrowRight size={15} />
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap gap-x-8 gap-y-3">
-                {[["150+", "data sources"], ["24/7", "monitoring"], ["<2 min", "signal to draft"], ["70+", "score threshold"]].map(([num, label]) => (
-                  <div key={label} className="flex items-baseline gap-2">
-                    <span className={`font-mono-data font-bold text-xl ${label === "signal to draft" ? "text-amber-600" : "text-emerald-600"}`}>
-                      {num}
-                    </span>
-                    <span className="text-sm text-gray-500">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="w-full min-w-0 lg:pt-10">
-              <ScoutHeroShowcase />
-            </div>
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        eyebrow="How it works"
+        title={
+          <>
+            From signal to signed deal —{" "}
+            <span className="text-emerald-400">automated.</span>
+          </>
+        }
+        description={
+          <>
+            <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
+            {" — robotics prospecting, qualifying, and outreach synced to "}
+            <span className="font-bold text-amber-400">HubSpot</span>
+            {" or your CRM."}
+          </>
+        }
+        innerClassName="pb-0"
+      >
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center pb-12 lg:pb-16 pt-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/results?url="
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-500 hover:-translate-y-0.5"
+            >
+              <Zap size={16} />
+              Activate SIGNAL
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/pipeline"
+              className="btn-secondary-hero"
+            >
+              Browse live pipeline
+              <ArrowRight size={16} className="btn-arrow" />
+            </Link>
           </div>
+          <ScoutHeroShowcase />
         </div>
-      </section>
-
-      <DIV />
+      </PageHeroDark>
+      <div className="page-hero-fade" aria-hidden />
 
       <section className="py-6 lg:py-8">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">

@@ -4,7 +4,11 @@ import { useLocation } from "wouter";
 import { normalizeUrl } from "@/lib/normalizeUrl";
 import { trackUrlScan } from "@/lib/siteAnalytics";
 
-export default function HeroUrlScan() {
+type Props = {
+  onDark?: boolean;
+};
+
+export default function HeroUrlScan({ onDark = false }: Props) {
   const [, setLocation] = useLocation();
   const [url, setUrl] = useState("");
 
@@ -18,7 +22,7 @@ export default function HeroUrlScan() {
 
   return (
     <form onSubmit={submit} className="mb-4 max-w-xl">
-      <label htmlFor="hero-product-url" className="mb-2 block text-xs font-semibold text-gray-600">
+      <label htmlFor="hero-product-url" className={`mb-2 block text-xs font-semibold ${onDark ? "text-slate-400" : "text-gray-600"}`}>
         Enter your product URL → see matched leads instantly
       </label>
       <div className="flex flex-col sm:flex-row gap-2">
@@ -30,7 +34,11 @@ export default function HeroUrlScan() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="yourcompany.com or product page URL"
-          className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          className={
+            onDark
+              ? "min-w-0 flex-1 rounded-xl border border-white/15 bg-white/10 px-4 py-3.5 text-sm text-white placeholder-slate-500 shadow-sm outline-none transition-colors focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+              : "min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          }
         />
         <button
           type="submit"
@@ -41,9 +49,9 @@ export default function HeroUrlScan() {
           <ArrowRight size={16} />
         </button>
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-gray-600">
+      <p className={`mt-2 text-[11px] leading-relaxed ${onDark ? "text-slate-500" : "text-gray-600"}`}>
         See who is buying robots like yours —{" "}
-        <span className="font-semibold text-amber-800">before your competitor&apos;s SDR does.</span>
+        <span className={`font-semibold ${onDark ? "text-amber-400" : "text-amber-800"}`}>before your competitor&apos;s SDR does.</span>
       </p>
     </form>
   );

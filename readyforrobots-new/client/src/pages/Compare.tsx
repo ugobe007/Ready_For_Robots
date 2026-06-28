@@ -5,6 +5,7 @@ import { ArrowRight, Check, X } from "lucide-react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 
 const rows: {
   dimension: string;
@@ -74,20 +75,23 @@ export default function Compare() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
-      <main className="flex-1 pt-24 pb-20 px-6">
+      <PageHeroDark
+        maxWidthClass="max-w-4xl"
+        eyebrow="Compare"
+        title={
+          <>
+            Data tools find accounts.
+            <br />
+            <span className="text-emerald-400">We run your robot sales pipeline.</span>
+          </>
+        }
+        description="Tools like Explee excel at horizontal company search. ReadyForRobots is built for robot companies who need verified buyer intent, the right SKU to pitch, and deals moving in CRM — not another stale list."
+        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto"
+      />
+      <div className="page-hero-fade" aria-hidden />
+
+      <main className="flex-1 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="section-eyebrow mb-3">Compare</p>
-            <h1 className="font-display font-extrabold text-gray-900 leading-tight mb-4 text-[clamp(2rem,4vw,2.75rem)]">
-              Data tools find accounts.
-              <br />
-              <span className="text-emerald-700">We run your robot sales pipeline.</span>
-            </h1>
-            <p className="text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Tools like Explee excel at horizontal company search. ReadyForRobots is built for robot companies
-              who need verified buyer intent, the right SKU to pitch, and deals moving in CRM — not another stale list.
-            </p>
-          </div>
 
           <div className="grid md:grid-cols-2 gap-4 mb-12">
             {examples.map((ex) => (

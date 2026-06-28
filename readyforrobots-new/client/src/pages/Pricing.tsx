@@ -4,6 +4,7 @@
 import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useLocation, Link } from "wouter";
 import { useState } from "react";
 
@@ -159,21 +160,27 @@ export default function Pricing() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
-      <main className="flex-1 pt-24 pb-20 px-6">
+      <PageHeroDark
+        maxWidthClass="max-w-5xl"
+        eyebrow="Pricing"
+        title="Simple pricing for robot sales teams"
+        description={
+          <>
+            <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
+            {" — robotics prospecting, qualifying, and outreach synced to "}
+            <span className="font-bold text-amber-400">HubSpot</span>
+            {" or your CRM. Paid billing is rolling out — every plan starts with a free workspace."}
+          </>
+        }
+        innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto"
+      />
+      <div className="page-hero-fade" aria-hidden />
+
+      <main className="flex-1 pb-20 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="section-eyebrow mb-3">Pricing</p>
-            <h1 className="font-display font-extrabold text-gray-900 leading-tight mb-4 text-[clamp(2rem,4vw,3rem)]">
-              Simple pricing for robot sales teams
-            </h1>
-            <p className="text-sm text-gray-600 max-w-xl mx-auto">
-              <span className="font-bold uppercase tracking-widest text-emerald-700">Signal</span>
-              {" — robotics prospecting, qualifying, and outreach synced to "}
-              <span className="font-bold text-amber-600">HubSpot</span>
-              {" or your CRM."}
-            </p>
-            <p className="mt-3 text-xs text-gray-500 max-w-lg mx-auto">
-              Paid billing is rolling out — every plan starts with a free workspace. Create an account, browse the pipeline, then upgrade when you are ready.{" "}
+          <div className="text-center mb-10">
+            <p className="text-xs text-gray-500 max-w-lg mx-auto">
+              Create an account, browse the pipeline, then upgrade when you are ready.{" "}
               <Link href="/compare" className="text-emerald-700 font-semibold hover:underline">
                 Compare vs data tools
               </Link>

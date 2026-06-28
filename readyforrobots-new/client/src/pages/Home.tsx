@@ -141,35 +141,35 @@ export default function Home() {
         <div className="container relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div className="animate-fade-in-up order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50/90 border border-emerald-200 rounded-full text-xs font-medium text-emerald-700 mb-5 sm:mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 page-hero-badge mb-5 sm:mb-6">
                 <LiveDot />
                 <span className="font-mono-data">
                   {hotLabel} HOT · {signalsLabel} live signals · updated daily
                 </span>
               </div>
 
-              <h1 className="hero-display font-bold text-gray-900 mb-5 sm:mb-6">
+              <h1 className="hero-display font-bold text-white mb-5 sm:mb-6">
                 Automate Your{" "}
-                <span className="text-emerald-600">Sales Pipeline.</span>
+                <span className="text-emerald-400">Sales Pipeline.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8 max-w-lg">
-                <span className="font-semibold text-gray-800">SIGNAL</span> monitors 150+ live sources to surface
+              <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-6 sm:mb-8 max-w-lg">
+                <span className="font-semibold text-slate-200">SIGNAL</span> monitors 150+ live sources to surface
                 automation-ready buyers — scored, briefed, and ready to contact. You approve. You show up. That&apos;s
                 it.
               </p>
 
-              <HeroUrlScan />
+              <HeroUrlScan onDark />
 
               <Link href="/pipeline" className="btn-secondary-hero mb-4">
                 Browse the pipeline free
                 <ChevronRight size={16} className="btn-arrow" />
               </Link>
 
-              <p className="text-xs text-gray-500 font-medium mb-1">
+              <p className="text-xs text-slate-500 font-medium mb-1">
                 No signup required · Free to start · Results in seconds
               </p>
-              <Link href="#live-pipeline" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1">
+              <Link href="#live-pipeline" className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1">
                 View live pipeline <ArrowRight size={12} />
               </Link>
             </div>
@@ -188,6 +188,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <div className="page-hero-fade" aria-hidden />
 
       <div id="about">
         <MarketingWhatSignalDoes hotCount={hot} totalCount={total} />

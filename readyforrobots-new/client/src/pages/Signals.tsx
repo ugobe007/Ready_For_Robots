@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase, Activity, Globe, Zap, Filter, Search, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText, cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 import { Link } from "wouter";
@@ -634,31 +635,39 @@ export default function Signals() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header />
 
-      <main className="flex-1 pt-24 pb-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="sticky top-20 z-20 mb-8 rounded-2xl border border-teal-300/20 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ background: "rgba(3,218,197,0.08)", backdropFilter: "blur(16px)" }}>
-            <p className="text-sm text-gray-600">
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        badge={
+          <div className="page-hero-badge">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            {formatMetric(leadSummary?.total_signals ?? 0) || "8,058"} live signals · 150+ sources monitored
+          </div>
+        }
+        eyebrow="Signal library"
+        title="What we watch for"
+        description="150+ sources monitored continuously. Every signal is scored, categorized, and matched to your robot category before it reaches your pipeline."
+        stats={[
+          { label: "Signals this week", value: formatMetric(1204), tone: "white" },
+          { label: "Hot leads", value: formatMetric(leadSummary?.hot ?? 38), tone: "amber" },
+          { label: "Drafts ready", value: formatMetric(24), tone: "emerald" },
+          { label: "Sources", value: "150+", tone: "white" },
+        ]}
+        innerClassName="pb-8"
+      />
+      <div className="page-hero-fade" aria-hidden />
+
+      <main className="flex-1 pb-20 px-6">
+        <div className="max-w-6xl mx-auto -mt-2">
+          <div className="mb-8 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-sm text-gray-700">
               These signals come from the same 150+ sources analyzed in our 2026 Automation Imperative Report.
             </p>
-            <Link href="/intelligence" className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0" style={{ color: "#059669" }}>
+            <Link href="/intelligence" className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0 text-emerald-700 hover:text-emerald-800">
               Download it <ChevronRight className="h-4 w-4" />
             </Link>
-          </div>
-
-          {/* Page header */}
-          <div className="mb-10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#10b981" }}>
-              Signal library
-            </p>
-            <h1
-              className="font-extrabold text-gray-900 leading-tight mb-3"
-              style={{ fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
-            >
-              What we watch for
-            </h1>
-            <p className="text-sm text-gray-600 max-w-xl">
-              150+ sources monitored continuously. Every signal is scored, categorized, and matched to your robot category before it reaches your pipeline.
-            </p>
           </div>
 
           <SignalRadar signals={liveSignals} summary={leadSummary} loading={loadingLiveSignals} activeIndex={activeSignalIndex} />

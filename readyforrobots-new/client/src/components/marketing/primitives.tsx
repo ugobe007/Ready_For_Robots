@@ -7,8 +7,8 @@ export function LiveDot() {
   );
 }
 
-export function HeatBadge({ heat }: { heat: "HOT" | "WARM" | string }) {
+export function HeatBadge({ heat, onDark = false }: { heat: "HOT" | "WARM" | string; onDark?: boolean }) {
   const tier = heat.toUpperCase();
-  if (tier === "HOT") return <span className="badge-hot">HOT</span>;
-  return <span className="badge-warm">WARM</span>;
+  if (tier === "HOT") return <span className={onDark ? "badge-hot-on-dark" : "badge-hot"}>HOT</span>;
+  return <span className={onDark ? "badge-warm-on-dark" : "badge-warm"}>WARM</span>;
 }

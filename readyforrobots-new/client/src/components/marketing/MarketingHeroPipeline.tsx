@@ -125,9 +125,9 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       <div className="pipeline-panel-header flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2">
           <LiveDot />
-          <span className="font-display text-sm font-semibold text-gray-900">Live pipeline</span>
+          <span className="font-display text-sm font-semibold text-white">Live pipeline</span>
         </div>
-        <span className="rounded-full border border-emerald-300/70 bg-emerald-100 px-2.5 py-0.5 font-mono-data text-xs font-bold text-emerald-800">
+        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono-data text-xs font-bold text-emerald-300">
           {hotLabel} HOT
         </span>
       </div>
@@ -143,21 +143,21 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                 rowIndex === 2 ? "hidden sm:flex" : ""
               }`}
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-100/80 shadow-sm mt-0.5">
-                <Icon size={16} className="text-emerald-800" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 shadow-sm mt-0.5">
+                <Icon size={16} className="text-emerald-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="truncate font-display text-sm font-semibold text-gray-900">
+                  <span className="truncate font-display text-sm font-semibold text-white">
                     {lead.company_name}
                   </span>
-                  <HeatBadge heat={tier} />
+                  <HeatBadge heat={tier} onDark />
                 </div>
-                <PipelineLeadActionMeta lead={lead} variant="compact" />
+                <PipelineLeadActionMeta lead={lead} variant="dark" />
               </div>
               <div className="shrink-0 text-right">
-                <div className="score-number text-2xl leading-none text-emerald-800">{scoreOf(lead)}</div>
-                <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-stone-600">
+                <div className="score-number text-2xl leading-none">{scoreOf(lead)}</div>
+                <div className="mt-0.5 font-mono-data text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {live ? "live" : "demo"}
                 </div>
               </div>
@@ -167,13 +167,13 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
       </div>
 
       <div className="pipeline-panel-footer flex items-center justify-between px-4 py-2.5 sm:px-5 sm:py-3">
-        <span className="font-mono-data text-[10px] text-stone-700 sm:text-xs">
+        <span className="font-mono-data text-[10px] text-slate-400 sm:text-xs">
           Showing {rows.length} of {totalLabel} active opportunities
-          {!live && <span className="text-stone-500"> · preview</span>}
+          {!live && <span className="text-slate-500"> · preview</span>}
         </span>
         <Link
           href="/pipeline"
-          className="flex items-center gap-1 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+          className="flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
         >
           View all <ArrowRight size={12} />
         </Link>

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
@@ -596,32 +597,39 @@ export default function Robots() {
     <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
       <Header />
 
-      {/* Compact page header */}
-      <section className="mx-auto max-w-5xl px-4 pt-24 pb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
-              Humanoid Robot Index
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-gray-600">
-              HEIR benchmarking, market signals, and live rankings — updated monthly.
-            </p>
+      <PageHeroDark
+        maxWidthClass="max-w-5xl"
+        badge={
+          <div className="page-hero-badge">
+            {robots.length || 109} humanoids benchmarked · HEIR 2026 · Updated monthly
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] shrink-0">
+        }
+        eyebrow="Humanoid intelligence"
+        title={
+          <>
+            Humanoid Robot{" "}
+            <span className="text-emerald-400">Index</span>
+          </>
+        }
+        description="HEIR benchmarking, market signals, and live rankings. HEIR measures humanoids by engineering maturity, not demo choreography — scored across mobility, manipulation, cognition, safety, data pipeline, and production readiness."
+        actions={
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px]">
             {HEIR_REPORTS.map((r) => (
               <a
                 key={r.href}
                 href={r.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-emerald-700 underline underline-offset-4 decoration-gray-300"
+                className="text-slate-400 underline underline-offset-4 decoration-white/20 hover:text-emerald-300"
               >
                 HEIR 2026 · {r.title} ↗
               </a>
             ))}
           </div>
-        </div>
-      </section>
+        }
+        innerClassName="pb-6"
+      />
+      <div className="page-hero-fade" aria-hidden />
 
       {/* HEIR research — collapsed appendix */}
       <HeirResearchAppendix />

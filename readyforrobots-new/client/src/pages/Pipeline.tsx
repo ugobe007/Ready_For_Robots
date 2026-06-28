@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import ScoutActionBar from "@/components/ScoutActionBar";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
 import { Link, useSearch } from "wouter";
@@ -1716,28 +1717,37 @@ export default function Pipeline() {
     <div className="pipeline-page-bg flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 px-4 pb-6 pt-20 lg:px-6">
+      <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-2">
           {isAdmin && <AdminNav />}
 
+          <PageHeroDark
+            maxWidthClass="max-w-[1500px]"
+            badge={
+              <div className="page-hero-badge">
+                {typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—"} active opportunities · updated live
+              </div>
+            }
+            eyebrow="SIGNAL · Sales intelligence"
+            title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
+            description="Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+            stats={[
+              { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—", tone: "white" },
+              { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "—", tone: "amber" },
+              { label: "Warm", value: typeof warmDeals === "number" ? warmDeals : "—", tone: "amber" },
+              { label: "Visible", value: visibleDeals, tone: "emerald" },
+            ]}
+            innerClassName="pb-6 pt-20"
+          />
+          <div className="page-hero-fade -mt-2 mb-2" aria-hidden />
+
           <div className="pipeline-workspace">
-            {/* ── Page header ── */}
+            {/* ── Workspace toolbar ── */}
             <div className="pipeline-page-header">
-              <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <div>
-                  <p className="sb-kicker mb-0.5 text-emerald-800">SIGNAL · Sales intelligence</p>
-                  <h1 className="font-display text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
-                    {isAdmin ? "Active Signals → Live Pipeline" : "Sales Pipeline"}
-                  </h1>
-                  <p className="mt-1 max-w-xl text-xs leading-relaxed text-gray-700 sm:text-sm">
-                    {isAdmin
-                      ? "Authoritative database counts up top. Cal outreach controls below."
-                      : panelPlan === "anonymous"
-                        ? `Preview ${entitlements?.pipeline_limit ?? 12} SIGNAL-ranked leads — sign up for ${PIPELINE_LIMIT_FREE} and put SIGNAL on your workspace.`
-                        : panelPlan === "free"
-                          ? `Your free workspace: ${entitlements?.visible_count ?? deals.length} of ${entitlements?.pipeline_limit ?? PIPELINE_LIMIT_FREE} live leads · save up to ${entitlements?.saved_limit ?? 5}.`
-                          : `${PIPELINE_HOT_SLOTS} hot · ${PIPELINE_WARM_SLOTS} warm · ${PIPELINE_MONITOR_SLOTS} monitoring — ranked by buyer intent and timing.`}
-                  </p>
+              <div className="pipeline-page-header-inner flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="min-w-0">
+                  <p className="sb-kicker mb-0.5">Filter pipeline</p>
+                  <p className="text-xs text-gray-600">Search industry, company, or signal</p>
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
