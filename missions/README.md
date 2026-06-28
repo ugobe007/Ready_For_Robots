@@ -28,7 +28,7 @@ python3 scripts/harness_daily.py
 # macOS: ./scripts/install_harness_launchd.sh
 ```
 
-Required secrets for CI: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`.
+Required secrets for CI: `ANTHROPIC_API_KEY`, `DATABASE_URL`, and **one** cache-refresh auth secret (`ADMIN_KEY`, `SCRAPER_CRON_TOKEN`, or `HARNESS_ADMIN_BEARER`). Run `python3 scripts/harness_preflight.py` to validate.
 
 ### Intelligence loop (start here)
 

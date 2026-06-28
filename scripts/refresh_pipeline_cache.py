@@ -8,6 +8,8 @@ import os
 import sys
 from pathlib import Path
 
+from urllib.parse import quote
+
 _root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_root))
 
@@ -39,12 +41,34 @@ def _auth_header_args(admin_key: str) -> list[str]:
     return ["-H", f"X-Admin-Key: {key}"]
 
 
+def resolve_remote_refresh_request(api_base: str) -> tuple[str, list[str]]:
+    """Build refresh URL and curl header args for prod admin API."""
+    base = api_base.rstrip("/")
+    url = f"{base}/api/admin/leads/refresh-pipeline-cache"
+
+    cron = (os.getenv("SCRAPER_CRON_TOKEN") or "").strip()
+    if cron:
+        return f"{url}?token={quote(cron, safe='')}", []
+
+    bearer = (os.getenv("HARNESS_ADMIN_BEARER") or "").strip()
+    if bearer.startswith("eyJ"):
+        return url, ["-H", f"Authorization: Bearer {bearer}"]
+
+    admin_key = (os.getenv("ADMIN_KEY") or "").strip()
+    if not admin_key:
+        raise ValueError(
+            "Set ADMIN_KEY (raw secret), SCRAPER_CRON_TOKEN, or HARNESS_ADMIN_BEARER "
+            "for remote pipeline cache refresh"
+        )
+    return url, _auth_header_args(admin_key)
+
+
 def _should_wait_after_post(http_status: int) -> bool:
     """Only poll for a rebuilt cache when the trigger POST actually succeeded."""
     return 200 <= http_status < 300
 
 
-def _post_remote_refresh(url: str, admin_key: str) -> tuple[int, str]:
+def _post_remote_refresh(url: str, header_args: list[str]) -> tuple[int, str]:
     """POST the refresh trigger; return (http_status, response_body).
 
     Uses ``curl -w`` to capture the HTTP status even on 4xx/5xx (plain
@@ -60,7 +84,7 @@ def _post_remote_refresh(url: str, admin_key: str) -> tuple[int, str]:
             "-X",
             "POST",
             url,
-            *_auth_header_args(admin_key),
+            *header_args,
             "-w",
             f"\n{_HTTP_STATUS_MARKER}%{{http_code}}",
         ],
@@ -164,16 +188,15 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.remote:
-        admin_key = (os.getenv("ADMIN_KEY") or "").strip()
-        if not admin_key:
-            print("ADMIN_KEY missing from .env — cannot call admin API", file=sys.stderr)
+        try:
+            url, header_args = resolve_remote_refresh_request(args.api_base)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
             return 1
         import subprocess
 
-        base = args.api_base.rstrip("/")
-        url = f"{base}/api/admin/leads/refresh-pipeline-cache"
         try:
-            status, body = _post_remote_refresh(url, admin_key)
+            status, body = _post_remote_refresh(url, header_args)
         except subprocess.CalledProcessError as exc:
             print(f"Remote refresh failed: {exc.stderr or exc.stdout}", file=sys.stderr)
             return 1
@@ -188,10 +211,11 @@ def main() -> int:
             )
             if status in (401, 403):
                 print(
-                    "Auth rejected. ADMIN_KEY in .env must be the server's raw "
-                    "ADMIN_KEY secret (not a Supabase service_role/anon JWT), or "
-                    "use an admin user's Bearer access token. Sync with: "
-                    "fly secrets set ADMIN_KEY='<secret>' -a ready-2-robot",
+                    "Auth rejected. Use one of:\n"
+                    "  • ADMIN_KEY — raw server secret (fly secrets set ADMIN_KEY='…')\n"
+                    "  • SCRAPER_CRON_TOKEN — query ?token= (same as scraper cron URLs)\n"
+                    "  • HARNESS_ADMIN_BEARER — admin user Supabase access_token (Bearer)\n"
+                    "Run: python3 scripts/harness_preflight.py --require-cache-auth",
                     file=sys.stderr,
                 )
             return 1
@@ -200,7 +224,7 @@ def main() -> int:
 
         if args.wait:
             return _wait_for_remote_cache(
-                api_base=base,
+                api_base=args.api_base.rstrip("/"),
                 timeout_sec=args.wait_timeout,
                 poll_sec=args.poll_interval,
             )

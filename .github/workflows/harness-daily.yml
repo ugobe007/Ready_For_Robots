@@ -3,7 +3,11 @@
 # Required repository secrets (Settings → Secrets and variables → Actions):
 #   ANTHROPIC_API_KEY     — Claude Agent SDK mission runner
 #   DATABASE_URL          — Postgres for harness_snapshot intelligence slice
-#   ADMIN_KEY             — Remote pipeline cache refresh on Fly
+#
+# Cache refresh auth (pick one):
+#   ADMIN_KEY             — Raw Fly secret (NOT JWT, NOT fly secrets list digest)
+#   SCRAPER_CRON_TOKEN    — Same token as scraper cron URLs (?token=)
+#   HARNESS_ADMIN_BEARER  — Admin user Supabase access_token (optional)
 #
 # Optional secrets:
 #   FLY_API_TOKEN         — fly deploy from agent missions
@@ -78,12 +82,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Harness preflight
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+          HARNESS_ADMIN_BEARER: ${{ secrets.HARNESS_ADMIN_BEARER }}
+        run: |
+          SKIP_AGENT="${{ github.event.inputs.skip_agent }}"
+          ARGS=()
+          if [ "$SKIP_AGENT" != "true" ]; then
+            ARGS+=(--require-agent)
+          fi
+          python3 scripts/harness_preflight.py "${ARGS[@]}" || {
+            if [ "$SKIP_AGENT" = "true" ]; then exit 0; fi
+            echo "::error::Harness preflight failed — fix ANTHROPIC_API_KEY or run with skip_agent=true"
+            exit 1
+          }
+          python3 scripts/harness_preflight.py --require-cache-auth || \
+            echo "::warning::Remote cache refresh may fail — set ADMIN_KEY or SCRAPER_CRON_TOKEN"
+
       - name: Run harness daily loop
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           HARNESS_DATABASE_URL: ${{ secrets.HARNESS_DATABASE_URL }}
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+          HARNESS_ADMIN_BEARER: ${{ secrets.HARNESS_ADMIN_BEARER }}
           API_BASE: https://ready-2-robot.fly.dev
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

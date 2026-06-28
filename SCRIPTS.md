@@ -208,6 +208,23 @@ curl -sS -X POST "https://ready-2-robot.fly.dev/api/admin/leads/enrich-agent?lim
 
 Or `?token=${SCRAPER_CRON_TOKEN}` on the same URL if that secret is on Fly.
 
+**GitHub Actions / harness:** validate secrets before daily runs:
+
+```bash
+python3 scripts/harness_preflight.py --require-cache-auth
+python3 scripts/harness_preflight.py --require-agent
+```
+
+Set **one** of these repository secrets for remote cache refresh:
+
+| Secret | Use when |
+|--------|----------|
+| `ADMIN_KEY` | Raw Fly secret (`fly secrets set ADMIN_KEY='…'`) — **not** a Supabase JWT |
+| `SCRAPER_CRON_TOKEN` | Same token as scraper cron URLs (`?token=`) |
+| `HARNESS_ADMIN_BEARER` | Admin user Supabase `access_token` (Bearer auth) |
+
+Post-deploy, `.github/workflows/deploy.yml` triggers `refresh_pipeline_cache.py --remote --wait` when auth is configured.
+
 **Fly gotcha:** never run `fly secrets set ADMIN_KEY=part1 part2` — spaces/commas create invalid secret names. Use one quoted value: `fly secrets set 'ADMIN_KEY=my-secret' -a ready-2-robot`.
 
 ---

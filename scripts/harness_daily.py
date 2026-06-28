@@ -143,6 +143,19 @@ def main() -> int:
     _ensure_mission(mission_dir=mission_dir, dry_run=args.dry_run)
 
     py = sys.executable
+    if not args.dry_run:
+        preflight_rc = _run(
+            [
+                py,
+                "scripts/harness_preflight.py",
+                *(["--require-agent"] if not args.skip_agent else []),
+            ],
+            dry_run=False,
+        )
+        if preflight_rc != 0 and not args.skip_agent:
+            print("Harness preflight failed — fix secrets or use --skip-agent.", flush=True)
+            return preflight_rc
+
     rc = _run([py, "scripts/harness_snapshot.py", "--api-base", args.api_base], dry_run=args.dry_run)
     if rc != 0:
         return rc
@@ -176,8 +189,24 @@ def main() -> int:
             ],
             dry_run=args.dry_run,
         )
-        if rc != 0:
-            return rc
+        if rc != 0 and not args.dry_run:
+            if rc == 42:
+                print(
+                    "Agent skipped — Anthropic credits exhausted. Continuing snapshot + notify.",
+                    flush=True,
+                )
+                stub = mission_dir / "outcome.md"
+                if not stub.is_file():
+                    stub.write_text(
+                        f"# Outcome: {mission_dir.name}\n\n"
+                        f"**Result:** blocked\n"
+                        f"**Note:** Anthropic credit balance too low at "
+                        f"{datetime.now(timezone.utc).isoformat()}. "
+                        f"Top up billing and re-run with `--force`.\n",
+                        encoding="utf-8",
+                    )
+            else:
+                return rc
     elif not outcome.is_file() and not args.dry_run:
         stub = mission_dir / "outcome.md"
         stub.write_text(

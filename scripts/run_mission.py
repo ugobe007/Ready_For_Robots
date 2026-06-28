@@ -141,17 +141,28 @@ async def _run_agent(prompt: str, *, max_turns: int, max_budget_usd: float) -> i
     )
 
     exit_code = 0
-    async for message in query(prompt=prompt, options=options):
-        if isinstance(message, ResultMessage):
-            if message.subtype == "success":
-                print("\n--- Mission result ---\n")
-                print(message.result or "")
-            else:
-                print(f"\nMission stopped: {message.subtype}", file=sys.stderr)
-                exit_code = 1
-            cost = getattr(message, "total_cost_usd", None)
-            if cost is not None:
-                print(f"Cost: ${cost:.4f}")
+    try:
+        async for message in query(prompt=prompt, options=options):
+            if isinstance(message, ResultMessage):
+                if message.subtype == "success":
+                    print("\n--- Mission result ---\n")
+                    print(message.result or "")
+                else:
+                    print(f"\nMission stopped: {message.subtype}", file=sys.stderr)
+                    exit_code = 1
+                cost = getattr(message, "total_cost_usd", None)
+                if cost is not None:
+                    print(f"Cost: ${cost:.4f}")
+    except Exception as exc:
+        msg = str(exc)
+        print(f"\nMission agent error: {msg}", file=sys.stderr)
+        if "credit balance" in msg.lower() or "credit balance is too low" in msg.lower():
+            print(
+                "Anthropic credits exhausted — top up ANTHROPIC_API_KEY billing or run with --skip-agent.",
+                file=sys.stderr,
+            )
+            return 42
+        return 1
     return exit_code
 
 

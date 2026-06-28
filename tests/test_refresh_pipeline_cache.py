@@ -7,6 +7,7 @@ polling for the full --wait timeout (which masked auth failures as generic
 from scripts.refresh_pipeline_cache import (
     _auth_header_args,
     _should_wait_after_post,
+    resolve_remote_refresh_request,
 )
 
 
