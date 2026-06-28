@@ -754,7 +754,7 @@
   }
 
   .humanoid-report-dark {
-    @apply overflow-hidden rounded-2xl border border-white/10 bg-[#121826] px-4 py-4 shadow-xl;
+    @apply overflow-hidden rounded-2xl border border-white/10 bg-[#121826] px-4 py-3 shadow-xl;
   }
 
   .intelligence-flow-dark {
