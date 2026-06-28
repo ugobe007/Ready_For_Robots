@@ -13,5 +13,5 @@ export const RR = {
   textMuted: "#4b5563",
   textDim: "#6b7280",
   border: "#e5e7eb",
-  fontDisplay: "'Sora', system-ui, sans-serif",
+  fontDisplay: "'Space Grotesk', system-ui, sans-serif",
 } as const;

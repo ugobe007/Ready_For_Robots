@@ -322,13 +322,13 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
   const totalSignals = summary?.total_signals ?? signals.length;
 
   return (
-    <section className="mb-10 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+    <section className="signal-radar-shell mb-10 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
       <style>{`
         @keyframes rfr-radar-sweep { 0% { transform: translateX(-22%); opacity: .08; } 38% { opacity: .35; } 100% { transform: translateX(122%); opacity: .08; } }
         @keyframes rfr-bar-sheen { 0% { transform: translateX(-120%); opacity: 0; } 30% { opacity: .45; } 100% { transform: translateX(120%); opacity: 0; } }
         @keyframes rfr-live-rise { 0% { transform: translateY(3px); opacity: .7; } 100% { transform: translateY(0); opacity: 1; } }
       `}</style>
-      <div className="border-b border-gray-100 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-5 lg:p-6">
+      <div className="signal-radar-head border-b border-gray-100 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-5 lg:p-6">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="section-eyebrow mb-2">Live buyer intelligence</p>
@@ -478,7 +478,7 @@ function SignalRadar({ signals, summary, loading, activeIndex }: { signals: Live
               <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-700">
                 Scoring now
               </p>
-              <h3 className="text-2xl font-black leading-tight text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <h3 className="text-2xl font-black leading-tight text-gray-900">
                 {activeSignal.company}
               </h3>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -655,24 +655,23 @@ export default function Signals() {
           { label: "Drafts ready", value: formatMetric(24), tone: "emerald" },
           { label: "Sources", value: "150+", tone: "white" },
         ]}
-        innerClassName="pb-8"
+        innerClassName="pb-4"
       />
-      <div className="page-hero-fade" aria-hidden />
 
-      <main className="flex-1 pb-20 px-6">
-        <div className="max-w-6xl mx-auto -mt-2">
-          <div className="mb-8 rounded-2xl border border-emerald-200/80 bg-emerald-50/80 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <p className="text-sm text-gray-700">
+      <section className="page-dark-shell pb-12">
+        <div className="container max-w-6xl pb-8">
+          <div className="dark-callout mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p>
               These signals come from the same 150+ sources analyzed in our 2026 Automation Imperative Report.
             </p>
-            <Link href="/intelligence" className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0 text-emerald-700 hover:text-emerald-800">
+            <Link href="/intelligence" className="inline-flex items-center gap-1.5 text-sm font-bold shrink-0 text-emerald-300 hover:text-emerald-200">
               Download it <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
 
           <SignalRadar signals={liveSignals} summary={leadSummary} loading={loadingLiveSignals} activeIndex={activeSignalIndex} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
 
             {/* Left: Signal library */}
             <div className="lg:col-span-2 flex flex-col gap-5">
@@ -681,27 +680,23 @@ export default function Signals() {
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search signals…"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 border border-gray-200 bg-white outline-none focus:border-emerald-500/50 transition-colors"
+                    className="dark-filter-input"
                   />
                 </div>
 
                 {/* Category filter */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Filter className="h-3 w-3 text-gray-400 shrink-0" />
+                  <Filter className="h-3 w-3 text-slate-500 shrink-0" />
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setCategory(cat)}
-                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                        category === cat
-                          ? "bg-emerald-600 border-emerald-600 text-white"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:text-emerald-700"
-                      }`}
+                      className={`dark-filter-chip ${category === cat ? "dark-filter-chip-active" : ""}`}
                     >
                       {cat}
                     </button>
@@ -710,16 +705,12 @@ export default function Signals() {
 
                 {/* Industry filter */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Building2 className="h-3 w-3 text-gray-400 shrink-0" />
+                  <Building2 className="h-3 w-3 text-slate-500 shrink-0" />
                   {INDUSTRIES.map((ind) => (
                     <button
                       key={ind}
                       onClick={() => setIndustry(ind)}
-                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                        industry === ind
-                          ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-emerald-200 hover:text-emerald-700"
-                      }`}
+                      className={`dark-filter-chip ${industry === ind ? "dark-filter-chip-active" : ""}`}
                     >
                       {ind}
                     </button>
@@ -730,7 +721,7 @@ export default function Signals() {
               {/* Signal cards */}
               <div className="space-y-3">
                 {filtered.length === 0 && (
-                  <div className="text-center py-12 text-gray-400 text-sm">No signals match your filters.</div>
+                  <div className="text-center py-12 text-slate-500 text-sm">No signals match your filters.</div>
                 )}
                 {filtered.map((sig) => {
                   const Icon = sig.icon;
@@ -738,7 +729,7 @@ export default function Signals() {
                   return (
                     <div
                       key={sig.id}
-                      className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:border-emerald-500/20 transition-colors"
+                      className="dark-surface-card overflow-hidden"
                       
                     >
                       <button
@@ -753,7 +744,7 @@ export default function Signals() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-bold text-gray-900">{sig.name}</span>
+                            <span className="text-sm font-bold text-slate-100">{sig.name}</span>
                             <span
                               className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border"
                               style={{ color: "#374151", background: `${sig.color}20`, borderColor: `${sig.color}45` }}
@@ -761,16 +752,13 @@ export default function Signals() {
                               {sig.category}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-600 leading-relaxed">{sig.description}</p>
+                          <p className="text-xs text-slate-400 leading-relaxed">{sig.description}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span
-                            className="font-mono text-sm font-bold"
-                            style={{ color: sig.color, fontFamily: "'JetBrains Mono', monospace" }}
-                          >
+                          <span className="font-mono-data text-sm font-bold" style={{ color: sig.color }}>
                             {sig.avgScore}
                           </span>
-                          <span className="text-[9px] text-gray-400">avg score</span>
+                          <span className="text-[9px] text-slate-500">avg score</span>
                         </div>
                       </button>
 
@@ -827,52 +815,43 @@ export default function Signals() {
 
             {/* Right: Live signal feed */}
             <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-gray-100 bg-white p-5">
+              <div className="dark-surface-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Zap className="h-3.5 w-3.5" style={{ color: MARKET_COLORS.amberBright }} />
-                  <span className="text-xs font-bold text-gray-600 uppercase tracking-widest">Live feed</span>
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: MARKET_COLORS.emeraldBright }} />
+                  <Zap className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Live feed</span>
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full animate-pulse bg-emerald-400" />
                 </div>
                 <div className="space-y-3">
                   {orderedLiveSignals.slice(0, 6).map((sig) => (
                     <div key={sig.id} className="flex items-start gap-3">
                       <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-1.5" style={{ background: sig.color }} />
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-gray-700">{sig.company}</p>
-                        <p className="text-[10px] text-gray-500">{sig.type} · {sig.track}</p>
+                        <p className="text-xs font-semibold text-slate-200">{sig.company}</p>
+                        <p className="text-[10px] text-slate-500">{sig.type} · {sig.track}</p>
                       </div>
                       <div className="flex flex-col items-end gap-0.5">
-                        <span
-                          className="font-mono text-xs font-bold"
-                          style={{ color: sig.color, fontFamily: "'JetBrains Mono', monospace" }}
-                        >
+                        <span className="font-mono-data text-xs font-bold" style={{ color: sig.color }}>
                           {sig.score}
                         </span>
-                        <span className="text-[9px] text-gray-400">{sig.time}</span>
+                        <span className="text-[9px] text-slate-500">{sig.time}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Stats */}
-              <div
-                className="rounded-2xl border border-gray-100 bg-white p-5"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">This week</p>
+              <div className="dark-surface-card p-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">This week</p>
                 <div className="space-y-3">
                   {[
-                    { label: "Signals detected", value: "1,204", color: "#10b981" },
-                    { label: "Hot leads identified", value: "38", color: "#34d399" },
+                    { label: "Signals detected", value: "1,204", color: "#34d399" },
+                    { label: "Hot leads identified", value: "38", color: "#fbbf24" },
                     { label: "Outreach drafts ready", value: "24", color: "#60a5fa" },
-                    { label: "Sources monitored", value: "150+", color: MARKET_COLORS.amber },
+                    { label: "Sources monitored", value: "150+", color: "#fbbf24" },
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between">
-                      <span className="text-xs text-gray-600">{stat.label}</span>
-                      <span
-                        className="font-mono text-sm font-bold"
-                        style={{ color: stat.color, fontFamily: "'JetBrains Mono', monospace" }}
-                      >
+                      <span className="text-xs text-slate-400">{stat.label}</span>
+                      <span className="font-mono-data text-sm font-bold" style={{ color: stat.color }}>
                         {stat.value}
                       </span>
                     </div>
@@ -882,7 +861,8 @@ export default function Signals() {
             </div>
           </div>
         </div>
-      </main>
+      </section>
+      <div className="page-dark-shell-fade" aria-hidden />
       <SiteFooter />
     </div>
   );

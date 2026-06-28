@@ -180,7 +180,7 @@ export default function Profile() {
       <Header />
       <main className="flex-1 pt-28 pb-12 px-4 max-w-lg mx-auto w-full">
         <AdminNav />
-        <h1 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">
           Your workspace
         </h1>
         <p className="text-xs text-gray-500 mb-6">Same data as before — powered by SIGNAL + FastAPI.</p>

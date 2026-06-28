@@ -154,7 +154,7 @@ function NlSurface({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: accent }}>{kicker}</p>
                 {title ? (
-                  <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h2 className="mt-0.5 text-[15px] font-semibold text-gray-900">
                     {title}
                   </h2>
                 ) : null}
@@ -370,7 +370,7 @@ export default function Newsletter() {
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: TEAL }} />
                   Robot Intelligence Brief · {edition?.latestEdition?.edition || "Daily"}
                 </p>
-                <h1 className="text-2xl font-semibold leading-tight text-gray-900 lg:text-[1.75rem]" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h1 className="text-2xl font-semibold leading-tight text-gray-900 lg:text-[1.75rem]">
                   {headline}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">{subheadline}</p>

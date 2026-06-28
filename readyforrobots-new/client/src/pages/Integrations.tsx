@@ -190,7 +190,7 @@ export default function Integrations() {
         <Header />
         <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-24 text-center">
           <Plug className="mx-auto mb-4 h-8 w-8 text-emerald-600" />
-          <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+          <h1 className="text-2xl font-black text-gray-900">
             Connect your stack
           </h1>
           <p className="mt-3 text-sm text-gray-500">
@@ -216,7 +216,7 @@ export default function Integrations() {
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Integrations
         </p>
-        <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-2xl font-black text-gray-900">
           Connect Signal to your stack
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500">

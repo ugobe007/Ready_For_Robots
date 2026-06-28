@@ -213,7 +213,7 @@ export default function Intelligence() {
             <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="border-b border-gray-100 p-6 lg:border-b-0 lg:border-r">
                 <p className={`mb-3 ${EYEBROW}`} style={{ color: "#FFB000" }}>Lead scoring model</p>
-                <h2 className="max-w-xl text-xl font-bold leading-tight text-gray-900 lg:text-2xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h2 className="max-w-xl text-xl font-bold leading-tight text-gray-900 lg:text-2xl">
                   We score the buyer first, then match it to the robot sales motion.
                 </h2>
                 <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-gray-500">
@@ -263,7 +263,7 @@ export default function Intelligence() {
           <section id="report" className="mb-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-gray-200 lg:grid-cols-[1fr_360px] bg-gray-100">
             <div className="p-6 bg-white">
               <p className={`mb-3 ${EYEBROW}`} style={{ color: "#059669" }}>Enterprise Intelligence Report</p>
-              <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900 lg:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900 lg:text-3xl">
                 The Automation Imperative: labor-intensive industries are flashing buy signals.
               </h2>
               <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-gray-500">
@@ -351,7 +351,7 @@ export default function Intelligence() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
               <div>
                 <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#10b981" }}>Robot Intelligence Brief</p>
-                <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h2 className="max-w-2xl text-2xl font-bold leading-tight text-gray-900">
                   A weekly brief that keeps the market warm between sales cycles.
                 </h2>
                 <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-gray-500">

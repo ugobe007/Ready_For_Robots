@@ -567,13 +567,13 @@ function PipelineMetric({
   return (
     <div className="pipeline-metric-card" style={{ ["--metric-accent" as string]: color }}>
       <div className="mb-1.5 flex items-center justify-between gap-2 pl-2">
-        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-stone-600">{label}</p>
-        <span className="h-2 w-2 rounded-full ring-2 ring-white" style={{ background: color }} />
+        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+        <span className="h-2 w-2 rounded-full ring-2 ring-[#121826]" style={{ background: color }} />
       </div>
-      <p className="pl-2 font-mono-data text-xl font-semibold leading-none" style={{ color }}>
+      <p className="pl-2 font-mono-data text-xl font-semibold leading-none text-white">
         {value}
       </p>
-      <p className="mt-1 pl-2 text-[10px] leading-snug text-gray-600">{sub}</p>
+      <p className="mt-1 pl-2 text-[10px] leading-snug text-slate-500">{sub}</p>
     </div>
   );
 }
@@ -1739,7 +1739,6 @@ export default function Pipeline() {
             ]}
             innerClassName="pb-6 pt-20"
           />
-          <div className="page-hero-fade -mt-2 mb-2" aria-hidden />
 
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}
@@ -1865,7 +1864,7 @@ export default function Pipeline() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-800">
                     {marketSnippet.label}
                   </p>
-                  <h2 className="mt-1 break-words text-sm font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                  <h2 className="mt-1 break-words text-sm font-bold text-gray-900">
                     {marketSnippet.headline}
                   </h2>
                   <p className="mt-1 break-words text-[12px] leading-relaxed text-gray-700">
@@ -1941,7 +1940,7 @@ export default function Pipeline() {
                     <div className="space-y-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                          <h2 className="text-base font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                          <h2 className="text-base font-bold text-gray-900">
                             Activation #{selectedActivation.id}
                           </h2>
                           <p className="mt-1 break-all text-xs text-gray-500">
@@ -2954,7 +2953,7 @@ export default function Pipeline() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5" style={{ color: "#10b981" }}>Email Preview</p>
-                <p className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>{selected.company}</p>
+                <p className="text-sm font-bold text-gray-900">{selected.company}</p>
               </div>
               <button
                 onClick={() => setPreviewOpen(false)}

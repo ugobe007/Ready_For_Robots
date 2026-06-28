@@ -374,7 +374,7 @@ export default function SupplyPipeline() {
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
             Marketplace supply pipeline
           </p>
-          <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+          <h1 className="text-2xl font-black text-gray-900">
             Robot company outreach agent
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">

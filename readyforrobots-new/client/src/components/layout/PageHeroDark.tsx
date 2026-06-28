@@ -51,8 +51,12 @@ export default function PageHeroDark({
           </div>
           {stats?.length ? (
             <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
-              {stats.map((stat) => (
-                <div key={stat.label} className="page-hero-stat-card">
+              {stats.map((stat, index) => (
+                <div
+                  key={stat.label}
+                  className="page-hero-stat-card"
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
                   <div className={`font-mono-data text-lg font-black sm:text-xl ${statToneClass[stat.tone ?? "emerald"]}`}>
                     {stat.value}
                   </div>

@@ -168,7 +168,7 @@ export default function HubSpotConnect() {
           <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
             HubSpot + Signal
           </p>
-          <h1 className="mt-2 text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+          <h1 className="mt-2 text-2xl font-black text-gray-900">
             Connect HubSpot automatically
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-gray-500">
@@ -197,7 +197,7 @@ export default function HubSpotConnect() {
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           HubSpot integration
         </p>
-        <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-2xl font-black text-gray-900">
           Link HubSpot to Signal
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-500">

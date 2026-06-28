@@ -167,9 +167,14 @@ export default function Header() {
           <div className="flex items-center justify-between h-16 gap-4">
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 object-contain" />
-              <span className={`font-display font-bold text-[15px] tracking-tight ${onDarkSurface ? "text-white" : "text-gray-900"}`}>
-                ReadyForRobots
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className={`font-display font-bold text-[15px] tracking-tight ${onDarkSurface ? "text-white" : "text-gray-900"}`}>
+                  ReadyForRobots
+                </span>
+                <span className={`rfr-scout-wordmark mt-1 text-[9px] ${onDarkSurface ? "text-emerald-400" : "text-emerald-600"}`}>
+                  SIGNAL
+                </span>
+              </div>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1 min-w-0">

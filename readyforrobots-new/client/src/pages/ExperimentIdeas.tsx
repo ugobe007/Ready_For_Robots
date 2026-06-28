@@ -21,7 +21,7 @@ export default function ExperimentIdeas() {
           </span>
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-600/80">Lab</p>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Experiments
             </h1>
             <p className="mt-1 max-w-xl text-sm text-gray-500">

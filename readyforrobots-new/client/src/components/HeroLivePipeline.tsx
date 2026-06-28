@@ -143,7 +143,7 @@ export default function HeroLivePipeline() {
           <div className="flex items-center gap-2.5 min-w-0">
             <img src="/logo-r.png" alt="" className="h-8 w-8 shrink-0 object-contain opacity-95" width={32} height={32} />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              <p className="text-sm font-semibold text-white truncate">
                 Live pipeline
               </p>
               <p className="rfr-scout-wordmark text-[9px] text-violet-200/80 truncate">SIGNAL spotlight</p>

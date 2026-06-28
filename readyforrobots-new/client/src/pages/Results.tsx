@@ -775,7 +775,7 @@ export default function Results() {
                     <div className="flex items-start gap-3">
                       <Bot className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#FFB000" }} />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                        <p className="text-sm font-semibold text-gray-900">
                           Activate SIGNAL sales motion
                         </p>
                         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500">

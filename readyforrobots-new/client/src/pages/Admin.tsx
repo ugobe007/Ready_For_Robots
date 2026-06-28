@@ -895,7 +895,7 @@ export default function Admin() {
 
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-lg font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Command center</h1>
+            <h1 className="text-lg font-extrabold text-gray-900">Command center</h1>
             <p className="mt-0.5 text-[11px] text-gray-600">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -981,7 +981,7 @@ export default function Admin() {
             <div className="flex items-center gap-2 min-w-0">
               <Mail className="h-4 w-4 shrink-0" style={{ color: "#10b981" }} />
               <div className="min-w-0">
-                <h2 className="text-base font-extrabold text-gray-900 truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+                <h2 className="text-base font-extrabold text-gray-900 truncate">
                   Cal outreach queue
                 </h2>
                 <p className="text-[11px] text-gray-500">Draft &amp; send from SIGNAL bar above · expand a row for preview</p>
@@ -1522,7 +1522,7 @@ export default function Admin() {
                 <Bot className="h-4 w-4" style={{ color: "#059669" }} />
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900">AI workflow command center</p>
               </div>
-              <h2 className="text-2xl font-extrabold text-gray-900" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>Agent actions and operating queue</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900">Agent actions and operating queue</h2>
               <p className="mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">
                 One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
               </p>

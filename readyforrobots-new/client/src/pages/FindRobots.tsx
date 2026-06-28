@@ -94,7 +94,7 @@ export default function FindRobots() {
         </p>
         <h1
           className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl"
-          style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
+         
         >
           Find the right robots for your operation
         </h1>

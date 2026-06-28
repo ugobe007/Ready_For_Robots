@@ -217,7 +217,7 @@ export default function ScoutActionBar({
                 <FlaskConical className="h-5 w-5" style={{ color: "#a78bfa" }} />
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Workflow Diagnostic</p>
-                  <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>SIGNAL / Cal Outreach Health</p>
+                  <p className="text-sm font-bold text-white">SIGNAL / Cal Outreach Health</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

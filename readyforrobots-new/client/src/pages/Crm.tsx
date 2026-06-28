@@ -388,23 +388,23 @@ export default function Crm() {
       <Header />
       <main className="admin-workspace flex-1 w-full max-w-4xl mx-auto px-4 pt-24 pb-8">
         <AdminNav />
-        <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="sb-kicker text-emerald-700">CRM workspace</p>
-            <h1 className="text-lg font-semibold text-gray-900 mb-0.5" style={{ fontFamily: "'Sora', system-ui" }}>
-              Buyer outreach
-            </h1>
-            <p className="text-xs text-gray-600">
-              Review, edit, approve, and send buyer outreach through SIGNAL. Replies come back to CRM and your inbox.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Link href="/integrations" className="sb-btn sb-btn-ghost">
-              Connect HubSpot / GitHub
-            </Link>
-            <Link href="/sales-console" className="sb-btn">
-              Open Sales Console
-            </Link>
+        <div className="workspace-page-header mb-4">
+          <div className="workspace-page-header-inner flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="workspace-kicker">CRM workspace</p>
+              <h1 className="text-lg sm:text-xl">Buyer outreach</h1>
+              <p>
+                Review, edit, approve, and send buyer outreach through SIGNAL. Replies come back to CRM and your inbox.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Link href="/integrations" className="sb-btn sb-btn-ghost border-white/10 bg-white/5 text-emerald-300 hover:bg-white/10">
+                Connect HubSpot / GitHub
+              </Link>
+              <Link href="/sales-console" className="sb-btn border-white/10 bg-white/5 text-slate-200 hover:bg-white/10">
+                Open Sales Console
+              </Link>
+            </div>
           </div>
         </div>
         {msg && (

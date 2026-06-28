@@ -423,7 +423,7 @@ export default function Marketplace() {
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Marketplace workspace
         </p>
-        <h1 className="text-2xl font-black text-gray-900" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="text-2xl font-black text-gray-900">
           Profiles, RFPs, proposals, quotes, invoices, and connections
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-gray-500">
@@ -533,7 +533,7 @@ function MarketplaceTeaser() {
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#FFB000" }}>
           Robot automation marketplace
         </p>
-        <h1 className="max-w-3xl text-3xl font-black text-gray-900 sm:text-4xl" style={{ fontFamily: "'Sora', system-ui" }}>
+        <h1 className="max-w-3xl text-3xl font-black text-gray-900 sm:text-4xl">
           RFPs, proposals, quotes, and procurement — in one workspace
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-500">

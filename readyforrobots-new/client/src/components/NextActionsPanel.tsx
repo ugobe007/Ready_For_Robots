@@ -84,7 +84,7 @@ export default function NextActionsPanel({
               Next actions
             </p>
           </div>
-          <p className="text-sm font-bold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+          <p className="text-sm font-bold text-white">
             What SIGNAL recommends now
           </p>
           {!compact && (

@@ -163,16 +163,19 @@ export default function SalesWorkflow() {
       <Header />
       <main className="max-w-6xl mx-auto px-4 pt-28 pb-8">
         <AdminNav />
-        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-neutral-950">Sales Workflow</h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Ranked actions, live activity, and automation status across CRM, inbox, and SCOUT.
-            </p>
+        <div className="workspace-page-header mb-6">
+          <div className="workspace-page-header-inner flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="workspace-kicker">Operator workspace</p>
+              <h1>Sales Workflow</h1>
+              <p>
+                Ranked actions, live activity, and automation status across CRM, inbox, and SCOUT.
+              </p>
+            </div>
+            {refreshing && !loading && (
+              <p className="text-xs text-slate-400">Refreshing…</p>
+            )}
           </div>
-          {refreshing && !loading && (
-            <p className="text-xs text-neutral-500">Refreshing…</p>
-          )}
         </div>
 
         {loading ? (

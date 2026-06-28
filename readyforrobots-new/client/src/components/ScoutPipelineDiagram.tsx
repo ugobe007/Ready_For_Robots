@@ -161,7 +161,7 @@ export default function ScoutPipelineDiagram({
                     <p
                       className={`font-bold leading-tight truncate ${rail ? "text-[11px]" : "text-[13px]"}`}
                       style={{
-                        fontFamily: "Sora, sans-serif",
+                        fontFamily: "Space Grotesk, sans-serif",
                         color: isActive ? "#111827" : "#6b7280",
                       }}
                     >

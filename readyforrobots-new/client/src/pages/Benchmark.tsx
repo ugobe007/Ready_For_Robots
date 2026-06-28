@@ -201,7 +201,7 @@ export default function Benchmark() {
         </div>
         <h1
           className="mb-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl"
-          style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
+         
         >
           How to benchmark a<br />
           <span style={{ color: "#10b981" }}>humanoid robot</span>

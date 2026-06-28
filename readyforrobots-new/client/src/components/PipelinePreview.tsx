@@ -116,7 +116,7 @@ export default function PipelinePreview() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#a78bfa" }}>Live pipeline</p>
             <h2
               className="font-extrabold text-white"
-              style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)", fontFamily: "'Sora', system-ui, sans-serif" }}
+              style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)", fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
             >
               Your pipeline is already moving
             </h2>

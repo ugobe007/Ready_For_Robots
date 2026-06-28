@@ -4,6 +4,7 @@ import { ArrowRight, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from "luc
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import RobotsLeaderCards from "@/components/robots/RobotsLeaderCards";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
@@ -628,7 +629,9 @@ export default function Robots() {
           </div>
         }
         innerClassName="pb-6"
-      />
+      >
+        <RobotsLeaderCards robots={robots} indexValue={indexValue} />
+      </PageHeroDark>
       <div className="page-hero-fade" aria-hidden />
 
       {/* HEIR research — collapsed appendix */}

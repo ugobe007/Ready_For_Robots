@@ -446,7 +446,7 @@ export default function HeroSpotlightLeads() {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-white truncate" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+            <p className="text-sm font-bold text-white truncate">
               {lead?.id ? (
                 <Link href={`/pipeline?lead=${lead.id}`} className="hover:text-teal-300 transition-colors">
                   {lead.company_name || "—"}
