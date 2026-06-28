@@ -1811,8 +1811,29 @@ export default function Pipeline() {
                   </div>
                 )}
                 {!loadingLeads && !loadErr && !hasActiveSearch && filtered.length === 0 && (
-                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900">
-                    Pipeline data is syncing from the database. Reload in a moment if tiers still look empty.
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-emerald-900">
+                    <p className="text-xs font-semibold">
+                      Live pipeline is rebuilding — your buyers are still here.
+                    </p>
+                    <p className="mt-1 text-[11px] leading-snug text-emerald-800">
+                      {typeof hotDeals === "number" || typeof warmDeals === "number"
+                        ? `${formatMetric(hotDeals)} hot · ${formatMetric(warmDeals)} warm robot buyers scored across ${formatMetric(dbTotal)} tracked accounts. The ranked feed paints in seconds — keep moving while it syncs.`
+                        : "The ranked buyer feed paints in a few seconds. Keep moving while it syncs."}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Link
+                        href="/signals"
+                        className="inline-flex items-center rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        Browse live buyer signals →
+                      </Link>
+                      <Link
+                        href="/results?url="
+                        className="inline-flex items-center rounded-md border border-emerald-400 bg-white px-2.5 py-1 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                      >
+                        Scan a company URL
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
