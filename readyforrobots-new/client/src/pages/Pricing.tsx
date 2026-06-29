@@ -119,8 +119,8 @@ const faqs = [
     a: "No. HubSpot is your system of record. Signal is robotics intelligence on top—live signals, scored timing, and outreach—synced into HubSpot when you upgrade. Your team closes in the CRM you already run.",
   },
   {
-    q: "How is ReadyForRobots different from an AI revenue OS?",
-    a: "Revenue operating systems replace CRM, engagement, and intelligence in one platform—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. Signal adds a robotics wedge: find robot-ready buyers from live signals, score timing, run outreach, and push context into HubSpot or your CRM. No stack rip-and-replace.",
+    q: "How is ReadyForRobots different from Reevo or other revenue operating systems?",
+    a: "Reevo and similar platforms ($80M+ funded) sell one AI-native stack that replaces CRM, engagement, and intelligence—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. We wedge in for robot sales: live buyer signals, HOT/WARM timing, pipeline_action (what to do next), robot_types_needed (what SKU to pitch), outreach drafts, and HubSpot sync. Keep HubSpot or use our native pipeline—no rip-and-replace. See /compare.",
   },
   {
     q: "How is this different from Explee, Apollo, or other company search tools?",

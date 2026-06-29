@@ -2,7 +2,7 @@
 
 **For ProductSurface, MarketIntel, Orchestrator, and sales copy.**
 
-**Last updated:** 2026-06-16
+**Last updated:** 2026-06-30
 
 ---
 
@@ -10,7 +10,9 @@
 
 Prospects will stack us against horizontal GTM data providers — especially [Explee](https://explee.com/landing-search) (105M companies, 536M people, AI search, deep-research agents), plus Apollo, ZoomInfo, Clay, and generic “AI SDR” stacks.
 
-**We do not win that fight on database size or filter breadth.** We win on **robot sales outcomes**: verified buyer intent → qualified pipeline → outreach → CRM advance.
+They will also hear from **“Revenue Operating System”** vendors — especially [Reevo](https://reevo.ai) ($80M+, Khosla / Kleiner Perkins, Nov 2025) — pitching one platform that replaces CRM, engagement, and intelligence for any B2B team.
+
+**We do not win on database size, filter breadth, or stack consolidation.** We win on **robot sales outcomes**: verified buyer intent → qualified pipeline → outreach → CRM advance.
 
 ---
 
@@ -23,7 +25,27 @@ Prospects will stack us against horizontal GTM data providers — especially [Ex
 | Horizontal B2B (any ICP) | Vertical: **buyers of robots** (operators, not OEM PR) |
 | Output = export / API | Output = **first meeting faster** with the right SKU pitch |
 
-**One-liner:** Explee helps you **find** accounts. ReadyForRobots helps robot companies **close** them.
+**One-liner:** Explee helps you **find** accounts. Reevo helps you **replace your GTM stack**. ReadyForRobots helps robot companies **close** buyers who are already showing intent.
+
+---
+
+## Revenue OS (Reevo and peers)
+
+| Dimension | Reevo-style “Revenue OS” | ReadyForRobots |
+|-----------|--------------------------|----------------|
+| **Pitch** | One AI-native platform: CRM + engagement + intelligence | **Robot sales pipeline** — SIGNAL-ranked buyers, outreach, HubSpot |
+| **ICP** | Any B2B revenue team (marketing → sales → CS) | **Robot OEMs, integrators, distributors** |
+| **Migration** | Replace fragmented tools; retrain on new system | **Layer on HubSpot / native workspace** — no rip-and-replace |
+| **Intelligence** | Generic “next best action” from first-party GTM data | **`pipeline_action` + `robot_types_needed`** from robot-buyer events |
+| **Proof in demo** | Consolidation story, AI recommendations | **Live HOT lead + Cal draft before signup** |
+| **Moat** | Capital, unified product surface, horizontal scale | Vertical junk gates, ontology, URL buyer scan, humanoid catalog |
+| **When they win** | Enterprise replacing Salesforce + Outreach + point tools | N/A — different buyer job |
+| **When we win** | Rep needs *which robot to pitch* and *who is buying now*, not another CRM | Always for robot sales teams |
+
+**Vs Reevo / revenue OS:**
+> “They sell one platform for every B2B team. We sell the **robot buyer pipeline** — live intent, SKU-level pitch actions, and deals advancing in HubSpot. Keep your CRM; add SIGNAL.”
+
+Typical outbound (template): *“juggling multiple tools… pipeline buried in manual CRM… deals stall…”* — horizontal pain, zero robotics specificity. Use that gap in FAQ and sales copy.
 
 ---
 
@@ -65,6 +87,7 @@ These are **product proof points**, not slogans. Every demo and mission should s
 | Becoming a research API vendor | We’re a **pipeline product**, not $10/1k research runs |
 | Horizontal lookalike search | “DocuSign alternatives” is Explee’s game; ours is “warehouse operator with AMR pilot signal” |
 | Dashboard parity with Salesforce | We sync **into** CRM; we don’t replace it |
+| Voice-first AI companion architecture | Different category — optimize signup → pipeline, not TTS latency |
 
 ---
 
@@ -79,6 +102,9 @@ These are **product proof points**, not slogans. Every demo and mission should s
 **Vs Clay / enrichment stacks:**
 > “Enrichment stacks need you to build the workflow. ReadyForRobots **is** the workflow — pipeline, outreach, HubSpot.”
 
+**Vs Reevo / revenue operating systems:**
+> “Revenue OS tools ask you to migrate your whole GTM stack. ReadyForRobots **wedges in** with robot-buyer intent, ranked timing, and outreach — synced to HubSpot. No $80M platform swap required.”
+
 **Vs generic AI SDR tools:**
 > “Generic AI SDRs blast email. We qualify **robot buyer events**, rank timing, and advance deals in your CRM.”
 
@@ -87,18 +113,20 @@ These are **product proof points**, not slogans. Every demo and mission should s
 ## Agent rules when building
 
 1. **ProductSurface:** Any comparison UI or FAQ must lead with **pipeline outcome**, not search filters.
-2. **MarketIntel:** Track Explee/Apollo pricing and feature launches quarterly; log in thesis — do not copy their homepage layout.
+2. **MarketIntel:** Track Explee/Apollo/**Reevo** pricing and feature launches quarterly; log in thesis — do not copy their homepage layout.
 3. **LeadQuality:** Junk-free pipeline is a **competitive moat**; one bad OEM row hurts us more than Explee (they don’t claim vertical trust).
 4. **Orchestrator:** Prefer missions that increase **activated pipelines** (save, advance, HubSpot sync) over “more companies in DB.”
 5. **Never** scope missions to match Explee’s company/people search parity.
+6. **MarketIntel / Orchestrator:** Ignore horizontal **AI agent latency** posts (voice chatbots, Flutter/Gemini streaming, “synaptic” architecture flex). Track only **GTM/CRM/revenue OS**, **robot-sales**, and **data-tool** competitors that touch our ICP’s budget or workflow.
 
----
+**Ignore list (not competitors):** Consumer voice assistants, coaching apps, generic agent infra demos — unless they ship robot-buyer pipeline, HubSpot sync, or scored OEM lead feeds.
 
 ## Build backlog (competitive UX)
 
 | Priority | Item | Acceptance |
 |----------|------|------------|
 | P0 | Pricing FAQ: vs GTM data / Explee-style tools | Honest comparison; links to pipeline proof |
+| P0 | Pricing FAQ: vs Reevo / revenue OS | Named objection handler; no stack migration |
 | P1 | Home/pipeline: always show `pipeline_action` + robot types above fold | Anonymous user sees *action*, not just company name |
 | P1 | Onboarding fork: “Import CSV” deprioritized vs “Browse live pipeline” | Activation metric: first save, not first upload |
 | P2 | `/compare` or marketing section “Data tools vs pipeline” | Table from this doc, robot-specific examples |

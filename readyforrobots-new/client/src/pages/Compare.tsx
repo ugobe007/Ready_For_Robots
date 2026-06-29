@@ -131,6 +131,30 @@ export default function Compare() {
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-12">
+            <h2 className="font-display font-bold text-gray-900 mb-2">vs Revenue OS (Reevo, etc.)</h2>
+            <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+              Well-funded platforms pitch one system to replace CRM + engagement + intelligence for any B2B team.
+              ReadyForRobots does not ask you to migrate your stack—we add a robotics pipeline on top.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Revenue OS pitch</p>
+                <p className="text-xs text-gray-700 leading-relaxed italic">
+                  “Replace fragmented sales tools… surface opportunities… recommend next steps… one platform for marketing, sales, and CS.”
+                </p>
+                <p className="mt-2 text-xs text-gray-500">Horizontal. No robot category. No SKU-level pitch.</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800 mb-2">ReadyForRobots</p>
+                <p className="text-xs text-emerald-950 leading-relaxed font-medium">
+                  Live robot-buyer signals → HOT/WARM timing → pipeline_action + robot_types_needed → Cal outreach draft → save &amp; sync to HubSpot.
+                </p>
+                <p className="mt-2 text-xs text-emerald-800">Vertical pipeline. Proof before signup on /pipeline.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-12">
             <h2 className="font-display font-bold text-gray-900 mb-4">When to use which</h2>
             <div className="grid md:grid-cols-2 gap-6 text-sm">
               <div>
@@ -139,6 +163,7 @@ export default function Compare() {
                   Stick with a data tool if…
                 </p>
                 <ul className="space-y-2 text-gray-600 text-xs leading-relaxed">
+                  <li>You are replacing Salesforce + Outreach with one horizontal revenue platform</li>
                   <li>You sell generic B2B SaaS and need maximum company count</li>
                   <li>Your team already built list → enrich → sequence workflows</li>
                   <li>Robot category and timing do not matter for your pitch</li>
@@ -150,9 +175,9 @@ export default function Compare() {
                   Use ReadyForRobots if…
                 </p>
                 <ul className="space-y-2 text-gray-600 text-xs leading-relaxed">
-                  <li>You sell robots and need buyers in motion, not cold titles</li>
+                  <li>You sell robots and need buyers in motion, not cold titles or generic CRM AI</li>
                   <li>Reps need to know what robot SKU to pitch before the call</li>
-                  <li>You want pipeline + HubSpot sync without building lead-ops</li>
+                  <li>You want pipeline + HubSpot sync without a full GTM stack migration</li>
                 </ul>
               </div>
             </div>
