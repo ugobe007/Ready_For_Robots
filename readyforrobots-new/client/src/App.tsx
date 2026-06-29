@@ -27,6 +27,7 @@ import Integrations from "./pages/Integrations";
 import HubSpotConnect from "./pages/HubSpotConnect";
 import Benchmark from "./pages/Benchmark";
 import Robots from "./pages/Robots";
+import HumanoidComparisonReport from "./pages/HumanoidComparisonReport";
 import FindRobots from "./pages/FindRobots";
 import Admin from "./pages/Admin";
 import Social from "./pages/Social";
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/benchmark" component={Benchmark} />
+      <Route path="/robots/report" component={HumanoidComparisonReport} />
       <Route path="/robots" component={Robots} />
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />

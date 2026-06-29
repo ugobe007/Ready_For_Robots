@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   fetchWithTimeout,
-  getApiBase,
+  getPublicReadApiBase,
   publicFetchInit,
   readSurfaceCache,
   writeSurfaceCache,
@@ -155,7 +155,7 @@ export function useHumanoidIntelligenceReport(topN = 12) {
   );
   const [loading, setLoading] = useState(!report);
   const [error, setError] = useState<string | null>(null);
-  const api = getApiBase();
+  const api = getPublicReadApiBase();
 
   useEffect(() => {
     let cancelled = false;

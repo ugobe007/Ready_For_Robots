@@ -614,7 +614,13 @@ export default function Robots() {
         }
         description="HEIR benchmarking, market signals, and live rankings. HEIR measures humanoids by engineering maturity, not demo choreography — scored across mobility, manipulation, cognition, safety, data pipeline, and production readiness."
         actions={
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[12px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
+            <Link
+              href="/robots/report"
+              className="inline-flex items-center gap-1 rounded-md bg-emerald-600/90 px-3 py-1.5 font-semibold text-white hover:bg-emerald-500"
+            >
+              Comparison report <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
             {HEIR_REPORTS.map((r) => (
               <a
                 key={r.href}

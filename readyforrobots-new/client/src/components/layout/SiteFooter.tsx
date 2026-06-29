@@ -17,6 +17,7 @@ const LINKS = {
     { label: "Signals", href: "/signals" },
     { label: "Activate SIGNAL", href: "/results?url=" },
     { label: "Robots", href: "/robots" },
+    { label: "Humanoid Report", href: "/robots/report" },
     { label: "Newsletter", href: "/newsletter" },
   ],
   Support: [

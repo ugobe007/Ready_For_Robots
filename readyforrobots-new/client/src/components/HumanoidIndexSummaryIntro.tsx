@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { ChevronDown, RefreshCw } from "lucide-react";
 import { humanoidReportPdfUrl } from "@/lib/humanoidIntelligenceReport";
 import { ReportBtnDownload } from "@/components/humanoid-report/HumanoidReportUI";
@@ -109,6 +110,10 @@ export default function HumanoidIndexSummaryIntro({
                 </div>
               )}
               <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-slate-500">
+                <Link href="/robots/report" className="font-semibold text-emerald-400 hover:text-emerald-300">
+                  Shareable comparison report
+                </Link>
+                <span>·</span>
                 <a href="/find-robots" className="font-semibold text-emerald-400 hover:text-emerald-300">
                   Find robots
                 </a>
