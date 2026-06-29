@@ -101,6 +101,8 @@ jobs:
           }
           python3 scripts/harness_preflight.py --require-cache-auth || \
             echo "::warning::Remote cache refresh may fail — set ADMIN_KEY or SCRAPER_CRON_TOKEN"
+          python3 scripts/harness_preflight.py --require-notify || \
+            echo "::warning::Daily email will fail — RESEND_API_KEY secret missing"
 
       - name: Run harness daily loop
         env:
@@ -113,8 +115,8 @@ jobs:
           API_BASE: https://ready-2-robot.fly.dev
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          HARNESS_NOTIFY_EMAIL: ${{ secrets.HARNESS_NOTIFY_EMAIL }}
-          ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+          HARNESS_NOTIFY_EMAIL: ugobe07@gmail.com
+          ADMIN_EMAILS: ugobe07@gmail.com
         run: |
           set -euo pipefail
           ARGS=()

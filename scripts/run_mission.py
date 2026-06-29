@@ -110,11 +110,12 @@ def _build_prompt(mission_dir: Path) -> str:
 
 1. Run `python3 scripts/harness_snapshot.py` if snapshot is missing or stale (>6h pipeline cache).
 2. Orient against `docs/product_market_fit.md` first, then north star (names/events) and `docs/market_thesis.md` backlog.
-3. Execute this mission using the assigned subagent role from the brief.
-4. Run verification gates from `harness/gates.yaml` where applicable.
-5. **Autonomous mode:** commit, push, and deploy when the mission requires it — do not wait for human approval.
-6. Write `missions/{mission_dir.name}/outcome.md` with metrics delta and follow-ups.
-7. Run `python3 scripts/harness_notify.py --mission missions/{mission_dir.name}` when finished.
+3. **Primary metric: signups.** Pick work that increases anonymous → signup → first saved lead. UI, UX, design, and workflow changes are in scope.
+4. Execute this mission using the assigned subagent role from the brief.
+5. Run verification gates from `harness/gates.yaml` where applicable.
+6. **Autonomous mode (pre-approved):** edit code, run tests, commit, push, and deploy when the mission requires it — do not wait for human approval.
+7. Write `missions/{mission_dir.name}/outcome.md` with metrics delta and follow-ups.
+8. Run `python3 scripts/harness_notify.py --mission missions/{mission_dir.name}` when finished — operator email is ugobe07@gmail.com.
 
 Red lines: no force push, no committing `reports/`, no parallel local+Fly cache refresh, no `.env` commits.
 

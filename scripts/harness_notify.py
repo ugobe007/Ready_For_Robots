@@ -22,6 +22,8 @@ from scripts.harness_env import load_harness_env
 
 load_harness_env(_root)
 
+DEFAULT_NOTIFY_EMAIL = "ugobe07@gmail.com"
+
 
 def _git_lines(args: list[str]) -> str:
     try:
@@ -42,7 +44,10 @@ def _notify_email() -> str:
     admins = (os.getenv("ADMIN_EMAILS") or "").strip()
     if admins:
         return admins.split(",")[0].strip()
-    return ""
+    owner = (os.getenv("OWNER_EMAIL") or os.getenv("REPORT_DOWNLOAD_NOTIFY_EMAIL") or "").strip()
+    if owner:
+        return owner
+    return DEFAULT_NOTIFY_EMAIL
 
 
 def _read_outcome(mission_dir: Path) -> str:
@@ -95,8 +100,13 @@ Autonomous harness run. Review when convenient: https://github.com/ugobe007/Read
 
 def _send_email(*, subject: str, body: str) -> dict:
     to = _notify_email()
-    if not to:
-        return {"sent": False, "reason": "HARNESS_NOTIFY_EMAIL or ADMIN_EMAILS not set"}
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key:
+        return {
+            "sent": False,
+            "to": to,
+            "reason": "RESEND_API_KEY not set — add GitHub secret RESEND_API_KEY (same value as Fly)",
+        }
     try:
         from app.services.resend_email import ResendEmailError, send_email_via_resend
 
@@ -108,16 +118,34 @@ def _send_email(*, subject: str, body: str) -> dict:
         )
         return {"sent": True, "to": to, "id": result.get("id")}
     except ResendEmailError as exc:
-        return {"sent": False, "reason": str(exc)}
+        return {"sent": False, "to": to, "reason": str(exc)}
     except Exception as exc:
-        return {"sent": False, "reason": str(exc)}
+        return {"sent": False, "to": to, "reason": str(exc)}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Notify operator of harness mission completion")
-    parser.add_argument("--mission", required=True, help="Mission folder path")
+    parser.add_argument("--mission", help="Mission folder path")
     parser.add_argument("--no-email", action="store_true", help="Write report file only")
+    parser.add_argument(
+        "--test-email",
+        action="store_true",
+        help="Send a short test message (no mission folder required)",
+    )
     args = parser.parse_args()
+
+    if args.test_email:
+        body = (
+            f"ReadyForRobots harness email test\n\n"
+            f"Time: {datetime.now(timezone.utc).isoformat()}\n"
+            f"Recipient: {_notify_email()}\n"
+        )
+        result = _send_email(subject="[RFR Harness] Email test", body=body)
+        print("Email:", result)
+        return 0 if result.get("sent") else 1
+
+    if not args.mission:
+        parser.error("--mission is required unless --test-email is set")
 
     mission_dir = Path(args.mission)
     if not mission_dir.is_absolute():
@@ -136,6 +164,12 @@ def main() -> int:
     subject = f"[RFR Harness] {mission_dir.name} complete"
     email_result = _send_email(subject=subject, body=body)
     print("Email:", email_result)
+    if not email_result.get("sent"):
+        print(
+            "WARNING: Daily harness email not delivered — check RESEND_API_KEY on GitHub Actions.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

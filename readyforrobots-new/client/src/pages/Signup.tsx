@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase } from "@/lib/supabase";
+import { getPublicReadApiBase } from "@/lib/apiBase";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
@@ -15,6 +16,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
+  const [liveProof, setLiveProof] = useState<{ hot?: number; companies?: number } | null>(null);
 
   const search = typeof window !== "undefined" ? window.location.search : "";
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -51,6 +53,27 @@ export default function Signup() {
       if (session) setLocation(nextPath());
     });
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        const hot = Number(data.hot);
+        const companies = Number(data.companies_in_database ?? data.total);
+        if (hot > 0 || companies > 0) {
+          setLiveProof({
+            hot: Number.isFinite(hot) ? hot : undefined,
+            companies: Number.isFinite(companies) ? companies : undefined,
+          });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function oauth(provider: "google" | "github") {
@@ -131,6 +154,13 @@ export default function Signup() {
                     ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
                     : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
             </p>
+            {liveProof && (liveProof.hot || liveProof.companies) && (
+              <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-900">
+                Live now ·{" "}
+                {liveProof.hot ? `${liveProof.hot.toLocaleString()} hot buyers` : "buyer signals scored"}
+                {liveProof.companies ? ` · ${liveProof.companies.toLocaleString()} companies tracked` : ""}
+              </p>
+            )}
             {!hubspotIntent && !pipelineIntent && !resultsIntent && (
               <ul className="mt-4 space-y-2 text-xs text-gray-600">
                 <li className="flex gap-2">
@@ -204,9 +234,9 @@ export default function Signup() {
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
                 >
-                  Sign up with Google
+                  Continue with Google — fastest
                 </button>
                 <button
                   type="button"

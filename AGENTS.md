@@ -114,7 +114,7 @@ python3 scripts/harness_daily.py
 
 | Method | When | Setup |
 |--------|------|--------|
-| **GitHub Actions** | 14:00 UTC daily + manual dispatch | Add secrets: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`. Optional: `FLY_API_TOKEN`, `RESEND_API_KEY`. Workflow: `.github/workflows/harness-daily.yml` |
+| **GitHub Actions** | 14:00 UTC daily + manual dispatch | Secrets: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_KEY`, **`RESEND_API_KEY`** (copy from Fly). Notify: `ugobe07@gmail.com` via `HARNESS_NOTIFY_EMAIL` in workflow. Workflow: `.github/workflows/harness-daily.yml` |
 | **macOS launchd** | 7:00 local daily | `./scripts/install_harness_launchd.sh` (uses `.venv-harness` + repo `.env`) |
 
 Pipeline cache refresh is async on Fly (~15–20 min). Use `python3 scripts/refresh_pipeline_cache.py --remote --wait` to block until `built_at` is set.
@@ -134,7 +134,7 @@ If snapshot shows `database.telemetry.status: unavailable`, set `DATABASE_URL` i
 
 ### Notify after every mission
 
-Run `scripts/harness_notify.py --mission <path>`. Writes `reports/harness_notification_latest.md`. Sends email when `RESEND_API_KEY` + `HARNESS_NOTIFY_EMAIL` (or first `ADMIN_EMAILS` entry) are set.
+Run `scripts/harness_notify.py --mission <path>`. Writes `reports/harness_notification_latest.md`. Sends email to **`ugobe07@gmail.com`** (default) when `RESEND_API_KEY` is set. Test: `RESEND_API_KEY=… python3 scripts/harness_notify.py --test-email`.
 
 ### Red lines (never)
 

@@ -81,6 +81,28 @@ def classify_agent_auth(*, skip_agent: bool) -> dict:
     return {"ok": True, "method": "ANTHROPIC_API_KEY"}
 
 
+def classify_notify_email() -> dict:
+    to = (os.getenv("HARNESS_NOTIFY_EMAIL") or "").strip()
+    if not to:
+        admins = (os.getenv("ADMIN_EMAILS") or "").strip()
+        if admins:
+            to = admins.split(",")[0].strip()
+    if not to:
+        to = "ugobe07@gmail.com"
+    resend = bool((os.getenv("RESEND_API_KEY") or "").strip())
+    if not resend:
+        return {
+            "ok": False,
+            "to": to,
+            "hint": (
+                "RESEND_API_KEY missing in GitHub Actions — copy from Fly: "
+                "fly ssh console -a ready-2-robot -C 'printenv RESEND_API_KEY' "
+                "then gh secret set RESEND_API_KEY"
+            ),
+        }
+    return {"ok": True, "to": to, "method": "RESEND_API_KEY"}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Harness / deploy secret preflight")
     parser.add_argument(
@@ -94,10 +116,16 @@ def main() -> int:
         help="Exit 1 when ANTHROPIC_API_KEY is missing",
     )
     parser.add_argument("--skip-agent", action="store_true")
+    parser.add_argument(
+        "--require-notify",
+        action="store_true",
+        help="Exit 1 when daily email cannot be sent (RESEND_API_KEY missing)",
+    )
     args = parser.parse_args()
 
     cache = classify_admin_refresh_auth()
     agent = classify_agent_auth(skip_agent=args.skip_agent)
+    notify = classify_notify_email()
 
     print("Harness preflight")
     print(f"  cache refresh: {'OK' if cache['ok'] else 'BLOCKED'} ({cache.get('method') or 'none'})")
@@ -106,11 +134,16 @@ def main() -> int:
     print(f"  agent runner: {'OK' if agent['ok'] else 'BLOCKED'} ({agent.get('method', 'none')})")
     if agent.get("hint"):
         print(f"    → {agent['hint']}")
+    print(f"  daily email: {'OK' if notify['ok'] else 'BLOCKED'} → {notify.get('to')}")
+    if notify.get("hint"):
+        print(f"    → {notify['hint']}")
 
     rc = 0
     if args.require_cache_auth and not cache["ok"]:
         rc = 1
     if args.require_agent and not agent["ok"]:
+        rc = 1
+    if args.require_notify and not notify["ok"]:
         rc = 1
     return rc
 
