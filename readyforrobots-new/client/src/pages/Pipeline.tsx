@@ -23,6 +23,7 @@ import {
   fetchWithTimeout,
   fetchWithTimeoutRetry,
   getApiBase,
+  getPublicReadApiBase,
   liveFetchInit,
   publicFetchInit,
   readSurfaceCache,
@@ -389,7 +390,7 @@ function resolvePipelineLeadId(search: string): number | null {
   return null;
 }
 const PIPELINE_FRESH_MS = 90 * 1000;
-const PIPELINE_TIMEOUT = 15_000;
+const PIPELINE_TIMEOUT = 8_000;
 
 type PipelineFeedPayload = {
   summary?: LeadSummary;
@@ -401,9 +402,9 @@ type PipelineFeedPayload = {
 async function fetchPipelineLeadsFallback(base: string, headers?: HeadersInit): Promise<ApiLead[]> {
   const res = await fetchWithTimeoutRetry(
     `${base}/api/leads?limit=50&sort=score&exclude_junk=true`,
-    liveFetchInit({ headers }),
+    publicFetchInit({ headers }),
     PIPELINE_TIMEOUT,
-    { retries: 2, retryDelayMs: 1000 },
+    { retries: 1, retryDelayMs: 800 },
   );
   if (!res.ok) return [];
   const data = await res.json();
@@ -417,9 +418,9 @@ async function fetchPipelineLeadsFallback(base: string, headers?: HeadersInit): 
 async function fetchPipelineSummaryFallback(base: string): Promise<LeadSummary | null> {
   const res = await fetchWithTimeoutRetry(
     `${base}/api/leads/summary?exclude_junk=true`,
-    liveFetchInit(),
+    publicFetchInit(),
     PIPELINE_TIMEOUT,
-    { retries: 2, retryDelayMs: 1000 },
+    { retries: 1, retryDelayMs: 800 },
   );
   if (!res.ok) return null;
   return (await res.json()) as LeadSummary;
@@ -448,6 +449,34 @@ function mergePipelineFeedDeals(mapped: Deal[], prev: Deal[]): Deal[] {
   const merged = mapped.map((d) => (d.id === deepLinkId ? { ...d, ...pinned } : d));
   if (merged.some((d) => d.id === deepLinkId)) return merged;
   return [pinned, ...merged];
+}
+
+async function hydratePipelineFallback(
+  base: string,
+  headers: HeadersInit | undefined,
+  setters: {
+    setDeals: Dispatch<SetStateAction<Deal[]>>;
+    setSelectedId: (fn: (prev: number | null) => number | null) => void;
+    setSummary: (v: LeadSummary | null) => void;
+    setEntitlements: (v: PipelineEntitlements | null) => void;
+    setMarketSnippet: (v: MarketSnippet) => void;
+  },
+  crmStages: Record<number, string>,
+  isCancelled: () => boolean,
+) {
+  const [fallbackLeads, summary] = await Promise.all([
+    fetchPipelineLeadsFallback(base, headers),
+    fetchPipelineSummaryFallback(base),
+  ]);
+  if (isCancelled()) return;
+
+  const payload: PipelineFeedPayload = {};
+  if (fallbackLeads.length > 0) payload.leads = fallbackLeads;
+  if (summary && (summary.hot ?? summary.companies_in_database)) payload.summary = summary;
+  if (!payload.leads?.length && !payload.summary) return;
+
+  writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
+  applyPipelineFeed(payload, setters, crmStages);
 }
 
 function applyPipelineFeed(
@@ -888,7 +917,7 @@ export default function Pipeline() {
   }, [session?.access_token]);
 
   useEffect(() => {
-    const base = getApiBase();
+    const base = getPublicReadApiBase();
     let cancelled = false;
     setLoadErr("");
 
@@ -911,42 +940,38 @@ export default function Pipeline() {
       const headers = token ? authHeader(token) : undefined;
       const res = await fetchWithTimeoutRetry(
         `${base}/api/leads/pipeline`,
-        liveFetchInit({ headers }),
+        publicFetchInit({ headers }),
         PIPELINE_TIMEOUT,
-        { retries: 3, retryDelayMs: 1500 },
+        { retries: 1, retryDelayMs: 800 },
       );
       if (!res.ok) throw new Error("Could not load pipeline");
-      let payload = (await res.json()) as PipelineFeedPayload;
+      const payload = (await res.json()) as PipelineFeedPayload;
       if (cancelled) return;
 
-      const leadRows = Array.isArray(payload.leads) ? payload.leads : [];
-      if (leadRows.length === 0) {
-        const fallbackLeads = await fetchPipelineLeadsFallback(base, headers);
-        if (cancelled) return;
-        if (fallbackLeads.length > 0) {
-          payload = { ...payload, leads: fallbackLeads };
-          const summaryStale =
-            !payload.summary?.hot &&
-            !payload.summary?.companies_in_database &&
-            !payload.summary?.signals_in_database;
-          if (summaryStale) {
-            const summary = await fetchPipelineSummaryFallback(base);
-            if (cancelled) return;
-            if (summary && (summary.hot ?? summary.companies_in_database)) {
-              payload = { ...payload, summary };
-            }
-          }
-        }
+      if (payload.entitlements) setEntitlements(payload.entitlements);
+      if (
+        payload.summary
+        && ((payload.summary.total ?? 0) > 0 || (payload.summary.hot ?? 0) > 0)
+      ) {
+        setSummary(payload.summary);
       }
 
-      writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
-      const painted = applyPipelineFeed(payload, feedSetters);
-      if (!painted && (payload.summary?.hot ?? 0) > 0) {
-        setDeals([]);
-        setSelectedId(null);
-      } else if (!painted) {
-        setDeals([]);
-        setSelectedId(null);
+      const leadRows = Array.isArray(payload.leads) ? payload.leads : [];
+      if (leadRows.length > 0) {
+        writeSurfaceCache(PIPELINE_SESSION_KEY, payload);
+        applyPipelineFeed(payload, feedSetters);
+        return;
+      }
+
+      // Primary feed empty (cache rebuild) — stop blocking the UI; hydrate in background.
+      if (payload.cache_pending) {
+        void hydratePipelineFallback(
+          base,
+          headers,
+          feedSetters,
+          crmStageByCompanyId,
+          () => cancelled,
+        ).catch(() => undefined);
       }
     };
 
@@ -981,8 +1006,9 @@ export default function Pipeline() {
 
   // Extended lead pool for tier-slot rotation (anonymous bucket view).
   useEffect(() => {
+    if (deals.length >= (entitlements?.pipeline_limit ?? 12)) return;
     let cancelled = false;
-    const base = getApiBase();
+    const base = getPublicReadApiBase();
     const headers = session?.access_token ? authHeader(session.access_token) : undefined;
     void fetchPipelineLeadsFallback(base, headers).then((rows) => {
       if (cancelled || rows.length === 0) return;
@@ -991,18 +1017,18 @@ export default function Pipeline() {
     return () => {
       cancelled = true;
     };
-  }, [session?.access_token, crmStageByCompanyId]);
+  }, [session?.access_token, crmStageByCompanyId, deals.length, entitlements?.pipeline_limit]);
 
   // Keep pipeline feed fresh — server rotation slot advances on the cache clock.
   useEffect(() => {
-    const base = getApiBase();
+    const base = getPublicReadApiBase();
     let cancelled = false;
     const refresh = () => {
       const token = session?.access_token;
       const headers = token ? authHeader(token) : undefined;
       void fetchWithTimeoutRetry(
         `${base}/api/leads/pipeline`,
-        liveFetchInit({ headers }),
+        publicFetchInit({ headers }),
         PIPELINE_TIMEOUT,
         { retries: 1, retryDelayMs: 800 },
       )

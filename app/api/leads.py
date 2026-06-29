@@ -2489,6 +2489,47 @@ def warm_homepage_cache() -> None:
     pass
 
 
+def _pipeline_feed_from_surface_caches() -> Optional[dict]:
+    """Stitch pipeline feed from warm durable surfaces when KEY_PIPELINE_FEED is cold."""
+    from datetime import datetime, timezone
+
+    from app.services.content_surfaces import (
+        KEY_LEADS_18,
+        KEY_LEADS_50,
+        KEY_LEADS_HOT_12,
+        KEY_SUMMARY_EXCLUDE_JUNK,
+    )
+    from app.services.public_surface_cache import read_public_caches_many
+
+    blobs = read_public_caches_many(
+        [KEY_SUMMARY_EXCLUDE_JUNK, KEY_LEADS_50, KEY_LEADS_18, KEY_LEADS_HOT_12],
+        stale_ok=True,
+    )
+    summary_raw = blobs.get(KEY_SUMMARY_EXCLUDE_JUNK)
+    leads: list = []
+    for key in (KEY_LEADS_50, KEY_LEADS_18, KEY_LEADS_HOT_12):
+        chunk = blobs.get(key)
+        if isinstance(chunk, list) and len(chunk) > 0:
+            leads = chunk
+            break
+
+    if not summary_raw and not leads:
+        return None
+
+    summary = dict(summary_raw) if summary_raw else _empty_summary_payload()
+    summary.pop("cache_pending", None)
+
+    return {
+        "leads": leads,
+        "summary": summary,
+        "summary_raw": summary_raw,
+        "rotation_slot": _current_rotation_slot(),
+        "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "cache_fallback": True,
+    }
+
+
 @router.get("/pipeline")
 def leads_pipeline_feed(
     response: Response,
@@ -2536,6 +2577,12 @@ def leads_pipeline_feed(
         if not pipeline_feed_is_stale(cached):
             hydrate_pipeline_feed_cache(cached)
             return _finish(cached)
+
+    stitched = _pipeline_feed_from_surface_caches()
+    if stitched and ((stitched.get("leads") or []) or (stitched.get("summary") or {}).get("hot")):
+        hydrate_pipeline_feed_cache(stitched)
+        schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_stitch")
+        return _finish(stitched)
 
     schedule_public_cache_refresh(pipeline_only=True, reason="pipeline_feed_miss")
 

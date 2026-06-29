@@ -86,6 +86,9 @@
   --sidebar-accent-foreground: oklch(0.13 0.02 240);
   --sidebar-border: oklch(0.91 0.005 240);
   --sidebar-ring: oklch(0.527 0.154 162);
+
+  /* Pipeline workspace panels — visible light grey (slate-100 was too close to white) */
+  --pipeline-panel-bg: #e5e7eb;
 }
 
 .dark {
@@ -651,11 +654,13 @@
   }
 
   .pipeline-metrics-grid {
-    @apply grid grid-cols-2 gap-2 border-b border-gray-200 bg-slate-100 p-3 lg:grid-cols-4;
+    @apply grid grid-cols-2 gap-2 border-b border-gray-300 p-3 lg:grid-cols-4;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-metric-card {
-    @apply relative overflow-hidden rounded-md border border-gray-200 bg-slate-100 px-2.5 py-2 shadow-sm;
+    @apply relative overflow-hidden rounded-md border border-gray-300 px-2.5 py-2 shadow-sm;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-metric-card::before {
@@ -673,11 +678,13 @@
   }
 
   .pipeline-deals-layout {
-    @apply border-t border-gray-200 bg-slate-100;
+    @apply border-t border-gray-300;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-list-columns {
-    @apply mb-1 hidden grid-cols-12 gap-2 rounded-md border border-gray-200 bg-slate-100 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:grid;
+    @apply mb-1 hidden grid-cols-12 gap-2 rounded-md border border-gray-300 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:grid;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-deal-row {
@@ -695,7 +702,8 @@
   }
 
   .pipeline-list-shell {
-    @apply rounded-md border border-gray-200 bg-slate-100 p-2;
+    @apply rounded-md border border-gray-300 p-2;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-detail-shell {
@@ -761,11 +769,13 @@
   }
 
   .pipeline-value-strip {
-    @apply rounded-xl border border-gray-200 bg-slate-100 px-4 py-3 shadow-sm;
+    @apply rounded-xl border border-gray-300 px-4 py-3 shadow-sm;
+    background-color: var(--pipeline-panel-bg);
   }
 
   .pipeline-market-snippet {
-    @apply mx-3 mb-2 rounded-lg border border-gray-200 bg-slate-100 px-3 py-2.5 shadow-sm sm:mx-4;
+    @apply mx-3 mb-2 rounded-lg border border-gray-300 px-3 py-2.5 shadow-sm sm:mx-4;
+    background-color: var(--pipeline-panel-bg);
   }
 
   /* Signals — dark intelligence panel on white page */

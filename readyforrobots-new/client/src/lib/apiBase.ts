@@ -51,6 +51,20 @@ export function getDirectApiBase(): string {
   return DEFAULT_PRODUCTION_API;
 }
 
+/**
+ * Public read surfaces (pipeline, leads list, summary) — hit Fly directly on the
+ * marketing domain. Same-origin /api rewrites add 2–5s+ latency per request.
+ */
+export function getPublicReadApiBase(): string {
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (_isMarketingHostname(h)) {
+      return DEFAULT_PRODUCTION_API;
+    }
+  }
+  return getApiBase();
+}
+
 export function getApiBase(): string {
   // Marketing site (Vercel): same-origin /api/* is proxied to Fly — avoids cross-origin failures.
   if (typeof window !== "undefined") {
