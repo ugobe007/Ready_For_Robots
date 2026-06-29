@@ -182,6 +182,17 @@ export function pipelineStageFromCrmOutreach(stage?: string | null): PipelineSta
   return null;
 }
 
+export function crmOutreachStageFromPipelineStage(stage: PipelineStage): string {
+  const map: Record<PipelineStage, string> = {
+    "New Signal": "new",
+    "Draft Ready": "draft_ready",
+    "Outreach Sent": "intro_sent",
+    "Qualified": "qualified",
+    "Meeting Set": "meeting",
+  };
+  return map[stage];
+}
+
 export function mapApiLeadToDeal(lead: ApiLead, crmOutreachStage?: string | null) {
   const loc = [lead.location_city, lead.location_state].filter(Boolean).join(", ") || "—";
   const { type, text, color } = topSignal(lead);

@@ -140,6 +140,12 @@ export default function SalesConsole() {
   }, [authFetch, session?.access_token]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oppId = params.get("opportunity_id");
+    if (oppId) setSelectedId(oppId);
+  }, []);
+
+  useEffect(() => {
     void loadRows();
   }, [loadRows]);
 

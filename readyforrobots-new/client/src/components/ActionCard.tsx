@@ -21,6 +21,7 @@ import type { ActivityItem, ActivityStatus } from "../types/readyForRobots";
 
 type ActionCardProps = {
   activity: ActivityItem;
+  disabled?: boolean;
   onApprove: (id: string) => void;
   onEdit: (id: string) => void;
   onSkip: (id: string) => void;
@@ -107,6 +108,7 @@ function ConfidenceArc({ score }: { score: number }) {
 
 export default function ActionCard({
   activity,
+  disabled = false,
   onApprove,
   onEdit,
   onSkip,
@@ -193,6 +195,7 @@ export default function ActionCard({
         <div className="flex items-center gap-2 pt-3 border-t border-neutral-100">
           <Button
             size="sm"
+            disabled={disabled}
             onClick={() => onApprove(activity.id)}
             className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-3 text-xs font-medium gap-1.5"
           >
@@ -202,6 +205,7 @@ export default function ActionCard({
           <Button
             size="sm"
             variant="outline"
+            disabled={disabled}
             onClick={() => onEdit(activity.id)}
             className="h-7 px-3 text-xs font-medium gap-1.5 text-neutral-600 border-neutral-200 hover:border-neutral-300"
           >
@@ -211,6 +215,7 @@ export default function ActionCard({
           <Button
             size="sm"
             variant="ghost"
+            disabled={disabled}
             onClick={() => onPrioritize(activity.id)}
             className="h-7 px-3 text-xs font-medium gap-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
           >
@@ -220,6 +225,7 @@ export default function ActionCard({
           <Button
             size="sm"
             variant="ghost"
+            disabled={disabled}
             onClick={() => onSkip(activity.id)}
             className="h-7 px-3 text-xs font-medium gap-1.5 text-neutral-400 hover:text-neutral-600 ml-auto"
           >

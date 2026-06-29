@@ -24,6 +24,7 @@ from app.services.apollo_client import (
 from app.services.sales_learning_agent import scraper_learning_report
 from app.services.sales_agent import create_automated_next_action, execute_sales_agent_action
 from app.services.sales_workflow_hub import (
+    apply_feed_action,
     collect_activity_feed,
     collect_next_actions,
     workflow_summary_since,
@@ -450,7 +451,43 @@ def list_activity_feed(
         if requested not in team_ids:
             raise HTTPException(status_code=404, detail="Team not found or access denied")
         team_ids = [requested]
-    return {"activities": collect_activity_feed(db, team_ids=team_ids, limit=limit)}
+    return {"activities": collect_activity_feed(db, team_ids=team_ids, user_id=_uid_uuid(user), limit=limit)}
+
+
+class FeedActionIn(BaseModel):
+    feed_id: str = Field(..., min_length=3)
+    action: str = Field(..., min_length=3, max_length=32)
+    entity_id: Optional[str] = None
+
+
+@router.post("/feed-actions")
+def post_feed_action(
+    body: FeedActionIn,
+    team_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    if not team_ids:
+        raise HTTPException(status_code=404, detail="No workspace found")
+    if team_id:
+        requested = _db_uuid(db, team_id)
+        if requested not in team_ids:
+            raise HTTPException(status_code=404, detail="Team not found or access denied")
+        team_ids = [requested]
+    try:
+        result = apply_feed_action(
+            db,
+            team_ids=team_ids,
+            user_id=uid,
+            feed_id=body.feed_id,
+            action=body.action,
+            entity_id=body.entity_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return result
 
 
 @router.get("/workflow-summary")
@@ -470,6 +507,7 @@ def get_workflow_summary(
             "opportunitiesAdvanced": 0,
             "repliesReceived": 0,
             "highlights": [],
+            "funnel": {"saved": 0, "sent": 0, "replied": 0, "meetings": 0},
         }
     if team_id:
         requested = _db_uuid(db, team_id)

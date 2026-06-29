@@ -1,6 +1,7 @@
 """Internal calendar API for operator meetings."""
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -17,6 +18,8 @@ from app.models.crm import TeamMember
 from app.models.sales_agent import SalesOpportunity
 from app.services.calendar_invite import attendee_emails, send_calendar_invite
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -31,6 +34,7 @@ class CalendarEventIn(BaseModel):
     attendees: list[dict[str, Any] | str] = Field(default_factory=list)
     sales_opportunity_id: Optional[str] = None
     send_invites: bool = False
+    sync_google: bool = True
 
 
 def _uid_uuid(user: dict) -> uuid.UUID:
@@ -120,7 +124,19 @@ def list_events(db: Session = Depends(get_db), user: dict = Depends(_require_use
         .limit(200)
         .all()
     )
-    return [_serialize_event(row) for row in rows]
+    events = [_serialize_event(row) for row in rows]
+    try:
+        from uuid import UUID
+
+        from app.services.google_calendar_sync import list_google_events
+
+        raw_tid = team_ids[0]
+        tid = raw_tid if isinstance(raw_tid, UUID) else UUID(str(raw_tid))
+        events.extend(list_google_events(db, team_id=tid, limit=15))
+    except Exception:
+        logger.debug("Google Calendar merge skipped", exc_info=True)
+    events.sort(key=lambda row: row.get("start_at") or "")
+    return events[:200]
 
 
 @router.post("/events")
@@ -160,7 +176,19 @@ def create_event(payload: CalendarEventIn, db: Session = Depends(get_db), user: 
     )
     db.add(event)
     db.flush()
-    if payload.send_invites and attendee_emails(event.attendees):
+    google_synced = False
+    if payload.sync_google:
+        try:
+            from uuid import UUID
+
+            from app.services.google_calendar_sync import create_google_event
+
+            tid = team_id if isinstance(team_id, UUID) else UUID(str(team_id))
+            create_google_event(db, team_id=tid, event=event)
+            google_synced = True
+        except Exception as exc:
+            logger.warning("Google Calendar sync failed: %s", exc)
+    if payload.send_invites and attendee_emails(event.attendees) and not google_synced:
         result = send_calendar_invite(event, organizer_email=user.get("email"))
         event.invite_status = "sent"
         event.payload = {**(event.payload or {}), "invite_resend_id": result.get("resend_id")}

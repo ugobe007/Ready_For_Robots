@@ -202,11 +202,11 @@ def hubspot_status(
     status.update(
         {
             "configured": configured,
-            "mode": "outbound_push",
+            "mode": "bidirectional",
             "sync_entitled": sync_entitled,
             "sync": sync,
             "message": (
-                "HubSpot is connected for this workspace."
+                "HubSpot is connected — push leads outbound and pull deal stages back into native CRM."
                 if configured
                 else "Connect HubSpot to push SIGNAL-qualified leads automatically."
             ),
@@ -246,7 +246,32 @@ def hubspot_push_lead(
             token=token,
             company_id=body.company_id,
             deal_name=body.deal_name,
+            team_id=team.id,
         )
     except HubSpotError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {"pushed": True, **result}
+
+
+@router.post("/sync-from-hubspot")
+def hubspot_sync_from_hubspot(
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Pull deal stages from HubSpot into native CRM account outreach stages."""
+    team = _default_team(db, _uid_uuid(user), user.get("email") or "")
+    token = resolve_hubspot_token(db, team_id=team.id)
+    if not token:
+        raise HTTPException(
+            status_code=501,
+            detail={
+                "code": "hubspot_not_configured",
+                "message": "Connect HubSpot first at /integrations/hubspot.",
+            },
+        )
+    from app.services.hubspot_crm_sync import sync_hubspot_deals_to_crm
+
+    try:
+        return sync_hubspot_deals_to_crm(db, team_id=team.id, token=token)
+    except HubSpotError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

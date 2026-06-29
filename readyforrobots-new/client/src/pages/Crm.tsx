@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
+import CrmAccountWorkspace from "@/components/crm/CrmAccountWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
@@ -103,6 +104,12 @@ export default function Crm() {
     },
     [session?.access_token],
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accountParam = params.get("account");
+    if (accountParam) setSelectedAccountId(accountParam);
+  }, []);
 
   useEffect(() => {
     if (!session?.access_token) return;
@@ -643,8 +650,17 @@ export default function Crm() {
             <aside className="sb-surface">
               <div className="flex h-full">
                 <div className="sb-surface-rail bg-emerald-500/80" />
-                <div className="sb-surface-body flex-1">
-              <div className="mb-2 rounded-md border border-emerald-200 bg-emerald-50 p-2">
+                <div className="sb-surface-body flex-1 space-y-3">
+              <CrmAccountWorkspace
+                accountId={selectedAccount.id}
+                authFetch={authFetch}
+                onStageChange={() => {
+                  void authFetch(`/api/crm/accounts?team_id=${encodeURIComponent(teamId)}`).then((data) => {
+                    setAccounts(Array.isArray(data) ? (data as Account[]) : []);
+                  });
+                }}
+              />
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
                 <p className="sb-kicker text-emerald-800">SIGNAL workflow intelligence</p>
                 <p className="mt-1 text-sm font-semibold text-gray-900">
                   {selectedAccount.workflow_intelligence?.recommended_action || "Waiting for SIGNAL activity on this account."}

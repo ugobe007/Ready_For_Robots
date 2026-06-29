@@ -49,6 +49,7 @@ from app.api.social_posts import router as social_posts_router
 from app.api.linkedin import router as linkedin_router
 from app.api.integrations import router as integrations_router
 from app.api.integrations_hubspot import router as integrations_hubspot_router
+from app.api.integrations_google_calendar import router as integrations_google_calendar_router
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
@@ -408,6 +409,7 @@ app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
 app.include_router(integrations_router, prefix="/api", tags=["integrations"])
 app.include_router(integrations_hubspot_router, prefix="/api", tags=["integrations"])
+app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
 
 if _mcp_asgi is not None:

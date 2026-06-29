@@ -35,6 +35,8 @@ export default function CalendarPage() {
   const { session, loading } = useAuth();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [busy, setBusy] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
   const defaults = useMemo(() => {
     const start = new Date();
     start.setHours(start.getHours() + 1, 0, 0, 0);
@@ -79,8 +81,52 @@ export default function CalendarPage() {
   }, [authFetch, session?.access_token]);
 
   useEffect(() => {
+    if (!session?.access_token) {
+      setGoogleConnected(false);
+      return;
+    }
+    void authFetch("/api/integrations/google-calendar/status")
+      .then((data) => {
+        const payload = data as { connected?: boolean; configured?: boolean };
+        setGoogleConnected(Boolean(payload.connected));
+        setGoogleConfigured(Boolean(payload.configured));
+      })
+      .catch(() => {
+        setGoogleConnected(false);
+      });
+  }, [session?.access_token, authFetch]);
+
+  useEffect(() => {
     void loadEvents();
   }, [loadEvents]);
+
+  async function connectGoogle() {
+    setBusy(true);
+    try {
+      const data = (await authFetch("/api/integrations/google-calendar/connect-url?return_to=/calendar")) as {
+        auth_url?: string;
+      };
+      if (data.auth_url) window.location.href = data.auth_url;
+      else toast.error("Google Calendar connect is not configured yet.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not start Google connect.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disconnectGoogle() {
+    setBusy(true);
+    try {
+      await authFetch("/api/integrations/google-calendar/disconnect", { method: "DELETE" });
+      setGoogleConnected(false);
+      toast.success("Google Calendar disconnected.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Disconnect failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const createEvent = async (event: FormEvent) => {
     event.preventDefault();
@@ -137,11 +183,38 @@ export default function CalendarPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-800">Internal calendar</p>
             <h1 className="mt-2 text-4xl font-black">Calendar</h1>
-            <p className="mt-2 max-w-2xl text-sm text-gray-500">Schedule meetings and send `.ics` invites. Events are stored internally and ready for future Google Calendar sync.</p>
+            <p className="mt-2 max-w-2xl text-sm text-gray-500">
+              Schedule meetings, sync to Google Calendar when connected, and send invites to buyers.
+            </p>
           </div>
-          <button onClick={() => void loadEvents()} disabled={busy} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 disabled:opacity-50">
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {googleConfigured ? (
+              googleConnected ? (
+                <button
+                  type="button"
+                  onClick={() => void disconnectGoogle()}
+                  disabled={busy}
+                  className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 disabled:opacity-50"
+                >
+                  Google connected
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void connectGoogle()}
+                  disabled={busy}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  Connect Google Calendar
+                </button>
+              )
+            ) : (
+              <span className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-500">Google OAuth pending server config</span>
+            )}
+            <button onClick={() => void loadEvents()} disabled={busy} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 disabled:opacity-50">
+              Refresh
+            </button>
+          </div>
         </div>
         <section className="mt-8 grid gap-6 lg:grid-cols-[420px_1fr]">
           <form onSubmit={(event) => void createEvent(event)} className="rounded-3xl border border-gray-300 bg-white p-5 shadow-sm">

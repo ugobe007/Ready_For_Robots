@@ -14,6 +14,7 @@ from app.services.integration_tokens import decrypt_token, encrypt_token
 
 PROVIDER_HUBSPOT = "hubspot"
 PROVIDER_GITHUB = "github"
+PROVIDER_GOOGLE_CALENDAR = "google_calendar"
 
 _PROVIDER_META: dict[str, dict[str, Any]] = {
     PROVIDER_HUBSPOT: {
@@ -31,6 +32,14 @@ _PROVIDER_META: dict[str, dict[str, Any]] = {
         "description": "Let SIGNAL read repos and automation context from your GitHub workspace.",
         "docs_url": "https://github.com/settings/tokens",
         "scopes_hint": "repo, read:org (fine-grained or classic PAT)",
+    },
+    PROVIDER_GOOGLE_CALENDAR: {
+        "name": "Google Calendar",
+        "connection_type": "calendar",
+        "auth_type": "oauth",
+        "description": "Sync operator meetings to Google Calendar and send invites from your calendar.",
+        "docs_url": "https://developers.google.com/calendar/api/guides/overview",
+        "scopes_hint": "calendar.events",
     },
 }
 
@@ -97,6 +106,20 @@ def _verify_github(token: str) -> dict[str, Any]:
     }
 
 
+def _verify_google_calendar(token: str) -> dict[str, Any]:
+    response = requests.get(
+        "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"maxResults": 1},
+        timeout=20,
+    )
+    if response.status_code == 401:
+        raise IntegrationError("Google Calendar token rejected — reconnect Google.")
+    if response.status_code >= 400:
+        raise IntegrationError(f"Google Calendar verification failed ({response.status_code}).")
+    return {"verified": True, "account_name": "Google Calendar"}
+
+
 def verify_provider_token(provider: str, token: str) -> dict[str, Any]:
     token = (token or "").strip()
     if not token:
@@ -105,6 +128,8 @@ def verify_provider_token(provider: str, token: str) -> dict[str, Any]:
         return _verify_hubspot(token)
     if provider == PROVIDER_GITHUB:
         return _verify_github(token)
+    if provider == PROVIDER_GOOGLE_CALENDAR:
+        return _verify_google_calendar(token)
     raise IntegrationError(f"Unknown provider: {provider}")
 
 
@@ -179,6 +204,15 @@ def resolve_hubspot_token(db: Session, *, team_id: UUID) -> Optional[str]:
     if token:
         return token
     return (os.getenv("HUBSPOT_PRIVATE_APP_TOKEN") or "").strip() or None
+
+
+def resolve_google_calendar_token(db: Session, *, team_id: UUID) -> Optional[str]:
+    try:
+        from app.services.google_calendar_sync import get_valid_access_token
+
+        return get_valid_access_token(db, team_id=team_id)
+    except Exception:
+        return None
 
 
 def serialize_provider_status(

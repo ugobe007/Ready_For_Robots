@@ -61,7 +61,11 @@ from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
-from app.services.crm_engagement_sync import serialize_engagement, sync_account_stage_to_engagement
+from app.services.crm_engagement_sync import (
+    serialize_engagement,
+    sync_account_stage_to_engagement,
+    sync_engagement_stage_to_account,
+)
 from app.services.sales_plan_agent import generate_sales_plan
 
 router = APIRouter()
@@ -793,6 +797,9 @@ def create_account(
             if industry is not None:
                 existing.industry = industry
             existing.owner_user_id = existing.owner_user_id or uid
+            if not existing.outreach_stage:
+                existing.outreach_stage = "new"
+            sync_account_stage_to_engagement(db, existing)
             db.commit()
             db.refresh(existing)
             row = existing
@@ -812,8 +819,11 @@ def create_account(
             website=website,
             industry=industry,
             owner_user_id=uid,
+            outreach_stage="new",
             )
             db.add(row)
+            db.flush()
+            sync_account_stage_to_engagement(db, row)
             db.commit()
             db.refresh(row)
             record_sales_experience(
@@ -884,6 +894,8 @@ def patch_account(
             acct.outreach_stage = patch["outreach_stage"]
         if "account_type" in patch:
             acct.account_type = patch["account_type"]
+        if "outreach_stage" in patch:
+            sync_account_stage_to_engagement(db, acct)
         db.commit()
         db.refresh(acct)
         pl = None
@@ -908,6 +920,221 @@ def patch_account(
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
         _raise_crm_db_error(e)
+
+
+def _serialize_note(row: CrmNote) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "crm_account_id": str(row.crm_account_id),
+        "engagement_id": str(row.engagement_id) if row.engagement_id else None,
+        "body": row.body,
+        "source": row.source,
+        "author_user_id": str(row.author_user_id) if row.author_user_id else None,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+def _serialize_outreach_message(row: OutreachMessage) -> dict[str, Any]:
+    return {
+        "id": str(row.id),
+        "to_email": row.to_email,
+        "subject": row.subject,
+        "status": row.status,
+        "send_identity": row.send_identity,
+        "sent_at": row.sent_at.isoformat() if row.sent_at else None,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    }
+
+
+@router.get("/accounts/{account_id}")
+def get_account_detail(
+    account_id: str,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        uid = _uid_uuid(user)
+        try:
+            aid = uuid.UUID(account_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid account id") from None
+        acct = _crm_account_for_user(db, uid, aid)
+        if not acct:
+            raise HTTPException(status_code=404, detail="Account not found or access denied")
+
+        pl = None
+        if acct.company_id:
+            co = (
+                db.query(Company)
+                .options(joinedload(Company.signals), joinedload(Company.scores))
+                .filter(Company.id == acct.company_id)
+                .first()
+            )
+            if co:
+                try:
+                    pl = _pipeline_snapshot_for_company_row(co)
+                except Exception:
+                    logger.warning("CRM detail pipeline snapshot failed company_id=%s", acct.company_id, exc_info=True)
+
+        engagements = (
+            db.query(CrmEngagement)
+            .filter(CrmEngagement.crm_account_id == acct.id)
+            .order_by(CrmEngagement.updated_at.desc())
+            .limit(20)
+            .all()
+        )
+        tasks = (
+            db.query(CrmTask)
+            .filter(CrmTask.crm_account_id == acct.id)
+            .order_by(CrmTask.due_at.asc().nullslast(), CrmTask.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        notes = (
+            db.query(CrmNote)
+            .filter(CrmNote.crm_account_id == acct.id)
+            .order_by(CrmNote.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        outreach = (
+            db.query(OutreachMessage)
+            .filter(OutreachMessage.crm_account_id == acct.id)
+            .order_by(OutreachMessage.sent_at.desc().nullslast(), OutreachMessage.created_at.desc())
+            .limit(25)
+            .all()
+        )
+
+        timeline: list[dict[str, Any]] = []
+        if acct.created_at:
+            timeline.append(
+                {
+                    "type": "account_created",
+                    "label": "Saved to CRM",
+                    "at": acct.created_at.isoformat(),
+                }
+            )
+        for msg in outreach:
+            timeline.append(
+                {
+                    "type": "outreach_sent",
+                    "label": f"Outreach sent to {msg.to_email}",
+                    "at": (msg.sent_at or msg.created_at).isoformat() if (msg.sent_at or msg.created_at) else None,
+                    "meta": {"subject": msg.subject, "status": msg.status},
+                }
+            )
+        for note in notes:
+            timeline.append(
+                {
+                    "type": "note",
+                    "label": note.body[:120],
+                    "at": note.created_at.isoformat() if note.created_at else None,
+                    "meta": {"source": note.source},
+                }
+            )
+        for task in tasks:
+            if task.status == "done":
+                timeline.append(
+                    {
+                        "type": "task_done",
+                        "label": task.title,
+                        "at": task.updated_at.isoformat() if task.updated_at else None,
+                    }
+                )
+        timeline.sort(key=lambda item: item.get("at") or "", reverse=True)
+
+        open_engagement = next((e for e in engagements if e.status == "open"), None)
+        if not open_engagement and acct.outreach_stage:
+            open_engagement = sync_account_stage_to_engagement(db, acct)
+            db.commit()
+            if open_engagement:
+                engagements = [open_engagement, *[e for e in engagements if e.id != open_engagement.id]]
+
+        account_payload = _attach_workflow_intelligence(db, acct, _serialize_account_enriched(acct, pl))
+        return {
+            "account": account_payload,
+            "engagement": serialize_engagement(open_engagement) if open_engagement else None,
+            "engagements": [serialize_engagement(e) for e in engagements],
+            "tasks": [
+                {
+                    "id": str(row.id),
+                    "title": row.title,
+                    "body": row.body,
+                    "status": row.status,
+                    "priority": row.priority,
+                    "due_at": row.due_at.isoformat() if row.due_at else None,
+                    "source": row.source,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+                for row in tasks
+            ],
+            "notes": [_serialize_note(row) for row in notes],
+            "outreach_history": [_serialize_outreach_message(row) for row in outreach],
+            "timeline": timeline[:40],
+        }
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
+@router.get("/accounts/{account_id}/notes")
+def list_account_notes(
+    account_id: str,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    rows = (
+        db.query(CrmNote)
+        .filter(CrmNote.crm_account_id == acct.id)
+        .order_by(CrmNote.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    return [_serialize_note(row) for row in rows]
+
+
+@router.post("/accounts/{account_id}/notes")
+def create_account_note(
+    account_id: str,
+    body: NoteCreateIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    uid = _uid_uuid(user)
+    try:
+        aid = uuid.UUID(account_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid account id") from None
+    acct = _crm_account_for_user(db, uid, aid)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found or access denied")
+    engagement_id = None
+    if body.engagement_id:
+        try:
+            engagement_id = uuid.UUID(body.engagement_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid engagement id") from None
+    note = CrmNote(
+        team_id=acct.team_id,
+        crm_account_id=acct.id,
+        engagement_id=engagement_id,
+        author_user_id=uid,
+        body=body.body.strip(),
+        source="user",
+    )
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return _serialize_note(note)
 
 
 @router.post("/accounts/{account_id}/draft-outreach")
@@ -1207,6 +1434,11 @@ class TaskPatchIn(BaseModel):
     due_at: Optional[str] = None
 
 
+class NoteCreateIn(BaseModel):
+    body: str = Field(..., min_length=1, max_length=8000)
+    engagement_id: Optional[str] = None
+
+
 class PlanCommitIn(BaseModel):
     commit_tasks: bool = True
 
@@ -1295,6 +1527,8 @@ def patch_engagement(
         row.name = patch["name"]
     if "value_amount" in patch:
         row.value_amount = patch["value_amount"]
+    if "stage" in patch and patch["stage"]:
+        sync_engagement_stage_to_account(db, row)
     db.commit()
     db.refresh(row)
     return serialize_engagement(row)

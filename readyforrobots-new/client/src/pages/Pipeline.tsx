@@ -31,7 +31,7 @@ import {
 } from "@/lib/apiBase";
 import { marketInsightForIndustry } from "@/lib/industryContext";
 import { dealMatchesIndustrySearch, pipelineSearchSuggestions } from "@/lib/industrySearchLexicon";
-import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
+import { mapApiLeadToDeal, crmOutreachStageFromPipelineStage, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
@@ -795,6 +795,7 @@ export default function Pipeline() {
   const [saveLimitOpen, setSaveLimitOpen] = useState(false);
   const [saveLimitMessage, setSaveLimitMessage] = useState("");
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
+  const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
@@ -843,15 +844,19 @@ export default function Pipeline() {
         );
         if (!accountsRes.ok) return;
         const accounts = (await accountsRes.json()) as Array<{
+          id?: string;
           company_id?: number | null;
           outreach_stage?: string | null;
         }>;
         if (cancelled) return;
         const next: Record<number, string> = {};
+        const accountIds: Record<number, string> = {};
         for (const acct of accounts) {
           if (acct.company_id && acct.outreach_stage) next[acct.company_id] = acct.outreach_stage;
+          if (acct.company_id && acct.id) accountIds[acct.company_id] = acct.id;
         }
         setCrmStageByCompanyId(next);
+        setCrmAccountIdByCompanyId(accountIds);
         setSavedLeadCount(accounts.filter((acct) => acct.company_id).length);
         setDeals((prev) =>
           prev.map((deal) => {
@@ -1366,16 +1371,37 @@ export default function Pipeline() {
   const selectedActivation = activations.find((a) => a.id === selectedActivationId) ?? activations[0] ?? null;
 
   const moveStage = (id: number, direction: 1 | -1) => {
+    let nextStage: Stage | null = null;
     setDeals((prev) =>
       prev.map((d) => {
         if (d.id !== id) return d;
         const idx = STAGES.indexOf(d.stage);
         const next = STAGES[idx + direction];
         if (!next) return d;
+        nextStage = next;
         toast.success(`Moved "${d.company}" to ${stageLabel(next)}`);
         return { ...d, stage: next, updatedAt: "just now" };
-      })
+      }),
     );
+    const accountId = crmAccountIdByCompanyId[id];
+    const token = session?.access_token;
+    if (!nextStage || !accountId || !token) return;
+    const outreachStage = crmOutreachStageFromPipelineStage(nextStage);
+    void fetch(
+      `${getApiBase()}/api/crm/accounts/${accountId}`,
+      liveFetchInit({
+        method: "PATCH",
+        headers: { ...authHeader(token), "Content-Type": "application/json" },
+        body: JSON.stringify({ outreach_stage: outreachStage }),
+      }),
+    )
+      .then((res) => {
+        if (!res.ok) return;
+        setCrmStageByCompanyId((prev) => ({ ...prev, [id]: outreachStage }));
+      })
+      .catch(() => {
+        /* stage sync is best-effort */
+      });
   };
 
   const copyDraft = () => {

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 HUBSPOT_OAUTH_STATE_KEY = "hubspot:oauth:state:"
 HUBSPOT_AUTH_URL = "https://app.hubspot.com/oauth/authorize"
 HUBSPOT_TOKEN_URL = "https://api.hubapi.com/oauth/v1/token"
-HUBSPOT_SCOPES = "crm.objects.contacts.read crm.objects.contacts.write crm.objects.companies.write oauth"
+HUBSPOT_SCOPES = "crm.objects.contacts.read crm.objects.contacts.write crm.objects.companies.write crm.objects.deals.read oauth"
 
 
 class HubSpotError(Exception):

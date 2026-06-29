@@ -5,6 +5,7 @@ import AdminNav from "@/components/AdminNav";
 import ActivityFeed from "@/components/ActivityFeed";
 import NextBestActions from "@/components/NextBestActions";
 import WhileYouWereAway from "@/components/WhileYouWereAway";
+import WorkflowFunnelPanel from "@/components/WorkflowFunnelPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchWithTimeout,
@@ -33,7 +34,10 @@ type WorkflowPayload = {
   activities: ActivityItem[];
   summary: DailySummary;
   highlights: NextAction[];
+  funnel?: { saved: number; sent: number; replied: number; meetings: number };
 };
+
+const EMPTY_FUNNEL = { saved: 0, sent: 0, replied: 0, meetings: 0 };
 
 function applySummary(payload: DailySummary & { repliesReceived?: number }): DailySummary {
   return {
@@ -62,6 +66,7 @@ export default function SalesWorkflow() {
   const [summary, setSummary] = useState<DailySummary>(EMPTY_SUMMARY);
   const [awayOpen, setAwayOpen] = useState(false);
   const [highlights, setHighlights] = useState<NextAction[]>([]);
+  const [funnel, setFunnel] = useState(EMPTY_FUNNEL);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const hydratedRef = useRef(false);
@@ -75,6 +80,7 @@ export default function SalesWorkflow() {
     setActivities(cached.data.activities);
     setSummary(cached.data.summary);
     setHighlights(cached.data.highlights ?? cached.data.summary.highlights ?? []);
+    setFunnel(cached.data.funnel ?? EMPTY_FUNNEL);
     setLoading(false);
   }, []);
 
@@ -99,6 +105,7 @@ export default function SalesWorkflow() {
       let nextActivities: ActivityItem[] = [];
       let nextSummary: DailySummary = EMPTY_SUMMARY;
       let nextHighlights: NextAction[] = [];
+      let nextFunnel = EMPTY_FUNNEL;
 
       if (actionsRes.ok) {
         const payload = (await actionsRes.json()) as { actions?: NextAction[] };
@@ -111,11 +118,17 @@ export default function SalesWorkflow() {
         setActivities(nextActivities);
       }
       if (summaryRes.ok) {
-        const payload = (await summaryRes.json()) as DailySummary & { repliesReceived?: number; highlights?: NextAction[] };
+        const payload = (await summaryRes.json()) as DailySummary & {
+          repliesReceived?: number;
+          highlights?: NextAction[];
+          funnel?: typeof EMPTY_FUNNEL;
+        };
         nextSummary = applySummary(payload);
         nextHighlights = payload.highlights ?? [];
+        nextFunnel = payload.funnel ?? EMPTY_FUNNEL;
         setSummary(nextSummary);
         setHighlights(nextHighlights);
+        setFunnel(nextFunnel);
         if (summaryActivityTotal(payload) > 0 || nextHighlights.length > 0) setAwayOpen(true);
       }
 
@@ -124,6 +137,7 @@ export default function SalesWorkflow() {
         activities: nextActivities,
         summary: nextSummary,
         highlights: nextHighlights,
+        funnel: nextFunnel,
       });
       hydratedRef.current = true;
     } finally {
@@ -138,8 +152,43 @@ export default function SalesWorkflow() {
   }, [session?.access_token, loadWorkflow]);
 
   const handleSelectActivity = (activity: ActivityItem) => {
-    if (activity.route) navigate(activity.route);
+    if (activity.route) {
+      const url = activity.entity_id
+        ? `${activity.route}?account=${encodeURIComponent(activity.entity_id)}`
+        : activity.route;
+      navigate(url);
+    }
   };
+
+  const handleFeedAction = useCallback(
+    async (activity: ActivityItem, action: "approve" | "edit" | "skip" | "prioritize") => {
+      const token = session?.access_token;
+      if (!token) throw new Error("Not signed in");
+      const res = await fetchWithTimeout(
+        `${getApiBase()}/api/sales/feed-actions`,
+        liveFetchInit({
+          method: "POST",
+          headers: { ...authHeader(token), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            feed_id: activity.id,
+            action,
+            entity_id: activity.entity_id,
+          }),
+        }),
+        WORKFLOW_FETCH_TIMEOUT_MS,
+      );
+      if (!res.ok) {
+        const raw = await res.text();
+        throw new Error(raw || `Action failed (${res.status})`);
+      }
+      const payload = (await res.json()) as { route?: string; entity_id?: string };
+      if (action === "approve" || action === "skip" || action === "prioritize") {
+        void loadWorkflow({ background: true });
+      }
+      return payload;
+    },
+    [session?.access_token, loadWorkflow],
+  );
 
   if (authLoading) {
     return <div className="min-h-screen bg-neutral-50" />;
@@ -186,9 +235,16 @@ export default function SalesWorkflow() {
         ) : showEmptyState ? (
           <p className="text-sm text-neutral-500">No workflow activity yet — save leads to CRM or run SCOUT to populate this view.</p>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-            <ActivityFeed activities={activities} onSelectActivity={handleSelectActivity} />
+          <div className="space-y-6">
+            <WorkflowFunnelPanel funnel={funnel} />
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+            <ActivityFeed
+              activities={activities}
+              onSelectActivity={handleSelectActivity}
+              onFeedAction={handleFeedAction}
+            />
             <NextBestActions actions={actions} />
+            </div>
           </div>
         )}
       </main>

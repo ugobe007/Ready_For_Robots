@@ -11,10 +11,16 @@ from app.models.sales_agent import SalesOpportunity
 
 STAGE_MAP = {
     "new": "qualification",
+    "draft_ready": "qualification",
+    "draft_approved": "qualification",
+    "review_required": "qualification",
     "intro_sent": "outreach",
+    "sequence_step_sent": "outreach",
+    "sent": "outreach",
     "nurture": "nurture",
     "qualified": "discovery",
     "meeting": "meeting",
+    "meeting_booked": "meeting",
     "proposal": "proposal",
     "negotiation": "negotiation",
     "closed_won": "closed_won",
@@ -23,10 +29,27 @@ STAGE_MAP = {
     "negative": "closed_lost",
 }
 
+REVERSE_STAGE_MAP = {
+    "qualification": "new",
+    "outreach": "intro_sent",
+    "nurture": "nurture",
+    "discovery": "qualified",
+    "meeting": "meeting",
+    "proposal": "proposal",
+    "negotiation": "negotiation",
+    "closed_won": "closed_won",
+    "closed_lost": "closed_lost",
+}
+
 
 def engagement_stage_for_opportunity(stage: str | None) -> str:
     key = (stage or "new").strip().lower()
     return STAGE_MAP.get(key, "qualification")
+
+
+def account_stage_for_engagement(stage: str | None) -> str:
+    key = (stage or "qualification").strip().lower()
+    return REVERSE_STAGE_MAP.get(key, "new")
 
 
 def ensure_engagement_for_opportunity(
@@ -78,6 +101,20 @@ def sync_opportunity_stage_to_engagement(db: Session, opportunity: SalesOpportun
         engagement.owner_user_id = opportunity.owner_user_id
     db.add(engagement)
     return engagement
+
+
+def sync_engagement_stage_to_account(db: Session, engagement: CrmEngagement) -> CrmAccount | None:
+    acct = db.query(CrmAccount).filter(CrmAccount.id == engagement.crm_account_id).first()
+    if not acct:
+        return None
+    acct.outreach_stage = account_stage_for_engagement(engagement.stage)
+    if engagement.status == "closed":
+        if engagement.stage == "closed_won":
+            acct.outreach_stage = "closed_won"
+        elif engagement.stage == "closed_lost":
+            acct.outreach_stage = "closed_lost"
+    db.add(acct)
+    return acct
 
 
 def sync_account_stage_to_engagement(db: Session, account: CrmAccount) -> CrmEngagement | None:

@@ -18,7 +18,7 @@ type InboxItem = {
   detected_intent?: string | null;
   received_at?: string | null;
   next_best_action?: { recommendation?: string; intent?: string };
-  latest_action?: { status?: string; draft_subject?: string | null; draft_body?: string | null } | null;
+  latest_action?: { id?: string; status?: string; draft_subject?: string | null; draft_body?: string | null } | null;
 };
 
 function formatDate(value?: string | null) {
@@ -83,6 +83,24 @@ export default function Inbox() {
 
   const selected = items.find((item) => item.id === selectedId) || null;
 
+  async function approveDraft(actionId: string) {
+    if (!session?.access_token) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const res = await fetch(`${getApiBase()}/api/sales/actions/${actionId}/automate`, liveFetchInit({
+        method: "POST",
+        headers: authHeader(session.access_token),
+      }));
+      if (!res.ok) throw new Error(await res.text());
+      await loadInbox();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not send reply");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900">
       <Header />
@@ -140,9 +158,23 @@ export default function Inbox() {
                     <p className="mt-1 text-sm text-gray-500">From {selected.from_email || "unknown"} · {formatDate(selected.received_at)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link href={`/sales-console`} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600">
-                      Open Sales Console
+                    <Link
+                      href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
+                    >
+                      Open in Sales Console
                     </Link>
+                    {selected.latest_action?.id &&
+                    (selected.latest_action.status === "pending" || selected.latest_action.status === "drafted") ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void approveDraft(selected.latest_action!.id!)}
+                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                      >
+                        Approve &amp; send reply
+                      </button>
+                    ) : null}
                     <Link href={scheduleHref(selected)} className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]">
                       Schedule meeting
                     </Link>

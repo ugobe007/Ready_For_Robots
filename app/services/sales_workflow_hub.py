@@ -359,6 +359,7 @@ def collect_activity_feed(
     db: Session,
     *,
     team_ids: list[Any],
+    user_id: uuid.UUID | None = None,
     limit: int = 40,
 ) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
@@ -472,7 +473,129 @@ def collect_activity_feed(
         )
 
     items.sort(key=lambda row: row.get("createdAt") or "", reverse=True)
+    dismissed = _dismissed_feed_ids(db, team_ids, user_id) if user_id else set()
+    if dismissed:
+        items = [row for row in items if row.get("id") not in dismissed]
     return items[:limit]
+
+
+def _dismissed_feed_ids(db: Session, team_ids: list[Any], user_id: uuid.UUID) -> set[str]:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    rows = (
+        db.query(SalesExperienceEvent)
+        .filter(
+            SalesExperienceEvent.team_id.in_(team_ids),
+            SalesExperienceEvent.user_id == user_id,
+            SalesExperienceEvent.event_type == "feed_dismissed",
+            SalesExperienceEvent.created_at >= cutoff,
+        )
+        .all()
+    )
+    dismissed: set[str] = set()
+    for row in rows:
+        payload = row.payload if isinstance(row.payload, dict) else {}
+        feed_id = payload.get("feed_id")
+        if feed_id:
+            dismissed.add(str(feed_id))
+    return dismissed
+
+
+def _account_id_from_feed(feed_id: str, entity_id: str | None = None) -> uuid.UUID | None:
+    if entity_id:
+        try:
+            return uuid.UUID(entity_id)
+        except ValueError:
+            pass
+    if feed_id.startswith("feed:draft:"):
+        try:
+            return uuid.UUID(feed_id.rsplit(":", 1)[-1])
+        except ValueError:
+            return None
+    return None
+
+
+def apply_feed_action(
+    db: Session,
+    *,
+    team_ids: list[Any],
+    user_id: uuid.UUID,
+    feed_id: str,
+    action: str,
+    entity_id: str | None = None,
+) -> dict[str, Any]:
+    from app.services.crm_engagement_sync import sync_account_stage_to_engagement
+    from app.services.sales_learning_agent import record_sales_experience
+
+    verb = (action or "").strip().lower()
+    if verb not in {"approve", "skip", "prioritize", "edit"}:
+        raise ValueError(f"Unsupported feed action: {action}")
+
+    if verb == "skip":
+        record_sales_experience(
+            db,
+            event_type="feed_dismissed",
+            outcome="skipped",
+            team_id=team_ids[0] if len(team_ids) == 1 else None,
+            user_id=user_id,
+            channel="workflow",
+            confidence=1.0,
+            payload={"feed_id": feed_id},
+        )
+        db.commit()
+        return {"ok": True, "action": verb}
+
+    account_uuid = _account_id_from_feed(feed_id, entity_id)
+    acct = None
+    if account_uuid:
+        acct = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.id == account_uuid, CrmAccount.team_id.in_(team_ids))
+            .first()
+        )
+
+    if verb == "prioritize":
+        if acct:
+            acct.updated_at = datetime.now(timezone.utc)
+            db.add(acct)
+        record_sales_experience(
+            db,
+            event_type="feed_prioritized",
+            outcome="observed",
+            team_id=acct.team_id if acct else (team_ids[0] if team_ids else None),
+            user_id=user_id,
+            crm_account_id=acct.id if acct else None,
+            channel="workflow",
+            confidence=1.0,
+            payload={"feed_id": feed_id},
+        )
+        db.commit()
+        return {"ok": True, "action": verb, "entity_id": str(acct.id) if acct else entity_id}
+
+    if verb == "approve":
+        if not acct:
+            raise ValueError("No CRM account linked to this feed item")
+        acct.outreach_stage = "draft_approved"
+        sync_account_stage_to_engagement(db, acct)
+        record_sales_experience(
+            db,
+            event_type="feed_approved",
+            outcome="approved",
+            team_id=acct.team_id,
+            user_id=user_id,
+            crm_account_id=acct.id,
+            channel="workflow",
+            confidence=1.0,
+            payload={"feed_id": feed_id},
+        )
+        db.commit()
+        return {"ok": True, "action": verb, "route": "/crm", "entity_id": str(acct.id)}
+
+    if verb == "edit":
+        if not acct:
+            raise ValueError("No CRM account linked to this feed item")
+        return {"ok": True, "action": verb, "route": "/crm", "entity_id": str(acct.id)}
+
+    return {"ok": False, "action": verb}
 
 
 def collect_workflow_highlights(
@@ -589,6 +712,53 @@ def collect_workflow_highlights(
     return deduped[:limit]
 
 
+def workflow_funnel_totals(db: Session, *, team_ids: list[Any]) -> dict[str, int]:
+    from app.models.calendar import CalendarEvent
+
+    saved = (
+        db.query(func.count(CrmAccount.id))
+        .filter(CrmAccount.team_id.in_(team_ids))
+        .scalar()
+        or 0
+    )
+    sent = (
+        db.query(func.count(CrmAccount.id))
+        .filter(CrmAccount.team_id.in_(team_ids), CrmAccount.outreach_sent_at.isnot(None))
+        .scalar()
+        or 0
+    )
+    replied = (
+        db.query(func.count(CrmAccount.id))
+        .filter(
+            CrmAccount.team_id.in_(team_ids),
+            CrmAccount.outreach_stage.in_(("replied", "qualified", "discovery", "nurture")),
+        )
+        .scalar()
+        or 0
+    )
+    meetings = (
+        db.query(func.count(CrmAccount.id))
+        .filter(
+            CrmAccount.team_id.in_(team_ids),
+            CrmAccount.outreach_stage.in_(("meeting", "meeting_booked", "proposal", "negotiation", "closed_won")),
+        )
+        .scalar()
+        or 0
+    )
+    calendar_meetings = (
+        db.query(func.count(CalendarEvent.id))
+        .filter(CalendarEvent.team_id.in_(team_ids), CalendarEvent.status == "scheduled")
+        .scalar()
+        or 0
+    )
+    return {
+        "saved": int(saved),
+        "sent": int(sent),
+        "replied": int(replied),
+        "meetings": int(max(meetings, calendar_meetings)),
+    }
+
+
 def workflow_summary_since(
     db: Session,
     *,
@@ -649,4 +819,5 @@ def workflow_summary_since(
         "opportunitiesAdvanced": int(advanced),
         "repliesReceived": int(replies),
         "highlights": collect_workflow_highlights(db, team_ids=team_ids, since=since_naive, limit=5),
+        "funnel": workflow_funnel_totals(db, team_ids=team_ids),
     }

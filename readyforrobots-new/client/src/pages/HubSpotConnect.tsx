@@ -145,6 +145,24 @@ export default function HubSpotConnect() {
     }
   };
 
+  const syncFromHubSpot = async () => {
+    setBusy(true);
+    try {
+      const result = (await authFetch("/api/integrations/hubspot/sync-from-hubspot", {
+        method: "POST",
+      })) as { updated?: number; checked?: number; message?: string };
+      if (result.message && !result.updated) {
+        toast.message(result.message);
+      } else {
+        toast.success(`Synced ${result.updated ?? 0} deal stage(s) from HubSpot.`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "HubSpot read sync failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const toggleLead = (companyId: number) => {
     setSelectedLeadIds((ids) =>
       ids.includes(companyId) ? ids.filter((id) => id !== companyId) : [...ids, companyId],
@@ -369,6 +387,23 @@ export default function HubSpotConnect() {
                 >
                   <Zap className="h-3.5 w-3.5" />
                   Save sync preferences
+                </button>
+              </section>
+            )}
+
+            {connected && (
+              <section className={cardClass}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 4 · Read sync from HubSpot</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Pull deal stages from HubSpot back into your native CRM accounts (after you push leads outbound).
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void syncFromHubSpot()}
+                  disabled={busy}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 disabled:opacity-50"
+                >
+                  Sync deal stages from HubSpot
                 </button>
               </section>
             )}
