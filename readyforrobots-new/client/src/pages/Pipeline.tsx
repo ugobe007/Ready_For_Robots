@@ -1902,7 +1902,7 @@ export default function Pipeline() {
               </div>
               <Link
                 href="/newsletter"
-                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900"
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900"
               >
                 Read daily brief <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -2247,7 +2247,7 @@ export default function Pipeline() {
           )}
 
           {/* ── Two-panel layout ── */}
-          <div className="flex min-h-0 gap-2 border-t border-gray-200 p-2 sm:p-3" style={{ minHeight: "calc(100vh - 200px)" }}>
+          <div className="pipeline-deals-layout flex min-h-0 gap-2 p-2 sm:p-3" style={{ minHeight: "calc(100vh - 200px)" }}>
 
             {/* LEFT: Lead pipeline (users) or admin stage columns */}
             <div className="pipeline-list-shell flex min-w-0 flex-1 flex-col gap-1 overflow-y-auto">
