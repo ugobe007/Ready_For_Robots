@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
+import { clearSupabaseOAuthParams, finishSupabaseOAuthCallback, readSupabaseOAuthError } from "@/lib/authCallback";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -23,17 +24,33 @@ export default function Login() {
   useEffect(() => {
     if (!supabase) return;
     const client: NonNullable<typeof supabase> = supabase;
-    if (typeof window !== "undefined" && window.location.hash) {
-      const params = new URLSearchParams(window.location.hash.slice(1));
-      const err = params.get("error");
-      const desc = params.get("error_description");
-      if (err) {
+
+    void (async () => {
+      const oauthErr = readSupabaseOAuthError();
+      if (oauthErr) {
         setStatus("error");
-        setErrMsg(desc || err);
-        window.history.replaceState(null, "", window.location.pathname);
+        setErrMsg(
+          oauthErr.includes("Unable to exchange external code")
+            ? "Google sign-in failed: client secret in Supabase → Authentication → Providers → Google must match your Google Cloud OAuth client. Calendar sync uses a separate Connect button on /calendar."
+            : oauthErr,
+        );
+        window.history.replaceState(null, "", clearSupabaseOAuthParams(window.location.pathname, window.location.search));
         return;
       }
-    }
+
+      const { error } = await finishSupabaseOAuthCallback(
+        client,
+        window.location.pathname,
+        window.location.search,
+      );
+      if (error) {
+        setStatus("error");
+        setErrMsg(error);
+        return;
+      }
+
+      await afterLogin();
+    })();
 
     async function afterLogin() {
       const { data } = await client.auth.getSession();
@@ -56,7 +73,6 @@ export default function Login() {
       setLocation(nextPath());
     }
 
-    void afterLogin();
     const { data: sub } = client.auth.onAuthStateChange((_e, session) => {
       if (session) void afterLogin();
     });

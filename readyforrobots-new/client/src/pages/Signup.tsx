@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
+import { clearSupabaseOAuthParams, finishSupabaseOAuthCallback, readSupabaseOAuthError } from "@/lib/authCallback";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
@@ -43,12 +44,30 @@ export default function Signup() {
     if (!supabase) return;
     const client: NonNullable<typeof supabase> = supabase;
 
-    async function afterSignup() {
+    void (async () => {
+      const oauthErr = readSupabaseOAuthError();
+      if (oauthErr) {
+        setStatus("error");
+        setErrMsg(oauthErr);
+        window.history.replaceState(null, "", clearSupabaseOAuthParams(window.location.pathname, window.location.search));
+        return;
+      }
+
+      const { error } = await finishSupabaseOAuthCallback(
+        client,
+        window.location.pathname,
+        window.location.search,
+      );
+      if (error) {
+        setStatus("error");
+        setErrMsg(error);
+        return;
+      }
+
       const { data } = await client.auth.getSession();
       if (data?.session) setLocation(nextPath());
-    }
+    })();
 
-    void afterSignup();
     const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
       if (session) setLocation(nextPath());
     });

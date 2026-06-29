@@ -17,6 +17,7 @@ from app.services.google_calendar_oauth import (
     complete_oauth_callback,
     connection_status,
     is_configured,
+    redirect_uri,
 )
 from app.services.integration_connections import PROVIDER_GOOGLE_CALENDAR, disconnect_provider, serialize_provider_status, _find_connection
 
@@ -70,7 +71,7 @@ def google_calendar_connect_url(
         )
     except GoogleCalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"auth_url": auth_url, "provider": "google_calendar", "mode": "oauth"}
+    return {"auth_url": auth_url, "provider": "google_calendar", "mode": "oauth", "redirect_uri": redirect_uri()}
 
 
 @router.get("/callback")

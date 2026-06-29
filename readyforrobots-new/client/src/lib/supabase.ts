@@ -12,7 +12,9 @@ export const supabase =
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true,
+          // Only /login and /signup run exchangeCodeForSession — /calendar must not steal Google Calendar codes.
+          detectSessionInUrl: false,
+          flowType: "pkce",
         },
       })
     : null;

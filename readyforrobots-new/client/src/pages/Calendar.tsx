@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -72,6 +72,20 @@ export default function CalendarPage() {
     send_invites: true,
   });
 
+  const integrationFetch = useCallback(
+    async (path: string, init: RequestInit = {}) => {
+      if (!session?.access_token) throw new Error("Not signed in");
+      const response = await fetch(
+        `${getDirectApiBase()}${path}`,
+        liveFetchInit({ ...init, headers: { ...authHeader(session.access_token), ...init.headers } }),
+      );
+      const text = await response.text();
+      if (!response.ok) throw new Error(parseApiError(text, response.statusText));
+      return text ? JSON.parse(text) : null;
+    },
+    [session?.access_token],
+  );
+
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
       if (!session?.access_token) throw new Error("Not signed in");
@@ -90,7 +104,7 @@ export default function CalendarPage() {
       return;
     }
     try {
-      const data = (await authFetch("/api/integrations/google-calendar/status")) as {
+      const data = (await integrationFetch("/api/integrations/google-calendar/status")) as {
         connected?: boolean;
         configured?: boolean;
       };
@@ -99,7 +113,7 @@ export default function CalendarPage() {
     } catch {
       setGoogleConnected(false);
     }
-  }, [authFetch, session?.access_token]);
+  }, [integrationFetch, session?.access_token]);
 
   const loadEvents = useCallback(async () => {
     if (!session?.access_token) return;
@@ -121,14 +135,38 @@ export default function CalendarPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+
+    // Stray OAuth codes on /calendar are for Supabase sign-in, not Calendar connect.
+    if (params.get("code") && params.get("connected") !== "google_calendar") {
+      toast.error(
+        "That Google link was for sign-in, not Calendar sync. Use Connect Google Calendar below (or fix Google provider secret in Supabase Auth).",
+      );
+      params.delete("code");
+      params.delete("state");
+      params.delete("error");
+      params.delete("error_description");
+      const next = params.toString();
+      window.history.replaceState({}, "", next ? `/calendar?${next}` : "/calendar");
+      return;
+    }
+
     if (params.get("connected") === "google_calendar") {
       toast.success("Google Calendar connected — new meetings will sync to your primary calendar.");
       window.history.replaceState({}, "", "/calendar");
       void loadGoogleStatus();
+      return;
     }
-    const err = params.get("error");
+
+    const err =
+      params.get("error_description") ||
+      params.get("error");
     if (err) {
-      toast.error(decodeURIComponent(err.replace(/\+/g, " ")));
+      const message = decodeURIComponent(err.replace(/\+/g, " "));
+      toast.error(
+        message.includes("Unable to exchange external code")
+          ? "Google sign-in failed (Supabase Auth). Check Google client secret in Supabase → Authentication → Providers → Google, then use Connect Google Calendar for sync."
+          : message,
+      );
       window.history.replaceState({}, "", "/calendar");
     }
   }, [loadGoogleStatus]);
@@ -140,11 +178,15 @@ export default function CalendarPage() {
   async function connectGoogle() {
     setBusy(true);
     try {
-      const data = (await authFetch("/api/integrations/google-calendar/connect-url?return_to=/calendar")) as {
+      const data = (await integrationFetch("/api/integrations/google-calendar/connect-url?return_to=/calendar")) as {
         auth_url?: string;
+        redirect_uri?: string;
       };
-      if (data.auth_url) window.location.href = data.auth_url;
-      else toast.error("Google Calendar connect is not configured yet.");
+      if (data.auth_url) {
+        window.location.href = data.auth_url;
+        return;
+      }
+      toast.error("Google Calendar connect is not configured yet.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not start Google connect.");
     } finally {
@@ -155,7 +197,7 @@ export default function CalendarPage() {
   async function disconnectGoogle() {
     setBusy(true);
     try {
-      await authFetch("/api/integrations/google-calendar/disconnect", { method: "DELETE" });
+      await integrationFetch("/api/integrations/google-calendar/disconnect", { method: "DELETE" });
       setGoogleConnected(false);
       toast.success("Google Calendar disconnected.");
     } catch (e) {
@@ -221,7 +263,8 @@ export default function CalendarPage() {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-800">Internal calendar</p>
             <h1 className="mt-2 text-4xl font-black">Calendar</h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-500">
-              Schedule meetings, sync to Google Calendar when connected, and send invites to buyers.
+              Schedule meetings, sync to Google Calendar when connected, and send invites to buyers. Sign in with Google only creates your account — use{" "}
+              <strong>Connect Google Calendar</strong> below to sync meetings.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
