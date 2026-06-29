@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 GOOGLE_OAUTH_STATE_KEY = "google_calendar:oauth:state:"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+# calendar.events covers create/list on primary; calendarList needs calendar.readonly (avoid extra scope).
 GOOGLE_SCOPES = "https://www.googleapis.com/auth/calendar.events"
+GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
 
 class GoogleCalendarError(Exception):
@@ -111,16 +113,25 @@ def _exchange_code(code: str) -> dict[str, Any]:
     return resp.json()
 
 
-def _verify_access_token(access_token: str) -> dict[str, Any]:
+def verify_google_calendar_access_token(access_token: str) -> dict[str, Any]:
+    """Verify token using primary events list (works with calendar.events scope)."""
     resp = requests.get(
-        "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+        f"{GOOGLE_CALENDAR_API}/calendars/primary/events",
         headers={"Authorization": f"Bearer {access_token}"},
         params={"maxResults": 1},
         timeout=20,
     )
+    if resp.status_code == 401:
+        raise GoogleCalendarError("Google Calendar token rejected — reconnect Google.")
     if resp.status_code >= 400:
-        raise GoogleCalendarError(f"Google Calendar verification failed ({resp.status_code})")
+        raise GoogleCalendarError(
+            f"Google Calendar verification failed ({resp.status_code}): {resp.text[:200]}"
+        )
     return {"verified": True, "account_name": "Google Calendar"}
+
+
+def _verify_access_token(access_token: str) -> dict[str, Any]:
+    return verify_google_calendar_access_token(access_token)
 
 
 def complete_oauth_callback(db: Session, *, code: str, state: str) -> dict[str, Any]:

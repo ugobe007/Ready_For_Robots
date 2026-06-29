@@ -107,17 +107,12 @@ def _verify_github(token: str) -> dict[str, Any]:
 
 
 def _verify_google_calendar(token: str) -> dict[str, Any]:
-    response = requests.get(
-        "https://www.googleapis.com/calendar/v3/users/me/calendarList",
-        headers={"Authorization": f"Bearer {token}"},
-        params={"maxResults": 1},
-        timeout=20,
-    )
-    if response.status_code == 401:
-        raise IntegrationError("Google Calendar token rejected — reconnect Google.")
-    if response.status_code >= 400:
-        raise IntegrationError(f"Google Calendar verification failed ({response.status_code}).")
-    return {"verified": True, "account_name": "Google Calendar"}
+    from app.services.google_calendar_oauth import GoogleCalendarError, verify_google_calendar_access_token
+
+    try:
+        return verify_google_calendar_access_token(token)
+    except GoogleCalendarError as exc:
+        raise IntegrationError(str(exc)) from exc
 
 
 def verify_provider_token(provider: str, token: str) -> dict[str, Any]:

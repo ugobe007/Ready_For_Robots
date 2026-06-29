@@ -31,6 +31,22 @@ function readParam(name: string) {
   return typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get(name) || "";
 }
 
+function parseApiError(text: string, fallback: string) {
+  if (!text) return fallback;
+  try {
+    const parsed = JSON.parse(text) as { detail?: unknown };
+    const detail = parsed.detail;
+    if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object" && "message" in detail) {
+      return String((detail as { message?: string }).message || fallback);
+    }
+    if (detail) return String(detail);
+  } catch {
+    // keep raw text
+  }
+  return text || fallback;
+}
+
 export default function CalendarPage() {
   const { session, loading } = useAuth();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -61,11 +77,29 @@ export default function CalendarPage() {
       if (!session?.access_token) throw new Error("Not signed in");
       const response = await fetch(`${getApiBase()}${path}`, liveFetchInit({ ...init, headers: { ...authHeader(session.access_token), ...init.headers } }));
       const text = await response.text();
-      if (!response.ok) throw new Error(text || response.statusText);
+      if (!response.ok) throw new Error(parseApiError(text, response.statusText));
       return text ? JSON.parse(text) : null;
     },
     [session?.access_token],
   );
+
+  const loadGoogleStatus = useCallback(async () => {
+    if (!session?.access_token) {
+      setGoogleConnected(false);
+      setGoogleConfigured(false);
+      return;
+    }
+    try {
+      const data = (await authFetch("/api/integrations/google-calendar/status")) as {
+        connected?: boolean;
+        configured?: boolean;
+      };
+      setGoogleConnected(Boolean(data.connected));
+      setGoogleConfigured(Boolean(data.configured));
+    } catch {
+      setGoogleConnected(false);
+    }
+  }, [authFetch, session?.access_token]);
 
   const loadEvents = useCallback(async () => {
     if (!session?.access_token) return;
@@ -81,20 +115,23 @@ export default function CalendarPage() {
   }, [authFetch, session?.access_token]);
 
   useEffect(() => {
-    if (!session?.access_token) {
-      setGoogleConnected(false);
-      return;
+    void loadGoogleStatus();
+  }, [loadGoogleStatus]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") === "google_calendar") {
+      toast.success("Google Calendar connected — new meetings will sync to your primary calendar.");
+      window.history.replaceState({}, "", "/calendar");
+      void loadGoogleStatus();
     }
-    void authFetch("/api/integrations/google-calendar/status")
-      .then((data) => {
-        const payload = data as { connected?: boolean; configured?: boolean };
-        setGoogleConnected(Boolean(payload.connected));
-        setGoogleConfigured(Boolean(payload.configured));
-      })
-      .catch(() => {
-        setGoogleConnected(false);
-      });
-  }, [session?.access_token, authFetch]);
+    const err = params.get("error");
+    if (err) {
+      toast.error(decodeURIComponent(err.replace(/\+/g, " ")));
+      window.history.replaceState({}, "", "/calendar");
+    }
+  }, [loadGoogleStatus]);
 
   useEffect(() => {
     void loadEvents();
@@ -196,7 +233,7 @@ export default function CalendarPage() {
                   disabled={busy}
                   className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800 disabled:opacity-50"
                 >
-                  Google connected
+                  Google connected — disconnect
                 </button>
               ) : (
                 <button
