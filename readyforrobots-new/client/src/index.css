@@ -659,8 +659,7 @@
   }
 
   .pipeline-metric-card {
-    @apply relative overflow-hidden rounded-md border border-gray-300 px-2.5 py-2 shadow-sm;
-    background-color: var(--pipeline-panel-bg);
+    @apply relative overflow-hidden rounded-md border border-gray-300 bg-white px-2.5 py-2 shadow-sm;
   }
 
   .pipeline-metric-card::before {
@@ -670,7 +669,7 @@
   }
 
   .pipeline-tier-header {
-    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-slate-100 px-2 py-1.5 text-slate-700;
+    @apply sticky top-0 z-10 mb-1 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-slate-700;
   }
 
   .pipeline-tier-title {
