@@ -54,6 +54,7 @@ https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback
      - `http://localhost:3000`
    - **Authorized redirect URIs**:
      - `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback`
+     - `https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback`
 6. Click **Create** → copy **Client ID** and **Client secret**
 
 ### 2. Configure in Supabase
@@ -68,9 +69,27 @@ https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback
 
 In **Authentication** → **URL Configuration** → **Redirect URLs**, ensure these are allowed:
 
+- `https://readyforrobots.com/auth/callback`
+- `https://readyforrobots.com/auth/callback/**`
 - `https://readyforrobots.com/login`
+- `https://readyforrobots.com/**`
 - `https://ready-2-robot.fly.dev/**`
 - `http://localhost:3000/login`
+- `http://localhost:5173/auth/callback`
+
+Site URL: `https://readyforrobots.com`
+
+---
+
+## Google Calendar (separate from sign-in)
+
+Add this redirect URI to the **same** Google OAuth client (or use a dedicated client on Fly only):
+
+```
+https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback
+```
+
+Connect on `/calendar` via **Connect Google Calendar** — not “Sign in with Google”.
 
 ---
 
@@ -87,7 +106,8 @@ In **Authentication** → **URL Configuration** → **Redirect URLs**, ensure th
 | Issue | Fix |
 |-------|-----|
 | **GitHub: "redirect_uri_mismatch"** | In [GitHub OAuth App](https://github.com/settings/developers) → your app → Authorization callback URL must be exactly `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback` (no trailing slash) |
-| **"Redirect URL not allowed"** (Supabase) | Add ALL of these to Supabase **URL Configuration** → **Redirect URLs**: `https://readyforrobots.com/login`, `https://readyforrobots.com/**`, `https://ready-2-robot.fly.dev/login`, `https://ready-2-robot.fly.dev/**`, `http://localhost:3000/login` |
+| **"Unable to exchange external code"** (Google) | Supabase → Providers → Google: Client secret must match Google Cloud exactly (no spaces). Toggle Google off, save, on, re-paste secret, save. Add `https://readyforrobots.com/auth/callback` to Redirect URLs. |
+| **"Redirect URL not allowed"** (Supabase) | Add ALL of these to Supabase **URL Configuration** → **Redirect URLs**: `https://readyforrobots.com/auth/callback`, `https://readyforrobots.com/**`, `https://ready-2-robot.fly.dev/**`, `http://localhost:5173/auth/callback` |
 | "Invalid redirect URI" (Google) | Add `https://lmoyydlhlgdyqbxkmkuz.supabase.co/auth/v1/callback` to Authorized redirect URIs in Google Cloud Console |
 | Provider not working | Enable the provider in Supabase **Providers** and save Client ID and secret |
 | Auth not configured | Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` |

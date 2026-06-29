@@ -15,6 +15,7 @@ import Newsletter from "./pages/Newsletter";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
 import Crm from "./pages/Crm";
 import Inbox from "./pages/Inbox";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/experiment" component={ExperimentIdeas} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
       <Route path="/crm" component={Crm} />
       <Route path="/inbox" component={Inbox} />

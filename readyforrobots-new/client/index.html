@@ -20,6 +20,20 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        try {
+          var path = window.location.pathname;
+          var params = new URLSearchParams(window.location.search);
+          if (path === "/calendar" && params.has("code") && params.get("connected") !== "google_calendar") {
+            params.delete("code");
+            params.delete("state");
+            var q = params.toString();
+            window.history.replaceState({}, "", q ? path + "?" + q : path);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 

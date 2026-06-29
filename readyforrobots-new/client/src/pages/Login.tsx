@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
-import { clearSupabaseOAuthParams, finishSupabaseOAuthCallback, readSupabaseOAuthError } from "@/lib/authCallback";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -25,32 +24,15 @@ export default function Login() {
     if (!supabase) return;
     const client: NonNullable<typeof supabase> = supabase;
 
-    void (async () => {
-      const oauthErr = readSupabaseOAuthError();
-      if (oauthErr) {
-        setStatus("error");
-        setErrMsg(
-          oauthErr.includes("Unable to exchange external code")
-            ? "Google sign-in failed: client secret in Supabase → Authentication → Providers → Google must match your Google Cloud OAuth client. Calendar sync uses a separate Connect button on /calendar."
-            : oauthErr,
-        );
-        window.history.replaceState(null, "", clearSupabaseOAuthParams(window.location.pathname, window.location.search));
-        return;
-      }
-
-      const { error } = await finishSupabaseOAuthCallback(
-        client,
-        window.location.pathname,
-        window.location.search,
-      );
-      if (error) {
-        setStatus("error");
-        setErrMsg(error);
-        return;
-      }
-
-      await afterLogin();
-    })();
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get("auth_error");
+    if (authError) {
+      setStatus("error");
+      setErrMsg(decodeURIComponent(authError.replace(/\+/g, " ")));
+      params.delete("auth_error");
+      const next = params.toString();
+      window.history.replaceState(null, "", next ? `/login?${next}` : "/login");
+    }
 
     async function afterLogin() {
       const { data } = await client.auth.getSession();
@@ -73,11 +55,12 @@ export default function Login() {
       setLocation(nextPath());
     }
 
+    void afterLogin();
     const { data: sub } = client.auth.onAuthStateChange((_e, session) => {
       if (session) void afterLogin();
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [setLocation]);
 
   async function oauth(provider: "google" | "github") {
     if (!supabase) {
@@ -86,8 +69,11 @@ export default function Login() {
       return;
     }
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/login${window.location.search}` : "/login";
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+    setStatus("idle");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: supabaseOAuthRedirect(nextPath()) },
+    });
     if (error) {
       setStatus("error");
       setErrMsg(error.message);
@@ -99,7 +85,7 @@ export default function Login() {
     if (!email.trim() || !supabase) return;
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/login${window.location.search}` : "/login";
+    const redirectTo = supabaseOAuthRedirect(nextPath());
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },
@@ -171,7 +157,7 @@ export default function Login() {
                   className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 />
                 {status === "error" && (
-                  <p className="text-xs text-red-600 border border-red-200 bg-red-50 rounded-lg px-3 py-2">{errMsg}</p>
+                  <p className="text-xs text-red-600 border border-red-200 bg-red-50 rounded-lg px-3 py-2 whitespace-pre-wrap">{errMsg}</p>
                 )}
                 <button
                   type="submit"

@@ -12,12 +12,18 @@ export const supabase =
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          // Only /login and /signup run exchangeCodeForSession — /calendar must not steal Google Calendar codes.
-          detectSessionInUrl: false,
+          detectSessionInUrl: true,
           flowType: "pkce",
         },
       })
     : null;
+
+/** Build redirect URL for Supabase OAuth — always land on /auth/callback first. */
+export function supabaseOAuthRedirect(nextPath = "/pipeline"): string {
+  if (typeof window === "undefined") return "/auth/callback";
+  const next = nextPath.startsWith("/") ? nextPath : "/pipeline";
+  return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+}
 
 export function authHeader(token: string | undefined): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};

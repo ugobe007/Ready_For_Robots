@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
-import { clearSupabaseOAuthParams, finishSupabaseOAuthCallback, readSupabaseOAuthError } from "@/lib/authCallback";
+import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
@@ -53,17 +53,6 @@ export default function Signup() {
         return;
       }
 
-      const { error } = await finishSupabaseOAuthCallback(
-        client,
-        window.location.pathname,
-        window.location.search,
-      );
-      if (error) {
-        setStatus("error");
-        setErrMsg(error);
-        return;
-      }
-
       const { data } = await client.auth.getSession();
       if (data?.session) setLocation(nextPath());
     })();
@@ -72,7 +61,7 @@ export default function Signup() {
       if (session) setLocation(nextPath());
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [setLocation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,8 +97,10 @@ export default function Signup() {
     }
     persistFullName();
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: supabaseOAuthRedirect(nextPath()) },
+    });
     if (error) {
       setStatus("error");
       setErrMsg(error.message);
@@ -127,7 +118,7 @@ export default function Signup() {
     persistFullName();
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/signup${window.location.search}` : "/signup";
+    const redirectTo = supabaseOAuthRedirect(nextPath());
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },
