@@ -35,6 +35,7 @@ import { mapApiLeadToDeal, type ApiLead } from "@/lib/pipelineLeadMap";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
+import { signupHrefForLead } from "@/lib/signupHref";
 import LeadShareBar from "@/components/LeadShareBar";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
@@ -1422,8 +1423,7 @@ export default function Pipeline() {
 
   const handleSaveLead = async (deal: Deal) => {
     if (!session?.access_token) {
-      const next = `/pipeline?lead=${deal.id}`;
-      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
+      window.location.href = signupHrefForLead(deal.id, deal.company);
       return;
     }
     setAdvancingLeadId(deal.id);
@@ -1464,8 +1464,7 @@ export default function Pipeline() {
 
   const handleAdvanceLead = async (deal: Deal) => {
     if (!session?.access_token) {
-      const next = `/pipeline?lead=${deal.id}`;
-      window.location.href = `/signup?next=${encodeURIComponent(next)}`;
+      window.location.href = signupHrefForLead(deal.id, deal.company);
       return;
     }
     setAdvancingLeadId(deal.id);
@@ -2882,7 +2881,7 @@ export default function Pipeline() {
                         </button>
                       ) : (
                         <Link
-                          href={`/signup?next=${encodeURIComponent(`/pipeline?lead=${selected.id}`)}`}
+                          href={signupHrefForLead(selected.id, selected.company)}
                           className="sb-btn sb-btn-primary"
                         >
                           Sign up free — save &amp; copy

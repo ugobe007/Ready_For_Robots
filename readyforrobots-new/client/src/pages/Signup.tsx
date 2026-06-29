@@ -22,6 +22,9 @@ export default function Signup() {
   const nextRaw = params.get("next") || "";
   const pipelineIntent = nextRaw.startsWith("/pipeline") || /[?&]lead=\d+/.test(nextRaw);
   const resultsIntent = nextRaw.startsWith("/results");
+  // Specific buyer the anonymous user was acting on — carried through the signup wall
+  // so we restate exactly what they unlock (value-first conversion continuity).
+  const buyerCo = (params.get("co") || "").trim().slice(0, 80);
 
   const nextPath = () => {
     if (typeof window === "undefined") return "/pipeline";
@@ -110,7 +113,9 @@ export default function Signup() {
               {hubspotIntent
                 ? "Sign up, then SIGNAL links HubSpot automatically."
                 : pipelineIntent
-                  ? "Save the lead. Copy the draft. Run your pipeline."
+                  ? buyerCo
+                    ? `Save ${buyerCo}. Copy the draft. Run your pipeline.`
+                    : "Save the lead. Copy the draft. Run your pipeline."
                   : resultsIntent
                     ? "Unlock your matched buyers in one workspace."
                     : "Automate your robot sales funnel."}
@@ -119,7 +124,9 @@ export default function Signup() {
               {hubspotIntent
                 ? "Use your work email and full name. After signup, SIGNAL provisions the HubSpot API connection and MCP bridge — no manual app setup."
                 : pipelineIntent
-                  ? "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
+                  ? buyerCo
+                    ? `Free workspace: land back on ${buyerCo}, save it in one click, copy the outreach draft SIGNAL wrote for them, and sync to HubSpot when you are ready.`
+                    : "Free workspace: land on your matched lead, save it in one click, copy the outreach draft, and sync to HubSpot when you are ready."
                   : resultsIntent
                     ? "Sign up to unlock every URL scan match, save leads to CRM, and copy signal-matched outreach drafts."
                     : "For robot OEMs and integrators — SIGNAL ranks buyer intent, drafts outreach, and advances deals in native CRM or HubSpot."}
@@ -144,7 +151,9 @@ export default function Signup() {
               <ul className="mt-4 space-y-2 text-xs text-gray-600">
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  Pick up on the same lead after signup — draft waiting in pipeline
+                  {buyerCo
+                    ? `Pick up right where you left off on ${buyerCo} — draft waiting in pipeline`
+                    : "Pick up on the same lead after signup — draft waiting in pipeline"}
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>

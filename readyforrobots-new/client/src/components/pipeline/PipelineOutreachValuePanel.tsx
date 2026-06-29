@@ -4,6 +4,7 @@
 import { ArrowRight, Copy, CheckCheck, Mail, Eye, LockKeyhole } from "lucide-react";
 import { Link } from "wouter";
 import { cleanAndClampText } from "@/lib/text";
+import { signupHrefForLead } from "@/lib/signupHref";
 
 type DealLike = {
   id: number;
@@ -37,9 +38,11 @@ export default function PipelineOutreachValuePanel({
 }: Props) {
   if (!deal.outreachBody && !deal.outreachSubject && !locked) return null;
 
-  const signupHref = `/signup?next=${encodeURIComponent(
-    signupNext ?? `/pipeline?lead=${deal.id}`,
-  )}`;
+  const signupHref = signupNext
+    ? `/signup?next=${encodeURIComponent(signupNext)}${
+        deal.company ? `&co=${encodeURIComponent(deal.company)}` : ""
+      }`
+    : signupHrefForLead(deal.id, deal.company);
 
   if (locked) {
     return (
