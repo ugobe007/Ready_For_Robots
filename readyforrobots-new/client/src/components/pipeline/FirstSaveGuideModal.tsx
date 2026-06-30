@@ -46,32 +46,32 @@ export default function FirstSaveGuideModal({
         if (!next) onDismiss();
       }}
     >
-      <DialogContent className="border-violet-200 bg-gradient-to-b from-violet-50 to-white sm:max-w-md">
+      <DialogContent className="border-emerald-300 bg-gradient-to-b from-emerald-50 to-white sm:max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl border border-violet-200 bg-white">
-            <Sparkles className="h-5 w-5 text-violet-700" />
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-300 bg-white shadow-sm">
+            <Sparkles className="h-5 w-5 text-emerald-700" />
           </div>
-          <DialogTitle className="text-center text-xl font-black text-gray-900">
+          <DialogTitle className="text-center text-xl font-black text-slate-900">
             Save your first lead
           </DialogTitle>
-          <DialogDescription className="text-center text-sm text-gray-600">
+          <DialogDescription className="text-center text-sm text-slate-700">
             You are signed in. One save turns this buyer into a tracked opportunity in your workspace.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border border-violet-100 bg-white px-4 py-3">
-          <p className="text-sm font-bold text-gray-900">{deal.company}</p>
+        <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3">
+          <p className="text-sm font-bold text-slate-900">{deal.company}</p>
           {deal.outreachSubject && (
-            <p className="mt-1 text-xs text-amber-800">Draft: {deal.outreachSubject}</p>
+            <p className="mt-1 text-xs font-medium text-emerald-900">Draft: {deal.outreachSubject}</p>
           )}
         </div>
 
         <ol className="space-y-2.5">
           {STEPS.map((step, index) => (
-            <li key={step} className="flex items-start gap-2.5 text-sm text-gray-700">
+            <li key={step} className="flex items-start gap-2.5 text-sm text-slate-700">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
               <span>
-                <span className="font-semibold text-gray-900">{index + 1}. </span>
+                <span className="font-semibold text-slate-900">{index + 1}. </span>
                 {step}
               </span>
             </li>
@@ -82,7 +82,7 @@ export default function FirstSaveGuideModal({
           <button
             type="button"
             onClick={onDismiss}
-            className="rounded-lg border border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50"
+            className="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
           >
             Browse first
           </button>

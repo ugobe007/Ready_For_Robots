@@ -48,7 +48,7 @@ export default function CrmPathFork({
       <button
         type="button"
         onClick={dismiss}
-        className="absolute right-3 top-3 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        className="absolute right-3 top-3 rounded-md p-1 text-slate-500 hover:bg-emerald-100/80 hover:text-slate-800"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" />
@@ -79,7 +79,7 @@ export default function CrmPathFork({
         </Link>
         <Link
           href="/compare"
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-gray-500 hover:text-emerald-800"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 hover:text-emerald-900"
         >
           Why not a data tool?
         </Link>

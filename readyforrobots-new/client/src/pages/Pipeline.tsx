@@ -1831,7 +1831,7 @@ export default function Pipeline() {
                 </div>
 
                 <div className="relative w-full sm:w-[340px]">
-                  <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
                   <input
                     value={industryQuery}
                     onChange={(e) => {
@@ -2220,7 +2220,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void controlActivation("update_plan")}
                                 disabled={activationControlBusy}
-                                className="rounded-lg border border-emerald-400/35 bg-violet-400/10 px-4 py-2.5 text-sm font-bold text-gray-700 disabled:opacity-50"
+                                className="rounded-lg border border-emerald-400/40 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-950 disabled:opacity-50"
                               >
                                 Save adjustments
                               </button>

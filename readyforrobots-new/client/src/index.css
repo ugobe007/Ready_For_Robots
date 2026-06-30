@@ -609,6 +609,35 @@
     color-scheme: light;
   }
 
+  /* Readable body copy — bump muted Tailwind grays one step darker */
+  .pipeline-workspace :where(.text-gray-400) {
+    @apply text-gray-600;
+  }
+
+  .pipeline-workspace :where(.text-gray-500) {
+    @apply text-gray-700;
+  }
+
+  .pipeline-workspace :where(.text-stone-400) {
+    @apply text-stone-600;
+  }
+
+  .pipeline-workspace :where(.text-stone-500) {
+    @apply text-stone-700;
+  }
+
+  .pipeline-workspace .sb-input {
+    @apply border-slate-300 bg-white placeholder:text-slate-500;
+  }
+
+  .pipeline-workspace .sb-kicker {
+    @apply text-slate-800;
+  }
+
+  .pipeline-first-save-nudge {
+    @apply rounded-xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-white px-4 py-3 shadow-sm sm:px-5;
+  }
+
   .pipeline-page-header {
     @apply relative overflow-hidden border-b border-slate-200 bg-slate-100 px-4 py-4 sm:px-5;
   }
@@ -627,7 +656,7 @@
   }
 
   .pipeline-page-header .pipeline-filter-hint {
-    @apply text-xs text-slate-600;
+    @apply text-xs font-medium text-slate-700;
   }
 
   .pipeline-metric-label {
@@ -777,8 +806,7 @@
   }
 
   .pipeline-value-strip {
-    @apply rounded-xl border border-gray-300 px-4 py-3 shadow-sm;
-    background-color: var(--pipeline-panel-bg);
+    @apply rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3 shadow-sm;
   }
 
   .pipeline-market-snippet {
