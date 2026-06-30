@@ -1,12 +1,14 @@
 /**
  * Content Studio — daily social posts from /api/social/daily-posts + LinkedIn publish.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, getDirectApiBase, liveFetchInit, readSurfaceCache, writeSurfaceCache } from "@/lib/apiBase";
+import { authHeader } from "@/lib/supabase";
 
 const SOCIAL_SESSION_KEY = "social_daily_posts_v1";
 const SOCIAL_SESSION_TTL_MS = 4 * 60 * 60 * 1000;
@@ -254,6 +256,7 @@ function PostCard({
                     type="button"
                     onClick={() => onPublishLinkedIn(linkedinText, shareUrl)}
                     disabled={publishing}
+                    title="Requires Studio access in the panel above"
                     className="text-xs px-3 py-1.5 rounded border border-emerald-200 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 font-mono disabled:opacity-50 bg-white"
                   >
                     {publishing ? "Publishing…" : "Publish to LinkedIn ↗"}
@@ -279,6 +282,7 @@ function PostCard({
 }
 
 export default function Social() {
+  const { session } = useAuth();
   const [posts, setPosts] = useState<SocialPost[] | null>(null);
   const [postedIds, setPostedIds] = useState<Set<number>>(new Set());
   const [currentCompanyIds, setCurrentCompanyIds] = useState<number[]>([]);
@@ -291,6 +295,7 @@ export default function Social() {
   const [generatedAt, setGeneratedAt] = useState("");
   const [batchPosted, setBatchPosted] = useState(false);
   const [linkedinStatus, setLinkedinStatus] = useState<LinkedInStatus | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [adminKey, setAdminKey] = useState("");
   const [linkedinMsg, setLinkedinMsg] = useState("");
   const [linkedinMsgIsError, setLinkedinMsgIsError] = useState(false);
@@ -302,7 +307,35 @@ export default function Social() {
     document.title = "Content Studio | Ready For Robots";
     const stored = window.sessionStorage.getItem("rr_admin_key") || "";
     if (stored) setAdminKey(stored);
+
+    const params = new URLSearchParams(window.location.search);
+    const linkedinParam = params.get("linkedin");
+    const detail = params.get("detail");
+    if (linkedinParam === "connected") {
+      setLinkedinMsg("LinkedIn connected — you can publish posts below.");
+      setLinkedinMsgIsError(false);
+    } else if (linkedinParam === "error") {
+      setLinkedinMsg(detail ? decodeURIComponent(detail) : "LinkedIn connect failed");
+      setLinkedinMsgIsError(true);
+    }
+    if (linkedinParam) {
+      params.delete("linkedin");
+      params.delete("detail");
+      const next = params.toString();
+      window.history.replaceState({}, "", next ? `/social?${next}` : "/social");
+    }
   }, []);
+
+  useEffect(() => {
+    if (!session?.access_token) {
+      setIsAdmin(false);
+      return;
+    }
+    void fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(session.access_token) }))
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setIsAdmin(Boolean(data?.is_admin)))
+      .catch(() => setIsAdmin(false));
+  }, [session?.access_token]);
 
   const fetchLinkedinStatus = useCallback(async () => {
     try {
@@ -332,10 +365,23 @@ export default function Social() {
 
   const resolveAdminKey = () => adminKey.trim();
 
-  const connectLinkedIn = async () => {
+  const studioAuthHeaders = useMemo((): Record<string, string> => {
+    if (session?.access_token && isAdmin) {
+      return authHeader(session.access_token);
+    }
     const key = resolveAdminKey();
-    if (!key) {
-      showLinkedinMessage("Enter your admin key below, then click Connect LinkedIn again.", true);
+    if (key) return { "X-Admin-Key": key };
+    return {};
+  }, [session?.access_token, isAdmin, adminKey]);
+
+  const studioAuthReady = Boolean(studioAuthHeaders.Authorization || studioAuthHeaders["X-Admin-Key"]);
+
+  const connectLinkedIn = async () => {
+    if (!studioAuthReady) {
+      showLinkedinMessage(
+        "Sign in with an admin account, or enter your Fly ADMIN_KEY below, then connect again.",
+        true,
+      );
       return;
     }
     setConnecting(true);
@@ -343,7 +389,7 @@ export default function Social() {
     try {
       const returnTo = `${window.location.origin}/social`;
       const res = await fetch(`${API}/api/linkedin/connect-url?return_to=${encodeURIComponent(returnTo)}`, {
-        headers: { "X-Admin-Key": key },
+        headers: studioAuthHeaders,
       });
       let data: { auth_url?: string; detail?: string | { msg?: string } } = {};
       try {
@@ -360,7 +406,7 @@ export default function Social() {
         throw new Error(detail);
       }
       if (data.auth_url) {
-        persistAdminKey(key);
+        if (resolveAdminKey()) persistAdminKey(resolveAdminKey());
         window.location.assign(data.auth_url);
         return;
       }
@@ -373,9 +419,11 @@ export default function Social() {
   };
 
   const publishToLinkedIn = async (text: string, articleUrl: string) => {
-    const key = resolveAdminKey();
-    if (!key) {
-      showLinkedinMessage("Enter your admin key in the LinkedIn panel before publishing.", true);
+    if (!studioAuthReady) {
+      showLinkedinMessage(
+        "Sign in with an admin account, or enter your Fly ADMIN_KEY in the panel above before publishing.",
+        true,
+      );
       return;
     }
     showLinkedinMessage("");
@@ -383,7 +431,7 @@ export default function Social() {
     try {
       const res = await fetch(`${API}/api/linkedin/publish`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Admin-Key": key },
+        headers: { "Content-Type": "application/json", ...studioAuthHeaders },
         body: JSON.stringify({ commentary: text, article_url: articleUrl || undefined }),
       });
       let data: { detail?: string; published_as?: string } = {};
@@ -397,7 +445,7 @@ export default function Social() {
         throw new Error(typeof data.detail === "string" ? data.detail : "Invalid admin key — update the field below to match Fly ADMIN_KEY");
       }
       if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Publish failed (${res.status})`);
-      persistAdminKey(key);
+      if (resolveAdminKey()) persistAdminKey(resolveAdminKey());
       showLinkedinMessage(`Published to LinkedIn (${data.published_as || "ok"})`);
     } catch (e) {
       showLinkedinMessage(e instanceof Error ? e.message : "Publish failed", true);
@@ -620,55 +668,110 @@ export default function Social() {
           </p>
         )}
 
-        <div className="workspace-panel-dark mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="workspace-panel-dark mb-6 p-4 sm:p-5">
+          <div className="flex flex-col gap-4">
             <div>
-              <p className="text-sm font-semibold text-white">LinkedIn Publishing</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm font-semibold text-white">LinkedIn publishing setup</p>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+                Step 1: authenticate Content Studio. Step 2: connect LinkedIn. Step 3: use{" "}
+                <strong className="text-white">Publish to LinkedIn</strong> on any post below.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">1 · Studio access</p>
+                {studioAuthReady ? (
+                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                    {session?.access_token && isAdmin ? "Admin session" : "Admin key set"}
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-200">
+                    Required
+                  </span>
+                )}
+              </div>
+              {session?.access_token && isAdmin ? (
+                <p className="text-xs text-emerald-300">
+                  Signed in as admin ({session.user.email}) — no admin key needed unless you prefer one.
+                </p>
+              ) : session?.access_token ? (
+                <p className="text-xs text-amber-200">
+                  Signed in, but this account is not in ADMIN_EMAILS — paste your Fly ADMIN_KEY below.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Not signed in — paste your Fly <code className="text-slate-200">ADMIN_KEY</code> below, or{" "}
+                  <Link href="/login?next=/social" className="text-emerald-300 underline underline-offset-2">
+                    sign in as admin
+                  </Link>
+                  .
+                </p>
+              )}
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[10px] uppercase tracking-wide text-slate-500">Admin key (Fly ADMIN_KEY)</span>
+                <input
+                  type="password"
+                  value={adminKey}
+                  onChange={(e) => persistAdminKey(e.target.value)}
+                  placeholder="Paste ADMIN_KEY — not the fly secrets list digest"
+                  autoComplete="off"
+                  className="w-full max-w-md text-xs px-3 py-2 rounded-lg border border-white/15 bg-[#0b1020] text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
+                />
+              </label>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">2 · LinkedIn account</p>
+                {linkedinStatus?.connected ? (
+                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                    Connected
+                  </span>
+                ) : linkedinStatus?.configured ? (
+                  <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-200">
+                    Not connected
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-xs text-slate-300">
                 {linkedinStatus?.connected
                   ? linkedinStatus.member_posting
-                    ? `Connected as ${linkedinStatus.member_name || "your profile"} — personal feed until Marketing API is approved.`
+                    ? `Publishing as ${linkedinStatus.member_name || "your profile"} (personal feed until Marketing API is approved).`
                     : `Connected · company page org ${linkedinStatus.organization_id}`
                   : linkedinStatus?.configured
-                    ? "Not connected — sign in with LinkedIn to enable one-click publish"
-                    : "Set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET on the API server"}
+                    ? "Connect once to enable one-click publish from post cards."
+                    : "LinkedIn app credentials are not configured on the API server yet."}
               </p>
               {linkedinMsg && (
-                <p className={`text-xs mt-2 font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>{linkedinMsg}</p>
+                <p className={`text-xs font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>
+                  {linkedinMsg}
+                </p>
               )}
-            </div>
-            <div className="flex gap-2 flex-wrap items-end">
-              {!linkedinStatus?.connected && (
-                <label className="flex flex-col gap-1 min-w-[220px]">
-                  <span className="text-[10px] uppercase tracking-wide text-slate-500">Admin key</span>
-                  <input
-                    type="password"
-                    value={adminKey}
-                    onChange={(e) => persistAdminKey(e.target.value)}
-                    placeholder="Same as Fly ADMIN_KEY"
-                    autoComplete="off"
-                    className="text-xs px-3 py-1.5 rounded border border-white/15 bg-white/10 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
-                  />
-                </label>
-              )}
-              <a
-                href={linkedinStatus?.organization_url || "https://www.linkedin.com/company/114404417/admin/dashboard/"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 bg-white/5"
-              >
-                Open Page Admin ↗
-              </a>
-              {!linkedinStatus?.connected && (
-                <button
-                  type="button"
-                  onClick={connectLinkedIn}
-                  disabled={connecting}
-                  className="text-xs px-3 py-1.5 rounded border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:bg-blue-500/10 bg-white/5 disabled:opacity-50"
+              <div className="flex flex-wrap gap-2 items-center">
+                <a
+                  href={linkedinStatus?.organization_url || "https://www.linkedin.com/company/114404417/admin/dashboard/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 bg-white/5"
                 >
-                  {connecting ? "Connecting…" : "Connect LinkedIn"}
-                </button>
-              )}
+                  Open Page Admin ↗
+                </a>
+                {linkedinStatus?.configured && (
+                  <button
+                    type="button"
+                    onClick={connectLinkedIn}
+                    disabled={connecting || !studioAuthReady}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-blue-400/40 text-blue-100 hover:border-blue-400 hover:bg-blue-500/10 bg-white/5 disabled:opacity-40"
+                  >
+                    {connecting
+                      ? "Connecting…"
+                      : linkedinStatus?.connected
+                        ? "Reconnect LinkedIn"
+                        : "Connect LinkedIn"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

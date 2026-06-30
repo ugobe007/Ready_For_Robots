@@ -13,7 +13,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.admin_auth import check_admin_key as _check_admin_key
+from app.admin_auth import require_admin_jwt_or_key
 from app.database import get_db
 from app.services.linkedin_oauth import (
     LinkedInError,
@@ -42,9 +42,9 @@ def linkedin_status(db: Session = Depends(get_db)):
 def linkedin_connect(
     return_to: str = Query("", description="Frontend URL to redirect after OAuth"),
     db: Session = Depends(get_db),
-    _: None = Depends(_check_admin_key),
+    _admin: dict = Depends(require_admin_jwt_or_key),
 ):
-    """Start OAuth — admin key required. Redirects to LinkedIn authorization."""
+    """Start OAuth — admin session or X-Admin-Key. Redirects to LinkedIn authorization."""
     if not is_configured():
         raise HTTPException(
             status_code=503,
@@ -61,9 +61,9 @@ def linkedin_connect(
 def linkedin_connect_url(
     return_to: str = Query("", description="Frontend URL to redirect after OAuth"),
     db: Session = Depends(get_db),
-    _: None = Depends(_check_admin_key),
+    _admin: dict = Depends(require_admin_jwt_or_key),
 ):
-    """Return OAuth URL as JSON (for SPA redirect)."""
+    """Return OAuth URL as JSON (for SPA redirect). Admin session or X-Admin-Key."""
     if not is_configured():
         raise HTTPException(status_code=503, detail="LinkedIn app credentials not configured")
     try:
@@ -105,9 +105,9 @@ def linkedin_callback(
 def linkedin_publish(
     body: LinkedInPublishIn,
     db: Session = Depends(get_db),
-    _: None = Depends(_check_admin_key),
+    _admin: dict = Depends(require_admin_jwt_or_key),
 ):
-    """Publish text to the Ready For Robots LinkedIn company page."""
+    """Publish text to LinkedIn — admin session or X-Admin-Key."""
     try:
         return publish_organization_post(db, commentary=body.commentary, article_url=body.article_url)
     except LinkedInError as exc:
