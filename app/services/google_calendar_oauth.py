@@ -54,12 +54,30 @@ def is_configured() -> bool:
     return bool(client_id() and client_secret())
 
 
+def _normalize_frontend_origin(origin: str) -> str:
+    raw = (origin or "").strip().rstrip("/")
+    if not raw:
+        return ""
+    allowed = {
+        "https://readyforrobots.com",
+        "https://www.readyforrobots.com",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    }
+    if raw in allowed or raw.endswith(".readyforrobots.com"):
+        return raw
+    return ""
+
+
 def build_authorization_url(
     db: Session,
     *,
     team_id: UUID,
     user_id: UUID,
     return_to: str = "",
+    frontend_origin: str = "",
 ) -> tuple[str, str]:
     if not is_configured():
         raise GoogleCalendarError("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set on the API server")
@@ -72,6 +90,7 @@ def build_authorization_url(
             "team_id": str(team_id),
             "user_id": str(user_id),
             "return_to": return_to[:500],
+            "frontend_origin": _normalize_frontend_origin(frontend_origin)[:500],
             "created_at": datetime.now(timezone.utc).isoformat(),
         },
         ttl_minutes=15,
@@ -170,6 +189,7 @@ def complete_oauth_callback(db: Session, *, code: str, state: str) -> dict[str, 
     return {
         "connected": True,
         "return_to": meta.get("return_to") or "/calendar",
+        "frontend_origin": meta.get("frontend_origin") or "",
         "account_name": verified.get("account_name"),
     }
 

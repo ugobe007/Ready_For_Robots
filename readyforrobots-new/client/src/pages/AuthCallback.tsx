@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
+import { markFreshSignup } from "@/lib/firstSaveGuide";
 
 function safeNext(raw: string | null): string {
   if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
@@ -25,7 +26,7 @@ export default function AuthCallback() {
     const oauthErr = readSupabaseOAuthError();
     if (oauthErr) {
       const detail = oauthErr.includes("Unable to exchange external code")
-        ? `${oauthErr} — Re-save the Google Client secret in Supabase → Authentication → Providers → Google (no spaces). Or use magic link below.`
+        ? `${oauthErr}\n\nGoogle Cloud has the right Client ID, but Supabase cannot exchange the code — the Client secret saved in Supabase → Authentication → Providers → Google does not match Google Cloud.\n\nFix: Google Cloud → Credentials → your Web client → Reset secret → copy the new GOCSPX-… secret → paste into Supabase Google provider → Save. Also add http://localhost:3000/** to Supabase URL Configuration if testing locally.`
         : oauthErr;
       setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(detail)}`);
       return;
@@ -35,6 +36,7 @@ export default function AuthCallback() {
     const finish = () => {
       if (done) return;
       done = true;
+      markFreshSignup();
       window.history.replaceState(null, "", clearSupabaseOAuthParams("/auth/callback", `?next=${encodeURIComponent(next)}`));
       setLocation(next);
     };

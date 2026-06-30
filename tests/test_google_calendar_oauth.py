@@ -5,6 +5,7 @@ from app.services.google_calendar_oauth import (
     GoogleCalendarError,
     redirect_uri,
     verify_google_calendar_access_token,
+    _normalize_frontend_origin,
 )
 
 
@@ -12,6 +13,12 @@ def test_redirect_uri_defaults_to_fly_callback(monkeypatch):
     monkeypatch.delenv("GOOGLE_CALENDAR_REDIRECT_URI", raising=False)
     monkeypatch.delenv("PUBLIC_API_URL", raising=False)
     assert redirect_uri() == "https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback"
+
+
+def test_normalize_frontend_origin_allows_local_dev():
+    assert _normalize_frontend_origin("http://localhost:3000/") == "http://localhost:3000"
+    assert _normalize_frontend_origin("https://readyforrobots.com") == "https://readyforrobots.com"
+    assert _normalize_frontend_origin("https://evil.example.com") == ""
 
 
 @patch("app.services.google_calendar_oauth.requests.get")

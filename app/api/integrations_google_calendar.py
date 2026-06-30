@@ -50,6 +50,7 @@ def google_calendar_status(
 @router.get("/connect-url")
 def google_calendar_connect_url(
     return_to: str = Query("/calendar", description="Frontend path after OAuth"),
+    origin: str = Query("", description="Frontend origin for post-OAuth redirect (local dev)"),
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
@@ -68,6 +69,7 @@ def google_calendar_connect_url(
             team_id=team.id,
             user_id=_uid_uuid(user),
             return_to=return_to,
+            frontend_origin=origin,
         )
     except GoogleCalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -93,7 +95,11 @@ def google_calendar_callback(
     return_to = str(result.get("return_to") or "/calendar")
     if not return_to.startswith("/"):
         return_to = "/calendar"
-    return RedirectResponse(url=f"{base}{return_to}?connected=google_calendar", status_code=302)
+    redirect_base = str(result.get("frontend_origin") or "").strip().rstrip("/") or base
+    return RedirectResponse(
+        url=f"{redirect_base}{return_to}?connected=google_calendar",
+        status_code=302,
+    )
 
 
 @router.delete("/disconnect")

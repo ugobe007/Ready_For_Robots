@@ -178,7 +178,9 @@ export default function CalendarPage() {
   async function connectGoogle() {
     setBusy(true);
     try {
-      const data = (await integrationFetch("/api/integrations/google-calendar/connect-url?return_to=/calendar")) as {
+      const data = (await integrationFetch(
+        `/api/integrations/google-calendar/connect-url?return_to=${encodeURIComponent("/calendar")}&origin=${encodeURIComponent(window.location.origin)}`,
+      )) as {
         auth_url?: string;
         redirect_uri?: string;
       };

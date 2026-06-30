@@ -36,9 +36,15 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
+import {
+  isFreshSignup,
+  markFirstSaveGuideSeen,
+  shouldShowFirstSaveGuide,
+} from "@/lib/firstSaveGuide";
 import LeadShareBar from "@/components/LeadShareBar";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
+import FirstSaveGuideModal from "@/components/pipeline/FirstSaveGuideModal";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
@@ -797,6 +803,7 @@ export default function Pipeline() {
   const [crmStageByCompanyId, setCrmStageByCompanyId] = useState<Record<number, string>>({});
   const [crmAccountIdByCompanyId, setCrmAccountIdByCompanyId] = useState<Record<number, string>>({});
   const [savedLeadCount, setSavedLeadCount] = useState(0);
+  const [firstSaveGuideOpen, setFirstSaveGuideOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(true);
   const [researchOpen, setResearchOpen] = useState(false);
   const [entitlements, setEntitlements] = useState<PipelineEntitlements | null>(null);
@@ -1359,6 +1366,17 @@ export default function Pipeline() {
     setSelectedId(filtered[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- advance panel only on rotation tick
   }, [rotateOffset]);
+
+  useEffect(() => {
+    if (!session?.access_token || savedLeadCount !== 0 || loadingLeads) return;
+    if (!shouldShowFirstSaveGuide()) return;
+    const leadId = selectedId ?? filtered[0]?.id;
+    if (leadId == null || !filtered.some((d) => d.id === leadId)) return;
+    const delay = isFreshSignup() ? 400 : 1200;
+    const timer = window.setTimeout(() => setFirstSaveGuideOpen(true), delay);
+    return () => window.clearTimeout(timer);
+  }, [session?.access_token, savedLeadCount, loadingLeads, filtered, selectedId]);
+
   const pendingDeepLink =
     selectedId != null &&
     deepLinkLeadId === selectedId &&
@@ -1447,10 +1465,10 @@ export default function Pipeline() {
     }
   };
 
-  const handleSaveLead = async (deal: Deal) => {
+  const handleSaveLead = async (deal: Deal): Promise<boolean> => {
     if (!session?.access_token) {
       window.location.href = signupHrefForLead(deal.id, deal.company);
-      return;
+      return false;
     }
     setAdvancingLeadId(deal.id);
     const base = getApiBase();
@@ -1474,15 +1492,17 @@ export default function Pipeline() {
         if (limitMessage) {
           setSaveLimitMessage(limitMessage);
           setSaveLimitOpen(true);
-          return;
+          return false;
         }
         throw new Error(errText);
       }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
       setSavedLeadCount((count) => count + 1);
       toast.success("Lead saved — copy your draft in CRM or connect HubSpot.");
+      return true;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
+      return false;
     } finally {
       setAdvancingLeadId(null);
     }
@@ -3105,6 +3125,24 @@ export default function Pipeline() {
           }
         />
       )}
+      <FirstSaveGuideModal
+        open={firstSaveGuideOpen}
+        onOpenChange={setFirstSaveGuideOpen}
+        deal={selected}
+        saving={Boolean(selected && advancingLeadId === selected.id)}
+        onDismiss={() => {
+          markFirstSaveGuideSeen();
+          setFirstSaveGuideOpen(false);
+        }}
+        onSave={() => {
+          if (!selected) return;
+          void handleSaveLead(selected).then((saved) => {
+            if (!saved) return;
+            markFirstSaveGuideSeen();
+            setFirstSaveGuideOpen(false);
+          });
+        }}
+      />
       <AlertDialog open={saveLimitOpen} onOpenChange={setSaveLimitOpen}>
         <AlertDialogContent className="border-emerald-500/30 bg-[#12082a] text-cream">
           <AlertDialogHeader>

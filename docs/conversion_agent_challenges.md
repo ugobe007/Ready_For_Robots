@@ -48,7 +48,7 @@ Measure weekly: anonymous pipeline views, signup starts, signup completes, first
 | 16 | **CRM path fork** — native CRM vs HubSpot after first save | ProductSurface | ✅ Done 2026-06-26 — `CrmPathFork` on pipeline + `/crm` |
 | 17 | **Live social proof on signup** — hot lead + company counts from API | ProductSurface | ✅ Done 2026-06-30 — `/signup` live proof strip |
 | 18 | **Google OAuth prominence** — primary CTA on peak-intent signup | ProductSurface | ✅ Done 2026-06-30 — emerald primary Google button |
-| 19 | **Post-signup guided first save** — modal or spotlight when savedCount=0 | ProductSurface | Open — extend `FirstSaveNudge` |
+| 19 | **Post-signup guided first save** — modal or spotlight when savedCount=0 | ProductSurface | ✅ Done — `FirstSaveGuideModal` after OAuth signup on `/pipeline` |
 | 20 | **Signup funnel instrumentation** — events for start/complete/first-save | ProductSurface | Open |
 
 ---
