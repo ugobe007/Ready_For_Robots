@@ -340,7 +340,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
@@ -356,6 +356,14 @@ export default function Admin() {
   const [dailyBriefLoading, setDailyBriefLoading] = useState(!initialApplied.dailyBrief);
   const [draftBodies, setDraftBodies] = useState<Record<string, string>>({});
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
+  const [draftContactEmails, setDraftContactEmails] = useState<Record<string, string>>({});
+  const [calAutonomy, setCalAutonomy] = useState<{
+    enabled?: boolean;
+    review_email?: string | null;
+    send_limit?: number;
+    every_hours?: number;
+    template_version?: string;
+  } | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -490,10 +498,17 @@ export default function Admin() {
     try {
       const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`);
       if (res.ok) {
-        const data = await res.json() as { draft_full?: string };
+        const data = await res.json() as { draft_full?: string; contact_email?: string | null };
         if (data.draft_full) {
           setDraftBodies((prev) => (
             prev[crmAccountId] ? prev : { ...prev, [crmAccountId]: data.draft_full! }
+          ));
+        }
+        if (data.contact_email != null) {
+          setDraftContactEmails((prev) => (
+            prev[crmAccountId] !== undefined
+              ? prev
+              : { ...prev, [crmAccountId]: data.contact_email || "" }
           ));
         }
       }
@@ -502,6 +517,64 @@ export default function Admin() {
       setDraftBodyLoading(null);
     }
   }, [adminFetch]);
+
+  const saveCalDraft = useCallback(async (crmAccountId: string) => {
+    const draft = draftBodies[crmAccountId];
+    if (!crmAccountId || !draft?.trim()) {
+      setError("Draft is empty — add text before saving.");
+      return;
+    }
+    setActionBusy("cal-save");
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          outreach_draft: draft,
+          contact_email: draftContactEmails[crmAccountId] ?? undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setMessage("Cal draft saved.");
+      void loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save draft.");
+    } finally {
+      setActionBusy("");
+    }
+  }, [adminFetch, draftBodies, draftContactEmails, loadCalStatus]);
+
+  const loadCalAutonomyStatus = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/cal/autonomy-status");
+      if (res.ok) setCalAutonomy(await res.json());
+    } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
+  const runCalAutonomy = async (dryRun: boolean) => {
+    setActionBusy(dryRun ? "cal-draft" : "cal-send");
+    setError("");
+    try {
+      const res = await adminFetch("/api/admin/cal/autonomy-run", {
+        method: "POST",
+        body: JSON.stringify({ dry_run: dryRun }),
+      });
+      const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+      if (!res.ok) throw new Error(String(data.detail || "Cal autonomy run failed"));
+      setMessage(
+        dryRun
+          ? `Dry run: would draft ${data.drafted ?? 0}, refresh ${data.refreshed ?? 0}, send ${data.sent ?? 0}.`
+          : `Cal autonomy: drafted ${data.drafted ?? 0}, refreshed ${data.refreshed ?? 0}, sent ${data.sent ?? 0}.`,
+      );
+      void loadCalStatus();
+      void loadCalAutonomyStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Cal autonomy run failed.");
+    } finally {
+      setActionBusy("");
+    }
+  };
 
   const loadReplySettings = useCallback(async () => {
     if (!session?.access_token) return;
@@ -571,6 +644,12 @@ export default function Admin() {
       void loadReplySettings();
     }
   }, [authLoading, loadReplySettings, session?.access_token]);
+
+  useEffect(() => {
+    if (!authLoading && session?.access_token && me?.is_admin) {
+      void loadCalAutonomyStatus();
+    }
+  }, [authLoading, loadCalAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -875,7 +954,18 @@ export default function Admin() {
         <main className="mx-auto max-w-xl px-6 pt-28 text-center">
           <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-300" />
           <h1 className="text-2xl font-bold text-gray-900">Admin access required</h1>
-          <p className="mt-3 text-sm text-gray-500">{me.email || "This account"} is signed in but is not listed in `ADMIN_EMAILS`.</p>
+          <p className="mt-3 text-sm text-gray-500">
+            {me.email || "This account"} is signed in but is not listed in `ADMIN_EMAILS`.
+            Cal outreach and the agent command center live on `/admin` for admin accounts only.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/sales-workflow" className="inline-flex rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold text-gray-700">
+              Open sales workflow
+            </Link>
+            <Link href="/pipeline" className="inline-flex rounded-xl border px-5 py-3 text-sm font-bold" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+              Back to pipeline
+            </Link>
+          </div>
         </main>
       </div>
     );
@@ -896,7 +986,12 @@ export default function Admin() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-lg font-extrabold text-gray-900">Command center</h1>
-            <p className="mt-0.5 text-[11px] text-gray-600">Run SIGNAL from the bar below · Cal queue scrolls under daily brief</p>
+            <p className="mt-0.5 text-[11px] text-gray-600">
+              Run SIGNAL from the bar below · expand rows in{" "}
+              <a href="#cal-outreach" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">Cal queue</a>
+              {" "}to edit drafts · agent actions in{" "}
+              <a href="#workflow" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">Agent queue</a>
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-xl border border-gray-200 p-1">
@@ -952,6 +1047,51 @@ export default function Admin() {
           </div>
         </details>
 
+        <details className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/40 px-4 py-3 group" open>
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-emerald-900 marker:content-none">
+            Cal autonomy
+            <span className="ml-2 font-normal text-emerald-800/70">sends to prospects · format reviews to ADMIN_EMAIL on Fly</span>
+          </summary>
+          <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
+            <p>
+              When enabled on the worker, Cal drafts HOT+WARM leads, refreshes stale copy every{" "}
+              {calAutonomy?.every_hours ?? 6}h cycle, and sends up to{" "}
+              <strong>{calAutonomy?.send_limit ?? 8}</strong> verified emails per run.
+              Set <code className="text-[10px]">ADMIN_EMAIL</code> on Fly for format review samples when Cal updates templates.
+            </p>
+            <p>
+              Status:{" "}
+              <span className="font-bold" style={{ color: calAutonomy?.enabled ? "#047857" : "#b45309" }}>
+                {calAutonomy?.enabled ? "enabled" : "disabled"}
+              </span>
+              {calAutonomy?.review_email ? (
+                <> · review inbox: <span className="font-mono">{calAutonomy.review_email}</span></>
+              ) : (
+                <> · <span className="text-amber-800">ADMIN_EMAIL not configured on server</span></>
+              )}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!!actionBusy}
+                onClick={() => void runCalAutonomy(true)}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+              >
+                Dry run
+              </button>
+              <button
+                type="button"
+                disabled={!!actionBusy}
+                onClick={() => void runCalAutonomy(false)}
+                className="rounded-xl border px-3 py-2 text-[10px] font-bold disabled:opacity-50"
+                style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
+              >
+                Run Cal now
+              </button>
+            </div>
+          </div>
+        </details>
+
         <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <ScoutActionBar
             accessToken={session?.access_token}
@@ -984,7 +1124,7 @@ export default function Admin() {
                 <h2 className="text-base font-extrabold text-gray-900 truncate">
                   Cal outreach queue
                 </h2>
-                <p className="text-[11px] text-gray-500">Draft &amp; send from SIGNAL bar above · expand a row for preview</p>
+                <p className="text-[11px] text-gray-500">Expand a row to edit Cal&apos;s draft · bulk draft/send from SIGNAL bar above</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1220,15 +1360,55 @@ export default function Admin() {
                           <div className="border-t border-gray-200 px-4 pb-4 pt-3">
                             {prospect.has_draft ? (
                               <>
-                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Cal draft</p>
-                                <pre className="whitespace-pre-wrap rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-600">
-                                  {prospect.crm_account_id && draftBodies[prospect.crm_account_id]
-                                    ? draftBodies[prospect.crm_account_id]
-                                    : draftBodyLoading === prospect.crm_account_id
-                                      ? "Loading draft…"
-                                      : (prospect.draft_preview || prospect.draft_full || "—")}
-                                </pre>
+                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Cal draft — editable</p>
+                                {prospect.crm_account_id && (
+                                  <label className="mb-3 block">
+                                    <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Contact email</span>
+                                    <input
+                                      value={
+                                        draftContactEmails[prospect.crm_account_id]
+                                        ?? prospect.contact_email
+                                        ?? ""
+                                      }
+                                      onChange={(e) => {
+                                        const id = prospect.crm_account_id!;
+                                        setDraftContactEmails((prev) => ({ ...prev, [id]: e.target.value }));
+                                      }}
+                                      placeholder="name@company.com"
+                                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-[11px] text-gray-800 outline-none focus:border-emerald-400/60"
+                                    />
+                                  </label>
+                                )}
+                                <textarea
+                                  value={
+                                    prospect.crm_account_id && draftBodies[prospect.crm_account_id]
+                                      ? draftBodies[prospect.crm_account_id]
+                                      : draftBodyLoading === prospect.crm_account_id
+                                        ? "Loading draft…"
+                                        : (prospect.draft_preview || prospect.draft_full || "")
+                                  }
+                                  onChange={(e) => {
+                                    if (!prospect.crm_account_id) return;
+                                    setDraftBodies((prev) => ({
+                                      ...prev,
+                                      [prospect.crm_account_id!]: e.target.value,
+                                    }));
+                                  }}
+                                  rows={12}
+                                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-700 outline-none focus:border-emerald-400/60"
+                                />
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
+                                  {prospect.crm_account_id && (
+                                    <button
+                                      type="button"
+                                      disabled={!!actionBusy || draftBodyLoading === prospect.crm_account_id}
+                                      onClick={() => void saveCalDraft(prospect.crm_account_id!)}
+                                      className="rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
+                                      style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
+                                    >
+                                      {actionBusy === "cal-save" ? "Saving…" : "Save draft"}
+                                    </button>
+                                  )}
                                   {prospect.contact_email && (
                                     <div className="flex flex-wrap gap-2 text-[10px] text-gray-600">
                                       <span>TO: <span className="font-mono text-gray-500">{prospect.contact_email}</span></span>
@@ -1242,9 +1422,15 @@ export default function Admin() {
                                       </span>
                                     ) : sendConfirm === prospect.crm_account_id ? (
                                       <>
-                                        <span className="text-[10px] text-amber-800">Send to {prospect.contact_email}?</span>
+                                        <span className="text-[10px] text-amber-800">
+                                          Send to {draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email}?
+                                        </span>
                                         <button
-                                          onClick={() => prospect.crm_account_id && prospect.contact_email && void runCalSendOne(prospect.crm_account_id, prospect.contact_email)}
+                                          onClick={() => {
+                                            if (!prospect.crm_account_id) return;
+                                            const to = (draftContactEmails[prospect.crm_account_id] ?? prospect.contact_email)?.trim();
+                                            if (to) void runCalSendOne(prospect.crm_account_id, to);
+                                          }}
                                           disabled={!!actionBusy}
                                           className="rounded-xl border border-amber-400 bg-amber-100 px-3 py-1.5 text-[10px] font-bold text-amber-950 disabled:opacity-40"
                                         >
@@ -1255,7 +1441,10 @@ export default function Admin() {
                                     ) : (
                                       <button
                                         onClick={() => setSendConfirm(prospect.crm_account_id ?? false)}
-                                        disabled={!!actionBusy || !prospect.contact_email}
+                                        disabled={
+                                          !!actionBusy
+                                          || !(draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email)?.trim()
+                                        }
                                         className="inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
                                         style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.40)" }}
                                       >

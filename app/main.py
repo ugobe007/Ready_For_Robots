@@ -206,6 +206,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_scraper()
     _start_scheduled_secondary_pipeline()
     _start_scheduled_data_quality()
+    _start_scheduled_cal_autonomy()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -666,6 +667,62 @@ def _start_scheduled_data_quality():
     logger.info(
         "In-app weekly data quality thread started (every %s hours)",
         os.getenv("DATA_QUALITY_EVERY_HOURS", "168"),
+    )
+
+
+def _scheduled_cal_autonomy_loop():
+    from app.database import SessionLocal
+    from app.services.cal_autonomy import cal_autonomy_enabled, run_cal_autonomy_cycle
+
+    delay_min = float(os.getenv("CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
+    time.sleep(max(60, delay_min * 60))
+    while True:
+        if not cal_autonomy_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = run_cal_autonomy_cycle(db)
+            logger.info(
+                "Cal autonomy cycle: status=%s drafted=%s sent=%s format_notified=%s",
+                result.get("status"),
+                result.get("drafted"),
+                result.get("sent"),
+                result.get("format_review_notified"),
+            )
+        except Exception as exc:
+            logger.exception("Cal autonomy cycle failed: %s", exc)
+        interval_hours = float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6")
+        time.sleep(max(1800, int(interval_hours * 3600)))
+
+
+def _start_scheduled_cal_autonomy():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app Cal autonomy skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app Cal autonomy disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_cal_autonomy_loop,
+        daemon=True,
+        name="cal-autonomy",
+    )
+    t.start()
+    print("[cal-autonomy] scheduler thread started", flush=True)
+    logger.info(
+        "In-app Cal autonomy thread started (every %s hours)",
+        os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6"),
     )
 
 

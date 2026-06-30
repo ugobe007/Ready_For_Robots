@@ -1,0 +1,421 @@
+"""Cal autonomous outreach — draft, refresh, send, and format review notifications."""
+from __future__ import annotations
+
+import hashlib
+import logging
+import os
+import uuid
+from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
+from typing import Any, Optional
+
+from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
+
+_REDIS_FP_KEY = "cal:outreach:template_fingerprint"
+
+
+def get_cal_review_email() -> Optional[str]:
+    """Operator inbox for Cal format reviews (ADMIN_EMAIL on Fly)."""
+    for key in ("ADMIN_EMAIL", "CAL_REVIEW_EMAIL", "HARNESS_NOTIFY_EMAIL"):
+        raw = (os.getenv(key) or "").strip()
+        if raw and "@" in raw:
+            return raw.split(",")[0].strip()
+    admins = (os.getenv("ADMIN_EMAILS") or "").strip()
+    if admins:
+        first = admins.split(",")[0].strip()
+        return first if "@" in first else None
+    return None
+
+
+def cal_autonomy_enabled() -> bool:
+    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
+        return False
+    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    return os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").strip().lower() in ("1", "true", "yes")
+
+
+def _redis_client():
+    url = (os.getenv("REDIS_URL") or os.getenv("CELERY_BROKER_URL") or "").strip()
+    if not url:
+        return None
+    try:
+        import redis
+
+        return redis.from_url(url, decode_responses=True)
+    except Exception:
+        return None
+
+
+def _stored_template_fingerprint() -> Optional[str]:
+    client = _redis_client()
+    if not client:
+        return None
+    try:
+        return client.get(_REDIS_FP_KEY)
+    except Exception:
+        return None
+
+
+def _persist_template_fingerprint(fp: str) -> None:
+    client = _redis_client()
+    if not client:
+        return
+    try:
+        client.set(_REDIS_FP_KEY, fp, ex=60 * 60 * 24 * 120)
+    except Exception:
+        pass
+
+
+def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
+    """Cal-voice buyer outreach (used for admin Cal queue + autonomy)."""
+    from app.services.agent_messaging import cal_opening, cal_signature
+    from app.services.cal_insights import pick_cal_insight
+
+    name = (getattr(company, "name", None) or "your team").strip()
+    industry = (getattr(company, "industry", None) or "your industry").strip()
+    week = datetime.now(timezone.utc).isocalendar().week
+    allow_humor = fresh or (week % 2 == 0)
+    insight = pick_cal_insight(company_name=name, allow_humor=allow_humor)
+
+    lines = [
+        "Hey,",
+        "",
+        cal_opening(audience="buyer"),
+        "",
+        insight,
+        "",
+        f"We've had {name} flagged in {industry} from live buying signals — "
+        "labor pressure, expansion moves, or CapEx shifts that usually precede an automation conversation.",
+        "",
+        "Worth a quick reply if you're the right person to explore timing?",
+        "",
+        cal_signature(),
+    ]
+    return "\n".join(lines)
+
+
+def format_cal_draft_storage(subject: str, body: str) -> str:
+    sub = (subject or "").strip()
+    text = (body or "").strip()
+    if sub.lower().startswith("subject:"):
+        return text if text else sub
+    return f"Subject: {sub}\n\n{text}" if sub else text
+
+
+def outreach_template_fingerprint() -> str:
+    version = (os.getenv("CAL_TEMPLATE_VERSION") or "1").strip()
+    sample_company = SimpleNamespace(name="Sample Logistics Co", industry="Logistics", website=None)
+    sample_body = cal_buyer_outreach_body(sample_company, fresh=False)
+    payload = f"{version}|{sample_body[:800]}"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
+
+
+def notify_admin_of_format_change(
+    *,
+    sample_company: str,
+    sample_subject: str,
+    sample_draft: str,
+    previous_fingerprint: Optional[str],
+    new_fingerprint: str,
+) -> bool:
+    """Email ADMIN_EMAIL when Cal's outreach template/format changes."""
+    to_email = get_cal_review_email()
+    if not to_email:
+        logger.warning("Cal format changed but ADMIN_EMAIL / ADMIN_EMAILS is not configured")
+        return False
+
+    from app.services.resend_email import ResendEmailError, send_email_via_resend
+
+    subject = "Cal updated outreach format — review sample"
+    body = f"""Cal refreshed the outreach template Cal uses for prospective buyers.
+
+Previous fingerprint: {previous_fingerprint or "(none)"}
+New fingerprint: {new_fingerprint}
+Template version: {os.getenv("CAL_TEMPLATE_VERSION") or "1"}
+
+Sample company: {sample_company}
+Sample subject: {sample_subject}
+
+--- Sample draft Cal will send (autonomous sends continue) ---
+
+{sample_draft}
+
+---
+Review in the command center: /admin#cal-outreach
+Reply to this email if you want Cal paused or the tone adjusted.
+"""
+    try:
+        send_email_via_resend(
+            to_email=to_email,
+            subject=subject,
+            body_text=body,
+            from_display_name="Ready For Robots · Cal ops",
+            idempotency_key=f"cal-format-review-{new_fingerprint}",
+        )
+        return True
+    except ResendEmailError as exc:
+        logger.warning("Cal format review email failed: %s", exc)
+        return False
+
+
+def resolve_cal_admin_context(db: Session) -> Optional[tuple[uuid.UUID, Any]]:
+    from app.models.crm import Team, TeamMember
+
+    team = db.query(Team).filter(Team.slug == "admin-cal-outreach").first()
+    if team:
+        member = (
+            db.query(TeamMember)
+            .filter(TeamMember.team_id == team.id)
+            .order_by(TeamMember.created_at.asc())
+            .first()
+        )
+        if member:
+            return member.user_id, team
+
+    uid_raw = (os.getenv("CAL_ADMIN_USER_ID") or "").strip()
+    if not uid_raw:
+        return None
+    try:
+        uid = uuid.UUID(uid_raw)
+    except ValueError:
+        logger.warning("Invalid CAL_ADMIN_USER_ID")
+        return None
+    from app.api.admin_extended import _admin_team
+
+    email = get_cal_review_email() or "admin@readyforrobots.com"
+    team = _admin_team(db, uid, email)
+    return uid, team
+
+
+def _draft_and_store(
+    db: Session,
+    *,
+    company: Any,
+    acct: Any,
+    team: Any,
+    existing: dict[int, Any],
+    regenerate: bool,
+    stale_before: Optional[datetime],
+) -> tuple[bool, bool]:
+    """Return (drafted, refreshed)."""
+    from app.api.admin_extended import _cal_draft_for_company, _cal_outreach_domain
+    from app.services.outreach_email_inference import infer_outreach_emails
+
+    company_id = company.id
+    acct = existing.get(company_id) if acct is None else acct
+    has_draft = bool(acct and acct.outreach_draft)
+    is_stale = False
+    if acct and stale_before:
+        ts = acct.updated_at or acct.created_at
+        if ts:
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            is_stale = ts <= stale_before
+
+    if has_draft and not regenerate and not is_stale:
+        return False, False
+
+    subject, draft_body = _cal_draft_for_company(company, fresh=regenerate or is_stale)
+    domain = _cal_outreach_domain(company, acct)
+
+    if acct is None:
+        from app.models.crm import CrmAccount
+
+        acct = CrmAccount(
+            team_id=team.id,
+            company_id=company.id,
+            name=company.name or "Unknown",
+            website=company.website,
+            industry=company.industry,
+            account_type="vendor"
+            if (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate"
+            else "buyer",
+        )
+        db.add(acct)
+        db.flush()
+        existing[company_id] = acct
+    elif (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate":
+        acct.account_type = "vendor"
+
+    if not acct.contact_email and domain:
+        guessed = infer_outreach_emails(domain, company.industry)
+        if guessed:
+            acct.contact_email = guessed.primary
+
+    acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
+    acct.outreach_stage = "draft_ready"
+    return True, bool(has_draft and (regenerate or is_stale))
+
+
+def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, Any]:
+    """Draft pending HOT+WARM leads, refresh stale copy, send up to limit, notify on format change."""
+    if not cal_autonomy_enabled():
+        return {"status": "disabled", "reason": "CAL_AUTONOMY_ENABLED / ENABLE_SCHEDULED_CAL_AUTONOMY off"}
+
+    ctx = resolve_cal_admin_context(db)
+    if not ctx:
+        return {"status": "skipped", "reason": "No admin-cal-outreach team — sign in to /admin once or set CAL_ADMIN_USER_ID"}
+
+    uid, team = ctx
+    from app.api.admin_extended import (
+        _hot_warm_companies,
+        _invalidate_admin_caches,
+        _cal_draft_for_company,
+    )
+    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
+    from app.services.company_domain import normalize_website_domain
+    from app.services.outreach_email_inference import infer_cc_outreach_emails
+    from app.services.resend_email import ResendEmailError, send_email_via_resend
+    from app.models.crm import CrmAccount
+
+    draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "50") or "50")
+    send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "8") or "8")
+    stale_days = int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7")
+    stale_before = datetime.now(timezone.utc) - timedelta(days=max(stale_days, 1))
+
+    companies = _hot_warm_companies(db, limit=max(draft_limit, 100))
+    company_ids = [c.id for c, _, _ in companies]
+    existing: dict[int, CrmAccount] = {}
+    if company_ids:
+        for acct in db.query(CrmAccount).filter(
+            CrmAccount.company_id.in_(company_ids),
+            CrmAccount.team_id == team.id,
+        ).all():
+            if acct.company_id:
+                existing[acct.company_id] = acct
+
+    drafted = 0
+    refreshed = 0
+    format_sample: Optional[tuple[str, str, str]] = None
+
+    for company, _score, _tier in companies[:draft_limit]:
+        acct = existing.get(company.id)
+        did_draft, did_refresh = _draft_and_store(
+            db,
+            company=company,
+            acct=acct,
+            team=team,
+            existing=existing,
+            regenerate=False,
+            stale_before=stale_before,
+        )
+        if did_draft:
+            drafted += 1
+        if did_refresh:
+            refreshed += 1
+        if format_sample is None and did_draft:
+            sub, body = _cal_draft_for_company(company, fresh=True)
+            format_sample = (company.name or "Sample", sub, format_cal_draft_storage(sub, body))
+
+    new_fp = outreach_template_fingerprint()
+    old_fp = _stored_template_fingerprint()
+    format_notified = False
+    if format_sample and (old_fp is None or old_fp != new_fp) and not dry_run:
+        format_notified = notify_admin_of_format_change(
+            sample_company=format_sample[0],
+            sample_subject=format_sample[1],
+            sample_draft=format_sample[2],
+            previous_fingerprint=old_fp,
+            new_fingerprint=new_fp,
+        )
+    if not dry_run and (old_fp != new_fp or old_fp is None):
+        _persist_template_fingerprint(new_fp)
+
+    sent = 0
+    skipped_no_draft = 0
+    skipped_already_sent = 0
+    skipped_unverified = 0
+    errors: list[dict[str, Any]] = []
+    now = datetime.now(timezone.utc)
+
+    for company, _score, tier in companies:
+        if sent >= send_limit:
+            break
+        if tier not in ("HOT", "WARM"):
+            continue
+        acct = existing.get(company.id)
+        if not acct or not acct.outreach_draft:
+            skipped_no_draft += 1
+            continue
+        if acct.outreach_sent_at:
+            skipped_already_sent += 1
+            continue
+
+        to_email, _src, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        if not to_email:
+            errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            continue
+
+        ok, verify_reason = verify_email_deliverable(to_email)
+        if not ok:
+            skipped_unverified += 1
+            continue
+
+        draft_lines = (acct.outreach_draft or "").strip().splitlines()
+        subject_line = next((line for line in draft_lines if line.strip()), None)
+        if subject_line and subject_line.lower().startswith("subject:"):
+            subject = subject_line[8:].strip()
+            body_text = "\n".join(draft_lines[1:]).strip()
+        else:
+            subject = f"Robot automation partnership — {company.name}"
+            body_text = acct.outreach_draft or ""
+
+        if dry_run:
+            sent += 1
+            continue
+
+        domain = normalize_website_domain(company.website or acct.website)
+        cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
+        cc_email = cc_list[0] if cc_list else None
+
+        try:
+            send_email_via_resend(
+                to_email=to_email,
+                subject=subject,
+                body_text=body_text,
+                from_display_name="Cal · Ready For Robots",
+                cc=[cc_email] if cc_email else None,
+                idempotency_key=f"cal-auto-{acct.id}-{now.date().isoformat()}",
+            )
+            acct.outreach_sent_at = now
+            acct.outreach_stage = "contacted"
+            sent += 1
+        except ResendEmailError as exc:
+            errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+
+    if not dry_run:
+        db.commit()
+        _invalidate_admin_caches()
+
+    return {
+        "status": "ok",
+        "dry_run": dry_run,
+        "drafted": drafted,
+        "refreshed": refreshed,
+        "sent": sent,
+        "skipped_no_draft": skipped_no_draft,
+        "skipped_already_sent": skipped_already_sent,
+        "skipped_unverified": skipped_unverified,
+        "errors": errors[:20],
+        "template_fingerprint": new_fp,
+        "format_review_notified": format_notified,
+        "review_email": get_cal_review_email(),
+        "admin_user_id": str(uid),
+    }
+
+
+def get_cal_autonomy_status() -> dict[str, Any]:
+    return {
+        "enabled": cal_autonomy_enabled(),
+        "review_email": get_cal_review_email(),
+        "template_fingerprint": outreach_template_fingerprint(),
+        "stored_fingerprint": _stored_template_fingerprint(),
+        "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "1",
+        "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "8") or "8"),
+        "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "50") or "50"),
+        "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
+        "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6"),
+    }

@@ -1560,7 +1560,7 @@ export default function Pipeline() {
         );
         if (!sendResponse.ok) throw new Error(await sendResponse.text());
         setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Outreach Sent", updatedAt: "just now" } : d)));
-        toast.success("Cal sent the outreach. Replies will return to the Sales Console and notify you.");
+        toast.success("Outreach sent. Replies will return to your workspace.");
         return;
       }
 
@@ -1569,9 +1569,9 @@ export default function Pipeline() {
         copyDraft();
         toast.success("Lead captured in CRM. Draft approved for manual send.");
       } else if (!deal.contact) {
-        toast.success("Lead captured in CRM. Add a recipient email before Cal sends.");
+        toast.success("Lead captured in CRM. Add a recipient email before sending.");
       } else {
-        toast.success("Lead captured in CRM. Cal is ready when you approve send.");
+        toast.success("Lead captured in CRM. Ready when you approve send.");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not advance lead with SIGNAL");
@@ -1709,7 +1709,7 @@ export default function Pipeline() {
       }));
       if (!sendRes.ok) throw new Error(await sendRes.text());
       setDeals((prev) => prev.map((d) => d.id === deal.id ? { ...d, stage: "Outreach Sent" as Stage, updatedAt: "just now" } : d));
-      toast.success(`Cal sent the email to ${deal.contact}.`);
+      toast.success(`Outreach sent to ${deal.contact}.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Send failed");
     } finally {
@@ -1767,7 +1767,7 @@ export default function Pipeline() {
             : d,
         ),
       );
-      toast.success("SIGNAL developed this lead — inference, brief, and Cal draft are ready.");
+      toast.success("SIGNAL developed this lead — inference, brief, and outreach draft are ready.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "SIGNAL could not develop this lead");
     } finally {
@@ -2799,14 +2799,24 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  {/* Cal outreach — workspace users */}
+                  {/* Outreach draft — users copy only; admins send from Cal queue or below */}
                   {showKanban && session?.access_token && (
                   <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Your outreach draft</p>
+                        <Mail className="h-3.5 w-3.5" style={{ color: isAdmin ? "#7c3aed" : "#059669" }} />
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                          {isAdmin ? "Cal's draft" : "Your outreach draft"}
+                        </p>
                       </div>
+                      {isAdmin && (
+                        <Link
+                          href="/admin#cal-outreach"
+                          className="text-[10px] font-semibold text-emerald-700 underline-offset-2 hover:underline"
+                        >
+                          Full Cal queue
+                        </Link>
+                      )}
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => setPreviewOpen(true)}
@@ -2888,7 +2898,7 @@ export default function Pipeline() {
                       </button>
                     )}
 
-                    {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && (
+                    {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && isAdmin && (
                       <button
                         type="button"
                         disabled={sendingLeadId === selected.id}
@@ -3002,7 +3012,7 @@ export default function Pipeline() {
                         disabled={advancingLeadId === selected.id}
                         className="sb-btn sb-btn-primary"
                       >
-                        {advancingLeadId === selected.id ? "Advancing..." : "Advance with Cal"}
+                        {advancingLeadId === selected.id ? "Advancing..." : isAdmin ? "Advance with Cal" : "Next stage"}
                         <ArrowRight className="h-3 w-3" />
                       </button>
                     )}
@@ -3020,7 +3030,9 @@ export default function Pipeline() {
                       : hasActiveSearch && filtered.length === 0 && !serverSearchLoading
                       ? `No leads match "${activeSearchQuery}". Try food service, hospitality, logistics, or a company name.`
                       : isAdmin
-                        ? "Select a deal to review signal detail and Cal outreach"
+                        ? isAdmin
+                          ? "Select a deal to review signal detail and Cal outreach"
+                          : "Select a deal to review signal detail and outreach draft"
                         : "Select a lead to review signals, research, and SIGNAL scoring"}
                   </p>
                   {pendingDeepLink && deepLinkLoadFailed ? (

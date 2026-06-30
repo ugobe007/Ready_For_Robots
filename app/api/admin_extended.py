@@ -327,24 +327,33 @@ def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional
     return effective, stored, inferred_to, inferred_cc
 
 
-def _cal_draft_for_company(company: Company) -> tuple[str, str]:
-    """Generate Cal subject + body using the template voice (no LLM)."""
+def _cal_draft_for_company(company: Company, *, fresh: bool = False) -> tuple[str, str]:
+    """Generate Cal subject + body using Cal's voice (no LLM)."""
     from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
 
     if is_stagegate_company(company):
         draft = cal_draft_for_stagegate_company(company)
         return draft["subject"], draft["body"]
 
-    from app.api.crm import _draft_subject, _draft_body
+    from app.api.crm import _draft_subject
     from app.models.crm import CrmAccount as _Acct
+    from app.services.cal_autonomy import cal_buyer_outreach_body
 
     dummy = _Acct(
         name=company.name or "Unknown",
         website=company.website,
         industry=company.industry,
+        account_type="vendor"
+        if (company.crm_metadata or {}).get("outreach_pipeline") == "stagegate"
+        else "buyer",
     )
     subject = _draft_subject(dummy)
-    body = _draft_body(dummy, None, [], "", "selective", None)
+    if dummy.account_type == "vendor":
+        from app.api.crm import _draft_body
+
+        body = _draft_body(dummy, None, [], "", "selective", None, company=company)
+    else:
+        body = cal_buyer_outreach_body(company, fresh=fresh)
     return subject, body
 
 
@@ -468,6 +477,37 @@ def cal_draft_body(
     acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
     if not acct:
         raise HTTPException(status_code=404, detail="CRM account not found")
+    return {
+        "crm_account_id": str(acct.id),
+        "draft_full": acct.outreach_draft,
+        "contact_email": acct.contact_email,
+    }
+
+
+class CalDraftPatchIn(BaseModel):
+    outreach_draft: str
+    contact_email: Optional[str] = None
+
+
+@router.patch("/cal/draft/{account_id}")
+def patch_cal_draft(
+    account_id: uuid.UUID,
+    body: CalDraftPatchIn,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Save editorial changes to a Cal outreach draft (admin only)."""
+    acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
+    if not acct:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+    draft = (body.outreach_draft or "").strip()
+    if not draft:
+        raise HTTPException(status_code=400, detail="outreach_draft cannot be empty")
+    acct.outreach_draft = draft
+    if body.contact_email is not None:
+        acct.contact_email = body.contact_email.strip() or None
+    db.commit()
+    db.refresh(acct)
     return {
         "crm_account_id": str(acct.id),
         "draft_full": acct.outreach_draft,
@@ -642,7 +682,7 @@ def cal_bulk_draft(
                 skipped += 1
                 continue
 
-            subject, draft_body = _cal_draft_for_company(company)
+            subject, draft_body = _cal_draft_for_company(company, fresh=body.regenerate)
             domain = _cal_outreach_domain(company, acct)
 
             if acct is None:
@@ -666,7 +706,9 @@ def cal_bulk_draft(
                 if guessed:
                     acct.contact_email = guessed.primary
 
-            acct.outreach_draft = draft_body
+            from app.services.cal_autonomy import format_cal_draft_storage
+
+            acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
             acct.outreach_stage = "draft_ready"
             drafted += 1
 
@@ -681,6 +723,28 @@ def cal_bulk_draft(
         "errors": errors,
         "team_id": str(team.id),
     }
+
+
+@router.get("/cal/autonomy-status")
+def cal_autonomy_status(_user: dict = Depends(require_admin)):
+    from app.services.cal_autonomy import get_cal_autonomy_status
+
+    return get_cal_autonomy_status()
+
+
+class CalAutonomyRunBody(BaseModel):
+    dry_run: bool = False
+
+
+@router.post("/cal/autonomy-run")
+def cal_autonomy_run(
+    body: CalAutonomyRunBody,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    from app.services.cal_autonomy import run_cal_autonomy_cycle
+
+    return run_cal_autonomy_cycle(db, dry_run=body.dry_run)
 
 
 class BulkSendBody(BaseModel):

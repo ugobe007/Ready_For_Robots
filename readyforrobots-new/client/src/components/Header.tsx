@@ -22,11 +22,12 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
-  ADMIN_WORKSPACE_SECTIONS,
   isAdminNavActive,
   isAdminWorkspacePath,
+  visibleAdminNavSections,
 } from "@/lib/adminNavLinks";
 import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 function smoothScroll(href: string) {
   if (href.startsWith("#")) {
@@ -84,6 +85,8 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const { session } = useAuth();
+  const isAdmin = useIsAdmin();
+  const workspaceSections = visibleAdminNavSections(isAdmin);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -287,7 +290,7 @@ export default function Header() {
                     </button>
                     {workspaceOpen && (
                       <div className="absolute right-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] max-h-[70vh] overflow-y-auto rounded-xl border border-gray-100 bg-white py-2 shadow-lg z-[60]">
-                        {ADMIN_WORKSPACE_SECTIONS.map((section) => (
+                        {workspaceSections.map((section) => (
                           <div key={section.label} className="px-2 py-1">
                             <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
                               {section.label}
@@ -453,7 +456,7 @@ export default function Header() {
         {session && (
           <div className="px-4 py-2 border-b border-gray-100">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1 mb-2">Workspace</p>
-            {ADMIN_WORKSPACE_SECTIONS.map((section) => (
+            {workspaceSections.map((section) => (
               <div key={section.label} className="mb-2">
                 <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">{section.label}</p>
                 {section.links.map((link) => (

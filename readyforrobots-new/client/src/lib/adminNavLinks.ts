@@ -3,6 +3,8 @@ export type AdminNavLink = {
   href: string;
   /** Shown in compact header dropdown only */
   shortLabel?: string;
+  /** Hidden unless the signed-in user is in ADMIN_EMAILS */
+  adminOnly?: boolean;
 };
 
 export type AdminNavSection = {
@@ -15,10 +17,12 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
     label: "Command",
     links: [
-      { label: "Admin", href: "/admin", shortLabel: "Admin dashboard" },
-      { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects" },
       { label: "Pipeline", href: "/pipeline" },
-      { label: "Workflow", href: "/sales-workflow" },
+      { label: "Sales workflow", href: "/sales-workflow", shortLabel: "Buyer actions feed" },
+      { label: "Command center", href: "/admin", shortLabel: "Admin dashboard", adminOnly: true },
+      { label: "Cal queue", href: "/admin#cal-outreach", shortLabel: "Cal outreach queue", adminOnly: true },
+      { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
+      { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
     ],
   },
   {
@@ -63,8 +67,9 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
   const hash = typeof window !== "undefined" ? window.location.hash : "";
 
   if (target === "/sales-workflow") return path === "/sales-workflow";
+  if (href.includes("#cal-outreach")) return path === "/admin" && hash === "#cal-outreach";
   if (href.includes("#workflow")) return path === "/admin" && hash === "#workflow";
-  if (target === "/admin") return path === "/admin" && hash !== "#workflow";
+  if (target === "/admin") return path === "/admin" && hash !== "#workflow" && hash !== "#cal-outreach";
   if (target === "/admin/prospects") return path === "/admin/prospects";
   if (target === "/pipeline") return path === "/pipeline" || path === "/admin/prospects";
   if (target === "/integrations") return path === "/integrations" || path.startsWith("/integrations/");
@@ -75,4 +80,16 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
 export function isAdminWorkspacePath(path: string): boolean {
   const normalized = normalizePath(path);
   return ADMIN_WORKSPACE_LINKS.some((link) => isAdminNavActive(normalized, link.href));
+}
+
+/** Workspace nav links visible for the current user (admin-only links filtered out). */
+export function visibleAdminNavLinks(isAdmin: boolean): AdminNavLink[] {
+  return ADMIN_WORKSPACE_LINKS.filter((link) => !link.adminOnly || isAdmin);
+}
+
+export function visibleAdminNavSections(isAdmin: boolean): AdminNavSection[] {
+  return ADMIN_WORKSPACE_SECTIONS.map((section) => ({
+    ...section,
+    links: section.links.filter((link) => !link.adminOnly || isAdmin),
+  })).filter((section) => section.links.length > 0);
 }

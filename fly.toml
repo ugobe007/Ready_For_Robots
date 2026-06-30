@@ -28,6 +28,16 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,https://ready-for-robots.vercel.app,https://ready-for-robots-ax5i.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
   # Admin emails (comma-separated) — users with access to /admin
   ADMIN_EMAILS = "ugobe07@gmail.com"
+  # Cal format review + ops notifications (set via fly secrets set ADMIN_EMAIL=...)
+  # ADMIN_EMAIL = "ugobe07@gmail.com"
+  # Cal autonomous outreach (worker process)
+  ENABLE_SCHEDULED_CAL_AUTONOMY = "1"
+  CAL_AUTONOMY_EVERY_HOURS = "6"
+  CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES = "20"
+  CAL_AUTONOMY_SEND_LIMIT = "8"
+  CAL_AUTONOMY_DRAFT_BATCH = "50"
+  CAL_REFRESH_STALE_DAYS = "7"
+  CAL_TEMPLATE_VERSION = "2"
   # OAuth callbacks redirect here after connect (Google Calendar, HubSpot, etc.)
   PUBLIC_SITE_URL = "https://readyforrobots.com"
   GOOGLE_CALENDAR_REDIRECT_URI = "https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback"

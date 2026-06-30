@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
 import {
-  ADMIN_WORKSPACE_SECTIONS,
   isAdminNavActive,
+  visibleAdminNavSections,
 } from "@/lib/adminNavLinks";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 type Props = {
   /** Dark command-rail styling for pipeline and other high-focus workspace pages. */
@@ -11,6 +12,8 @@ type Props = {
 
 export default function AdminNav({ variant = "light" }: Props) {
   const [location] = useLocation();
+  const isAdmin = useIsAdmin();
+  const sections = visibleAdminNavSections(isAdmin);
   const dark = variant === "dark";
 
   return (
@@ -23,7 +26,7 @@ export default function AdminNav({ variant = "light" }: Props) {
       aria-label="Workspace navigation"
     >
       <div className="flex min-w-max flex-col gap-3">
-        {ADMIN_WORKSPACE_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <div key={section.label} className="flex min-w-max flex-wrap items-center gap-2">
             <span
               className={`px-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
