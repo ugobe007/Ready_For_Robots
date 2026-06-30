@@ -126,8 +126,11 @@ export default function Header() {
   const closeDrawer = () => setOpen(false);
   const signedInEmail = session?.user?.email;
   const workspaceNavActive = isAdminWorkspacePath(location);
+  const pathBase = location.split("?")[0].split("#")[0];
+  const pipelineCommand = pathBase === "/pipeline";
   const darkHero = isDarkHeroRoute(location);
-  const onDarkSurface = darkHero && !scrolled;
+  const onDarkSurface = darkHero && !scrolled && !pipelineCommand;
+  const lightNav = onDarkSurface || pipelineCommand;
   const moreNavActive = moreNavLinks.some((l) => location === l.href);
   const supportNavActive = supportNavLinks.some((l) => {
     const path = l.href.split("#", 1)[0];
@@ -142,9 +145,9 @@ export default function Header() {
 
   const navLinkClass = (href: string) => {
     const active = location === href;
-    if (onDarkSurface) {
+    if (lightNav) {
       return `px-3.5 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
-        active ? "text-emerald-300 bg-white/10" : "text-slate-300 hover:text-white hover:bg-white/5"
+        active ? "text-emerald-300 bg-white/10" : "text-slate-200 hover:text-white hover:bg-white/10"
       }`;
     }
     return `px-3.5 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${
@@ -156,11 +159,13 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100"
-            : onDarkSurface
-              ? "bg-transparent border-b border-white/5"
-              : "bg-white/80 backdrop-blur-md"
+          pipelineCommand
+            ? "bg-[#0b1020]/98 backdrop-blur-xl shadow-lg border-b border-white/10"
+            : scrolled
+              ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100"
+              : onDarkSurface
+                ? "bg-transparent border-b border-white/5"
+                : "bg-white/80 backdrop-blur-md"
         }`}
       >
         <div className="container">
@@ -168,10 +173,10 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <img src="/logo-r.png" alt="ReadyForRobots" className="h-8 w-8 object-contain" />
               <div className="flex flex-col leading-none">
-                <span className={`font-display font-bold text-[15px] tracking-tight ${onDarkSurface ? "text-white" : "text-gray-900"}`}>
+                <span className={`font-display font-bold text-[15px] tracking-tight ${lightNav ? "text-white" : "text-gray-900"}`}>
                   ReadyForRobots
                 </span>
-                <span className={`rfr-scout-wordmark mt-1 text-[9px] ${onDarkSurface ? "text-emerald-400" : "text-emerald-600"}`}>
+                <span className={`rfr-scout-wordmark mt-1 text-[9px] ${lightNav ? "text-emerald-400" : "text-emerald-600"}`}>
                   SIGNAL
                 </span>
               </div>
@@ -193,10 +198,10 @@ export default function Header() {
                   type="button"
                   onClick={() => setMoreOpen((v) => !v)}
                   className={`inline-flex items-center gap-1 px-3.5 py-2 text-sm font-medium rounded-md transition-colors ${
-                    onDarkSurface
+                    lightNav
                       ? moreNavActive || supportNavActive || moreOpen
                         ? "text-emerald-300 bg-white/10"
-                        : "text-slate-300 hover:text-white hover:bg-white/5"
+                        : "text-slate-200 hover:text-white hover:bg-white/10"
                       : moreNavActive || supportNavActive || moreOpen
                         ? "text-emerald-700 bg-emerald-50"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -248,7 +253,7 @@ export default function Header() {
 
               {!session ? (
                 <>
-                  <Link href="/login" className={`hidden md:inline text-sm font-medium ${onDarkSurface ? "text-slate-300 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+                  <Link href="/login" className={`hidden md:inline text-sm font-medium ${lightNav ? "text-slate-200 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                     Sign in
                   </Link>
                   <Link
@@ -267,8 +272,12 @@ export default function Header() {
                       onClick={() => setWorkspaceOpen((v) => !v)}
                       className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition ${
                         workspaceNavActive || workspaceOpen
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50"
+                          ? lightNav
+                            ? "border-emerald-400 bg-emerald-600/90 text-white"
+                            : "border-emerald-600 bg-emerald-50 text-emerald-800"
+                          : lightNav
+                            ? "border-white/15 bg-white/5 text-slate-100 hover:border-emerald-400/50 hover:bg-white/10"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50"
                       }`}
                       aria-expanded={workspaceOpen}
                     >
@@ -302,7 +311,11 @@ export default function Header() {
                   </div>
                   <Link
                     href="/profile"
-                    className="max-w-[140px] truncate rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    className={`max-w-[140px] truncate rounded-lg px-3 py-2 text-xs font-semibold ${
+                      lightNav
+                        ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
                     title={signedInEmail}
                   >
                     {signedInEmail ?? "Account"}
@@ -310,7 +323,11 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => void handleSignOut()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold ${
+                      lightNav
+                        ? "border-white/15 text-slate-300 hover:bg-white/10 hover:text-white"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     Sign out
@@ -320,7 +337,7 @@ export default function Header() {
 
               <button
                 onClick={() => setOpen(!open)}
-                className={`lg:hidden p-2 rounded-md ${onDarkSurface ? "text-slate-300 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"}`}
+                className={`lg:hidden p-2 rounded-md ${lightNav ? "text-slate-200 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"}`}
                 aria-label={open ? "Close menu" : "Open menu"}
               >
                 {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

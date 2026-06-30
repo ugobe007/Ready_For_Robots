@@ -1788,9 +1788,7 @@ export default function Pipeline() {
       <Header />
 
       <main className="flex-1 px-4 pb-6 pt-4 lg:px-6">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-2">
-          {isAdmin && <AdminNav />}
-
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
           <PageHeroDark
             maxWidthClass="max-w-[1500px]"
             badge={
@@ -1810,13 +1808,18 @@ export default function Pipeline() {
             innerClassName="pb-6 pt-20"
           />
 
-          {session?.access_token && (
-            <WorkspaceQuickLinks
-              savedCount={savedLeadCount}
-              hubspotConnected={hubspotIntegration?.connected}
-              queuedActions={queuedActivations}
-            />
-          )}
+          <div className="pipeline-command-rail flex flex-col gap-3">
+            {isAdmin && <AdminNav variant="dark" />}
+
+            {session?.access_token && (
+              <WorkspaceQuickLinks
+                savedCount={savedLeadCount}
+                hubspotConnected={hubspotIntegration?.connected}
+                queuedActions={queuedActivations}
+                variant="dark"
+              />
+            )}
+          </div>
 
           <div className="pipeline-workspace">
             {/* ── Workspace toolbar ── */}
