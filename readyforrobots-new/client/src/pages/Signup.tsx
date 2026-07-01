@@ -278,7 +278,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={status === "sending" || !email.trim()}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-gray-900 transition-all hover:bg-emerald-700 disabled:opacity-40"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-40"
                 >
                   {status === "sending" ? "Sending..." : hubspotIntent ? "Sign up & connect HubSpot" : "Send signup link"}
                 </button>
