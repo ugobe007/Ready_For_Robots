@@ -364,6 +364,14 @@ export default function Admin() {
     every_hours?: number;
     template_version?: string;
   } | null>(null);
+  const [supplyAutonomy, setSupplyAutonomy] = useState<{
+    enabled?: boolean;
+    review_email?: string | null;
+    send_limit?: number;
+    min_score?: number;
+    every_hours?: number;
+    template_version?: string;
+  } | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -552,6 +560,14 @@ export default function Admin() {
     } catch { /* advisory */ }
   }, [adminFetch, session?.access_token]);
 
+  const loadSupplyAutonomyStatus = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/supply/autonomy-status");
+      if (res.ok) setSupplyAutonomy(await res.json());
+    } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
   const runCalAutonomy = async (dryRun: boolean) => {
     setActionBusy(dryRun ? "cal-draft" : "cal-send");
     setError("");
@@ -571,6 +587,29 @@ export default function Admin() {
       void loadCalAutonomyStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cal autonomy run failed.");
+    } finally {
+      setActionBusy("");
+    }
+  };
+
+  const runSupplyAutonomy = async (dryRun: boolean) => {
+    setActionBusy(dryRun ? "supply-draft" : "supply-send");
+    setError("");
+    try {
+      const res = await adminFetch("/api/admin/supply/autonomy-run", {
+        method: "POST",
+        body: JSON.stringify({ dry_run: dryRun }),
+      });
+      const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+      if (!res.ok) throw new Error(String(data.detail || "Supply autonomy run failed"));
+      setMessage(
+        dryRun
+          ? `Supply dry run: would send ${data.sent ?? 0} vendor emails (min score ${data.min_score ?? supplyAutonomy?.min_score ?? 60}).`
+          : `Supply autonomy: sent ${data.sent ?? 0} vendor signup emails.`,
+      );
+      void loadSupplyAutonomyStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Supply autonomy run failed.");
     } finally {
       setActionBusy("");
     }
@@ -648,8 +687,9 @@ export default function Admin() {
   useEffect(() => {
     if (!authLoading && session?.access_token && me?.is_admin) {
       void loadCalAutonomyStatus();
+      void loadSupplyAutonomyStatus();
     }
-  }, [authLoading, loadCalAutonomyStatus, me?.is_admin, session?.access_token]);
+  }, [authLoading, loadCalAutonomyStatus, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -739,14 +779,14 @@ export default function Admin() {
     }
   }
 
-  async function runCalBulkDraft(regenerate = false) {
+  async function runCalBulkDraft(regenerate = false, companyIds?: number[]) {
     setMessage("");
     setError("");
     setActionBusy("cal-draft");
     try {
       const res = await adminFetch("/api/admin/cal/bulk-draft", {
         method: "POST",
-        body: JSON.stringify({ regenerate }),
+        body: JSON.stringify({ regenerate, company_ids: companyIds ?? null }),
       });
       const data = await res.json().catch(() => ({})) as { drafted?: number; skipped?: number; errors?: unknown[] };
       if (!res.ok) throw new Error((data as { detail?: string }).detail || "Bulk draft failed.");
@@ -757,6 +797,10 @@ export default function Admin() {
     } finally {
       setActionBusy("");
     }
+  }
+
+  async function runCalDraftOne(companyId: number) {
+    await runCalBulkDraft(false, [companyId]);
   }
 
   async function runCalReinferContacts() {
@@ -820,18 +864,28 @@ export default function Admin() {
     }
   }
 
-  async function runCalSendOne(crmAccountId: string, toEmail: string) {
+  async function runCalSendOne(
+    crmAccountId: string,
+    toEmail: string,
+    draftText?: string,
+  ) {
     setMessage("");
     setError("");
     setSendConfirm(false);
     setActionBusy("cal-send-one");
     try {
+      const payload: Record<string, unknown> = {
+        crm_account_id: crmAccountId,
+        contact_email: toEmail.trim(),
+      };
+      if (draftText?.trim()) payload.outreach_draft = draftText.trim();
+
       const res = await adminFetch("/api/admin/cal/send-one", {
         method: "POST",
-        body: JSON.stringify({ crm_account_id: crmAccountId }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({})) as { sent?: boolean; to?: string };
-      if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+      const data = await res.json().catch(() => ({})) as { sent?: boolean; to?: string; detail?: string };
+      if (!res.ok) throw new Error(data.detail || "Send failed.");
       setMessage(`Sent to ${data.to ?? toEmail}.`);
       await loadCalStatus();
     } catch (err) {
@@ -1092,6 +1146,51 @@ export default function Admin() {
           </div>
         </details>
 
+        <details className="mb-4 rounded-xl border border-sky-200 bg-sky-50/40 px-4 py-3 group">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-sky-900 marker:content-none">
+            Supply autonomy
+            <span className="ml-2 font-normal text-sky-800/70">vendor signup outreach · /supply-pipeline ICP</span>
+          </summary>
+          <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
+            <p>
+              When enabled on the worker, Cal sends vendor signup emails to robot companies (score ≥{" "}
+              {supplyAutonomy?.min_score ?? 60}) with matched buyer signals and a signup/results link — up to{" "}
+              <strong>{supplyAutonomy?.send_limit ?? 6}</strong> per {supplyAutonomy?.every_hours ?? 6}h cycle.
+            </p>
+            <p>
+              Status:{" "}
+              <span className="font-bold" style={{ color: supplyAutonomy?.enabled ? "#0369a1" : "#b45309" }}>
+                {supplyAutonomy?.enabled ? "enabled" : "disabled"}
+              </span>
+              {supplyAutonomy?.review_email ? (
+                <> · format reviews: <span className="font-mono">{supplyAutonomy.review_email}</span></>
+              ) : null}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/supply-pipeline" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700">
+                Supply pipeline
+              </Link>
+              <button
+                type="button"
+                disabled={!!actionBusy}
+                onClick={() => void runSupplyAutonomy(true)}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+              >
+                Dry run
+              </button>
+              <button
+                type="button"
+                disabled={!!actionBusy}
+                onClick={() => void runSupplyAutonomy(false)}
+                className="rounded-xl border px-3 py-2 text-[10px] font-bold disabled:opacity-50"
+                style={{ color: "#0369a1", borderColor: "rgba(14,165,233,0.35)", background: "rgba(14,165,233,0.08)" }}
+              >
+                Run supply now
+              </button>
+            </div>
+          </div>
+        </details>
+
         <div className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <ScoutActionBar
             accessToken={session?.access_token}
@@ -1104,8 +1203,8 @@ export default function Admin() {
               replied: (calStatus.summary as Record<string, number>).replied ?? 0,
             } : null}
             busy={actionBusy === "cal-draft" ? "draft" : actionBusy === "cal-send" ? "send" : null}
-            onRunScout={() => void runCalBulkDraft(false)}
-            onActivateScout={() => setSendConfirm("bulk")}
+            onRunScout={() => void loadCalStatus()}
+            onActivateScout={() => document.getElementById("cal-outreach")?.scrollIntoView({ behavior: "smooth" })}
             onTrackScout={() => void loadCalStatus()}
           />
         </div>
@@ -1124,7 +1223,9 @@ export default function Admin() {
                 <h2 className="text-base font-extrabold text-gray-900 truncate">
                   Cal outreach queue
                 </h2>
-                <p className="text-[11px] text-gray-500">Expand a row to edit Cal&apos;s draft · bulk draft/send from SIGNAL bar above</p>
+                <p className="text-[11px] text-gray-500">
+                  Draft HOT+WARM leads, edit copy, then send individually or in bulk via Resend
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1144,48 +1245,99 @@ export default function Admin() {
                 ))}
               </div>
               <button
-                onClick={() => void runCalBulkDraft(true)}
+                onClick={() => void loadCalStatus()}
                 disabled={!!actionBusy}
                 className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
-                title="Regenerate all drafts"
               >
-                Regenerate
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Primary workflow — always visible in this section */}
+          <div className="mb-5 grid gap-3 rounded-xl border border-emerald-200/80 bg-white/90 p-4 md:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 1 · Draft</p>
+              <p className="text-xs text-gray-600">
+                <strong>{formatNumber(calStatus?.summary?.pending_draft)}</strong> leads need a draft
+              </p>
+              <button
+                type="button"
+                onClick={() => void runCalBulkDraft(false)}
+                disabled={!!actionBusy || (calStatus?.summary?.pending_draft ?? 0) === 0}
+                className="rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
+              >
+                {actionBusy === "cal-draft" ? "Drafting…" : `Draft all pending (${formatNumber(calStatus?.summary?.pending_draft)})`}
               </button>
               <button
+                type="button"
+                onClick={() => void runCalBulkDraft(true)}
+                disabled={!!actionBusy}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
+              >
+                Regenerate all drafts
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2 border-y border-gray-100 py-3 md:border-y-0 md:border-x md:px-4 md:py-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 2 · Fix emails</p>
+              <p className="text-xs text-gray-600">
+                <strong>{formatNumber(calStatus?.summary?.sendable)}</strong> ready to send ·{" "}
+                <strong>{formatNumber(calStatus?.summary?.no_email)}</strong> missing email
+              </p>
+              <button
+                type="button"
                 onClick={() => void runCalReinferContacts()}
                 disabled={!!actionBusy}
-                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 disabled:opacity-40"
               >
                 {actionBusy === "cal-reinfer" ? "Re-inferring…" : "Re-infer contacts"}
               </button>
               {(calStatus?.summary?.no_email ?? 0) > 0 && (
                 <button
+                  type="button"
                   onClick={() => void (async () => {
                     setActionBusy("cleanup");
                     try {
                       const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=80&dry_run=false", { method: "POST" });
                       const d = await res.json().catch(() => ({})) as {
                         resolved_emails?: number;
-                        resolved_websites?: number;
-                        processed?: number;
                         apollo_hits?: number;
                         inferred_hits?: number;
                         unresolved?: number;
-                        duration_ms?: number;
                       };
                       setMessage(
-                        `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}) · `
-                        + `${d.resolved_websites ?? 0} websites · ${d.processed ?? 0} processed · ${d.duration_ms ?? "?"}ms.`,
+                        `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}).`,
                       );
                       void loadCalStatus();
                     } finally { setActionBusy(""); }
                   })()}
                   disabled={!!actionBusy}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-900 disabled:opacity-40"
                 >
-                  Fix {calStatus?.summary?.no_email} emails
+                  Fix {calStatus?.summary?.no_email} missing emails
                 </button>
               )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 3 · Send</p>
+              <p className="text-xs text-gray-600">
+                Bulk send uses saved contact emails · expand a row to send one
+              </p>
+              <button
+                type="button"
+                onClick={() => setSendConfirm("bulk")}
+                disabled={!!actionBusy || (calStatus?.summary?.sendable ?? 0) === 0}
+                className="rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-40"
+                style={{ color: "#92400e", borderColor: "rgba(245,158,11,0.45)", background: "rgba(255,176,0,0.12)" }}
+              >
+                {actionBusy === "cal-send" ? "Sending…" : `Send all (${formatNumber(calStatus?.summary?.sendable)})`}
+              </button>
+              <p className="text-[10px] text-gray-500">
+                {formatNumber(calStatus?.summary?.sent)} already sent · no duplicates
+              </p>
             </div>
           </div>
 
@@ -1411,7 +1563,7 @@ export default function Admin() {
                                   )}
                                   {prospect.contact_email && (
                                     <div className="flex flex-wrap gap-2 text-[10px] text-gray-600">
-                                      <span>TO: <span className="font-mono text-gray-500">{prospect.contact_email}</span></span>
+                                      <span>TO: <span className="font-mono text-gray-500">{draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email}</span></span>
                                       {prospect.default_cc && <span>CC: <span className="font-mono text-gray-500">{prospect.default_cc}</span></span>}
                                     </div>
                                   )}
@@ -1429,7 +1581,8 @@ export default function Admin() {
                                           onClick={() => {
                                             if (!prospect.crm_account_id) return;
                                             const to = (draftContactEmails[prospect.crm_account_id] ?? prospect.contact_email)?.trim();
-                                            if (to) void runCalSendOne(prospect.crm_account_id, to);
+                                            const draft = draftBodies[prospect.crm_account_id] ?? prospect.draft_full ?? prospect.draft_preview ?? "";
+                                            if (to) void runCalSendOne(prospect.crm_account_id, to, draft);
                                           }}
                                           disabled={!!actionBusy}
                                           className="rounded-xl border border-amber-400 bg-amber-100 px-3 py-1.5 text-[10px] font-bold text-amber-950 disabled:opacity-40"
@@ -1455,7 +1608,18 @@ export default function Admin() {
                                 </div>
                               </>
                             ) : (
-                              <p className="text-xs text-gray-600">No draft yet. Click <strong className="text-gray-500">Draft pending</strong> to generate.</p>
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-xs text-gray-600">No draft yet for this lead.</p>
+                                <button
+                                  type="button"
+                                  disabled={!!actionBusy}
+                                  onClick={() => void runCalDraftOne(prospect.company_id)}
+                                  className="rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
+                                  style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
+                                >
+                                  {actionBusy === "cal-draft" ? "Drafting…" : "Generate draft for this lead"}
+                                </button>
+                              </div>
                             )}
                           </div>
                         )}

@@ -6,6 +6,7 @@ Additional endpoints for company management and system controls.
 
 
 import logging
+import os
 import time
 import uuid
 from datetime import datetime, timezone
@@ -405,11 +406,16 @@ def _serialize_cal_row(
     return row
 
 
-def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int, SimpleNamespace]:
-    """Load CRM fields needed for Cal outreach without full draft bodies."""
+def _crm_accounts_for_companies(
+    db: Session,
+    company_ids: list[int],
+    *,
+    team_id: uuid.UUID | None = None,
+) -> dict[int, SimpleNamespace]:
+    """Load CRM fields for Cal outreach — scoped to admin outreach team when team_id set."""
     if not company_ids:
         return {}
-    rows = (
+    q = (
         db.query(
             CrmAccount.id,
             CrmAccount.company_id,
@@ -423,9 +429,10 @@ def _crm_accounts_for_companies(db: Session, company_ids: list[int]) -> dict[int
             CrmAccount.outreach_draft.isnot(None).label("has_draft_col"),
         )
         .filter(CrmAccount.company_id.in_(company_ids))
-        .order_by(CrmAccount.outreach_draft.isnot(None).desc(), desc(CrmAccount.updated_at))
-        .all()
     )
+    if team_id is not None:
+        q = q.filter(CrmAccount.team_id == team_id)
+    rows = q.order_by(CrmAccount.outreach_draft.isnot(None).desc(), desc(CrmAccount.updated_at)).all()
     out: dict[int, SimpleNamespace] = {}
     for r in rows:
         if r.company_id in out:
@@ -530,14 +537,17 @@ def _empty_cal_draft_payload(*, include_prospects: bool) -> dict[str, Any]:
 def _build_cal_draft_status_payload(
     db: Session,
     *,
+    admin_uid: uuid.UUID,
+    admin_email: str = "",
     include_draft_bodies: bool,
     include_prospects: bool,
     prospect_limit: int,
 ) -> dict[str, Any]:
-    """Return HOT+WARM prospects with their Cal draft state and email delivery tracking."""
+    """Return HOT+WARM prospects with Cal draft state on the admin outreach team."""
+    team = _admin_team(db, admin_uid, admin_email)
     companies = _hot_warm_companies(db)
     company_ids = [c.id for c, _, _ in companies]
-    accounts_by_company = _crm_accounts_for_companies(db, company_ids)
+    accounts_by_company = _crm_accounts_for_companies(db, company_ids, team_id=team.id)
 
     account_ids = [a.id for a in accounts_by_company.values()]
     delivery_by_account = _latest_delivery_by_account(db, account_ids)
@@ -598,6 +608,7 @@ def _build_cal_draft_status_payload(
             "opened": opened,
             "clicked": clicked,
             "replied": replied,
+            "team_id": str(team.id),
         },
         "prospects": prospect_rows,
     }
@@ -629,6 +640,8 @@ def cal_draft_status(
         with SessionLocal() as db:
             return _build_cal_draft_status_payload(
                 db,
+                admin_uid=uuid.UUID(user["uid"]),
+                admin_email=user.get("email") or "",
                 include_draft_bodies=include_draft_bodies,
                 include_prospects=include_prospects,
                 prospect_limit=prospect_limit,
@@ -643,6 +656,7 @@ def cal_draft_status(
 
 class BulkDraftBody(BaseModel):
     regenerate: bool = False
+    company_ids: Optional[list[int]] = None
 
 
 @router.post("/cal/bulk-draft")
@@ -676,6 +690,8 @@ def cal_bulk_draft(
     now = datetime.now(timezone.utc)
 
     for company, score, tier in companies:
+        if body.company_ids is not None and company.id not in body.company_ids:
+            continue
         try:
             acct = existing.get(company.id)
             if acct and acct.outreach_draft and not body.regenerate:
@@ -747,10 +763,29 @@ def cal_autonomy_run(
     return run_cal_autonomy_cycle(db, dry_run=body.dry_run)
 
 
+@router.get("/supply/autonomy-status")
+def supply_autonomy_status(_user: dict = Depends(require_admin)):
+    from app.services.supply_autonomy import get_supply_autonomy_status
+
+    return get_supply_autonomy_status()
+
+
+@router.post("/supply/autonomy-run")
+def supply_autonomy_run(
+    body: CalAutonomyRunBody,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    from app.services.supply_autonomy import run_supply_autonomy_cycle
+
+    return run_supply_autonomy_cycle(db, dry_run=body.dry_run)
+
+
 class BulkSendBody(BaseModel):
     limit: int = 100         # max emails to send in one call
     tier_filter: str = "all" # "all" | "HOT" | "WARM"
     dry_run: bool = False    # if True, validate but don't send
+    skip_verification: bool = False
 
 
 @router.post("/cal/bulk-send")
@@ -803,21 +838,25 @@ def cal_bulk_send(
             skipped_already_sent += 1
             continue
 
-        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        to_email = (acct.contact_email or "").strip() or None
+        email_source = "crm" if to_email else None
+        if not to_email:
+            to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
             continue
 
-        ok, verify_reason = verify_email_deliverable(to_email)
-        if not ok:
-            skipped_unverified += 1
-            errors.append({
-                "company_id": company.id,
-                "name": company.name,
-                "error": f"Email failed verification ({verify_reason}): {to_email}",
-                "email_source": email_source,
-            })
-            continue
+        if not _cal_should_skip_verification(body.skip_verification):
+            ok, verify_reason = verify_email_deliverable(to_email)
+            if not ok:
+                skipped_unverified += 1
+                errors.append({
+                    "company_id": company.id,
+                    "name": company.name,
+                    "error": f"Email failed verification ({verify_reason}): {to_email}",
+                    "email_source": email_source,
+                })
+                continue
 
         domain = normalize_website_domain(company.website or acct.website)
         cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
@@ -1098,6 +1137,15 @@ def cal_reinfer_contacts(
 
 class SingleSendBody(BaseModel):
     crm_account_id: str
+    contact_email: Optional[str] = None
+    outreach_draft: Optional[str] = None
+    skip_verification: bool = False
+
+
+def _cal_should_skip_verification(explicit: bool = False) -> bool:
+    if explicit:
+        return True
+    return (os.getenv("CAL_SKIP_EMAIL_VERIFY") or "").strip().lower() in ("1", "true", "yes")
 
 
 @router.post("/cal/send-one")
@@ -1110,31 +1158,40 @@ def cal_send_one(
     from app.services.resend_email import send_email_via_resend, ResendEmailError
     import uuid as _uuid
 
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+
     acct = db.query(CrmAccount).filter(
         CrmAccount.id == _uuid.UUID(body.crm_account_id)
     ).first()
     if not acct:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="CRM account not found")
-    if not acct.outreach_draft:
-        from fastapi import HTTPException
+    if acct.team_id != team.id:
+        raise HTTPException(status_code=403, detail="CRM account is not on the admin outreach team")
+    if not acct.outreach_draft and not (body.outreach_draft or "").strip():
         raise HTTPException(status_code=400, detail="No draft to send")
     if acct.outreach_sent_at:
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Already sent")
+
+    if (body.outreach_draft or "").strip():
+        acct.outreach_draft = body.outreach_draft.strip()
+    if body.contact_email is not None:
+        acct.contact_email = body.contact_email.strip() or None
+        db.flush()
 
     company = db.query(Company).filter(Company.id == acct.company_id).first() if acct.company_id else None
     from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
 
-    to_email, _src, _title = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
+    to_email = (acct.contact_email or "").strip() or None
     if not to_email:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="No recipient email")
+        to_email, _src, _title = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
+    if not to_email:
+        raise HTTPException(status_code=400, detail="No recipient email — add one in the contact field and try again")
 
-    ok, reason = verify_email_deliverable(to_email)
-    if not ok:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
+    if not _cal_should_skip_verification(body.skip_verification):
+        ok, reason = verify_email_deliverable(to_email)
+        if not ok:
+            raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
 
     domain = normalize_website_domain((company.website if company else None) or acct.website)
     industry = (company.industry if company else None) or acct.industry

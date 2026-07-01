@@ -70,27 +70,62 @@ def _persist_template_fingerprint(fp: str) -> None:
 
 
 def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
-    """Cal-voice buyer outreach (used for admin Cal queue + autonomy)."""
-    from app.services.agent_messaging import cal_opening, cal_signature
+    """Cal-voice outreach to buyer-side prospects (admin Cal queue + autonomy)."""
+    from app.services.agent_messaging import (
+        BUYER_SIGNAL_EXPLANATION,
+        CAL_INTRO,
+        cal_signature,
+    )
     from app.services.cal_insights import pick_cal_insight
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
     week = datetime.now(timezone.utc).isocalendar().week
     allow_humor = fresh or (week % 2 == 0)
-    insight = pick_cal_insight(company_name=name, allow_humor=allow_humor)
+    insight = pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="buyer")
 
     lines = [
-        "Hey,",
+        CAL_INTRO,
         "",
-        cal_opening(audience="buyer"),
+        BUYER_SIGNAL_EXPLANATION,
         "",
         insight,
         "",
-        f"We've had {name} flagged in {industry} from live buying signals — "
-        "labor pressure, expansion moves, or CapEx shifts that usually precede an automation conversation.",
+        f"We've had {name} flagged in {industry} from live signals — "
+        "the kind that usually precede an automation conversation, not a generic vendor browse.",
         "",
         "Worth a quick reply if you're the right person to explore timing?",
+        "",
+        cal_signature(),
+    ]
+    return "\n".join(lines)
+
+
+def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:
+    """Cal-voice outreach to robot companies — sherpa tone, PoC-aware."""
+    from app.services.agent_messaging import (
+        CAL_VENDOR_BUYER_MATCH_CTA,
+        CAL_VENDOR_SHERPA_LINE,
+        cal_vendor_match_paragraph,
+        cal_signature,
+    )
+    from app.services.cal_insights import pick_cal_insight
+
+    name = (getattr(company, "name", None) or "your team").strip()
+    industry = (getattr(company, "industry", None) or "your space").strip()
+    week = datetime.now(timezone.utc).isocalendar().week
+    allow_humor = fresh or (week % 2 == 0)
+
+    lines = [
+        "Hi,",
+        "",
+        cal_vendor_match_paragraph(name, industry=industry),
+        "",
+        pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="vendor"),
+        "",
+        CAL_VENDOR_SHERPA_LINE,
+        "",
+        CAL_VENDOR_BUYER_MATCH_CTA,
         "",
         cal_signature(),
     ]
@@ -106,9 +141,9 @@ def format_cal_draft_storage(subject: str, body: str) -> str:
 
 
 def outreach_template_fingerprint() -> str:
-    version = (os.getenv("CAL_TEMPLATE_VERSION") or "1").strip()
-    sample_company = SimpleNamespace(name="Sample Logistics Co", industry="Logistics", website=None)
-    sample_body = cal_buyer_outreach_body(sample_company, fresh=False)
+    version = (os.getenv("CAL_TEMPLATE_VERSION") or "2").strip()
+    sample_company = SimpleNamespace(name="Sample Robotics Co", industry="Logistics", website=None)
+    sample_body = cal_vendor_outreach_body(sample_company, fresh=False)
     payload = f"{version}|{sample_body[:800]}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
 
@@ -134,7 +169,7 @@ def notify_admin_of_format_change(
 
 Previous fingerprint: {previous_fingerprint or "(none)"}
 New fingerprint: {new_fingerprint}
-Template version: {os.getenv("CAL_TEMPLATE_VERSION") or "1"}
+Template version: {os.getenv("CAL_TEMPLATE_VERSION") or "2"}
 
 Sample company: {sample_company}
 Sample subject: {sample_subject}
@@ -413,7 +448,7 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "review_email": get_cal_review_email(),
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),
-        "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "1",
+        "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "2",
         "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "8") or "8"),
         "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "50") or "50"),
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),

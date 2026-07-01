@@ -44,6 +44,18 @@ def test_cal_buyer_outreach_body_mentions_cal():
         type("Co", (), {"name": "Acme Logistics", "industry": "Logistics"})(),
         fresh=False,
     )
-    assert "Cal here" in body
+    assert "Cal from Ready For Robots" in body
     assert "Acme Logistics" in body
     assert "Ready For Robots" in body
+
+
+def test_cal_vendor_outreach_body_sherpa_tone():
+    from app.services.cal_autonomy import cal_vendor_outreach_body
+
+    body = cal_vendor_outreach_body(
+        type("Co", (), {"name": "DexMate Robotics", "industry": "Logistics"})(),
+        fresh=False,
+    )
+    assert "DexMate Robotics" in body
+    assert "PoC" in body or "PoCs" in body or "pilot" in body.lower()
+    assert "engineer-led" in body.lower() or "guide" in body.lower()

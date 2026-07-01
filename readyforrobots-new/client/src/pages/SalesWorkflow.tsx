@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -215,10 +215,14 @@ export default function SalesWorkflow() {
         <div className="workspace-page-header mb-6">
           <div className="workspace-page-header-inner flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="workspace-kicker">Operator workspace</p>
-              <h1>Sales Workflow</h1>
+              <p className="workspace-kicker">Activity feed</p>
+              <h1>What happened</h1>
               <p>
-                Ranked actions, live activity, and automation status across CRM, inbox, and SCOUT.
+                Live progress across your pipeline — drafts, sends, and replies.{" "}
+                <Link href="/pipeline" className="font-semibold text-emerald-200 underline underline-offset-2 hover:text-white">
+                  Run the pipeline
+                </Link>
+                {" "}to pick leads and send outreach.
               </p>
             </div>
             {refreshing && !loading && (

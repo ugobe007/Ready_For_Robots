@@ -7,7 +7,8 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
-import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
+import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
+import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent } from "@/lib/authNext";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
@@ -29,11 +30,17 @@ export default function Signup() {
   // so we restate exactly what they unlock (value-first conversion continuity).
   const buyerCo = (params.get("co") || "").trim().slice(0, 80);
 
-  const nextPath = () => {
-    if (typeof window === "undefined") return "/pipeline";
+  const nextPath = () => resolvePostAuthPath("/pipeline");
+
+  useEffect(() => {
+    const plan = readPlanParam(search);
+    if (plan) {
+      storeCheckoutIntent(plan);
+      return;
+    }
     const next = params.get("next");
-    return next && next.startsWith("/") ? next : "/pipeline";
-  };
+    if (next && next.startsWith("/")) storePendingNext(next);
+  }, [params, search]);
 
   const persistFullName = () => {
     if (typeof window === "undefined" || !fullName.trim()) return;
@@ -99,7 +106,7 @@ export default function Signup() {
     setErrMsg("");
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: supabaseOAuthRedirect(nextPath()) },
+      options: { redirectTo: supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline")) },
     });
     if (error) {
       setStatus("error");
@@ -118,7 +125,7 @@ export default function Signup() {
     persistFullName();
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = supabaseOAuthRedirect(nextPath());
+    const redirectTo = supabaseOAuthRedirect(postAuthRedirectTarget("/pipeline"));
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },

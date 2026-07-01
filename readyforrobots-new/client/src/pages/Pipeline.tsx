@@ -49,6 +49,7 @@ import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
+import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1498,7 +1499,7 @@ export default function Pipeline() {
       }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
       setSavedLeadCount((count) => count + 1);
-      toast.success("Lead saved — copy your draft in CRM or connect HubSpot.");
+      toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
       return true;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save lead with SIGNAL");
@@ -1567,11 +1568,11 @@ export default function Pipeline() {
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Draft Ready", updatedAt: "just now" } : d)));
       if (automationLevel === "manual") {
         copyDraft();
-        toast.success("Lead captured in CRM. Draft approved for manual send.");
+        toast.success("Lead saved. Draft ready — click Send outreach when you're happy with it.");
       } else if (!deal.contact) {
-        toast.success("Lead captured in CRM. Add a recipient email before sending.");
+        toast.success("Lead saved. Add a contact email, then Send outreach.");
       } else {
-        toast.success("Lead captured in CRM. Ready when you approve send.");
+        toast.success("Lead saved — SIGNAL can send when you're ready.");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not advance lead with SIGNAL");
@@ -1798,7 +1799,11 @@ export default function Pipeline() {
             }
             eyebrow="SIGNAL · Sales intelligence"
             title={isAdmin ? "Active Signals → Live Pipeline" : "Live Pipeline"}
-            description="Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+            description={
+              session?.access_token
+                ? "Pick a lead on the left → develop with SIGNAL → send from the panel on the right. Replies land in Inbox."
+                : "Every lead shows what to pitch — not just who to call. Pipeline actions and robot categories on every row."
+            }
             stats={[
               { label: "Total leads", value: typeof dbTotal === "number" ? dbTotal.toLocaleString() : "—", tone: "white" },
               { label: "Hot", value: typeof hotDeals === "number" ? hotDeals : "—", tone: "amber" },
@@ -1809,15 +1814,26 @@ export default function Pipeline() {
           />
 
           <div className="pipeline-command-rail flex flex-col gap-3">
-            {isAdmin && <AdminNav variant="dark" />}
+            {session?.access_token && <AdminNav variant="dark" />}
 
             {session?.access_token && (
-              <WorkspaceQuickLinks
-                savedCount={savedLeadCount}
-                hubspotConnected={hubspotIntegration?.connected}
-                queuedActions={queuedActivations}
-                variant="dark"
-              />
+              <>
+                <PipelineSalesWorkflowRail
+                  hasSession={Boolean(session?.access_token)}
+                  hasSavedLeads={savedLeadCount > 0}
+                  hasSelection={Boolean(selected)}
+                  hasDraft={Boolean(selected?.outreachBody)}
+                  hasContact={Boolean(selected?.contact)}
+                  sent={selected?.stage === "Outreach Sent"}
+                  variant="dark"
+                />
+                <WorkspaceQuickLinks
+                  savedCount={savedLeadCount}
+                  hubspotConnected={hubspotIntegration?.connected}
+                  queuedActions={queuedActivations}
+                  variant="dark"
+                />
+              </>
             )}
           </div>
 
@@ -2799,14 +2815,14 @@ export default function Pipeline() {
                     </div>
                   )}
 
-                  {/* Outreach draft — users copy only; admins send from Cal queue or below */}
+                  {/* Outreach draft — primary send path lives here (CRM is advanced editor only) */}
                   {showKanban && session?.access_token && (
                   <div className="shrink-0 px-5 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5" style={{ color: isAdmin ? "#7c3aed" : "#059669" }} />
+                        <Mail className="h-3.5 w-3.5" style={{ color: "#059669" }} />
                         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                          {isAdmin ? "Cal's draft" : "Your outreach draft"}
+                          Outreach draft
                         </p>
                       </div>
                       {isAdmin && (
@@ -2814,7 +2830,7 @@ export default function Pipeline() {
                           href="/admin#cal-outreach"
                           className="text-[10px] font-semibold text-emerald-700 underline-offset-2 hover:underline"
                         >
-                          Full Cal queue
+                          Cal bulk queue
                         </Link>
                       )}
                       <div className="flex items-center gap-1.5">
@@ -2898,20 +2914,25 @@ export default function Pipeline() {
                       </button>
                     )}
 
-                    {selected.contact && selected.stage !== "Outreach Sent" && session?.access_token && isAdmin && (
+                    {selected.contact && selected.outreachBody && selected.stage !== "Outreach Sent" && session?.access_token && (
                       <button
                         type="button"
                         disabled={sendingLeadId === selected.id}
                         onClick={() => void sendOneLead(selected)}
                         className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-bold border transition-all disabled:opacity-50"
-                        style={{ background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.28)", color: "#047857" }}
+                        style={{ background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#047857" }}
                       >
                         {sendingLeadId === selected.id
                           ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                           : <Send className="h-3.5 w-3.5" />
                         }
-                        {sendingLeadId === selected.id ? "Sending..." : `Send to ${selected.contact}`}
+                        {sendingLeadId === selected.id ? "Sending..." : `Send outreach to ${selected.contact}`}
                       </button>
+                    )}
+                    {!selected.contact && selected.outreachBody && (
+                      <p className="mt-2 text-[10px] text-amber-800">
+                        Add a contact email on this lead before sending.
+                      </p>
                     )}
                   </div>
                   )}
@@ -2996,23 +3017,35 @@ export default function Pipeline() {
                         Back
                       </button>
                     )}
+                    {selected.contact && selected.outreachBody && selected.stage !== "Outreach Sent" && (
+                      <button
+                        type="button"
+                        disabled={sendingLeadId === selected.id}
+                        onClick={() => void sendOneLead(selected)}
+                        className="sb-btn sb-btn-primary"
+                      >
+                        {sendingLeadId === selected.id ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Send className="h-3 w-3" />
+                        )}
+                        {sendingLeadId === selected.id ? "Sending…" : "Send outreach"}
+                      </button>
+                    )}
                     <button
-                      onClick={() => {
-                        copyDraft();
-                        toast.success("Draft copied — ready to send");
-                      }}
+                      onClick={copyDraft}
                       className="sb-btn"
                     >
-                      <Mail className="h-3 w-3" />
-                      Approve &amp; Copy
+                      <Copy className="h-3 w-3" />
+                      Copy draft
                     </button>
                     {STAGES.indexOf(selected.stage) < STAGES.length - 1 && (
                       <button
                         onClick={() => void handleAdvanceLead(selected)}
                         disabled={advancingLeadId === selected.id}
-                        className="sb-btn sb-btn-primary"
+                        className="sb-btn"
                       >
-                        {advancingLeadId === selected.id ? "Advancing..." : isAdmin ? "Advance with Cal" : "Next stage"}
+                        {advancingLeadId === selected.id ? "Advancing..." : "Next stage"}
                         <ArrowRight className="h-3 w-3" />
                       </button>
                     )}

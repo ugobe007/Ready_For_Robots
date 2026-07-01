@@ -16,6 +16,7 @@ import {
 import { Link, useLocation } from "wouter";
 import AnimatedStat, { statTarget } from "@/components/marketing/AnimatedStat";
 import { HeatBadge } from "@/components/marketing/primitives";
+import { checkoutLoginPath, storeCheckoutIntent } from "@/lib/authNext";
 
 type BenchReport = {
   total_robots?: number;
@@ -567,7 +568,8 @@ const HOME_PRICING_TIERS = [
     accent: "border-emerald-300 ring-1 ring-emerald-200 shadow-lg shadow-emerald-100/40",
     iconBg: "bg-amber-50 text-amber-600",
     cta: "Upgrade to Pro",
-    href: "/signup?plan=pro&next=%2Fpipeline",
+    href: checkoutLoginPath("pro"),
+    checkoutTier: "pro" as const,
     features: ["Unlimited saved leads", "SIGNAL research on HOT/WARM", "HubSpot auto-sync"],
     highlight: true,
     badge: "Most popular",
@@ -649,7 +651,12 @@ export function MarketingPricing() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setLocation(tier.href)}
+                    onClick={() => {
+                      if ("checkoutTier" in tier && tier.checkoutTier) {
+                        storeCheckoutIntent(tier.checkoutTier);
+                      }
+                      setLocation(tier.href);
+                    }}
                     className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] ${
                       tier.highlight
                         ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"

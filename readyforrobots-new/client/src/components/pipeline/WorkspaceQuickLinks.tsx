@@ -1,8 +1,8 @@
 /**
- * Signed-in workspace nav — pipeline-first landing with CRM path visible.
+ * Signed-in workspace nav — pipeline-first; CRM is advanced, not the primary path.
  */
 import { Link } from "wouter";
-import { ArrowRight, LayoutDashboard, Plug, Zap } from "lucide-react";
+import { ArrowRight, Inbox, Zap } from "lucide-react";
 
 type Props = {
   savedCount: number;
@@ -33,37 +33,16 @@ export default function WorkspaceQuickLinks({
             dark ? "text-emerald-300" : "text-emerald-800"
           }`}
         >
-          Your sales workspace
+          Everything happens on this page
         </p>
         <p className={`mt-0.5 text-xs ${dark ? "text-slate-300" : "text-gray-600"}`}>
-          {savedCount === 0
-            ? "Save a lead below, then run outreach in native CRM or HubSpot."
-            : `${savedCount} saved lead${savedCount === 1 ? "" : "s"} · pick native CRM or HubSpot sync anytime.`}
+          Pick a lead → Develop with SIGNAL → Send from the right panel.{" "}
+          {savedCount > 0
+            ? `${savedCount} saved in your workspace.`
+            : "Save your first lead to unlock the kanban + send flow."}
         </p>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        <Link
-          href="/crm"
-          className={
-            dark
-              ? "inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
-              : "inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-800 hover:bg-gray-100"
-          }
-        >
-          <LayoutDashboard className="h-3 w-3" />
-          CRM
-        </Link>
-        <Link
-          href="/integrations/hubspot"
-          className={
-            dark
-              ? "inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-amber-100 hover:bg-amber-500/25"
-              : "inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-950 hover:bg-amber-100"
-          }
-        >
-          <Plug className="h-3 w-3" />
-          {hubspotConnected ? "HubSpot ✓" : "HubSpot"}
-        </Link>
         <Link
           href="/sales-workflow"
           className={
@@ -73,8 +52,29 @@ export default function WorkspaceQuickLinks({
           }
         >
           <Zap className="h-3 w-3" />
-          Next actions
+          Activity
           {queuedActions > 0 ? ` (${queuedActions})` : ""}
+        </Link>
+        <Link
+          href="/inbox"
+          className={
+            dark
+              ? "inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 hover:bg-white/10"
+              : "inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-800 hover:bg-gray-100"
+          }
+        >
+          <Inbox className="h-3 w-3" />
+          Replies
+        </Link>
+        <Link
+          href="/integrations/hubspot"
+          className={
+            dark
+              ? "inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-amber-100 hover:bg-amber-500/25"
+              : "inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-950 hover:bg-amber-100"
+          }
+        >
+          {hubspotConnected ? "HubSpot ✓" : "HubSpot sync"}
         </Link>
         {savedCount === 0 && (
           <span
@@ -82,7 +82,7 @@ export default function WorkspaceQuickLinks({
               dark ? "text-amber-200" : "text-amber-800"
             }`}
           >
-            Save first lead
+            Save a lead below
             <ArrowRight className="h-3 w-3" />
           </span>
         )}

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import {
   isAdminNavActive,
+  openWorkspaceHref,
   visibleAdminNavSections,
 } from "@/lib/adminNavLinks";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -11,7 +12,7 @@ type Props = {
 };
 
 export default function AdminNav({ variant = "light" }: Props) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const isAdmin = useIsAdmin();
   const sections = visibleAdminNavSections(isAdmin);
   const dark = variant === "dark";
@@ -40,7 +41,13 @@ export default function AdminNav({ variant = "light" }: Props) {
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.href.split("#", 1)[0]}
+                  onClick={(e) => {
+                    if (link.href.includes("#")) {
+                      e.preventDefault();
+                      openWorkspaceHref(link.href, setLocation);
+                    }
+                  }}
                   className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
                     active
                       ? dark

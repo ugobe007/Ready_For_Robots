@@ -38,6 +38,14 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CAL_AUTONOMY_DRAFT_BATCH = "50"
   CAL_REFRESH_STALE_DAYS = "7"
   CAL_TEMPLATE_VERSION = "2"
+  # Supply-side Cal autonomy (robot vendor signup outreach — worker process)
+  ENABLE_SCHEDULED_SUPPLY_AUTONOMY = "1"
+  SUPPLY_AUTONOMY_EVERY_HOURS = "6"
+  SUPPLY_AUTONOMY_FIRST_RUN_DELAY_MINUTES = "30"
+  SUPPLY_AUTONOMY_SEND_LIMIT = "6"
+  SUPPLY_AUTONOMY_MIN_SCORE = "60"
+  SUPPLY_AUTONOMY_BATCH = "40"
+  SUPPLY_TEMPLATE_VERSION = "1"
   # OAuth callbacks redirect here after connect (Google Calendar, HubSpot, etc.)
   PUBLIC_SITE_URL = "https://readyforrobots.com"
   GOOGLE_CALENDAR_REDIRECT_URI = "https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback"

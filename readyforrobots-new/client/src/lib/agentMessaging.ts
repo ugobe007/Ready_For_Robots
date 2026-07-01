@@ -6,8 +6,10 @@ export const OUTREACH_SIGNATURE = "Best,\n[Your name]";
 export const OUTREACH_INTRO = "";
 
 export const BUYER_SIGNAL_EXPLANATION =
-  "I track labor, expansion, and CapEx signals to spot where automation is actually worth a look.";
+  "We track live buying signals and rank accounts that are actually moving, not just browsing.";
 
 // Admin-only Cal persona (internal tooling only — do not surface on user pages).
-export const CAL_INTRO = "Cal here — I run the automation research desk at Ready For Robots.";
+export const CAL_INTRO = "Hi — Cal from Ready For Robots.";
+export const CAL_VENDOR_SHERPA_LINE =
+  "Most robot companies are engineer-led, not sales-led. I act as a guide through trials and deployments — honest readouts, no theater.";
 export const CAL_SIGNATURE = ["— Cal", "Ready For Robots"].join("\n");

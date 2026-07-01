@@ -33,7 +33,7 @@ from app.services.agent_messaging import (
     CAL_VENDOR_STRATEGY_CALL_CTA,
     VEGAS_DISTRIBUTION_LINE,
     cal_signature,
-    cal_vendor_opening,
+    cal_vendor_match_paragraph,
 )
 from app.services.cal_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
@@ -1041,7 +1041,7 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
 
         return build_stagegate_draft(rc)
 
-    subject = f"Sales channel signals for {rc.company_name}"
+    subject = f"Buyer matches for {rc.company_name}"
     focus = _vendor_focus_phrase(rc)
     possessive = _vendor_possessive(rc.company_name)
     lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
@@ -1052,21 +1052,23 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dic
         robot_type=getattr(rc, "robot_type", None),
         allow_humor=True,
     )
-    body = f"""Hello {rc.company_name} team,
+    from app.services.agent_messaging import cal_vendor_match_paragraph
 
-{cal_vendor_opening()}
+    body = f"""Hi,
+
+{cal_vendor_match_paragraph(rc.company_name, industry=focus)}
 
 {insight}
 
-I came across a few buyer signals that looked relevant to {rc.company_name}, especially around {focus}.
+A few accounts stood out — not list noise, timing signals behind them:
 
 {lead_lines}
 
-I am not assuming each one is a fit. They stood out because there is some timing signal behind the account, not just a company name on a list.
-
 {response_playbook}
 
-If you are pushing West Coast expansion or hospitality adoption, we can map a custom sales channel strategy around {possessive} hardware and target market. {VEGAS_DISTRIBUTION_LINE}
+I'm not assuming each one is a fit. PoCs fail when capabilities don't match buyer requirements; I'll flag what aligns and what doesn't.
+
+If you're pushing West Coast expansion or hospitality adoption, we can map a channel strategy around {possessive} hardware. {VEGAS_DISTRIBUTION_LINE}
 
 {CAL_VENDOR_OFFRAMP_LINE}
 

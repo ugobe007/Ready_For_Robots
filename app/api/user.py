@@ -58,17 +58,33 @@ def _uid_uuid(user: dict):
 
 # ── Helpers: ensure profile exists ────────────────────────────────────────────
 
-def _ensure_profile(db: Session, uid: str, email: str):
-    """Upsert the user_profiles row — keep email in sync with JWT (OAuth can update it)."""
+def _ensure_profile(db: Session, uid: str, email: str) -> bool:
+    """Upsert user_profiles — keep email in sync with JWT. Returns True if newly created."""
+    existing = db.execute(
+        text("SELECT id FROM user_profiles WHERE id = :uid"),
+        {"uid": uid},
+    ).fetchone()
+    if existing:
+        db.execute(
+            text("""
+                UPDATE user_profiles
+                SET email = COALESCE(NULLIF(:email, ''), email),
+                    updated_at = now()
+                WHERE id = :uid
+            """),
+            {"uid": uid, "email": email},
+        )
+        db.commit()
+        return False
     db.execute(
         text("""
             INSERT INTO user_profiles (id, email)
             VALUES (:uid, :email)
-            ON CONFLICT (id) DO UPDATE SET email = COALESCE(NULLIF(:email, ''), user_profiles.email)
         """),
         {"uid": uid, "email": email},
     )
     db.commit()
+    return True
 
 
 # ── Summary card generator ─────────────────────────────────────────────────────
@@ -193,7 +209,7 @@ def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
     from app.services.plan_entitlements import user_workspace_entitlements
 
     try:
-        _ensure_profile(db, _uid(user), user["email"])
+        is_new_profile = _ensure_profile(db, _uid(user), user["email"])
         row = db.execute(
             text("SELECT id, email, display_name, created_at FROM user_profiles WHERE id = :uid"),
             {"uid": _uid(user)},
@@ -202,6 +218,18 @@ def get_me(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
         _handle_db_schema_not_ready(e)
     if not row:
         raise HTTPException(status_code=404, detail="Profile not found")
+    if is_new_profile and (row.email or user.get("email")):
+        try:
+            from app.services.onboarding_email import maybe_send_welcome_email
+
+            maybe_send_welcome_email(
+                db,
+                user_id=_uid(user),
+                email=(row.email or user.get("email") or "").strip(),
+                display_name=row.display_name,
+            )
+        except Exception:
+            pass
     # Prefer JWT email for admin check (source of truth at login); fallback to DB
     email_for_admin = (user.get("email") or "").strip() or (row.email or "").strip()
     return {

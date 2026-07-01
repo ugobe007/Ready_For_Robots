@@ -12,6 +12,7 @@ import Signals from "./pages/Signals";
 import HowItWorks from "./pages/HowItWorks";
 import Intelligence from "./pages/Intelligence";
 import Newsletter from "./pages/Newsletter";
+import BillingSuccess from "./pages/BillingSuccess";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -34,6 +35,7 @@ import Admin from "./pages/Admin";
 import Social from "./pages/Social";
 import ExperimentIdeas from "./pages/ExperimentIdeas";
 import { AuthProvider } from "./contexts/AuthContext";
+import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
@@ -53,6 +55,7 @@ function Router() {
       <Route path="/robots" component={Robots} />
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={Social} />
       <Route path="/experiment" component={ExperimentIdeas} />
       <Route path="/login" component={Login} />
@@ -89,6 +92,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <AuthProvider>
+          <PostAuthRedirect />
           <ScoutChat>
             <VisitTracker>
             <TooltipProvider>

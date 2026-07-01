@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
-import { markFreshSignup } from "@/lib/firstSaveGuide";
+import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent } from "@/lib/authNext";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -15,11 +15,14 @@ export default function Login() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errMsg, setErrMsg] = useState("");
 
-  const nextPath = () => {
-    if (typeof window === "undefined") return "/pipeline";
-    const next = new URLSearchParams(window.location.search).get("next");
-    return next && next.startsWith("/") ? next : "/pipeline";
-  };
+  const redirectTarget = () => postAuthRedirectTarget("/pipeline");
+
+  useEffect(() => {
+    const plan = readPlanParam();
+    if (plan) storeCheckoutIntent(plan);
+    const next = readNextParam();
+    if (next) storePendingNext(next);
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -39,13 +42,15 @@ export default function Login() {
       const { data } = await client.auth.getSession();
       const session = data?.session;
       if (!session) return;
+      const hasExplicitReturn = Boolean(readNextParam() || peekPendingNext());
+      const dest = resolvePostAuthPath("/pipeline");
       try {
         const res = await fetch(`${getApiBase()}/api/user/auth-debug`, {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (res.ok) {
           const j = await res.json();
-          if (j?.is_admin) {
+          if (j?.is_admin && !hasExplicitReturn && dest === "/pipeline") {
             setLocation("/admin");
             return;
           }
@@ -53,8 +58,7 @@ export default function Login() {
       } catch {
         /* ignore */
       }
-      markFreshSignup();
-      setLocation(nextPath());
+      setLocation(dest);
     }
 
     void afterLogin();
@@ -74,7 +78,7 @@ export default function Login() {
     setStatus("idle");
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: supabaseOAuthRedirect(nextPath()) },
+      options: { redirectTo: supabaseOAuthRedirect(redirectTarget()) },
     });
     if (error) {
       setStatus("error");
@@ -87,7 +91,7 @@ export default function Login() {
     if (!email.trim() || !supabase) return;
     setStatus("sending");
     setErrMsg("");
-    const redirectTo = supabaseOAuthRedirect(nextPath());
+    const redirectTo = supabaseOAuthRedirect(redirectTarget());
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: redirectTo },

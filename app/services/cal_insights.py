@@ -1,8 +1,8 @@
 """Rotating industry insights for Cal's Ready For Robots outreach.
 
-Persona: Cal on the automation research desk — buyer signals, vendor matching,
-trade-show timing for sales pipeline. NOT StageGate logistics (warehousing,
-staging, on-site repair). Keep insights in that lane; never mention onstage.bot.
+Persona: Cal — veteran robotics sherpa for engineer-led robot companies.
+PoC → deployment reality, buyer matching, trade-show timing. Honest, abbreviated, in-the-know.
+NOT StageGate logistics (warehousing, staging, on-site repair). Never mention onstage.bot.
 """
 from __future__ import annotations
 
@@ -26,9 +26,54 @@ class _Insight:
     show_key: Optional[str] = None
     robot_pattern: Optional[re.Pattern[str]] = None
     humor: bool = False
+    vendor_only: bool = False
 
 
 _INSIGHTS: list[_Insight] = [
+    _Insight(
+        id="poc_to_paid",
+        text=(
+            "Most PoCs stall on integration and support, not hardware specs. "
+            "Buyers decide on who shows up when the robot misbehaves on their floor — "
+            "not who had the slickest demo video."
+        ),
+        vendor_only=True,
+    ),
+    _Insight(
+        id="engineer_led_sales",
+        text=(
+            "Engineer-led robot companies often lose deals in the handoff after the PoC — "
+            "when the buyer's ops team asks about uptime, spares, and who fixes it at 2 a.m. "
+            "That conversation should start before the trial, not after."
+        ),
+        vendor_only=True,
+    ),
+    _Insight(
+        id="roi_nuance",
+        text=(
+            "ROI gets the meeting; proof points, roadmap, and PoC availability get the pilot. "
+            "Buyers weigh what you've deployed elsewhere, what ships in the next 12 months, "
+            "and whether your leadership team has done this before."
+        ),
+        vendor_only=True,
+    ),
+    _Insight(
+        id="capability_match",
+        text=(
+            "The trick isn't listing every sensor — it's matching what your robot does today "
+            "(and credibly next year) to what the buyer's workflow actually requires. "
+            "Misalignment here is the #1 PoC killer I've seen across AMR and industrial deployments."
+        ),
+        vendor_only=True,
+    ),
+    _Insight(
+        id="industry_story",
+        text=(
+            "Buyers in each industry respond to different proof — hospitality cares about guest-facing reliability; "
+            "logistics cares about throughput under real aisle conditions. "
+            "A story from their vertical beats a generic spec sheet every time."
+        ),
+    ),
     _Insight(
         id="showroom_not_crate",
         text=(
@@ -166,13 +211,19 @@ def pick_cal_insight(
     robot_type: Optional[str] = None,
     seed: Optional[str] = None,
     allow_humor: bool = True,
+    audience: str = "any",
 ) -> str:
-    """Pick one insight paragraph. Same seed → same insight."""
+    """Pick one insight paragraph. Same seed → same insight.
+
+    audience: "vendor" | "buyer" | "any" — filters vendor-only PoC/deployment insights.
+    """
     seed_key = seed or company_name or trade_show or "ready-for-robots"
     show = _show_key(trade_show)
     robot = (robot_type or "").strip()
 
     pool = [i for i in _INSIGHTS if allow_humor or not i.humor]
+    if audience == "buyer":
+        pool = [i for i in pool if not i.vendor_only]
 
     show_matches = [i for i in pool if show and i.show_key == show]
     robot_matches = [

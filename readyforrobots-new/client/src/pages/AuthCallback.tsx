@@ -2,13 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
-import { clearSupabaseOAuthParams, readSupabaseOAuthError } from "@/lib/authCallback";
+import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
+import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget } from "@/lib/authNext";
 import { markFreshSignup } from "@/lib/firstSaveGuide";
-
-function safeNext(raw: string | null): string {
-  if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
-  return "/pipeline";
-}
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -20,8 +16,9 @@ export default function AuthCallback() {
       return;
     }
     const client = supabase;
-    const params = new URLSearchParams(window.location.search);
-    const next = safeNext(params.get("next"));
+    const pathname = window.location.pathname;
+    const search = window.location.search;
+    const next = readNextParam(search) ?? peekPendingNext() ?? postAuthRedirectTarget("/pipeline");
 
     const oauthErr = readSupabaseOAuthError();
     if (oauthErr) {
@@ -37,13 +34,20 @@ export default function AuthCallback() {
       if (done) return;
       done = true;
       markFreshSignup();
+      clearPendingNext();
       window.history.replaceState(null, "", clearSupabaseOAuthParams("/auth/callback", `?next=${encodeURIComponent(next)}`));
       setLocation(next);
     };
 
-    void client.auth.getSession().then(({ data }) => {
+    void (async () => {
+      const { error } = await finishSupabaseOAuthCallback(client, pathname, search);
+      if (error) {
+        setLocation(`/login?next=${encodeURIComponent(next)}&auth_error=${encodeURIComponent(error)}`);
+        return;
+      }
+      const { data } = await client.auth.getSession();
       if (data.session) finish();
-    });
+    })();
 
     const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
       if (session) finish();

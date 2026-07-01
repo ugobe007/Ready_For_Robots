@@ -15,23 +15,28 @@ export type AdminNavSection = {
 /** Canonical workspace navigation — keep AdminNav and Header dropdown in sync. */
 export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
-    label: "Command",
+    label: "Pipeline",
     links: [
-      { label: "Pipeline", href: "/pipeline" },
-      { label: "Sales workflow", href: "/sales-workflow", shortLabel: "Buyer actions feed" },
-      { label: "Command center", href: "/admin", shortLabel: "Admin dashboard", adminOnly: true },
-      { label: "Cal queue", href: "/admin#cal-outreach", shortLabel: "Cal outreach queue", adminOnly: true },
-      { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
-      { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
+      { label: "Live pipeline", href: "/pipeline", shortLabel: "Pick leads · draft · send" },
+      { label: "Activity feed", href: "/sales-workflow", shortLabel: "What happened while you were away" },
+      { label: "Inbox", href: "/inbox", shortLabel: "Replies & threads" },
     ],
   },
   {
-    label: "Sales",
+    label: "Tools",
     links: [
-      { label: "Buyer CRM", href: "/crm" },
-      { label: "Inbox", href: "/inbox" },
+      { label: "Outreach editor", href: "/crm", shortLabel: "Advanced approve/send UI" },
       { label: "Calendar", href: "/calendar" },
-      { label: "Sales Console", href: "/sales-console" },
+      { label: "Sales console", href: "/sales-console", shortLabel: "Reply automation" },
+    ],
+  },
+  {
+    label: "Admin",
+    links: [
+      { label: "Command center", href: "/admin", shortLabel: "Admin dashboard", adminOnly: true },
+      { label: "Cal queue", href: "/admin#cal-outreach", shortLabel: "Bulk HOT/WARM outreach", adminOnly: true },
+      { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
+      { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
     ],
   },
   {
@@ -93,3 +98,31 @@ export function visibleAdminNavSections(isAdmin: boolean): AdminNavSection[] {
     links: section.links.filter((link) => !link.adminOnly || isAdmin),
   })).filter((section) => section.links.length > 0);
 }
+
+/** SPA navigation that preserves hash anchors (wouter path-only routes drop #sections). */
+export function openWorkspaceHref(href: string, setLocation: (path: string) => void): void {
+  const hashIdx = href.indexOf("#");
+  if (hashIdx === -1) {
+    setLocation(href);
+    return;
+  }
+  const path = href.slice(0, hashIdx) || "/";
+  const hash = href.slice(hashIdx);
+  setLocation(path);
+  if (typeof window === "undefined") return;
+  const full = `${path}${hash}`;
+  if (`${window.location.pathname}${window.location.hash}` !== full) {
+    window.history.replaceState(null, "", full);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }
+  const id = hash.replace(/^#/, "");
+  window.setTimeout(() => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 120);
+}
+
+export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
+  { label: "Cal queue — draft & send", href: "/admin#cal-outreach", shortLabel: "Cal outreach" },
+  { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions" },
+  { label: "Command center", href: "/admin", shortLabel: "Admin home" },
+];

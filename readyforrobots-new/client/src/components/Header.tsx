@@ -22,11 +22,14 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import {
+  ADMIN_QUICK_ACTIONS,
   isAdminNavActive,
   isAdminWorkspacePath,
+  openWorkspaceHref,
   visibleAdminNavSections,
 } from "@/lib/adminNavLinks";
 import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
+import { loginHref } from "@/lib/authNext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 function smoothScroll(href: string) {
@@ -83,7 +86,7 @@ export default function Header() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { session } = useAuth();
   const isAdmin = useIsAdmin();
   const workspaceSections = visibleAdminNavSections(isAdmin);
@@ -256,7 +259,7 @@ export default function Header() {
 
               {!session ? (
                 <>
-                  <Link href="/login" className={`hidden md:inline text-sm font-medium ${lightNav ? "text-slate-200 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+                  <Link href={loginHref()} className={`hidden md:inline text-sm font-medium ${lightNav ? "text-slate-200 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                     Sign in
                   </Link>
                   <Link
@@ -298,8 +301,14 @@ export default function Header() {
                             {section.links.map((link) => (
                               <Link
                                 key={link.href}
-                                href={link.href}
-                                onClick={() => setWorkspaceOpen(false)}
+                                href={link.href.split("#", 1)[0]}
+                                onClick={(e) => {
+                                  setWorkspaceOpen(false);
+                                  if (link.href.includes("#")) {
+                                    e.preventDefault();
+                                    openWorkspaceHref(link.href, setLocation);
+                                  }
+                                }}
                                 className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-50 ${
                                   isAdminNavActive(location, link.href) ? "bg-emerald-50 text-emerald-700" : "text-gray-700"
                                 }`}
@@ -309,6 +318,27 @@ export default function Header() {
                             ))}
                           </div>
                         ))}
+                        {isAdmin && (
+                          <div className="border-t border-gray-100 px-2 py-2 mt-1">
+                            <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
+                              Admin actions
+                            </p>
+                            {ADMIN_QUICK_ACTIONS.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href.split("#", 1)[0]}
+                                onClick={(e) => {
+                                  setWorkspaceOpen(false);
+                                  e.preventDefault();
+                                  openWorkspaceHref(link.href, setLocation);
+                                }}
+                                className="block rounded-lg px-3 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-50"
+                              >
+                                {link.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -462,8 +492,14 @@ export default function Header() {
                 {section.links.map((link) => (
                   <Link
                     key={link.href}
-                    href={link.href}
-                    onClick={closeDrawer}
+                    href={link.href.split("#", 1)[0]}
+                    onClick={(e) => {
+                      closeDrawer();
+                      if (link.href.includes("#")) {
+                        e.preventDefault();
+                        openWorkspaceHref(link.href, setLocation);
+                      }
+                    }}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm ${
                       isAdminNavActive(location, link.href) ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50"
                     }`}
@@ -474,13 +510,33 @@ export default function Header() {
                 ))}
               </div>
             ))}
+            {isAdmin && (
+              <div className="mb-2 rounded-xl border border-amber-100 bg-amber-50/80 p-2">
+                <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">Admin actions</p>
+                {ADMIN_QUICK_ACTIONS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href.split("#", 1)[0]}
+                    onClick={(e) => {
+                      closeDrawer();
+                      e.preventDefault();
+                      openWorkspaceHref(link.href, setLocation);
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-950"
+                  >
+                    {link.label}
+                    <ChevronRight className="h-3.5 w-3.5 text-amber-400 ml-auto" />
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         <div className="px-4 py-3">
           {!session ? (
             <div className="space-y-2">
-              <Link href="/login" onClick={closeDrawer} className="block text-center py-2 text-sm text-gray-600">
+              <Link href={loginHref()} onClick={closeDrawer} className="block text-center py-2 text-sm text-gray-600">
                 Sign in
               </Link>
               <Link

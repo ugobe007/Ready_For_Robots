@@ -1,12 +1,16 @@
 /**
  * Pricing — ReadyForRobots (Precision Intelligence light theme)
  */
-import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle, ChevronDown } from "lucide-react";
+import { CheckCircle2, ArrowRight, Zap, Shield, Cpu, HelpCircle, ChevronDown, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import { useLocation, Link } from "wouter";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { useAuth } from "@/contexts/AuthContext";
+import { checkoutAuthHref } from "@/lib/authNext";
+import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
 
 const tiers = [
   {
@@ -58,8 +62,8 @@ const tiers = [
     tagline: "For teams ready to act on more accounts",
     accent: "slate" as const,
     icon: Shield,
-    cta: "Talk to sales",
-    ctaAction: "sales",
+    cta: "Apply as founding customer",
+    ctaAction: "founding",
     features: [
       "Everything in Pro",
       "Priority SIGNAL research coverage",
@@ -141,19 +145,100 @@ const accentStyles = {
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+  const { session, loading: authLoading } = useAuth();
+  const [billing, setBilling] = useState<BillingConfig | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [foundingEmail, setFoundingEmail] = useState("");
+  const [foundingCompany, setFoundingCompany] = useState("");
+  const [foundingName, setFoundingName] = useState("");
+  const [foundingBusy, setFoundingBusy] = useState(false);
+  const [foundingError, setFoundingError] = useState("");
+  const [foundingSuccess, setFoundingSuccess] = useState(false);
+  const upgradeStarted = useRef(false);
+
+  useEffect(() => {
+    void fetchBillingConfig().then(setBilling).catch(() => setBilling({ enabled: false }));
+  }, []);
+
+  const beginCheckout = useCallback(async (tier: "pro" | "premium") => {
+    setCheckoutError("");
+    if (!billing?.enabled || !session?.access_token) {
+      setLocation(checkoutAuthHref(tier));
+      return;
+    }
+    setCheckoutBusy(tier);
+    try {
+      const url = await startCheckout(session.access_token, tier);
+      window.location.href = url;
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : "Checkout failed");
+      setCheckoutBusy(null);
+    }
+  }, [billing?.enabled, session?.access_token, setLocation]);
+
+  useEffect(() => {
+    if (authLoading || !billing?.enabled || !session?.access_token || upgradeStarted.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const upgrade = (params.get("upgrade") || "").toLowerCase();
+    if (upgrade === "pro" || upgrade === "premium") {
+      upgradeStarted.current = true;
+      void beginCheckout(upgrade);
+    }
+  }, [authLoading, billing?.enabled, session?.access_token, beginCheckout]);
 
   const handleCta = (action: string, tier: string) => {
     const plan = tier.toLowerCase();
+    if (action === "founding") {
+      if (plan === "premium" && billing?.premium_available) {
+        void beginCheckout("premium");
+        return;
+      }
+      document.getElementById("founding-customer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (action === "trial" || action === "checkout_pro") {
+      void beginCheckout("pro");
+      return;
+    }
+    if (action === "checkout_premium") {
+      void beginCheckout("premium");
+      return;
+    }
     if (action === "sales") {
       window.location.href = "mailto:sales@readyforrobots.com?subject=Premium%20workspace%20inquiry";
       return;
     }
     const next = encodeURIComponent("/pipeline");
-    const query =
-      action === "trial"
-        ? `/signup?plan=pro&next=${next}`
-        : `/signup?plan=${plan}&next=${next}`;
-    setLocation(query);
+    setLocation(`/signup?plan=${plan}&next=${next}`);
+  };
+
+  const submitFounding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFoundingBusy(true);
+    setFoundingError("");
+    setFoundingSuccess(false);
+    try {
+      const res = await fetch(`${getApiBase()}/api/waitlist/founding-customer`, liveFetchInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: foundingEmail.trim(),
+          company: foundingCompany.trim(),
+          name: foundingName.trim() || undefined,
+        }),
+      }));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(String(data.detail || "Could not submit request"));
+      setFoundingSuccess(true);
+      setFoundingEmail("");
+      setFoundingCompany("");
+      setFoundingName("");
+    } catch (err) {
+      setFoundingError(err instanceof Error ? err.message : "Could not submit request");
+    } finally {
+      setFoundingBusy(false);
+    }
   };
 
   return (
@@ -169,7 +254,7 @@ export default function Pricing() {
             <span className="font-bold uppercase tracking-widest text-emerald-400">Signal</span>
             {" — robotics prospecting, qualifying, and outreach synced to "}
             <span className="font-bold text-amber-400">HubSpot</span>
-            {" or your CRM. Paid billing is rolling out — every plan starts with a free workspace."}
+            {" or your CRM. Free workspace to start — Pro and Premium checkout when billing is enabled."}
           </>
         }
         innerClassName="pb-8 text-center [&_.page-hero-title]:mx-auto [&_.page-hero-description]:mx-auto"
@@ -185,6 +270,9 @@ export default function Pricing() {
                 Compare vs data tools
               </Link>
             </p>
+            {checkoutError ? (
+              <p className="mt-3 text-xs text-red-600">{checkoutError}</p>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
@@ -220,12 +308,16 @@ export default function Pricing() {
 
                     <button
                       onClick={() => handleCta(tier.ctaAction, tier.name)}
-                      className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl mb-7 transition-all hover:-translate-y-0.5 ${
+                      disabled={checkoutBusy === tier.name.toLowerCase() || checkoutBusy === (tier.name === "Pro" ? "pro" : tier.name === "Premium" ? "premium" : "")}
+                      className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-3 rounded-xl mb-7 transition-all hover:-translate-y-0.5 disabled:opacity-60 ${
                         tier.highlight
                           ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
                           : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
                       }`}
                     >
+                      {checkoutBusy === "pro" && tier.name === "Pro" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : null}
                       {tier.cta} <ArrowRight className="h-3.5 w-3.5" />
                     </button>
 
@@ -250,6 +342,81 @@ export default function Pricing() {
               );
             })}
           </div>
+
+          <section
+            id="founding-customer"
+            className="mb-16 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+          >
+            <p className="section-eyebrow mb-2">Founding customers</p>
+            <h2 className="font-display font-extrabold text-gray-900 mb-2 text-xl">
+              Premium workspace — early access
+            </h2>
+            <p className="text-sm text-gray-600 mb-6 max-w-2xl">
+              Teams ready to run a full robot sales motion can apply for founding customer terms on Premium.
+              We will follow up personally on founding terms. Premium self-serve checkout appears here when{" "}
+              <code className="text-[10px]">STRIPE_PRICE_PREMIUM</code> is configured on the server.
+            </p>
+            {foundingSuccess ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                Thanks — we received your request and will reach out shortly.
+              </div>
+            ) : (
+              <form onSubmit={(e) => void submitFounding(e)} className="grid gap-4 max-w-lg">
+                <div>
+                  <label htmlFor="founding-email" className="block text-xs font-semibold text-gray-700 mb-1">
+                    Work email
+                  </label>
+                  <input
+                    id="founding-email"
+                    type="email"
+                    required
+                    value={foundingEmail}
+                    onChange={(e) => setFoundingEmail(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+                    placeholder="you@company.com"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="founding-company" className="block text-xs font-semibold text-gray-700 mb-1">
+                    Company
+                  </label>
+                  <input
+                    id="founding-company"
+                    type="text"
+                    required
+                    value={foundingCompany}
+                    onChange={(e) => setFoundingCompany(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+                    placeholder="Your robot company or sales team"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="founding-name" className="block text-xs font-semibold text-gray-700 mb-1">
+                    Name <span className="font-normal text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    id="founding-name"
+                    type="text"
+                    value={foundingName}
+                    onChange={(e) => setFoundingName(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm"
+                    placeholder="Your name"
+                  />
+                </div>
+                {foundingError ? (
+                  <p className="text-xs text-red-600">{foundingError}</p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={foundingBusy}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                >
+                  {foundingBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Request founding access
+                </button>
+              </form>
+            )}
+          </section>
 
           <section className="mb-16 rounded-2xl border border-amber-200 bg-amber-50/50 p-6">
             <div className="mb-5 flex items-start gap-4">

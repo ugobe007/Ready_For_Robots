@@ -59,29 +59,28 @@ def test_vendor_signup_email_only_mentions_three_matches():
 
     email = _vendor_signup_email(_RobotCompany(), matches)
 
-    assert email["subject"] == "Sales channel signals for DexMate Robotics"
+    assert email["subject"] == "Buyer matches for DexMate Robotics"
     assert "Buyer 1" in email["body"]
     assert "Buyer 2" in email["body"]
     assert "Buyer 3" in email["body"]
     assert "Buyer 4" not in email["body"]
     assert "Buyer 5" not in email["body"]
-    assert "Cal here — I run the automation research desk at Ready For Robots." in email["body"]
+    assert "DexMate Robotics" in email["body"]
+    assert "PoC" in email["body"] or "PoCs" in email["body"]
     assert "ReadyBot" not in email["body"]
-    assert "We map automation demand signals across enterprise buyers" in email["body"]
-    assert "search engine for your sales pipeline" in email["body"]
-    assert "If the signal is weak, we'll say so" in email["body"]
+    assert "If the signal is weak" in email["body"]
     assert "onstage.bot" not in email["body"]
     assert "physical staging" not in email["body"]
-    assert "Worth a quick strategy call this week?" in email["body"]
+    assert "Worth 15 minutes" in email["body"]
     assert "secure warehousing, staging" not in email["body"]
     assert "two-sided robot automation marketplace" not in email["body"]
     assert "Preformatted response sequence" not in email["body"]
     assert "<a href=" not in email["body"]
     assert "https://news.google.com" not in email["body"]
     assert "Buyer 1 (Unknown)" not in email["body"]
-    assert "I am not assuming each one is a fit." in email["body"]
+    assert "I'm not assuming each one is a fit" in email["body"]
     assert "— Cal\nReady For Robots" in email["body"]
-    assert "sales channel strategy" in email["body"]
+    assert "channel strategy" in email["body"]
 
 
 def test_vendor_logistics_requires_explicit_vendor_fit():

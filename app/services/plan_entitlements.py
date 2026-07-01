@@ -53,9 +53,29 @@ def _is_admin_email(email: str) -> bool:
     return _is_admin(email)
 
 
-def resolve_plan_tier(user: Optional[dict]) -> str:
+def _billing_tier_from_db(db, uid: str) -> Optional[str]:
+    if db is None or not uid:
+        return None
+    try:
+        from sqlalchemy import text
+
+        row = db.execute(
+            text("SELECT billing_tier FROM user_profiles WHERE id = :uid"),
+            {"uid": str(uid)},
+        ).fetchone()
+        if row and (row.billing_tier or "").strip():
+            return str(row.billing_tier).strip().lower()
+    except Exception:
+        return None
+    return None
+
+
+def resolve_plan_tier(user: Optional[dict], db=None) -> str:
     if not user:
         return PLAN_ANONYMOUS
+    slug = resolve_billing_tier_slug(user, db=db)
+    if slug in PAID_PIPELINE_SLUGS:
+        return PLAN_PAID
     email = (user.get("email") or "").strip()
     if email and _is_admin_email(email):
         return PLAN_PAID
@@ -66,20 +86,24 @@ def resolve_plan_tier(user: Optional[dict]) -> str:
     }
     if email.lower() in paid_emails:
         return PLAN_PAID
-    slug = (user.get("plan_tier") or user.get("plan") or "").strip().lower()
-    if slug in PAID_PIPELINE_SLUGS:
-        return PLAN_PAID
     return PLAN_FREE
 
 
-def resolve_billing_tier_slug(user: Optional[dict]) -> str:
-    """JWT / env billing slug — may differ from effective workspace plan."""
+def resolve_billing_tier_slug(user: Optional[dict], db=None) -> str:
+    """JWT / DB / env billing slug — may differ from effective workspace plan."""
     if not user:
         return "anonymous"
+    db_tier = _billing_tier_from_db(db, user.get("uid") or "")
+    if db_tier and db_tier in PAID_PIPELINE_SLUGS:
+        return db_tier
     email = (user.get("email") or "").strip()
     if email and _is_admin_email(email):
         return "pro"
     slug = (user.get("plan_tier") or user.get("plan") or "").strip().lower()
+    if slug in PAID_PIPELINE_SLUGS:
+        return slug
+    if db_tier:
+        return db_tier
     return slug or "free"
 
 
@@ -109,8 +133,8 @@ def plan_feature_flags(plan: str) -> dict[str, bool]:
 
 def user_workspace_entitlements(user: Optional[dict], db=None) -> dict[str, Any]:
     """Workspace entitlements for /api/user/me and profile meters."""
-    plan = resolve_plan_tier(user)
-    billing = resolve_billing_tier_slug(user)
+    plan = resolve_plan_tier(user, db=db)
+    billing = resolve_billing_tier_slug(user, db=db)
     saved_limit = saved_leads_limit_for_plan(plan)
     saved_count = 0
     if user and db is not None and plan != PLAN_ANONYMOUS:

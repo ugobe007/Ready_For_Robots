@@ -56,7 +56,7 @@ from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement, CrmTask, CrmNote
 from app.models.outreach import OutreachMessage
-from app.services.agent_messaging import CAL_INTRO, REP_OUTREACH_CTA, cal_signature, rep_outreach_signature
+from app.services.agent_messaging import REP_OUTREACH_CTA, cal_signature, rep_outreach_signature
 from app.services.cal_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -426,53 +426,43 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
 
 
 def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
-    """Email to a VENDOR (robot company) — send them a buyer lead, not a pitch."""
+    """Email to a robot company — Cal as veteran sherpa, not a sales blast."""
+    from app.services.agent_messaging import (
+        CAL_VENDOR_BUYER_MATCH_CTA,
+        CAL_VENDOR_STRATEGY_CALL_CTA,
+        cal_vendor_match_paragraph,
+        cal_signature,
+    )
+
     industry = (acct.industry or "your space").strip()
     name = (acct.name or "your team").strip()
     selected_traits = set(traits)
+    allow_humor = "humor" in selected_traits
 
-    lines: list[str] = ["Hey,", "", CAL_INTRO, ""]
+    lines: list[str] = ["Hi,", ""]
 
-    if "insightful" in selected_traits or "industry_refs" in selected_traits:
-        lines.append(pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits))
-        lines.append(
-            f"We've been tracking buyer signals in {industry} — labor pressure, expansion moves, CapEx shifts — "
-            f"and a few accounts are showing real purchase intent right now. "
-            f"The kind of signals that usually show up 6–8 weeks before a vendor conversation."
-        )
-    elif "robot_examples" in selected_traits:
-        lines.append(pick_cal_insight(company_name=name, allow_humor="humor" in selected_traits))
-        lines.append(
-            f"There are active {industry} buyers in our signal feed right now. "
-            f"Not window-shoppers — accounts showing labor strain and operational throughput gaps. "
-            f"The type that are already evaluating options."
-        )
-    elif "humor" in selected_traits:
-        lines.append(pick_cal_insight(company_name=name, allow_humor=True))
-        lines.append(
-            f"We're seeing active buyer signals in {industry} right now — "
-            f"accounts that fit {name}'s deployment profile. "
-            f"We route these signals to vendors before they hit the open market."
-        )
-    else:
-        lines.append(pick_cal_insight(company_name=name, allow_humor=False))
-        lines.append(
-            f"We're seeing active buyer signals in {industry} right now — "
-            f"accounts that fit {name}'s deployment profile. "
-            f"We route these signals to vendors before they hit the open market."
-        )
-
+    lines.append(cal_vendor_match_paragraph(name, industry=industry))
+    lines.append("")
+    lines.append(pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="vendor"))
+    lines.append("")
+    lines.append(
+        f"We're tracking active buyer signals in {industry} — labor pressure, expansion, CapEx — "
+        f"accounts with real purchase intent, not list noise."
+    )
     lines.append("")
 
     if "inquisitive" in selected_traits:
-        lines.append("What does your ideal buyer look like right now — industry, size, use case? I'll match against what we're tracking.")
+        lines.append(
+            "What does your ideal buyer look like right now — industry, size, use case? "
+            "I'll match against what we're seeing and be straight about fit."
+        )
     else:
         channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
         meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
         if channel in ("phone", "meeting"):
-            lines.append(meeting or "Worth a quick call to see if the signals match your pipeline?")
+            lines.append(meeting or CAL_VENDOR_STRATEGY_CALL_CTA)
         else:
-            lines.append("Want me to send over the buyer profile? Takes 30 seconds to see if it's a fit.")
+            lines.append(CAL_VENDOR_BUYER_MATCH_CTA)
 
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:

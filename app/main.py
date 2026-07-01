@@ -40,6 +40,7 @@ from app.api.calendar import router as calendar_router
 from app.api.proposals import router as proposals_router
 from app.api.scout import router as scout_router
 from app.api.waitlist import router as waitlist_router
+from app.api.billing import router as billing_router
 from app.api.robot_buyer_leads import router as robot_buyer_leads_router
 from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_lead_ops import router as admin_lead_ops_router
@@ -207,6 +208,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_secondary_pipeline()
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
+    _start_scheduled_supply_autonomy()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -408,6 +410,7 @@ app.include_router(calendar_router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(proposals_router, prefix="/api/proposals", tags=["proposals"])
 app.include_router(scout_router, prefix="/api/scout", tags=["scout"])
 app.include_router(waitlist_router, prefix="/api/waitlist", tags=["waitlist"])
+app.include_router(billing_router, prefix="/api/billing", tags=["billing"])
 app.include_router(integrations_router, prefix="/api", tags=["integrations"])
 app.include_router(integrations_hubspot_router, prefix="/api", tags=["integrations"])
 app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
@@ -723,6 +726,61 @@ def _start_scheduled_cal_autonomy():
     logger.info(
         "In-app Cal autonomy thread started (every %s hours)",
         os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6"),
+    )
+
+
+def _scheduled_supply_autonomy_loop():
+    from app.database import SessionLocal
+    from app.services.supply_autonomy import run_supply_autonomy_cycle, supply_autonomy_enabled
+
+    delay_min = float(os.getenv("SUPPLY_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "30") or "30")
+    time.sleep(max(60, delay_min * 60))
+    while True:
+        if not supply_autonomy_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = run_supply_autonomy_cycle(db)
+            logger.info(
+                "Supply autonomy cycle: status=%s sent=%s format_notified=%s",
+                result.get("status"),
+                result.get("sent"),
+                result.get("format_review_notified"),
+            )
+        except Exception as exc:
+            logger.exception("Supply autonomy cycle failed: %s", exc)
+        interval_hours = float(os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6") or "6")
+        time.sleep(max(1800, int(interval_hours * 3600)))
+
+
+def _start_scheduled_supply_autonomy():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app supply autonomy skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_SUPPLY_AUTONOMY", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app supply autonomy disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_SUPPLY_AUTONOMY", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_supply_autonomy_loop,
+        daemon=True,
+        name="supply-autonomy",
+    )
+    t.start()
+    print("[supply-autonomy] scheduler thread started", flush=True)
+    logger.info(
+        "In-app supply autonomy thread started (every %s hours)",
+        os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6"),
     )
 
 

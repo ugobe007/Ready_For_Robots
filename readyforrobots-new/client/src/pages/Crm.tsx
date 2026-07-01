@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import CrmAccountWorkspace from "@/components/crm/CrmAccountWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
 
@@ -71,6 +73,8 @@ const VOICE_FEEDBACK = [
 
 export default function Crm() {
   const { session, loading } = useAuth();
+  const isAdmin = useIsAdmin();
+  const [, setLocation] = useLocation();
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -212,8 +216,18 @@ export default function Crm() {
     setCollateralPolicy(settings?.scout_collateral_policy || "selective");
     setCollateralLinks(settings?.scout_collateral_links || "");
     setSuggestions([]);
-    setStyleApproved(false);
+    setStyleApproved(
+      selectedAccount.outreach_stage === "draft_approved" || selectedAccount.outreach_stage === "intro_sent",
+    );
   }, [selectedAccount, settings]);
+
+  const sendBlockers = (): string[] => {
+    const blockers: string[] = [];
+    if (!contactEmail.trim()) blockers.push("add a recipient email");
+    if (!draft.trim()) blockers.push("write or generate a message draft");
+    if (!styleApproved) blockers.push('click "Approve draft" to confirm the message');
+    return blockers;
+  };
 
   const parseEmails = (value: string) =>
     value
@@ -398,13 +412,38 @@ export default function Crm() {
         <div className="workspace-page-header mb-4">
           <div className="workspace-page-header-inner flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="workspace-kicker">CRM workspace</p>
-              <h1 className="text-lg sm:text-xl">Buyer outreach</h1>
+              <p className="workspace-kicker">Advanced outreach editor</p>
+              <h1 className="text-lg sm:text-xl">Outreach editor</h1>
               <p>
-                Review, edit, approve, and send buyer outreach through SIGNAL. Replies come back to CRM and your inbox.
+                Bulk-style approve/send for saved accounts. For the main workflow, use{" "}
+                <Link href="/pipeline" className="font-semibold text-emerald-200 underline underline-offset-2 hover:text-white">
+                  Live pipeline
+                </Link>
+                {" "}— pick a lead, draft, and send from the right panel.
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
+              <Link href="/pipeline" className="sb-btn sb-btn-primary border-emerald-400/50 bg-emerald-600 text-white hover:bg-emerald-700">
+                ← Back to pipeline
+              </Link>
+              {isAdmin && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                    className="sb-btn border-amber-300/40 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20"
+                  >
+                    Cal queue — bulk send
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openWorkspaceHref("/admin#workflow", setLocation)}
+                    className="sb-btn border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                  >
+                    Agent queue
+                  </button>
+                </>
+              )}
               <Link href="/integrations" className="sb-btn sb-btn-ghost border-white/10 bg-white/5 text-emerald-300 hover:bg-white/10">
                 Connect HubSpot / GitHub
               </Link>
@@ -500,7 +539,10 @@ export default function Crm() {
                 <span className="sb-label mb-1 block">Recipient email</span>
                 <input
                   value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
+                  onChange={(e) => {
+                    setContactEmail(e.target.value);
+                    setStyleApproved(false);
+                  }}
                   placeholder="buyer@example.com"
                   className="sb-input"
                 />
@@ -533,7 +575,10 @@ export default function Crm() {
                 </div>
                 <textarea
                   value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
+                  onChange={(e) => {
+                    setDraft(e.target.value);
+                    setStyleApproved(false);
+                  }}
                   rows={8}
                   className="sb-input min-h-[140px] leading-relaxed"
                 />
@@ -627,21 +672,27 @@ export default function Crm() {
                 <button type="button" onClick={() => void draftWithScout()} disabled={busy || sending} className="sb-btn">
                   Draft outreach
                 </button>
-                <button type="button" onClick={() => void saveDraft()} disabled={busy || sending} className="sb-btn">
-                  Approve draft
+                <button
+                  type="button"
+                  onClick={() => void saveDraft()}
+                  disabled={busy || sending || !draft.trim()}
+                  className={`sb-btn ${styleApproved ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-amber-300 bg-amber-50 text-amber-900"}`}
+                >
+                  {styleApproved ? "Draft approved ✓" : "Approve draft"}
                 </button>
                 <button
                   type="button"
                   onClick={() => void sendWithScout()}
-                  disabled={sending || !contactEmail || !draft || !styleApproved}
+                  disabled={sending || sendBlockers().length > 0}
                   className="sb-btn sb-btn-primary"
+                  title={sendBlockers().length ? sendBlockers().join("; ") : "Send via Resend"}
                 >
                   {sending ? "Sending..." : "Send outreach"}
                 </button>
               </div>
-              {!styleApproved && (
+              {sendBlockers().length > 0 && (
                 <p className="mt-1.5 text-[11px] text-gray-500">
-                  Approve the draft first. This confirms the message and teaches SIGNAL the format and style to reuse.
+                  Before sending: {sendBlockers().join(" · ")}.
                 </p>
               )}
                 </div>
