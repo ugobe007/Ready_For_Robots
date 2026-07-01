@@ -29,7 +29,7 @@ import {
   visibleAdminNavSections,
 } from "@/lib/adminNavLinks";
 import { isDarkHeroRoute } from "@/lib/darkHeroRoutes";
-import { loginHref } from "@/lib/authNext";
+import { loginHref, clearPendingNext } from "@/lib/authNext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 function smoothScroll(href: string) {
@@ -145,6 +145,7 @@ export default function Header() {
 
   const handleSignOut = async () => {
     closeDrawer();
+    clearPendingNext();
     await supabase?.auth.signOut();
     window.location.href = "/";
   };

@@ -16,7 +16,7 @@ import {
 import { Link, useLocation } from "wouter";
 import AnimatedStat, { statTarget } from "@/components/marketing/AnimatedStat";
 import { HeatBadge } from "@/components/marketing/primitives";
-import { checkoutLoginPath, storeCheckoutIntent } from "@/lib/authNext";
+import { checkoutLoginPath, signupHrefForCheckout } from "@/lib/authNext";
 
 type BenchReport = {
   total_robots?: number;
@@ -653,7 +653,8 @@ export function MarketingPricing() {
                     type="button"
                     onClick={() => {
                       if ("checkoutTier" in tier && tier.checkoutTier) {
-                        storeCheckoutIntent(tier.checkoutTier);
+                        window.location.assign(signupHrefForCheckout(tier.checkoutTier));
+                        return;
                       }
                       setLocation(tier.href);
                     }}

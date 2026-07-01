@@ -131,6 +131,7 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
     vercel_robots = _fetch_probe(f"{MARKETING_SITE}/api/humanoid/robots")
     pipeline = _fetch_probe(f"{base}/api/leads/pipeline", timeout=25)
     billing = _fetch_probe(f"{base}/api/billing/config", timeout=10)
+    checkout_auth = _probe_checkout_requires_auth(api_base=base)
     pages = {
         "robots": _page_probe("/robots"),
         "pricing": _page_probe("/pricing"),
@@ -167,6 +168,12 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
         alerts.append("Stripe billing disabled — upgrades cannot convert to revenue")
         recommendations.append("Enable STRIPE_SECRET_KEY + price IDs on Fly for Pro checkout.")
 
+    if billing.get("ok") and billing.get("billing_enabled") and not checkout_auth.get("ok"):
+        alerts.append(
+            "Billing checkout API accepts unauthenticated POST — anonymous users could reach Stripe"
+        )
+        recommendations.append("Ensure POST /api/billing/checkout returns 401 without Authorization header.")
+
     for name, probe in pages.items():
         if not probe.get("ok"):
             alerts.append(f"Page /{name} unhealthy: {probe.get('error') or probe.get('status')}")
@@ -177,6 +184,7 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
         "vercel_robots_proxy": vercel_robots,
         "pipeline": pipeline,
         "billing": billing,
+        "checkout_auth_probe": checkout_auth,
         "pages": pages,
         "alerts": alerts,
         "recommendations": recommendations,
@@ -218,6 +226,38 @@ def _scan_file_for_api_violations(path: Path) -> list[dict[str, str]]:
     return violations
 
 
+def _check_pricing_checkout_auth_gate() -> dict[str, Any]:
+    """Static checks — logged-out users must not auto-start Stripe from stale localStorage intent."""
+    pricing = FRONTEND_ROOT / "src" / "pages" / "Pricing.tsx"
+    issues: list[str] = []
+    if not pricing.is_file():
+        return {"ok": False, "issues": ["Pricing.tsx missing"]}
+    text = pricing.read_text(encoding="utf-8")
+    if re.search(r'params\.get\("upgrade"\)\s*\|\|\s*peekPendingPlan\(\)', text):
+        issues.append("Pricing auto-checkout uses peekPendingPlan() — can skip auth before Stripe")
+    if "setLocation(checkoutAuthHref" in text:
+        issues.append("Pricing uses setLocation(checkoutAuthHref) — use signupHrefForCheckout + window.location.assign")
+    if "beginCheckout" in text and not re.search(r"if\s*\(\s*authLoading\s*\)", text):
+        issues.append("beginCheckout must wait for authLoading before starting checkout")
+    if "signupHrefForCheckout" not in text:
+        issues.append("Pricing must redirect unauthenticated checkout to signupHrefForCheckout")
+    return {"ok": not issues, "issues": issues}
+
+
+def _probe_checkout_requires_auth(*, api_base: str = FLY_API) -> dict[str, Any]:
+    """POST /api/billing/checkout without a token must reject (never return a Stripe URL)."""
+    url = f"{api_base.rstrip('/')}/api/billing/checkout"
+    try:
+        import httpx
+
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post(url, json={"tier": "pro"})
+            ok = resp.status_code in (401, 403)
+            return {"ok": ok, "status": resp.status_code, "url": url}
+    except Exception as exc:
+        return {"ok": False, "url": url, "error": str(exc)}
+
+
 def check_code_conventions() -> dict[str, Any]:
     violations: list[dict[str, str]] = []
     if FRONTEND_ROOT.is_dir():
@@ -239,6 +279,7 @@ def check_code_conventions() -> dict[str, Any]:
                 login_ok = False
 
     open_challenges = _parse_open_conversion_challenges()
+    checkout_gate = _check_pricing_checkout_auth_gate()
     alerts: list[str] = []
     if violations:
         alerts.append(f"{len(violations)} public-read API routing violation(s)")
@@ -246,12 +287,18 @@ def check_code_conventions() -> dict[str, Any]:
         alerts.append("authNext.ts missing navigateAfterAuth — checkout redirect may drop ?upgrade=pro")
     if not login_ok:
         alerts.append("Login.tsx uses resolvePostAuthPath without importing it")
+    for issue in checkout_gate.get("issues") or []:
+        alerts.append(f"Checkout auth gate: {issue}")
     if open_challenges:
         alerts.append(f"{len(open_challenges)} open conversion challenge(s) on the board")
 
     recommendations = []
     if violations:
         recommendations.append("Run harness code gate before deploy; fix getPublicReadApiBase violations first.")
+    if not checkout_gate.get("ok"):
+        recommendations.append(
+            "Fix Pricing checkout: unauthenticated users → signup/login; auto-resume only on ?upgrade= after auth."
+        )
     if open_challenges:
         top = open_challenges[0]
         recommendations.append(f"Next conversion build: #{top['rank']} {top['title']}")
@@ -261,10 +308,12 @@ def check_code_conventions() -> dict[str, Any]:
         "violation_count": len(violations),
         "auth_helpers_ok": auth_patterns_ok,
         "login_import_ok": login_ok,
+        "checkout_auth_gate_ok": checkout_gate.get("ok"),
+        "checkout_auth_gate": checkout_gate,
         "open_conversion_challenges": open_challenges,
         "alerts": alerts,
         "recommendations": recommendations,
-        "healthy": not violations and auth_patterns_ok and login_ok,
+        "healthy": not violations and auth_patterns_ok and login_ok and checkout_gate.get("ok"),
     }
 
 

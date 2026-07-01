@@ -8,7 +8,7 @@ import HubSpotConnectPanel, { type HubSpotIntegrationStatus } from "@/components
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader, supabase } from "@/lib/supabase";
-import type { AutonomyMode } from "@/types/readyForRobots";
+import { clearPendingNext } from "@/lib/authNext";
 
 const PERSONA_TRAITS = [
   { id: "insightful", label: "Insightful comments" },
@@ -414,7 +414,12 @@ export default function Profile() {
         </p>
         <button
           type="button"
-          onClick={() => void supabase?.auth.signOut()}
+          onClick={() => {
+            clearPendingNext();
+            void supabase?.auth.signOut().then(() => {
+              window.location.href = "/";
+            });
+          }}
           className="text-xs text-red-400/90 border border-red-500/30 rounded px-3 py-2 hover:bg-red-500/10"
         >
           Sign out

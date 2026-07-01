@@ -9,7 +9,7 @@ import { useLocation, Link } from "wouter";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
-import { checkoutAuthHref, peekPendingPlan } from "@/lib/authNext";
+import { signupHrefForCheckout } from "@/lib/authNext";
 import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
 
 const tiers = [
@@ -163,8 +163,13 @@ export default function Pricing() {
 
   const beginCheckout = useCallback(async (tier: "pro" | "premium") => {
     setCheckoutError("");
-    if (!billing?.enabled || !session?.access_token) {
-      setLocation(checkoutAuthHref(tier));
+    if (authLoading) return;
+    if (!billing?.enabled) {
+      setCheckoutError("Billing is not available yet.");
+      return;
+    }
+    if (!session?.access_token) {
+      window.location.assign(signupHrefForCheckout(tier));
       return;
     }
     setCheckoutBusy(tier);
@@ -175,12 +180,12 @@ export default function Pricing() {
       setCheckoutError(err instanceof Error ? err.message : "Checkout failed");
       setCheckoutBusy(null);
     }
-  }, [billing?.enabled, session?.access_token, setLocation]);
+  }, [authLoading, billing?.enabled, session?.access_token]);
 
+  // Resume checkout only after auth when URL explicitly carries ?upgrade= (post-login return).
   useEffect(() => {
     if (authLoading || !billing?.enabled || !session?.access_token || upgradeStarted.current) return;
-    const params = new URLSearchParams(window.location.search);
-    let upgrade = (params.get("upgrade") || peekPendingPlan() || "").toLowerCase();
+    const upgrade = (new URLSearchParams(window.location.search).get("upgrade") || "").toLowerCase();
     if (upgrade === "pro" || upgrade === "premium") {
       upgradeStarted.current = true;
       void beginCheckout(upgrade);

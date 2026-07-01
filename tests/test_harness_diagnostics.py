@@ -6,7 +6,9 @@ from pathlib import Path
 import pytest
 
 from scripts.harness_diagnostics import (
+    _check_pricing_checkout_auth_gate,
     _parse_open_conversion_challenges,
+    _probe_checkout_requires_auth,
     _scan_file_for_api_violations,
     check_code_conventions,
     render_daily_report_markdown,
@@ -46,6 +48,17 @@ def test_check_code_conventions_login_import():
     code = check_code_conventions()
     assert code.get("login_import_ok") is True
     assert code.get("auth_helpers_ok") is True
+    assert code.get("checkout_auth_gate_ok") is True
+
+
+def test_pricing_checkout_auth_gate_passes():
+    gate = _check_pricing_checkout_auth_gate()
+    assert gate["ok"] is True, gate.get("issues")
+
+
+def test_checkout_api_requires_auth():
+    probe = _probe_checkout_requires_auth()
+    assert probe.get("ok") is True, probe
 
 
 def test_render_daily_report_includes_sections():
