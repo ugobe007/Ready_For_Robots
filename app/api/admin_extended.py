@@ -492,8 +492,9 @@ def cal_draft_body(
 
 
 class CalDraftPatchIn(BaseModel):
-    outreach_draft: str
+    outreach_draft: Optional[str] = None
     contact_email: Optional[str] = None
+    outreach_stage: Optional[str] = None
 
 
 @router.patch("/cal/draft/{account_id}")
@@ -507,19 +508,79 @@ def patch_cal_draft(
     acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
     if not acct:
         raise HTTPException(status_code=404, detail="CRM account not found")
-    draft = (body.outreach_draft or "").strip()
-    if not draft:
-        raise HTTPException(status_code=400, detail="outreach_draft cannot be empty")
-    acct.outreach_draft = draft
+    if body.outreach_draft is not None:
+        draft = (body.outreach_draft or "").strip()
+        if not draft:
+            raise HTTPException(status_code=400, detail="outreach_draft cannot be empty")
+        acct.outreach_draft = draft
     if body.contact_email is not None:
         acct.contact_email = body.contact_email.strip() or None
+    if body.outreach_stage is not None:
+        acct.outreach_stage = body.outreach_stage.strip() or None
     db.commit()
     db.refresh(acct)
     return {
         "crm_account_id": str(acct.id),
         "draft_full": acct.outreach_draft,
         "contact_email": acct.contact_email,
+        "outreach_stage": acct.outreach_stage,
     }
+
+
+@router.post("/cal/approve-one/{account_id}")
+def cal_approve_one(
+    account_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Mark one Cal draft approved and ready to send."""
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    acct = db.query(CrmAccount).filter(
+        CrmAccount.id == account_id,
+        CrmAccount.team_id == team.id,
+    ).first()
+    if not acct:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+    if not acct.outreach_draft:
+        raise HTTPException(status_code=400, detail="No draft to approve")
+    if acct.outreach_sent_at:
+        raise HTTPException(status_code=400, detail="Already sent")
+    acct.outreach_stage = "draft_approved"
+    db.commit()
+    _invalidate_admin_caches()
+    return {"approved": True, "crm_account_id": str(acct.id)}
+
+
+@router.post("/cal/approve-all")
+def cal_approve_all(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Approve all unsent Cal drafts on the admin outreach team."""
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    rows = db.query(CrmAccount).filter(
+        CrmAccount.team_id == team.id,
+        CrmAccount.outreach_draft.isnot(None),
+        CrmAccount.outreach_sent_at.is_(None),
+    ).all()
+    approved = 0
+    for acct in rows:
+        if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+            acct.outreach_stage = "draft_approved"
+            approved += 1
+    db.commit()
+    _invalidate_admin_caches()
+    return {"approved": approved, "total_unsent_drafted": len(rows)}
+
+
+def _cal_draft_is_sendable(acct: CrmAccount) -> bool:
+    if not acct.outreach_draft or acct.outreach_sent_at:
+        return False
+    if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+        return False
+    return bool((acct.contact_email or "").strip())
 
 
 def _empty_cal_draft_payload(*, include_prospects: bool) -> dict[str, Any]:
@@ -527,6 +588,7 @@ def _empty_cal_draft_payload(*, include_prospects: bool) -> dict[str, Any]:
         "summary": {
             "total": 0, "hot": 0, "warm": 0, "drafted": 0, "unsent_drafted": 0,
             "sendable": 0, "no_email": 0, "pending_draft": 0, "sent": 0,
+            "approved": 0, "needs_approval": 0,
             "opened": 0, "clicked": 0, "replied": 0,
         },
         "prospects": [] if include_prospects else [],
@@ -572,7 +634,21 @@ def _build_cal_draft_status_payload(
     drafted = sum(1 for r in summary_rows if r["has_draft"])
     sent = sum(1 for r in summary_rows if r["outreach_sent_at"])
     unsent_drafted = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"])
-    sendable = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"])
+    approved = sum(
+        1 for r in summary_rows
+        if r["has_draft"] and not r["outreach_sent_at"]
+        and (r["outreach_stage"] or "") in ("draft_approved", "approved")
+    )
+    needs_approval = sum(
+        1 for r in summary_rows
+        if r["has_draft"] and not r["outreach_sent_at"]
+        and (r["outreach_stage"] or "") not in ("draft_approved", "approved")
+    )
+    sendable = sum(
+        1 for r in summary_rows
+        if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"]
+        and (r["outreach_stage"] or "") in ("draft_approved", "approved")
+    )
     no_email = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"] and not r["contact_email"])
     opened = sum(1 for r in summary_rows if r["email_delivery_status"] in ("opened", "clicked"))
     clicked = sum(1 for r in summary_rows if r["email_delivery_status"] == "clicked")
@@ -601,6 +677,8 @@ def _build_cal_draft_status_payload(
             "warm": warm,
             "drafted": drafted,
             "unsent_drafted": unsent_drafted,
+            "approved": approved,
+            "needs_approval": needs_approval,
             "sendable": sendable,
             "no_email": no_email,
             "pending_draft": total - drafted,
@@ -836,6 +914,14 @@ def cal_bulk_send(
             continue
         if acct.outreach_sent_at:
             skipped_already_sent += 1
+            continue
+        if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+            skipped_no_draft += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": "Draft not approved — approve in Step 2 before sending",
+            })
             continue
 
         to_email = (acct.contact_email or "").strip() or None
@@ -1172,6 +1258,8 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail="No draft to send")
     if acct.outreach_sent_at:
         raise HTTPException(status_code=400, detail="Already sent")
+    if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+        raise HTTPException(status_code=400, detail="Draft not approved — approve before sending")
 
     if (body.outreach_draft or "").strip():
         acct.outreach_draft = body.outreach_draft.strip()

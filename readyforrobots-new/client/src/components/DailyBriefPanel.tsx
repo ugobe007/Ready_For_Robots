@@ -127,7 +127,7 @@ export default function DailyBriefPanel({ data, loading }: Props) {
 
           {(data?.next_steps?.length ?? 0) > 0 ? (
             <div>
-              <p className="admin-kicker mb-2">Next steps</p>
+              <p className="admin-kicker mb-2">Next steps — click to jump to that workflow step</p>
               <div className="flex flex-col gap-2">
                 {data!.next_steps!.map((step) => (
                   <a

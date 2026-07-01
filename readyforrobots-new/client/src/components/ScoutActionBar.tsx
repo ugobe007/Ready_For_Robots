@@ -1,18 +1,17 @@
 /**
- * ScoutActionBar — fixed 4-button bar: [Run SIGNAL] [Activate SIGNAL] [Track SIGNAL] [TEST]
- * Sits at the top of any panel that manages Cal outreach.
- * Also owns the TEST diagnostic modal.
+ * ScoutActionBar — Cal outreach workflow: Review → Approve → Send → Responses
  */
 import { useState } from "react";
-import { Zap, Send, BarChart2, FlaskConical, X, RefreshCw, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { Eye, CheckCircle2, Send, Inbox, FlaskConical, X, RefreshCw, AlertTriangle, XCircle, CheckCircle2 as CheckOk } from "lucide-react";
 import { toast } from "sonner";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 
-/* ── Types ─────────────────────────────────────────────────────────────── */
 export interface ScoutStats {
   total: number;
   drafted: number;
+  sendable: number;
+  needsApproval?: number;
   sent: number;
   opened: number;
   clicked: number;
@@ -54,7 +53,6 @@ interface DiagnosticData {
   health: "ok" | "warn" | "error";
 }
 
-/* ── Helpers ────────────────────────────────────────────────────────────── */
 function statusColor(status: string): string {
   if (["opened", "clicked"].includes(status)) return "#34d399";
   if (["sent", "delivered"].includes(status)) return "#60a5fa";
@@ -64,7 +62,7 @@ function statusColor(status: string): string {
 }
 
 function HealthIcon({ health }: { health: "ok" | "warn" | "error" }) {
-  if (health === "ok") return <CheckCircle2 className="h-4 w-4" style={{ color: "#34d399" }} />;
+  if (health === "ok") return <CheckOk className="h-4 w-4" style={{ color: "#34d399" }} />;
   if (health === "warn") return <AlertTriangle className="h-4 w-4" style={{ color: "#FFB000" }} />;
   return <XCircle className="h-4 w-4" style={{ color: "#f87171" }} />;
 }
@@ -78,23 +76,24 @@ function StatPill({ label, value, color }: { label: string; value: number; color
   );
 }
 
-/* ── Component ─────────────────────────────────────────────────────────── */
 interface Props {
   accessToken: string | undefined;
   stats: ScoutStats | null;
-  busy: "draft" | "send" | null;
-  onRunScout: () => void;
-  onActivateScout: () => void;
-  onTrackScout: () => void;
+  busy: "draft" | "send" | "approve" | null;
+  onStep1Review: () => void;
+  onStep2Approve: () => void;
+  onStep3Send: () => void;
+  onStep4Responses: () => void;
 }
 
 export default function ScoutActionBar({
   accessToken,
   stats,
   busy,
-  onRunScout,
-  onActivateScout,
-  onTrackScout,
+  onStep1Review,
+  onStep2Approve,
+  onStep3Send,
+  onStep4Responses,
 }: Props) {
   const [testOpen, setTestOpen] = useState(false);
   const [diagnostic, setDiagnostic] = useState<DiagnosticData | null>(null);
@@ -102,7 +101,7 @@ export default function ScoutActionBar({
 
   const openTest = async () => {
     setTestOpen(true);
-    if (diagnostic) return; // already loaded
+    if (diagnostic) return;
     if (!accessToken) { toast.info("Sign in to run a diagnostic."); return; }
     setLoadingDiag(true);
     try {
@@ -137,64 +136,74 @@ export default function ScoutActionBar({
     }
   };
 
+  const stepBtn = (
+    step: number,
+    label: string,
+    icon: React.ReactNode,
+    onClick: () => void,
+    colors: { border: string; bg: string; text: string },
+    count?: number,
+    disabled?: boolean,
+  ) => (
+    <button
+      type="button"
+      disabled={disabled || !!busy}
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all hover:-translate-y-px disabled:opacity-50"
+      style={{ borderColor: colors.border, background: colors.bg, color: colors.text }}
+      title={`Step ${step} — ${label}`}
+    >
+      {icon}
+      {step} · {label}{count != null && count > 0 ? ` (${count})` : ""}
+    </button>
+  );
+
   return (
     <>
-      {/* ── Action bar ── */}
       <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
-        <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">SIGNAL</span>
+        <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">Cal workflow</span>
 
-        {/* Step 1 — Draft */}
-        <button
-          type="button"
-          disabled={!!busy}
-          onClick={onRunScout}
-          className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-800 transition-all hover:-translate-y-px disabled:opacity-50"
-          title="Step 1 — Write Cal outreach emails for all prospects (buyer & vendor templates)"
-        >
-          {busy === "draft" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
-          1 · Draft emails
-        </button>
+        {stepBtn(1, "Review drafts", <Eye className="h-3 w-3" />, onStep1Review, {
+          border: "rgba(96,165,250,0.35)",
+          bg: "rgba(96,165,250,0.08)",
+          text: "#1d4ed8",
+        }, stats?.drafted)}
 
-        <span className="text-xs font-semibold text-gray-600">→</span>
+        <span className="text-xs font-semibold text-gray-400">→</span>
 
-        {/* Step 2 — Send */}
-        <button
-          type="button"
-          disabled={!!busy}
-          onClick={onActivateScout}
-          className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-800 transition-all hover:-translate-y-px disabled:opacity-50"
-          title="Step 2 — Send all drafted emails via Resend (all at once)"
-        >
-          {busy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-          2 · Send all{stats?.drafted ? ` (${stats.drafted})` : ""}
-        </button>
+        {stepBtn(2, "Approve & edit", busy === "approve" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />, onStep2Approve, {
+          border: "rgba(167,139,250,0.35)",
+          bg: "rgba(167,139,250,0.08)",
+          text: "#6d28d9",
+        }, stats?.needsApproval)}
 
-        <span className="text-xs font-semibold text-gray-600">→</span>
+        <span className="text-xs font-semibold text-gray-400">→</span>
 
-        {/* Step 3 — Track */}
-        <button
-          type="button"
-          onClick={onTrackScout}
-          className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-900 transition-all hover:-translate-y-px"
-          title="Step 3 — Refresh open / click / reply stats"
-        >
-          <BarChart2 className="h-3 w-3" />
-          3 · Track stats
-        </button>
+        {stepBtn(3, "Send emails", busy === "send" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />, onStep3Send, {
+          border: "rgba(52,211,153,0.35)",
+          bg: "rgba(52,211,153,0.08)",
+          text: "#047857",
+        }, stats?.sendable)}
 
-        {/* TEST */}
+        <span className="text-xs font-semibold text-gray-400">→</span>
+
+        {stepBtn(4, "Review replies", <Inbox className="h-3 w-3" />, onStep4Responses, {
+          border: "rgba(251,191,36,0.45)",
+          bg: "rgba(251,191,36,0.1)",
+          text: "#92400e",
+        }, stats?.replied || stats?.sent)}
+
         <button
           type="button"
           onClick={() => void openTest()}
           className="ml-auto flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-[11px] font-bold text-violet-800 transition-all hover:-translate-y-px"
-          title="Run workflow diagnostic — check reply routing, webhooks, and delivery stats"
+          title="Run workflow diagnostic"
         >
           <FlaskConical className="h-3 w-3" />
           TEST
         </button>
       </div>
 
-      {/* ── TEST / Diagnostic modal ── */}
       {testOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -211,13 +220,12 @@ export default function ScoutActionBar({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
               <div className="flex items-center gap-3">
                 <FlaskConical className="h-5 w-5" style={{ color: "#a78bfa" }} />
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#a78bfa" }}>Workflow Diagnostic</p>
-                  <p className="text-sm font-bold text-white">SIGNAL / Cal Outreach Health</p>
+                  <p className="text-sm font-bold text-white">Cal Outreach Health</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -242,8 +250,6 @@ export default function ScoutActionBar({
 
             {diagnostic && (
               <div className="px-6 py-5 flex flex-col gap-5">
-
-                {/* Issues */}
                 {diagnostic.issues.length > 0 && (
                   <div className="rounded-xl border border-amber-400/25 bg-amber-400/6 p-4">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/70 mb-2">Issues found</p>
@@ -258,7 +264,6 @@ export default function ScoutActionBar({
                   </div>
                 )}
 
-                {/* Send path */}
                 <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-3">Email routing</p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -269,7 +274,7 @@ export default function ScoutActionBar({
                     <div>
                       <p className="text-[10px] text-white/30 uppercase tracking-wide mb-0.5">Replies go to</p>
                       <p className="text-xs font-semibold text-white/75 break-all">
-                        {diagnostic.config.reply_to || <span className="italic text-amber-300">Same as from (RESEND_REPLY_TO not set)</span>}
+                        {diagnostic.config.reply_to || <span className="italic text-amber-300">Same as from</span>}
                       </p>
                     </div>
                     <div>
@@ -281,34 +286,6 @@ export default function ScoutActionBar({
                   </div>
                 </div>
 
-                {/* Webhook status */}
-                <div className="rounded-xl border border-white/8 p-4" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-3">Tracking webhooks</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      {diagnostic.config.delivery_webhook_configured
-                        ? <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "#34d399" }} />
-                        : <XCircle className="h-4 w-4 shrink-0" style={{ color: "#f87171" }} />
-                      }
-                      <div>
-                        <p className="text-xs font-semibold text-white/70">Delivery events</p>
-                        <p className="text-[10px] text-white/30">Open / click / bounce tracking</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {diagnostic.config.inbound_webhook_configured
-                        ? <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "#34d399" }} />
-                        : <XCircle className="h-4 w-4 shrink-0" style={{ color: "#f87171" }} />
-                      }
-                      <div>
-                        <p className="text-xs font-semibold text-white/70">Inbound replies</p>
-                        <p className="text-[10px] text-white/30">Captures prospect replies to Cal</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 30-day delivery stats */}
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Delivery stats — last 30 days</p>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -321,52 +298,14 @@ export default function ScoutActionBar({
                   </div>
                 </div>
 
-                {/* Recent emails */}
-                {diagnostic.recent_emails.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-2">Recent emails</p>
-                    <div className="space-y-1.5">
-                      {/* Header */}
-                      <div className="grid grid-cols-[1.5fr_1.5fr_1fr_0.8fr] gap-3 border-b border-white/7 pb-1.5 text-[9px] uppercase tracking-widest text-white/25">
-                        <span>Company</span>
-                        <span>To</span>
-                        <span>Subject</span>
-                        <span>Status</span>
-                      </div>
-                      {diagnostic.recent_emails.map((msg) => (
-                        <div key={msg.id} className="grid grid-cols-[1.5fr_1.5fr_1fr_0.8fr] gap-3 rounded-lg px-0 py-1 text-[11px]">
-                          <span className="text-white/65 truncate">{msg.company}</span>
-                          <span className="font-mono text-white/40 truncate">{msg.to}</span>
-                          <span className="text-white/35 truncate">{msg.subject}</span>
-                          <span className="font-bold capitalize" style={{ color: statusColor(msg.status) }}>{msg.status}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* How to check replies */}
                 <div className="rounded-xl border border-violet-400/15 bg-violet-400/5 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70 mb-2">How to check replies</p>
-                  <ul className="space-y-1.5">
-                    <li className="text-[11px] text-white/55">
-                      <span className="font-semibold text-white/75">1. Inbox</span> — Check{" "}
-                      <span className="font-mono text-violet-300">{diagnostic.config.reply_to || diagnostic.config.from_email || "your reply-to inbox"}</span>{" "}
-                      for prospect replies. Cal routes them here automatically.
-                    </li>
-                    <li className="text-[11px] text-white/55">
-                      <span className="font-semibold text-white/75">2. Sales Console</span> — Go to{" "}
-                      <a href="/sales-console" className="text-violet-300 underline underline-offset-2">/sales-console</a>{" "}
-                      to see all captured replies in your SIGNAL workflow queue.
-                    </li>
-                    <li className="text-[11px] text-white/55">
-                      <span className="font-semibold text-white/75">3. Resend Dashboard</span> — Open{" "}
-                      <a href="https://resend.com/emails" target="_blank" rel="noreferrer" className="text-violet-300 underline underline-offset-2">resend.com/emails</a>{" "}
-                      for per-email delivery events, open pixel data, and bounce details.
-                    </li>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70 mb-2">Step 4 — How to check replies</p>
+                  <ul className="space-y-1.5 text-[11px] text-white/55">
+                    <li><span className="font-semibold text-white/75">Inbox</span> — Check your reply-to address for prospect replies.</li>
+                    <li><span className="font-semibold text-white/75">Sales workflow</span> — <a href="/sales-workflow" className="text-violet-300 underline">/sales-workflow</a> for captured replies.</li>
+                    <li><span className="font-semibold text-white/75">Resend</span> — <a href="https://resend.com/emails" target="_blank" rel="noreferrer" className="text-violet-300 underline">resend.com/emails</a> for delivery events.</li>
                   </ul>
                 </div>
-
               </div>
             )}
           </div>

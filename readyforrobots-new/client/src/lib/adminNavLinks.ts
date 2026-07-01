@@ -34,7 +34,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     label: "Admin",
     links: [
       { label: "Command center", href: "/admin", shortLabel: "Admin dashboard", adminOnly: true },
-      { label: "Cal queue", href: "/admin#cal-outreach", shortLabel: "Bulk HOT/WARM outreach", adminOnly: true },
+      { label: "Cal queue", href: "/admin#cal-step-1-review", shortLabel: "Review · approve · send", adminOnly: true },
       { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
       { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
     ],
@@ -72,9 +72,13 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
   const hash = typeof window !== "undefined" ? window.location.hash : "";
 
   if (target === "/sales-workflow") return path === "/sales-workflow";
-  if (href.includes("#cal-outreach")) return path === "/admin" && hash === "#cal-outreach";
+  if (href.includes("#cal-step-") || href.includes("#cal-outreach")) {
+    return path === "/admin" && (hash.startsWith("#cal-step-") || hash === "#cal-outreach");
+  }
   if (href.includes("#workflow")) return path === "/admin" && hash === "#workflow";
-  if (target === "/admin") return path === "/admin" && hash !== "#workflow" && hash !== "#cal-outreach";
+  if (target === "/admin") {
+    return path === "/admin" && hash !== "#workflow" && !hash.startsWith("#cal-step-") && hash !== "#cal-outreach";
+  }
   if (target === "/admin/prospects") return path === "/admin/prospects";
   if (target === "/pipeline") return path === "/pipeline" || path === "/admin/prospects";
   if (target === "/integrations") return path === "/integrations" || path.startsWith("/integrations/");
@@ -122,7 +126,7 @@ export function openWorkspaceHref(href: string, setLocation: (path: string) => v
 }
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
-  { label: "Cal queue — draft & send", href: "/admin#cal-outreach", shortLabel: "Cal outreach" },
+  { label: "Cal queue — review & send", href: "/admin#cal-step-1-review", shortLabel: "Cal outreach" },
   { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions" },
   { label: "Command center", href: "/admin", shortLabel: "Admin home" },
 ];

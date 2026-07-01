@@ -138,6 +138,8 @@ type CalDraftStatus = {
     drafted?: number;
     unsent_drafted?: number;
     sendable?: number;
+    approved?: number;
+    needs_approval?: number;
     no_email?: number;
     pending_draft?: number;
     sent?: number;
@@ -340,7 +342,7 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-approve" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
@@ -803,6 +805,76 @@ export default function Admin() {
     await runCalBulkDraft(false, [companyId]);
   }
 
+  const isCalApproved = (stage?: string | null) => stage === "draft_approved" || stage === "approved";
+
+  const navigateCalStep = useCallback((step: 1 | 2 | 3 | 4) => {
+    setError("");
+    const hash = `cal-step-${step}-${step === 1 ? "review" : step === 2 ? "approve" : step === 3 ? "send" : "responses"}`;
+    window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
+    if (step === 1) {
+      setCalFilter("drafted");
+      setMessage("Step 1 — Expand rows below to read each Cal draft before approving.");
+    } else if (step === 2) {
+      setCalFilter("drafted");
+      setMessage("Step 2 — Edit copy or contact email, then Approve each draft (or Approve all).");
+    } else if (step === 3) {
+      setCalFilter("drafted");
+      setMessage("Step 3 — Send approved emails in bulk or expand a row to send one.");
+    } else {
+      setCalFilter("sent");
+      setMessage("Step 4 — Review replies in Sales workflow and follow up on warm responses.");
+    }
+    requestAnimationFrame(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("cal-prospect-table")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
+
+  useEffect(() => {
+    const applyHash = () => {
+      const h = window.location.hash.replace("#", "");
+      if (h === "cal-outreach" || h === "cal-step-1-review") navigateCalStep(1);
+      else if (h === "cal-step-2-approve") navigateCalStep(2);
+      else if (h === "cal-step-3-send") navigateCalStep(3);
+      else if (h === "cal-step-4-responses") navigateCalStep(4);
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, [navigateCalStep]);
+
+  async function runCalApproveOne(crmAccountId: string) {
+    setError("");
+    setActionBusy("cal-approve");
+    try {
+      const res = await adminFetch(`/api/admin/cal/approve-one/${crmAccountId}`, { method: "POST" });
+      const data = await res.json().catch(() => ({})) as { detail?: string };
+      if (!res.ok) throw new Error(data.detail || "Approve failed.");
+      setMessage("Draft approved — ready to send in Step 3.");
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Approve failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
+  async function runCalApproveAll() {
+    setError("");
+    setActionBusy("cal-approve");
+    try {
+      const res = await adminFetch("/api/admin/cal/approve-all", { method: "POST" });
+      const data = await res.json().catch(() => ({})) as { approved?: number; detail?: string };
+      if (!res.ok) throw new Error(data.detail || "Approve all failed.");
+      setMessage(`Approved ${data.approved ?? 0} Cal drafts — proceed to Step 3 to send.`);
+      await loadCalStatus();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Approve all failed.");
+    } finally {
+      setActionBusy("");
+    }
+  }
+
   async function runCalReinferContacts() {
     setMessage("");
     setError("");
@@ -1041,10 +1113,8 @@ export default function Admin() {
           <div>
             <h1 className="text-lg font-extrabold text-gray-900">Command center</h1>
             <p className="mt-0.5 text-[11px] text-gray-600">
-              Run SIGNAL from the bar below · expand rows in{" "}
-              <a href="#cal-outreach" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">Cal queue</a>
-              {" "}to edit drafts · agent actions in{" "}
-              <a href="#workflow" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">Agent queue</a>
+              Cal workflow: Review → Approve → Send → Responses · use the bar below or{" "}
+              <a href="#cal-step-1-review" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">Cal queue</a>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1197,15 +1267,18 @@ export default function Admin() {
             stats={calStatus?.summary ? {
               total: calStatus.summary.total ?? 0,
               drafted: calStatus.summary.unsent_drafted ?? calStatus.summary.drafted ?? 0,
+              sendable: calStatus.summary.sendable ?? 0,
+              needsApproval: calStatus.summary.needs_approval ?? 0,
               sent: calStatus.summary.sent ?? 0,
               opened: (calStatus.summary as Record<string, number>).opened ?? 0,
               clicked: (calStatus.summary as Record<string, number>).clicked ?? 0,
               replied: (calStatus.summary as Record<string, number>).replied ?? 0,
             } : null}
-            busy={actionBusy === "cal-draft" ? "draft" : actionBusy === "cal-send" ? "send" : null}
-            onRunScout={() => void loadCalStatus()}
-            onActivateScout={() => document.getElementById("cal-outreach")?.scrollIntoView({ behavior: "smooth" })}
-            onTrackScout={() => void loadCalStatus()}
+            busy={actionBusy === "cal-approve" ? "approve" : actionBusy === "cal-send" ? "send" : null}
+            onStep1Review={() => navigateCalStep(1)}
+            onStep2Approve={() => navigateCalStep(2)}
+            onStep3Send={() => navigateCalStep(3)}
+            onStep4Responses={() => navigateCalStep(4)}
           />
         </div>
 
@@ -1224,7 +1297,7 @@ export default function Admin() {
                   Cal outreach queue
                 </h2>
                 <p className="text-[11px] text-gray-500">
-                  Draft HOT+WARM leads, edit copy, then send individually or in bulk via Resend
+                  4-step workflow: review drafts → approve → send → follow up on replies
                 </p>
               </div>
             </div>
@@ -1254,90 +1327,86 @@ export default function Admin() {
             </div>
           </div>
 
-          {/* Primary workflow — always visible in this section */}
-          <div className="mb-5 grid gap-3 rounded-xl border border-emerald-200/80 bg-white/90 p-4 md:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 1 · Draft</p>
-              <p className="text-xs text-gray-600">
-                <strong>{formatNumber(calStatus?.summary?.pending_draft)}</strong> leads need a draft
-              </p>
+          {/* Setup — generate drafts & fix contacts (before Step 1) */}
+          <details className="mb-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-3">
+            <summary className="cursor-pointer text-[11px] font-bold text-gray-600">
+              Setup · generate missing drafts ({formatNumber(calStatus?.summary?.pending_draft)}) · fix emails ({formatNumber(calStatus?.summary?.no_email)})
+            </summary>
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => void runCalBulkDraft(false)}
                 disabled={!!actionBusy || (calStatus?.summary?.pending_draft ?? 0) === 0}
-                className="rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-40"
+                className="rounded-lg border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
                 style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
               >
                 {actionBusy === "cal-draft" ? "Drafting…" : `Draft all pending (${formatNumber(calStatus?.summary?.pending_draft)})`}
               </button>
-              <button
-                type="button"
-                onClick={() => void runCalBulkDraft(true)}
-                disabled={!!actionBusy}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
-              >
-                Regenerate all drafts
+              <button type="button" onClick={() => void runCalBulkDraft(true)} disabled={!!actionBusy} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40">
+                Regenerate all
+              </button>
+              <button type="button" onClick={() => void runCalReinferContacts()} disabled={!!actionBusy} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40">
+                Re-infer contacts
+              </button>
+            </div>
+          </details>
+
+          {/* 4-step Cal workflow */}
+          <div className="mb-5 grid gap-3 rounded-xl border border-emerald-200/80 bg-white/90 p-4 lg:grid-cols-4">
+            <div id="cal-step-1-review" className="scroll-mt-32 flex flex-col gap-2 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-800">Step 1 · Review</p>
+              <p className="text-xs text-gray-700">
+                Read <strong>{formatNumber(calStatus?.summary?.unsent_drafted)}</strong> unsent drafts in the table below.
+              </p>
+              <button type="button" onClick={() => navigateCalStep(1)} className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-[11px] font-bold text-blue-900">
+                Show drafted leads
               </button>
             </div>
 
-            <div className="flex flex-col gap-2 border-y border-gray-100 py-3 md:border-y-0 md:border-x md:px-4 md:py-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 2 · Fix emails</p>
-              <p className="text-xs text-gray-600">
-                <strong>{formatNumber(calStatus?.summary?.sendable)}</strong> ready to send ·{" "}
-                <strong>{formatNumber(calStatus?.summary?.no_email)}</strong> missing email
+            <div id="cal-step-2-approve" className="scroll-mt-32 flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-800">Step 2 · Approve</p>
+              <p className="text-xs text-gray-700">
+                <strong>{formatNumber(calStatus?.summary?.needs_approval)}</strong> need approval ·{" "}
+                <strong>{formatNumber(calStatus?.summary?.approved)}</strong> approved
               </p>
               <button
                 type="button"
-                onClick={() => void runCalReinferContacts()}
-                disabled={!!actionBusy}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 disabled:opacity-40"
+                onClick={() => void runCalApproveAll()}
+                disabled={!!actionBusy || (calStatus?.summary?.needs_approval ?? 0) === 0}
+                className="rounded-xl border border-violet-200 bg-white px-3 py-2 text-[11px] font-bold text-violet-900 disabled:opacity-40"
               >
-                {actionBusy === "cal-reinfer" ? "Re-inferring…" : "Re-infer contacts"}
+                {actionBusy === "cal-approve" ? "Approving…" : "Approve all drafts"}
               </button>
-              {(calStatus?.summary?.no_email ?? 0) > 0 && (
-                <button
-                  type="button"
-                  onClick={() => void (async () => {
-                    setActionBusy("cleanup");
-                    try {
-                      const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=80&dry_run=false", { method: "POST" });
-                      const d = await res.json().catch(() => ({})) as {
-                        resolved_emails?: number;
-                        apollo_hits?: number;
-                        inferred_hits?: number;
-                        unresolved?: number;
-                      };
-                      setMessage(
-                        `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}).`,
-                      );
-                      void loadCalStatus();
-                    } finally { setActionBusy(""); }
-                  })()}
-                  disabled={!!actionBusy}
-                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-900 disabled:opacity-40"
-                >
-                  Fix {calStatus?.summary?.no_email} missing emails
-                </button>
-              )}
+              <p className="text-[10px] text-gray-500">Or expand a row → edit → Approve this draft</p>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Step 3 · Send</p>
-              <p className="text-xs text-gray-600">
-                Bulk send uses saved contact emails · expand a row to send one
+            <div id="cal-step-3-send" className="scroll-mt-32 flex flex-col gap-2 rounded-lg border border-amber-100 bg-amber-50/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-900">Step 3 · Send</p>
+              <p className="text-xs text-gray-700">
+                <strong>{formatNumber(calStatus?.summary?.sendable)}</strong> approved with email · expand a row to send one
               </p>
               <button
                 type="button"
                 onClick={() => setSendConfirm("bulk")}
                 disabled={!!actionBusy || (calStatus?.summary?.sendable ?? 0) === 0}
-                className="rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-40"
-                style={{ color: "#92400e", borderColor: "rgba(245,158,11,0.45)", background: "rgba(255,176,0,0.12)" }}
+                className="rounded-xl border border-amber-300 bg-amber-100 px-3 py-2 text-[11px] font-bold text-amber-950 disabled:opacity-40"
               >
-                {actionBusy === "cal-send" ? "Sending…" : `Send all (${formatNumber(calStatus?.summary?.sendable)})`}
+                {actionBusy === "cal-send" ? "Sending…" : `Send all approved (${formatNumber(calStatus?.summary?.sendable)})`}
               </button>
-              <p className="text-[10px] text-gray-500">
-                {formatNumber(calStatus?.summary?.sent)} already sent · no duplicates
+            </div>
+
+            <div id="cal-step-4-responses" className="scroll-mt-32 flex flex-col gap-2 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800">Step 4 · Responses</p>
+              <p className="text-xs text-gray-700">
+                <strong>{formatNumber((calStatus?.summary as Record<string, number> | undefined)?.replied)}</strong> replies ·{" "}
+                {formatNumber(calStatus?.summary?.sent)} sent total
               </p>
+              <button type="button" onClick={() => navigateCalStep(4)} className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-[11px] font-bold text-emerald-900">
+                Show sent & replies
+              </button>
+              <a href="/sales-workflow" className="text-center text-[10px] font-bold text-emerald-700 underline underline-offset-2">
+                Open sales workflow →
+              </a>
             </div>
           </div>
 
@@ -1346,7 +1415,10 @@ export default function Admin() {
             <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
               <p className="mb-1 text-sm font-bold text-amber-900">Confirm bulk send</p>
               <p className="mb-3 text-xs text-amber-950/80">
-                <strong>{calStatus?.summary?.sendable ?? 0} emails will go out</strong> via Resend
+                <strong>{calStatus?.summary?.sendable ?? 0} approved emails will go out</strong> via Resend
+                {(calStatus?.summary?.needs_approval ?? 0) > 0 && (
+                  <span className="text-amber-800"> · {calStatus?.summary?.needs_approval} still need approval (Step 2)</span>
+                )}
                 {(calStatus?.summary?.no_email ?? 0) > 0 && (
                   <span className="text-amber-800"> · {calStatus?.summary?.no_email} contacts skipped (no email address on file)</span>
                 )}
@@ -1369,7 +1441,7 @@ export default function Admin() {
 
           <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-6">
             <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub={`${formatNumber(calStatus?.summary?.hot)} hot · ${formatNumber(calStatus?.summary?.warm)} warm`} />
-            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub={`${formatNumber(calStatus?.summary?.sendable ?? calStatus?.summary?.unsent_drafted)} sendable`} />
+            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub={`${formatNumber(calStatus?.summary?.approved)} approved · ${formatNumber(calStatus?.summary?.sendable)} sendable`} />
             <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need draft" />
             <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="delivered" />
             <AdminCard label="Opened" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.opened)} sub="engagement" />
@@ -1377,7 +1449,7 @@ export default function Admin() {
           </div>
 
           {/* Prospect table */}
-          <div className="max-h-[600px] overflow-y-auto pr-1">
+          <div id="cal-prospect-table" className="max-h-[600px] overflow-y-auto pr-1 scroll-mt-28">
             {!calStatus ? (
               <p className="py-6 text-center text-xs text-gray-400">
                 {syncingSection === "cal" ? "Loading prospect draft status…" : "No Cal outreach data yet."}
@@ -1483,7 +1555,7 @@ export default function Admin() {
                           </div>
                           <div>
                             <span className="text-[11px] text-gray-500">
-                              {prospect.outreach_sent_at ? "sent" : prospect.outreach_stage?.replace(/_/g, " ") || "—"}
+                              {prospect.outreach_sent_at ? "sent" : isCalApproved(prospect.outreach_stage) ? "approved" : prospect.outreach_stage?.replace(/_/g, " ") || "needs review"}
                             </span>
                             {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-gray-500">{formatDate(prospect.outreach_sent_at)}</p>}
                           </div>
@@ -1558,8 +1630,24 @@ export default function Admin() {
                                       className="rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
                                       style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
                                     >
-                                      {actionBusy === "cal-save" ? "Saving…" : "Save draft"}
+                                      {actionBusy === "cal-save" ? "Saving…" : "Save edits"}
                                     </button>
+                                  )}
+                                  {prospect.crm_account_id && !prospect.outreach_sent_at && !isCalApproved(prospect.outreach_stage) && (
+                                    <button
+                                      type="button"
+                                      disabled={!!actionBusy}
+                                      onClick={() => void runCalApproveOne(prospect.crm_account_id!)}
+                                      className="rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
+                                      style={{ color: "#6d28d9", borderColor: "rgba(109,40,217,0.35)", background: "rgba(109,40,217,0.08)" }}
+                                    >
+                                      {actionBusy === "cal-approve" ? "Approving…" : "Approve this draft"}
+                                    </button>
+                                  )}
+                                  {prospect.crm_account_id && isCalApproved(prospect.outreach_stage) && !prospect.outreach_sent_at && (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-medium text-violet-800">
+                                      <CheckCircle2 className="h-3 w-3" /> Approved
+                                    </span>
                                   )}
                                   {prospect.contact_email && (
                                     <div className="flex flex-wrap gap-2 text-[10px] text-gray-600">
@@ -1596,10 +1684,12 @@ export default function Admin() {
                                         onClick={() => setSendConfirm(prospect.crm_account_id ?? false)}
                                         disabled={
                                           !!actionBusy
+                                          || !isCalApproved(prospect.outreach_stage)
                                           || !(draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email)?.trim()
                                         }
                                         className="inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
                                         style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.40)" }}
+                                        title={!isCalApproved(prospect.outreach_stage) ? "Approve draft in Step 2 first" : undefined}
                                       >
                                         <Mail className="h-3 w-3" /> Send this email
                                       </button>

@@ -2532,11 +2532,21 @@ export default function Pipeline() {
               {isAdmin && (
               <ScoutActionBar
                 accessToken={session?.access_token}
-                stats={scoutStats}
-                busy={scoutBusy}
-                onRunScout={() => setScoutConfirm("draft")}
-                onActivateScout={() => setScoutConfirm("send")}
-                onTrackScout={() => void loadScoutStats()}
+                stats={scoutStats ? {
+                  total: scoutStats.total ?? 0,
+                  drafted: scoutStats.drafted ?? 0,
+                  sendable: scoutStats.sendable ?? scoutStats.drafted ?? 0,
+                  needsApproval: scoutStats.needs_approval,
+                  sent: scoutStats.sent ?? 0,
+                  opened: scoutStats.opened ?? 0,
+                  clicked: scoutStats.clicked ?? 0,
+                  replied: scoutStats.replied ?? 0,
+                } : null}
+                busy={scoutBusy === "draft" ? null : scoutBusy === "send" ? "send" : null}
+                onStep1Review={() => { window.location.href = "/admin#cal-step-1-review"; }}
+                onStep2Approve={() => { window.location.href = "/admin#cal-step-2-approve"; }}
+                onStep3Send={() => { window.location.href = "/admin#cal-step-3-send"; }}
+                onStep4Responses={() => { window.location.href = "/admin#cal-step-4-responses"; }}
               />
               )}
 
