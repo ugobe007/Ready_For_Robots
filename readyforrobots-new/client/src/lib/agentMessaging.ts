@@ -6,7 +6,7 @@ export const OUTREACH_SIGNATURE = "Best,\n[Your name]";
 export const OUTREACH_INTRO = "";
 
 export const BUYER_SIGNAL_EXPLANATION =
-  "We track live buying signals and rank accounts that are actually moving, not just browsing.";
+  "We track live buying signals and customer pilot opportunities by key variables in — labor pressure, expansion, CapEx — and rank accounts that are actually moving, not just browsing.";
 
 // Admin-only Cal persona (internal tooling only — do not surface on user pages).
 export const CAL_INTRO = "Hi — Cal from Ready For Robots.";

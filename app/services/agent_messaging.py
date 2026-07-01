@@ -18,8 +18,8 @@ CAL_VENDOR_SHERPA_LINE = (
 )
 
 BUYER_SIGNAL_EXPLANATION = (
-    "We track live buying signals — labor pressure, expansion, CapEx — "
-    "and rank accounts that are actually moving, not just browsing."
+    "We track live buying signals and customer pilot opportunities by key variables in — "
+    "labor pressure, expansion, CapEx — and rank accounts that are actually moving, not just browsing."
 )
 
 VENDOR_SIGNAL_EXPLANATION = (

@@ -91,10 +91,10 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
         "",
         insight,
         "",
-        f"We've had {name} flagged in {industry} from live signals — "
+        f"We've identified {name} in our {industry} — "
         "the kind that usually precede an automation conversation, not a generic vendor browse.",
         "",
-        "Worth a quick reply if you're the right person to explore timing?",
+        "Worth a quick reply to explore timing?",
         "",
         cal_signature(),
     ]
