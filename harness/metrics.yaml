@@ -30,6 +30,22 @@ endpoints:
       - warm
       - cold
 
+  robots:
+    path: /api/humanoid/robots
+    fly_direct: true
+    vercel_proxy_warn_ms: 8000
+    fields:
+      - robots_count
+      - stale
+    alerts:
+      min_robots: 1
+      max_latency_ms: 5000
+
+  billing:
+    path: /api/billing/config
+    fields:
+      - enabled
+
 git:
   track_branch: main
   note_dirty_worktree: true
@@ -54,6 +70,27 @@ intelligence:
 product_surface:
   canonical_frontend: readyforrobots-new/client
   experiment_route: /experiment
+  public_read_api: getPublicReadApiBase
+  diagnostics_script: scripts/harness_diagnostics.py
+
+conversion:
+  thesis_doc: docs/conversion_agent_challenges.md
+  primary_metric: signups_7d
+  revenue_metric: active_subscriptions
+  db_tables:
+    - user_profiles
+    - crm_accounts
+    - waitlist_signups
+
+daily_report:
+  markdown: reports/harness_daily_report_latest.md
+  email_subject_prefix: "[RFR Daily]"
+  sections:
+    - executive_summary
+    - site_health
+    - code_review
+    - conversion
+    - agent_mission
 
 notification:
   script: scripts/harness_notify.py

@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import {
   isValidHumanoidReport,
   type HumanoidIntelligenceReportData,
@@ -44,7 +44,7 @@ export default function HumanoidDailyRecap({ className = "" }: { className?: str
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getApiBase()}/api/humanoid/intelligence-report?top_n=8`, liveFetchInit())
+    fetch(`${getPublicReadApiBase()}/api/humanoid/intelligence-report?top_n=8`, liveFetchInit())
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled) return;

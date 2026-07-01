@@ -99,6 +99,22 @@ One mission = one primary goal. Split hero swap from pipeline cleanup.
 Run observe before every mission:
 
 ```bash
+python3 scripts/harness_snapshot.py
+python3 scripts/harness_diagnostics.py --check all   # site + code + conversion
+```
+
+**Daily operator report** (email + `reports/harness_daily_report_latest.md`):
+
+| Section | Agent role | What it covers |
+|---------|------------|----------------|
+| Executive summary | Orchestrator | Signups 7d, paid subs, CRM activation — fundability metrics |
+| Site health | PipelineHealth | Robots/pipeline API latency, page uptime, Stripe enabled |
+| Code review | ProductSurface + Deploy | Public-read API routing, auth checkout helpers, open conversion board |
+| Agent mission | Orchestrator | What shipped today + recommended next build |
+
+Conversion is the **primary daily lens** — see `docs/conversion_agent_challenges.md`. Site performance and code conventions are guardrails so signup flows stay fast and checkout redirects work.
+
+```bash
 python3 scripts/harness_snapshot.py   # requires DATABASE_URL or HARNESS_DATABASE_URL in .env
 python3 scripts/run_mission.py --mission missions/2026-06-23-friction-baseline
 python3 scripts/harness_notify.py --mission missions/2026-06-23-friction-baseline

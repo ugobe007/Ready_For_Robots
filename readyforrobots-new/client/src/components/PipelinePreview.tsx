@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { TrendingUp, Users, AlertTriangle, ChevronRight, ChevronDown, ArrowRight, Zap } from "lucide-react";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 
 const signals = [
   {
@@ -82,7 +82,7 @@ export default function PipelinePreview() {
     (async () => {
       try {
         const res = await fetch(
-          `${getApiBase()}/api/leads/summary?exclude_junk=true`,
+          `${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`,
           liveFetchInit(),
         );
         if (!res.ok || cancelled) return;

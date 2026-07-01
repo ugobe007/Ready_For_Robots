@@ -12,7 +12,7 @@ import RobotAvatar from "@/components/RobotAvatar";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import {
   fetchWithTimeout,
-  getApiBase,
+  getPublicReadApiBase,
   publicFetchInit,
   readSurfaceCache,
   writeSurfaceCache,
@@ -518,7 +518,7 @@ export default function Robots() {
   const [loading, setLoading] = useState(!(cachedRobots?.data?.length));
   const [filter, setFilter] = useState<"all" | "available" | "pilot" | "research">("all");
   const [sortDim, setSortDim] = useState<string>("total");
-  const api = getApiBase();
+  const api = getPublicReadApiBase();
   const { report: intelligenceReport, loading: reportLoading, error: reportError } =
     useHumanoidIntelligenceReport(12);
 
@@ -535,7 +535,7 @@ export default function Robots() {
     void fetchWithTimeout(
       `${api}/api/humanoid/robots`,
       publicFetchInit(),
-      10_000,
+      15_000,
       { publicCache: true },
     )
       .then(async (r) => {

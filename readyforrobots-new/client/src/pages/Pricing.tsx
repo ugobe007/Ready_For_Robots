@@ -9,7 +9,7 @@ import { useLocation, Link } from "wouter";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
-import { checkoutAuthHref } from "@/lib/authNext";
+import { checkoutAuthHref, peekPendingPlan } from "@/lib/authNext";
 import { fetchBillingConfig, startCheckout, type BillingConfig } from "@/lib/billing";
 
 const tiers = [
@@ -180,7 +180,7 @@ export default function Pricing() {
   useEffect(() => {
     if (authLoading || !billing?.enabled || !session?.access_token || upgradeStarted.current) return;
     const params = new URLSearchParams(window.location.search);
-    const upgrade = (params.get("upgrade") || "").toLowerCase();
+    let upgrade = (params.get("upgrade") || peekPendingPlan() || "").toLowerCase();
     if (upgrade === "pro" || upgrade === "premium") {
       upgradeStarted.current = true;
       void beginCheckout(upgrade);

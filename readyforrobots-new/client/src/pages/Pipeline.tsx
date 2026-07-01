@@ -2542,11 +2542,13 @@ export default function Pipeline() {
                   clicked: scoutStats.clicked ?? 0,
                   replied: scoutStats.replied ?? 0,
                 } : null}
-                busy={scoutBusy === "draft" ? null : scoutBusy === "send" ? "send" : null}
-                onStep1Review={() => { window.location.href = "/admin#cal-step-1-review"; }}
-                onStep2Approve={() => { window.location.href = "/admin#cal-step-2-approve"; }}
-                onStep3Send={() => { window.location.href = "/admin#cal-step-3-send"; }}
-                onStep4Responses={() => { window.location.href = "/admin#cal-step-4-responses"; }}
+                busy={null}
+                autopilotEnabled
+                everyHours={3}
+                sendLimit={25}
+                onRunNow={() => { window.location.href = "/admin#cal-outreach"; }}
+                onViewQueue={() => { window.location.href = "/admin#cal-outreach"; }}
+                onViewReplies={() => { window.location.href = "/sales-workflow"; }}
               />
               )}
 

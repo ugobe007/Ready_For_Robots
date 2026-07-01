@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getApiBase } from "@/lib/apiBase";
-import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent } from "@/lib/authNext";
+import { readNextParam, peekPendingNext, postAuthRedirectTarget, storePendingNext, readPlanParam, storeCheckoutIntent, resolvePostAuthPath, navigateAfterAuth } from "@/lib/authNext";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -58,7 +58,7 @@ export default function Login() {
       } catch {
         /* ignore */
       }
-      setLocation(dest);
+      navigateAfterAuth(dest);
     }
 
     void afterLogin();

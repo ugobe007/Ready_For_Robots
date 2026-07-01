@@ -8,7 +8,7 @@ import { AlertTriangle, TrendingUp, DollarSign, Newspaper, Building2, Briefcase,
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import { cleanAndClampText, cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 import { Link } from "wouter";
 import { toast } from "sonner";
@@ -583,7 +583,7 @@ export default function Signals() {
 
     async function loadLeadSummary() {
       try {
-        const response = await fetch(`${getApiBase()}/api/leads/summary?exclude_junk=true`, liveFetchInit());
+        const response = await fetch(`${getPublicReadApiBase()}/api/leads/summary?exclude_junk=true`, liveFetchInit());
         if (!response.ok) throw new Error(`Lead summary failed with ${response.status}`);
         const data = await response.json();
         if (!cancelled) setLeadSummary(data);
@@ -595,7 +595,7 @@ export default function Signals() {
     async function loadLiveSignals() {
       try {
         const response = await fetch(
-          `${getApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
+          `${getPublicReadApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
           liveFetchInit(),
         );
         if (!response.ok) throw new Error(`Live signal feed failed with ${response.status}`);

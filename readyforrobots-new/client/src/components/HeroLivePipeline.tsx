@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import { dedupeHomepageLeads } from "@/lib/homepageLeads";
 import { cleanAndClampText, leadPreviewSentences } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
@@ -108,7 +108,7 @@ export default function HeroLivePipeline() {
     let cancelled = false;
     (async () => {
       try {
-        const base = getApiBase();
+        const base = getPublicReadApiBase();
         const r = await fetch(`${base}/api/leads/homepage`, liveFetchInit());
         if (!r.ok || cancelled) return;
         const raw = await r.text();

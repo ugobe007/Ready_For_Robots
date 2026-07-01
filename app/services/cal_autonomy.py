@@ -281,7 +281,11 @@ def _draft_and_store(
             acct.contact_email = guessed.primary
 
     acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
-    acct.outreach_stage = "draft_ready"
+    from app.api.admin_extended import cal_manual_approval_required
+
+    acct.outreach_stage = (
+        "draft_approved" if not cal_manual_approval_required() else "draft_ready"
+    )
     return True, bool(has_draft and (regenerate or is_stale))
 
 
@@ -306,8 +310,9 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
     from app.services.resend_email import ResendEmailError, send_email_via_resend
     from app.models.crm import CrmAccount
 
-    draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "50") or "50")
-    send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "8") or "8")
+    draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
+    send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
+    followup_limit = int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25")
     stale_days = int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7")
     stale_before = datetime.now(timezone.utc) - timedelta(days=max(stale_days, 1))
 
@@ -379,9 +384,20 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             skipped_already_sent += 1
             continue
 
-        to_email, _src, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        to_email = (acct.contact_email or "").strip() or None
+        if not to_email:
+            to_email, _src, _title = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            continue
+
+        from app.api.admin_extended import cal_manual_approval_required
+
+        if cal_manual_approval_required() and (acct.outreach_stage or "") not in (
+            "draft_approved",
+            "approved",
+        ):
+            skipped_no_draft += 1
             continue
 
         ok, verify_reason = verify_email_deliverable(to_email)
@@ -418,8 +434,27 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             acct.outreach_sent_at = now
             acct.outreach_stage = "contacted"
             sent += 1
+            try:
+                from app.services.sequence_runner import enroll_after_intro_send
+
+                enroll_after_intro_send(
+                    db,
+                    team_id=team.id,
+                    crm_account_id=acct.id,
+                )
+            except Exception as exc:
+                logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
+
+    followups: dict[str, Any] = {"processed": 0, "sent": 0, "skipped": 0, "failed": 0}
+    if not dry_run:
+        try:
+            from app.services.sequence_runner import process_due_enrollments
+
+            followups = process_due_enrollments(db, limit=followup_limit)
+        except Exception as exc:
+            logger.warning("Cal follow-up cycle failed: %s", exc)
 
     if not dry_run:
         db.commit()
@@ -431,6 +466,7 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
         "drafted": drafted,
         "refreshed": refreshed,
         "sent": sent,
+        "followups": followups,
         "skipped_no_draft": skipped_no_draft,
         "skipped_already_sent": skipped_already_sent,
         "skipped_unverified": skipped_unverified,
@@ -449,8 +485,10 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),
         "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "2",
-        "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "8") or "8"),
-        "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "50") or "50"),
+        "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25"),
+        "followup_limit": int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25"),
+        "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100"),
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
-        "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6"),
+        "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "3") or "3"),
+        "manual_approval": (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"),
     }

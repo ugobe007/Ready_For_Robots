@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import RobotAvatar from "@/components/RobotAvatar";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import { LiveDot } from "@/components/marketing/primitives";
 
 type MarqueeRobot = {
@@ -74,7 +74,7 @@ export default function HumanoidBenchmarkMarquee({ compact = false }: { compact?
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getApiBase()}/api/humanoid/robots`, liveFetchInit())
+    fetch(`${getPublicReadApiBase()}/api/humanoid/robots`, liveFetchInit())
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled || !Array.isArray(data?.robots)) return;

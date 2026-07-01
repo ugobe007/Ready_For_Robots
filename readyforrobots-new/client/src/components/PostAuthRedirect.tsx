@@ -3,15 +3,13 @@
  * When a session appears on a neutral page, resume stored checkout/deep-link intent.
  */
 import { useEffect, useRef } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearPendingNext, peekPendingNext, postAuthRedirectTarget } from "@/lib/authNext";
+import { peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
 
-const NEUTRAL_PATHS = new Set(["/", "/login", "/signup", "/auth/callback"]);
+const NEUTRAL_PATHS = new Set(["/", "/login", "/signup", "/auth/callback", "/pricing"]);
 
 export default function PostAuthRedirect() {
   const { session, loading } = useAuth();
-  const [, setLocation] = useLocation();
   const handled = useRef(false);
 
   useEffect(() => {
@@ -23,9 +21,8 @@ export default function PostAuthRedirect() {
     const path = window.location.pathname;
     if (!NEUTRAL_PATHS.has(path)) return;
     handled.current = true;
-    clearPendingNext();
-    setLocation(target);
-  }, [loading, session, setLocation]);
+    navigateAfterAuth(target);
+  }, [loading, session]);
 
   return null;
 }

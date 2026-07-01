@@ -269,18 +269,20 @@ def daily_brief(db: Session = Depends(get_db)):
         .filter(CrmAccount.outreach_draft.isnot(None), CrmAccount.outreach_sent_at.is_(None))
         .scalar() or 0
     )
-    cal_needs_approval = (
-        db.query(func.count(CrmAccount.id))
-        .filter(
-            CrmAccount.outreach_draft.isnot(None),
-            CrmAccount.outreach_sent_at.is_(None),
-            or_(
-                CrmAccount.outreach_stage.is_(None),
-                ~CrmAccount.outreach_stage.in_(("draft_approved", "approved")),
-            ),
+    cal_needs_approval = 0
+    if (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"):
+        cal_needs_approval = (
+            db.query(func.count(CrmAccount.id))
+            .filter(
+                CrmAccount.outreach_draft.isnot(None),
+                CrmAccount.outreach_sent_at.is_(None),
+                or_(
+                    CrmAccount.outreach_stage.is_(None),
+                    ~CrmAccount.outreach_stage.in_(("draft_approved", "approved")),
+                ),
+            )
+            .scalar() or 0
         )
-        .scalar() or 0
-    )
     sendable = (
         db.query(func.count(CrmAccount.id))
         .filter(
@@ -288,7 +290,11 @@ def daily_brief(db: Session = Depends(get_db)):
             CrmAccount.outreach_sent_at.is_(None),
             CrmAccount.contact_email.isnot(None),
             CrmAccount.contact_email != "",
-            CrmAccount.outreach_stage.in_(("draft_approved", "approved")),
+            *(
+                [CrmAccount.outreach_stage.in_(("draft_approved", "approved"))]
+                if (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes")
+                else []
+            ),
         )
         .scalar() or 0
     )
@@ -333,16 +339,16 @@ def daily_brief(db: Session = Depends(get_db)):
         if count > 0:
             next_steps.append({"label": label, "count": count, "href": href, "priority": priority})
 
-    add_step("Step 1 — Review Cal draft emails", unsent_drafted, "/admin#cal-step-1-review", "high")
-    add_step("Step 2 — Approve or adjust Cal emails", cal_needs_approval, "/admin#cal-step-2-approve", "high")
-    add_step("Step 3 — Send approved Cal emails", sendable, "/admin#cal-step-3-send", "high")
     replied_count = (
         db.query(func.count(CrmAccount.id))
         .filter(CrmAccount.outreach_stage == "replied")
         .scalar() or 0
     )
-    add_step("Step 4 — Review Cal replies & follow-up", replied_count or emails_sent_total, "/admin#cal-step-4-responses", "medium")
-    add_step("HOT leads not yet emailed", hot_unsent, "/admin#cal-step-1-review", "medium")
+    add_step("Cal autopilot — ready to send", sendable, "/admin#cal-outreach", "high")
+    if cal_needs_approval:
+        add_step("Cal drafts need approval", cal_needs_approval, "/admin#cal-outreach", "high")
+    add_step("Review Cal replies & follow-up", replied_count or emails_sent_total, "/sales-workflow", "high")
+    add_step("HOT leads not yet emailed", hot_unsent, "/admin#cal-outreach", "medium")
     add_step("Sales actions need approval", needs_approval, "/sales-console", "high")
     add_step("SIGNAL drafts awaiting send", scout_drafted, "/admin#workflow", "medium")
     add_step("Research updates to review", research_pending, "/pipeline", "medium")

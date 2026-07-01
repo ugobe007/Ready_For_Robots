@@ -34,7 +34,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     label: "Admin",
     links: [
       { label: "Command center", href: "/admin", shortLabel: "Admin dashboard", adminOnly: true },
-      { label: "Cal queue", href: "/admin#cal-step-1-review", shortLabel: "Review · approve · send", adminOnly: true },
+      { label: "Cal queue", href: "/admin#cal-outreach", shortLabel: "Autopilot · preview queue", adminOnly: true },
       { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
       { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
     ],
@@ -126,7 +126,7 @@ export function openWorkspaceHref(href: string, setLocation: (path: string) => v
 }
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
-  { label: "Cal queue — review & send", href: "/admin#cal-step-1-review", shortLabel: "Cal outreach" },
+  { label: "Cal autopilot queue", href: "/admin#cal-outreach", shortLabel: "Cal outreach" },
   { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions" },
   { label: "Command center", href: "/admin", shortLabel: "Admin home" },
 ];

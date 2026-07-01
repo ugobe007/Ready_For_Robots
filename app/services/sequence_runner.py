@@ -17,28 +17,37 @@ from app.services.sales_learning_agent import record_sales_experience
 logger = logging.getLogger(__name__)
 
 DEFAULT_BUYER_SEQUENCE = {
-    "name": "Buyer intro cadence",
-    "slug": "buyer_intro_v1",
+    "name": "Cal buyer cadence",
+    "slug": "cal_buyer_v1",
     "steps": [
         {
             "step_number": 1,
             "delay_days": 0,
             "subject_template": "Automation opportunity — {company_name}",
-            "body_template": "Hi — Cal from Ready For Robots. We noticed automation intent at {company_name} and would love to share a relevant deployment pattern.",
+            "body_template": "Hi — Cal from Ready For Robots.\n\nWe noticed automation intent at {company_name} and wanted to share a relevant deployment pattern.",
             "action_label": "Intro",
         },
         {
             "step_number": 2,
             "delay_days": 3,
-            "subject_template": "Following up — robotics fit for {company_name}",
-            "body_template": "Quick follow-up on my note last week. Happy to share a short benchmark for peers in {industry}.",
+            "subject_template": "Following up — {company_name}",
+            "body_template": (
+                "Hi — Cal again.\n\n"
+                "Quick follow-up on my note. Happy to share how peers in {industry} are running pilots "
+                "and what usually moves a PoC to deployment.\n\n"
+                "Worth a quick reply?\n\n— Cal\nReady For Robots"
+            ),
             "action_label": "Value follow-up",
         },
         {
             "step_number": 3,
             "delay_days": 7,
-            "subject_template": "Should I close the loop?",
-            "body_template": "I do not want to crowd your inbox — should I close the loop, or is timing still off for {company_name}?",
+            "subject_template": "Should I close the loop? — {company_name}",
+            "body_template": (
+                "Hi — Cal from Ready For Robots.\n\n"
+                "I don't want to crowd your inbox. Should I close the loop on {company_name}, "
+                "or is timing still off?\n\n— Cal\nReady For Robots"
+            ),
             "action_label": "Breakup",
         },
     ],
@@ -105,6 +114,55 @@ def enroll_account(
         status="active",
         enrolled_at=now,
         next_step_at=now,
+    )
+    db.add(enrollment)
+    db.flush()
+    return enrollment
+
+
+def enroll_after_intro_send(
+    db: Session,
+    *,
+    team_id,
+    crm_account_id,
+    sequence: OutreachSequence | None = None,
+) -> OutreachSequenceEnrollment:
+    """Enroll after Cal's intro email — schedule step 2 follow-up."""
+    sequence = sequence or ensure_default_sequence(db, team_id=team_id)
+    now = datetime.now(timezone.utc)
+    existing = (
+        db.query(OutreachSequenceEnrollment)
+        .filter(
+            OutreachSequenceEnrollment.crm_account_id == crm_account_id,
+            OutreachSequenceEnrollment.sequence_id == sequence.id,
+        )
+        .first()
+    )
+    step2 = (
+        db.query(OutreachSequenceStep)
+        .filter(
+            OutreachSequenceStep.sequence_id == sequence.id,
+            OutreachSequenceStep.step_number == 2,
+        )
+        .first()
+    )
+    delay_days = max(1, int(step2.delay_days if step2 else 3))
+    if existing:
+        if existing.status in ("paused", "completed", "blocked"):
+            existing.status = "active"
+            existing.paused_reason = None
+        existing.current_step = 2
+        existing.next_step_at = now + timedelta(days=delay_days)
+        db.flush()
+        return existing
+    enrollment = OutreachSequenceEnrollment(
+        team_id=team_id,
+        sequence_id=sequence.id,
+        crm_account_id=crm_account_id,
+        current_step=2,
+        status="active",
+        enrolled_at=now,
+        next_step_at=now + timedelta(days=delay_days),
     )
     db.add(enrollment)
     db.flush()

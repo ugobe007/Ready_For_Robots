@@ -9,6 +9,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -58,6 +59,43 @@ def _read_outcome(mission_dir: Path) -> str:
 
 
 def build_notification(mission_dir: Path) -> str:
+    snapshot_path = _root / "reports" / "harness_snapshot_latest.json"
+    snapshot: dict | None = None
+    if snapshot_path.is_file():
+        try:
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            snapshot = None
+
+    diagnostics = (snapshot or {}).get("diagnostics")
+    if not diagnostics:
+        try:
+            from scripts.harness_diagnostics import build_diagnostics
+            from scripts.harness_snapshot import _db_session
+
+            db = _db_session()
+            try:
+                diagnostics = build_diagnostics(db=db)
+            finally:
+                if db is not None:
+                    db.close()
+        except Exception as exc:
+            diagnostics = {"error": str(exc), "alerts": [str(exc)]}
+
+    outcome = _read_outcome(mission_dir)
+    try:
+        from scripts.harness_diagnostics import render_daily_report_markdown
+
+        return render_daily_report_markdown(
+            snapshot=snapshot,
+            diagnostics=diagnostics or {},
+            mission_name=mission_dir.name,
+            outcome_md=outcome,
+        )
+    except Exception:
+        pass
+
+    # Fallback if render fails
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     branch = _git_lines(["rev-parse", "--abbrev-ref", "HEAD"])
     commit = _git_lines(["rev-parse", "--short", "HEAD"])
@@ -155,13 +193,16 @@ def main() -> int:
     reports = _root / "reports"
     reports.mkdir(parents=True, exist_ok=True)
     out_path = reports / "harness_notification_latest.md"
+    daily_path = reports / "harness_daily_report_latest.md"
     out_path.write_text(body, encoding="utf-8")
+    daily_path.write_text(body, encoding="utf-8")
     print(f"Wrote {out_path}")
+    print(f"Wrote {daily_path}")
 
     if args.no_email:
         return 0
 
-    subject = f"[RFR Harness] {mission_dir.name} complete"
+    subject = f"[RFR Daily] Signups & site health — {datetime.now(timezone.utc).date().isoformat()}"
     email_result = _send_email(subject=subject, body=body)
     print("Email:", email_result)
     if not email_result.get("sent"):

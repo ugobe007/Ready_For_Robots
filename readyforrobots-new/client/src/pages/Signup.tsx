@@ -8,7 +8,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
-import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent } from "@/lib/authNext";
+import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 
@@ -61,11 +61,11 @@ export default function Signup() {
       }
 
       const { data } = await client.auth.getSession();
-      if (data?.session) setLocation(nextPath());
+      if (data?.session) navigateAfterAuth(nextPath());
     })();
 
     const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
-      if (session) setLocation(nextPath());
+      if (session) navigateAfterAuth(nextPath());
     });
     return () => sub.subscription.unsubscribe();
   }, [setLocation]);

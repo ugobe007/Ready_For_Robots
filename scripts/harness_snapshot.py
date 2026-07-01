@@ -422,6 +422,13 @@ def build_snapshot(api_base: str, *, previous: dict | None = None) -> dict:
     telemetry = database_telemetry(_root)
     if telemetry.get("status") != "connected" and db is None:
         telemetry = {**telemetry, "intelligence_blocked": True}
+    diagnostics = None
+    try:
+        from scripts.harness_diagnostics import build_diagnostics
+
+        diagnostics = build_diagnostics(api_base=base, db=db)
+    except Exception as exc:
+        diagnostics = {"error": str(exc), "healthy": False, "alerts": [f"diagnostics failed: {exc}"]}
     try:
         intelligence = _build_intelligence(db, pipeline_leads, previous)
         database = _merge_database_block(db, telemetry)
@@ -448,6 +455,10 @@ def build_snapshot(api_base: str, *, previous: dict | None = None) -> dict:
             f"unknown industry rows with signals: {database['unknown_industry_with_signals']}"
         )
     alerts.extend(intel_alerts)
+    if diagnostics:
+        for a in diagnostics.get("alerts") or []:
+            if a not in alerts:
+                alerts.append(a)
 
     return {
         "generated_at": now.isoformat(),
@@ -479,6 +490,7 @@ def build_snapshot(api_base: str, *, previous: dict | None = None) -> dict:
         },
         "database": database,
         "intelligence": intelligence,
+        "diagnostics": diagnostics,
         "alerts": alerts,
     }
 

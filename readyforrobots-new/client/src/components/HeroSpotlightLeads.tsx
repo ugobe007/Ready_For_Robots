@@ -7,7 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import {
   fetchWithTimeout,
-  getApiBase,
+  getPublicReadApiBase,
   publicFetchInit,
   readSurfaceCache,
   writeSurfaceCache,
@@ -295,7 +295,7 @@ export default function HeroSpotlightLeads() {
     let cancelled = false;
     (async () => {
       try {
-        const base = getApiBase();
+        const base = getPublicReadApiBase();
         const r = await fetchWithTimeout(
           `${base}/api/leads/homepage`,
           publicFetchInit(),

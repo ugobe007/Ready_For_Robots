@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import { supabase } from "@/lib/supabase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
-import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget } from "@/lib/authNext";
+import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
 import { markFreshSignup } from "@/lib/firstSaveGuide";
 
 export default function AuthCallback() {
@@ -34,9 +34,8 @@ export default function AuthCallback() {
       if (done) return;
       done = true;
       markFreshSignup();
-      clearPendingNext();
       window.history.replaceState(null, "", clearSupabaseOAuthParams("/auth/callback", `?next=${encodeURIComponent(next)}`));
-      setLocation(next);
+      navigateAfterAuth(next);
     };
 
     void (async () => {

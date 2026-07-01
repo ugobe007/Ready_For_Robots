@@ -149,6 +149,16 @@ export function signupHrefForCheckout(tier: "pro" | "premium"): string {
   return `/signup?plan=${tier}&next=${encodeURIComponent(returnTo)}`;
 }
 
+/**
+ * Full-page navigation after auth — preserves query strings (wouter setLocation drops ?upgrade=pro).
+ */
+export function navigateAfterAuth(path: string, opts?: { clearIntent?: boolean }): void {
+  if (typeof window === "undefined" || !isSafePath(path.split("?")[0] || path)) return;
+  if (opts?.clearIntent !== false) clearPendingNext();
+  if (`${window.location.pathname}${window.location.search}` === path) return;
+  window.location.replace(path);
+}
+
 /** True when URL carries plan=pro|premium (upgrade intent). */
 export function readPlanParam(search?: string): "pro" | "premium" | null {
   if (typeof window === "undefined") return null;

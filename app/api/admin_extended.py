@@ -35,6 +35,17 @@ from app.services.lead_primary_link import enrich_lead_link_fields
 router = APIRouter(dependencies=[Depends(require_admin)])
 
 
+def cal_manual_approval_required() -> bool:
+    """When false (default), Cal drafts and sends without manual approve step."""
+    return (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes")
+
+
+def _cal_is_approved(stage: Optional[str]) -> bool:
+    if not cal_manual_approval_required():
+        return True
+    return (stage or "") in ("draft_approved", "approved")
+
+
 def _invalidate_admin_caches() -> None:
     from app.services.admin_snapshot import touch_invalidate
     touch_invalidate()
@@ -637,17 +648,17 @@ def _build_cal_draft_status_payload(
     approved = sum(
         1 for r in summary_rows
         if r["has_draft"] and not r["outreach_sent_at"]
-        and (r["outreach_stage"] or "") in ("draft_approved", "approved")
+        and _cal_is_approved(r["outreach_stage"])
     )
-    needs_approval = sum(
+    needs_approval = 0 if not cal_manual_approval_required() else sum(
         1 for r in summary_rows
         if r["has_draft"] and not r["outreach_sent_at"]
-        and (r["outreach_stage"] or "") not in ("draft_approved", "approved")
+        and not _cal_is_approved(r["outreach_stage"])
     )
     sendable = sum(
         1 for r in summary_rows
         if r["has_draft"] and not r["outreach_sent_at"] and r["contact_email"]
-        and (r["outreach_stage"] or "") in ("draft_approved", "approved")
+        and _cal_is_approved(r["outreach_stage"])
     )
     no_email = sum(1 for r in summary_rows if r["has_draft"] and not r["outreach_sent_at"] and not r["contact_email"])
     opened = sum(1 for r in summary_rows if r["email_delivery_status"] in ("opened", "clicked"))
@@ -915,7 +926,7 @@ def cal_bulk_send(
         if acct.outreach_sent_at:
             skipped_already_sent += 1
             continue
-        if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+        if (acct.outreach_stage or "") not in ("draft_approved", "approved") and cal_manual_approval_required():
             skipped_no_draft += 1
             errors.append({
                 "company_id": company.id,
@@ -974,6 +985,16 @@ def cal_bulk_send(
             acct.outreach_sent_at = now
             acct.outreach_stage = "contacted"
             sent_count += 1
+            try:
+                from app.services.sequence_runner import enroll_after_intro_send
+
+                enroll_after_intro_send(
+                    db,
+                    team_id=team.id,
+                    crm_account_id=acct.id,
+                )
+            except Exception as exc:
+                logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
         except Exception as exc:
@@ -1258,7 +1279,7 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail="No draft to send")
     if acct.outreach_sent_at:
         raise HTTPException(status_code=400, detail="Already sent")
-    if (acct.outreach_stage or "") not in ("draft_approved", "approved"):
+    if (acct.outreach_stage or "") not in ("draft_approved", "approved") and cal_manual_approval_required():
         raise HTTPException(status_code=400, detail="Draft not approved — approve before sending")
 
     if (body.outreach_draft or "").strip():
@@ -1310,6 +1331,16 @@ def cal_send_one(
     now = datetime.now(timezone.utc)
     acct.outreach_sent_at = now
     acct.outreach_stage = "contacted"
+    try:
+        from app.services.sequence_runner import enroll_after_intro_send
+
+        enroll_after_intro_send(
+            db,
+            team_id=team.id,
+            crm_account_id=acct.id,
+        )
+    except Exception as exc:
+        logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
     db.commit()
     _invalidate_admin_caches()
     return {"sent": True, "to": to_email, "sent_at": now.isoformat()}

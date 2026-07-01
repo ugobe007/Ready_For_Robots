@@ -13,6 +13,25 @@ tests:
     required_for:
       - LeadQuality
 
+  site_health_smoke:
+    command: python3 scripts/harness_diagnostics.py --check site
+    required_for:
+      - PipelineHealth
+      - ProductSurface
+      - Deploy
+
+  code_conventions:
+    command: python3 scripts/harness_diagnostics.py --check code --fail-on-violations
+    required_for:
+      - ProductSurface
+      - Deploy
+
+  harness_diagnostics_unit:
+    command: python3 -m pytest tests/test_harness_diagnostics.py -q --tb=no
+    required_for:
+      - PipelineHealth
+      - ProductSurface
+
 pre_commit:
   block_paths:
     - reports/

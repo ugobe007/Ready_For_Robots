@@ -1,4 +1,4 @@
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 
 export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v2";
 /** Match server daily edition — rolls at 6am America/Los_Angeles. */
@@ -81,8 +81,8 @@ export async function fetchHomepageLeadPool<
 >(fallback: T[]): Promise<{ leads: T[]; live: boolean; summary?: { total?: number; hot?: number } }> {
   try {
     const [homepageRes, hotRes] = await Promise.all([
-      fetch(`${getApiBase()}/api/leads/homepage`, liveFetchInit()),
-      fetch(`${getApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`, liveFetchInit()),
+      fetch(`${getPublicReadApiBase()}/api/leads/homepage`, liveFetchInit()),
+      fetch(`${getPublicReadApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`, liveFetchInit()),
     ]);
     const merged: T[] = [];
     let summary: { total?: number; hot?: number } | undefined;
