@@ -405,14 +405,9 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             skipped_unverified += 1
             continue
 
-        draft_lines = (acct.outreach_draft or "").strip().splitlines()
-        subject_line = next((line for line in draft_lines if line.strip()), None)
-        if subject_line and subject_line.lower().startswith("subject:"):
-            subject = subject_line[8:].strip()
-            body_text = "\n".join(draft_lines[1:]).strip()
-        else:
-            subject = f"Robot automation partnership — {company.name}"
-            body_text = acct.outreach_draft or ""
+        from app.services.cal_outreach_send import parse_cal_draft
+
+        subject, body_text = parse_cal_draft(acct.outreach_draft, company.name or "your team")
 
         if dry_run:
             sent += 1
@@ -449,27 +444,23 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
         cc_email = cc_list[0] if cc_list else None
 
         try:
-            send_email_via_resend(
+            from app.services.cal_outreach_send import enroll_cal_followup, send_cal_intro_email
+
+            send_cal_intro_email(
+                db,
+                acct=acct,
+                company=company,
+                team_id=team.id,
                 to_email=to_email,
                 subject=subject,
                 body_text=body_text,
-                from_display_name="Cal · Ready For Robots",
                 cc=[cc_email] if cc_email else None,
+                sender_user_id=uid,
                 idempotency_key=f"cal-auto-{acct.id}-{now.date().isoformat()}",
+                send_identity="cal",
             )
-            acct.outreach_sent_at = now
-            acct.outreach_stage = "contacted"
             sent += 1
-            try:
-                from app.services.sequence_runner import enroll_after_intro_send
-
-                enroll_after_intro_send(
-                    db,
-                    team_id=team.id,
-                    crm_account_id=acct.id,
-                )
-            except Exception as exc:
-                logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
+            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
 

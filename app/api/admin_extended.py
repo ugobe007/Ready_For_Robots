@@ -837,6 +837,201 @@ def cal_autonomy_status(_user: dict = Depends(require_admin)):
     return get_cal_autonomy_status()
 
 
+@router.get("/cal/activity")
+def cal_activity(
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+    limit: int = Query(40, ge=10, le=100),
+):
+    """Operator timeline: what Cal is doing autonomously + items needing human help."""
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import desc, func
+
+    from app.models.calendar import CalendarEvent
+    from app.models.crm import CrmAccount
+    from app.models.outreach import OutreachMessage, OutreachReply
+    from app.models.sales_agent import SalesAgentAction, SalesOpportunity
+    from app.models.sequences import OutreachSequenceEnrollment
+    from app.services.cal_autonomy import get_cal_autonomy_status
+    from app.services.cal_ops_monitor import get_cal_ops_monitor
+
+    cap = max(10, min(limit, 100))
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=14)
+
+    autopilot = get_cal_autonomy_status()
+    ops = get_cal_ops_monitor(db, limit=15)
+
+    enroll_active = (
+        db.query(func.count(OutreachSequenceEnrollment.id))
+        .filter(OutreachSequenceEnrollment.status == "active")
+        .scalar() or 0
+    )
+    enroll_due = (
+        db.query(func.count(OutreachSequenceEnrollment.id))
+        .filter(
+            OutreachSequenceEnrollment.status == "active",
+            OutreachSequenceEnrollment.next_step_at.isnot(None),
+            OutreachSequenceEnrollment.next_step_at <= now,
+        )
+        .scalar() or 0
+    )
+    enroll_paused = (
+        db.query(func.count(OutreachSequenceEnrollment.id))
+        .filter(OutreachSequenceEnrollment.status == "paused")
+        .scalar() or 0
+    )
+
+    crm_names = {
+        str(row.id): row.name
+        for row in db.query(CrmAccount.id, CrmAccount.name).limit(2000).all()
+    }
+
+    timeline: list[dict] = []
+
+    for msg in (
+        db.query(OutreachMessage)
+        .filter(OutreachMessage.sent_at.isnot(None), OutreachMessage.sent_at >= since)
+        .order_by(desc(OutreachMessage.sent_at))
+        .limit(cap)
+        .all()
+    ):
+        identity = (msg.send_identity or "").lower()
+        kind = "followup_sent" if identity == "sequence" else "intro_sent"
+        timeline.append({
+            "id": str(msg.id),
+            "kind": kind,
+            "at": msg.sent_at.isoformat() if msg.sent_at else None,
+            "title": msg.subject,
+            "detail": f"To {msg.to_email}",
+            "entity": crm_names.get(str(msg.crm_account_id)) or msg.to_email,
+            "action_url": "/sales-console",
+        })
+
+    for reply in (
+        db.query(OutreachReply)
+        .filter(OutreachReply.received_at >= since)
+        .order_by(desc(OutreachReply.received_at))
+        .limit(cap)
+        .all()
+    ):
+        timeline.append({
+            "id": str(reply.id),
+            "kind": "reply_received",
+            "at": reply.received_at.isoformat() if reply.received_at else None,
+            "title": reply.subject or "Inbound reply",
+            "detail": (reply.from_email or "unknown sender"),
+            "entity": crm_names.get(str(reply.crm_account_id)) or reply.from_email,
+            "action_url": "/inbox",
+        })
+
+    for action in (
+        db.query(SalesAgentAction)
+        .filter(SalesAgentAction.created_at >= since)
+        .order_by(desc(SalesAgentAction.created_at))
+        .limit(cap)
+        .all()
+    ):
+        kind = "auto_reply_sent" if action.status in ("sent", "completed") else "cal_planned_action"
+        timeline.append({
+            "id": str(action.id),
+            "kind": kind,
+            "at": (action.updated_at or action.created_at).isoformat() if (action.updated_at or action.created_at) else None,
+            "title": action.recommendation or action.action_type.replace("_", " ").title(),
+            "detail": action.detected_intent or action.status,
+            "entity": action.draft_subject or "Sales agent",
+            "action_url": "/sales-console",
+        })
+
+    for row in ops.get("assembly_rejections") or []:
+        timeline.append({
+            "id": str(row.get("id") or row.get("created_at")),
+            "kind": "assembly_blocked",
+            "at": row.get("created_at"),
+            "title": "Assembly blocked send",
+            "detail": "; ".join((row.get("issues") or [])[:2]) or row.get("note") or "",
+            "entity": row.get("vendor_name") or "Buyer outreach",
+            "action_url": "/admin#cal-outreach",
+        })
+
+    timeline.sort(key=lambda x: x.get("at") or "", reverse=True)
+    timeline = timeline[:cap]
+
+    needs_you: list[dict] = []
+
+    pending_approval = (
+        db.query(SalesAgentAction)
+        .filter(
+            SalesAgentAction.requires_approval.is_(True),
+            SalesAgentAction.status.in_(["planned", "draft", "pending", "review", "drafted"]),
+        )
+        .order_by(desc(SalesAgentAction.updated_at))
+        .limit(10)
+        .all()
+    )
+    for action in pending_approval:
+        needs_you.append({
+            "kind": "approval_required",
+            "title": action.recommendation or "Cal action needs approval",
+            "detail": action.detected_intent or action.action_type,
+            "action_url": "/sales-console",
+        })
+
+    meeting_opps = (
+        db.query(SalesOpportunity)
+        .filter(SalesOpportunity.stage.in_(["meeting_requested", "qualified"]))
+        .order_by(desc(SalesOpportunity.updated_at))
+        .limit(8)
+        .all()
+    )
+    scheduled_opp_ids = {
+        str(row.sales_opportunity_id)
+        for row in db.query(CalendarEvent.sales_opportunity_id)
+        .filter(CalendarEvent.sales_opportunity_id.isnot(None))
+        .all()
+        if row.sales_opportunity_id
+    }
+    for opp in meeting_opps:
+        if str(opp.id) in scheduled_opp_ids:
+            continue
+        if opp.stage != "meeting_requested":
+            continue
+        needs_you.append({
+            "kind": "schedule_meeting",
+            "title": f"Schedule meeting — {opp.title or 'Opportunity'}",
+            "detail": "Cal replied asking for times — book on calendar when ready",
+            "action_url": f"/calendar?sales_opportunity_id={opp.id}",
+        })
+
+    for row in ops.get("assembly_rejections") or []:
+        needs_you.append({
+            "kind": "edit_draft",
+            "title": f"Fix draft — {row.get('vendor_name') or 'blocked send'}",
+            "detail": "; ".join((row.get("issues") or [])[:2]) or "Assembly rejected copy",
+            "action_url": "/admin#cal-outreach",
+        })
+
+    return {
+        "autopilot": autopilot,
+        "sequences": {
+            "active": enroll_active,
+            "due_now": enroll_due,
+            "paused": enroll_paused,
+        },
+        "timeline": timeline,
+        "needs_you": needs_you[:12],
+        "capabilities": {
+            "draft_autonomous": True,
+            "send_autonomous": bool(autopilot.get("enabled")),
+            "followup_autonomous": True,
+            "reply_autonomous": True,
+            "meeting_autonomous": False,
+            "meeting_note": "Cal classifies meeting requests and asks for times; you confirm on Calendar.",
+        },
+    }
+
+
 @router.get("/cal/ops-monitor")
 def cal_ops_monitor(
     db: Session = Depends(get_db),
@@ -899,7 +1094,8 @@ def cal_bulk_send(
     have NOT been sent yet.  Uses Resend under the hood.  Hard-caps at
     `body.limit` to prevent accidental mass-sends.
     """
-    from app.services.resend_email import send_email_via_resend, ResendEmailError
+    from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
+    from app.services.resend_email import ResendEmailError
 
     uid = uuid.UUID(user["uid"])
     team = _admin_team(db, uid, user.get("email") or "")
@@ -971,41 +1167,28 @@ def cal_bulk_send(
         cc_email = cc_list[0] if cc_list else None
 
         # Build subject from draft first line or fallback
-        draft_lines = (acct.outreach_draft or "").strip().splitlines()
-        subject_line = next((l for l in draft_lines if l.strip()), None)
-        if subject_line and subject_line.lower().startswith("subject:"):
-            subject = subject_line[8:].strip()
-            body_text = "\n".join(draft_lines[1:]).strip()
-        else:
-            subject = f"Robot automation partnership — {company.name}"
-            body_text = acct.outreach_draft
+        subject, body_text = parse_cal_draft(acct.outreach_draft, company.name or "Unknown")
 
         if body.dry_run:
             sent_count += 1
             continue
 
         try:
-            send_email_via_resend(
+            send_cal_intro_email(
+                db,
+                acct=acct,
+                company=company,
+                team_id=team.id,
                 to_email=to_email,
                 subject=subject,
                 body_text=body_text,
-                from_display_name="Cal · Ready For Robots",
                 cc=[cc_email] if cc_email else None,
+                sender_user_id=uid,
                 idempotency_key=f"cal-bulk-{acct.id}",
+                send_identity="cal",
             )
-            acct.outreach_sent_at = now
-            acct.outreach_stage = "contacted"
             sent_count += 1
-            try:
-                from app.services.sequence_runner import enroll_after_intro_send
-
-                enroll_after_intro_send(
-                    db,
-                    team_id=team.id,
-                    crm_account_id=acct.id,
-                )
-            except Exception as exc:
-                logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
+            enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
         except ResendEmailError as exc:
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
         except Exception as exc:
@@ -1273,7 +1456,8 @@ def cal_send_one(
     user: dict = Depends(require_admin),
 ):
     """Send a single drafted Cal email by CRM account ID."""
-    from app.services.resend_email import send_email_via_resend, ResendEmailError
+    from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
+    from app.services.resend_email import ResendEmailError
     import uuid as _uuid
 
     uid = uuid.UUID(user["uid"])
@@ -1317,41 +1501,28 @@ def cal_send_one(
     industry = (company.industry if company else None) or acct.industry
     cc_list = infer_cc_outreach_emails(domain, industry, primary=to_email)
     cc_email = cc_list[0] if cc_list else None
-    draft_lines = (acct.outreach_draft or "").strip().splitlines()
-    subject_line = next((l for l in draft_lines if l.strip()), None)
-    if subject_line and subject_line.lower().startswith("subject:"):
-        subject = subject_line[8:].strip()
-        body_text = "\n".join(draft_lines[1:]).strip()
-    else:
-        subject = f"Robot automation partnership — {acct.name}"
-        body_text = acct.outreach_draft
+    subject, body_text = parse_cal_draft(acct.outreach_draft, acct.name or "Unknown")
 
     try:
-        send_email_via_resend(
+        send_cal_intro_email(
+            db,
+            acct=acct,
+            company=company,
+            team_id=team.id,
             to_email=to_email,
             subject=subject,
             body_text=body_text,
-            from_display_name="Cal · Ready For Robots",
             cc=[cc_email] if cc_email else None,
+            sender_user_id=uid,
             idempotency_key=f"cal-single-{acct.id}",
+            send_identity="cal",
         )
     except ResendEmailError as exc:
         from fastapi import HTTPException
-        raise HTTPException(status_code=502, detail=str(exc))
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
+    enroll_cal_followup(db, team_id=team.id, crm_account_id=acct.id)
     now = datetime.now(timezone.utc)
-    acct.outreach_sent_at = now
-    acct.outreach_stage = "contacted"
-    try:
-        from app.services.sequence_runner import enroll_after_intro_send
-
-        enroll_after_intro_send(
-            db,
-            team_id=team.id,
-            crm_account_id=acct.id,
-        )
-    except Exception as exc:
-        logger.warning("Cal follow-up enroll failed account=%s: %s", acct.id, exc)
     db.commit()
     _invalidate_admin_caches()
     return {"sent": True, "to": to_email, "sent_at": now.isoformat()}
