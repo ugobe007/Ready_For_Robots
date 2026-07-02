@@ -13,6 +13,8 @@ import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
 import {
   readLocalAdminSnapshot,
+  mergeSectionIntoSnapshot,
+  writeLocalAdminSnapshot,
   snapshotToApplied,
   type AdminSectionName,
 } from "@/lib/adminSnapshot";
@@ -150,6 +152,9 @@ type CalDraftStatus = {
     replied?: number;
   };
   prospects?: CalProspect[];
+  stale?: boolean;
+  bootstrap_required?: boolean;
+  bootstrap_message?: string;
 };
 
 type ScoutStatus = {
@@ -411,6 +416,8 @@ export default function Admin() {
   } | null>(null);
   const [calActivity, setCalActivity] = useState<CalActivityData | null>(null);
   const [calActivityLoading, setCalActivityLoading] = useState(true);
+  const [calStatusError, setCalStatusError] = useState("");
+  const [calStatusLoading, setCalStatusLoading] = useState(false);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -536,8 +543,32 @@ export default function Admin() {
 
   const loadCalStatus = useCallback(async () => {
     if (!session?.access_token) return;
-    await refreshSection("cal", true);
-  }, [refreshSection, session?.access_token]);
+    setCalStatusLoading(true);
+    setCalStatusError("");
+    try {
+      const res = await adminFetch("/api/admin/cal/draft-status?include_prospects=true&prospect_limit=300");
+      const data = await res.json().catch(() => ({})) as CalDraftStatus & { detail?: string };
+      if (!res.ok) {
+        setCalStatusError(data.detail || `Cal queue failed to load (${res.status})`);
+        return;
+      }
+      setCalStatus(data);
+      if (data.bootstrap_required) {
+        setCalStatusError(data.bootstrap_message || "Cal outreach team not initialized.");
+      } else if (data.stale) {
+        setCalStatusError("Cal queue timed out — showing partial data. Click Refresh.");
+      } else if ((data.summary?.total ?? 0) === 0) {
+        setCalStatusError("No HOT/WARM sales leads in Cal's universe yet. Check pipeline scoring or run Run cycle now to draft.");
+      }
+      const current = readLocalAdminSnapshot() ?? { sections: {} };
+      const next = mergeSectionIntoSnapshot(current, "cal", new Date().toISOString(), data);
+      writeLocalAdminSnapshot(next);
+    } catch (err) {
+      setCalStatusError(err instanceof Error ? err.message : "Cal queue failed to load.");
+    } finally {
+      setCalStatusLoading(false);
+    }
+  }, [adminFetch, session?.access_token]);
 
   const loadDraftBody = useCallback(async (crmAccountId: string) => {
     if (!crmAccountId) return;
@@ -636,17 +667,24 @@ export default function Admin() {
         body: JSON.stringify({ dry_run: dryRun }),
       });
       const data = await res.json().catch(() => ({})) as Record<string, unknown> & {
+        status?: string;
+        reason?: string;
         drafted?: number;
         refreshed?: number;
         sent?: number;
         followups?: { sent?: number; processed?: number };
+        errors?: Array<{ name?: string; error?: string }>;
       };
       if (!res.ok) throw new Error(String(data.detail || "Cal autonomy run failed"));
-      const fu = data.followups?.sent ?? 0;
+      if (data.status === "skipped" || data.status === "disabled") {
+        throw new Error(String(data.reason || `Cal autonomy ${data.status}`));
+      }
+      const fu = (data.followups as { sent?: number } | undefined)?.sent ?? 0;
+      const errCount = data.errors?.length ?? 0;
       setMessage(
         dryRun
           ? `Dry run: would draft ${data.drafted ?? 0}, send ${data.sent ?? 0}, follow up ${fu}.`
-          : `Cal autopilot: drafted ${data.drafted ?? 0}, sent ${data.sent ?? 0}, follow-ups ${fu}.`,
+          : `Cal cycle complete — drafted ${data.drafted ?? 0}, sent ${data.sent ?? 0}, follow-ups ${fu}${errCount ? ` · ${errCount} blocked (see queue)` : ""}.`,
       );
       void loadCalStatus();
       void loadCalAutonomyStatus();
@@ -762,8 +800,9 @@ export default function Admin() {
       void loadSupplyAutonomyStatus();
       void loadCalOpsMonitor();
       void loadCalActivity();
+      void loadCalStatus();
     }
-  }, [authLoading, loadCalActivity, loadCalAutonomyStatus, loadCalOpsMonitor, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
+  }, [authLoading, loadCalActivity, loadCalAutonomyStatus, loadCalOpsMonitor, loadCalStatus, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -1226,6 +1265,9 @@ export default function Admin() {
               data={calActivity}
               loading={calActivityLoading}
               busy={!!actionBusy}
+              queueSummary={calStatus?.summary}
+              queueLoading={calStatusLoading}
+              queueError={calStatusError}
               onRefresh={() => {
                 void loadCalActivity();
                 void loadCalStatus();
@@ -1234,14 +1276,9 @@ export default function Admin() {
               }}
               onRunCal={() => void runCalAutonomy(false)}
               onOpenQueue={scrollToCalQueue}
+              onDraftPending={() => void runCalBulkDraft(false)}
+              onSendAll={() => setSendConfirm("bulk")}
             />
-
-            <details className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 group" open>
-              <summary className="cursor-pointer list-none text-sm font-bold text-gray-800 marker:content-none">
-                Edit drafts & manual send overrides
-                <span className="ml-2 text-xs font-normal text-gray-500">spot-check copy · send one · bulk override</span>
-              </summary>
-              <div className="mt-4">
 
         {/* ── Cal Outreach: draft status for HOT+WARM prospects ── */}
         <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-200 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
@@ -1629,8 +1666,6 @@ export default function Admin() {
             )}
           </div>
         </section>
-              </div>
-            </details>
           </>
         )}
 

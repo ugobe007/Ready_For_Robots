@@ -33,14 +33,36 @@ export type CalActivityData = {
   };
 };
 
+type QueueSummary = {
+  total?: number;
+  hot?: number;
+  warm?: number;
+  drafted?: number;
+  pending_draft?: number;
+  sendable?: number;
+  sent?: number;
+  opened?: number;
+  replied?: number;
+};
+
 type Props = {
   data: CalActivityData | null;
   loading?: boolean;
   busy?: boolean;
+  queueSummary?: QueueSummary | null;
+  queueLoading?: boolean;
+  queueError?: string;
   onRefresh: () => void;
   onRunCal: () => void;
   onOpenQueue: () => void;
+  onDraftPending?: () => void;
+  onSendAll?: () => void;
 };
+
+function fmt(n?: number) {
+  if (n == null) return "0";
+  return new Intl.NumberFormat("en-US").format(n);
+}
 
 const KIND_LABEL: Record<string, string> = {
   intro_sent: "Intro sent",
@@ -64,16 +86,65 @@ export default function AdminCalOversightPanel({
   data,
   loading,
   busy,
+  queueSummary,
+  queueLoading,
+  queueError,
   onRefresh,
   onRunCal,
   onOpenQueue,
+  onDraftPending,
+  onSendAll,
 }: Props) {
   const ap = data?.autopilot;
   const caps = data?.capabilities;
   const seq = data?.sequences;
+  const q = queueSummary;
 
   return (
     <div className="mb-6 space-y-4">
+      {queueError ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950">
+          {queueError}
+        </div>
+      ) : null}
+
+      <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold text-gray-950">Cal sales lead queue (live)</p>
+          <span className="text-xs text-gray-500">{queueLoading ? "Loading…" : `${fmt(q?.hot)} hot · ${fmt(q?.warm)} warm`}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
+          {[
+            { label: "Total leads", value: q?.total },
+            { label: "Drafted", value: q?.drafted },
+            { label: "Pending draft", value: q?.pending_draft },
+            { label: "Ready to send", value: q?.sendable },
+            { label: "Sent", value: q?.sent },
+            { label: "Opened", value: q?.opened },
+            { label: "Replied", value: q?.replied },
+          ].map((item) => (
+            <div key={item.label} className="rounded-lg border border-gray-200 bg-slate-50 px-2 py-2 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-gray-500">{item.label}</p>
+              <p className="text-lg font-black text-gray-950">{fmt(item.value)}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" onClick={onOpenQueue} className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-900">
+            View all leads & emails below
+          </button>
+          {onDraftPending && (q?.pending_draft ?? 0) > 0 ? (
+            <button type="button" disabled={busy} onClick={onDraftPending} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-800 disabled:opacity-50">
+              Draft pending ({fmt(q?.pending_draft)})
+            </button>
+          ) : null}
+          {onSendAll && (q?.sendable ?? 0) > 0 ? (
+            <button type="button" disabled={busy} onClick={onSendAll} className="rounded-lg border border-amber-300 bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-950 disabled:opacity-50">
+              Send all ready ({fmt(q?.sendable)})
+            </button>
+          ) : null}
+        </div>
+      </div>
       <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white px-5 py-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3">

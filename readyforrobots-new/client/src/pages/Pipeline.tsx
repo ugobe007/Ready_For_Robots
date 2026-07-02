@@ -1619,18 +1619,18 @@ export default function Pipeline() {
     const base = getApiBase();
     const hdrs = liveFetchInit({ headers: authHeader(session.access_token) });
     try {
-      const snap = await fetch(`${base}/api/admin/snapshot/section/cal`, hdrs);
-      if (snap.ok) {
-        const patch = await snap.json() as { data?: { summary?: typeof scoutStats } };
-        if (patch.data?.summary) {
-          setScoutStats(patch.data.summary);
-          return;
-        }
-      }
       const r = await fetch(`${base}/api/admin/cal/draft-status?include_prospects=false`, hdrs);
       if (r.ok) {
         const d = await r.json() as { summary?: typeof scoutStats };
-        setScoutStats(d.summary ?? null);
+        if (d.summary) {
+          setScoutStats(d.summary);
+          return;
+        }
+      }
+      const snap = await fetch(`${base}/api/admin/snapshot/section/cal?refresh=1`, hdrs);
+      if (snap.ok) {
+        const patch = await snap.json() as { data?: { summary?: typeof scoutStats } };
+        if (patch.data?.summary) setScoutStats(patch.data.summary);
       }
     } catch { /* advisory */ }
   };

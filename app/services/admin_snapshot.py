@@ -128,10 +128,24 @@ def _build_section(name: str, db: Session, *, analytics_range: str = "30d") -> A
         return list_recent_activity(limit=40, db=db)
 
     if name == "cal":
-        from app.api.admin_extended import _build_cal_draft_status_payload
+        from app.api.admin_extended import _build_cal_draft_status_payload, _empty_cal_draft_payload
+        from app.services.cal_autonomy import get_cal_review_email, resolve_cal_admin_context
 
+        ctx = resolve_cal_admin_context(db)
+        if not ctx:
+            payload = _empty_cal_draft_payload(include_prospects=True)
+            payload["bootstrap_required"] = True
+            payload["bootstrap_message"] = (
+                "Cal outreach team not initialized — open /admin while signed in as admin, "
+                "or set CAL_ADMIN_USER_ID on Fly."
+            )
+            return payload
+
+        admin_uid, _team = ctx
         return _build_cal_draft_status_payload(
             db,
+            admin_uid=admin_uid,
+            admin_email=get_cal_review_email() or "",
             include_draft_bodies=False,
             include_prospects=True,
             prospect_limit=120,
