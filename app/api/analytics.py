@@ -77,6 +77,28 @@ async def track_url_scan(data: dict):
         db.close()
     return {"status": "tracked"}
 
+
+@router.post("/track/supply-conversion")
+async def track_supply_conversion(data: dict):
+    """Track vendor signup funnel landings from Cal supply outreach emails."""
+    from app.services.supply_conversion import parse_supply_attribution, record_supply_signup_landing
+
+    db = SessionLocal()
+    try:
+        robot_company_id, message_token, utm_source = parse_supply_attribution(data)
+        record_supply_signup_landing(
+            db,
+            page=str(data.get("page") or "unknown"),
+            robot_company_id=robot_company_id,
+            message_token=message_token,
+            utm_source=utm_source,
+            referrer=data.get("referrer"),
+            completed=bool(data.get("completed")),
+        )
+    finally:
+        db.close()
+    return {"status": "tracked"}
+
 @router.get("/analytics")
 async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
     """

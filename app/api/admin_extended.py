@@ -837,6 +837,17 @@ def cal_autonomy_status(_user: dict = Depends(require_admin)):
     return get_cal_autonomy_status()
 
 
+@router.get("/cal/ops-monitor")
+def cal_ops_monitor(
+    db: Session = Depends(get_db),
+    limit: int = Query(25, ge=1, le=100),
+    _user: dict = Depends(require_admin),
+):
+    from app.services.cal_ops_monitor import get_cal_ops_monitor
+
+    return get_cal_ops_monitor(db, limit=limit)
+
+
 class CalAutonomyRunBody(BaseModel):
     dry_run: bool = False
 

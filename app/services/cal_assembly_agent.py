@@ -98,6 +98,12 @@ def curate_supply_matches(
         if not ok:
             issues.append(f"{company.name}: {skip}")
             continue
+        from app.services.cal_pipeline_enrichment import enrichment_supply_eligible
+
+        enrich_ok, enrich_skip = enrichment_supply_eligible(company)
+        if not enrich_ok:
+            issues.append(f"{company.name}: {enrich_skip}")
+            continue
         signal = str(match.get("signal") or "")
         if signal and not _company_name_in_signal(company.name or "", signal):
             issues.append(f"{company.name}: signal does not corroborate company name")

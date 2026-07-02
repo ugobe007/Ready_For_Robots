@@ -64,19 +64,48 @@ def _site_url() -> str:
     return (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/")
 
 
-def append_signup_cta(body: str, rc: RobotCompany) -> str:
+def build_supply_tracking(
+    rc: RobotCompany,
+    *,
+    message_token: str | None = None,
+) -> dict[str, str]:
+    tracking = {
+        "utm_source": "cal_supply",
+        "utm_medium": "email",
+        "utm_campaign": "vendor_signup",
+        "rc": str(getattr(rc, "id", "") or ""),
+    }
+    if message_token:
+        tracking["msg"] = message_token
+    return {k: v for k, v in tracking.items() if v}
+
+
+def build_supply_cta_url(rc: RobotCompany, *, tracking: dict[str, str] | None = None) -> str:
+    site = _site_url()
+    website = (getattr(rc, "website", None) or "").strip()
+    query = "&".join(f"{key}={quote(value, safe='')}" for key, value in (tracking or {}).items())
+    if website:
+        base = f"{site}/results?url={quote(website, safe='')}"
+        return f"{base}&{query}" if query else base
+    return f"{site}/signup?{query}" if query else f"{site}/signup"
+
+
+def append_signup_cta(
+    body: str,
+    rc: RobotCompany,
+    *,
+    tracking: dict[str, str] | None = None,
+) -> str:
     """Ensure vendor outreach includes a signup / results scan link."""
     text = (body or "").rstrip()
     lower = text.lower()
     if "readyforrobots.com/signup" in lower or "/results?url=" in lower:
         return text
-    site = _site_url()
+    link = build_supply_cta_url(rc, tracking=tracking)
     website = (getattr(rc, "website", None) or "").strip()
     if website:
-        link = f"{site}/results?url={quote(website, safe='')}"
         line = f"Start free — scan your market and get matched buyer signals: {link}"
     else:
-        link = f"{site}/signup"
         line = f"Create a free workspace to receive matched buyer signals: {link}"
     return f"{text}\n\n{line}"
 
@@ -204,6 +233,8 @@ def _send_supply_email(
     subject: str,
     body: str,
     dry_run: bool,
+    tracking: dict[str, str] | None = None,
+    match_lead_ids: list[int] | None = None,
 ) -> dict[str, Any]:
     from app.api.robot_companies import (
         _create_crm_supply_tracking_copy,
@@ -272,6 +303,8 @@ def _send_supply_email(
         is_test=False,
         payload={
             "source": "supply_autonomy",
+            "conversion_tracking": tracking or {},
+            "match_lead_ids": match_lead_ids or [],
             **({"inbound_not_configured": True} if inbound_missing else {}),
         },
         approved_at=now,
@@ -359,7 +392,12 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
 
         matches = _match_buyer_leads(db, company, limit=12)
         matches = _select_supply_batch_matches(matches, used_lead_ids, limit=3)
+        from app.services.cal_pipeline_enrichment import ensure_supply_matches_enriched
+
+        matches, _enriched_count = ensure_supply_matches_enriched(db, matches)
         min_matches = int(os.getenv("SUPPLY_AUTONOMY_MIN_MATCHES", "2") or "2")
+        tracking_token = secrets.token_urlsafe(10)
+        tracking = build_supply_tracking(company, message_token=tracking_token)
 
         research = _research_robot_company_contacts(company, enabled=True, max_pages=1, timeout=1.2)
         contact = _contact_strategy(company, research)
@@ -369,7 +407,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
             continue
 
         draft = _vendor_signup_email(company, matches, force_rfr=True)
-        body = append_signup_cta(draft["body"], company)
+        body = append_signup_cta(draft["body"], company, tracking=tracking)
         subject = draft["subject"]
 
         from app.services.cal_assembly_agent import assemble_supply_outreach, cal_assembly_required
@@ -385,6 +423,16 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
             )
             if not assembly.approved:
                 skipped_assembly_rejected += 1
+                from app.services.cal_ops_monitor import record_cal_assembly_rejection
+
+                record_cal_assembly_rejection(
+                    db,
+                    channel="supply",
+                    robot_company_id=company.id,
+                    vendor_name=company.company_name or "",
+                    subject=subject,
+                    issues=assembly.issues,
+                )
                 logger.info(
                     "Cal assembly rejected supply send to %s: %s",
                     company.company_name,
@@ -393,7 +441,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
                 continue
             if assembly.matches and assembly.matches != matches:
                 draft = _vendor_signup_email(company, assembly.matches, force_rfr=True)
-                body = append_signup_cta(draft["body"], company)
+                body = append_signup_cta(draft["body"], company, tracking=tracking)
                 subject = draft["subject"]
                 matches = assembly.matches
         elif len(matches) < max(1, min_matches):
@@ -417,6 +465,8 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
                 subject=subject,
                 body=body,
                 dry_run=dry_run,
+                tracking=tracking,
+                match_lead_ids=[int(m.get("id") or 0) for m in matches if m.get("id")],
             )
             sent += 1
             sent_ids.add(company.id)
@@ -441,7 +491,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
     if not dry_run and (old_fp != new_fp or old_fp is None):
         _persist_template_fingerprint(new_fp)
 
-    if not dry_run and sent:
+    if not dry_run and (sent or skipped_assembly_rejected):
         db.commit()
 
     return {

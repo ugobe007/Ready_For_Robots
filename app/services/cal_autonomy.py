@@ -427,6 +427,16 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
                 body=body_text,
             )
             if not assembly.approved:
+                from app.services.cal_ops_monitor import record_cal_assembly_rejection
+
+                record_cal_assembly_rejection(
+                    db,
+                    channel="buyer",
+                    company_id=company.id,
+                    vendor_name=company.name or "",
+                    subject=subject,
+                    issues=assembly.issues,
+                )
                 errors.append({
                     "company_id": company.id,
                     "name": company.name,

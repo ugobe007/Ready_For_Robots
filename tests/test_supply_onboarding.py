@@ -9,6 +9,7 @@ import pytest
 from app.services.onboarding_email import welcome_email_body
 from app.services.supply_autonomy import (
     append_signup_cta,
+    build_supply_tracking,
     outreach_template_fingerprint,
     supply_autonomy_enabled,
 )
@@ -21,15 +22,17 @@ def test_supply_autonomy_enabled_default(monkeypatch):
 
 
 def test_append_signup_cta_adds_signup_link():
-    rc = SimpleNamespace(website=None)
-    body = append_signup_cta("Hello vendor team.", rc)
+    rc = SimpleNamespace(id=1, website=None)
+    body = append_signup_cta("Hello vendor team.", rc, tracking=build_supply_tracking(rc, message_token="x"))
     assert "readyforrobots.com/signup" in body
+    assert "utm_source=cal_supply" in body
 
 
 def test_append_signup_cta_uses_results_url_when_website():
-    rc = SimpleNamespace(website="https://robots.example.com")
-    body = append_signup_cta("Hello vendor team.", rc)
+    rc = SimpleNamespace(id=2, website="https://robots.example.com")
+    body = append_signup_cta("Hello vendor team.", rc, tracking=build_supply_tracking(rc, message_token="y"))
     assert "/results?url=" in body
+    assert "rc=2" in body
 
 
 def test_supply_template_fingerprint_stable(monkeypatch):

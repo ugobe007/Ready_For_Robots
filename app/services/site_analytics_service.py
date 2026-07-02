@@ -21,6 +21,8 @@ EVENT_VISIT = "visit"
 EVENT_ROI = "roi_calculation"
 EVENT_ROBOT_SEARCH = "robot_search"
 EVENT_URL_SCAN = "url_scan"
+EVENT_SUPPLY_SIGNUP_LANDING = "supply_signup_landing"
+EVENT_SUPPLY_SIGNUP_COMPLETE = "supply_signup_complete"
 
 
 def record_site_event(db: Session, event_type: str, payload: dict[str, Any] | None = None) -> None:

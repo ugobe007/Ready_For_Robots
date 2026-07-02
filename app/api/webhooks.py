@@ -409,6 +409,16 @@ def _capture_delivery_event(db: Session, event_type: str, data: dict[str, Any]) 
     if supply_msg:
         supply_msg.status = status
         supply_msg.payload = _delivery_payload(supply_msg.payload, event_type, data)
+        if event_type in {"email.opened", "email.clicked", "email.bounced", "email.complained", "email.suppressed"}:
+            from app.services.supply_conversion import record_supply_email_engagement
+
+            record_supply_email_engagement(
+                db,
+                robot_company_id=supply_msg.robot_company_id,
+                supply_message_id=str(supply_msg.id),
+                event_type=event_type,
+                data=data,
+            )
         if event_type in {"email.bounced", "email.complained", "email.suppressed"}:
             _handle_supply_delivery_problem(db, supply_msg, event_type, data)
     if crm_msg:
