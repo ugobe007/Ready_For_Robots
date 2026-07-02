@@ -375,6 +375,10 @@ export default function Admin() {
   const [draftContactEmails, setDraftContactEmails] = useState<Record<string, string>>({});
   const [calAutonomy, setCalAutonomy] = useState<{
     enabled?: boolean;
+    env_enabled?: boolean;
+    runtime_override?: boolean | null;
+    runtime_toggle_available?: boolean;
+    scheduled_on_worker?: boolean;
     manual_approval?: boolean;
     review_email?: string | null;
     send_limit?: number;
@@ -383,6 +387,7 @@ export default function Admin() {
     template_version?: string;
     assembly?: { assembly_required?: boolean; llm_review_enabled?: boolean };
   } | null>(null);
+  const [bulkSendSkipVerify, setBulkSendSkipVerify] = useState(false);
   const [supplyAutonomy, setSupplyAutonomy] = useState<{
     enabled?: boolean;
     review_email?: string | null;
@@ -629,6 +634,24 @@ export default function Admin() {
       if (res.ok) setCalAutonomy(await res.json());
     } catch { /* advisory */ }
   }, [adminFetch, session?.access_token]);
+
+  const toggleCalAutonomy = async (enabled: boolean) => {
+    setError("");
+    setMessage("");
+    try {
+      const res = await adminFetch("/api/admin/cal/autonomy-toggle", {
+        method: "POST",
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json().catch(() => ({})) as { detail?: string };
+      if (!res.ok) throw new Error(data.detail || "Could not update autopilot.");
+      setCalAutonomy(data as typeof calAutonomy);
+      setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"} — worker will ${enabled ? "resume" : "pause"} scheduled cycles.`);
+      void loadCalActivity();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Autopilot toggle failed.");
+    }
+  };
 
   const loadSupplyAutonomyStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -989,32 +1012,50 @@ export default function Admin() {
     }
   }
 
-  async function runCalBulkSend(tierFilter: "all" | "HOT" | "WARM" = "all", limit = 1000) {
+  async function runCalBulkSend(tierFilter: "all" | "HOT" | "WARM" = "all", limit = 1000, skipVerification = false) {
     setMessage("");
     setError("");
     setSendConfirm(false);
     setActionBusy("cal-send");
     let totalSent = 0;
     let totalErrors = 0;
-    // Loop in batches of 100 until nothing left to send
+    let lastErrors: Array<{ name?: string; error?: string }> = [];
     try {
       while (true) {
         const res = await adminFetch("/api/admin/cal/bulk-send", {
           method: "POST",
-          body: JSON.stringify({ limit: 100, tier_filter: tierFilter, dry_run: false }),
+          body: JSON.stringify({
+            limit: 100,
+            tier_filter: tierFilter,
+            dry_run: false,
+            skip_verification: skipVerification,
+          }),
         });
-        const data = await res.json().catch(() => ({})) as { sent?: number; skipped_no_draft?: number; skipped_already_sent?: number; errors?: unknown[] };
-        if (!res.ok) throw new Error((data as { detail?: string }).detail || "Send failed.");
+        const data = await res.json().catch(() => ({})) as {
+          sent?: number;
+          skipped_unverified?: number;
+          errors?: Array<{ name?: string; error?: string }>;
+          detail?: string;
+        };
+        if (!res.ok) throw new Error(data.detail || "Send failed.");
         const batchSent = data.sent ?? 0;
         totalSent += batchSent;
-        totalErrors += data.errors?.length ?? 0;
-        // Stop when no more emails went out in this batch
+        lastErrors = data.errors ?? [];
+        totalErrors += lastErrors.length;
         if (batchSent === 0) break;
-        // Stop if we've hit the overall limit
         if (totalSent >= limit) break;
       }
-      setMessage(`Cal sent ${totalSent} emails · ${totalErrors} errors.`);
       await loadCalStatus();
+      void loadCalActivity();
+      if (totalSent === 0) {
+        const sample = lastErrors.slice(0, 3).map((e) => `${e.name || "Lead"}: ${e.error || "unknown"}`).join(" · ");
+        throw new Error(
+          sample
+            ? `No emails sent (${totalErrors} blocked). ${sample}`
+            : `No emails sent — ${calStatus?.summary?.sendable ?? 0} looked sendable but none passed send checks.`,
+        );
+      }
+      setMessage(`Cal sent ${totalSent} email(s)${totalErrors ? ` · ${totalErrors} skipped/failed` : ""}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Send failed.");
     } finally {
@@ -1261,6 +1302,41 @@ export default function Admin() {
 
         {adminTab === "cal" && (
           <>
+            {sendConfirm === "bulk" ? (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="w-full max-w-md rounded-2xl border border-amber-300 bg-white p-5 shadow-xl">
+                  <p className="mb-1 text-base font-bold text-amber-950">Send all ready emails?</p>
+                  <p className="mb-3 text-sm text-amber-950/80">
+                    <strong>{calStatus?.summary?.sendable ?? 0} emails</strong> will go out via Resend (manual send — skips assembly review).
+                  </p>
+                  <label className="mb-4 flex items-start gap-2 text-xs text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={bulkSendSkipVerify}
+                      onChange={(e) => setBulkSendSkipVerify(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    Skip email verification (use if role inboxes are blocked by verify checks)
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => void runCalBulkSend("all", 1000, bulkSendSkipVerify)}
+                      disabled={!!actionBusy}
+                      className="rounded-xl border border-amber-500 bg-amber-100 px-4 py-2 text-sm font-bold text-amber-950 disabled:opacity-50"
+                    >
+                      {actionBusy === "cal-send" ? "Sending…" : "Yes — send all now"}
+                    </button>
+                    <button
+                      onClick={() => setSendConfirm(false)}
+                      className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <AdminCalOversightPanel
               data={calActivity}
               loading={calActivityLoading}
@@ -1268,6 +1344,11 @@ export default function Admin() {
               queueSummary={calStatus?.summary}
               queueLoading={calStatusLoading}
               queueError={calStatusError}
+              autopilotEnabled={calAutonomy?.enabled}
+              autopilotEnvEnabled={calAutonomy?.env_enabled}
+              autopilotToggleAvailable={calAutonomy?.runtime_toggle_available ?? false}
+              everyHours={calAutonomy?.every_hours ?? 3}
+              sendLimit={calAutonomy?.send_limit ?? 25}
               onRefresh={() => {
                 void loadCalActivity();
                 void loadCalStatus();
@@ -1278,6 +1359,7 @@ export default function Admin() {
               onOpenQueue={scrollToCalQueue}
               onDraftPending={() => void runCalBulkDraft(false)}
               onSendAll={() => setSendConfirm("bulk")}
+              onToggleAutopilot={(enabled) => void toggleCalAutonomy(enabled)}
             />
 
         {/* ── Cal Outreach: draft status for HOT+WARM prospects ── */}
@@ -1355,35 +1437,6 @@ export default function Admin() {
               </button>
             </div>
           </details>
-
-          {/* ── Bulk-send confirm modal ── */}
-          {sendConfirm === "bulk" && (
-            <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
-              <p className="mb-1 text-sm font-bold text-amber-900">Confirm bulk send</p>
-              <p className="mb-3 text-xs text-amber-950/80">
-                <strong>{calStatus?.summary?.sendable ?? 0} emails will go out</strong> via Resend (manual send path — skips Cal&apos;s assembly review, unlike Run Cal now).
-                {calManualApproval && (calStatus?.summary?.needs_approval ?? 0) > 0 && (
-                  <span className="text-amber-800"> · {calStatus?.summary?.needs_approval} still need approval — bulk send will skip them</span>
-                )}
-                {(calStatus?.summary?.no_email ?? 0) > 0 && (
-                  <span className="text-amber-800"> · {calStatus?.summary?.no_email} contacts skipped (no email address on file)</span>
-                )}
-                {(calStatus?.summary?.sent ?? 0) > 0 && <span className="text-amber-700"> · {calStatus?.summary?.sent} already sent (no duplicates)</span>}
-                {". "}Cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => void runCalBulkSend()}
-                  className="rounded-xl border border-amber-500 bg-amber-100 px-4 py-2 text-xs font-bold text-amber-950"
-                >
-                  Yes — send all now
-                </button>
-                <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700">
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-6">
             <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub={`${formatNumber(calStatus?.summary?.hot)} hot · ${formatNumber(calStatus?.summary?.warm)} warm`} />

@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 _REDIS_FP_KEY = "cal:outreach:template_fingerprint"
+_REDIS_AUTONOMY_KEY = "cal:autonomy:runtime_enabled"
 
 
 def get_cal_review_email() -> Optional[str]:
@@ -29,12 +30,46 @@ def get_cal_review_email() -> Optional[str]:
     return None
 
 
-def cal_autonomy_enabled() -> bool:
+def get_cal_autonomy_runtime_override() -> Optional[bool]:
+    """Operator toggle stored in Redis; None = use env default."""
+    client = _redis_client()
+    if not client:
+        return None
+    try:
+        raw = client.get(_REDIS_AUTONOMY_KEY)
+        if raw is None:
+            return None
+        return str(raw).strip().lower() in ("1", "true", "yes")
+    except Exception:
+        return None
+
+
+def set_cal_autonomy_runtime_override(enabled: bool) -> bool:
+    client = _redis_client()
+    if not client:
+        return False
+    try:
+        client.set(_REDIS_AUTONOMY_KEY, "1" if enabled else "0")
+        return True
+    except Exception:
+        return False
+
+
+def _cal_autonomy_env_default() -> bool:
     if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
         return False
     if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("1", "true", "yes"):
         return True
     return os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").strip().lower() in ("1", "true", "yes")
+
+
+def cal_autonomy_enabled() -> bool:
+    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
+        return False
+    override = get_cal_autonomy_runtime_override()
+    if override is not None:
+        return override
+    return _cal_autonomy_env_default()
 
 
 def _redis_client():
@@ -500,6 +535,11 @@ def get_cal_autonomy_status() -> dict[str, Any]:
 
     return {
         "enabled": cal_autonomy_enabled(),
+        "env_enabled": _cal_autonomy_env_default(),
+        "runtime_override": get_cal_autonomy_runtime_override(),
+        "runtime_toggle_available": _redis_client() is not None,
+        "scheduled_on_worker": os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower()
+        not in ("0", "false", "no"),
         "review_email": get_cal_review_email(),
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),

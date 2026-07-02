@@ -52,11 +52,17 @@ type Props = {
   queueSummary?: QueueSummary | null;
   queueLoading?: boolean;
   queueError?: string;
+  autopilotEnabled?: boolean;
+  autopilotEnvEnabled?: boolean;
+  autopilotToggleAvailable?: boolean;
+  everyHours?: number;
+  sendLimit?: number;
   onRefresh: () => void;
   onRunCal: () => void;
   onOpenQueue: () => void;
   onDraftPending?: () => void;
   onSendAll?: () => void;
+  onToggleAutopilot?: (enabled: boolean) => void;
 };
 
 function fmt(n?: number) {
@@ -89,16 +95,24 @@ export default function AdminCalOversightPanel({
   queueSummary,
   queueLoading,
   queueError,
+  autopilotEnabled,
+  autopilotEnvEnabled,
+  autopilotToggleAvailable,
+  everyHours = 3,
+  sendLimit = 25,
   onRefresh,
   onRunCal,
   onOpenQueue,
   onDraftPending,
   onSendAll,
+  onToggleAutopilot,
 }: Props) {
   const ap = data?.autopilot;
   const caps = data?.capabilities;
   const seq = data?.sequences;
   const q = queueSummary;
+  const autopilotOn = autopilotEnabled ?? ap?.enabled ?? autopilotEnvEnabled ?? true;
+  const autopilotKnown = autopilotEnabled != null || ap?.enabled != null;
 
   return (
     <div className="mb-6 space-y-4">
@@ -181,19 +195,36 @@ export default function AdminCalOversightPanel({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-          <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 font-semibold text-emerald-900">
-            Autopilot {ap?.enabled ? "ON" : "OFF"} · every {ap?.every_hours ?? 3}h · up to {ap?.send_limit ?? 25} intros/run
-          </span>
-          {ap?.assembly?.assembly_required ? (
-            <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 font-semibold text-violet-900">
-              Assembly review ON{ap.assembly.llm_review_enabled ? " + LLM" : ""}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            <span className={`rounded-full border px-3 py-1 font-semibold ${autopilotOn ? "border-emerald-300 bg-emerald-100 text-emerald-900" : "border-amber-300 bg-amber-100 text-amber-900"}`}>
+              Autopilot {autopilotKnown ? (autopilotOn ? "ON" : "OFF") : "…"} · every {everyHours}h · up to {sendLimit}/run
             </span>
-          ) : null}
-          {ap?.manual_approval ? (
-            <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 font-semibold text-amber-900">
-              Manual approval required before send
-            </span>
+            {ap?.assembly?.assembly_required ? (
+              <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 font-semibold text-violet-900">
+                Assembly review ON{ap.assembly.llm_review_enabled ? " + LLM" : ""}
+              </span>
+            ) : null}
+          </div>
+          {onToggleAutopilot && autopilotToggleAvailable ? (
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-800">
+              <span>Autopilot</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={autopilotOn}
+                disabled={busy}
+                onClick={() => onToggleAutopilot(!autopilotOn)}
+                className={`relative h-6 w-11 rounded-full transition ${autopilotOn ? "bg-emerald-500" : "bg-gray-300"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${autopilotOn ? "left-5" : "left-0.5"}`}
+                />
+              </button>
+              <span>{autopilotOn ? "On" : "Off"}</span>
+            </label>
+          ) : onToggleAutopilot ? (
+            <span className="text-[10px] text-gray-500">Toggle unavailable (Redis not configured)</span>
           ) : null}
         </div>
       </div>

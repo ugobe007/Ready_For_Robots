@@ -1058,6 +1058,28 @@ def cal_autonomy_run(
     return run_cal_autonomy_cycle(db, dry_run=body.dry_run)
 
 
+class CalAutonomyToggleBody(BaseModel):
+    enabled: bool
+
+
+@router.post("/cal/autonomy-toggle")
+def cal_autonomy_toggle(
+    body: CalAutonomyToggleBody,
+    _user: dict = Depends(require_admin),
+):
+    """Runtime on/off for Cal worker autopilot (Redis override; env default remains on Fly)."""
+    from app.services.cal_autonomy import get_cal_autonomy_status, set_cal_autonomy_runtime_override
+
+    if not set_cal_autonomy_runtime_override(body.enabled):
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=503,
+            detail="Autopilot toggle unavailable — REDIS_URL not configured on server.",
+        )
+    return get_cal_autonomy_status()
+
+
 @router.get("/supply/autonomy-status")
 def supply_autonomy_status(_user: dict = Depends(require_admin)):
     from app.services.supply_autonomy import get_supply_autonomy_status
