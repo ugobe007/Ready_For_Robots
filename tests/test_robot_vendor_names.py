@@ -53,3 +53,10 @@ def test_vendor_oem_junk_match_includes_pattern_vendors():
     ok, reason = vendor_oem_junk_match("RoboCorp Automation")
     assert ok
     assert "vendor" in reason.lower()
+
+
+def test_brain_corp_recognized_as_oem():
+    assert is_known_robotics_vendor_name("Brain Corp") is True
+    junk, reason = is_junk("Brain Corp", mode="buyer")
+    assert junk is True
+    assert "vendor" in reason.lower() or "oem" in reason.lower()

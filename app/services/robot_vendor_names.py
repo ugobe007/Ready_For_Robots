@@ -227,7 +227,7 @@ _BUYER_DEPLOYMENT_PARTNERS = frozenset({
 _LEGAL_SUFFIX = re.compile(
     r"""
     \s*[\(,]?\s*
-    (inc\.?|llc\.?|ltd\.?|corp\.?|corporation|company|co\.?|plc\.?|gmbh|s\.a\.|s\.p\.a\.?)
+    (inc\.?|llc\.?|ltd\.?|company|co\.?|plc\.?|gmbh|s\.a\.|s\.p\.a\.?)
     \s*\)?\s*$
     """,
     re.IGNORECASE | re.VERBOSE,
@@ -249,6 +249,15 @@ def is_known_robotics_vendor_name(name: Optional[str]) -> bool:
     """
     if not name or not str(name).strip():
         return False
+
+    raw = " ".join(str(name).strip().lower().split())
+    if raw in _BUYER_DEPLOYMENT_PARTNERS:
+        return False
+    for partner in _BUYER_DEPLOYMENT_PARTNERS:
+        if raw.startswith(partner + " ") or raw.startswith(partner + ","):
+            return False
+    if raw in _all_vendor_names():
+        return True
 
     key = _normalize_key(str(name))
     if not key:

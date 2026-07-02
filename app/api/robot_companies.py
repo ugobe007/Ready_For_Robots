@@ -222,6 +222,12 @@ def _supply_buyer_lead_eligible(company: Company, rc: RobotCompany) -> tuple[boo
     if junk:
         return False, junk_reason or "classified as junk"
 
+    from app.services.robot_vendor_names import vendor_oem_junk_match
+
+    oem_junk, oem_reason = vendor_oem_junk_match(name, mode="buyer")
+    if oem_junk:
+        return False, oem_reason or "robotics vendor/OEM — not a buyer"
+
     if pri.tier not in ("HOT", "WARM"):
         return False, f"tier {pri.tier} — supply outreach requires HOT/WARM"
 
@@ -1111,14 +1117,17 @@ def _match_line(match: dict[str, Any]) -> str:
     return f"- {label}: {why}"
 
 
-def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]]) -> dict[str, str]:
+def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]], *, force_rfr: bool = False) -> dict[str, str]:
     trade_show = getattr(rc, "next_trade_show", None)
     trade_shows = getattr(rc, "trade_shows", None)
     if not trade_show and isinstance(trade_shows, list) and trade_shows:
         trade_show = trade_shows[0]
 
     data_source = (getattr(rc, "data_source", None) or "").lower()
-    if data_source.startswith("stagegate") or "stagegate_oem" in str(getattr(rc, "market_intelligence", {}) or {}):
+    if (
+        not force_rfr
+        and (data_source.startswith("stagegate") or "stagegate_oem" in str(getattr(rc, "market_intelligence", {}) or {}))
+    ):
         from app.services.stagegate_crm_bridge import build_stagegate_draft
 
         return build_stagegate_draft(rc)

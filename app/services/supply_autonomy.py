@@ -374,7 +374,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
             skipped_no_contact += 1
             continue
 
-        draft = _vendor_signup_email(company, matches)
+        draft = _vendor_signup_email(company, matches, force_rfr=True)
         body = append_signup_cta(draft["body"], company)
         subject = draft["subject"]
 
