@@ -258,6 +258,25 @@ def _probe_checkout_requires_auth(*, api_base: str = FLY_API) -> dict[str, Any]:
         return {"ok": False, "url": url, "error": str(exc)}
 
 
+def _check_supply_match_quality_gate() -> dict[str, Any]:
+    """Supply Cal emails must reuse pipeline junk/buyer gates — not raw term overlap."""
+    rc_path = _root / "app" / "api" / "robot_companies.py"
+    issues: list[str] = []
+    if not rc_path.is_file():
+        return {"ok": False, "issues": ["robot_companies.py missing"]}
+    text = rc_path.read_text(encoding="utf-8")
+    if "_supply_buyer_lead_eligible" not in text:
+        issues.append("Missing _supply_buyer_lead_eligible — supply emails may cite junk leads")
+    if "_supply_buyer_lead_eligible(" not in text:
+        issues.append("_match_buyer_leads must call _supply_buyer_lead_eligible")
+    supply_path = _root / "app" / "services" / "supply_autonomy.py"
+    if supply_path.is_file():
+        supply_text = supply_path.read_text(encoding="utf-8")
+        if "SUPPLY_AUTONOMY_MIN_MATCHES" not in supply_text:
+            issues.append("supply_autonomy missing SUPPLY_AUTONOMY_MIN_MATCHES guard")
+    return {"ok": not issues, "issues": issues}
+
+
 def check_code_conventions() -> dict[str, Any]:
     violations: list[dict[str, str]] = []
     if FRONTEND_ROOT.is_dir():
@@ -280,6 +299,7 @@ def check_code_conventions() -> dict[str, Any]:
 
     open_challenges = _parse_open_conversion_challenges()
     checkout_gate = _check_pricing_checkout_auth_gate()
+    supply_gate = _check_supply_match_quality_gate()
     alerts: list[str] = []
     if violations:
         alerts.append(f"{len(violations)} public-read API routing violation(s)")
@@ -289,6 +309,8 @@ def check_code_conventions() -> dict[str, Any]:
         alerts.append("Login.tsx uses resolvePostAuthPath without importing it")
     for issue in checkout_gate.get("issues") or []:
         alerts.append(f"Checkout auth gate: {issue}")
+    for issue in supply_gate.get("issues") or []:
+        alerts.append(f"Supply match gate: {issue}")
     if open_challenges:
         alerts.append(f"{len(open_challenges)} open conversion challenge(s) on the board")
 
@@ -298,6 +320,10 @@ def check_code_conventions() -> dict[str, Any]:
     if not checkout_gate.get("ok"):
         recommendations.append(
             "Fix Pricing checkout: unauthenticated users → signup/login; auto-resume only on ?upgrade= after auth."
+        )
+    if not supply_gate.get("ok"):
+        recommendations.append(
+            "Fix supply buyer matching: apply classify_lead + buyer-intent gate before Cal cites leads in vendor emails."
         )
     if open_challenges:
         top = open_challenges[0]
@@ -310,10 +336,18 @@ def check_code_conventions() -> dict[str, Any]:
         "login_import_ok": login_ok,
         "checkout_auth_gate_ok": checkout_gate.get("ok"),
         "checkout_auth_gate": checkout_gate,
+        "supply_match_gate_ok": supply_gate.get("ok"),
+        "supply_match_gate": supply_gate,
         "open_conversion_challenges": open_challenges,
         "alerts": alerts,
         "recommendations": recommendations,
-        "healthy": not violations and auth_patterns_ok and login_ok and checkout_gate.get("ok"),
+        "healthy": (
+            not violations
+            and auth_patterns_ok
+            and login_ok
+            and checkout_gate.get("ok")
+            and supply_gate.get("ok")
+        ),
     }
 
 

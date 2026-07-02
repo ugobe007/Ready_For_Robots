@@ -344,6 +344,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
     skipped_already_sent = 0
     skipped_no_contact = 0
     skipped_unverified = 0
+    skipped_insufficient_matches = 0
     errors: list[dict[str, Any]] = []
     format_sample: Optional[tuple[str, str, str]] = None
     used_lead_ids: set[int] = set()
@@ -357,6 +358,10 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
 
         matches = _match_buyer_leads(db, company, limit=12)
         matches = _select_supply_batch_matches(matches, used_lead_ids, limit=3)
+        min_matches = int(os.getenv("SUPPLY_AUTONOMY_MIN_MATCHES", "2") or "2")
+        if len(matches) < max(1, min_matches):
+            skipped_insufficient_matches += 1
+            continue
         for match in matches:
             match_id = int(match.get("id") or 0)
             if match_id:
@@ -419,6 +424,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         "skipped_already_sent": skipped_already_sent,
         "skipped_no_contact": skipped_no_contact,
         "skipped_unverified": skipped_unverified,
+        "skipped_insufficient_matches": skipped_insufficient_matches,
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,

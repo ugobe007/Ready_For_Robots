@@ -49,6 +49,7 @@ def test_check_code_conventions_login_import():
     assert code.get("login_import_ok") is True
     assert code.get("auth_helpers_ok") is True
     assert code.get("checkout_auth_gate_ok") is True
+    assert code.get("supply_match_gate_ok") is True
 
 
 def test_pricing_checkout_auth_gate_passes():

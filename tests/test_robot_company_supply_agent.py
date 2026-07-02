@@ -14,11 +14,14 @@ from app.api.robot_companies import (
     _research_robot_company_contacts,
     _select_supply_batch_matches,
     _prepare_supply_pipeline_copy,
+    _supply_buyer_lead_eligible,
     _vendor_allows_logistics,
     _supply_reply_address,
     _supply_outreach_history,
     _vendor_signup_email,
 )
+from app.models.signal import Signal
+from app.models.score import Score
 from app.api.webhooks import _capture_delivery_event
 from app.models.crm import CrmAccount
 from app.models.company import Company
@@ -130,6 +133,17 @@ def test_match_buyer_leads_differs_by_robot_vendor_fit(db_session):
         Company(id=1003, name="Toyota", industry="Manufacturing", sub_industry="factory production", is_internal=True, crm_metadata={"automation_requirements": ["assembly"]}),
         Company(id=1004, name="Target", industry="Retail", sub_industry="store operations", is_internal=True, crm_metadata={"automation_requirements": ["service"]}),
     ]
+    signal_rows = [
+        (1001, "labor_shortage", "Marriott expands hotel service robotics pilot due to housekeeping labor shortage.", 78.0),
+        (1002, "labor_shortage", "DHL opens new warehouse and seeks AMR automation for fulfillment labor shortage.", 80.0),
+        (1003, "capex", "Toyota factory capex includes assembly line cobot automation budget.", 76.0),
+        (1004, "labor_shortage", "Target store operations team evaluates service robot deployment for backroom labor gap.", 77.0),
+    ]
+    for company_id, sig_type, text, overall in signal_rows:
+        companies[company_id - 1001].signals = [
+            Signal(company_id=company_id, signal_type=sig_type, signal_text=text, signal_strength=0.8)
+        ]
+        companies[company_id - 1001].scores = [Score(company_id=company_id, overall_intent_score=overall)]
     db_session.add_all(companies)
     db_session.commit()
     service_vendor = _RobotCompany()
@@ -149,6 +163,64 @@ def test_match_buyer_leads_differs_by_robot_vendor_fit(db_session):
     assert [m["id"] for m in service_matches] != [m["id"] for m in warehouse_matches]
     assert {m["company_name"] for m in service_matches}.intersection({"Marriott", "Target"})
     assert {m["company_name"] for m in warehouse_matches}.intersection({"DHL"})
+
+
+def test_supply_buyer_lead_eligible_rejects_vendors_and_research(db_session):
+    cobot_vendor = _RobotCompany()
+    cobot_vendor.robot_type = "cobot"
+    cobot_vendor.target_market = "manufacturing"
+
+    brain = Company(
+        id=2001,
+        name="Brain Corp",
+        industry="Datacenters",
+        is_internal=True,
+    )
+    uc_davis = Company(
+        id=2002,
+        name="UC Davis",
+        industry="Automotive & Manufacturing",
+        is_internal=True,
+    )
+    uc_davis.signals = [
+        Signal(
+            company_id=2002,
+            signal_type="news",
+            signal_text=(
+                "UC Davis launches first long-term U.S. study led by nurses on humanoid robots "
+                "in dementia care - University of California - Davis"
+            ),
+            signal_strength=0.7,
+        )
+    ]
+    uc_davis.scores = [Score(company_id=2002, overall_intent_score=72.0)]
+    good = Company(
+        id=2003,
+        name="Harbor Fresh Foods",
+        industry="Food Service",
+        is_internal=True,
+        crm_metadata={"automation_requirements": ["assembly", "production"]},
+    )
+    good.signals = [
+        Signal(
+            company_id=2003,
+            signal_type="labor_shortage",
+            signal_text="Harbor Fresh Foods expands production line and seeks cobot automation for packaging due to labor shortage.",
+            signal_strength=0.8,
+        )
+    ]
+    good.scores = [Score(company_id=2003, overall_intent_score=78.0)]
+    db_session.add_all([brain, uc_davis, good])
+    db_session.commit()
+
+    assert _supply_buyer_lead_eligible(brain, cobot_vendor)[0] is False
+    assert _supply_buyer_lead_eligible(uc_davis, cobot_vendor)[0] is False
+    assert _supply_buyer_lead_eligible(good, cobot_vendor)[0] is True
+
+    matches = _match_buyer_leads(db_session, cobot_vendor, limit=5)
+    names = {m["company_name"] for m in matches}
+    assert "Brain Corp" not in names
+    assert "UC Davis" not in names
 
 
 def test_supply_batch_matches_prefer_unused_buyer_leads():

@@ -167,6 +167,85 @@ def _lead_signal_strength(company: Company) -> float:
     return 0.0
 
 
+_ACADEMIC_BUYER_NAME_RE = re.compile(
+    r"\b(university|college|institute of technology|polytechnic|school of medicine)\b",
+    re.I,
+)
+_RESEARCH_ONLY_SIGNAL_RE = re.compile(
+    r"\b("
+    r"study led by|research study|clinical trial|academic study|"
+    r"dementia care|nurses on humanoid|university launches|"
+    r"first long-term.*study|led by nurses"
+    r")\b",
+    re.I,
+)
+_HUMANOID_CARE_SIGNAL_RE = re.compile(
+    r"\b(humanoid|social robot|companion robot)\b",
+    re.I,
+)
+_CARE_CONTEXT_RE = re.compile(
+    r"\b(dementia|elder|nursing|nurses|care home|hospital|healthcare|clinical)\b",
+    re.I,
+)
+_OPERATING_BUYER_EVIDENCE_RE = re.compile(
+    r"\b("
+    r"capex|capital expenditure|rfp|request for proposal|"
+    r"warehouse deployment|factory automation|production line|"
+    r"procurement|purchase order|vendor selection|pilot production|"
+    r"labor shortage|automation budget|install.*robot"
+    r")\b",
+    re.I,
+)
+
+
+def _primary_signal_blob(company: Company) -> str:
+    parts: list[str] = []
+    for sig in (company.signals or [])[:6]:
+        parts.append(str(getattr(sig, "signal_text", "") or ""))
+        parts.append(str(getattr(sig, "signal_type", "") or ""))
+    return " ".join(parts)
+
+
+def _supply_buyer_lead_eligible(company: Company, rc: RobotCompany) -> tuple[bool, str]:
+    """
+    Supply-side Cal emails must only cite pipeline-grade buyer opportunities —
+    same junk / buyer-intent / OEM gates as the public pipeline, plus product fit.
+    """
+    from app.services.lead_filter import classify_lead
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
+
+    name = (company.name or "").strip()
+    if is_known_robotics_vendor_name(name):
+        return False, "known robotics vendor/OEM — not a buyer"
+
+    junk, junk_reason, pri = classify_lead(company, company.scores, company.signals)
+    if junk:
+        return False, junk_reason or "classified as junk"
+
+    if pri.tier not in ("HOT", "WARM"):
+        return False, f"tier {pri.tier} — supply outreach requires HOT/WARM"
+
+    blob = _primary_signal_blob(company)
+    low_blob = blob.lower()
+
+    if _ACADEMIC_BUYER_NAME_RE.search(name):
+        if _RESEARCH_ONLY_SIGNAL_RE.search(blob) or not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
+            return False, "academic/research institution — not an operating automation buyer"
+
+    explicit_vendor = _explicit_robot_market_terms(rc)
+    industrial_vendor = explicit_vendor.intersection(
+        {"cobot", "industrial", "manufacturing", "assembly", "production", "factory", "amr", "agv"}
+    )
+    if industrial_vendor and _HUMANOID_CARE_SIGNAL_RE.search(blob) and _CARE_CONTEXT_RE.search(blob):
+        if not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
+            return False, "healthcare/humanoid research signal — poor fit for industrial/cobot vendor"
+
+    if industrial_vendor and _RESEARCH_ONLY_SIGNAL_RE.search(blob) and not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
+        return False, "research headline — not a deployment buyer"
+
+    return True, ""
+
+
 def _curated_vendor_leads(rc: RobotCompany, rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     if not rows:
         return []
@@ -228,6 +307,9 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
     )
     ranked = []
     for c in candidates:
+        eligible, _skip = _supply_buyer_lead_eligible(c, rc)
+        if not eligible:
+            continue
         if not allow_logistics and _is_logistics_lead(c):
             continue
         lead_terms = _lead_terms(c)
