@@ -261,6 +261,8 @@ def _probe_checkout_requires_auth(*, api_base: str = FLY_API) -> dict[str, Any]:
 def _check_supply_match_quality_gate() -> dict[str, Any]:
     """Supply Cal emails must reuse pipeline junk/buyer gates — not raw term overlap."""
     rc_path = _root / "app" / "api" / "robot_companies.py"
+    assembly_path = _root / "app" / "services" / "cal_assembly_agent.py"
+    persona_path = _root / "app" / "services" / "cal_persona.py"
     issues: list[str] = []
     if not rc_path.is_file():
         return {"ok": False, "issues": ["robot_companies.py missing"]}
@@ -274,6 +276,12 @@ def _check_supply_match_quality_gate() -> dict[str, Any]:
         supply_text = supply_path.read_text(encoding="utf-8")
         if "SUPPLY_AUTONOMY_MIN_MATCHES" not in supply_text:
             issues.append("supply_autonomy missing SUPPLY_AUTONOMY_MIN_MATCHES guard")
+        if "assemble_supply_outreach" not in supply_text:
+            issues.append("supply_autonomy must call Cal assembly agent before send")
+    if not assembly_path.is_file():
+        issues.append("cal_assembly_agent.py missing — no pre-send review")
+    if not persona_path.is_file():
+        issues.append("cal_persona.py missing — Cal has no defined personality")
     return {"ok": not issues, "issues": issues}
 
 

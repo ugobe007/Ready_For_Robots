@@ -418,6 +418,22 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             sent += 1
             continue
 
+        from app.services.cal_assembly_agent import assemble_buyer_outreach, cal_assembly_required
+
+        if cal_assembly_required():
+            assembly = assemble_buyer_outreach(
+                company_name=company.name or "",
+                subject=subject,
+                body=body_text,
+            )
+            if not assembly.approved:
+                errors.append({
+                    "company_id": company.id,
+                    "name": company.name,
+                    "error": f"Cal assembly rejected: {'; '.join(assembly.issues[:3])}",
+                })
+                continue
+
         domain = normalize_website_domain(company.website or acct.website)
         cc_list = infer_cc_outreach_emails(domain, company.industry, primary=to_email)
         cc_email = cc_list[0] if cc_list else None
@@ -479,6 +495,8 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
 
 
 def get_cal_autonomy_status() -> dict[str, Any]:
+    from app.services.cal_assembly_agent import get_cal_assembly_status
+
     return {
         "enabled": cal_autonomy_enabled(),
         "review_email": get_cal_review_email(),
@@ -491,4 +509,5 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
         "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "3") or "3"),
         "manual_approval": (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"),
+        "assembly": get_cal_assembly_status(),
     }

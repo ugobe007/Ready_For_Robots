@@ -345,6 +345,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
     skipped_no_contact = 0
     skipped_unverified = 0
     skipped_insufficient_matches = 0
+    skipped_assembly_rejected = 0
     errors: list[dict[str, Any]] = []
     format_sample: Optional[tuple[str, str, str]] = None
     used_lead_ids: set[int] = set()
@@ -359,13 +360,6 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         matches = _match_buyer_leads(db, company, limit=12)
         matches = _select_supply_batch_matches(matches, used_lead_ids, limit=3)
         min_matches = int(os.getenv("SUPPLY_AUTONOMY_MIN_MATCHES", "2") or "2")
-        if len(matches) < max(1, min_matches):
-            skipped_insufficient_matches += 1
-            continue
-        for match in matches:
-            match_id = int(match.get("id") or 0)
-            if match_id:
-                used_lead_ids.add(match_id)
 
         research = _research_robot_company_contacts(company, enabled=True, max_pages=1, timeout=1.2)
         contact = _contact_strategy(company, research)
@@ -377,6 +371,39 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         draft = _vendor_signup_email(company, matches, force_rfr=True)
         body = append_signup_cta(draft["body"], company)
         subject = draft["subject"]
+
+        from app.services.cal_assembly_agent import assemble_supply_outreach, cal_assembly_required
+
+        if cal_assembly_required():
+            assembly = assemble_supply_outreach(
+                db,
+                company,
+                matches,
+                subject=subject,
+                body=body,
+                min_matches=min_matches,
+            )
+            if not assembly.approved:
+                skipped_assembly_rejected += 1
+                logger.info(
+                    "Cal assembly rejected supply send to %s: %s",
+                    company.company_name,
+                    "; ".join(assembly.issues[:5]),
+                )
+                continue
+            if assembly.matches and assembly.matches != matches:
+                draft = _vendor_signup_email(company, assembly.matches, force_rfr=True)
+                body = append_signup_cta(draft["body"], company)
+                subject = draft["subject"]
+                matches = assembly.matches
+        elif len(matches) < max(1, min_matches):
+            skipped_insufficient_matches += 1
+            continue
+
+        for match in matches:
+            match_id = int(match.get("id") or 0)
+            if match_id:
+                used_lead_ids.add(match_id)
 
         if format_sample is None:
             format_sample = (company.company_name or "Sample", subject, body)
@@ -425,6 +452,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         "skipped_no_contact": skipped_no_contact,
         "skipped_unverified": skipped_unverified,
         "skipped_insufficient_matches": skipped_insufficient_matches,
+        "skipped_assembly_rejected": skipped_assembly_rejected,
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,
@@ -436,6 +464,8 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
 
 
 def get_supply_autonomy_status() -> dict[str, Any]:
+    from app.services.cal_assembly_agent import get_cal_assembly_status
+
     return {
         "enabled": supply_autonomy_enabled(),
         "review_email": get_cal_review_email(),
@@ -446,4 +476,5 @@ def get_supply_autonomy_status() -> dict[str, Any]:
         "min_score": int(os.getenv("SUPPLY_AUTONOMY_MIN_SCORE", "60") or "60"),
         "every_hours": float(os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6") or "6"),
         "allow_inferred_inboxes": _allow_inferred_inboxes(),
+        "assembly": get_cal_assembly_status(),
     }

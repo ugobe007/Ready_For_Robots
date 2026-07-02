@@ -40,6 +40,8 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CAL_AUTONOMY_DRAFT_BATCH = "100"
   CAL_REFRESH_STALE_DAYS = "7"
   CAL_MANUAL_APPROVAL = "0"
+  CAL_ASSEMBLY_REQUIRED = "1"
+  CAL_ASSEMBLY_LLM_REVIEW = "1"
   CAL_TEMPLATE_VERSION = "2"
   # Supply-side Cal autonomy (robot vendor signup outreach — worker process)
   ENABLE_SCHEDULED_SUPPLY_AUTONOMY = "1"
