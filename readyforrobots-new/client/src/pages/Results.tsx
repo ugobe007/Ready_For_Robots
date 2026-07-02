@@ -29,7 +29,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { OUTREACH_CTA, OUTREACH_SIGNATURE } from "@/lib/agentMessaging";
 import { normalizeUrl } from "@/lib/normalizeUrl";
 import { getApiBase, fetchWithTimeoutRetry, liveFetchInit } from "@/lib/apiBase";
-import { trackUrlScan } from "@/lib/siteAnalytics";
+import { trackUrlScan, readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
 import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanScrapedText } from "@/lib/text";
@@ -397,6 +397,18 @@ export default function Results() {
   const params = new URLSearchParams(search);
   const initialUrl = params.get("url")?.trim() || "";
   const { session } = useAuth();
+
+  useEffect(() => {
+    const attribution = readSupplyAttribution(search);
+    if (!attribution.utmSource && !attribution.robotCompanyId) return;
+    trackSupplyConversion({
+      page: "results",
+      utm_source: attribution.utmSource,
+      rc: attribution.robotCompanyId,
+      msg: attribution.messageToken,
+      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    });
+  }, [search]);
 
   const [urlInput, setUrlInput] = useState(initialUrl);
   const [submittedUrl, setSubmittedUrl] = useState(initialUrl);

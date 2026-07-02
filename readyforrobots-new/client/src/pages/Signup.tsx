@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
+import { readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
 
@@ -42,6 +43,18 @@ export default function Signup() {
     if (next && next.startsWith("/")) storePendingNext(next);
   }, [params, search]);
 
+  useEffect(() => {
+    const attribution = readSupplyAttribution(search);
+    if (!attribution.utmSource && !attribution.robotCompanyId) return;
+    trackSupplyConversion({
+      page: "signup",
+      utm_source: attribution.utmSource,
+      rc: attribution.robotCompanyId,
+      msg: attribution.messageToken,
+      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    });
+  }, [search]);
+
   const persistFullName = () => {
     if (typeof window === "undefined" || !fullName.trim()) return;
     window.localStorage.setItem(SIGNUP_NAME_KEY, fullName.trim());
@@ -65,7 +78,19 @@ export default function Signup() {
     })();
 
     const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
-      if (session) navigateAfterAuth(nextPath());
+      if (session) {
+        const attribution = readSupplyAttribution(search);
+        if (attribution.utmSource || attribution.robotCompanyId) {
+          trackSupplyConversion({
+            page: "signup",
+            completed: true,
+            utm_source: attribution.utmSource,
+            rc: attribution.robotCompanyId,
+            msg: attribution.messageToken,
+          });
+        }
+        navigateAfterAuth(nextPath());
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [setLocation]);

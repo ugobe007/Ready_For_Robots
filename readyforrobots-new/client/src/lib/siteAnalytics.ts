@@ -27,3 +27,27 @@ export function trackRobotSearch(payload: Record<string, unknown>) {
 export function trackRoiCalculation(payload: Record<string, unknown>) {
   postEvent("/api/track/roi-calculation", payload);
 }
+
+export function trackSupplyConversion(payload: Record<string, unknown>) {
+  postEvent("/api/track/supply-conversion", payload);
+}
+
+export function readSupplyAttribution(search: string): {
+  robotCompanyId?: number;
+  messageToken?: string;
+  utmSource?: string;
+} {
+  const params = new URLSearchParams(search);
+  const utmSource = params.get("utm_source") || undefined;
+  const rcRaw = params.get("rc");
+  const robotCompanyId = rcRaw ? Number(rcRaw) : undefined;
+  const messageToken = params.get("msg") || undefined;
+  if (!utmSource && !robotCompanyId && !messageToken) {
+    return {};
+  }
+  return {
+    robotCompanyId: Number.isFinite(robotCompanyId) ? robotCompanyId : undefined,
+    messageToken,
+    utmSource,
+  };
+}

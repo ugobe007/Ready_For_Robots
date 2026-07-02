@@ -376,6 +376,29 @@ export default function Admin() {
     every_hours?: number;
     template_version?: string;
   } | null>(null);
+  const [calOpsMonitor, setCalOpsMonitor] = useState<{
+    assembly?: { assembly_required?: boolean; llm_review_enabled?: boolean };
+    assembly_rejections?: Array<{
+      id?: string;
+      channel?: string;
+      robot_company_id?: number | null;
+      company_id?: number | null;
+      vendor_name?: string | null;
+      subject?: string | null;
+      note?: string | null;
+      issues?: string[];
+      created_at?: string | null;
+    }>;
+    conversion_counts?: Record<string, number>;
+    recent_conversions?: Array<{
+      id?: string;
+      event_type?: string;
+      outcome?: string;
+      robot_company_id?: number | null;
+      note?: string | null;
+      created_at?: string | null;
+    }>;
+  } | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
@@ -572,6 +595,14 @@ export default function Admin() {
     } catch { /* advisory */ }
   }, [adminFetch, session?.access_token]);
 
+  const loadCalOpsMonitor = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/cal/ops-monitor?limit=20");
+      if (res.ok) setCalOpsMonitor(await res.json());
+    } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
   const runCalAutonomy = async (dryRun: boolean) => {
     setActionBusy("cal-run");
     setError("");
@@ -595,6 +626,7 @@ export default function Admin() {
       );
       void loadCalStatus();
       void loadCalAutonomyStatus();
+      void loadCalOpsMonitor();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cal autonomy run failed.");
     } finally {
@@ -618,6 +650,7 @@ export default function Admin() {
           : `Supply autonomy: sent ${data.sent ?? 0} vendor signup emails.`,
       );
       void loadSupplyAutonomyStatus();
+      void loadCalOpsMonitor();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Supply autonomy run failed.");
     } finally {
@@ -698,8 +731,9 @@ export default function Admin() {
     if (!authLoading && session?.access_token && me?.is_admin) {
       void loadCalAutonomyStatus();
       void loadSupplyAutonomyStatus();
+      void loadCalOpsMonitor();
     }
-  }, [authLoading, loadCalAutonomyStatus, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
+  }, [authLoading, loadCalAutonomyStatus, loadCalOpsMonitor, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -1347,6 +1381,67 @@ export default function Admin() {
                 View replies →
               </a>
             </div>
+          </div>
+
+          <div className="mb-5 rounded-xl border border-violet-200/80 bg-white/90 p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-800 mb-1">Cal judgment monitor</p>
+                <p className="text-xs text-gray-700">
+                  Assembly rejections and vendor signup funnel from supply emails — watch Cal&apos;s decisions, not rewrite his copy.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void loadCalOpsMonitor()}
+                disabled={!!actionBusy}
+                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+              <AdminCard
+                label="Assembly"
+                value={calOpsMonitor?.assembly?.assembly_required ? "On" : "Off"}
+                sub={calOpsMonitor?.assembly?.llm_review_enabled ? "LLM review" : "Rules only"}
+              />
+              <AdminCard label="Rejected" value={formatNumber(calOpsMonitor?.assembly_rejections?.length)} sub="recent blocks" />
+              <AdminCard label="Signup clicks" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_signup_landing)} sub="landing visits" />
+              <AdminCard label="Signups" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_signup_complete)} sub="completed" />
+              <AdminCard label="Email clicks" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_email_clicked)} sub="from Resend" />
+            </div>
+            {(calOpsMonitor?.assembly_rejections?.length ?? 0) > 0 ? (
+              <div className="mb-4 max-h-48 overflow-y-auto rounded-lg border border-red-100 bg-red-50/40">
+                {(calOpsMonitor?.assembly_rejections ?? []).slice(0, 8).map((row) => (
+                  <div key={row.id} className="border-b border-red-100 px-3 py-2 text-[11px] last:border-b-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold uppercase text-red-800">
+                        {row.channel || "unknown"}
+                      </span>
+                      <span className="font-semibold text-gray-900">{row.vendor_name || row.note || "Rejected send"}</span>
+                      {row.created_at ? (
+                        <span className="text-gray-400">{new Date(row.created_at).toLocaleString()}</span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-gray-700">{(row.issues || []).slice(0, 3).join(" · ") || row.note}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mb-4 text-[11px] text-gray-500">No assembly rejections logged yet — Cal is either sending clean copy or hasn&apos;t run since deploy.</p>
+            )}
+            {(calOpsMonitor?.recent_conversions?.length ?? 0) > 0 ? (
+              <div className="max-h-36 overflow-y-auto rounded-lg border border-emerald-100 bg-emerald-50/30">
+                {(calOpsMonitor?.recent_conversions ?? []).slice(0, 6).map((row) => (
+                  <div key={row.id} className="flex flex-wrap items-center gap-2 border-b border-emerald-100 px-3 py-2 text-[11px] last:border-b-0">
+                    <span className="font-mono text-[10px] text-emerald-800">{row.event_type}</span>
+                    <span className="text-gray-700">{row.note || row.outcome}</span>
+                    {row.robot_company_id ? <span className="text-gray-400">rc={row.robot_company_id}</span> : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <details className="mb-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-3">
