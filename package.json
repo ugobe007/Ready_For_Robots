@@ -17,6 +17,7 @@
     "legacy:next:build": "cd frontend/nextjs && npm run build",
     "legacy:next:lint": "npm run lint --prefix frontend/nextjs",
     "deploy:fly": "flyctl deploy --strategy immediate -a ready-2-robot",
+    "deploy:vercel": "NODE_VERSION=22 vercel build --prod && vercel deploy --prebuilt --prod",
     "ship": "./scripts/ship.sh"
   },
   "dependencies": {

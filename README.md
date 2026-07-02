@@ -77,7 +77,7 @@ Legacy Next.js commands are still available with the `legacy:next:*` script name
 
 The Vercel project for `readyforrobots.com` must be a **static** deploy (0 serverless functions):
 
-- **Root Directory:** repository root (`.`) **or** `readyforrobots-new` (both have `vercel.json` — static Vite only).
+- **Root Directory:** repository root (`.`) only — project **`ready-for-robots`** serves `readyforrobots.com`.
 - **Do not** set Root Directory to `frontend/nextjs` (legacy Next.js creates 12+ serverless routes on Hobby).
 - **Framework Preset:** Other (not Next.js / not Python).
 - API lives on Fly (`ready-2-robot.fly.dev`); `/api/*` is rewritten in `vercel.json`, not implemented on Vercel.
@@ -89,6 +89,12 @@ If the build fails with “No more than 12 Serverless Functions”, the project 
 - Build command: `cd readyforrobots-new && VITE_PUBLIC_API_URL=https://ready-2-robot.fly.dev npx --yes pnpm@10.4.1 exec vite build`
 - Output directory: `readyforrobots-new/dist/public`
 - Environment variable: `VITE_PUBLIC_API_URL=https://ready-2-robot.fly.dev`
+
+Deploy production from the **repo root**:
+
+```bash
+npm run deploy:vercel
+```
 
 After deployment, verify these URLs load the same Vite surface:
 
