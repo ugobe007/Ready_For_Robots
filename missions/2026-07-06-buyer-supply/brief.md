@@ -49,6 +49,44 @@ scored/ranked/drafted.
 - Targeted pytest for any ingestion/classification changes.
 - Deploy to `ready-2-robot`; re-run runway on Fly.
 
-## Outcome
+## Outcome (2026-07-06)
 
-_Filled on completion._
+**Premise was partly wrong — corrected mid-mission.** The ~121 "off-ICP" HOT/WARM
+records were NOT junk. All had real, verified website domains and were real,
+reputable companies (Marriott, MGM, United, IHG). Sources: 86 `news_discovery`,
+30 `seed`/`seed_v2`/`seed_v3`, 1 `manual_las_vegas_cleaning_robot_prospects` —
+i.e. hospitality/aviation/gaming were **deliberately seeded as cleaning/service/
+delivery-robot buyers**. The off-ICP industry gate was overcorrecting.
+
+### Changes shipped
+1. **Narrowed the off-ICP gate** (`app/services/cal_autonomy.py`) to pure
+   non-buyers only (publishing/newspaper/market research). Re-admitted hospitality/
+   aviation/gaming/food service. Eligible HOT/WARM pool: **179 → 295** (ineligible
+   121 → 5). Tests updated (`tests/test_cal_autonomy.py`).
+2. **Diagnostics added:** `scripts/cal_ineligible_breakdown.py`,
+   `scripts/cal_runway.py`, `scripts/cal_bounce_recovery.py`,
+   `scripts/cal_live_cycle_monitor.py`, `scripts/cal_dryrun.py`.
+
+### Root-cause finding (the real bottleneck)
+- Outreach status all-time: **321 bounced / 208 sent-unconfirmed / 53 delivered** (~55% bounce).
+- Of bounced accounts: 46 landed, **91 bounced at the REAL domain** (bad guessed
+  mailbox), only **1** at a wrong domain. Domain correction cannot recover them.
+- **Cal lacks real contact emails.** It guesses `info@`/`name@`, which bounce even
+  at valid domains. The recipient-trust gate blocks fake *domains* but still allows
+  domain-matched *mailbox guesses* — so the bounce pattern can recur.
+
+### Metric delta
+- Eligible HOT/WARM buyers: 179 → **295**.
+- Ineligible: 121 → **5**.
+- Runway (eligible + unsent): **2** — supply is contacted-but-bounced, not absent.
+
+### Recommended next mission (buyer-contact enrichment)
+1. Enrich real contact emails (Apollo/Hunter/website mailto) for the 295 eligible
+   buyers before send — replace mailbox guessing.
+2. Harden recipient gate: send only to **verified-source** emails (drop trust for
+   domain-matched guesses), or verify guessed mailboxes (ZeroBounce) pre-send.
+3. Optionally reset the 91 real-domain bounces once real mailboxes are available.
+
+### Not done (deliberately)
+- Did not apply bounce reset (only 1 recoverable — not worth it).
+- Did not expand discovery volume (out of scope; precision first).
