@@ -39,7 +39,8 @@ def _verified_retry(db, limit: int, apply: bool) -> int:
     from app.models.outreach import OutreachMessage
     from app.api.admin_extended import _cal_draft_for_company
     from app.services.cal_autonomy import _cal_buyer_eligible, format_cal_draft_storage
-    from app.services.lead_enrichment import resolve_outreach_email
+    from app.services.lead_enrichment import company_website_domain, resolve_outreach_email
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
     msgs = db.query(OutreachMessage).all()
     by_acct: dict = {}
@@ -66,12 +67,22 @@ def _verified_retry(db, limit: int, apply: bool) -> int:
         company = db.query(Company).filter(Company.id == acct.company_id).first()
         if not company or not _cal_buyer_eligible(company, acct)[0]:
             continue
+        if is_known_robotics_vendor_name(company.name or ""):
+            continue  # vendor/OEM slipped through eligibility — never a buyer
+        real = (company_website_domain(company, acct) or "").lower()
+        if not real:
+            continue
         scanned += 1
         # Resolve FRESH (acct=None) so a stale bounce-era guessed contact_email does
         # not short-circuit the waterfall; resolve persists verified hits to company.
         email, source, _t = resolve_outreach_email(company, None, use_apollo=False)
         if source not in _VERIFIED or not email:
             continue
+        edom = email.split("@")[-1].strip().lower()
+        if edom.startswith("www."):
+            edom = edom[4:]
+        if edom != real:
+            continue  # verified person, but at a domain that isn't the real company
         chosen.append((company, acct, email, source))
 
     print("\n" + "=" * 60)
