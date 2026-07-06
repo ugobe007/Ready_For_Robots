@@ -11,12 +11,15 @@ def main() -> int:
     from app.database import SessionLocal
     from app.services.cal_autonomy import run_cal_autonomy_cycle
 
+    import json
+
     db = SessionLocal()
     try:
         r = run_cal_autonomy_cycle(db, dry_run=True)
         print("=" * 54)
         print("CAL DRY-RUN CYCLE PREVIEW")
         print("=" * 54)
+        print("  RAW:", json.dumps({k: v for k, v in r.items() if k != "errors"}, default=str)[:500])
         for k in (
             "drafted", "refreshed", "sent",
             "skipped_ineligible", "skipped_no_draft",
