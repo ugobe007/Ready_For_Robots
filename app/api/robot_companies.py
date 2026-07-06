@@ -11,11 +11,16 @@ from typing import Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from html import unescape
+import hashlib
+import logging
 import os
 import re
 import secrets
+import threading
 import uuid
 from urllib.parse import urljoin, urlparse
+
+logger = logging.getLogger(__name__)
 
 import requests
 from bs4 import BeautifulSoup
@@ -38,6 +43,7 @@ from app.services.agent_messaging import (
 from app.services.cal_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
+from app.services.cal_email_send import send_cal_email_via_resend
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import record_sales_experience
 from app.services.shared_api_cache import shared_cache_get, shared_cache_set
@@ -101,6 +107,66 @@ def _explicit_robot_market_terms(rc: RobotCompany) -> set[str]:
     )
 
 
+# Buyer industry → robot-domain vocabulary (shared with vendor terms/aliases in
+# _robot_market_terms). Industries with a clear automation domain map to matching
+# tokens; industries with no inherent robot fit (aviation, finance, media, government)
+# are intentionally absent — they only match a vendor when the buyer's own signal or
+# requirements name the relevant automation (explicit term overlap), never on score alone.
+_INDUSTRY_DOMAIN_TOKENS: dict[str, set[str]] = {
+    "logistics": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "warehouse": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "supply chain": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "freight": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "3pl": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "manufacturing": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "automotive": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "industrial": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "electronics": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "food": {"manufacturing", "production", "service", "hospitality"},
+    "restaurant": {"service", "hospitality", "production"},
+    "hospitality": {"hospitality", "service", "cleaning"},
+    "hotel": {"hospitality", "service", "cleaning"},
+    "retail": {"retail", "service", "cleaning"},
+    "grocery": {"retail", "service", "cleaning", "warehouse"},
+    "healthcare": {"healthcare", "service", "cleaning"},
+    "hospital": {"healthcare", "service", "cleaning"},
+    "medical": {"healthcare", "service", "cleaning"},
+    "cleaning": {"cleaning", "service"},
+    "facility": {"cleaning", "service"},
+    "facilities": {"cleaning", "service"},
+    "construction": {"industrial", "production"},
+    "agriculture": {"production", "manufacturing"},
+}
+
+
+def _buyer_domain_tokens(company: Company) -> set[str]:
+    ind = " ".join(
+        str(x or "").lower() for x in (company.industry, company.sub_industry)
+    )
+    tokens: set[str] = set()
+    for key, toks in _INDUSTRY_DOMAIN_TOKENS.items():
+        if key in ind:
+            tokens |= toks
+    return tokens
+
+
+def _vendor_buyer_domain_fit(rc: RobotCompany, company: Company) -> bool:
+    """True when the buyer plausibly needs this vendor's robots.
+
+    Fit requires either explicit term overlap (the buyer's requirements/signals name
+    automation the vendor supplies) or that the buyer's industry maps to a robot domain
+    the vendor serves. A high intent score alone is never enough — that is exactly how
+    off-domain buyers (e.g. an airline trialing humanoids) were being cited to AMR/cleaning
+    vendors and then blocked at assembly.
+    """
+    vendor_terms = _robot_market_terms(rc)
+    if not vendor_terms:
+        return True  # unknown vendor profile — do not over-filter
+    if vendor_terms & _lead_terms(company):
+        return True
+    return bool(vendor_terms & _buyer_domain_tokens(company))
+
+
 def _vendor_allows_logistics(rc: RobotCompany) -> bool:
     logistics_terms = {
         "agv",
@@ -123,12 +189,26 @@ def _is_logistics_lead(company: Company) -> bool:
 
 
 def _lead_terms(company: Company) -> set[str]:
+    """Domain vocabulary describing what the buyer actually needs.
+
+    Only pulls from controlled fields — industry, sub-industry, explicit automation
+    requirements, and signal types. It deliberately does NOT stringify the whole
+    `crm_metadata` enrichment blob: that blob embeds the inference engine's *suggested*
+    robot forms (e.g. "logistics_warehouse", "material_handling", "cobot", "humanoid") for
+    almost every HOT lead, which made every enriched buyer spuriously "overlap" every
+    vendor and let off-domain buyers (an airline) match AMR/warehouse vendors.
+    """
     profile = company.automation_profile or {}
-    requirements = []
+    requirements: list[Any] = []
     if isinstance(profile, dict):
-        requirements = profile.get("requirements") or profile.get("automation_requirements") or []
+        requirements = list(profile.get("requirements") or profile.get("automation_requirements") or [])
+    meta = company.crm_metadata or {}
+    if isinstance(meta, dict):
+        meta_reqs = meta.get("automation_requirements")
+        if isinstance(meta_reqs, list):
+            requirements += meta_reqs
     signal_terms = [s.signal_type for s in (company.signals or [])[:5]]
-    return _split_terms(company.industry, company.sub_industry, company.crm_metadata, requirements, signal_terms)
+    return _split_terms(company.industry, company.sub_industry, *requirements, *signal_terms)
 
 
 def _lead_score(company: Company, vendor_terms: set[str]) -> float:
@@ -168,8 +248,13 @@ def _lead_signal_strength(company: Company) -> float:
 
 
 _ACADEMIC_BUYER_NAME_RE = re.compile(
-    r"\b(university|college|institute of technology|polytechnic|school of medicine)\b",
-    re.I,
+    r"(?i)("
+    r"\b(university|univ\.?|college|institute of technology|polytechnic|"
+    r"school of medicine|academy of sciences)\b"
+    r"|\bUC\s+[A-Za-z]{3,}"  # UC Davis, UC Berkeley, UC San Diego …
+    r"|\b(MIT|Caltech|UCLA|UCSF|UCSD|UCSB|USC|NYU|CMU|Carnegie\s+Mellon|"
+    r"ETH\s+Z[uü]rich|Georgia\s+Tech|Virginia\s+Tech)\b"
+    r")",
 )
 _RESEARCH_ONLY_SIGNAL_RE = re.compile(
     r"\b("
@@ -235,8 +320,11 @@ def _supply_buyer_lead_eligible(company: Company, rc: RobotCompany) -> tuple[boo
     low_blob = blob.lower()
 
     if _ACADEMIC_BUYER_NAME_RE.search(name):
-        if _RESEARCH_ONLY_SIGNAL_RE.search(blob) or not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
-            return False, "academic/research institution — not an operating automation buyer"
+        # Universities/research institutes are not cold-outreach robot buyers for our
+        # vendors. Reject unconditionally — a manufacturing-looking scraped signal on a
+        # university row is almost always mis-attributed headline text, and citing it to a
+        # vendor only produces a blocked draft downstream.
+        return False, "academic/research institution — not an operating automation buyer"
 
     explicit_vendor = _explicit_robot_market_terms(rc)
     industrial_vendor = explicit_vendor.intersection(
@@ -317,6 +405,8 @@ def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[di
         if not eligible:
             continue
         if not allow_logistics and _is_logistics_lead(c):
+            continue
+        if not _vendor_buyer_domain_fit(rc, c):
             continue
         lead_terms = _lead_terms(c)
         overlap = vendor_terms.intersection(lead_terms)
@@ -1640,25 +1730,39 @@ def get_upcoming_actions(days: int = 7, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/agent/supply-side")
-def supply_side_agent(
-    limit: int = Query(10, ge=1, le=50),
-    min_score: int = Query(0, ge=0, le=100),
-    search: Optional[str] = None,
-    research_contacts: bool = Query(True, description="Run bounded official-site contact research"),
-    research_limit: int = Query(4, ge=0, le=10, description="Maximum rows to live-research per request"),
-    db: Session = Depends(get_db),
-):
-    """
-    Research robot companies, identify who to contact, match up to 3 buyer leads,
-    and draft signup/meeting outreach for review.
-    """
+# Supply-side agent is expensive (~25s: matches 300 candidates per vendor).
+# Cache the built payload in the durable pipeline_cache_store and serve
+# stale-while-revalidate so only the very first build pays the full cost.
+_SUPPLY_SIDE_CACHE_TTL_MIN = int(os.getenv("SUPPLY_SIDE_CACHE_TTL_MIN", "15") or "15")
+_supply_side_refresh_guard = threading.Lock()
+_supply_side_refreshing: set[str] = set()
+
+
+def _supply_side_cache_key(
+    limit: int, min_score: int, search: Optional[str], research_contacts: bool, research_limit: int
+) -> str:
+    raw = f"{limit}|{min_score}|{(search or '').strip().lower()}|{int(research_contacts)}|{research_limit}"
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    return f"supply_side_agent:v1:{digest}"
+
+
+def _build_supply_side_payload(
+    db: Session,
+    *,
+    limit: int,
+    min_score: int,
+    search: Optional[str],
+    research_contacts: bool,
+    research_limit: int,
+) -> dict[str, Any]:
     query = db.query(RobotCompany)
     if min_score:
         query = query.filter(RobotCompany.lead_score >= min_score)
     if search:
         query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
-    companies = query.order_by(RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()).limit(limit).all()
+    companies = query.order_by(
+        RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()
+    ).limit(limit).all()
     candidate_limit = min(150, max(18, limit * 3))
     used_lead_ids: set[int] = set()
     rows = []
@@ -1681,6 +1785,99 @@ def supply_side_agent(
         "companies": rows,
         "count": len(rows),
     }
+
+
+def _refresh_supply_side_cache_async(
+    cache_key: str,
+    *,
+    limit: int,
+    min_score: int,
+    search: Optional[str],
+    research_contacts: bool,
+    research_limit: int,
+) -> None:
+    """Rebuild the payload off the request path (dogpile-guarded)."""
+    with _supply_side_refresh_guard:
+        if cache_key in _supply_side_refreshing:
+            return
+        _supply_side_refreshing.add(cache_key)
+
+    def _run() -> None:
+        from app.database import SessionLocal
+        from app.services.pipeline_cache_store import cache_write
+
+        db = SessionLocal()
+        try:
+            payload = _build_supply_side_payload(
+                db,
+                limit=limit,
+                min_score=min_score,
+                search=search,
+                research_contacts=research_contacts,
+                research_limit=research_limit,
+            )
+            cache_write(db, cache_key, payload, ttl_minutes=_SUPPLY_SIDE_CACHE_TTL_MIN)
+        except Exception as exc:  # noqa: BLE001 — background refresh must not crash
+            logger.warning("supply-side cache refresh failed (%s): %s", cache_key, exc)
+        finally:
+            db.close()
+            with _supply_side_refresh_guard:
+                _supply_side_refreshing.discard(cache_key)
+
+    threading.Thread(target=_run, name="supply-side-refresh", daemon=True).start()
+
+
+@router.get("/agent/supply-side")
+def supply_side_agent(
+    limit: int = Query(10, ge=1, le=50),
+    min_score: int = Query(0, ge=0, le=100),
+    search: Optional[str] = None,
+    research_contacts: bool = Query(True, description="Run bounded official-site contact research"),
+    research_limit: int = Query(4, ge=0, le=10, description="Maximum rows to live-research per request"),
+    refresh: bool = Query(False, description="Bypass cache and rebuild synchronously"),
+    db: Session = Depends(get_db),
+):
+    """
+    Research robot companies, identify who to contact, match up to 3 buyer leads,
+    and draft signup/meeting outreach for review.
+
+    Served from a durable cache with stale-while-revalidate: a fresh entry returns
+    instantly, an expired entry serves stale immediately while rebuilding in the
+    background, and only the first-ever build pays the full ~25s.
+    """
+    from app.services.pipeline_cache_store import cache_read_safe, cache_write
+
+    cache_key = _supply_side_cache_key(limit, min_score, search, research_contacts, research_limit)
+
+    if not refresh:
+        fresh = cache_read_safe(cache_key, stale_ok=False)
+        if fresh is not None:
+            return {**fresh, "cache": "fresh"}
+        stale = cache_read_safe(cache_key, stale_ok=True)
+        if stale is not None:
+            _refresh_supply_side_cache_async(
+                cache_key,
+                limit=limit,
+                min_score=min_score,
+                search=search,
+                research_contacts=research_contacts,
+                research_limit=research_limit,
+            )
+            return {**stale, "cache": "stale-revalidating"}
+
+    payload = _build_supply_side_payload(
+        db,
+        limit=limit,
+        min_score=min_score,
+        search=search,
+        research_contacts=research_contacts,
+        research_limit=research_limit,
+    )
+    try:
+        cache_write(db, cache_key, payload, ttl_minutes=_SUPPLY_SIDE_CACHE_TTL_MIN)
+    except Exception as exc:  # noqa: BLE001 — cache write is best-effort
+        logger.warning("supply-side cache write failed (%s): %s", cache_key, exc)
+    return {**payload, "cache": "forced" if refresh else "miss"}
 
 
 @router.post("/{company_id}/email/approve")
@@ -1855,28 +2052,31 @@ def send_email(
     reply_to = _supply_reply_address(reply_token)
 
     _supply_inbound_missing = False
+    _include_demo = template_type in ("intro", "supply_pipeline", "vendor_signup")
     try:
-        send_result = send_email_via_resend(
-            to_email=to_emails,
-            subject=subject,
-            body_text=body,
-            from_display_name="Cal",
-            reply_to=reply_to,
-            idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
-        )
+        send_fn = send_cal_email_via_resend if _include_demo else send_email_via_resend
+        send_kwargs: dict = {
+            "to_email": to_emails,
+            "subject": subject,
+            "body_text": body,
+            "from_display_name": "Cal",
+            "reply_to": reply_to,
+            "idempotency_key": f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
+        }
+        if _include_demo:
+            send_kwargs["include_demo"] = True
+        send_result = send_fn(**send_kwargs)
     except ResendEmailError as exc:
         err_text = str(exc).lower()
         if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
             _supply_inbound_missing = True
             try:
-                send_result = send_email_via_resend(
-                    to_email=to_emails,
-                    subject=subject,
-                    body_text=body,
-                    from_display_name="Cal",
-                    reply_to=None,
-                    idempotency_key=f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
-                )
+                fallback_kwargs = {
+                    **send_kwargs,
+                    "reply_to": None,
+                    "idempotency_key": f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
+                }
+                send_result = send_fn(**fallback_kwargs)
             except ResendEmailError as exc2:
                 raise HTTPException(status_code=400, detail=str(exc2)) from exc2
         else:
