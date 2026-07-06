@@ -343,6 +343,14 @@ _CAL_OFF_ICP_INDUSTRY_TOKENS = (
     "banking",
 )
 
+# Strong automation-buyer signals that override a noisy off-ICP industry label
+# (e.g. "Amazon Fulfillment" mislabeled as hospitality is still a core buyer).
+_CAL_IN_ICP_OVERRIDE_TOKENS = (
+    "fulfillment", "warehouse", "logistics", "distribution", "supply chain",
+    "manufactur", "factory", "industrial", "3pl", "e-commerce", "ecommerce",
+    "grocery", "cold storage", "material handling", "automation",
+)
+
 
 def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
     """
@@ -360,9 +368,12 @@ def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
     if not company_website_domain(company, acct):
         return False, "no verifiable website domain"
     blob = (
+        f"{name.lower()} "
         f"{(getattr(company, 'industry', None) or '').lower()} "
         f"{(getattr(company, 'sub_industry', None) or '').lower()}"
     )
+    if any(tok in blob for tok in _CAL_IN_ICP_OVERRIDE_TOKENS):
+        return True, "ok"
     for tok in _CAL_OFF_ICP_INDUSTRY_TOKENS:
         if tok in blob:
             return False, f"off-ICP industry ({tok})"
