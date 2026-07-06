@@ -30,7 +30,7 @@ def _dom(email: str | None) -> str:
 _VERIFIED = {"apollo", "hunter", "hunter_domain", "website_mailto", "signal_email"}
 
 
-def _verified_retry(db, limit: int, apply: bool) -> int:
+def _verified_retry(db, limit: int, apply: bool, names: list[str] | None = None) -> int:
     """Controlled ramp: reset never-landed eligible accounts that resolve to a
     VERIFIED contact today, so Cal re-contacts them via the hardened gate. Only
     accounts with a verified email are reset (they will actually send, not re-skip)."""
@@ -67,6 +67,8 @@ def _verified_retry(db, limit: int, apply: bool) -> int:
         company = db.query(Company).filter(Company.id == acct.company_id).first()
         if not company or not _cal_buyer_eligible(company, acct)[0]:
             continue
+        if names and not any(n.lower() in (company.name or "").lower() for n in names):
+            continue  # curated allowlist for controlled ramp
         if is_known_robotics_vendor_name(company.name or ""):
             continue  # vendor/OEM slipped through eligibility — never a buyer
         real = (company_website_domain(company, acct) or "").lower()
@@ -114,6 +116,8 @@ def main() -> int:
     ap.add_argument("--verified-retry", action="store_true",
                     help="Controlled ramp: reset never-landed accounts that resolve to a verified contact.")
     ap.add_argument("--limit", type=int, default=20, help="Max accounts to reset in verified-retry mode.")
+    ap.add_argument("--names", type=str, default="",
+                    help="Comma-separated name substrings — curated allowlist for the ramp.")
     args = ap.parse_args()
 
     from app.database import SessionLocal
@@ -126,7 +130,8 @@ def main() -> int:
     db = SessionLocal()
     try:
         if args.verified_retry:
-            return _verified_retry(db, args.limit, args.apply)
+            name_list = [n.strip() for n in args.names.split(",") if n.strip()]
+            return _verified_retry(db, args.limit, args.apply, name_list or None)
         status_mix = Counter(s for (s,) in db.query(OutreachMessage.status).all())
         print("=" * 60)
         print("OUTREACH STATUS DISTRIBUTION")
