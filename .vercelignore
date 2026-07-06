@@ -1,26 +1,45 @@
-# Static marketing site only — API runs on Fly.io (ready-2-robot.fly.dev).
-# Prevents Vercel Hobby 12-function limit from Python/Next/Express auto-detection.
-
-# Exclude Python backend; keep app/data for Vite @ontology import
-app/**
-!app/data/**
+# Keep Vercel upload under 100MB — source only; deps install on build
+**/.git/**
+**/.git
+**/node_modules/**
+**/.venv/**
+**/.venv_new/**
+**/venv/**
+# Catch every virtualenv variant (.venv-harness has a 206MB bundled binary > Vercel 100MB limit)
+**/.venv*/**
+**/.venv*
+.venv-harness/
+.venv.broken/
+**/__pycache__/**
+**/*.pyc
+.cursor/
+.agents/
+dist/
+reports/
+missions/
+docs/
+frontend/
+readyforrobots-redesign/
 worker/
 migrations/
 scripts/
 tests/
-frontend/
-docs/
+assets/
 *.py
 requirements.txt
 alembic.ini
 Dockerfile
 fly.toml
 readyforrobots-new/server/
-readyforrobots-new/dist/index.js
-reports/
-readyforrobots-redesign/
-missions/
-**/node_modules/
-.venv/
-.venv_new/
-venv/
+readyforrobots-new/dist/
+readyforrobots-new/node_modules/
+readyforrobots-new/.vercel/
+node_modules/
+
+# Python backend (keep app/data for any shared imports)
+app/**
+!app/data/**
+
+# Markdown noise (optional keep for subfolder docs)
+*.md
+!readyforrobots-new/client/**
