@@ -224,8 +224,26 @@ def resolve_outreach_email(
     Waterfall: CRM → Apollo (opt-in) → Hunter → signal → person guess → mailto → role inbox.
     Returns (email, source_label, contact_title).
     """
+    def _remember(addr: str, src: str) -> None:
+        """Durably record a verified contact + its true source on the company."""
+        if company is None or not addr:
+            return
+        base = getattr(company, "crm_metadata", None)
+        meta = dict(base) if isinstance(base, dict) else {}
+        meta["outreach_email"] = addr.strip().lower()
+        meta["outreach_email_source"] = src
+        company.crm_metadata = meta
+
     if acct and (acct.contact_email or "").strip():
-        return acct.contact_email.strip(), "crm_contact", None
+        stored = acct.contact_email.strip()
+        base = getattr(company, "crm_metadata", None)
+        meta = base if isinstance(base, dict) else {}
+        if (meta.get("outreach_email") or "").strip().lower() == stored.lower():
+            # Return the true recorded source so verified emails stay trusted and
+            # guessed emails (laundered onto contact_email) do not pass as real.
+            src = (meta.get("outreach_email_source") or "").strip().lower() or "crm_contact"
+            return stored, src, None
+        return stored, "crm_contact", None
 
     domain = outreach_domain(company, acct)
     industry = company.industry or (acct.industry if acct else None)
@@ -243,6 +261,7 @@ def resolve_outreach_email(
             email = prospect["email"].strip()
             if acct:
                 acct.contact_email = email
+            _remember(email, "apollo")
             return email, "apollo", prospect.get("title")
 
     prospect = hunter_contact_email(
@@ -259,6 +278,7 @@ def resolve_outreach_email(
                 acct.contact_email = email
             source = prospect.get("source") or "hunter"
             label = "hunter_domain" if source == "hunter_domain" else "hunter"
+            _remember(email, label)
             return email, label, prospect.get("title")
 
     texts = signal_texts or []
@@ -273,6 +293,7 @@ def resolve_outreach_email(
     if signal_email:
         if acct:
             acct.contact_email = signal_email
+        _remember(signal_email, "signal_email")
         return signal_email, "signal_email", None
 
     person_email, _pattern, dm_title = infer_person_email_from_decision_makers(
@@ -288,6 +309,7 @@ def resolve_outreach_email(
         if mailto_email:
             if acct:
                 acct.contact_email = mailto_email
+            _remember(mailto_email, "website_mailto")
             return mailto_email, "website_mailto", None
 
     inferred = infer_primary_outreach_email(domain, industry)
@@ -336,7 +358,12 @@ def _domain_resolves(domain: str) -> bool:
 
 
 # Email sources that came from a real observation/verification, not a name-derived guess.
-_VERIFIED_EMAIL_SOURCES = frozenset({"apollo", "hunter", "website_mailto", "signal_email"})
+# hunter_domain = Hunter domain-search hit (a real person at the company), verified by
+# Hunter — as trustworthy as a Hunter finder result. person_inferred / domain_inferred
+# are name-derived GUESSES and are intentionally excluded.
+_VERIFIED_EMAIL_SOURCES = frozenset(
+    {"apollo", "hunter", "hunter_domain", "website_mailto", "signal_email"}
+)
 
 
 def company_website_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
@@ -365,12 +392,11 @@ def outreach_recipient_trusted(
     source: str,
 ) -> tuple[bool, str]:
     """
-    Guard against bounces from guessed email domains.
-
-    Trust the recipient only when:
-      • it came from a verified provider (Apollo / Hunter / website mailto / signal), OR
-      • its domain matches the company's real website domain (role inboxes on the
-        actual domain are acceptable; guessed domains are not).
+    Guard against bounces: trust the recipient ONLY when the address came from a
+    verified provider/observation (Apollo / Hunter / Hunter domain search / website
+    mailto / signal). A domain-matched *guess* (role/person inbox on the real domain)
+    is NOT trusted — those mailboxes frequently do not exist and were the dominant
+    bounce class (info@/name@ at valid domains).
 
     Rejects laundered guesses: resolve_outreach_email stores name-derived guesses
     back onto acct.contact_email, so a "crm_contact" source is NOT inherently real.
@@ -386,8 +412,6 @@ def outreach_recipient_trusted(
         return True, source
 
     web = company_website_domain(company, acct)
-    if web and edom == web:
-        return True, f"{source or 'unknown'}@website"
     return False, f"unverified:{source or 'unknown'}:{edom or 'none'}~{web or 'no-website'}"
 
 

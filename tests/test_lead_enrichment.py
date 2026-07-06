@@ -27,9 +27,20 @@ def test_recipient_trusted_rejects_guessed_domain():
     assert "unverified" in reason
 
 
-def test_recipient_trusted_allows_role_inbox_on_real_domain():
+def test_recipient_trusted_rejects_guessed_role_inbox_on_real_domain():
+    # Hardened: a guessed role inbox even on the real domain is NOT trusted —
+    # info@/sales@ frequently do not exist and were the dominant bounce class.
     ok, reason = outreach_recipient_trusted(
         _company(), None, "sales@hawaiianairlines.com", "domain_inferred"
+    )
+    assert ok is False
+    assert "unverified" in reason
+
+
+def test_recipient_trusted_allows_hunter_domain_hit():
+    # Hunter domain-search hits are verified real people at the company.
+    ok, _ = outreach_recipient_trusted(
+        _company(), None, "christian.nice@hawaiianairlines.com", "hunter_domain"
     )
     assert ok is True
 
