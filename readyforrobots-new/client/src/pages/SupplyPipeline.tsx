@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, getDirectApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText } from "@/lib/text";
 import { toast } from "sonner";
@@ -160,25 +160,41 @@ export default function SupplyPipeline() {
   const [err, setErr] = useState("");
   const [sidebarView, setSidebarView] = useState<"needs_action" | "sent" | "all">("needs_action");
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setErr("");
-      try {
-        const response = await fetch(`${getApiBase()}/api/robot-companies/agent/supply-side?limit=12&research_contacts=false`, liveFetchInit());
-        if (!response.ok) throw new Error(await response.text());
-        const payload = await response.json();
-        const companies = Array.isArray(payload.companies) ? payload.companies : [];
-        setRows(companies);
-        setDrafts(Object.fromEntries(companies.map((row: SupplyCompany) => [row.robot_company.id, initialDraft(row)])));
-        setSelectedId(companies[0]?.robot_company?.id ?? null);
-      } catch (e) {
-        setErr(e instanceof Error ? e.message : "Could not load supply pipeline");
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadPipeline = useCallback(async () => {
+    setLoading(true);
+    setErr("");
+    // The supply-side agent researches + matches each vendor (~20-30s). Hit Fly
+    // directly to skip the Vercel proxy, and abort after 90s so the page never
+    // spins forever — show a retryable error instead.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 90_000);
+    try {
+      const response = await fetch(
+        `${getDirectApiBase()}/api/robot-companies/agent/supply-side?limit=12&research_contacts=false`,
+        liveFetchInit({ signal: ctrl.signal }),
+      );
+      if (!response.ok) throw new Error(await response.text());
+      const payload = await response.json();
+      const companies = Array.isArray(payload.companies) ? payload.companies : [];
+      setRows(companies);
+      setDrafts(Object.fromEntries(companies.map((row: SupplyCompany) => [row.robot_company.id, initialDraft(row)])));
+      setSelectedId(companies[0]?.robot_company?.id ?? null);
+    } catch (e) {
+      const aborted = e instanceof DOMException && e.name === "AbortError";
+      setErr(
+        aborted
+          ? "The outreach agent took too long to research these companies. Tap Retry to try again."
+          : e instanceof Error ? e.message : "Could not load supply pipeline",
+      );
+    } finally {
+      clearTimeout(timer);
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadPipeline();
+  }, [loadPipeline]);
 
   const selected = selectedId == null ? null : rows.find((row) => row.robot_company.id === selectedId) ?? null;
   const selectedDraft = selected ? drafts[selected.robot_company.id] : null;
@@ -408,7 +424,24 @@ export default function SupplyPipeline() {
             </button>
             <p className="text-[11px] text-gray-400">Operator controls: review, edit, approve, then send. Nothing sends without approval.</p>
           </div>
-          {err && <p className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">{err}</p>}
+          {err && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">
+              <span>{err}</span>
+              <button
+                type="button"
+                onClick={() => void loadPipeline()}
+                disabled={loading}
+                className="rounded-lg border border-red-400 bg-white px-3 py-1.5 text-xs font-bold text-red-900 disabled:opacity-50"
+              >
+                {loading ? "Loading..." : "Retry"}
+              </button>
+            </div>
+          )}
+          {loading && !err && (
+            <p className="mt-4 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-500">
+              SIGNAL is researching robot companies and matching buyer leads — this can take up to a minute.
+            </p>
+          )}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-2xl border border-gray-200 bg-white">
