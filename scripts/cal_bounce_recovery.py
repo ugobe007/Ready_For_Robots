@@ -67,7 +67,9 @@ def _verified_retry(db, limit: int, apply: bool) -> int:
         if not company or not _cal_buyer_eligible(company, acct)[0]:
             continue
         scanned += 1
-        email, source, _t = resolve_outreach_email(company, acct, use_apollo=False)
+        # Resolve FRESH (acct=None) so a stale bounce-era guessed contact_email does
+        # not short-circuit the waterfall; resolve persists verified hits to company.
+        email, source, _t = resolve_outreach_email(company, None, use_apollo=False)
         if source not in _VERIFIED or not email:
             continue
         chosen.append((company, acct, email, source))
@@ -79,7 +81,8 @@ def _verified_retry(db, limit: int, apply: bool) -> int:
         print(f"  {company.name[:30]:30} {source:14} {email}")
 
     if apply and chosen:
-        for company, acct, _email, _source in chosen:
+        for company, acct, email, _source in chosen:
+            acct.contact_email = email  # replace stale bounce-era guess with verified
             acct.outreach_sent_at = None
             if acct.outreach_stage == "suppressed_junk":
                 acct.outreach_stage = None
