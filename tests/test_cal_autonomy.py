@@ -29,12 +29,21 @@ def test_cal_buyer_eligible_blocks_robot_vendor():
     assert "junk/vendor" in reason
 
 
-def test_cal_buyer_eligible_blocks_off_icp_airline():
+def test_cal_buyer_eligible_blocks_pure_publisher():
     ok, reason = _cal_buyer_eligible(
-        _StubCompany("Hawaiian Airlines", "Airline", website="https://hawaiianairlines.com")
+        _StubCompany("Globex Holdings", "Publishing", website="https://globexholdings.com")
     )
     assert ok is False
     assert "off-ICP" in reason
+
+
+def test_cal_buyer_eligible_allows_hospitality_service_robot_buyer():
+    # Hotels/airlines/casinos are deliberate service/cleaning-robot buyers and
+    # must be eligible when they have a real domain (send-time gates handle safety).
+    ok, _ = _cal_buyer_eligible(
+        _StubCompany("Marriott International", "Hospitality", website="https://marriott.com")
+    )
+    assert ok is True
 
 
 def test_cal_buyer_eligible_blocks_no_domain_fragment():

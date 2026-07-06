@@ -332,15 +332,14 @@ def _draft_and_store(
     return True, bool(has_draft and (regenerate or is_stale))
 
 
-# Off-ICP industries that keep re-contaminating the buyer queue. Scoped to Cal's
-# outreach path only — the broader pipeline/UI classification is unchanged.
+# Off-ICP industries — genuine non-buyers only. Hospitality, aviation, gaming,
+# and food service are DELIBERATE service/cleaning/delivery-robot buyer segments
+# (see seed_v2/v3 + the manual "las_vegas_cleaning_robot_prospects" source), so
+# they are NOT excluded — bounce safety is handled by the recipient-trust +
+# deliverability gates at send time, not by blanket industry exclusion. Scoped to
+# Cal's outreach path only; broader pipeline/UI classification is unchanged.
 _CAL_OFF_ICP_INDUSTRY_TOKENS = (
-    "airline", "aviation", "airport",
-    "hotel", "resort", "hospitality",
-    "casino", "gaming",
-    "restaurant", "quick service", "quick-service", "food service",
-    "media", "publishing", "newspaper",
-    "banking",
+    "publishing", "newspaper", "market research", "trade publication",
 )
 
 # Strong automation-buyer signals that override a noisy off-ICP industry label
