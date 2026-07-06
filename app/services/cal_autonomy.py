@@ -107,32 +107,35 @@ def _persist_template_fingerprint(fp: str) -> None:
 def cal_buyer_outreach_body(company: Any, *, fresh: bool = False) -> str:
     """Cal-voice outreach to buyer-side prospects (admin Cal queue + autonomy)."""
     from app.services.agent_messaging import (
+        BUYER_CAL_PERSONALITY,
+        BUYER_OUTREACH_CTA,
+        BUYER_ROI_PROOF,
         BUYER_SIGNAL_EXPLANATION,
         CAL_INTRO,
+        buyer_company_hook,
         cal_signature,
     )
-    from app.services.cal_insights import pick_cal_insight
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your industry").strip()
     week = datetime.now(timezone.utc).isocalendar().week
     allow_humor = fresh or (week % 2 == 0)
-    insight = pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="buyer")
 
+    # Value-first order: what you get → why you specifically → proof → clear ask.
     lines = [
         CAL_INTRO,
         "",
         BUYER_SIGNAL_EXPLANATION,
         "",
-        insight,
+        buyer_company_hook(name, industry=industry),
         "",
-        f"We've identified {name} in our {industry} — "
-        "the kind that usually precede an automation conversation, not a generic vendor browse.",
+        BUYER_ROI_PROOF,
         "",
-        "Worth a quick reply to explore timing?",
-        "",
-        cal_signature(),
+        BUYER_OUTREACH_CTA,
     ]
+    if allow_humor:
+        lines += ["", BUYER_CAL_PERSONALITY]
+    lines += ["", cal_signature()]
     return "\n".join(lines)
 
 
@@ -286,7 +289,12 @@ def _draft_and_store(
             is_stale = ts <= stale_before
 
     if has_draft and not regenerate and not is_stale:
-        return False, False
+        from app.services.cal_draft_guard import draft_needs_regeneration
+
+        account_type = getattr(acct, "account_type", None) or "buyer"
+        needs_refresh, _ = draft_needs_regeneration(acct.outreach_draft, account_type=account_type)
+        if not needs_refresh:
+            return False, False
 
     subject, draft_body = _cal_draft_for_company(company, fresh=regenerate or is_stale)
     domain = _cal_outreach_domain(company, acct)
@@ -324,22 +332,37 @@ def _draft_and_store(
     return True, bool(has_draft and (regenerate or is_stale))
 
 
-def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, Any]:
+def run_cal_autonomy_cycle(
+    db: Session,
+    *,
+    dry_run: bool = False,
+    admin_uid: Optional[uuid.UUID] = None,
+    admin_email: str = "",
+) -> dict[str, Any]:
     """Draft pending HOT+WARM leads, refresh stale copy, send up to limit, notify on format change."""
     if not cal_autonomy_enabled():
         return {"status": "disabled", "reason": "CAL_AUTONOMY_ENABLED / ENABLE_SCHEDULED_CAL_AUTONOMY off"}
 
-    ctx = resolve_cal_admin_context(db)
-    if not ctx:
-        return {"status": "skipped", "reason": "No admin-cal-outreach team — sign in to /admin once or set CAL_ADMIN_USER_ID"}
+    if admin_uid is not None:
+        from app.api.admin_extended import _admin_team
 
-    uid, team = ctx
+        team = _admin_team(db, admin_uid, admin_email or get_cal_review_email() or "admin@readyforrobots.com")
+        uid = admin_uid
+    else:
+        ctx = resolve_cal_admin_context(db)
+        if not ctx:
+            return {"status": "skipped", "reason": "No admin-cal-outreach team — sign in to /admin once or set CAL_ADMIN_USER_ID"}
+        uid, team = ctx
     from app.api.admin_extended import (
         _hot_warm_companies,
         _invalidate_admin_caches,
         _cal_draft_for_company,
     )
-    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
+    from app.services.lead_enrichment import (
+        outreach_recipient_trusted,
+        resolve_outreach_email,
+        verify_email_deliverable,
+    )
     from app.services.company_domain import normalize_website_domain
     from app.services.outreach_email_inference import infer_cc_outreach_emails
     from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -419,11 +442,23 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             skipped_already_sent += 1
             continue
 
-        to_email = (acct.contact_email or "").strip() or None
-        if not to_email:
-            to_email, _src, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        # Always resolve so we know the email SOURCE — a pre-stored acct.contact_email
+        # may be a laundered name-guess from a prior cycle.
+        to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
         if not to_email:
             errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            continue
+
+        # Hard-gate: never send to guessed domains. Verified provider OR the
+        # email must sit on the company's real website domain.
+        trusted, trust_reason = outreach_recipient_trusted(company, acct, to_email, email_source)
+        if not trusted:
+            skipped_unverified += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Unverified recipient skipped ({trust_reason})",
+            })
             continue
 
         from app.api.admin_extended import cal_manual_approval_required
@@ -441,6 +476,17 @@ def run_cal_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str, A
             continue
 
         from app.services.cal_outreach_send import parse_cal_draft
+        from app.services.cal_draft_guard import is_complete_cal_draft
+
+        draft_ok, draft_reason = is_complete_cal_draft(acct.outreach_draft)
+        if not draft_ok:
+            skipped_no_draft += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Incomplete draft skipped: {draft_reason}",
+            })
+            continue
 
         subject, body_text = parse_cal_draft(acct.outreach_draft, company.name or "your team")
 

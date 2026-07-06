@@ -3,10 +3,49 @@ from unittest.mock import MagicMock, patch
 
 from app.services.lead_enrichment import (
     infer_sales_email,
+    outreach_recipient_trusted,
     persist_outreach_contact,
     resolve_outreach_email,
     verify_email_deliverable,
 )
+
+
+def _company(name="Hawaiian Airlines", website="https://hawaiianairlines.com", website_domain=None):
+    c = MagicMock()
+    c.name = name
+    c.website = website
+    c.website_domain = website_domain
+    return c
+
+
+def test_recipient_trusted_rejects_guessed_domain():
+    # "Hawaiian Airlines" real site is hawaiianairlines.com; hawaiian.com is a name-guess.
+    ok, reason = outreach_recipient_trusted(
+        _company(), None, "automation@hawaiian.com", "domain_inferred"
+    )
+    assert ok is False
+    assert "unverified" in reason
+
+
+def test_recipient_trusted_allows_role_inbox_on_real_domain():
+    ok, reason = outreach_recipient_trusted(
+        _company(), None, "sales@hawaiianairlines.com", "domain_inferred"
+    )
+    assert ok is True
+
+
+def test_recipient_trusted_allows_verified_provider_any_domain():
+    # Apollo/Hunter emails are verified even if the domain differs from the website field.
+    ok, _ = outreach_recipient_trusted(_company(), None, "cto@corp-mail.com", "apollo")
+    assert ok is True
+
+
+def test_recipient_trusted_rejects_when_no_website():
+    ok, reason = outreach_recipient_trusted(
+        _company(website=None), None, "facilities@voluntary.com", "crm_contact"
+    )
+    assert ok is False
+    assert "no-website" in reason
 
 
 def test_persist_outreach_contact_writes_row_and_metadata():

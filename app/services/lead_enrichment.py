@@ -36,6 +36,7 @@ from app.services.hunter_client import (
     hunter_contact_enabled,
     pick_best_domain_email,
 )
+from app.services.email_address import normalize_recipient_email
 from app.services.company_domain import normalize_website_domain, persist_company_domain, resolve_outreach_domain, is_trusted_outreach_domain
 from app.services.outreach_email_inference import (
     infer_cc_outreach_emails,
@@ -309,7 +310,7 @@ def verify_email_deliverable(email: str) -> tuple[bool, str]:
     - ZERO_BOUNCE_API_KEY set → API verify (accurate)
     - Otherwise → syntax + domain resolves (free baseline)
     """
-    email = (email or "").strip().lower()
+    email = normalize_recipient_email(email) or ""
     if not email or not _EMAIL_RE.match(email):
         return False, "invalid_format"
 
@@ -332,6 +333,62 @@ def _domain_resolves(domain: str) -> bool:
         return True
     except socket.gaierror:
         return False
+
+
+# Email sources that came from a real observation/verification, not a name-derived guess.
+_VERIFIED_EMAIL_SOURCES = frozenset({"apollo", "hunter", "website_mailto", "signal_email"})
+
+
+def company_website_domain(company: Company, acct: CrmAccount | None = None) -> str | None:
+    """
+    The company's REAL website domain (from the website field only) — never a
+    name-derived brand-slug guess. Used to gate outreach so we don't email
+    fabricated domains like hawaiian.com for "Hawaiian Airlines".
+    """
+    from app.services.company_domain import normalize_website_domain
+
+    dom = normalize_website_domain(
+        getattr(company, "website", None) or (getattr(acct, "website", None) if acct else None)
+    )
+    if dom:
+        return dom
+    wd = getattr(company, "website_domain", None)
+    if wd and str(wd).strip():
+        return normalize_website_domain(str(wd))
+    return None
+
+
+def outreach_recipient_trusted(
+    company: Company,
+    acct: CrmAccount | None,
+    email: str,
+    source: str,
+) -> tuple[bool, str]:
+    """
+    Guard against bounces from guessed email domains.
+
+    Trust the recipient only when:
+      • it came from a verified provider (Apollo / Hunter / website mailto / signal), OR
+      • its domain matches the company's real website domain (role inboxes on the
+        actual domain are acceptable; guessed domains are not).
+
+    Rejects laundered guesses: resolve_outreach_email stores name-derived guesses
+    back onto acct.contact_email, so a "crm_contact" source is NOT inherently real.
+    """
+    normalized = normalize_recipient_email(email) or ""
+    if not normalized or "@" not in normalized:
+        return False, "invalid_format"
+    edom = normalized.rsplit("@", 1)[-1].strip().lower()
+    if edom.startswith("www."):
+        edom = edom[4:]
+
+    if (source or "") in _VERIFIED_EMAIL_SOURCES:
+        return True, source
+
+    web = company_website_domain(company, acct)
+    if web and edom == web:
+        return True, f"{source or 'unknown'}@website"
+    return False, f"unverified:{source or 'unknown'}:{edom or 'none'}~{web or 'no-website'}"
 
 
 def _verify_zerobounce(email: str, api_key: str) -> tuple[bool, str]:
