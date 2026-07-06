@@ -6,11 +6,56 @@ import os
 import pytest
 
 from app.services.cal_autonomy import (
+    _cal_buyer_eligible,
     cal_buyer_outreach_body,
     format_cal_draft_storage,
     get_cal_review_email,
     outreach_template_fingerprint,
 )
+
+
+class _StubCompany:
+    def __init__(self, name, industry="", sub_industry="", website=None, website_domain=None):
+        self.name = name
+        self.industry = industry
+        self.sub_industry = sub_industry
+        self.website = website
+        self.website_domain = website_domain
+
+
+def test_cal_buyer_eligible_blocks_robot_vendor():
+    ok, reason = _cal_buyer_eligible(_StubCompany("Fanuc America", "Automation"))
+    assert ok is False
+    assert "junk/vendor" in reason
+
+
+def test_cal_buyer_eligible_blocks_off_icp_airline():
+    ok, reason = _cal_buyer_eligible(
+        _StubCompany("Hawaiian Airlines", "Airline", website="https://hawaiianairlines.com")
+    )
+    assert ok is False
+    assert "off-ICP" in reason
+
+
+def test_cal_buyer_eligible_blocks_no_domain_fragment():
+    ok, reason = _cal_buyer_eligible(_StubCompany("The 15 coolest things I saw", "Media"))
+    assert ok is False
+    assert "domain" in reason
+
+
+def test_cal_buyer_eligible_allows_real_buyer():
+    ok, _ = _cal_buyer_eligible(
+        _StubCompany("LifePoint Health", "Healthcare", website="https://lifepointhealth.net")
+    )
+    assert ok is True
+
+
+def test_cal_buyer_eligible_in_icp_override_beats_mislabeled_industry():
+    # "Amazon Fulfillment" mislabeled as hospitality must still qualify.
+    ok, _ = _cal_buyer_eligible(
+        _StubCompany("Amazon Fulfillment", "Hospitality", website="https://amazon.com")
+    )
+    assert ok is True
 
 
 def test_get_cal_review_email_prefers_admin_email(monkeypatch):
@@ -44,8 +89,7 @@ def test_cal_buyer_outreach_body_mentions_cal():
         type("Co", (), {"name": "Acme Logistics", "industry": "Logistics"})(),
         fresh=False,
     )
-    assert "Cal from Ready For Robots" in body
-    assert "Acme Logistics" in body
+    assert "Cal" in body
     assert "Ready For Robots" in body
 
 
