@@ -27,9 +27,79 @@ def _dom(email: str | None) -> str:
     return (email or "").split("@")[-1].lower().strip()
 
 
+_VERIFIED = {"apollo", "hunter", "hunter_domain", "website_mailto", "signal_email"}
+
+
+def _verified_retry(db, limit: int, apply: bool) -> int:
+    """Controlled ramp: reset never-landed eligible accounts that resolve to a
+    VERIFIED contact today, so Cal re-contacts them via the hardened gate. Only
+    accounts with a verified email are reset (they will actually send, not re-skip)."""
+    from app.models.company import Company
+    from app.models.crm import CrmAccount
+    from app.models.outreach import OutreachMessage
+    from app.api.admin_extended import _cal_draft_for_company
+    from app.services.cal_autonomy import _cal_buyer_eligible, format_cal_draft_storage
+    from app.services.lead_enrichment import resolve_outreach_email
+
+    msgs = db.query(OutreachMessage).all()
+    by_acct: dict = {}
+    for m in msgs:
+        by_acct.setdefault(m.crm_account_id, []).append(m)
+
+    # Candidate accounts: never landed, only failed outcomes.
+    candidates: list[int] = []
+    for acct_id, ms in by_acct.items():
+        outcomes = {(m.status or "").lower() for m in ms}
+        if outcomes & _LANDED or not (outcomes & _FAILED):
+            continue
+        candidates.append(acct_id)
+
+    chosen = []
+    scanned = 0
+    scan_cap = max(limit * 4, 40)
+    for acct_id in candidates:
+        if len(chosen) >= limit or scanned >= scan_cap:
+            break
+        acct = db.query(CrmAccount).filter(CrmAccount.id == acct_id).first()
+        if not acct or not acct.company_id:
+            continue
+        company = db.query(Company).filter(Company.id == acct.company_id).first()
+        if not company or not _cal_buyer_eligible(company, acct)[0]:
+            continue
+        scanned += 1
+        email, source, _t = resolve_outreach_email(company, acct, use_apollo=False)
+        if source not in _VERIFIED or not email:
+            continue
+        chosen.append((company, acct, email, source))
+
+    print("\n" + "=" * 60)
+    print(f"VERIFIED-RETRY RAMP — scanned {scanned}, verified {len(chosen)} (limit {limit})")
+    print("=" * 60)
+    for company, _acct, email, source in chosen:
+        print(f"  {company.name[:30]:30} {source:14} {email}")
+
+    if apply and chosen:
+        for company, acct, _email, _source in chosen:
+            acct.outreach_sent_at = None
+            if acct.outreach_stage == "suppressed_junk":
+                acct.outreach_stage = None
+            if not acct.outreach_draft:
+                sub, body = _cal_draft_for_company(company, fresh=True)
+                acct.outreach_draft = format_cal_draft_storage(sub, body)
+        db.commit()
+        print(f"\nAPPLIED: reset {len(chosen)} verified accounts for re-contact.")
+    elif not apply:
+        print("\nDry-run — no changes. Re-run with --apply --verified-retry to unlock.")
+    print("=" * 60)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="Clear outreach_sent_at for recoverable accounts.")
+    ap.add_argument("--verified-retry", action="store_true",
+                    help="Controlled ramp: reset never-landed accounts that resolve to a verified contact.")
+    ap.add_argument("--limit", type=int, default=20, help="Max accounts to reset in verified-retry mode.")
     args = ap.parse_args()
 
     from app.database import SessionLocal
@@ -41,6 +111,8 @@ def main() -> int:
 
     db = SessionLocal()
     try:
+        if args.verified_retry:
+            return _verified_retry(db, args.limit, args.apply)
         status_mix = Counter(s for (s,) in db.query(OutreachMessage.status).all())
         print("=" * 60)
         print("OUTREACH STATUS DISTRIBUTION")
