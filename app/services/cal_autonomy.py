@@ -332,6 +332,43 @@ def _draft_and_store(
     return True, bool(has_draft and (regenerate or is_stale))
 
 
+# Off-ICP industries that keep re-contaminating the buyer queue. Scoped to Cal's
+# outreach path only — the broader pipeline/UI classification is unchanged.
+_CAL_OFF_ICP_INDUSTRY_TOKENS = (
+    "airline", "aviation", "airport",
+    "hotel", "resort", "hospitality",
+    "casino", "gaming",
+    "restaurant", "quick service", "quick-service", "food service",
+    "media", "publishing", "newspaper",
+    "banking",
+)
+
+
+def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
+    """
+    Buyer-outreach eligibility gate, contained to Cal so the queue cannot
+    re-contaminate: real buyer name (not vendor/OEM/fragment), a reachable
+    website domain, and an in-ICP industry.
+    """
+    from app.services.lead_filter import is_junk
+    from app.services.lead_enrichment import company_website_domain
+
+    name = (getattr(company, "name", None) or "").strip()
+    junk, reason = is_junk(name, "buyer")
+    if junk:
+        return False, f"junk/vendor: {reason}"
+    if not company_website_domain(company, acct):
+        return False, "no verifiable website domain"
+    blob = (
+        f"{(getattr(company, 'industry', None) or '').lower()} "
+        f"{(getattr(company, 'sub_industry', None) or '').lower()}"
+    )
+    for tok in _CAL_OFF_ICP_INDUSTRY_TOKENS:
+        if tok in blob:
+            return False, f"off-ICP industry ({tok})"
+    return True, "ok"
+
+
 def run_cal_autonomy_cycle(
     db: Session,
     *,
@@ -387,10 +424,15 @@ def run_cal_autonomy_cycle(
 
     drafted = 0
     refreshed = 0
+    skipped_ineligible = 0
     format_sample: Optional[tuple[str, str, str]] = None
 
     for company, _score, _tier in companies[:draft_limit]:
         acct = existing.get(company.id)
+        eligible, _elig_reason = _cal_buyer_eligible(company, acct)
+        if not eligible:
+            skipped_ineligible += 1
+            continue
         did_draft, did_refresh = _draft_and_store(
             db,
             company=company,
@@ -440,6 +482,16 @@ def run_cal_autonomy_cycle(
             continue
         if acct.outreach_sent_at:
             skipped_already_sent += 1
+            continue
+
+        eligible, elig_reason = _cal_buyer_eligible(company, acct)
+        if not eligible:
+            skipped_ineligible += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Ineligible buyer skipped ({elig_reason})",
+            })
             continue
 
         # Always resolve so we know the email SOURCE — a pre-stored acct.contact_email
@@ -568,6 +620,7 @@ def run_cal_autonomy_cycle(
         "skipped_no_draft": skipped_no_draft,
         "skipped_already_sent": skipped_already_sent,
         "skipped_unverified": skipped_unverified,
+        "skipped_ineligible": skipped_ineligible,
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,
