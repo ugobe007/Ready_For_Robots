@@ -47,7 +47,11 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   CAL_ASSEMBLY_LLM_REVIEW = "1"
   CAL_TEMPLATE_VERSION = "2"
   # Supply-side Cal autonomy (robot vendor signup outreach — worker process)
-  ENABLE_SCHEDULED_SUPPLY_AUTONOMY = "1"
+  # DISABLED 2026-07-07: this loop / supply-pipeline send path emitted "StageGate /
+  # onstage.bot" trade-show-logistics copy to robot OEMs from readyforrobots.com
+  # (policy violation). Do not re-enable until the StageGate persona is fully
+  # removed from the supply/OEM draft path. See app/services/resend_email.py guard.
+  ENABLE_SCHEDULED_SUPPLY_AUTONOMY = "0"
   SUPPLY_AUTONOMY_EVERY_HOURS = "6"
   SUPPLY_AUTONOMY_FIRST_RUN_DELAY_MINUTES = "30"
   SUPPLY_AUTONOMY_SEND_LIMIT = "6"

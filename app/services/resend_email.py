@@ -10,6 +10,31 @@ class ResendEmailError(Exception):
     """Raised when Resend email send fails."""
 
 
+# Hard safety guard: Ready For Robots is the ONLY brand allowed to leave this
+# domain. The "StageGate / onstage.bot" trade-show-logistics persona is a
+# separate product and must never be emailed from readyforrobots.com. This
+# blocks every send path (cal, supply, special projects) at the source.
+_FOREIGN_BRAND_MARKERS = (
+    "onstage.bot",
+    "stagegate",
+    "bonded warehous",
+    "show logistics",
+)
+
+
+def _block_foreign_brand(*, subject: str, body_text: str, from_display_name: str | None) -> None:
+    haystack = " ".join(
+        part for part in (subject, body_text, from_display_name or "") if part
+    ).lower()
+    hit = next((m for m in _FOREIGN_BRAND_MARKERS if m in haystack), None)
+    if hit:
+        raise ResendEmailError(
+            "Blocked: outbound email contains a non-Ready-For-Robots brand marker "
+            f"({hit!r}). StageGate/onstage.bot copy must never be sent from "
+            "readyforrobots.com. See app/services/cal_persona.py."
+        )
+
+
 def _format_from_header(from_email: str, display_name: str | None) -> str:
     fe = (from_email or "").strip()
     dn = (display_name or "").strip()
@@ -56,6 +81,8 @@ def send_email_via_resend(
     to_emails = _email_list(to_email)
     if not to_emails:
         raise ResendEmailError("Recipient email is required")
+
+    _block_foreign_brand(subject=subject, body_text=body_text, from_display_name=from_display_name)
 
     payload: dict[str, Any] = {
         "from": _format_from_header(from_email, from_display_name),
