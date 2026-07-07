@@ -282,9 +282,11 @@ def _handle_crm_delivery_problem(
     attempted = list({crm_msg.to_email.lower(), *(email.lower() for email in payload.get("attempted_recipients", []))})
     alternate = None
     problem = DELIVERY_STATUS_BY_EVENT.get(event_type, "delivery_problem")
-    if attempts < 2:
-        alternates = _buyer_contact_alternates(bounced, attempted)
-        alternate = alternates[0] if alternates else None
+    # Hardened: do NOT auto-resend to guessed role inboxes (operations@/info@/…).
+    # Guessed mailboxes were the dominant bounce class and create bounce loops that
+    # damage sender reputation. Cal contacts only verified addresses; on bounce we
+    # record the problem and notify to add another verified contact.
+    _ = (attempts, bounced, attempted)  # retained for payload/notify context
     if alternate:
         try:
             reply_token = f"{crm_msg.reply_token}-r{attempts + 1}"
@@ -561,6 +563,27 @@ def _capture_supply_reply(
     return reply
 
 
+@router.post("/resend/delivery")
+async def resend_delivery_webhook(
+    request: Request,
+    svix_id: str | None = Header(None, alias="svix-id"),
+    svix_timestamp: str | None = Header(None, alias="svix-timestamp"),
+    svix_signature: str | None = Header(None, alias="svix-signature"),
+):
+    """Outbound delivery events (sent, delivered, opened, clicked, bounced)."""
+    payload = await request.body()
+    _verify_resend_signature(payload, svix_id, svix_timestamp, svix_signature, secret_env="RESEND_WEBHOOK_SECRET")
+    event = await request.json()
+    event_type = str(event.get("type") or "")
+    if event_type not in DELIVERY_EVENT_TYPES:
+        return {"ok": True, "ignored": event_type}
+    db = SessionLocal()
+    try:
+        return _capture_delivery_event(db, event_type, _event_data(event))
+    finally:
+        db.close()
+
+
 @router.post("/resend/inbound")
 async def resend_inbound_webhook(
     request: Request,
@@ -653,6 +676,7 @@ async def resend_inbound_webhook(
             received_at=datetime.now(timezone.utc),
         )
         db.add(reply)
+        msg.status = "replied"
         if account:
             account.outreach_stage = "replied"
             from app.services.sequence_runner import pause_enrollment_for_reply

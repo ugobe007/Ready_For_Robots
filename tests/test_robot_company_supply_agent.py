@@ -165,6 +165,61 @@ def test_match_buyer_leads_differs_by_robot_vendor_fit(db_session):
     assert {m["company_name"] for m in warehouse_matches}.intersection({"DHL"})
 
 
+def test_match_buyer_leads_excludes_off_domain_high_score_buyer(db_session):
+    """A high-intent buyer in an unrelated domain must not be cited to a vendor.
+
+    An airline trialing humanoids scores high but has no AMR/warehouse fit — citing it to
+    a warehouse AMR vendor is the mismatch that got blocked at assembly.
+    """
+    airline = Company(
+        id=3001,
+        name="Japan Airlines",
+        industry="Airports & Aviation",
+        sub_industry="passenger aviation",
+        is_internal=True,
+    )
+    airline.signals = [
+        Signal(
+            company_id=3001,
+            signal_type="news",
+            signal_text="Japan Airlines trials humanoid robots at Haneda for passenger assistance.",
+            signal_strength=0.9,
+        )
+    ]
+    airline.scores = [Score(company_id=3001, overall_intent_score=95.0)]
+
+    warehouse_buyer = Company(
+        id=3002,
+        name="Nimbus Fulfillment",
+        industry="Logistics",
+        sub_industry="warehouse fulfillment",
+        is_internal=True,
+        crm_metadata={"automation_requirements": ["warehouse"]},
+    )
+    warehouse_buyer.signals = [
+        Signal(
+            company_id=3002,
+            signal_type="labor_shortage",
+            signal_text="Nimbus Fulfillment opens a warehouse and seeks AMR automation for fulfillment labor shortage.",
+            signal_strength=0.8,
+        )
+    ]
+    warehouse_buyer.scores = [Score(company_id=3002, overall_intent_score=80.0)]
+
+    db_session.add_all([airline, warehouse_buyer])
+    db_session.commit()
+
+    amr_vendor = _RobotCompany()
+    amr_vendor.id = 801
+    amr_vendor.company_name = "Geek Plus"
+    amr_vendor.robot_type = "AMR"
+    amr_vendor.target_market = "warehouse logistics"
+
+    names = {m["company_name"] for m in _match_buyer_leads(db_session, amr_vendor, limit=5)}
+    assert "Nimbus Fulfillment" in names
+    assert "Japan Airlines" not in names
+
+
 def test_supply_buyer_lead_eligible_rejects_vendors_and_research(db_session):
     cobot_vendor = _RobotCompany()
     cobot_vendor.robot_type = "cobot"
@@ -484,7 +539,10 @@ def test_bounce_event_resends_to_alternate_role_inbox(db_session, monkeypatch):
     assert resent.status == "resent"
 
 
-def test_crm_bounce_event_resends_to_alternate_buyer_inbox(db_session, monkeypatch):
+def test_crm_bounce_event_does_not_resend_to_guessed_inbox(db_session, monkeypatch):
+    # Hardened: a buyer bounce must NOT auto-resend to a guessed role inbox
+    # (operations@/info@…) — guessed mailboxes create bounce loops. Cal only
+    # contacts verified addresses; on bounce it records the problem and notifies.
     team_id = "b1111111-1111-4111-8111-111111111111"
     account_id = "b2222222-2222-4222-8222-222222222222"
     user_id = "b3333333-3333-4333-8333-333333333333"
@@ -508,9 +566,7 @@ def test_crm_bounce_event_resends_to_alternate_buyer_inbox(db_session, monkeypat
     db_session.commit()
 
     def fake_send(**kwargs):
-        assert kwargs["to_email"] == "operations@example.com"
-        assert kwargs["reply_to"] == "reply+crm_token-r1@readyforrobots.com"
-        return {"resend_id": "re_crm_resend_456", "from_email": "outreach@readyforrobots.com", "to": [kwargs["to_email"]]}
+        raise AssertionError("bounce must not trigger a guessed-inbox resend")
 
     monkeypatch.setattr("app.api.webhooks.send_email_via_resend", fake_send)
 
@@ -520,14 +576,18 @@ def test_crm_bounce_event_resends_to_alternate_buyer_inbox(db_session, monkeypat
         {"email_id": "re_crm_bounce_123", "to": ["buyer@example.com"], "reason": "mailbox not found"},
     )
     db_session.refresh(message)
-    resent = db_session.query(OutreachMessage).filter(OutreachMessage.resend_id == "re_crm_resend_456").first()
 
     assert result["status"] == "bounced"
     assert message.status == "bounced"
-    assert message.payload["automated_resend_to"] == "operations@example.com"
-    assert "Resent to operations@example.com" in message.payload["cal_delivery_action"]
-    assert resent is not None
-    assert resent.status == "resent"
+    assert "automated_resend_to" not in message.payload
+    assert "no unused alternate" in message.payload["cal_delivery_action"]
+    # No resent message row created.
+    resent = (
+        db_session.query(OutreachMessage)
+        .filter(OutreachMessage.payload["source"].astext == "crm_auto_resend")
+        .first()
+    )
+    assert resent is None
 
 
 def test_supply_send_creates_crm_tracking_copy(db_session):
