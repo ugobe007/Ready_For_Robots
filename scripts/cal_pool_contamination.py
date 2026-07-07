@@ -5,7 +5,6 @@ it should NOT be there. Read-only.
 """
 from __future__ import annotations
 
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -19,20 +18,12 @@ _MEDIA_JUNK_DOMAINS = {
     "medium.com", "wordpress.com", "blogspot.com", "substack.com",
 }
 
-_GENERIC_NAME_RE = re.compile(
-    r"(?i)^(the\s+)?([a-z]+\s+)?(logistics|tech|technology|manufacturing|warehouse|"
-    r"hotel|casino|robotics|automation|ai|software|startup|firm)\s+"
-    r"(company|firm|startup|business|corp|group)\.?$"
-)
-
 
 def main() -> int:
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
     from app.services.lead_enrichment import company_website_domain
-    from app.services.lead_filter import is_headline_fragment
-    from app.services.robot_vendor_names import is_known_robotics_vendor_name
-    from app.services.company_name_validation import reject_as_non_company_name
+    from app.services.lead_filter import is_junk
 
     db = SessionLocal()
     try:
@@ -52,14 +43,11 @@ def main() -> int:
             name = (company.name or "").strip()
             dom = (company_website_domain(company) or "").lower()
             hit = False
-            if is_known_robotics_vendor_name(name):
-                add("robot vendor/OEM", f"{name}"); hit = True
-            if is_headline_fragment(name)[0]:
-                add("headline fragment", f"{name}"); hit = True
-            if _GENERIC_NAME_RE.match(name):
-                add("generic descriptor name", f"{name}"); hit = True
-            if reject_as_non_company_name(name)[0]:
-                add("non-company name (validator)", f"{name}"); hit = True
+            # Authoritative check: anything is_junk flags must NOT be in the pool
+            # (regression guard — _hot_warm_companies should have excluded it).
+            junk, reason = is_junk(name)
+            if junk:
+                add(f"is_junk LEAK: {reason[:32]}", name); hit = True
             if dom in _MEDIA_JUNK_DOMAINS:
                 add("media/junk domain", f"{name} -> {dom}"); hit = True
             if not dom:

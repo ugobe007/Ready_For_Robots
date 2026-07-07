@@ -50,6 +50,36 @@ def test_real_company_names_not_junk(name):
     assert is_junk(name)[0] is False
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Japan Airlines puts humanoid robots",
+        "White Castle Puts Its Restaurant",
+        "White Castle Debuts Futuristic Restaurant",
+        "United's mobile app",
+        "United\u2019s mobile app",  # curly apostrophe from scraped titles
+    ],
+)
+def test_verb_and_possessive_headline_fragments_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True
+    assert reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "White Castle",
+        "United Airlines",
+        "Japan Airlines",
+        "Domino\u2019s Pizza",
+        "Trader Joe\u2019s",
+    ],
+)
+def test_headline_fragment_patterns_spare_real_buyers(name):
+    assert is_junk(name)[0] is False
+
+
 def test_peak_season_exact_is_junk():
     assert is_junk("Peak Season")[0] is True
 
@@ -451,6 +481,19 @@ def test_classify_lead_blocks_seller_story_without_buyer_intent():
     assert "buyer opportunity" in reason.lower()
 
 
+def test_classify_lead_blocks_imos_pizza_store_opening():
+    c = SimpleNamespace(name="Imo's Pizza", industry="Manufacturing", employee_estimate=None)
+    sigs = [
+        SimpleNamespace(
+            signal_type="expansion",
+            signal_text="Imo's Pizza Opens First Store in Nashville Area",
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
 def test_classify_lead_allows_real_buyer_deployment_signal():
     c = SimpleNamespace(name="Millennium Hotels & Resorts", industry="Hospitality", employee_estimate=1000)
     score = SimpleNamespace(overall_intent_score=62.0, last_calculated_at=None, id=1)
@@ -532,3 +575,197 @@ def test_mis_attributed_company_name_not_in_signal_text():
     ]
     assert _company_name_not_corroborated_by_signals("HeadlineFragmentXy", sigs) is True
     assert _company_name_not_corroborated_by_signals("Fetch Robotics", sigs) is False
+
+
+def _rss_sig(text: str, signal_type: str = "expansion"):
+    return SimpleNamespace(
+        signal_type=signal_type,
+        signal_text=(
+            f"{text} <a href=\"https://news.google.com/rss/articles/ABC\" "
+            'target="_blank">story</a>'
+        ),
+    )
+
+
+def test_classify_lead_blocks_indefinite_article_restaurant_chain_headline():
+    c = SimpleNamespace(
+        name="A 1920s-Era Restaurant Chain",
+        industry="Food Service",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [
+        _rss_sig(
+            "A 1920s-Era Restaurant Chain Is Expanding with a New Phoenix-Area Location."
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+    assert "rss scrape noise" in reason.lower() or "headline shape" in reason.lower()
+
+
+def test_classify_lead_blocks_how_to_labor_costs_headline():
+    c = SimpleNamespace(
+        name="Lower Restaurant Labor Costs",
+        industry="Food Service",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [
+        _rss_sig("How to Lower Restaurant Labor Costs in 2026 - Toast POS.")
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
+def test_classify_lead_blocks_quoted_company_headline_unicode_quotes():
+    c = SimpleNamespace(
+        name="\u2018Seafood Robotics\u2019 Company",
+        industry="Food Service",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [
+        _rss_sig(
+            "\u2018Seafood Robotics\u2019 Company Buys Washington State Processing Plant."
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
+def test_classify_lead_blocks_generic_descriptor_rss_headline():
+    c = SimpleNamespace(
+        name="Efficient design",
+        industry="Unknown",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [_rss_sig("Efficient design trends in warehouse automation.")]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
+def test_classify_lead_allows_seed_v2_buyer_with_rich_signals():
+    c = SimpleNamespace(
+        name="Accor Hotels",
+        industry="Hospitality",
+        source="seed_v2",
+        employee_estimate=50000,
+        is_internal=True,
+    )
+    score = SimpleNamespace(overall_intent_score=85.0, last_calculated_at=None, id=1)
+    sigs = [
+        SimpleNamespace(
+            signal_type="labor_shortage",
+            signal_text="Accor investing EUR 300M in hotel technology transformation including service robots.",
+        )
+    ]
+    junk, reason, pri = classify_lead(c, [score], sigs)
+    assert junk is False
+
+
+def test_classify_lead_blocks_pipe_delimited_rss_headline():
+    c = SimpleNamespace(
+        name="AI-powered | WellSpan York Hospital",
+        industry="Healthcare",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [
+        _rss_sig(
+            "AI-powered | WellSpan York Hospital unveils full-service robotic kitchen."
+        )
+    ]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
+def test_classify_lead_blocks_see_photos_of_headline():
+    c = SimpleNamespace(
+        name="See photos of WellSpan York Hospital",
+        industry="Healthcare",
+        source="news_discovery",
+        employee_estimate=None,
+        is_internal=True,
+    )
+    sigs = [_rss_sig("See photos of WellSpan York Hospital's new robotic kitchen unveiled.")]
+    junk, reason, pri = classify_lead(c, None, sigs)
+    assert junk is True
+    assert pri.tier == "COLD"
+
+
+# ── Pool-names mission: vendors (incl. allowlisted/headline forms) + descriptors ──
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        # Vendor gate must win over the brand allowlist, incl. headline fragments.
+        "Locus Robotics",
+        "Locus Robotics Surpasses 5 Billion Pick Milestone",
+        "Locus Robotics survey: 7",
+        # Newly-added material-handling / service-robot OEMs.
+        "Daifuku",
+        "Daifuku Co",
+        "Dematic",
+        "Vanderlande",
+        "Keenon",
+        "Keenon Humanoid Robot Joins Hotel Chain",
+        "Richtech Robotics",
+        "Addverb Technologies",
+        "Hikrobot",
+        "Exotec",
+    ],
+)
+def test_robot_vendors_are_junk_even_if_allowlisted(name):
+    junk, reason = is_junk(name)
+    assert junk is True
+    assert "vendor" in reason.lower() or "oem" in reason.lower()
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "PA logistics company",
+        "Miami logistics company",
+        "2021 Women",
+        "2023 Robotics Roundup",
+        "Dynamic Warehouse AI-Powered AMRs",
+    ],
+)
+def test_generic_descriptors_and_list_fragments_are_junk(name):
+    junk, reason = is_junk(name)
+    assert junk is True
+    assert reason
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        # Real buyers that must NOT be caught by the new descriptor/vendor rules.
+        "Radisson Hotel Group",
+        "Melia Hotel Group",
+        "RJW Logistics Group",
+        "Rebel Hotel Company",
+        "PM Hotel Group",
+    ],
+)
+def test_real_buyers_survive_pool_name_rules(name):
+    assert is_junk(name)[0] is False
+
+
+def test_vendor_allowed_in_oem_prospect_mode():
+    # StageGate/XBOT pipeline sells TO vendors — they must pass in oem_prospect mode.
+    assert is_junk("Daifuku Co", mode="oem_prospect")[0] is False
+    assert is_junk("Locus Robotics", mode="oem_prospect")[0] is False

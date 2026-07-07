@@ -18,9 +18,9 @@ _DUAL_VENDOR_JUNK = re.compile(
 # Keep in sync with product expectations: these are globally recognized brands/tickers
 # stored as single-field “company names” by scrapers.
 ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
-    # Real OEM / integrator names that were false positives on robotics-vendor patterns
-    "locus robotics",
-    "bito lagertechnik",
+    # NOTE: robot OEMs/integrators (e.g. Locus Robotics, Bito Lagertechnik) are
+    # intentionally NOT allowlisted — they are vendors, not buyer opportunities, and
+    # the robot-vendor gate in is_junk must catch them.
     "ups", "dhl", "ibm", "3m", "sap", "bmw", "kfc", "cvs", "gm",
     "ge", "hp", "lg", "bp", "ab inbev", "jbs", "mcd",
     # Single-token global brands — must not fail headline-victim heuristics
@@ -44,11 +44,9 @@ ALLOWLISTED_COMPANY_NAMES: frozenset[str] = frozenset({
     "invivoscribe",
 })
 
-# Names that share a stable prefix (legal suffix variants: GmbH, Inc., etc.)
-_BRAND_PREFIX_ALLOW = (
-    "locus robotics",
-    "bito lagertechnik",
-)
+# Names that share a stable prefix (legal suffix variants: GmbH, Inc., etc.).
+# Deliberately empty of robot vendors — see note in ALLOWLISTED_COMPANY_NAMES.
+_BRAND_PREFIX_ALLOW: tuple[str, ...] = ()
 
 
 def is_allowlisted_company_name(name: str) -> bool:

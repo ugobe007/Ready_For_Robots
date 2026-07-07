@@ -1120,6 +1120,18 @@ _HEADLINE_FRAGMENT_PATTERNS = [
     r"(?i)\bmarket\s+(analysis|to\s+reach|size|forecast)\b",
     r"(?i)\bindustry\s+(outlook|trends|fast\s+facts)\b",
     r"(?i)\band\s+[A-Z][a-z]+\s+Robotics\b",  # "Team X and Vendor Robotics Partner…"
+    r"\|",                                         # AI-powered | WellSpan York Hospital
+    r"(?i)^see\s+photos?\s+of\b",                  # See photos of WellSpan…
+    r"(?i)^ai-powered\s*\|",                      # RSS title metadata prefix
+    # News-headline verb stubs: "<Brand> puts/debuts/unveils … <object>" scraped from a wire title
+    # ("Japan Airlines puts humanoid robots", "White Castle Debuts Futuristic Restaurant").
+    r"(?i)\b(puts|debuts|unveils|rolls\s+out|deploys|trials|showcases|reveals|"
+    r"introduces|is\s+adding|to\s+deploy|to\s+add)\s+"
+    r"(its|the|new|a|an|humanoid|robot|robots|futuristic|first|autonomous|ai\b)",
+    # Possessive-object headline stub: "United's mobile app", "Company's new plan"
+    # (handles both the straight ' and curly \u2019 apostrophe from scraped titles).
+    r"(?i)['\u2019]s\s+(new|latest|first|next|mobile|flagship)\b",
+    r"(?i)['\u2019]s\s+(app|mobile\s+app|plan|robot|robots|deal|move|strategy)\s*$",
 ]
 _HEADLINE_FRAGMENT_RE = [re.compile(p) for p in _HEADLINE_FRAGMENT_PATTERNS]
 
@@ -1285,6 +1297,32 @@ def is_headline_fragment(name: Optional[str]) -> tuple[bool, str]:
     return False, ""
 
 
+# Names that start with a bare 4-digit year ("2021 Women", "2023 Robotics Roundup")
+# are list/headline fragments, never a legal company name.
+_YEAR_PREFIX_RE = re.compile(r"^(?:19|20)\d{2}\s+\S")
+
+# Lowercase generic descriptors like "Miami logistics company" / "PA logistics company".
+# Case-sensitive on purpose: the industry word + "company" must be lowercase (a scraped
+# description), so Title-Case real names ("Rebel Hotel Company", "RJW Logistics Group")
+# are NOT matched.
+_GENERIC_DESCRIPTOR_RE = re.compile(
+    r"^(?:[A-Z]{2}|[A-Z][a-z]+)\s+"
+    r"(?:logistics|warehouse|manufacturing|tech|technology|software|robotics|"
+    r"automation|trucking|distribution|shipping|freight|fulfillment)\s+company$"
+)
+
+
+def _generic_descriptor_or_list_fragment(name: str) -> tuple[bool, str]:
+    stripped = name.strip()
+    if _YEAR_PREFIX_RE.match(stripped):
+        return True, "list/headline fragment (year prefix)"
+    if _GENERIC_DESCRIPTOR_RE.match(stripped):
+        return True, "generic industry descriptor (not a company name)"
+    if "ai-powered" in stripped.lower():
+        return True, "product headline fragment ('AI-Powered')"
+    return False, ""
+
+
 def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     """
     Returns (True, reason) if the company name looks like scraper garbage.
@@ -1300,8 +1338,12 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     stripped = name.strip()
     low = stripped.lower()
 
-    # Align with company_validator: short tickers (LG, BP, 3M) are not junk.
-    if is_allowlisted_company_name(stripped):
+    # Align with company_validator: short tickers (LG, BP, 3M) are not junk — but a
+    # robot vendor must never be laundered clean via the allowlist (buyer mode), so
+    # the allowlist short-circuit does not apply to known vendors.
+    if is_allowlisted_company_name(stripped) and not (
+        mode != "oem_prospect" and is_known_robotics_vendor_name(stripped)
+    ):
         return False, ""
 
     if is_known_publication_name(stripped):
@@ -1323,6 +1365,10 @@ def is_junk(name: Optional[str], mode: str = "buyer") -> tuple[bool, str]:
     frag, frag_reason = is_headline_fragment(stripped)
     if frag:
         return True, frag_reason
+
+    gen_junk, gen_reason = _generic_descriptor_or_list_fragment(stripped)
+    if gen_junk:
+        return True, gen_reason
 
     bad_nc, reason_nc = reject_as_non_company_name(stripped)
     if bad_nc:
@@ -1476,6 +1522,142 @@ BUYER_EXPANSION_RE = re.compile(
     r"resort|terminal|gate|sq\.?\s*ft|square\s+feet)\b",
     re.IGNORECASE,
 )
+
+# QSR / retail unit openings (new store in a city) — not automation buyer capex.
+_RETAIL_UNIT_OPENING_RE = re.compile(
+    r"\b(?:opens?|opening|opened)\s+(?:its?\s+)?(?:first|new|additional|another|"
+    r"second|third|\d+(?:st|nd|rd|th)?)\s+(?:store|location|restaurant|shop|unit|outlet|branch|site)\b|"
+    r"\b(?:first|new)\s+(?:store|location|restaurant|shop|outlet|branch)\s+in\b|"
+    r"\b(?:opens?|opening)\s+(?:in|near)\s+(?:the\s+)?[\w'&.-]+(?:\s+[\w'&.-]+){0,4}\s+area\b|"
+    r"\bgrand\s+opening\b",
+    re.IGNORECASE,
+)
+
+_FACILITY_CAPEX_EXPANSION_RE = re.compile(
+    r"\b(?:warehouse|distribution\s+center|fulfillment\s+center|\bdc\b|"
+    r"manufacturing\s+plant|production\s+plant|factory|processing\s+plant|"
+    r"cold\s+storage|logistics\s+hub|data\s+center|square\s+feet|sq\.?\s*ft|sqft|"
+    r"capex|capital\s+(?:expenditure|investment)|breaking\s+ground|"
+    r"million\s+square|new\s+facility|new\s+plant|new\s+warehouse)\b",
+    re.IGNORECASE,
+)
+
+_QSR_BRAND_NAME_RE = re.compile(
+    r"\b(?:pizza|pizzeria|restaurant|restaurants|cafe|coffee|burger|taco|wing|"
+    r"donut|doughnut|bakery|bistro|grill|diner|sandwich|subs?|qsr|fast\s+food)\b",
+    re.IGNORECASE,
+)
+
+
+def is_weak_retail_unit_expansion_story(text: str, *, company_name: str = "") -> bool:
+    """
+    True when copy is a single retail/QSR store opening — not facility capex or automation intent.
+    Used at ingest (signal reconcile) and in classify_lead buyer-opportunity gate.
+    """
+    blob = (text or "").strip()
+    if not blob or not _RETAIL_UNIT_OPENING_RE.search(blob):
+        return False
+    if _FACILITY_CAPEX_EXPANSION_RE.search(blob):
+        return False
+    if BUYER_TEXT_EVIDENCE_RE.search(blob):
+        return False
+
+    name = (company_name or "").strip()
+    if name:
+        from app.services.industry_inference import known_industry_for_company_name
+
+        ind = (known_industry_for_company_name(name) or "").lower()
+        if ind in ("food service", "hospitality", "retail"):
+            return True
+        if _QSR_BRAND_NAME_RE.search(name):
+            return True
+
+    if re.search(
+        r"(?i)\b(?:restaurant|pizza|pizzeria|qsr|fast\s+food|cafe|coffee\s+shop|burger\s+chain)\b",
+        blob,
+    ):
+        return True
+    return False
+
+
+_INDEFINITE_ARTICLE_HEADLINE_RE = re.compile(
+    r"(?i)^a\s+(?:\d|'?\d{2,4}s?-era)\b"
+)
+_ADVICE_HEADLINE_NAME_RE = re.compile(
+    r"(?i)^(how\s+to|lower|raising|reducing|improving|cutting)\s+"
+)
+_GENERIC_DESCRIPTOR_NAME_RE = re.compile(
+    r"(?i)^(efficient|effective|scalable|flexible|automated|smart|digital|intelligent)\s+\w+$"
+)
+
+
+def _news_discovery_rss_headline_junk(company, signals) -> tuple[bool, str]:
+    """
+    Hide news_discovery rows where Google RSS HTML or empty scrape text was stored
+    as a company without a real entity name (headline fragments, how-to titles).
+    """
+    source = (getattr(company, "source", None) or "").strip()
+    if source != "news_discovery":
+        return False, ""
+
+    name = (getattr(company, "name", None) or "").strip()
+    if not name:
+        return False, ""
+
+    if is_allowlisted_company_name(name):
+        return False, ""
+
+    from app.services.industry_inference import known_industry_for_company_name
+
+    if known_industry_for_company_name(name):
+        return False, ""
+
+    sigs = list(signals or [])
+    if not sigs:
+        return False, ""
+
+    from app.services.headline_name_shape import passes_headline_name_shape
+    from app.services.rss_noise_lead import (
+        entity_is_noise_headline,
+        is_market_report_company_name,
+        signals_predominantly_rss_html,
+    )
+
+    blob = _signal_text_blob(sigs).strip()
+    texts = [str(getattr(s, "signal_text", None) or "").strip() for s in sigs]
+    predominantly_rss = signals_predominantly_rss_html(sigs)
+
+    def _headline_name_fail() -> tuple[bool, str]:
+        if is_market_report_company_name(name):
+            return True, "market research headline stored as company"
+        if _INDEFINITE_ARTICLE_HEADLINE_RE.search(name):
+            return True, "indefinite-article headline (not a company name)"
+        if _ADVICE_HEADLINE_NAME_RE.search(name):
+            return True, "how-to / advice headline (not a company name)"
+        if _GENERIC_DESCRIPTOR_NAME_RE.search(name):
+            return True, "generic descriptor headline (not a company name)"
+        ent_noise, ent_reason = entity_is_noise_headline(name, min_confidence=0.72)
+        if ent_noise:
+            return True, ent_reason
+        shape_ok, shape_reason = passes_headline_name_shape(name)
+        if not shape_ok:
+            return True, shape_reason
+        first_text = texts[0].lower() if texts else ""
+        if first_text.startswith("how to ") and name.lower() in first_text:
+            return True, "how-to article title stored as company name"
+        return False, ""
+
+    if not blob:
+        fail, reason = _headline_name_fail()
+        if fail:
+            return True, f"empty RSS scrape ({reason})"
+        return True, "empty RSS scrape (no corroborating signal text)"
+
+    if not predominantly_rss:
+        return False, ""
+
+    return _headline_name_fail()
+
 
 BUYER_OPERATIONS_HIRE_RE = re.compile(
     r"\b(?:vp|svp|evp|vice\s+president|director|head|chief|manager|lead)\s+"
@@ -1695,21 +1877,36 @@ def _buyer_opportunity_gate(
     from app.services.industry_inference import known_industry_for_company_name
 
     name = (company_name or "").strip()
-    if name and (
-        is_allowlisted_company_name(name) or known_industry_for_company_name(name)
-    ):
-        return True, ""
-
     sigs = list(signals or [])
+
     if not sigs:
+        if name and (
+            is_allowlisted_company_name(name) or known_industry_for_company_name(name)
+        ):
+            return True, ""
         return True, ""
 
     sig_types = [getattr(s, "signal_type", None) or "" for s in sigs]
     blob = _signal_text_blob(sigs)
 
+    if name and is_allowlisted_company_name(name):
+        return True, ""
+
+    known_ind = (known_industry_for_company_name(name) or "").lower() if name else ""
+    if known_ind in ("food service", "hospitality", "retail") and "expansion" in sig_types:
+        if (
+            not _FACILITY_CAPEX_EXPANSION_RE.search(blob)
+            and not BUYER_TEXT_EVIDENCE_RE.search(blob)
+            and not {t for t in sig_types if t in BUYER_DIRECT_SIGNAL_TYPES}
+        ):
+            if is_weak_retail_unit_expansion_story(blob, company_name=name) or not blob.strip():
+                return False, "retail/QSR store opening — not an automation buyer opportunity"
+
     direct_types = {t for t in sig_types if t in BUYER_DIRECT_SIGNAL_TYPES}
     has_direct_type = bool(direct_types)
     has_expansion_evidence = "expansion" in sig_types and bool(BUYER_EXPANSION_RE.search(blob))
+    if has_expansion_evidence and is_weak_retail_unit_expansion_story(blob, company_name=name):
+        has_expansion_evidence = False
     has_operations_hire = "strategic_hire" in sig_types and bool(BUYER_OPERATIONS_HIRE_RE.search(blob))
     has_text_evidence = bool(BUYER_TEXT_EVIDENCE_RE.search(blob))
 
@@ -1725,6 +1922,8 @@ def _buyer_opportunity_gate(
         return False, "seller/vendor or publisher story, not a buyer opportunity"
 
     if not has_buyer_intent:
+        if "expansion" in sig_types and is_weak_retail_unit_expansion_story(blob, company_name=name):
+            return False, "retail/QSR store opening — not an automation buyer opportunity"
         return False, "no buyer-intent signal found (labor, expansion, capex, RFP, deployment, or operations hiring)"
 
     return True, ""
@@ -1835,6 +2034,12 @@ def classify_lead(company, scores_or_one, signals) -> tuple[bool, str, PriorityR
     )
     if not ok_logic:
         return True, f"logic engine: {logic_reason}", PriorityResult("COLD", 0.0, [logic_reason])
+
+    rss_junk, rss_reason = _news_discovery_rss_headline_junk(company, signals)
+    if rss_junk:
+        return True, f"RSS scrape noise: {rss_reason}", PriorityResult(
+            "COLD", 0.0, [rss_reason]
+        )
 
     ok_buyer, buyer_reason = _buyer_opportunity_gate(signals, company_name=name or "")
     if not ok_buyer:
