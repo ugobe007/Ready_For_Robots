@@ -63,7 +63,30 @@ PUBLIC_READ_ALLOWLIST_SUBSTRINGS = (
 )
 
 
-def _fetch_probe(url: str, *, timeout: float = 15.0) -> dict[str, Any]:
+def _fetch_probe(url: str, *, timeout: float = 15.0, retries: int = 1) -> dict[str, Any]:
+    # Retry once on transient failures (timeout / 5xx). The single shared-CPU web
+    # machine can briefly saturate during the daily heavy jobs; one blip should not
+    # raise a P0 fundability alert when the endpoint is actually healthy on retry.
+    attempt = 0
+    last: dict[str, Any] = {}
+    while attempt <= max(retries, 0):
+        last = _fetch_probe_once(url, timeout=timeout)
+        if last.get("ok"):
+            if attempt:
+                last["recovered_after_retry"] = attempt
+            return last
+        transient = "HTTP 5" in str(last.get("error") or "") or "timed out" in str(
+            last.get("error") or ""
+        ).lower() or "timeout" in str(last.get("error") or "").lower()
+        if not transient:
+            return last
+        attempt += 1
+        if attempt <= max(retries, 0):
+            time.sleep(2.0)
+    return last
+
+
+def _fetch_probe_once(url: str, *, timeout: float = 15.0) -> dict[str, Any]:
     t0 = time.perf_counter()
     try:
         import httpx
