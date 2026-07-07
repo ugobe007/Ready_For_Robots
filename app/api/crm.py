@@ -368,16 +368,15 @@ def _draft_subject(acct: CrmAccount) -> str:
             return f"healthcare operator — automation interest"
         return f"buyer lead for {name}"
 
-    # Buyer = company seeking automation — subject hooks curiosity, not a sales pitch
+    # Buyer = company seeking automation — value-first subject, matches the shortlist CTA
     if industry in ("hospitality", "hotels", "casinos & gaming"):
-        return f"robot companies for {name}?"
-    if industry in ("logistics", "warehousing"):
-        return f"quick question about {name}'s ops"
-    if industry in ("healthcare", "medical technology"):
-        return f"robotics vendors for {name} — worth 10 minutes?"
+        return f"{name}: robots worth a pilot (and which to skip)"
     if industry in ("food service", "food processing & manufacturing"):
-        return f"labor question for {name}"
-    return f"automation vendors we matched to {name}"
+        return f"{name}: the automation math"
+    if industry in ("healthcare", "medical technology"):
+        return f"robotics that actually fit {name}"
+    # Logistics, warehousing, and everything else land on the shortlist framing.
+    return f"a robotics shortlist for {name}"
 
 
 def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:

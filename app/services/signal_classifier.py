@@ -104,30 +104,46 @@ def text_indicates_executive_appointment(text: str) -> bool:
 def reconcile_signal_types_for_text(text: str, types: List[str]) -> List[str]:
     """
     Drop weak ``expansion`` / ``scale_expansion`` when the article is clearly an exec appointment
-    without facility/capex anchors. Ensures ``strategic_hire`` is present for that shape.
+    or a retail/QSR single-store opening without facility/capex anchors.
 
     Call after ontology + rules + keyword merges (and after scraper keyword passes).
     """
     if not types:
         return types
+    from app.services.lead_filter import is_weak_retail_unit_expansion_story
+
     exec_appt = text_indicates_executive_appointment(text)
+    weak_retail = is_weak_retail_unit_expansion_story(text or "")
     strong_x = _STRONG_EXPANSION_CONTEXT.search(text or "") is not None
-    if not exec_appt:
+    if not exec_appt and not weak_retail:
         return types
 
     filtered: List[str] = []
     for x in types:
         if x in ("expansion", "scale_expansion") and not strong_x:
-            continue
+            if exec_appt or weak_retail:
+                continue
         filtered.append(x)
 
-    if "strategic_hire" not in filtered:
-        filtered.insert(0, "strategic_hire")
-    else:
-        filtered = ["strategic_hire"] + [x for x in filtered if x != "strategic_hire"]
+    if exec_appt:
+        if "strategic_hire" not in filtered:
+            filtered.insert(0, "strategic_hire")
+        else:
+            filtered = ["strategic_hire"] + [x for x in filtered if x != "strategic_hire"]
+
+    if weak_retail and not filtered:
+        return ["news"]
+    if weak_retail and "news" not in filtered and not any(
+        t in filtered
+        for t in (
+            "labor_shortage", "labor_pain", "capex", "robot_installation", "vendor_selection",
+            "rfp_posted", "warehouse_throughput", "strategic_hire",
+        )
+    ):
+        filtered.append("news")
 
     if not filtered:
-        return ["strategic_hire"]
+        return ["strategic_hire"] if exec_appt else ["news"]
     return filtered
 
 

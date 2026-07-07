@@ -123,9 +123,9 @@ EXPANSION_QUERIES = [
     "new hotel opens 2025 2026 grand opening ribbon cutting",
     "hotel renovation capital investment million upgrade 2026",
     "resort expansion new tower rooms construction 2026",
-    # New restaurant / food service locations
-    "restaurant chain opens new locations 2026 expansion",
-    "fast food QSR new unit growth 2026 sites",
+    # Food service automation (not store-opening / unit growth)
+    "restaurant kitchen automation robot deployment 2026",
+    "QSR food prep automation labor shortage investment 2026",
     # Hospital / healthcare new builds
     "new hospital campus opens construction 2026",
     "hospital expansion million new building wing",

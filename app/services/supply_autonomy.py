@@ -242,7 +242,8 @@ def _send_supply_email(
         _supply_reply_address,
         _uuid_for_session,
     )
-    from app.services.resend_email import ResendEmailError, send_email_via_resend
+    from app.services.cal_email_send import send_cal_email_via_resend
+    from app.services.resend_email import ResendEmailError
 
     subject, body = _prepare_supply_pipeline_copy(company, subject, body)
     if dry_run:
@@ -252,13 +253,14 @@ def _send_supply_email(
     reply_to = _supply_reply_address(reply_token)
     inbound_missing = False
     try:
-        send_result = send_email_via_resend(
+        send_result = send_cal_email_via_resend(
             to_email=to_emails,
             subject=subject,
             body_text=body,
             from_display_name="Cal",
             reply_to=reply_to,
             idempotency_key=f"supply-auto/{company.id}/{'-'.join(to_emails)[:120]}",
+            include_demo=True,
         )
     except ResendEmailError as exc:
         err_text = str(exc).lower()
@@ -275,13 +277,14 @@ def _send_supply_email(
             )
         ):
             inbound_missing = True
-            send_result = send_email_via_resend(
+            send_result = send_cal_email_via_resend(
                 to_email=to_emails,
                 subject=subject,
                 body_text=body,
                 from_display_name="Cal",
                 reply_to=None,
                 idempotency_key=f"supply-auto/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
+                include_demo=True,
             )
         else:
             raise

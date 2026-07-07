@@ -207,21 +207,11 @@ class ScoutLeadBrief:
 
 
 def _cal_draft_for_company(company: Company) -> tuple[str, str]:
-    from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+    from app.api.admin_extended import _cal_draft_for_company as build_cal_draft
+    from app.services.cal_autonomy import format_cal_draft_storage
 
-    if is_stagegate_company(company):
-        draft = cal_draft_for_stagegate_company(company)
-        return draft["subject"], draft["body"]
-
-    from app.api.crm import _draft_body, _draft_subject
-    from app.models.crm import CrmAccount as _Acct
-
-    dummy = _Acct(
-        name=company.name or "Unknown",
-        website=company.website,
-        industry=company.industry,
-    )
-    return _draft_subject(dummy), _draft_body(dummy, None, [], "", "selective", None)
+    subject, body = build_cal_draft(company, fresh=False)
+    return subject, format_cal_draft_storage(subject, body)
 
 
 def _load_company(db: Session, company_id: int) -> Optional[Company]:

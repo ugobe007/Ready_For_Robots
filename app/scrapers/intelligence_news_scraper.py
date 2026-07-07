@@ -158,7 +158,7 @@ DISCOVERY_QUERIES = [
 
     # Food Service
     "restaurant automation kitchen robot deployment 2026",
-    "restaurant chain expansion new locations 2026",
+    "restaurant chain kitchen automation labor shortage 2026",
     "QSR labor shortage staffing turnover 2026",
     "fast food automation investment technology 2026",
     "restaurant delivery robot pilot program 2026",
@@ -202,7 +202,7 @@ DISCOVERY_QUERIES = [
     "logistics company acquisition merger warehouse 2026",
     "hospitality hotel funding round investment 2026",
     "warehouse automation startup series A B C 2026",
-    "restaurant chain private equity acquisition 2026",
+    "restaurant food automation private equity investment 2026",
     "healthcare technology funding round investment",
     
     # ═══════════════════════════════════════════════════════════════════════

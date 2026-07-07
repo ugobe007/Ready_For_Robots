@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.models.crm import CrmAccount
 from app.models.company import Company
 from app.models.outreach import OutreachMessage
-from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.resend_email import ResendEmailError
+from app.services.cal_email_send import send_cal_email_via_resend
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,7 @@ def send_cal_intro_email(
     sender_user_id=None,
     idempotency_key: str,
     send_identity: str = "cal",
+    include_demo: bool = True,
 ) -> OutreachMessage:
     """Send intro email with reply routing and persist OutreachMessage for inbound webhook."""
     reply_token = secrets.token_urlsafe(18)
@@ -75,7 +77,7 @@ def send_cal_intro_email(
     inbound_missing = False
 
     try:
-        send_result = send_email_via_resend(
+        send_result = send_cal_email_via_resend(
             to_email=to_email,
             subject=subject,
             body_text=body_text,
@@ -83,12 +85,13 @@ def send_cal_intro_email(
             reply_to=reply_to,
             cc=cc,
             idempotency_key=idempotency_key,
+            include_demo=include_demo,
         )
     except ResendEmailError as exc:
         err_text = str(exc).lower()
         if any(kw in err_text for kw in ("notification service", "notification_service", "inbound", "not set", "not configured")):
             inbound_missing = True
-            send_result = send_email_via_resend(
+            send_result = send_cal_email_via_resend(
                 to_email=to_email,
                 subject=subject,
                 body_text=body_text,
@@ -96,6 +99,7 @@ def send_cal_intro_email(
                 reply_to=None,
                 cc=cc,
                 idempotency_key=f"{idempotency_key}/no-inbound",
+                include_demo=include_demo,
             )
         else:
             raise
@@ -116,7 +120,7 @@ def send_cal_intro_email(
         resend_id=send_result.get("resend_id"),
         status="sent",
         sent_at=now,
-        payload={"channel": "cal_buyer", "inbound_routing": not inbound_missing},
+        payload={"channel": "cal_buyer", "inbound_routing": not inbound_missing, "email_demo": include_demo},
     )
     db.add(msg)
     acct.outreach_sent_at = now

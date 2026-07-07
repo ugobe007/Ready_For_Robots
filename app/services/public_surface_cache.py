@@ -99,11 +99,17 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
         _compute_pipeline_summary,
         _current_rotation_slot,
         _summary_for_homepage,
+        build_industry_search_leads_list,
         build_public_leads_list,
         build_public_pipeline_feed,
         hydrate_pipeline_feed_cache,
     )
-    from app.services.content_surfaces import KEY_PIPELINE_FEED
+    from app.services.content_surfaces import (
+        KEY_CAL_LEAD_DROPS,
+        KEY_PIPELINE_FEED,
+        INDUSTRY_SEARCH_CACHE_QUERIES,
+    )
+    from app.services.cal_lead_drops import build_cal_lead_drops_preview
 
     from app.services.homepage_rotation import homepage_rotation_day, homepage_rotation_slot
 
@@ -131,6 +137,17 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
         leads = build_public_leads_list(db, limit=limit, tier=tier)
         write_public_cache(db, key, leads)
         stats[f"leads_{limit}_{tier or 'all'}"] = len(leads)
+
+    for search_q in INDUSTRY_SEARCH_CACHE_QUERIES:
+        from app.api.leads import _industry_search_cache_key
+
+        search_leads = build_industry_search_leads_list(db, search_q, limit=50)
+        write_public_cache(db, _industry_search_cache_key(search_q), search_leads)
+        stats[f"leads_search_{search_q.replace(' ', '_')}"] = len(search_leads)
+
+    cal_drops = build_cal_lead_drops_preview(db, limit=3)
+    write_public_cache(db, KEY_CAL_LEAD_DROPS, cal_drops)
+    stats["cal_lead_drops"] = cal_drops.get("count", 0)
 
     pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)
     pipeline_feed = {

@@ -350,20 +350,26 @@ async def cron_run_data_quality(
 async def run_intelligence_scraper(
     background_tasks: BackgroundTasks,
     articles_per_query: int = 15,
+    max_queries: int = 20,
+    enrich: bool = True,
 ) -> Dict[str, Any]:
     """
-    Run the intelligence news scraper (discovers new leads from news).
-    Runs in the background so the request returns immediately.
-    No Redis/Celery required - writes directly to the app database.
+    Run the intelligence news scraper (discovers new buyer leads from news).
+    Bounded default: 20 queries (~15 min) to avoid long-lived DB connections.
     """
     def _task():
-        _run_intelligence_scraper_sync(articles_per_query=articles_per_query)
+        _run_intelligence_scraper_sync(
+            articles_per_query=articles_per_query,
+            max_queries=max_queries,
+            enrich=enrich,
+        )
 
     background_tasks.add_task(_task)
     return {
         "status": "intelligence_scraper_started",
-        "message": "Intelligence scraper running in background (discovers new leads from 183 news queries). Check /api/leads/summary in 10–20 min.",
+        "message": f"Buyer intelligence scraper running ({max_queries} queries). Check /api/leads/summary in ~15 min.",
         "articles_per_query": articles_per_query,
+        "max_queries": max_queries,
         "check_leads": "/api/leads/summary",
     }
 
@@ -424,28 +430,19 @@ async def run_all_scrapers(
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     """
-    Manually trigger all scrapers to run immediately.
+    Manually trigger buyer scrapers (no OEM / StageGate vendor sync).
     ALWAYS runs intelligence scraper in-process (no Redis needed) — guarantees new leads.
     Also queues Celery tasks for job boards, news, RSS, company→news, enrich, etc.
+
+    For OEM/XBOT discovery use POST /api/scraper/run-oem instead.
     """
-    # 1. ALWAYS run intelligence scraper in-process — quick mode (20 queries, ~3 min)
+    # 1. ALWAYS run intelligence scraper in-process — quick mode (20 queries, ~15 min)
     background_tasks.add_task(
         _run_intelligence_scraper_sync,
         articles_per_query=15,
         max_queries=20,
         enrich=True,
     )
-
-    def _run_oem_sync():
-        from app.database import SessionLocal
-        from app.services.oem_discovery import run_oem_discovery
-        db = SessionLocal()
-        try:
-            run_oem_discovery(db, max_queries=20)
-        finally:
-            db.close()
-
-    background_tasks.add_task(_run_oem_sync)
 
     # 2. Queue Celery tasks (job boards, news, RSS, company→news, enrich, etc.)
     tasks = {}
@@ -501,11 +498,16 @@ async def run_specific_scraper(
     For 'intelligence' runs in-process (no Redis). Others queue to Celery.
     """
     if scraper_type == "intelligence":
-        background_tasks.add_task(_run_intelligence_scraper_sync, 15)
+        background_tasks.add_task(
+            _run_intelligence_scraper_sync,
+            articles_per_query=15,
+            max_queries=20,
+            enrich=True,
+        )
         return {
             "status": "scraper_started",
             "scraper_type": "intelligence",
-            "message": "Intelligence scraper running in background. Check /api/leads/summary in 10–20 min.",
+            "message": "Buyer intelligence scraper running (20 queries, ~15 min). Check /api/leads/summary.",
             "check_leads": "/api/leads/summary",
         }
     try:
@@ -587,7 +589,8 @@ async def get_daily_stats(days: int = 7, db: Session = Depends(get_db)) -> Dict[
     total_companies = db.query(func.count(Company.id)).scalar()
     total_signals = db.query(func.count(Signal.id)).scalar()
     companies_last_24h = db.query(func.count(Company.id)).filter(
-        Company.created_at >= datetime.utcnow() - timedelta(hours=24)
+        Company.created_at >= datetime.utcnow() - timedelta(hours=24),
+        Company.source != "stagegate_oem",
     ).scalar()
     signals_last_24h = db.query(func.count(Signal.id)).filter(
         Signal.created_at >= datetime.utcnow() - timedelta(hours=24)
@@ -621,9 +624,10 @@ async def get_scraper_status(db: Session = Depends(get_db)) -> Dict[str, Any]:
     watchdog.reload_from_disk()
     health = watchdog.status()
     
-    # Calculate daily rate
+    # Buyer leads only — exclude StageGate OEM vendor sync rows
     companies_last_24h = db.query(func.count(Company.id)).filter(
-        Company.created_at >= datetime.utcnow() - timedelta(hours=24)
+        Company.created_at >= datetime.utcnow() - timedelta(hours=24),
+        Company.source != "stagegate_oem",
     ).scalar()
     
     return {

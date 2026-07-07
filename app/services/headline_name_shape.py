@@ -99,7 +99,18 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
         return False, "empty name"
 
     name = str(name).strip()
-    name_lower = name.lower()
+    name_lower = name.lower().translate(
+        str.maketrans(
+            {
+                "\u2018": "'",
+                "\u2019": "'",
+                "\u201c": '"',
+                "\u201d": '"',
+                "\u00ab": '"',
+                "\u00bb": '"',
+            }
+        )
+    )
     words = name_lower.split()
 
     if len(name) < 3 or len(name) > 55:
@@ -107,6 +118,15 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
 
     if "?" in name:
         return False, "contains question mark (headline)"
+
+    if "|" in name:
+        return False, "pipe-delimited RSS metadata (not a company name)"
+
+    if re.match(r"(?i)^see\s+photos?\s+of\b", name_lower):
+        return False, "editorial photo-gallery headline (not a company name)"
+
+    if re.search(r"(?i)\b(hospital|resort|clinic|facility|airport|campus)['']s$", name_lower):
+        return False, "facility possessive headline fragment"
     if re.search(r"\.{3,}", name) or "..." in name:
         return False, "truncated headline ellipsis"
     if re.match(r"(?i)^inside\s+", name_lower):
@@ -124,7 +144,10 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
     if _LEADING_ADVERBS.match(name_lower):
         return False, "starts with adverb (sentence fragment)"
 
-    if re.search(r"'s?\s+\w+", name) and not re.search(
+    if re.match(r"(?i)^['\"].+['\"]\s+company$", name_lower):
+        return False, "quoted headline fragment with Company suffix"
+
+    if re.search(r"'s?\s+\w+", name_lower) and not re.search(
         r"(?i)'s?\s+(group|corp|inc|ltd|co\.?|holdings?|ventures?|partners?|labs?|"
         r"technologies|solutions|services|systems)$",
         name_lower,
@@ -183,6 +206,21 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
 
     if re.match(r"^(here\s+(are|is)|there\s+(are|is))\s+", name_lower):
         return False, "list headline opener"
+
+    if re.match(r"(?i)^a\s+(?:\d|'?\d{2,4}s?-era)\b", name_lower):
+        return False, "indefinite-article headline (A 1920s-Era …)"
+
+    if re.match(
+        r"(?i)^(how\s+to|lower|raising|reducing|improving|cutting)\s+",
+        name_lower,
+    ):
+        return False, "how-to / advice headline (not a company name)"
+
+    if re.match(
+        r"(?i)^(efficient|effective|scalable|flexible|automated|smart|digital|intelligent)\s+\w+$",
+        name_lower,
+    ) and len(words) <= 3:
+        return False, "generic descriptor headline (not a company name)"
 
     if re.match(
         r"^(the\s+)?(future|state|rise|fall|history|evolution|dawn|end|era|age)\s+of\s+",

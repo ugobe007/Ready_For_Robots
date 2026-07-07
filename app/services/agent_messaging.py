@@ -5,7 +5,7 @@ from __future__ import annotations
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-CAL_INTRO = "Hi — Cal from Ready For Robots."
+CAL_INTRO = "Hi, it's Cal at Ready For Robots."
 
 CAL_VENDOR_IDENTITY = (
     "I've spent years inside robot deployments — Anybots, Omron, Panasonic, Mitsubishi, Locus Robotics — "
@@ -17,9 +17,28 @@ CAL_VENDOR_SHERPA_LINE = (
     "honest readouts, no theater."
 )
 
+# Value-first: lead with the outcome the buyer gets, not how we watch them.
 BUYER_SIGNAL_EXPLANATION = (
-    "We track live buying signals and customer pilot opportunities by key variables in — "
-    "labor pressure, expansion, CapEx — and rank accounts that are actually moving, not just browsing."
+    "I match ops teams with the two or three robotics vendors actually worth a pilot — "
+    "and tell you which ones to skip. No brochures, no innovation theater, no 90-day PoC that "
+    "quietly dies."
+)
+
+# Concrete ROI / proof so the buyer sees a reason to care, not just a pitch.
+BUYER_ROI_PROOF = (
+    "The teams that get this right see payback in roughly 12–18 months — and it's almost never the "
+    "flashiest robot. It's matching the right cell to the one bottleneck that's actually costing you. "
+    "I've watched enough pilots stall to know where the money hides."
+)
+
+BUYER_OUTREACH_CTA = (
+    "Want the shortlist? Reply \"send it\" and I'll send three vendors who've deployed in setups like "
+    "yours — plus the one I'd personally avoid. Five-minute read, no call required."
+)
+
+# Optional closing beat — confident, a little dry. Used when humor is allowed.
+BUYER_CAL_PERSONALITY = (
+    "Fair warning: I'm annoyingly picky about fit. It's cheaper than a failed deployment."
 )
 
 VENDOR_SIGNAL_EXPLANATION = (
@@ -58,6 +77,38 @@ REP_OUTREACH_CTA = "Worth a quick reply if you're the right person to explore th
 
 def rep_outreach_signature() -> str:
     return "Best,\n[Your name]"
+
+
+def buyer_company_hook(name: str, *, industry: str = "your industry") -> str:
+    """One specific, relatable line: the bottleneck teams like theirs actually hit."""
+    n = (name or "your team").strip()
+    ind = (industry or "your industry").strip().lower()
+    if ind in ("logistics", "warehousing"):
+        return (
+            f"Warehouses like {n} tend to hit the same wall: labor's tight, volume isn't, and the "
+            f"AMRs that crush a carpet demo fall apart in real aisles. The ones that actually hold up "
+            f"are a short list — and I keep it."
+        )
+    if ind in ("hospitality", "hotels", "casinos & gaming"):
+        return (
+            f"For a property like {n}, the math is usually overnight coverage and turnover — the point "
+            f"where service and cleaning automation starts paying for itself instead of sitting in a lobby "
+            f"as a gimmick."
+        )
+    if ind in ("healthcare", "medical technology"):
+        return (
+            f"Teams like {n} usually reach for robots when clinical ops scale faster than headcount — "
+            f"internal logistics and AMRs first, because that's where the hours quietly disappear."
+        )
+    if ind in ("food service", "food processing & manufacturing"):
+        return (
+            f"In food ops like {n}, it's throughput and back-of-house strain that make the case — a "
+            f"targeted cell on the real bottleneck, not a catalog of robots you'll never run."
+        )
+    return (
+        f"Teams in {industry.strip()} like {n} usually get to robots the same way: one bottleneck gets "
+        f"expensive enough that a targeted pilot beats hiring against it."
+    )
 
 
 def cal_signature() -> str:

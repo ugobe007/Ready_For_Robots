@@ -142,6 +142,11 @@ def connection_status(db: Session) -> dict[str, Any]:
         "organization_id": org,
         "organization_urn": organization_urn(),
         "organization_url": f"https://www.linkedin.com/company/{org}/admin/dashboard/",
+        "organization_page_status": (
+            "active"
+            if mode == "organization"
+            else "pending_linkedin_support — Community Management API under review; use member mode meanwhile"
+        ),
         "redirect_uri": redirect_uri(),
         "scopes": oauth_scopes(),
         "products_required": {

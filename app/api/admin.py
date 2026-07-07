@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, or_
 from pydantic import BaseModel
 from typing import Any, Callable, List, Optional
+import os
 import time
 
 from app.database import get_db
@@ -269,20 +270,6 @@ def daily_brief(db: Session = Depends(get_db)):
         .filter(CrmAccount.outreach_draft.isnot(None), CrmAccount.outreach_sent_at.is_(None))
         .scalar() or 0
     )
-    cal_needs_approval = 0
-    if (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"):
-        cal_needs_approval = (
-            db.query(func.count(CrmAccount.id))
-            .filter(
-                CrmAccount.outreach_draft.isnot(None),
-                CrmAccount.outreach_sent_at.is_(None),
-                or_(
-                    CrmAccount.outreach_stage.is_(None),
-                    ~CrmAccount.outreach_stage.in_(("draft_approved", "approved")),
-                ),
-            )
-            .scalar() or 0
-        )
     sendable = (
         db.query(func.count(CrmAccount.id))
         .filter(
@@ -298,6 +285,47 @@ def daily_brief(db: Session = Depends(get_db)):
         )
         .scalar() or 0
     )
+    cal_needs_approval = 0
+    if (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"):
+        cal_needs_approval = (
+            db.query(func.count(CrmAccount.id))
+            .filter(
+                CrmAccount.outreach_draft.isnot(None),
+                CrmAccount.outreach_sent_at.is_(None),
+                or_(
+                    CrmAccount.outreach_stage.is_(None),
+                    ~CrmAccount.outreach_stage.in_(("draft_approved", "approved")),
+                ),
+            )
+            .scalar() or 0
+        )
+
+    cal_queue: dict[str, Any] = {}
+    try:
+        from app.services.cal_autonomy import get_cal_review_email, resolve_cal_admin_context
+        from app.api.admin_extended import _build_cal_draft_status_payload
+
+        ctx = resolve_cal_admin_context(db)
+        if ctx:
+            admin_uid, _team = ctx
+            cal_payload = _build_cal_draft_status_payload(
+                db,
+                admin_uid=admin_uid,
+                admin_email=get_cal_review_email() or "",
+                include_draft_bodies=False,
+                include_prospects=False,
+                prospect_limit=1,
+                fast_summary=True,
+            )
+            cal_queue = cal_payload.get("summary") or {}
+    except Exception:
+        cal_queue = {}
+
+    if cal_queue:
+        unsent_drafted = int(cal_queue.get("unsent_drafted") or 0)
+        sendable = int(cal_queue.get("sendable") or 0)
+        cal_needs_approval = int(cal_queue.get("needs_approval") or 0)
+
     drafts_created_today = (
         db.query(func.count(CrmAccount.id))
         .filter(CrmAccount.outreach_draft.isnot(None), CrmAccount.updated_at >= day_start)
@@ -344,7 +372,10 @@ def daily_brief(db: Session = Depends(get_db)):
         .filter(CrmAccount.outreach_stage == "replied")
         .scalar() or 0
     )
+    cal_queue_pending = int(cal_queue.get("pending_draft") or 0) if cal_queue else 0
     add_step("Cal autopilot — ready to send", sendable, "/admin#cal-outreach", "high")
+    if cal_queue_pending:
+        add_step("Cal leads need drafting", cal_queue_pending, "/admin#cal-outreach", "high")
     if cal_needs_approval:
         add_step("Cal drafts need approval", cal_needs_approval, "/admin#cal-outreach", "high")
     add_step("Review Cal replies & follow-up", replied_count or emails_sent_total, "/sales-workflow", "high")
@@ -372,6 +403,9 @@ def daily_brief(db: Session = Depends(get_db)):
             "scout_drafted": scout_drafted,
             "needs_approval": needs_approval,
             "research_pending": research_pending,
+            "cal_queue_total": int(cal_queue.get("total") or 0) if cal_queue else None,
+            "cal_queue_pending": int(cal_queue.get("pending_draft") or 0) if cal_queue else None,
+            "cal_queue_scope": "HOT/WARM" if cal_queue else None,
         },
         "next_steps": next_steps,
     }

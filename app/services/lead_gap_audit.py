@@ -152,7 +152,9 @@ def audit_company_gaps(
         or timing.get("top_window")
         or meta.get("project_timing")
     )
-    has_automation_reqs = bool(meta.get("automation_requirements"))
+    has_automation_reqs = bool(
+        meta.get("automation_requirements") or meta.get("inferred_robot_fit")
+    )
     if not (has_budget or has_timing or has_automation_reqs):
         gaps.append("crm_descriptors")
 

@@ -481,25 +481,55 @@ def _industry_search_sql_filter(query: str):
     return or_(*clauses)
 
 
+def _industry_search_cache_key(query: str) -> str:
+    from app.services.content_surfaces import KEY_LEADS_SEARCH_PREFIX, KEY_LEADS_SEARCH_VERSION
+    from app.services.industry_search_lexicon import normalize_search_query
+
+    slug = (normalize_search_query(query) or "").strip().replace(" ", "_")
+    return f"{KEY_LEADS_SEARCH_PREFIX}{slug}:{KEY_LEADS_SEARCH_VERSION}"
+
+
 def _lead_rows_query_industry_search(db: Session, query: str, limit: int):
     """
     Companies matching a vertical search via SQL — not limited to global top-N by score.
+    Prefers industry/name filters; skips expensive signal-text EXISTS when ontology resolves.
     """
     lim = max(50, min(int(limit), LEADS_INDUSTRY_SEARCH_POOL_CAP))
-    sql_filter = _industry_search_sql_filter(query)
-    signal_terms = [
-        t for t in sql_signal_terms_for_query(query) if len((t or "").strip()) >= 4
-    ]
+    canonical = canonical_industries_for_query(query)
+    clauses = []
+    seen: set[str] = set()
+    for c in canonical:
+        key = (c or "").strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Company.industry.ilike(f"%{c}%"))
+    for term in expand_search_terms(query):
+        t = (term or "").strip()
+        if len(t) < 4:
+            continue
+        key = t.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Company.name.ilike(f"%{t}%"))
 
-    match_filter = sql_filter
-    if signal_terms:
-        sig_ors = [Signal.signal_text.ilike(f"%{t}%") for t in signal_terms]
-        sig_exists = (
-            exists()
-            .where(and_(Signal.company_id == Company.id, or_(*sig_ors)))
-            .correlate(Company)
-        )
-        match_filter = or_(sql_filter, sig_exists) if sql_filter is not None else sig_exists
+    match_filter = or_(*clauses) if clauses else None
+    if match_filter is None:
+        sql_filter = _industry_search_sql_filter(query)
+        signal_terms = [
+            t for t in sql_signal_terms_for_query(query) if len((t or "").strip()) >= 4
+        ]
+        if signal_terms:
+            sig_ors = [Signal.signal_text.ilike(f"%{t}%") for t in signal_terms]
+            sig_exists = (
+                exists()
+                .where(and_(Signal.company_id == Company.id, or_(*sig_ors)))
+                .correlate(Company)
+            )
+            match_filter = or_(sql_filter, sig_exists) if sql_filter is not None else sig_exists
+        else:
+            match_filter = sql_filter
     if match_filter is None:
         return db.query(Company.id).filter(Company.id == -1)
 
@@ -1257,11 +1287,29 @@ def _public_leads_durable_key(
     rotation_slot: Optional[int],
 ) -> Optional[str]:
     """Map standard public pipeline queries to pre-built durable cache keys."""
-    from app.services.public_surface_cache import (
+    from app.services.content_surfaces import (
+        INDUSTRY_SEARCH_CACHE_QUERIES,
         KEY_LEADS_18,
         KEY_LEADS_50,
         KEY_LEADS_HOT_12,
     )
+    from app.services.industry_search_lexicon import normalize_search_query
+
+    if (
+        min_score == 0.0
+        and max_score == 100.0
+        and signal_type is None
+        and exclude_junk is True
+        and sort == "score"
+        and rotation_slot is None
+        and tier is None
+        and industry
+        and 1 <= limit <= 50
+    ):
+        norm = normalize_search_query(industry)
+        cached_queries = {normalize_search_query(q) for q in INDUSTRY_SEARCH_CACHE_QUERIES}
+        if norm in cached_queries:
+            return _industry_search_cache_key(industry)
 
     if (
         min_score == 0.0
@@ -1349,6 +1397,113 @@ def build_public_leads_list(
     staged = _rotate_staged_leads(staged, limit)
     return [
         _fmt_company(c, junk, junk_reason, pri, llm_homepage_url=None, fast_signals=True)
+        for c, junk, junk_reason, pri in staged
+    ]
+
+
+def build_industry_search_leads_list(
+    db: Session,
+    query: str,
+    *,
+    limit: int = 50,
+    exclude_junk: bool = True,
+    sort: str = "score",
+) -> list:
+    """Pre-build vertical search results (restaurant, hospitality, …) for durable cache."""
+    from types import SimpleNamespace
+
+    candidate_limit = min(
+        LEADS_INDUSTRY_SEARCH_POOL_CAP,
+        max(limit * 5, 80),
+    )
+    rows = _lead_rows_query_industry_search(db, query, candidate_limit).all()
+
+    results = []
+    for row in rows:
+        if not _row_matches_industry_search(row, query):
+            continue
+        junk, junk_reason = _row_is_junk(row.name)
+        if junk and exclude_junk:
+            continue
+        pri = _row_priority(row)
+        results.append(
+            {
+                "id": row.id,
+                "company_name": row.name,
+                "priority_tier": pri.tier,
+                "priority_score": round(pri.score, 1),
+                "priority_reasons": pri.reasons,
+                "is_junk": junk,
+                "junk_reason": junk_reason,
+                "signal_count": int(row.signal_count or 0),
+            }
+        )
+
+    if sort == "name":
+        results.sort(key=lambda x: (x["company_name"] or "").lower())
+    elif sort == "signals":
+        results.sort(key=lambda x: x["signal_count"], reverse=True)
+    else:
+        results.sort(key=lambda x: x["priority_score"], reverse=True)
+
+    results = results[: min(120, max(limit * 3, 60))]
+    if not results:
+        return []
+
+    ids = [r["id"] for r in results]
+    companies = (
+        db.query(Company)
+        .options(joinedload(Company.scores), joinedload(Company.signals))
+        .filter(Company.id.in_(ids))
+        .all()
+    )
+    company_map = {c.id: c for c in companies}
+
+    staged = []
+    for r in results:
+        c = company_map.get(r["id"])
+        if not c:
+            continue
+        junk = bool(r.get("is_junk"))
+        junk_reason = r.get("junk_reason") or ""
+        if junk and exclude_junk:
+            continue
+        if not _company_matches_industry_filter(c, query):
+            continue
+        pri = SimpleNamespace(
+            tier=r.get("priority_tier") or "COLD",
+            score=float(r.get("priority_score") or 0),
+            reasons=r.get("priority_reasons") or [],
+        )
+        staged.append((c, junk, junk_reason, pri))
+
+    staged = dedupe_staged_lead_tuples(staged)
+    food_query = (query or "").strip().lower()
+    if food_query in (
+        "restaurant", "restaurants", "qsr", "fast food", "fast casual",
+        "dining", "foodservice", "food service", "food robot",
+    ):
+
+        def _restaurant_rank(company: Company) -> int:
+            ind = (
+                effective_industry_for_lead(company.name, company.industry, company.signals)
+                or ""
+            ).lower()
+            if "food service" in ind or "food & beverage" in ind:
+                return 0
+            if "hospitality" in ind:
+                return 1
+            return 2
+
+        staged.sort(
+            key=lambda t: (
+                _restaurant_rank(t[0]),
+                -float(getattr(t[3], "score", 0) or 0),
+            )
+        )
+    staged = staged[:limit]
+    return [
+        _fmt_pipeline_card(c, junk, junk_reason, pri, fast=True)
         for c, junk, junk_reason, pri in staged
     ]
 
@@ -1728,25 +1883,28 @@ def get_leads(
                 KEY_LEADS_18,
                 KEY_LEADS_50,
                 KEY_LEADS_HOT_12,
+                KEY_LEADS_SEARCH_PREFIX,
             )
             from app.services.public_surface_cache import read_public_caches_many
 
-            alt_keys = [
-                k
-                for k in (
-                    *_LEADS_LIST_LEGACY_KEYS,
-                    KEY_LEADS_HOT_12,
-                    KEY_LEADS_18,
-                    KEY_LEADS_50,
-                )
-                if k != public_key
-            ]
-            blobs = read_public_caches_many(alt_keys, stale_ok=True)
-            for alt_key in alt_keys:
-                alt = blobs.get(alt_key)
-                if isinstance(alt, list) and len(alt) > 0:
-                    public_data = alt[:limit]
-                    break
+            is_industry_search_key = public_key.startswith(KEY_LEADS_SEARCH_PREFIX)
+            if not is_industry_search_key:
+                alt_keys = [
+                    k
+                    for k in (
+                        *_LEADS_LIST_LEGACY_KEYS,
+                        KEY_LEADS_HOT_12,
+                        KEY_LEADS_18,
+                        KEY_LEADS_50,
+                    )
+                    if k != public_key
+                ]
+                blobs = read_public_caches_many(alt_keys, stale_ok=True)
+                for alt_key in alt_keys:
+                    alt = blobs.get(alt_key)
+                    if isinstance(alt, list) and len(alt) > 0:
+                        public_data = alt[:limit]
+                        break
         if public_data is not None and len(public_data) > 0:
             sliced = public_data[:limit] if len(public_data) > limit else public_data
             _LEADS_LIST_CACHE[_cache_key] = (time.monotonic(), sliced)
@@ -1778,7 +1936,7 @@ def get_leads(
             if industry_filter:
                 candidate_limit = min(
                     LEADS_INDUSTRY_SEARCH_POOL_CAP,
-                    max(limit * 8, 80),
+                    max(limit * 5, 80),
                 )
                 rows = _lead_rows_query_industry_search(
                     live_db, industry_filter, candidate_limit
@@ -1834,7 +1992,11 @@ def get_leads(
             else:
                 results.sort(key=lambda x: x["priority_score"], reverse=True)
 
-            pre_limit = limit if industry_filter else min(250, max(limit * 5, 80))
+            pre_limit = (
+                min(120, max(limit * 3, 60))
+                if industry_filter
+                else min(250, max(limit * 5, 80))
+            )
             results = results[:pre_limit]
 
             if not results:
@@ -1963,6 +2125,53 @@ def _lead_snapshot_version(db: Session, company_id: int) -> Optional[str]:
     return "|".join(
         str(v) for v in (row.u, row.cr, row.n_sig, row.sig_max, row.score_max, row.score_at)
     )
+
+
+@router.get("/cal-drops")
+def get_cal_lead_drops(response: Response):
+    """Shareable Cal buyer briefs — pre-built during pipeline cache refresh."""
+    from app.services.content_surfaces import KEY_CAL_LEAD_DROPS
+    from app.services.public_surface_cache import read_public_cache, schedule_public_cache_refresh
+
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=7200"
+
+    cached = read_public_cache(KEY_CAL_LEAD_DROPS, stale_ok=True)
+    if isinstance(cached, dict) and (cached.get("drops") or []):
+        return cached
+
+    schedule_public_cache_refresh(pipeline_only=True, reason="cal_drops_miss")
+    return {
+        "headline": "Cal's pipeline brief",
+        "subhead": "Priority accounts — cache warming.",
+        "drops": [],
+        "count": 0,
+        "cache_pending": True,
+    }
+
+
+@router.get("/cal-email-preview")
+def get_cal_email_preview():
+    """HTML preview of Cal vendor email with inline demo GIF (for QA / marketing)."""
+    from fastapi.responses import HTMLResponse
+
+    from app.services.cal_email_demo import enrich_cal_email_with_demo
+
+    sample = """Hi,
+
+I've reviewed your robots against what buyers are asking for right now. A few accounts stood out — not list noise, timing signals behind them.
+
+- MGM Resorts International (Hospitality): Piloting service robots at flagship properties.
+- Hard Rock International (Food Service): Kitchen automation rollout in motion.
+
+I'm not assuming each one is a fit. PoCs fail when capabilities don't match buyer requirements.
+
+Worth a quick reply to explore timing?
+
+— Cal
+Ready For Robots"""
+    enriched = enrich_cal_email_with_demo(sample, use_cid=False)
+    html = enriched.get("body_html") or "<p>Demo GIF not configured.</p>"
+    return HTMLResponse(content=html)
 
 
 @router.get("/by-id/{company_id}")

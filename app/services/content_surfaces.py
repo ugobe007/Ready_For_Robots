@@ -27,6 +27,16 @@ KEY_LEADS_50 = "public:leads:list:50:score:v2"
 KEY_LEADS_18 = "public:leads:list:18:score:v2"
 KEY_LEADS_HOT_12 = "public:leads:list:12:hot:score:v2"
 KEY_PIPELINE_FEED = "public:leads:pipeline:30:v1"
+# Pre-built vertical search slices (pipeline industry filter — restaurant, hospitality, …)
+KEY_LEADS_SEARCH_PREFIX = "public:leads:search:"
+KEY_LEADS_SEARCH_VERSION = "v1"
+INDUSTRY_SEARCH_CACHE_QUERIES = (
+    "restaurant",
+    "hospitality",
+    "logistics",
+    "food service",
+)
+KEY_CAL_LEAD_DROPS = "public:cal:lead_drops:v1"
 KEY_HUMANOID_BENCHMARK_REPORT = "public:humanoid:report:v1"
 KEY_HUMANOID_ROBOTS_LIST = "public:humanoid:robots:v1"
 KEY_HUMANOID_INTELLIGENCE = "public:humanoid:intelligence:v1"

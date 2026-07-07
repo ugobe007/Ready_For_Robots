@@ -3,6 +3,8 @@ from typing import Any
 
 import requests
 
+from app.services.email_address import normalize_recipient_email, recipient_email_error
+
 
 class ResendEmailError(Exception):
     """Raised when Resend email send fails."""
@@ -25,6 +27,7 @@ def send_email_via_resend(
     to_email: str | list[str],
     subject: str,
     body_text: str,
+    body_html: str | None = None,
     from_display_name: str | None = None,
     reply_to: str | None = None,
     cc: list[str] | None = None,
@@ -60,8 +63,18 @@ def send_email_via_resend(
         "subject": subject,
         "text": body_text,
     }
-    clean_cc = [x.strip() for x in (cc or []) if x and "@" in x]
-    clean_bcc = [x.strip() for x in (bcc or []) if x and "@" in x]
+    if body_html and body_html.strip():
+        payload["html"] = body_html.strip()
+    clean_cc = []
+    for x in cc or []:
+        norm = normalize_recipient_email(x)
+        if norm:
+            clean_cc.append(norm)
+    clean_bcc = []
+    for x in bcc or []:
+        norm = normalize_recipient_email(x)
+        if norm:
+            clean_bcc.append(norm)
     if clean_cc:
         payload["cc"] = clean_cc
     if clean_bcc:
@@ -114,14 +127,17 @@ def _email_list(value: str | list[str]) -> list[str]:
     emails = []
     seen: set[str] = set()
     for item in raw_values:
-        email = str(item or "").strip()
-        if "@" not in email:
+        email = normalize_recipient_email(str(item or ""))
+        if not email:
             continue
-        key = email.lower()
-        if key in seen:
+        if email in seen:
             continue
-        seen.add(key)
+        seen.add(email)
         emails.append(email)
+    if raw_values and not emails:
+        sample = str(raw_values[0] if not isinstance(value, list) else (value[0] if value else "")).strip()
+        hint = recipient_email_error(sample) or "Invalid recipient email format."
+        raise ResendEmailError(hint)
     return emails
 
 

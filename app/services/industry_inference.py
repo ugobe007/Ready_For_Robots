@@ -152,6 +152,8 @@ KNOWN_COMPANY_INDUSTRY: Dict[str, str] = {
     "captain d's": "Food Service",
     "panera": "Food Service",
     "marco's pizza": "Food Service",
+    "imo's pizza": "Food Service",
+    "imos pizza": "Food Service",
     "first watch": "Food Service",
     "7-eleven": "Retail",
     "sheetz": "Retail",

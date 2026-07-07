@@ -1424,7 +1424,7 @@ NEWS_QUERIES = [
     # === Expansion & New Facilities (new locations = new robot sales) ===
     {"query": "hotel resort new property opening 2025 2026 grand opening",  "industries": ["Hospitality"],                  "signal_types": ["expansion"]},
     {"query": "new distribution center warehouse opening groundbreaking",   "industries": ["Logistics"],                    "signal_types": ["expansion", "capex"]},
-    {"query": "restaurant chain new locations expansion opening sites",     "industries": ["Food Service"],                 "signal_types": ["expansion"]},
+    {"query": "restaurant chain kitchen automation robot deployment pilot 2025", "industries": ["Food Service"],                 "signal_types": ["automation_intent", "capex"]},
     {"query": "hospital new campus facility construction expansion",        "industries": ["Healthcare"],                   "signal_types": ["expansion", "capex"]},
     {"query": "hotel renovation investment upgrade rooms guest",            "industries": ["Hospitality"],                  "signal_types": ["capex"]},
     {"query": "fulfillment center expansion new warehouse facility 2025",   "industries": ["Logistics"],                    "signal_types": ["expansion", "capex"]},
@@ -1451,7 +1451,7 @@ NEWS_QUERIES = [
     {"query": "Amazon fulfillment new warehouse distribution center 2025",  "industries": ["Logistics"],                    "signal_types": ["expansion"]},
     {"query": "Prologis new property construction distribution",            "industries": ["Logistics"],                    "signal_types": ["expansion", "capex"]},
     {"query": "HCA Healthcare new facility hospital expansion 2025",        "industries": ["Healthcare"],                   "signal_types": ["expansion", "capex"]},
-    {"query": "McDonald's Yum Brands Chipotle new locations expansion",     "industries": ["Food Service"],                 "signal_types": ["expansion"]},
+    {"query": "McDonald's Chipotle Yum Brands kitchen automation robot deployment", "industries": ["Food Service"],                 "signal_types": ["automation_intent"]},
     {"query": "Hyatt IHG Wyndham hotel staffing housekeeping challenges",   "industries": ["Hospitality"],                  "signal_types": ["labor_shortage"]},
     {"query": "Ryder J.B. Hunt warehouse operations new contract facility", "industries": ["Logistics"],                    "signal_types": ["expansion", "capex"]},
 

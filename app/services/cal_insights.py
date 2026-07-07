@@ -25,6 +25,7 @@ class _Insight:
     text: str
     show_key: Optional[str] = None
     robot_pattern: Optional[re.Pattern[str]] = None
+    industry_pattern: Optional[re.Pattern[str]] = None
     humor: bool = False
     vendor_only: bool = False
 
@@ -169,6 +170,45 @@ _INSIGHTS: list[_Insight] = [
             "The vendors who win are the ones talking to accounts already signaling a deployment timeline."
         ),
         humor=True,
+        vendor_only=True,
+    ),
+    _Insight(
+        id="buyer_floor_reality",
+        text=(
+            "Trade-show demos run on perfect floors. Your site doesn't. "
+            "We shortlist vendors who've deployed in messy aisles and real shift schedules — that's the gap most buyers feel after they get back from the hall."
+        ),
+        humor=True,
+    ),
+    _Insight(
+        id="buyer_signal_plain",
+        text=(
+            "When we say \"signals,\" we mean things you'd notice in the news or on LinkedIn — "
+            "new DC capacity, automation job posts, overtime hiring, CapEx in an earnings call. "
+            "That's the window where vendor selection actually sticks."
+        ),
+    ),
+    _Insight(
+        id="buyer_shortlist_value",
+        text=(
+            "Most ops teams don't need 40 vendor emails — they need two or three names that match "
+            "their workflow, with proof from a similar site. That's the piece we try to do before anyone's inbox fills up."
+        ),
+    ),
+    _Insight(
+        id="buyer_pilot_timing",
+        text=(
+            "Pilots usually start 8–12 weeks after the first serious vendor conversation — "
+            "the signals we watch tend to show up in that window, not the week of the press release."
+        ),
+    ),
+    _Insight(
+        id="logistics_aisle",
+        text=(
+            "In logistics, the pilot question is almost always the same: can it handle your SKU mix and aisle width on the night shift? "
+            "We weight vendors who've answered that in a live DC, not on a demo lane."
+        ),
+        industry_pattern=re.compile(r"\b(logistics|warehousing|supply chain|distribution)\b", re.I),
     ),
     _Insight(
         id="rfp_timing",
@@ -209,6 +249,7 @@ def pick_cal_insight(
     company_name: Optional[str] = None,
     trade_show: Optional[str] = None,
     robot_type: Optional[str] = None,
+    industry: Optional[str] = None,
     seed: Optional[str] = None,
     allow_humor: bool = True,
     audience: str = "any",
@@ -217,9 +258,10 @@ def pick_cal_insight(
 
     audience: "vendor" | "buyer" | "any" — filters vendor-only PoC/deployment insights.
     """
-    seed_key = seed or company_name or trade_show or "ready-for-robots"
+    seed_key = seed or f"{company_name or ''}:{industry or ''}" or trade_show or "ready-for-robots"
     show = _show_key(trade_show)
     robot = (robot_type or "").strip()
+    ind = (industry or "").strip()
 
     pool = [i for i in _INSIGHTS if allow_humor or not i.humor]
     if audience == "buyer":
@@ -229,13 +271,18 @@ def pick_cal_insight(
     robot_matches = [
         i for i in pool if i.robot_pattern and robot and i.robot_pattern.search(robot)
     ]
+    industry_matches = [
+        i for i in pool if i.industry_pattern and ind and i.industry_pattern.search(ind)
+    ]
 
-    if show_matches:
+    if industry_matches:
+        candidates = industry_matches
+    elif show_matches:
         candidates = show_matches
     elif robot_matches:
         candidates = robot_matches
     else:
-        candidates = [i for i in pool if not i.show_key and not i.robot_pattern]
+        candidates = [i for i in pool if not i.show_key and not i.robot_pattern and not i.industry_pattern]
         if not candidates:
             candidates = pool
 

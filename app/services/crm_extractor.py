@@ -400,6 +400,11 @@ class CRMDescriptors:
     budget_signals: List[BudgetSignal] = field(default_factory=list)
     timing_signals: List[TimingSignal] = field(default_factory=list)
     automation_requirements: List[str] = field(default_factory=list)
+    # Robot-fit guesses inferred from industry/robot-type when the signal text names no
+    # concrete requirement. Kept for display only — NEVER used for vendor matching, since
+    # these are possibilities (e.g. "baggage handling robots" guessed off a humanoid-trial
+    # story), not requirements the buyer actually stated.
+    inferred_robot_fit: List[str] = field(default_factory=list)
     decision_makers: List[DecisionMaker] = field(default_factory=list)
     extracted_at: Optional[str] = None
 
@@ -435,14 +440,19 @@ def extract(company: "Company", signals: List["Signal"], db: "Session") -> CRMDe
     if not signal_texts:
         return CRMDescriptors(extracted_at=_now())
 
+    # Grounded requirements come only from the signal text. The inferred robot-fit menu is
+    # kept in a separate field so it can inform display/sales copy without masquerading as a
+    # stated buyer requirement in vendor matching.
     automation_requirements = _extract_automation_requirements(signal_texts)
+    inferred_robot_fit: List[str] = []
     if not automation_requirements:
-        automation_requirements = _infer_automation_requirements_fallback(company, signal_texts)
+        inferred_robot_fit = _infer_automation_requirements_fallback(company, signal_texts)
 
     descriptors = CRMDescriptors(
         budget_signals=_extract_budget(signal_texts),
         timing_signals=_extract_timing(signal_texts),
         automation_requirements=automation_requirements,
+        inferred_robot_fit=inferred_robot_fit,
         decision_makers=_extract_decision_makers(signal_texts),
         extracted_at=_now(),
     )
@@ -482,6 +492,7 @@ def build_crm_metadata_dict(descriptors: CRMDescriptors) -> dict:
             "top_window": descriptors.top_timing,
         },
         "automation_requirements": descriptors.automation_requirements,
+        "inferred_robot_fit": descriptors.inferred_robot_fit,
         "decision_makers": [
             {
                 "name": f"{dm.first_name} {dm.last_name}",
@@ -495,7 +506,9 @@ def build_crm_metadata_dict(descriptors: CRMDescriptors) -> dict:
             "has_budget": descriptors.has_budget,
             "has_timing": descriptors.has_timing,
             "has_decision_makers": bool(descriptors.decision_makers),
-            "has_automation_requirements": bool(descriptors.automation_requirements),
+            "has_automation_requirements": bool(
+                descriptors.automation_requirements or descriptors.inferred_robot_fit
+            ),
             "extracted_at": descriptors.extracted_at,
         },
     }

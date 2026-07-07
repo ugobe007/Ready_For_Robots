@@ -148,7 +148,8 @@ def _build_section(name: str, db: Session, *, analytics_range: str = "30d") -> A
             admin_email=get_cal_review_email() or "",
             include_draft_bodies=False,
             include_prospects=True,
-            prospect_limit=120,
+            prospect_limit=50,
+            fast_summary=True,
         )
 
     if name == "scout":

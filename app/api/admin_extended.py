@@ -307,20 +307,50 @@ def _admin_team(db: Session, uid: uuid.UUID, email: str) -> Team:
     return team
 
 
-def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
-    """Return (company, score, tier) for HOT and WARM leads, highest score first."""
+def _hot_warm_companies_fast(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
+    """Score-threshold HOT/WARM list — no per-lead classify (fast for admin dashboard)."""
     rows = (
         db.query(Company, Score)
         .join(Score, Score.company_id == Company.id)
         .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
+        .filter(Company.is_internal.isnot(False))
         .order_by(Score.overall_intent_score.desc())
         .limit(limit)
         .all()
     )
-    return [
-        (company, float(score.overall_intent_score or 0), _tier_from_score(float(score.overall_intent_score or 0)))
-        for company, score in rows
-    ]
+    out: list[tuple[Company, float, str]] = []
+    for company, score in rows:
+        s = float(score.overall_intent_score or 0)
+        tier = "HOT" if s >= 75 else "WARM"
+        out.append((company, s, tier))
+    return out
+
+
+def _hot_warm_companies(db: Session, limit: int = 300) -> list[tuple[Company, float, str]]:
+    """Return (company, score, tier) for HOT and WARM buyer leads — excludes junk/classified COLD."""
+    from sqlalchemy.orm import joinedload
+
+    from app.services.lead_filter import classify_lead
+
+    rows = (
+        db.query(Company, Score)
+        .join(Score, Score.company_id == Company.id)
+        .options(joinedload(Company.signals))
+        .filter(Score.overall_intent_score >= _WARM_THRESHOLD)
+        .filter(Company.is_internal.isnot(False))
+        .order_by(Score.overall_intent_score.desc())
+        .limit(max(limit * 4, limit))
+        .all()
+    )
+    out: list[tuple[Company, float, str]] = []
+    for company, score in rows:
+        junk, _, pri = classify_lead(company, score, company.signals)
+        if junk or pri.tier not in ("HOT", "WARM"):
+            continue
+        out.append((company, float(score.overall_intent_score or 0), pri.tier))
+        if len(out) >= limit:
+            break
+    return out
 
 
 def _cal_outreach_domain(company: Company, acct: Optional[Any]) -> Optional[str]:
@@ -329,13 +359,16 @@ def _cal_outreach_domain(company: Company, acct: Optional[Any]) -> Optional[str]
 
 def _cal_contact_fields(company: Company, acct: Optional[Any]) -> tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
     """Return (effective_email, stored_email, inferred_primary, inferred_cc)."""
+    from app.services.email_address import normalize_recipient_email
+
     domain = _cal_outreach_domain(company, acct)
     industry = company.industry or (getattr(acct, "industry", None) if acct else None)
     guessed = infer_outreach_emails(domain, industry) if domain else None
     inferred_to = guessed.primary if guessed else None
     inferred_cc = guessed.cc[0] if guessed and guessed.cc else None
-    stored = (getattr(acct, "contact_email", None) or "").strip() or None
-    effective = stored or inferred_to
+    stored_raw = (getattr(acct, "contact_email", None) or "").strip() or None
+    stored = normalize_recipient_email(stored_raw) if stored_raw else None
+    effective = stored or normalize_recipient_email(inferred_to) or inferred_to
     return effective, stored, inferred_to, inferred_cc
 
 
@@ -377,8 +410,13 @@ def _serialize_cal_row(
     delivery_status: Optional[str] = None,
     *,
     include_draft_body: bool = False,
+    fast_contact: bool = False,
 ) -> dict[str, Any]:
-    effective, stored, inferred_to, inferred_cc = _cal_contact_fields(company, acct)
+    if fast_contact:
+        stored = (getattr(acct, "contact_email", None) or "").strip() or None
+        effective, stored, inferred_to, inferred_cc = stored, stored, None, None
+    else:
+        effective, stored, inferred_to, inferred_cc = _cal_contact_fields(company, acct)
     has_draft = bool(
         acct
         and (
@@ -387,7 +425,8 @@ def _serialize_cal_row(
             else acct.outreach_draft
         )
     )
-    preview = (acct.outreach_draft or "").strip()[:140] if has_draft else None
+    preview_src = getattr(acct, "draft_preview", None) or getattr(acct, "outreach_draft", None)
+    preview = (preview_src or "").strip()[:140] if has_draft else None
     meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
     row: dict[str, Any] = {
         "company_id": company.id,
@@ -460,7 +499,7 @@ def _crm_accounts_for_companies(
             outreach_sent_at=r.outreach_sent_at,
             account_type=r.account_type,
             has_draft=has_draft,
-            outreach_draft=preview if has_draft else None,
+            draft_preview=preview if has_draft else None,
         )
     return out
 
@@ -523,9 +562,23 @@ def patch_cal_draft(
         draft = (body.outreach_draft or "").strip()
         if not draft:
             raise HTTPException(status_code=400, detail="outreach_draft cannot be empty")
+        from app.services.cal_draft_guard import is_complete_cal_draft
+
+        ok, reason = is_complete_cal_draft(draft)
+        if not ok:
+            raise HTTPException(status_code=400, detail=f"Draft incomplete — load full text before saving: {reason}")
         acct.outreach_draft = draft
     if body.contact_email is not None:
-        acct.contact_email = body.contact_email.strip() or None
+        from app.services.email_address import normalize_recipient_email, recipient_email_error
+
+        raw_contact = (body.contact_email or "").strip()
+        if raw_contact:
+            normalized = normalize_recipient_email(raw_contact)
+            if not normalized:
+                raise HTTPException(status_code=400, detail=recipient_email_error(raw_contact))
+            acct.contact_email = normalized
+        else:
+            acct.contact_email = None
     if body.outreach_stage is not None:
         acct.outreach_stage = body.outreach_stage.strip() or None
     db.commit()
@@ -615,10 +668,11 @@ def _build_cal_draft_status_payload(
     include_draft_bodies: bool,
     include_prospects: bool,
     prospect_limit: int,
+    fast_summary: bool = False,
 ) -> dict[str, Any]:
     """Return HOT+WARM prospects with Cal draft state on the admin outreach team."""
     team = _admin_team(db, admin_uid, admin_email)
-    companies = _hot_warm_companies(db)
+    companies = _hot_warm_companies_fast(db) if fast_summary else _hot_warm_companies(db)
     company_ids = [c.id for c, _, _ in companies]
     accounts_by_company = _crm_accounts_for_companies(db, company_ids, team_id=team.id)
 
@@ -629,7 +683,11 @@ def _build_cal_draft_status_payload(
     for company, score, tier in companies:
         acct = accounts_by_company.get(company.id)
         has_draft = bool(acct and acct.has_draft)
-        effective, _, _, _ = _cal_contact_fields(company, acct)
+        if fast_summary:
+            stored = (getattr(acct, "contact_email", None) or "").strip() or None
+            effective = stored
+        else:
+            effective, _, _, _ = _cal_contact_fields(company, acct)
         summary_rows.append({
             "tier": tier,
             "has_draft": has_draft,
@@ -637,6 +695,7 @@ def _build_cal_draft_status_payload(
             "contact_email": effective,
             "email_delivery_status": delivery_by_account.get(str(acct.id)) if acct else None,
             "outreach_stage": acct.outreach_stage if acct else None,
+            "account_type": getattr(acct, "account_type", None) or "buyer",
         })
 
     total = len(summary_rows)
@@ -664,6 +723,8 @@ def _build_cal_draft_status_payload(
     opened = sum(1 for r in summary_rows if r["email_delivery_status"] in ("opened", "clicked"))
     clicked = sum(1 for r in summary_rows if r["email_delivery_status"] == "clicked")
     replied = sum(1 for r in summary_rows if r["outreach_stage"] == "replied")
+    buyers = sum(1 for r in summary_rows if (r.get("account_type") or "buyer") == "buyer")
+    vendors = sum(1 for r in summary_rows if r.get("account_type") == "vendor")
 
     prospect_rows: list[dict[str, Any]] = []
     if include_prospects:
@@ -677,6 +738,7 @@ def _build_cal_draft_status_payload(
                 if company.id in accounts_by_company
                 else None,
                 include_draft_body=include_draft_bodies,
+                fast_contact=fast_summary,
             )
             for company, score, tier in companies[:prospect_limit]
         ]
@@ -697,6 +759,9 @@ def _build_cal_draft_status_payload(
             "opened": opened,
             "clicked": clicked,
             "replied": replied,
+            "buyers": buyers,
+            "vendors": vendors,
+            "scope": "HOT/WARM",
             "team_id": str(team.id),
         },
         "prospects": prospect_rows,
@@ -721,6 +786,10 @@ def cal_draft_status(
         le=500,
         description="Max prospect rows returned when include_prospects=true",
     ),
+    fast_summary: bool = Query(
+        False,
+        description="Skip slow email inference + delivery lookups for counts-only refresh",
+    ),
 ):
     from app.database import SessionLocal
     from app.db_timeout import run_db
@@ -734,13 +803,41 @@ def cal_draft_status(
                 include_draft_bodies=include_draft_bodies,
                 include_prospects=include_prospects,
                 prospect_limit=prospect_limit,
+                fast_summary=fast_summary or not include_prospects,
             )
 
+    timeout = 20 if (not include_prospects or fast_summary) else 45
     try:
-        return run_db(_run, timeout_sec=25, label="cal/draft-status")
+        return run_db(_run, timeout_sec=timeout, label="cal/draft-status")
     except TimeoutError:
         logger.warning("cal/draft-status timed out — returning empty summary")
         return _empty_cal_draft_payload(include_prospects=include_prospects)
+
+
+@router.get("/cal/queue-summary")
+def cal_queue_summary(
+    user: dict = Depends(require_admin),
+):
+    """Fast counts-only Cal queue — avoids 502 on full draft-status."""
+    from app.database import SessionLocal
+    from app.db_timeout import run_db
+
+    def _run() -> dict[str, Any]:
+        with SessionLocal() as db:
+            return _build_cal_draft_status_payload(
+                db,
+                admin_uid=uuid.UUID(user["uid"]),
+                admin_email=user.get("email") or "",
+                include_draft_bodies=False,
+                include_prospects=False,
+                prospect_limit=1,
+                fast_summary=True,
+            )
+
+    try:
+        return run_db(_run, timeout_sec=20, label="cal/queue-summary")
+    except TimeoutError:
+        return _empty_cal_draft_payload(include_prospects=False)
 
 
 class BulkDraftBody(BaseModel):
@@ -784,8 +881,12 @@ def cal_bulk_draft(
         try:
             acct = existing.get(company.id)
             if acct and acct.outreach_draft and not body.regenerate:
-                skipped += 1
-                continue
+                from app.services.cal_draft_guard import draft_needs_regeneration
+
+                account_type = getattr(acct, "account_type", None) or "buyer"
+                if not draft_needs_regeneration(acct.outreach_draft, account_type=account_type)[0]:
+                    skipped += 1
+                    continue
 
             subject, draft_body = _cal_draft_for_company(company, fresh=body.regenerate)
             domain = _cal_outreach_domain(company, acct)
@@ -814,7 +915,9 @@ def cal_bulk_draft(
             from app.services.cal_autonomy import format_cal_draft_storage
 
             acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
-            acct.outreach_stage = "draft_ready"
+            acct.outreach_stage = (
+                "draft_approved" if not cal_manual_approval_required() else "draft_ready"
+            )
             drafted += 1
 
         except Exception as exc:
@@ -853,7 +956,7 @@ def cal_activity(
     from app.models.outreach import OutreachMessage, OutreachReply
     from app.models.sales_agent import SalesAgentAction, SalesOpportunity
     from app.models.sequences import OutreachSequenceEnrollment
-    from app.services.cal_autonomy import get_cal_autonomy_status
+    from app.services.cal_autonomy import get_cal_autonomy_status, resolve_cal_admin_context
     from app.services.cal_ops_monitor import get_cal_ops_monitor
 
     cap = max(10, min(limit, 100))
@@ -899,6 +1002,7 @@ def cal_activity(
     ):
         identity = (msg.send_identity or "").lower()
         kind = "followup_sent" if identity == "sequence" else "intro_sent"
+        body_text = (msg.body_text or "").strip()
         timeline.append({
             "id": str(msg.id),
             "kind": kind,
@@ -906,7 +1010,11 @@ def cal_activity(
             "title": msg.subject,
             "detail": f"To {msg.to_email}",
             "entity": crm_names.get(str(msg.crm_account_id)) or msg.to_email,
-            "action_url": "/sales-console",
+            "to_email": msg.to_email,
+            "body_preview": body_text[:500] if body_text else None,
+            "body_full": body_text if len(body_text) <= 4000 else None,
+            "crm_account_id": str(msg.crm_account_id) if msg.crm_account_id else None,
+            "action_url": "/inbox",
         })
 
     for reply in (
@@ -980,7 +1088,7 @@ def cal_activity(
 
     meeting_opps = (
         db.query(SalesOpportunity)
-        .filter(SalesOpportunity.stage.in_(["meeting_requested", "qualified"]))
+        .filter(SalesOpportunity.current_stage.in_(["meeting_requested", "qualified"]))
         .order_by(desc(SalesOpportunity.updated_at))
         .limit(8)
         .all()
@@ -995,7 +1103,7 @@ def cal_activity(
     for opp in meeting_opps:
         if str(opp.id) in scheduled_opp_ids:
             continue
-        if opp.stage != "meeting_requested":
+        if opp.current_stage != "meeting_requested":
             continue
         needs_you.append({
             "kind": "schedule_meeting",
@@ -1012,8 +1120,45 @@ def cal_activity(
             "action_url": "/admin#cal-outreach",
         })
 
+    sent_recent = sum(1 for row in timeline if row.get("kind") in ("intro_sent", "followup_sent"))
+    manual_approval = bool(autopilot.get("manual_approval"))
+
+    pending_cal_approvals: list[dict] = []
+    if manual_approval:
+        ctx = resolve_cal_admin_context(db)
+        if ctx:
+            _uid, team = ctx
+            for acct in (
+                db.query(CrmAccount)
+                .filter(
+                    CrmAccount.team_id == team.id,
+                    CrmAccount.outreach_draft.isnot(None),
+                    CrmAccount.outreach_sent_at.is_(None),
+                    CrmAccount.outreach_stage.notin_(["draft_approved", "approved"]),
+                )
+                .order_by(desc(CrmAccount.updated_at))
+                .limit(20)
+                .all()
+            ):
+                pending_cal_approvals.append({
+                    "crm_account_id": str(acct.id),
+                    "company_name": acct.name,
+                    "contact_email": acct.contact_email,
+                    "outreach_stage": acct.outreach_stage,
+                })
+                needs_you.insert(0, {
+                    "kind": "cal_draft_approval",
+                    "title": f"Approve draft — {acct.name}",
+                    "detail": acct.contact_email or "No contact email yet",
+                    "action_url": "/admin#cal-approvals",
+                })
+
     return {
         "autopilot": autopilot,
+        "operator_mode": "approval_required" if manual_approval else "auto_send",
+        "sent_recent_count": sent_recent,
+        "pending_approval_count": len(pending_cal_approvals),
+        "pending_approvals": pending_cal_approvals,
         "sequences": {
             "active": enroll_active,
             "due_now": enroll_due,
@@ -1023,7 +1168,7 @@ def cal_activity(
         "needs_you": needs_you[:12],
         "capabilities": {
             "draft_autonomous": True,
-            "send_autonomous": bool(autopilot.get("enabled")),
+            "send_autonomous": bool(autopilot.get("enabled")) and not manual_approval,
             "followup_autonomous": True,
             "reply_autonomous": True,
             "meeting_autonomous": False,
@@ -1051,11 +1196,156 @@ class CalAutonomyRunBody(BaseModel):
 def cal_autonomy_run(
     body: CalAutonomyRunBody,
     db: Session = Depends(get_db),
-    _user: dict = Depends(require_admin),
+    user: dict = Depends(require_admin),
 ):
     from app.services.cal_autonomy import run_cal_autonomy_cycle
 
-    return run_cal_autonomy_cycle(db, dry_run=body.dry_run)
+    return run_cal_autonomy_cycle(
+        db,
+        dry_run=body.dry_run,
+        admin_uid=uuid.UUID(user["uid"]),
+        admin_email=user.get("email") or "",
+    )
+
+
+@router.get("/cal/operator-dashboard")
+def cal_operator_dashboard(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+):
+    """Unified operator metrics: queue, opportunities, workflow, buyer/vendor split, engagement."""
+    from sqlalchemy import desc, func
+
+    from app.api.admin import workflow_actions
+    from app.models.crm import CrmAccount
+    from app.models.sales_agent import SalesOpportunity
+    from app.services.cal_autonomy import cal_buyer_outreach_body, get_cal_autonomy_status
+
+    uid = uuid.UUID(user["uid"])
+    team = _admin_team(db, uid, user.get("email") or "")
+    cal_payload = _build_cal_draft_status_payload(
+        db,
+        admin_uid=uid,
+        admin_email=user.get("email") or "",
+        include_draft_bodies=False,
+        include_prospects=False,
+        prospect_limit=1,
+        fast_summary=True,
+    )
+    summary = cal_payload.get("summary") or {}
+
+    prospects: list[dict[str, Any]] = []
+    sample_company_row = (
+        db.query(CrmAccount, Company)
+        .join(Company, Company.id == CrmAccount.company_id)
+        .filter(CrmAccount.team_id == team.id, CrmAccount.outreach_draft.isnot(None))
+        .order_by(desc(CrmAccount.updated_at))
+        .first()
+    )
+
+    opp_total = db.query(func.count(SalesOpportunity.id)).scalar() or 0
+    opp_by_stage = {
+        row[0] or "unknown": row[1]
+        for row in db.query(SalesOpportunity.current_stage, func.count(SalesOpportunity.id))
+        .group_by(SalesOpportunity.current_stage)
+        .all()
+    }
+
+    workflow = workflow_actions(limit=80, db=db)
+
+    sample_company = None
+    template_sample: dict[str, Any] = {}
+    if sample_company_row:
+        acct, company = sample_company_row
+        sample_company = {"company_id": company.id, "company_name": company.name}
+        subject, body = _cal_draft_for_company(company, fresh=False)
+        template_sample = {
+            "company_name": company.name,
+            "subject": subject,
+            "body": body,
+            "note": "Template voice is code-defined (agent_messaging.py). Per-lead drafts stored on CRM accounts.",
+        }
+
+    return {
+        "cal_queue": summary,
+        "buyer_vendor": {
+            "buyers": int(summary.get("buyers") or 0),
+            "vendors": int(summary.get("vendors") or 0),
+            "scope": "HOT/WARM",
+        },
+        "sales_opportunities": {
+            "total": int(opp_total),
+            "by_stage": opp_by_stage,
+        },
+        "workflow": {
+            "counts": workflow.get("counts"),
+            "by_source": workflow.get("by_source"),
+            "items": workflow.get("items"),
+        },
+        "autopilot": get_cal_autonomy_status(),
+        "template_sample": template_sample,
+        "ai_assistants": [
+            {
+                "id": "cal_autonomy",
+                "name": "Cal autonomy",
+                "role": "Drafts HOT/WARM buyer emails, sends on schedule, runs follow-up sequences",
+                "review_url": "/admin#cal-outreach",
+                "status": "active" if get_cal_autonomy_status().get("enabled") else "paused",
+            },
+            {
+                "id": "cal_assembly",
+                "name": "Cal assembly QA",
+                "role": "Pre-send copy review — blocks weak buyer–vendor pairings",
+                "review_url": "/admin#cal-outreach",
+                "status": "active" if get_cal_autonomy_status().get("assembly", {}).get("assembly_required") else "off",
+            },
+            {
+                "id": "sales_agent",
+                "name": "Sales agent (Max)",
+                "role": "Classifies inbound replies, drafts follow-ups, auto-replies when safe",
+                "review_url": "/sales-console",
+                "status": "active",
+            },
+            {
+                "id": "lead_research",
+                "name": "Lead research agent",
+                "role": "Enriches signals and company context for pipeline prioritization",
+                "review_url": "/admin#workflow",
+                "status": "active",
+            },
+        ],
+    }
+
+
+@router.get("/cal/template-sample")
+def cal_template_sample(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_admin),
+    company_id: Optional[int] = Query(None),
+):
+    """Preview Cal's buyer outreach template for a sample or specific company."""
+    from app.models.company import Company
+
+    uid = uuid.UUID(user["uid"])
+    if company_id:
+        company = db.query(Company).filter(Company.id == company_id).first()
+    else:
+        companies = _hot_warm_companies(db, limit=1)
+        company = companies[0][0] if companies else None
+    if not company:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="No sample company in Cal queue")
+    subject, body = _cal_draft_for_company(company, fresh=False)
+    return {
+        "company_id": company.id,
+        "company_name": company.name,
+        "subject": subject,
+        "body": body,
+        "storage_format": f"Subject: {subject}\n\n{body}",
+        "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "2",
+        "editable_note": "Global voice lives in agent_messaging.py. Edit per-lead copy via PATCH /api/admin/cal/draft/{crm_account_id}.",
+    }
 
 
 class CalAutonomyToggleBody(BaseModel):
@@ -1078,6 +1368,23 @@ def cal_autonomy_toggle(
             detail="Autopilot toggle unavailable — REDIS_URL not configured on server.",
         )
     return get_cal_autonomy_status()
+
+
+class CalDailyDigestSendBody(BaseModel):
+    force: bool = False
+    period_hours: int = 24
+
+
+@router.post("/cal/daily-digest-send")
+def cal_daily_digest_send(
+    body: CalDailyDigestSendBody,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(require_admin),
+):
+    """Send the plain-text Cal daily activity email now (for testing or catch-up)."""
+    from app.services.cal_daily_digest import send_cal_daily_digest
+
+    return send_cal_daily_digest(db, period_hours=body.period_hours, force=body.force)
 
 
 @router.get("/supply/autonomy-status")
@@ -1137,7 +1444,11 @@ def cal_bulk_send(
     skipped_no_draft = 0
     skipped_already_sent = 0
     skipped_unverified = 0
+    skipped_duplicate = 0
     errors: list[dict[str, Any]] = []
+    # Guard against duplicate Company rows (same recipient) inside a single run —
+    # otherwise one inbox can receive the same intro several times.
+    seen_recipients: set[str] = set()
     now = datetime.now(timezone.utc)
 
     from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
@@ -1151,6 +1462,17 @@ def cal_bulk_send(
         acct = accounts.get(company.id)
         if not acct or not acct.outreach_draft:
             skipped_no_draft += 1
+            continue
+        from app.services.cal_draft_guard import is_complete_cal_draft
+
+        draft_ok, draft_reason = is_complete_cal_draft(acct.outreach_draft)
+        if not draft_ok:
+            skipped_no_draft += 1
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": f"Incomplete draft — run Draft all pending or regenerate: {draft_reason}",
+            })
             continue
         if acct.outreach_sent_at:
             skipped_already_sent += 1
@@ -1168,9 +1490,22 @@ def cal_bulk_send(
         email_source = "crm" if to_email else None
         if not to_email:
             to_email, email_source, _title = resolve_outreach_email(company, acct, use_apollo=True)
+        from app.services.email_address import normalize_recipient_email, recipient_email_error
+
+        to_email = normalize_recipient_email(to_email)
         if not to_email:
-            errors.append({"company_id": company.id, "name": company.name, "error": "No recipient email"})
+            errors.append({
+                "company_id": company.id,
+                "name": company.name,
+                "error": recipient_email_error(acct.contact_email) or "Invalid recipient email format",
+            })
             continue
+
+        recipient_key = to_email.strip().lower()
+        if recipient_key in seen_recipients:
+            skipped_duplicate += 1
+            continue
+        seen_recipients.add(recipient_key)
 
         if not _cal_should_skip_verification(body.skip_verification):
             ok, verify_reason = verify_email_deliverable(to_email)
@@ -1225,6 +1560,7 @@ def cal_bulk_send(
         "skipped_no_draft": skipped_no_draft,
         "skipped_already_sent": skipped_already_sent,
         "skipped_unverified": skipped_unverified,
+        "skipped_duplicate": skipped_duplicate,
         "errors": errors,
         "dry_run": body.dry_run,
     }
@@ -1465,6 +1801,28 @@ class SingleSendBody(BaseModel):
     skip_verification: bool = False
 
 
+def _cal_resolve_send_to_email(company: Company | None, acct: CrmAccount) -> tuple[str | None, str | None]:
+    """Normalize CRM/inferred recipient; return (email, error_message)."""
+    from app.services.email_address import normalize_recipient_email, recipient_email_error
+    from app.services.lead_enrichment import resolve_outreach_email
+
+    stored = normalize_recipient_email(acct.contact_email)
+    if stored:
+        return stored, None
+
+    to_raw, _src, _title = resolve_outreach_email(
+        company or Company(name=acct.name),
+        acct,
+        use_apollo=True,
+    )
+    normalized = normalize_recipient_email(to_raw)
+    if normalized:
+        return normalized, None
+    if (to_raw or "").strip():
+        return None, recipient_email_error(to_raw)
+    return None, "No recipient email — enter name@company.com in the contact field."
+
+
 def _cal_should_skip_verification(explicit: bool = False) -> bool:
     if explicit:
         return True
@@ -1500,30 +1858,52 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail="Draft not approved — approve before sending")
 
     if (body.outreach_draft or "").strip():
-        acct.outreach_draft = body.outreach_draft.strip()
+        from app.services.cal_draft_guard import is_complete_cal_draft
+
+        draft_candidate = body.outreach_draft.strip()
+        ok, reason = is_complete_cal_draft(draft_candidate)
+        if not ok:
+            raise HTTPException(status_code=400, detail=f"Draft incomplete — wait for full draft to load: {reason}")
+        acct.outreach_draft = draft_candidate
     if body.contact_email is not None:
-        acct.contact_email = body.contact_email.strip() or None
+        from app.services.email_address import normalize_recipient_email, recipient_email_error
+
+        raw_contact = body.contact_email.strip()
+        if raw_contact:
+            normalized = normalize_recipient_email(raw_contact)
+            if not normalized:
+                raise HTTPException(status_code=400, detail=recipient_email_error(raw_contact))
+            acct.contact_email = normalized
+        else:
+            acct.contact_email = None
         db.flush()
 
     company = db.query(Company).filter(Company.id == acct.company_id).first() if acct.company_id else None
-    from app.services.lead_enrichment import resolve_outreach_email, verify_email_deliverable
+    from app.services.lead_enrichment import verify_email_deliverable
 
-    to_email = (acct.contact_email or "").strip() or None
+    to_email, email_err = _cal_resolve_send_to_email(company, acct)
     if not to_email:
-        to_email, _src, _title = resolve_outreach_email(company or Company(name=acct.name), acct, use_apollo=True)
-    if not to_email:
-        raise HTTPException(status_code=400, detail="No recipient email — add one in the contact field and try again")
+        raise HTTPException(status_code=400, detail=email_err or "No recipient email")
 
     if not _cal_should_skip_verification(body.skip_verification):
         ok, reason = verify_email_deliverable(to_email)
         if not ok:
             raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
 
+    from app.services.cal_draft_guard import is_complete_cal_draft, parse_cal_draft_or_raise
+
+    ok, reason = is_complete_cal_draft(acct.outreach_draft)
+    if not ok:
+        raise HTTPException(status_code=400, detail=f"Cannot send incomplete draft: {reason}")
+
     domain = normalize_website_domain((company.website if company else None) or acct.website)
     industry = (company.industry if company else None) or acct.industry
     cc_list = infer_cc_outreach_emails(domain, industry, primary=to_email)
     cc_email = cc_list[0] if cc_list else None
-    subject, body_text = parse_cal_draft(acct.outreach_draft, acct.name or "Unknown")
+    try:
+        subject, body_text = parse_cal_draft_or_raise(acct.outreach_draft, acct.name or "Unknown")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     try:
         send_cal_intro_email(
@@ -1915,6 +2295,25 @@ def scout_diagnostic(
         issues.append("RESEND_WEBHOOK_SECRET is not set — delivery events (open/click/bounce) won't be tracked")
     if not inbound_secret_set:
         issues.append("RESEND_INBOUND_WEBHOOK_SECRET is not set — inbound email replies won't be captured")
+    hints: list[str] = []
+    if webhook_secret_set and inbound_secret_set:
+        hints.append(
+            "Inbound replies: Resend → Inbound → "
+            "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound (email.received)"
+        )
+        hints.append(
+            "Opens/clicks: Resend → Webhooks → add endpoint "
+            "https://ready-2-robot.fly.dev/api/webhooks/resend/delivery "
+            "with email.sent, email.delivered, email.opened, email.clicked, email.bounced"
+        )
+
+    sent_30d = status_counts.get("sent", 0) + status_counts.get("delivered", 0)
+    opened_30d = status_counts.get("opened", 0)
+    if sent_30d > 10 and opened_30d == 0 and webhook_secret_set:
+        issues.append(
+            f"{sent_30d} emails sent in 30d but 0 opens tracked — confirm the delivery webhook URL "
+            "in Resend points to /api/webhooks/resend/delivery (not only inbound)"
+        )
 
     from app.services.stagegate_voice import STAGEGATE_OUTREACH_RULES
 
@@ -1925,6 +2324,23 @@ def scout_diagnostic(
             "api_key_set": api_key_set,
             "delivery_webhook_configured": webhook_secret_set,
             "inbound_webhook_configured": inbound_secret_set,
+            "webhook_urls": {
+                "delivery": "https://ready-2-robot.fly.dev/api/webhooks/resend/delivery",
+                "inbound": "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound",
+            },
+            "resend_setup": {
+                "delivery_events": [
+                    "email.sent",
+                    "email.delivered",
+                    "email.opened",
+                    "email.clicked",
+                    "email.bounced",
+                    "email.complained",
+                ],
+                "inbound_events": ["email.received"],
+                "delivery_secret_env": "RESEND_WEBHOOK_SECRET",
+                "inbound_secret_env": "RESEND_INBOUND_WEBHOOK_SECRET",
+            },
         },
         "cal_outreach_style": {
             "stagegate_rules": list(STAGEGATE_OUTREACH_RULES),
@@ -1940,5 +2356,6 @@ def scout_diagnostic(
         },
         "recent_emails": recent_list,
         "issues": issues,
+        "hints": hints,
         "health": "ok" if not issues else ("warn" if len(issues) <= 2 else "error"),
     }

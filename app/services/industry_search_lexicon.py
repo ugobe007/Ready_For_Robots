@@ -79,8 +79,8 @@ def canonical_industries_for_query(query: str) -> List[str]:
 
 def sql_signal_terms_for_query(query: str, *, max_terms: int = 14) -> List[str]:
     """
-    Compact term list for signal-text SQL ILIKE — sector roots + canonical labels only.
-    Avoids matching unrelated rows via broad sub-ontology phrases (e.g. food delivery → logistics).
+    Compact term list for signal-text SQL ILIKE — matched sectors only.
+    Avoids unrelated sectors that share a canonical industry label (e.g. grocery/logistics bleed on restaurant).
     """
     q = _resolve_query(query)
     if not q:
@@ -90,13 +90,15 @@ def sql_signal_terms_for_query(query: str, *, max_terms: int = 14) -> List[str]:
     raw = normalize_search_query(query)
     if raw and raw != q:
         terms.append(raw)
-    canon_set = {c.lower() for c in match.canonical_industries}
-    for sector in load_sector_ontology().get("sectors", []):
-        sector_canon = sector.get("canonical_industries") or []
-        if not any((c or "").lower() in canon_set for c in sector_canon):
+    sector_by_id = {s["id"]: s for s in load_sector_ontology().get("sectors", [])}
+    for sid in match.sector_ids:
+        sector = sector_by_id.get(sid)
+        if not sector:
             continue
         terms.extend(sector.get("root_aliases") or [])
-        terms.extend(sector_canon)
+        terms.extend(normalize_term(c) for c in (sector.get("canonical_industries") or []) if c)
+    if not match.sector_ids:
+        terms.extend(normalize_term(c) for c in match.canonical_industries if c)
     return _dedupe(terms)[:max_terms]
 
 
