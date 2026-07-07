@@ -84,6 +84,8 @@ type LinkedInStatus = {
   pending_marketing_api?: boolean;
   member_name?: string;
   organization_id?: string;
+  organization_urn?: string;
+  organization_page_status?: string;
   organization_url?: string;
 };
 
@@ -737,12 +739,18 @@ export default function Social() {
               <p className="text-xs text-slate-300">
                 {linkedinStatus?.connected
                   ? linkedinStatus.member_posting
-                    ? `Publishing as ${linkedinStatus.member_name || "your profile"} (personal feed until Marketing API is approved).`
-                    : `Connected · company page org ${linkedinStatus.organization_id}`
+                    ? `Publishing as ${linkedinStatus.member_name || "your profile"} (personal feed until company page API is active).`
+                    : `Connected · company page ${linkedinStatus.organization_urn || linkedinStatus.organization_id}`
                   : linkedinStatus?.configured
                     ? "Connect once to enable one-click publish from post cards."
                     : "LinkedIn app credentials are not configured on the API server yet."}
               </p>
+              {linkedinStatus?.organization_page_status &&
+                linkedinStatus.organization_page_status !== "active" && (
+                  <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                    {linkedinStatus.organization_page_status}
+                  </p>
+                )}
               {linkedinMsg && (
                 <p className={`text-xs font-mono ${linkedinMsgIsError ? "text-red-400" : "text-emerald-400"}`}>
                   {linkedinMsg}

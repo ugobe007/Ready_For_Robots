@@ -29,4 +29,19 @@ export function authHeader(token: string | undefined): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+/**
+ * Fresh access token from the Supabase client (auto-refreshes if expired).
+ * Use for admin API calls so a stale in-memory session never sends a bare
+ * request that the backend rejects with "Authorization: Bearer <token> required".
+ */
+export async function getFreshAccessToken(fallback?: string): Promise<string | undefined> {
+  if (!supabase) return fallback;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export type { Session };

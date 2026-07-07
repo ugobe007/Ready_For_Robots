@@ -1,9 +1,10 @@
 /**
- * ScoutActionBar — Cal autopilot controls (draft, send, follow-up on schedule)
+ * ScoutActionBar — Cal autopilot controls (Supabase inline links only)
  */
 import { useState } from "react";
-import { Zap, Inbox, List, FlaskConical, X, RefreshCw, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
+import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 
@@ -19,10 +20,18 @@ export interface ScoutStats {
 }
 
 interface DiagnosticData {
-  config: { from_email: string | null; reply_to: string | null; api_key_set: boolean; delivery_webhook_configured: boolean; inbound_webhook_configured: boolean };
+  config: {
+    from_email: string | null;
+    reply_to: string | null;
+    api_key_set: boolean;
+    delivery_webhook_configured: boolean;
+    inbound_webhook_configured: boolean;
+    webhook_urls?: { delivery: string; inbound: string };
+  };
   stats_30d: { sent: number; delivered: number; opened: number; clicked: number; bounced: number; replied: number; total: number };
   recent_emails: Array<{ id: string; to: string; subject: string; status: string; sent_at: string | null; company: string }>;
   issues: string[];
+  hints?: string[];
   health: "ok" | "warn" | "error";
 }
 
@@ -70,52 +79,30 @@ export default function ScoutActionBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3">
-        <div className="mr-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800">Cal autopilot</p>
-          <p className="text-[10px] text-gray-600">
-            {autopilotEnabled
-              ? `On · drafts, sends (${sendLimit}/run), follow-ups every ${everyHours}h`
-              : "Off · enable on worker or Run Cal now"}
-          </p>
+      <div className="border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3 text-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800">Cal autopilot</p>
+        <p className="mb-1 text-[10px] text-gray-600">
+          {autopilotEnabled
+            ? `On · drafts, sends (${sendLimit}/run), follow-ups every ${everyHours}h`
+            : "Off · enable on worker or run Cal now"}
+        </p>
+        <div>
+          <SupabaseInlineLink onClick={onRunNow} busy={busy === "run"}>
+            Run Cal now
+          </SupabaseInlineLink>
+          <span className="text-gray-400"> · </span>
+          <SupabaseInlineLink tone="blue" onClick={onViewQueue}>
+            Queue{stats?.sendable ? ` (${stats.sendable} sendable)` : ""}
+          </SupabaseInlineLink>
+          <span className="text-gray-400"> · </span>
+          <SupabaseInlineLink tone="amber" onClick={onViewReplies}>
+            Replies{stats?.replied ? ` (${stats.replied})` : ""}
+          </SupabaseInlineLink>
+          <span className="text-gray-400"> · </span>
+          <SupabaseInlineLink tone="gray" onClick={() => void openTest()}>
+            Test delivery
+          </SupabaseInlineLink>
         </div>
-
-        <button
-          type="button"
-          disabled={!!busy}
-          onClick={onRunNow}
-          className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-100 px-3 py-1.5 text-[11px] font-bold text-emerald-900 disabled:opacity-50"
-        >
-          {busy === "run" ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
-          Run Cal now
-        </button>
-
-        <button
-          type="button"
-          onClick={onViewQueue}
-          className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-900"
-        >
-          <List className="h-3 w-3" />
-          Queue{stats?.sendable ? ` (${stats.sendable})` : ""}
-        </button>
-
-        <button
-          type="button"
-          onClick={onViewReplies}
-          className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-900"
-        >
-          <Inbox className="h-3 w-3" />
-          Replies{stats?.replied ? ` (${stats.replied})` : ""}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void openTest()}
-          className="ml-auto flex items-center gap-1.5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-[11px] font-bold text-violet-800"
-        >
-          <FlaskConical className="h-3 w-3" />
-          TEST
-        </button>
       </div>
 
       {testOpen && (
@@ -123,17 +110,30 @@ export default function ScoutActionBar({
           <div className="relative w-full max-w-lg rounded-2xl border bg-[#0d0520] p-6" style={{ borderColor: "rgba(124,58,237,0.35)" }} onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-bold text-white">Cal delivery health</p>
-              <button onClick={() => setTestOpen(false)}><X className="h-4 w-4 text-white/50" /></button>
+              <SupabaseInlineLink tone="gray" onClick={() => setTestOpen(false)} className="text-white/70 hover:text-white">
+                Close
+              </SupabaseInlineLink>
             </div>
             {loadingDiag && <p className="text-sm text-white/40">Running…</p>}
             {diagnostic && (
-              <div className="space-y-2 text-[11px] text-white/70">
+              <div className="space-y-3 text-[11px] text-white/70">
+                <div className="grid grid-cols-4 gap-2 rounded-lg border border-white/10 bg-white/5 p-2 text-center">
+                  {(["sent", "opened", "clicked", "replied"] as const).map((k) => (
+                    <div key={k}>
+                      <p className="text-lg font-bold text-white">{diagnostic.stats_30d[k]}</p>
+                      <p className="text-[9px] uppercase tracking-wider text-white/40">{k} · 30d</p>
+                    </div>
+                  ))}
+                </div>
                 {diagnostic.issues.map((issue, i) => (
                   <p key={i} className="flex gap-2"><AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />{issue}</p>
                 ))}
                 {!diagnostic.issues.length && (
-                  <p className="flex gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400" />Routing and API key look OK.</p>
+                  <p className="flex gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400" />API key and webhook secrets are set on Fly.</p>
                 )}
+                {(diagnostic.hints ?? []).map((hint, i) => (
+                  <p key={`h-${i}`} className="text-white/50">{hint}</p>
+                ))}
               </div>
             )}
           </div>

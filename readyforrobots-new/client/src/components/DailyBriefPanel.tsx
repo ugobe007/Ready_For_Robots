@@ -1,10 +1,7 @@
 import { useLocation } from "wouter";
-import { ArrowRight, FileEdit, Mail, Send, Sun, Users } from "lucide-react";
-
-function scrollToHash(hash: string) {
-  if (!hash) return;
-  document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+import { Sun } from "lucide-react";
+import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
+import { scrollToAdminSection, scrollToAdminSectionFromHref } from "@/lib/adminNavigation";
 
 function normalizePath(path: string) {
   return (path.replace(/^\/readyforrobots/, "") || "/").replace(/\/$/, "") || "/";
@@ -19,6 +16,9 @@ export type DailyBriefData = {
     drafts_created_today?: number;
     unsent_drafted?: number;
     sendable?: number;
+    cal_queue_total?: number | null;
+    cal_queue_pending?: number | null;
+    cal_queue_scope?: string | null;
     emails_sent_today?: number;
     emails_sent_total?: number;
     scout_drafted?: number;
@@ -33,12 +33,23 @@ export type DailyBriefData = {
   }>;
 };
 
+type CalActions = {
+  pendingDraft?: number;
+  sendable?: number;
+  onDraftAll?: () => void;
+  onSendAll?: () => void;
+  onOpenQueue?: () => void;
+  draftBusy?: boolean;
+  sendBusy?: boolean;
+};
+
 type Props = {
   data: DailyBriefData | null;
   loading?: boolean;
+  calActions?: CalActions;
 };
 
-export default function DailyBriefPanel({ data, loading }: Props) {
+export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   const [, setLocation] = useLocation();
   const m = data?.metrics;
   const today = data?.date ?? new Date().toISOString().slice(0, 10);
@@ -54,104 +65,101 @@ export default function DailyBriefPanel({ data, loading }: Props) {
     if (target === current) {
       if (hash) {
         window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
-        scrollToHash(hash);
+        scrollToAdminSection(hash);
       }
       return;
     }
 
     setLocation(href);
     if (hash) {
-      window.setTimeout(() => scrollToHash(hash), 400);
+      window.setTimeout(() => scrollToAdminSection(hash), 400);
     }
   };
 
-  const statCards = m
-    ? [
-        {
-          label: "New leads today",
-          value: (m.new_companies_today ?? 0) + (m.new_hot_warm_today ?? 0),
-          sub: `${m.new_companies_today ?? 0} companies · ${m.new_signals_today ?? 0} signals`,
-          icon: Users,
-          color: "#b45309",
-        },
-        {
-          label: "Drafts in queue",
-          value: (m.unsent_drafted ?? 0) + (m.scout_drafted ?? 0),
-          sub: `${m.sendable ?? 0} sendable · ${m.drafts_created_today ?? 0} drafted today`,
-          icon: FileEdit,
-          color: "#7c3aed",
-        },
-        {
-          label: "Emails sent today",
-          value: m.emails_sent_today ?? 0,
-          sub: `${m.emails_sent_total ?? 0} total sent`,
-          icon: Send,
-          color: "#047857",
-        },
-        {
-          label: "Action items",
-          value: data?.next_steps?.length ?? 0,
-          sub: `${m.needs_approval ?? 0} approvals · ${m.research_pending ?? 0} research`,
-          icon: Mail,
-          color: "#2563eb",
-        },
-      ]
-    : [];
+  const nonCalSteps = (data?.next_steps ?? []).filter(
+    (s) => !s.label.toLowerCase().includes("cal autopilot")
+      && !s.label.toLowerCase().includes("cal leads need drafting")
+      && !s.label.toLowerCase().includes("cal drafts need approval")
+      && !s.label.toLowerCase().includes("hot leads not yet"),
+  );
+
+  const calTotal = m?.cal_queue_total ?? 0;
+  const calPending = calActions?.pendingDraft ?? m?.cal_queue_pending ?? 0;
+  const calSendable = calActions?.sendable ?? m?.sendable ?? 0;
+  const calUnsent = m?.unsent_drafted ?? 0;
+
+  const openQueue = calActions?.onOpenQueue ?? (() => scrollToAdminSection("cal-outreach"));
 
   return (
     <div className="mb-4 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white px-5 py-5 shadow-sm">
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-2">
         <Sun size={16} className="text-amber-600" />
         <div>
           <h2 className="text-sm font-bold text-gray-900">Daily brief</h2>
-          <p className="text-[11px] text-gray-600">UTC {today} · intake, outreach, next steps</p>
+          <p className="text-[11px] text-gray-600">UTC {today}</p>
         </div>
       </div>
 
       {loading ? (
-        <p className="py-4 text-sm text-gray-600">Loading today&apos;s activity…</p>
+        <p className="py-2 text-sm text-gray-600">Loading…</p>
       ) : (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {statCards.map((s) => (
-              <div key={s.label} className="rounded-lg border border-gray-200 bg-white px-3 py-3">
-                <div className="mb-1 flex items-center gap-1.5">
-                  <s.icon size={12} style={{ color: s.color }} />
-                  <span className="text-[10px] font-medium text-gray-600">{s.label}</span>
-                </div>
-                <div className="font-mono text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                <div className="mt-0.5 text-[10px] font-medium text-gray-700">{s.sub}</div>
-              </div>
-            ))}
+          <div className="mb-4">
+            <p className="admin-kicker mb-1.5">Do now</p>
+            <div className="text-sm leading-relaxed text-gray-800">
+              {(calPending ?? 0) > 0 && calActions?.onDraftAll ? (
+                <>
+                  <SupabaseInlineLink onClick={calActions.onDraftAll} busy={calActions.draftBusy}>
+                    Draft {calPending} Cal leads
+                  </SupabaseInlineLink>
+                  <span className="text-gray-400"> · </span>
+                </>
+              ) : null}
+              {(calSendable ?? 0) > 0 && calActions?.onSendAll ? (
+                <>
+                  <SupabaseInlineLink onClick={calActions.onSendAll} busy={calActions.sendBusy} tone="amber">
+                    Send {calSendable} Cal emails
+                  </SupabaseInlineLink>
+                  <span className="text-gray-400"> · </span>
+                </>
+              ) : null}
+              {calTotal > 0 ? (
+                <>
+                  <SupabaseInlineLink tone="blue" onClick={openQueue}>
+                    Open Cal queue
+                  </SupabaseInlineLink>
+                  {nonCalSteps.length > 0 ? <span className="text-gray-400"> · </span> : null}
+                </>
+              ) : null}
+              {nonCalSteps.map((step, i) => (
+                <span key={step.label}>
+                  {i > 0 ? <span className="text-gray-400"> · </span> : null}
+                  <SupabaseInlineLink href={step.href} onNavigate={goToStep(step.href)}>
+                    {step.count} {step.label}
+                  </SupabaseInlineLink>
+                </span>
+              ))}
+              {!calPending && !calSendable && calTotal === 0 && nonCalSteps.length === 0 ? (
+                <span className="text-gray-600">No pending actions.</span>
+              ) : null}
+            </div>
           </div>
 
-          {(data?.next_steps?.length ?? 0) > 0 ? (
-            <div>
-              <p className="admin-kicker mb-2">Next steps — click to jump to that workflow step</p>
-              <div className="flex flex-col gap-2">
-                {data!.next_steps!.map((step) => (
-                  <a
-                    key={step.label}
-                    href={step.href}
-                    onClick={goToStep(step.href)}
-                    className={`flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2.5 text-sm no-underline transition-colors hover:bg-gray-50 ${
-                      step.priority === "high"
-                        ? "border-amber-300 bg-amber-50 text-gray-900"
-                        : "border-gray-200 bg-white text-gray-800"
-                    }`}
-                  >
-                    <span>
-                      <strong className="font-mono text-amber-700">{step.count}</strong>
-                      {" "}{step.label}
-                    </span>
-                    <ArrowRight size={14} className="shrink-0 text-gray-600" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-600">No pending workflow actions — queue is clear.</p>
-          )}
+          <div className="text-sm text-gray-700">
+            <span className="font-medium text-gray-900">Cal outreach (HOT/WARM):</span>{" "}
+            {calTotal} in queue · {calPending} need drafting · {calUnsent} drafted unsent · {calSendable} ready to send
+            {(m?.scout_drafted ?? 0) > 0 ? (
+              <span className="text-gray-600"> · SIGNAL: {m?.scout_drafted} drafts (separate)</span>
+            ) : null}
+            {calTotal > 0 ? (
+              <>
+                <span className="text-gray-400"> · </span>
+                <SupabaseInlineLink tone="gray" onClick={openQueue}>
+                  jump to queue
+                </SupabaseInlineLink>
+              </>
+            ) : null}
+          </div>
         </>
       )}
     </div>

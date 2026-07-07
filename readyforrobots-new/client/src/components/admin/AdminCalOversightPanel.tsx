@@ -8,6 +8,10 @@ export type CalActivityTimelineItem = {
   title?: string;
   detail?: string;
   entity?: string;
+  to_email?: string;
+  body_preview?: string | null;
+  body_full?: string | null;
+  crm_account_id?: string | null;
   action_url?: string;
 };
 
@@ -17,9 +21,19 @@ export type CalActivityData = {
     every_hours?: number;
     send_limit?: number;
     followup_limit?: number;
+    draft_batch?: number;
     manual_approval?: boolean;
     assembly?: { assembly_required?: boolean; llm_review_enabled?: boolean };
   };
+  operator_mode?: "auto_send" | "approval_required";
+  sent_recent_count?: number;
+  pending_approval_count?: number;
+  pending_approvals?: Array<{
+    crm_account_id?: string;
+    company_name?: string;
+    contact_email?: string | null;
+    outreach_stage?: string | null;
+  }>;
   sequences?: { active?: number; due_now?: number; paused?: number };
   timeline?: CalActivityTimelineItem[];
   needs_you?: Array<{ kind?: string; title?: string; detail?: string; action_url?: string }>;

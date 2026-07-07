@@ -32,6 +32,8 @@ const LINKS = {
     { label: "About", href: "/#about" },
     { label: "Case Studies", href: "/#case-studies" },
     { label: "Find Robots", href: "/find-robots" },
+    { label: "Deployment design", href: "/vendor/design" },
+    { label: "Privacy Policy", href: "/privacy" },
   ],
 };
 
@@ -103,6 +105,9 @@ export default function SiteFooter({
         <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-slate-600 text-xs">© 2026 ReadyForRobots · Signal for robotics sales.</p>
           <div className="flex flex-wrap gap-6 justify-center">
+            <Link href="/privacy" className="text-slate-500 text-xs hover:text-white transition-colors">
+              Privacy
+            </Link>
             <Link href="/login" className="text-slate-500 text-xs hover:text-white transition-colors">
               Sign in
             </Link>
