@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
 import { clearPendingNext, readNextParam, peekPendingNext, postAuthRedirectTarget, navigateAfterAuth } from "@/lib/authNext";
 import { markFreshSignup } from "@/lib/firstSaveGuide";
+import { trackSignupComplete } from "@/lib/siteAnalytics";
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -34,6 +35,9 @@ export default function AuthCallback() {
       if (done) return;
       done = true;
       markFreshSignup();
+      // Funnel #20: account created (fires once per browser). OAuth + magic link
+      // both land here, so this is the single completion point.
+      trackSignupComplete({ next });
       window.history.replaceState(null, "", clearSupabaseOAuthParams("/auth/callback", `?next=${encodeURIComponent(next)}`));
       navigateAfterAuth(next);
     };

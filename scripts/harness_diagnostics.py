@@ -450,6 +450,26 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
         except Exception:
             pass
 
+        # Signup funnel (conversion board #20) — client-side start/complete/first-save
+        # events reveal where the funnel drops. Best-effort: table may not exist yet.
+        funnel_7d: dict[str, int] = {}
+        try:
+            rows = db.execute(
+                text(
+                    """
+                    SELECT event_type, COUNT(*) AS n
+                    FROM site_analytics_events
+                    WHERE event_type IN ('signup_start', 'signup_complete', 'first_save')
+                      AND created_at >= :since
+                    GROUP BY event_type
+                    """
+                ),
+                {"since": week_ago},
+            ).fetchall()
+            funnel_7d = {str(r[0]): int(r[1]) for r in rows}
+        except Exception:
+            funnel_7d = {}
+
         block.update(
             {
                 "available": True,
@@ -460,6 +480,11 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
                 "crm_accounts_total": int(crm_accounts),
                 "crm_accounts_7d": int(crm_accounts_7d),
                 "founding_waitlist": int(waitlist),
+                "signup_funnel_7d": {
+                    "signup_start": funnel_7d.get("signup_start", 0),
+                    "signup_complete": funnel_7d.get("signup_complete", 0),
+                    "first_save": funnel_7d.get("first_save", 0),
+                },
             }
         )
 
@@ -567,9 +592,19 @@ def render_daily_report_markdown(
                 f"(paid tier rows: {conv.get('paid_tier_users', 0)})",
                 f"- **CRM accounts (7d / total):** {conv.get('crm_accounts_7d', 0)} / {conv.get('crm_accounts_total', 0)}",
                 f"- **Founding waitlist:** {conv.get('founding_waitlist', 0)}",
-                "",
             ]
         )
+        funnel = conv.get("signup_funnel_7d") or {}
+        start = funnel.get("signup_start", 0)
+        complete = funnel.get("signup_complete", 0)
+        saved = funnel.get("first_save", 0)
+        s2c = f"{round((complete / start) * 100)}%" if start else "—"
+        c2s = f"{round((saved / complete) * 100)}%" if complete else "—"
+        lines.append(
+            f"- **Signup funnel (7d):** start {start} → complete {complete} ({s2c}) "
+            f"→ first-save {saved} ({c2s})"
+        )
+        lines.append("")
     else:
         lines.append(f"- Conversion DB metrics unavailable ({conv.get('reason') or conv.get('error') or 'no DB'})")
         lines.append("")

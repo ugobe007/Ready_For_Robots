@@ -36,6 +36,7 @@ import { scoutFingerprint } from "@/lib/scoutFingerprint";
 import { authHeader } from "@/lib/supabase";
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
+import { trackFirstSave } from "@/lib/siteAnalytics";
 import {
   isFreshSignup,
   markFirstSaveGuideSeen,
@@ -47,6 +48,7 @@ import FirstSaveNudge from "@/components/pipeline/FirstSaveNudge";
 import FirstSaveGuideModal from "@/components/pipeline/FirstSaveGuideModal";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
+import CalLeadDrop, { dealToCalDrop } from "@/components/pipeline/CalLeadDrop";
 import AnonymousValueStrip from "@/components/pipeline/AnonymousValueStrip";
 import WorkspaceQuickLinks from "@/components/pipeline/WorkspaceQuickLinks";
 import PipelineSalesWorkflowRail from "@/components/pipeline/PipelineSalesWorkflowRail";
@@ -1296,7 +1298,6 @@ export default function Pipeline() {
       return;
     }
     setServerSearchLoading(true);
-    setServerSearchDeals([]);
     searchDebounceRef.current = setTimeout(() => {
       const base = getApiBase();
       const headers = session?.access_token ? authHeader(session.access_token) : undefined;
@@ -1498,6 +1499,8 @@ export default function Pipeline() {
         throw new Error(errText);
       }
       setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage: "Qualified", updatedAt: "just now" } : d)));
+      // Funnel #20: activation — first saved lead (fires once per browser).
+      trackFirstSave({ company: deal.company, industry: deal.industry || null });
       setSavedLeadCount((count) => count + 1);
       toast.success("Lead saved — develop with SIGNAL and send from the panel on the right.");
       return true;
@@ -2642,6 +2645,20 @@ export default function Pipeline() {
                   </div>
 
                   <PipelineRobotPriorityPanel deal={selected} />
+
+                  {selected && ["HOT", "WARM"].includes((selected.priorityTier || "").toUpperCase()) && (
+                    <CalLeadDrop
+                      drop={dealToCalDrop(selected)}
+                      variant="compact"
+                      showDraft={Boolean(session?.access_token)}
+                      onMoveNow={
+                        session?.access_token
+                          ? () => void developLeadWithScout(selected)
+                          : undefined
+                      }
+                      pipelineHref={`/pipeline?lead=${selected.id}`}
+                    />
+                  )}
 
                   {!session?.access_token && selected && (
                     <PipelineOutreachValuePanel

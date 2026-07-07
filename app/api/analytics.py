@@ -13,8 +13,10 @@ from app.services.site_analytics_service import (
     EVENT_ROBOT_SEARCH,
     EVENT_URL_SCAN,
     EVENT_VISIT,
+    SIGNUP_FUNNEL_STAGES,
     aggregate_site_metrics,
     record_site_event,
+    signup_funnel_metrics,
 )
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -76,6 +78,27 @@ async def track_url_scan(data: dict):
     finally:
         db.close()
     return {"status": "tracked"}
+
+
+@router.post("/track/funnel")
+async def track_funnel_stage(data: dict):
+    """Track a buyer signup-funnel stage (conversion board #20).
+
+    Body: {"stage": "signup_start" | "signup_complete" | "first_save", ...context}
+    The stage becomes the event_type; remaining fields are stored as payload so we
+    can slice by plan/next/intent later. Unknown stages are rejected so the funnel
+    event space stays clean.
+    """
+    stage = str(data.get("stage") or "").strip().lower()
+    if stage not in SIGNUP_FUNNEL_STAGES:
+        raise HTTPException(status_code=400, detail="Unknown funnel stage")
+    payload = {k: v for k, v in data.items() if k != "stage"}
+    db = SessionLocal()
+    try:
+        record_site_event(db, stage, payload)
+    finally:
+        db.close()
+    return {"status": "tracked", "stage": stage}
 
 
 @router.post("/track/supply-conversion")
@@ -276,6 +299,8 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         email_captures = site_metrics["email_captures"]
         conversion_rate = site_metrics["conversion_rate"]
 
+        signup_funnel = signup_funnel_metrics(db, cutoff=cutoff, prev_cutoff=prev_cutoff)
+
         # ── Insights ──────────────────────────────────────────────────────────
         insights = {
             "hottest_trend": f"{recent_hot_type} is the top signal type in the last {range}" if recent_hot_type else "Collecting signal data…",
@@ -312,6 +337,7 @@ async def get_analytics(range: str = Query('7d', pattern='^(7d|30d|90d|all)$')):
         "avg_robot_cost": avg_robot_cost,
         "email_captures": email_captures,
         "conversion_rate": conversion_rate,
+        "signup_funnel": signup_funnel,
         "insights": insights,
     }
     _ANALYTICS_CACHE[range] = (time.monotonic(), result)

@@ -24,6 +24,15 @@ EVENT_URL_SCAN = "url_scan"
 EVENT_SUPPLY_SIGNUP_LANDING = "supply_signup_landing"
 EVENT_SUPPLY_SIGNUP_COMPLETE = "supply_signup_complete"
 
+# Buyer signup funnel (conversion board #20) — instrument the browse → signup →
+# activate motion so we can see WHERE the funnel drops (signup friction vs
+# activation friction) instead of only knowing "signups but no paid subs".
+EVENT_SIGNUP_START = "signup_start"
+EVENT_SIGNUP_COMPLETE = "signup_complete"
+EVENT_FIRST_SAVE = "first_save"
+
+SIGNUP_FUNNEL_STAGES = (EVENT_SIGNUP_START, EVENT_SIGNUP_COMPLETE, EVENT_FIRST_SAVE)
+
 
 def record_site_event(db: Session, event_type: str, payload: dict[str, Any] | None = None) -> None:
     if not _table_ready(db, SiteAnalyticsEvent.__tablename__):
@@ -157,4 +166,54 @@ def aggregate_site_metrics(
         "conversion_rate": conversion_rate,
         "avg_payback_months": avg_payback_months,
         "avg_robot_cost": avg_robot_cost,
+    }
+
+
+def _rate(numerator: int, denominator: int) -> float:
+    """Percentage of numerator over denominator, 0.0 when denominator is 0."""
+    if denominator <= 0:
+        return 0.0
+    return round((numerator / denominator) * 100, 1)
+
+
+def signup_funnel_metrics(
+    db: Session,
+    *,
+    cutoff: datetime,
+    prev_cutoff: datetime | None = None,
+) -> dict[str, Any]:
+    """Signup funnel counts + step conversion rates for conversion board #20.
+
+    Stages: signup_start (intent) → signup_complete (account created) →
+    first_save (activated: saved their first lead). Step rates reveal whether the
+    drop-off is at signup friction (start→complete) or activation (complete→save).
+    """
+    if not _table_ready(db, SiteAnalyticsEvent.__tablename__):
+        return {
+            "available": False,
+            "signup_start": 0,
+            "signup_complete": 0,
+            "first_save": 0,
+            "start_to_complete_rate": 0.0,
+            "complete_to_save_rate": 0.0,
+            "start_to_save_rate": 0.0,
+        }
+
+    start, prev_start = _count_events(db, EVENT_SIGNUP_START, cutoff, prev_cutoff)
+    complete, prev_complete = _count_events(db, EVENT_SIGNUP_COMPLETE, cutoff, prev_cutoff)
+    first_save, prev_save = _count_events(db, EVENT_FIRST_SAVE, cutoff, prev_cutoff)
+
+    return {
+        "available": True,
+        "signup_start": start,
+        "signup_complete": complete,
+        "first_save": first_save,
+        "start_to_complete_rate": _rate(complete, start),
+        "complete_to_save_rate": _rate(first_save, complete),
+        "start_to_save_rate": _rate(first_save, start),
+        "prev": {
+            "signup_start": prev_start,
+            "signup_complete": prev_complete,
+            "first_save": prev_save,
+        },
     }

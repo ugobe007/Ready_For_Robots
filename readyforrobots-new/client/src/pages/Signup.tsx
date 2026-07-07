@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import { supabase, supabaseOAuthRedirect } from "@/lib/supabase";
 import { getPublicReadApiBase } from "@/lib/apiBase";
-import { readSupplyAttribution, trackSupplyConversion } from "@/lib/siteAnalytics";
+import { readSupplyAttribution, trackSupplyConversion, trackSignupStart } from "@/lib/siteAnalytics";
 import { clearSupabaseOAuthParams, readSupabaseOAuthError, finishSupabaseOAuthCallback } from "@/lib/authCallback";
 import { resolvePostAuthPath, storePendingNext, postAuthRedirectTarget, readPlanParam, storeCheckoutIntent, navigateAfterAuth } from "@/lib/authNext";
 
@@ -42,6 +42,17 @@ export default function Signup() {
     const next = params.get("next");
     if (next && next.startsWith("/")) storePendingNext(next);
   }, [params, search]);
+
+  // Funnel #20: record signup intent (denominator). Fires once per page view.
+  useEffect(() => {
+    trackSignupStart({
+      plan: params.get("plan") || null,
+      next: params.get("next") || null,
+      intent: params.get("intent") || null,
+      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const attribution = readSupplyAttribution(search);

@@ -32,6 +32,45 @@ export function trackSupplyConversion(payload: Record<string, unknown>) {
   postEvent("/api/track/supply-conversion", payload);
 }
 
+/**
+ * Buyer signup funnel (conversion board #20): browse → signup → activate.
+ * signup_start (intent) → signup_complete (account) → first_save (activated).
+ */
+export type FunnelStage = "signup_start" | "signup_complete" | "first_save";
+
+export function trackFunnelStage(stage: FunnelStage, payload: Record<string, unknown> = {}) {
+  postEvent("/api/track/funnel", { stage, ...payload });
+}
+
+/** Fire an event at most once per browser (dedupes completion/activation across reloads). */
+function trackFunnelOnce(stage: FunnelStage, payload: Record<string, unknown> = {}) {
+  const key = `rfr_funnel_${stage}`;
+  if (typeof window !== "undefined") {
+    try {
+      if (window.localStorage.getItem(key) === "1") return;
+      window.localStorage.setItem(key, "1");
+    } catch {
+      /* private mode — fall through and fire (better a possible dup than a miss) */
+    }
+  }
+  trackFunnelStage(stage, payload);
+}
+
+/** Signup intent — fired on each /signup view (denominator of the funnel). */
+export function trackSignupStart(payload: Record<string, unknown> = {}) {
+  trackFunnelStage("signup_start", payload);
+}
+
+/** Account created — fired once per browser when auth first completes. */
+export function trackSignupComplete(payload: Record<string, unknown> = {}) {
+  trackFunnelOnce("signup_complete", payload);
+}
+
+/** Activation — fired once per browser on the user's first saved lead. */
+export function trackFirstSave(payload: Record<string, unknown> = {}) {
+  trackFunnelOnce("first_save", payload);
+}
+
 export function readSupplyAttribution(search: string): {
   robotCompanyId?: number;
   messageToken?: string;

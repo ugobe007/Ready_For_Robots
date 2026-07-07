@@ -12,10 +12,14 @@ from app.models.robot_buyer_lead import RobotBuyerLead
 from app.models.site_analytics_event import SiteAnalyticsEvent
 from app.models.waitlist import WaitlistSignup
 from app.services.site_analytics_service import (
+    EVENT_FIRST_SAVE,
+    EVENT_SIGNUP_COMPLETE,
+    EVENT_SIGNUP_START,
     EVENT_URL_SCAN,
     EVENT_VISIT,
     aggregate_site_metrics,
     record_site_event,
+    signup_funnel_metrics,
 )
 
 
@@ -73,3 +77,32 @@ def test_record_and_aggregate_site_metrics(db_session):
 
     rows = db_session.query(SiteAnalyticsEvent).all()
     assert len(rows) == 2
+
+
+def test_signup_funnel_metrics_counts_and_rates(db_session):
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=30)
+
+    # 4 started, 2 completed, 1 activated → 50% start→complete, 50% complete→save.
+    for _ in range(4):
+        record_site_event(db_session, EVENT_SIGNUP_START, {"plan": "pro"})
+    for _ in range(2):
+        record_site_event(db_session, EVENT_SIGNUP_COMPLETE, {})
+    record_site_event(db_session, EVENT_FIRST_SAVE, {"company": "Acme"})
+
+    funnel = signup_funnel_metrics(db_session, cutoff=cutoff)
+
+    assert funnel["available"] is True
+    assert funnel["signup_start"] == 4
+    assert funnel["signup_complete"] == 2
+    assert funnel["first_save"] == 1
+    assert funnel["start_to_complete_rate"] == 50.0
+    assert funnel["complete_to_save_rate"] == 50.0
+    assert funnel["start_to_save_rate"] == 25.0
+
+
+def test_signup_funnel_metrics_zero_safe(db_session):
+    funnel = signup_funnel_metrics(db_session, cutoff=datetime.now(timezone.utc) - timedelta(days=7))
+    assert funnel["signup_start"] == 0
+    assert funnel["start_to_complete_rate"] == 0.0
+    assert funnel["complete_to_save_rate"] == 0.0
