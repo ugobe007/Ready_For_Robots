@@ -146,3 +146,97 @@ def test_rotate_token_invalidates_old(client):
     assert new != old
     assert client.get(f"/api/special-projects/portal/{old}").status_code == 404
     assert client.get(f"/api/special-projects/portal/{new}").status_code == 200
+
+
+# ── Target queue (Cal's review-first outreach pipeline) ─────────────────────────
+
+def _add_target(client, project_id, **kw):
+    payload = {"company": "CloudKitchens", "best_fit_task": "Bowl assembly", "sequence": "A", **kw}
+    res = client.post(f"/api/admin/special-projects/{project_id}/targets", json=payload)
+    assert res.status_code == 200, res.text
+    return res.json()
+
+
+def test_create_target_autogenerates_draft(client):
+    proj = _create(client)
+    t = _add_target(client, proj["id"], contact_name="Alex Rivera", signal="a new automation push")
+    assert t["stage"] == "targeted"
+    assert t["approved"] is False
+    # Draft is composed from the sequence template with merge fields.
+    assert "CloudKitchens" in t["draft_subject"]
+    assert t["draft_body"].startswith("Hi Alex,")
+    assert "no-cost validation pilot" in t["draft_body"]
+    # Has an email guessed flag off since none was provided.
+    assert t["contact_status"] == "none"
+    assert t["can_send"] is False
+
+
+def test_send_requires_approval_and_email(client):
+    proj = _create(client)
+    t = _add_target(client, proj["id"])
+    # Not approved, no email → refused.
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send")
+    assert res.status_code == 400
+    # Approve but still no email → refused.
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/approve")
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send")
+    assert res.status_code == 400
+
+
+def test_send_moves_stage_and_records_activity(client, monkeypatch):
+    sent = {}
+
+    def fake_send(**kwargs):
+        sent.update(kwargs)
+        return {"id": "resend-123"}
+
+    monkeypatch.setattr("app.services.cal_email_send.send_cal_email_via_resend", fake_send)
+
+    proj = _create(client)
+    t = _add_target(client, proj["id"], contact_email="ops@cloudkitchens.com")
+    client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/approve")
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/send")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["stage"] == "contacted"
+    assert body["sent_at"] is not None
+    assert sent["to_email"] == "ops@cloudkitchens.com"
+
+    # Funnel + KPIs recompute from real activity.
+    listing = client.get(f"/api/admin/special-projects/{proj['id']}/targets").json()
+    assert listing["pipeline"]["targeted"] == 1
+    assert listing["pipeline"]["contacted"] == 1
+    assert listing["metrics"]["contacted"] == 1
+
+    # An outreach update lands on the timeline for the portal.
+    portal = client.get(f"/api/special-projects/portal/{proj['share_token']}").json()
+    assert any(u["category"] == "outreach" for u in portal["updates"])
+    assert portal["accounts"][0]["company"] == "CloudKitchens"
+    assert portal["accounts"][0]["contacted"] is True
+
+
+def test_stage_advance_recomputes_funnel(client):
+    proj = _create(client)
+    t = _add_target(client, proj["id"])
+    res = client.post(
+        f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/stage",
+        json={"stage": "demo"},
+    )
+    assert res.status_code == 200, res.text
+    assert res.json()["stage"] == "demo"
+    listing = client.get(f"/api/admin/special-projects/{proj['id']}/targets").json()
+    # Cumulative funnel: a demo-stage target counts for every earlier stage too.
+    assert listing["pipeline"]["targeted"] == 1
+    assert listing["pipeline"]["contacted"] == 1
+    assert listing["pipeline"]["demo"] == 1
+    assert listing["pipeline"]["pilot_signed"] == 0
+
+
+def test_invalid_stage_rejected(client):
+    proj = _create(client)
+    t = _add_target(client, proj["id"])
+    res = client.post(
+        f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/stage",
+        json={"stage": "bogus"},
+    )
+    assert res.status_code == 400

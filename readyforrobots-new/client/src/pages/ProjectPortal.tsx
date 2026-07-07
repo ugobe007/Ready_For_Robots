@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
-import { Activity, CheckCircle2, Loader2, Rocket } from "lucide-react";
+import { Activity, Building2, CheckCircle2, Loader2, Rocket } from "lucide-react";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 
 type PortalUpdate = {
@@ -19,6 +19,7 @@ type PortalData = {
   status: string;
   metrics: Record<string, unknown>;
   funnel: Array<{ stage: string; count: number }>;
+  accounts?: Array<{ company: string; segment?: string | null; best_fit_task?: string | null; stage: string; contacted: boolean }>;
   updated_at?: string | null;
   updates: PortalUpdate[];
 };
@@ -149,6 +150,37 @@ export default function ProjectPortal() {
                       {f.count}
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Accounts in motion */}
+        {data.accounts && data.accounts.length > 0 && (
+          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
+              <Building2 className="h-4 w-4 text-indigo-400" /> Accounts Cal is working ({data.accounts.length})
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {data.accounts.map((a) => (
+                <div
+                  key={a.company}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-white">{a.company}</div>
+                    {a.best_fit_task && (
+                      <div className="truncate text-[11px] text-slate-500">{a.best_fit_task}</div>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                      a.contacted ? "bg-indigo-500/15 text-indigo-300" : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {a.stage.replace("_", " ")}
+                  </span>
                 </div>
               ))}
             </div>

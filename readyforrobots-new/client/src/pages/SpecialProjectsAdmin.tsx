@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
   Bot,
+  Check,
+  ChevronDown,
   Copy,
   ExternalLink,
+  Mail,
   Plus,
   RefreshCw,
   Rocket,
+  Send,
   Shield,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import Header from "@/components/Header";
@@ -52,6 +57,34 @@ type Project = {
   portal_path: string;
   updates?: ProjectUpdate[];
   update_count?: number;
+};
+
+type Target = {
+  id: string;
+  company: string;
+  website?: string | null;
+  segment?: string | null;
+  best_fit_task?: string | null;
+  persona?: string | null;
+  sequence?: string | null;
+  fit?: string | null;
+  signal?: string | null;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  contact_title?: string | null;
+  contact_status: string;
+  draft_subject?: string | null;
+  draft_body?: string | null;
+  stage: string;
+  approved: boolean;
+  can_send: boolean;
+  sent_at?: string | null;
+};
+
+const FIT_LABEL: Record<string, { text: string; cls: string }> = {
+  H: { text: "Hot", cls: "bg-red-100 text-red-700" },
+  W: { text: "Warm", cls: "bg-amber-100 text-amber-700" },
+  C: { text: "Cold", cls: "bg-slate-100 text-slate-600" },
 };
 
 type MetricRow = { key: string; value: string };
@@ -100,6 +133,11 @@ export default function SpecialProjectsAdmin() {
   const [updBody, setUpdBody] = useState("");
   const [updCategory, setUpdCategory] = useState<string>("milestone");
 
+  // Target queue (Cal's review-first outreach pipeline)
+  const [targets, setTargets] = useState<Target[]>([]);
+  const [targetsLoading, setTargetsLoading] = useState(false);
+  const [expandedTarget, setExpandedTarget] = useState<string | null>(null);
+
   const adminFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
       const token = await getFreshAccessToken(session?.access_token);
@@ -136,6 +174,23 @@ export default function SpecialProjectsAdmin() {
     }
   }, [adminFetch]);
 
+  const loadTargets = useCallback(
+    async (projectId: string) => {
+      setTargetsLoading(true);
+      try {
+        const res = await adminFetch(`/api/admin/special-projects/${projectId}/targets`);
+        if (!res.ok) throw new Error(`Failed to load targets (${res.status})`);
+        const data = (await res.json()) as { targets: Target[] };
+        setTargets(data.targets || []);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load targets");
+      } finally {
+        setTargetsLoading(false);
+      }
+    },
+    [adminFetch],
+  );
+
   const openProject = useCallback(
     async (id: string) => {
       setError("");
@@ -151,12 +206,71 @@ export default function SpecialProjectsAdmin() {
           Object.fromEntries(PIPELINE_STAGES.map((s) => [s, String(p.pipeline?.[s] ?? "")])),
         );
         setMetricRows(metricsToRows(p.metrics));
+        setExpandedTarget(null);
+        void loadTargets(id);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to open project");
       }
     },
-    [adminFetch],
+    [adminFetch, loadTargets],
   );
+
+  const targetAction = useCallback(
+    async (path: string, init: RequestInit, successMsg?: string) => {
+      if (!selected) return;
+      setBusy(true);
+      setError("");
+      try {
+        const res = await adminFetch(path, init);
+        if (!res.ok) {
+          const detail = await res.json().catch(() => null);
+          throw new Error(detail?.detail || `Action failed (${res.status})`);
+        }
+        await loadTargets(selected.id);
+        // Sending / stage changes recompute the project funnel + KPIs.
+        await openProject(selected.id);
+        if (successMsg) setNotice(successMsg);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Action failed");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [adminFetch, selected, loadTargets, openProject],
+  );
+
+  const enrichTargets = useCallback(async () => {
+    if (!selected) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/enrich`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Enrich failed (${res.status})`);
+      await loadTargets(selected.id);
+      setNotice(`Enriched ${data?.enriched ?? 0} of ${data?.attempted ?? 0} contacts`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Enrich failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets]);
+
+  const regenerateDrafts = useCallback(async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await adminFetch(`/api/admin/special-projects/${selected.id}/targets/regenerate-drafts`, {
+        method: "POST",
+      });
+      await loadTargets(selected.id);
+      setNotice("Drafts regenerated");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets]);
 
   useEffect(() => {
     if (!authLoading) void loadProjects();
@@ -512,9 +626,197 @@ export default function SpecialProjectsAdmin() {
                   </div>
                 </div>
 
+                {/* Cal outreach queue (review-first) */}
+                <div className="rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <Bot className="h-4 w-4 text-indigo-600" /> Cal outreach queue
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                        {targetsLoading ? "…" : `${targets.length} accounts`}
+                      </span>
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => void enrichTargets()}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        <Mail className="h-3.5 w-3.5" /> Enrich emails
+                      </button>
+                      <button
+                        onClick={() => void regenerateDrafts()}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Regenerate drafts
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mb-3 text-xs text-slate-500">
+                    Review-first — Cal drafts every touch, nothing sends until you approve. Sending and stage
+                    changes auto-update the funnel + KPIs below.
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-[11px] uppercase tracking-wide text-slate-400">
+                          <th className="py-2 pr-2 font-semibold">Account</th>
+                          <th className="py-2 pr-2 font-semibold">Contact</th>
+                          <th className="py-2 pr-2 font-semibold">Stage</th>
+                          <th className="py-2 pr-2 text-right font-semibold">Draft / send</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {targets.map((t) => {
+                          const fit = t.fit ? FIT_LABEL[t.fit] : null;
+                          const open = expandedTarget === t.id;
+                          return (
+                            <Fragment key={t.id}>
+                              <tr className="align-top">
+                                <td className="py-2.5 pr-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-medium text-slate-900">{t.company}</span>
+                                    {fit && (
+                                      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${fit.cls}`}>
+                                        {fit.text}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500">
+                                    {t.best_fit_task}
+                                    {t.segment ? ` · ${t.segment}` : ""}
+                                  </div>
+                                </td>
+                                <td className="py-2.5 pr-2">
+                                  {t.contact_email ? (
+                                    <div>
+                                      <div className="text-xs text-slate-700">{t.contact_email}</div>
+                                      <span
+                                        className={`text-[10px] font-medium ${
+                                          t.contact_status === "verified" ? "text-emerald-600" : "text-amber-600"
+                                        }`}
+                                      >
+                                        {t.contact_status}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[11px] text-slate-400">no email yet</span>
+                                  )}
+                                </td>
+                                <td className="py-2.5 pr-2">
+                                  <select
+                                    value={t.stage}
+                                    onChange={(e) =>
+                                      void targetAction(
+                                        `/api/admin/special-projects/${selected.id}/targets/${t.id}/stage`,
+                                        { method: "POST", body: JSON.stringify({ stage: e.target.value }) },
+                                        "Stage updated",
+                                      )
+                                    }
+                                    className="rounded-md border border-slate-300 px-2 py-1 text-xs capitalize"
+                                  >
+                                    {PIPELINE_STAGES.map((s) => (
+                                      <option key={s} value={s}>
+                                        {s.replace("_", " ")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="py-2.5 pl-2">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => setExpandedTarget(open ? null : t.id)}
+                                      className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
+                                    >
+                                      Draft <ChevronDown className={`h-3 w-3 transition ${open ? "rotate-180" : ""}`} />
+                                    </button>
+                                    {t.sent_at ? (
+                                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">
+                                        <Check className="h-3 w-3" /> Sent
+                                      </span>
+                                    ) : t.approved ? (
+                                      <button
+                                        onClick={() =>
+                                          void targetAction(
+                                            `/api/admin/special-projects/${selected.id}/targets/${t.id}/send`,
+                                            { method: "POST" },
+                                            `Sent to ${t.company}`,
+                                          )
+                                        }
+                                        disabled={busy || !t.can_send}
+                                        title={t.can_send ? "Send now" : "Add a contact email first"}
+                                        className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
+                                      >
+                                        <Send className="h-3 w-3" /> Send
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          void targetAction(
+                                            `/api/admin/special-projects/${selected.id}/targets/${t.id}/approve`,
+                                            { method: "POST" },
+                                            "Draft approved",
+                                          )
+                                        }
+                                        disabled={busy}
+                                        className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                      >
+                                        <Check className="h-3 w-3" /> Approve
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                              {open && (
+                                <tr>
+                                  <td colSpan={4} className="pb-3">
+                                    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                                      <div className="text-[11px] font-semibold text-slate-500">
+                                        Subject · Sequence {t.sequence} · {t.persona}
+                                      </div>
+                                      <div className="text-sm font-medium text-slate-800">{t.draft_subject}</div>
+                                      <pre className="mt-2 whitespace-pre-wrap font-sans text-xs text-slate-700">
+                                        {t.draft_body}
+                                      </pre>
+                                      {t.approved && !t.sent_at && (
+                                        <button
+                                          onClick={() =>
+                                            void targetAction(
+                                              `/api/admin/special-projects/${selected.id}/targets/${t.id}/unapprove`,
+                                              { method: "POST" },
+                                              "Approval revoked",
+                                            )
+                                          }
+                                          className="mt-2 text-[11px] font-medium text-slate-500 hover:text-red-600"
+                                        >
+                                          Revoke approval
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        })}
+                        {!targetsLoading && targets.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="py-6 text-center text-xs text-slate-500">
+                              No target accounts yet. Seed them with{" "}
+                              <code className="rounded bg-slate-100 px-1">seed_special_project_nimo_targets.py</code>.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
                 {/* Pipeline funnel */}
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
-                  <h3 className="mb-3 text-sm font-semibold text-slate-900">Pipeline funnel</h3>
+                  <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                    Pipeline funnel <span className="text-xs font-normal text-slate-400">(auto-derived from the queue)</span>
+                  </h3>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
                     {PIPELINE_STAGES.map((stage) => (
                       <div key={stage}>

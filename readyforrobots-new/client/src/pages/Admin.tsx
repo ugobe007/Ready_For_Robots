@@ -2009,6 +2009,13 @@ export default function Admin() {
               <Link href="/marketplace" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
                 Marketplace
               </Link>
+              <Link
+                href="/admin/special-projects"
+                className="rounded-xl border px-4 py-2 text-xs font-bold text-white"
+                style={{ backgroundColor: "#4f46e5", borderColor: "#4f46e5" }}
+              >
+                Special Projects (NIMO)
+              </Link>
             </div>
           </div>
         </section>
