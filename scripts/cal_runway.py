@@ -1,6 +1,7 @@
 """How many eligible HOT/WARM buyers has Cal NOT yet contacted? (send runway)"""
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -8,6 +9,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--limit", type=int, default=300, help="HOT/WARM window size to measure.")
+    args = ap.parse_args()
+
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
     from app.models.crm import CrmAccount
@@ -15,7 +20,7 @@ def main() -> int:
 
     db = SessionLocal()
     try:
-        pool = _hot_warm_companies(db, 300)
+        pool = _hot_warm_companies(db, args.limit)
         eligible = ineligible = sent = unsent_no_draft = unsent_ready = 0
         ready_names = []
         for company, _s, _t in pool:
