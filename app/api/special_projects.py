@@ -12,7 +12,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+import csv
+import io
 from datetime import datetime, timezone
+
+from fastapi.responses import Response
 
 from app.api.auth_deps import require_admin
 from app.database import get_db
@@ -245,6 +249,65 @@ def list_targets(project_id: str, db: Session = Depends(get_db)) -> dict[str, An
         "pipeline": p.pipeline or {},
         "metrics": p.metrics or {},
     }
+
+
+_CSV_FIELDS = [
+    "company",
+    "segment",
+    "best_fit_task",
+    "fit",
+    "contact_name",
+    "contact_title",
+    "contact_email",
+    "email_status",
+    "stage",
+    "date_contacted",
+    "outreach_sequence",
+    "why_now_signal",
+    "website",
+    "outreach_subject",
+]
+_FIT_LABEL = {"H": "Hot", "W": "Warm", "C": "Cold"}
+
+
+@admin_router.get("/{project_id}/targets.csv")
+def export_targets_csv(
+    project_id: str, contacted: bool = False, db: Session = Depends(get_db)
+) -> Response:
+    """Download the target accounts as CSV (all, or only those Cal has contacted)."""
+    p = _get_or_404(db, project_id)
+    rows = sorted(p.targets or [], key=lambda t: t.sort_order)
+    if contacted:
+        rows = [t for t in rows if t.sent_at is not None]
+
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=_CSV_FIELDS)
+    writer.writeheader()
+    for t in rows:
+        writer.writerow(
+            {
+                "company": t.company or "",
+                "segment": t.segment or "",
+                "best_fit_task": t.best_fit_task or "",
+                "fit": _FIT_LABEL.get(t.fit or "", t.fit or ""),
+                "contact_name": t.contact_name or "",
+                "contact_title": t.contact_title or "",
+                "contact_email": t.contact_email or "",
+                "email_status": t.contact_status or "",
+                "stage": t.stage or "",
+                "date_contacted": t.sent_at.strftime("%Y-%m-%d") if t.sent_at else "",
+                "outreach_sequence": t.sequence or "",
+                "why_now_signal": t.signal or "",
+                "website": t.website or "",
+                "outreach_subject": (t.draft_subject or "").strip(),
+            }
+        )
+    filename = f"{p.slug}-leads-{datetime.now(timezone.utc):%Y-%m-%d}.csv"
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @admin_router.post("/{project_id}/targets")

@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   Copy,
+  Download,
   ExternalLink,
   Mail,
   Plus,
@@ -257,6 +258,35 @@ export default function SpecialProjectsAdmin() {
       setBusy(false);
     }
   }, [adminFetch, selected, loadTargets]);
+
+  const downloadCsv = useCallback(
+    async (contactedOnly: boolean) => {
+      if (!selected) return;
+      setBusy(true);
+      setError("");
+      try {
+        const res = await adminFetch(
+          `/api/admin/special-projects/${selected.id}/targets.csv${contactedOnly ? "?contacted=true" : ""}`,
+        );
+        if (!res.ok) throw new Error(`Export failed (${res.status})`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${selected.slug}-leads${contactedOnly ? "-contacted" : ""}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setNotice("CSV downloaded");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Export failed");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [adminFetch, selected],
+  );
 
   const regenerateDrafts = useCallback(async () => {
     if (!selected) return;
@@ -649,6 +679,14 @@ export default function SpecialProjectsAdmin() {
                         className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                       >
                         <Sparkles className="h-3.5 w-3.5" /> Regenerate drafts
+                      </button>
+                      <button
+                        onClick={() => void downloadCsv(false)}
+                        disabled={busy}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                        title="Download all targets as CSV"
+                      >
+                        <Download className="h-3.5 w-3.5" /> CSV
                       </button>
                     </div>
                   </div>
