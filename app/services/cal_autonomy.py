@@ -359,6 +359,13 @@ def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
     """
     from app.services.lead_filter import is_junk
     from app.services.lead_enrichment import company_website_domain
+    from app.services.brand import BRAND_STAGEGATE, company_brand
+
+    # Brand isolation: the Ready For Robots buyer loop must never read, draft, or
+    # send to StageGate (onstage.bot logistics) accounts. Those are worked in the
+    # StageGate pipeline, from a StageGate identity — never as an RFR buyer.
+    if company_brand(company, acct) == BRAND_STAGEGATE:
+        return False, "stagegate account — isolated from Ready For Robots buyer loop"
 
     name = (getattr(company, "name", None) or "").strip()
     junk, reason = is_junk(name, "buyer")

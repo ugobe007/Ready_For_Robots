@@ -10,29 +10,27 @@ class ResendEmailError(Exception):
     """Raised when Resend email send fails."""
 
 
-# Hard safety guard: Ready For Robots is the ONLY brand allowed to leave this
-# domain. The "StageGate / onstage.bot" trade-show-logistics persona is a
-# separate product and must never be emailed from readyforrobots.com. This
-# blocks every send path (cal, supply, special projects) at the source.
-_FOREIGN_BRAND_MARKERS = (
-    "onstage.bot",
-    "stagegate",
-    "bonded warehous",
-    "show logistics",
-)
+def _block_cross_brand(
+    *, from_email: str, subject: str, body_text: str, from_display_name: str | None
+) -> None:
+    """
+    Hard brand-isolation guard at the single send chokepoint. Cal serves two
+    brands (Ready For Robots + StageGate); this ensures a message's voice always
+    matches its sending identity so StageGate/onstage.bot copy can never leave a
+    readyforrobots.com address (and vice versa). Covers cal, supply, special
+    projects, and auto-reply paths. See app/services/brand.py.
+    """
+    from app.services.brand import BrandViolation, assert_send_brand_consistent
 
-
-def _block_foreign_brand(*, subject: str, body_text: str, from_display_name: str | None) -> None:
-    haystack = " ".join(
-        part for part in (subject, body_text, from_display_name or "") if part
-    ).lower()
-    hit = next((m for m in _FOREIGN_BRAND_MARKERS if m in haystack), None)
-    if hit:
-        raise ResendEmailError(
-            "Blocked: outbound email contains a non-Ready-For-Robots brand marker "
-            f"({hit!r}). StageGate/onstage.bot copy must never be sent from "
-            "readyforrobots.com. See app/services/cal_persona.py."
+    try:
+        assert_send_brand_consistent(
+            from_email=from_email,
+            subject=subject,
+            body_text=body_text,
+            from_display_name=from_display_name,
         )
+    except BrandViolation as exc:
+        raise ResendEmailError(f"Blocked (brand isolation): {exc}") from exc
 
 
 def _format_from_header(from_email: str, display_name: str | None) -> str:
@@ -82,7 +80,12 @@ def send_email_via_resend(
     if not to_emails:
         raise ResendEmailError("Recipient email is required")
 
-    _block_foreign_brand(subject=subject, body_text=body_text, from_display_name=from_display_name)
+    _block_cross_brand(
+        from_email=from_email,
+        subject=subject,
+        body_text=body_text,
+        from_display_name=from_display_name,
+    )
 
     payload: dict[str, Any] = {
         "from": _format_from_header(from_email, from_display_name),
