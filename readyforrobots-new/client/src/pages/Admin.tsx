@@ -1370,6 +1370,28 @@ export default function Admin() {
           </div>
         </div>
 
+        <Link
+          href="/admin/special-projects"
+          className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 transition hover:bg-indigo-100"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-sm font-extrabold text-white">
+              C
+            </span>
+            <div>
+              <div className="text-sm font-extrabold text-indigo-900">
+                Cal → Special Projects (NIMO)
+              </div>
+              <div className="text-[11px] text-indigo-700">
+                Review-first outreach queue, funnel & client portal for bespoke robot-company engagements
+              </div>
+            </div>
+          </div>
+          <span className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[11px] font-bold text-white">
+            Open →
+          </span>
+        </Link>
+
         <DailyBriefPanel
           data={dailyBrief}
           loading={dailyBriefLoading}
