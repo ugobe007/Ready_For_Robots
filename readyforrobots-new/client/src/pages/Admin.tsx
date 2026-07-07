@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
 import { Link } from "wouter";
-import AdminNav from "@/components/AdminNav";
-import AdminCalOversightPanel, { type CalActivityData } from "@/components/admin/AdminCalOversightPanel";
-import AdminPipelinePanel from "@/components/admin/AdminPipelinePanel";
 import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPanel";
+import CalEmailPreview from "@/components/admin/CalEmailPreview";
+import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
+import CalWorkflowPanel, { type CalWorkflowMetrics } from "@/components/admin/CalWorkflowPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
-import { adminTabFromHash, setAdminTabHash, type AdminTab } from "@/lib/adminTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
@@ -18,7 +17,8 @@ import {
   snapshotToApplied,
   type AdminSectionName,
 } from "@/lib/adminSnapshot";
-import { authHeader } from "@/lib/supabase";
+import { authHeader, getFreshAccessToken } from "@/lib/supabase";
+import { scrollToAdminSection } from "@/lib/adminNavigation";
 
 type AdminStats = {
   totals?: { companies?: number; signals?: number; scored?: number };
@@ -70,6 +70,15 @@ type SiteAnalytics = {
   total_signals?: number;
   new_companies?: number;
   new_signals?: number;
+  signup_funnel?: {
+    available?: boolean;
+    signup_start?: number;
+    signup_complete?: number;
+    first_save?: number;
+    start_to_complete_rate?: number;
+    complete_to_save_rate?: number;
+    start_to_save_rate?: number;
+  };
   insights?: {
     hottest_trend?: string;
     opportunity?: string;
@@ -150,11 +159,26 @@ type CalDraftStatus = {
     opened?: number;
     clicked?: number;
     replied?: number;
+    buyers?: number;
+    vendors?: number;
+    scope?: string;
   };
   prospects?: CalProspect[];
   stale?: boolean;
   bootstrap_required?: boolean;
   bootstrap_message?: string;
+};
+
+type OperatorDashboard = {
+  cal_queue?: CalDraftStatus["summary"];
+  buyer_vendor?: { buyers?: number; vendors?: number; scope?: string };
+  sales_opportunities?: { total?: number };
+  workflow?: WorkflowSummary;
+  autopilot?: {
+    enabled?: boolean;
+    runtime_toggle_available?: boolean;
+    template_version?: string;
+  };
 };
 
 type ScoutStatus = {
@@ -349,21 +373,18 @@ export default function Admin() {
   const [companyJson, setCompanyJson] = useState('[{"name":"Example Robotics Buyer","website":"https://example.com","industry":"Logistics"}]');
   const [triggerScraper, setTriggerScraper] = useState("news");
   const [triggerIndustry, setTriggerIndustry] = useState("");
-  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-approve" | "cal-run" | "scout-activate" | "scout-send" | "cleanup" | "">("");
+  const [actionBusy, setActionBusy] = useState<"urls" | "companies" | "scraper" | "cache" | "reindex" | "export" | "cal-draft" | "cal-send" | "cal-send-one" | "cal-reinfer" | "cal-save" | "cal-run" | "supply-draft" | "supply-send" | "scout-activate" | "scout-send" | "cleanup" | "">("");
   const [sendConfirm, setSendConfirm] = useState<false | "bulk" | "scout-send" | string>(false);
   const [scoutStatus, setScoutStatus] = useState<ScoutStatus | null>(
     initialApplied.scoutStatus as ScoutStatus | null,
   );
   const [calStatus, setCalStatus] = useState<CalDraftStatus | null>(initialApplied.calStatus as CalDraftStatus | null);
   const [calExpanded, setCalExpanded] = useState<number | null>(null);
-  const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("drafted");
-  const [adminTab, setAdminTabState] = useState<AdminTab>(() =>
-    typeof window !== "undefined" ? adminTabFromHash(window.location.hash) : "cal",
-  );
-  const setAdminTab = useCallback((tab: AdminTab) => {
-    setAdminTabState(tab);
-    setAdminTabHash(tab);
-  }, []);
+  const [calSelectedIdx, setCalSelectedIdx] = useState<number | null>(null);
+  const [calFilter, setCalFilter] = useState<"all" | "pending" | "drafted" | "sent">("all");
+  const [calStatusError, setCalStatusError] = useState("");
+  const [calStatusLoading, setCalStatusLoading] = useState(false);
+  const [bulkSendSkipVerify, setBulkSendSkipVerify] = useState(false);
   // Reply notification settings
   const [replyForwardEmail, setReplyForwardEmail] = useState("");
   const [replySettingBusy, setReplySettingBusy] = useState(false);
@@ -372,6 +393,7 @@ export default function Admin() {
   const [dailyBriefLoading, setDailyBriefLoading] = useState(!initialApplied.dailyBrief);
   const [draftBodies, setDraftBodies] = useState<Record<string, string>>({});
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
+  const [draftLoadErrors, setDraftLoadErrors] = useState<Record<string, string>>({});
   const [draftContactEmails, setDraftContactEmails] = useState<Record<string, string>>({});
   const [calAutonomy, setCalAutonomy] = useState<{
     enabled?: boolean;
@@ -379,15 +401,11 @@ export default function Admin() {
     runtime_override?: boolean | null;
     runtime_toggle_available?: boolean;
     scheduled_on_worker?: boolean;
-    manual_approval?: boolean;
     review_email?: string | null;
     send_limit?: number;
-    followup_limit?: number;
     every_hours?: number;
     template_version?: string;
-    assembly?: { assembly_required?: boolean; llm_review_enabled?: boolean };
   } | null>(null);
-  const [bulkSendSkipVerify, setBulkSendSkipVerify] = useState(false);
   const [supplyAutonomy, setSupplyAutonomy] = useState<{
     enabled?: boolean;
     review_email?: string | null;
@@ -396,48 +414,27 @@ export default function Admin() {
     every_hours?: number;
     template_version?: string;
   } | null>(null);
-  const [calOpsMonitor, setCalOpsMonitor] = useState<{
-    assembly?: { assembly_required?: boolean; llm_review_enabled?: boolean };
-    assembly_rejections?: Array<{
-      id?: string;
-      channel?: string;
-      robot_company_id?: number | null;
-      company_id?: number | null;
-      vendor_name?: string | null;
-      subject?: string | null;
-      note?: string | null;
-      issues?: string[];
-      created_at?: string | null;
-    }>;
-    conversion_counts?: Record<string, number>;
-    recent_conversions?: Array<{
-      id?: string;
-      event_type?: string;
-      outcome?: string;
-      robot_company_id?: number | null;
-      note?: string | null;
-      created_at?: string | null;
-    }>;
-  } | null>(null);
-  const [calActivity, setCalActivity] = useState<CalActivityData | null>(null);
-  const [calActivityLoading, setCalActivityLoading] = useState(true);
-  const [calStatusError, setCalStatusError] = useState("");
-  const [calStatusLoading, setCalStatusLoading] = useState(false);
+  const [salesOppTotal, setSalesOppTotal] = useState<number | null>(null);
+  const [operatorDashboard, setOperatorDashboard] = useState<OperatorDashboard | null>(null);
 
   const headers = useMemo(() => ({
     "Content-Type": "application/json",
     ...authHeader(session?.access_token),
   }), [session?.access_token]);
 
-  const adminFetch = useCallback((path: string, init: RequestInit = {}) => (
-    fetch(`${api}${path}`, liveFetchInit({
+  const adminFetch = useCallback(async (path: string, init: RequestInit = {}) => {
+    // Always attach a *fresh* token — an in-memory session can go stale between
+    // Supabase auto-refresh cycles and cause spurious 401s (e.g. draft retry).
+    const token = await getFreshAccessToken(session?.access_token);
+    return fetch(`${api}${path}`, liveFetchInit({
       ...init,
       headers: {
-        ...headers,
+        "Content-Type": "application/json",
+        ...authHeader(token),
         ...((init.headers as Record<string, string>) || {}),
       },
-    }))
-  ), [api, headers]);
+    }));
+  }, [api, session?.access_token]);
 
   const applySectionData = useCallback((section: AdminSectionName, data: unknown) => {
     switch (section) {
@@ -551,41 +548,78 @@ export default function Admin() {
     setCalStatusLoading(true);
     setCalStatusError("");
     try {
-      const res = await adminFetch("/api/admin/cal/draft-status?include_prospects=true&prospect_limit=300");
-      const data = await res.json().catch(() => ({})) as CalDraftStatus & { detail?: string };
-      if (!res.ok) {
-        setCalStatusError(data.detail || `Cal queue failed to load (${res.status})`);
-        return;
+      const cached = readLocalAdminSnapshot()?.sections?.cal?.data as CalDraftStatus | undefined;
+      if (cached?.summary?.total) {
+        setCalStatus((prev) => ({
+          summary: cached.summary,
+          prospects: prev?.prospects ?? cached.prospects ?? [],
+        }));
       }
-      setCalStatus(data);
-      if (data.bootstrap_required) {
-        setCalStatusError(data.bootstrap_message || "Cal outreach team not initialized.");
-      } else if (data.stale) {
-        setCalStatusError("Cal queue timed out — showing partial data. Click Refresh.");
-      } else if ((data.summary?.total ?? 0) === 0) {
-        setCalStatusError("No HOT/WARM sales leads in Cal's universe yet. Check pipeline scoring or run Run cycle now to draft.");
+
+      const sumRes = await adminFetch("/api/admin/cal/queue-summary");
+      const sumData = (await sumRes.json().catch(() => ({}))) as CalDraftStatus & { detail?: string };
+      if (sumRes.ok && sumData.summary) {
+        setCalStatus((prev) => ({ ...sumData, prospects: prev?.prospects ?? [] }));
+      } else if (!sumRes.ok && sumRes.status !== 502) {
+        setCalStatusError(sumData.detail || `Cal queue failed (${sumRes.status})`);
+      } else if (!sumRes.ok && !cached?.summary) {
+        setCalStatusError("Cal queue failed to load (502) — retrying from cache…");
       }
-      const current = readLocalAdminSnapshot() ?? { sections: {} };
-      const next = mergeSectionIntoSnapshot(current, "cal", new Date().toISOString(), data);
-      writeLocalAdminSnapshot(next);
+
+      const listRes = await adminFetch(
+        "/api/admin/cal/draft-status?include_prospects=true&prospect_limit=50&fast_summary=true",
+      );
+      const listData = (await listRes.json().catch(() => ({}))) as CalDraftStatus & { detail?: string };
+      if (listRes.ok && (listData.prospects?.length || listData.summary)) {
+        setCalStatus(listData);
+        if (listData.bootstrap_required) {
+          setCalStatusError(listData.bootstrap_message || "Cal outreach team not initialized.");
+        } else {
+          setCalStatusError("");
+        }
+        const current = readLocalAdminSnapshot() ?? { sections: {} };
+        writeLocalAdminSnapshot(
+          mergeSectionIntoSnapshot(current, "cal", new Date().toISOString(), listData),
+        );
+      } else if (!listRes.ok && sumRes.ok) {
+        setCalStatusError(
+          listRes.status === 502
+            ? "Lead list timed out — counts above are valid. Click a lead after Refresh."
+            : "Lead list still loading — counts above are valid.",
+        );
+      } else if (listData.stale && sumRes.ok) {
+        setCalStatusError("Partial load — click Refresh to reload the lead list.");
+      }
     } catch (err) {
+      const cached = readLocalAdminSnapshot()?.sections?.cal?.data as CalDraftStatus | undefined;
+      if (cached?.summary) setCalStatus(cached);
       setCalStatusError(err instanceof Error ? err.message : "Cal queue failed to load.");
     } finally {
       setCalStatusLoading(false);
     }
   }, [adminFetch, session?.access_token]);
 
-  const loadDraftBody = useCallback(async (crmAccountId: string) => {
+  const loadDraftBody = useCallback(async (crmAccountId: string, preview?: string) => {
     if (!crmAccountId) return;
+    if (draftBodies[crmAccountId]?.trim()) return;
     setDraftBodyLoading(crmAccountId);
+    setDraftLoadErrors((prev) => {
+      const next = { ...prev };
+      delete next[crmAccountId];
+      return next;
+    });
     try {
       const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`);
       if (res.ok) {
         const data = await res.json() as { draft_full?: string; contact_email?: string | null };
-        if (data.draft_full) {
-          setDraftBodies((prev) => (
-            prev[crmAccountId] ? prev : { ...prev, [crmAccountId]: data.draft_full! }
-          ));
+        const full = (data.draft_full || "").trim();
+        if (full) {
+          setDraftBodies((prev) => ({ ...prev, [crmAccountId]: full }));
+        } else if (preview) {
+          setDraftBodies((prev) => ({ ...prev, [crmAccountId]: preview }));
+          setDraftLoadErrors((prev) => ({ ...prev, [crmAccountId]: "Full draft empty — showing preview. Click Retry." }));
+        } else {
+          setDraftLoadErrors((prev) => ({ ...prev, [crmAccountId]: "No draft text on this CRM account." }));
         }
         if (data.contact_email != null) {
           setDraftContactEmails((prev) => (
@@ -594,38 +628,24 @@ export default function Admin() {
               : { ...prev, [crmAccountId]: data.contact_email || "" }
           ));
         }
+      } else {
+        const errText = await res.text().catch(() => "");
+        if (preview) setDraftBodies((prev) => ({ ...prev, [crmAccountId]: preview }));
+        setDraftLoadErrors((prev) => ({
+          ...prev,
+          [crmAccountId]: errText || `Could not load draft (HTTP ${res.status})`,
+        }));
       }
-    } catch { /* advisory */ }
-    finally {
+    } catch (err) {
+      if (preview) setDraftBodies((prev) => ({ ...prev, [crmAccountId]: preview }));
+      setDraftLoadErrors((prev) => ({
+        ...prev,
+        [crmAccountId]: err instanceof Error ? err.message : "Draft load failed",
+      }));
+    } finally {
       setDraftBodyLoading(null);
     }
-  }, [adminFetch]);
-
-  const saveCalDraft = useCallback(async (crmAccountId: string) => {
-    const draft = draftBodies[crmAccountId];
-    if (!crmAccountId || !draft?.trim()) {
-      setError("Draft is empty — add text before saving.");
-      return;
-    }
-    setActionBusy("cal-save");
-    setError("");
-    try {
-      const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          outreach_draft: draft,
-          contact_email: draftContactEmails[crmAccountId] ?? undefined,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      setMessage("Cal draft saved.");
-      void loadCalStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save draft.");
-    } finally {
-      setActionBusy("");
-    }
-  }, [adminFetch, draftBodies, draftContactEmails, loadCalStatus]);
+  }, [adminFetch, draftBodies]);
 
   const loadCalAutonomyStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -646,12 +666,74 @@ export default function Admin() {
       const data = await res.json().catch(() => ({})) as { detail?: string };
       if (!res.ok) throw new Error(data.detail || "Could not update autopilot.");
       setCalAutonomy(data as typeof calAutonomy);
-      setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"} — worker will ${enabled ? "resume" : "pause"} scheduled cycles.`);
-      void loadCalActivity();
+      setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Autopilot toggle failed.");
     }
   };
+
+  const loadOperatorDashboard = useCallback(async () => {
+    if (!session?.access_token) return;
+    try {
+      const res = await adminFetch("/api/admin/cal/operator-dashboard");
+      if (!res.ok) return;
+      const data = (await res.json()) as OperatorDashboard;
+      setOperatorDashboard(data);
+      setSalesOppTotal(data.sales_opportunities?.total ?? null);
+      if (data.cal_queue) {
+        setCalStatus((prev) => ({
+          summary: { ...prev?.summary, ...data.cal_queue },
+          prospects: prev?.prospects ?? [],
+          stale: prev?.stale,
+          bootstrap_required: prev?.bootstrap_required,
+          bootstrap_message: prev?.bootstrap_message,
+        }));
+      }
+      if (data.workflow) {
+        setWorkflow((prev) => ({
+          ...prev,
+          counts: data.workflow?.counts ?? prev?.counts,
+          by_source: data.workflow?.by_source ?? prev?.by_source,
+          items: data.workflow?.items?.length ? data.workflow.items : prev?.items,
+        }));
+      }
+      if (data.autopilot) setCalAutonomy((prev) => ({ ...prev, ...data.autopilot }));
+    } catch { /* advisory */ }
+  }, [adminFetch, session?.access_token]);
+
+  const refreshOperatorView = useCallback(async () => {
+    await Promise.all([
+      loadOperatorDashboard(),
+      loadCalStatus(),
+      refreshSection("daily_brief", true),
+    ]);
+  }, [loadCalStatus, loadOperatorDashboard, refreshSection]);
+
+  const saveCalDraft = useCallback(async (crmAccountId: string) => {
+    const draft = draftBodies[crmAccountId];
+    if (!crmAccountId || !draft?.trim()) {
+      setError("Draft is empty — add text before saving.");
+      return;
+    }
+    setActionBusy("cal-save");
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/cal/draft/${crmAccountId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          outreach_draft: draft,
+          contact_email: draftContactEmails[crmAccountId] ?? undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setMessage("Cal draft saved.");
+      void refreshOperatorView();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save draft.");
+    } finally {
+      setActionBusy("");
+    }
+  }, [adminFetch, draftBodies, draftContactEmails, refreshOperatorView]);
 
   const loadSupplyAutonomyStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -661,58 +743,32 @@ export default function Admin() {
     } catch { /* advisory */ }
   }, [adminFetch, session?.access_token]);
 
-  const loadCalOpsMonitor = useCallback(async () => {
-    if (!session?.access_token) return;
-    try {
-      const res = await adminFetch("/api/admin/cal/ops-monitor?limit=20");
-      if (res.ok) setCalOpsMonitor(await res.json());
-    } catch { /* advisory */ }
-  }, [adminFetch, session?.access_token]);
-
-  const loadCalActivity = useCallback(async () => {
-    if (!session?.access_token) return;
-    setCalActivityLoading(true);
-    try {
-      const res = await adminFetch("/api/admin/cal/activity?limit=40");
-      if (res.ok) setCalActivity(await res.json() as CalActivityData);
-    } catch { /* advisory */ }
-    finally {
-      setCalActivityLoading(false);
-    }
-  }, [adminFetch, session?.access_token]);
-
   const runCalAutonomy = async (dryRun: boolean) => {
-    setActionBusy("cal-run");
+    setActionBusy(dryRun ? "cal-draft" : "cal-run");
     setError("");
     try {
       const res = await adminFetch("/api/admin/cal/autonomy-run", {
         method: "POST",
         body: JSON.stringify({ dry_run: dryRun }),
       });
-      const data = await res.json().catch(() => ({})) as Record<string, unknown> & {
-        status?: string;
-        reason?: string;
-        drafted?: number;
-        refreshed?: number;
-        sent?: number;
-        followups?: { sent?: number; processed?: number };
-        errors?: Array<{ name?: string; error?: string }>;
-      };
-      if (!res.ok) throw new Error(String(data.detail || "Cal autonomy run failed"));
-      if (data.status === "skipped" || data.status === "disabled") {
-        throw new Error(String(data.reason || `Cal autonomy ${data.status}`));
-      }
-      const fu = (data.followups as { sent?: number } | undefined)?.sent ?? 0;
-      const errCount = data.errors?.length ?? 0;
+      const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+      if (!res.ok) throw new Error(String(data.detail || data.reason || data.status || "Cal autonomy run failed"));
+      const skips = [
+        data.skipped_no_draft != null ? `${data.skipped_no_draft} skipped (no draft / needs approval)` : null,
+        data.skipped_already_sent != null ? `${data.skipped_already_sent} already sent` : null,
+        data.skipped_unverified != null ? `${data.skipped_unverified} unverified email` : null,
+      ].filter(Boolean);
+      const errSample = Array.isArray(data.errors)
+        ? (data.errors as Array<{ name?: string; error?: string }>).slice(0, 2).map((e) => `${e.name}: ${e.error}`).join(" · ")
+        : "";
+      const suffix = [skips.join(", "), errSample].filter(Boolean).join(" — ");
       setMessage(
         dryRun
-          ? `Dry run: would draft ${data.drafted ?? 0}, send ${data.sent ?? 0}, follow up ${fu}.`
-          : `Cal cycle complete — drafted ${data.drafted ?? 0}, sent ${data.sent ?? 0}, follow-ups ${fu}${errCount ? ` · ${errCount} blocked (see queue)` : ""}.`,
+          ? `Dry run: would draft ${data.drafted ?? 0}, refresh ${data.refreshed ?? 0}, send ${data.sent ?? 0}.${suffix ? ` ${suffix}` : ""}`
+          : `Cal cycle: drafted ${data.drafted ?? 0}, refreshed ${data.refreshed ?? 0}, sent ${data.sent ?? 0}.${suffix ? ` ${suffix}` : data.drafted === 0 && data.sent === 0 ? " Queue may already be drafted — check sendable count and assembly blocks." : ""}`,
       );
-      void loadCalStatus();
+      void refreshOperatorView();
       void loadCalAutonomyStatus();
-      void loadCalOpsMonitor();
-      void loadCalActivity();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Cal autonomy run failed.");
     } finally {
@@ -736,7 +792,6 @@ export default function Admin() {
           : `Supply autonomy: sent ${data.sent ?? 0} vendor signup emails.`,
       );
       void loadSupplyAutonomyStatus();
-      void loadCalOpsMonitor();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Supply autonomy run failed.");
     } finally {
@@ -787,25 +842,21 @@ export default function Admin() {
   }, [authLoading, loadAdmin, session?.access_token]);
 
   useEffect(() => {
-    const syncFromHash = () => {
-      setAdminTabState(adminTabFromHash(window.location.hash));
-      const hash = window.location.hash.slice(1);
-      if (hash && !["cal-outreach", "pipeline", "system", "cal"].includes(hash)) {
-        scrollToHash(hash);
-      }
-    };
-    syncFromHash();
-    window.addEventListener("hashchange", syncFromHash);
-    return () => window.removeEventListener("hashchange", syncFromHash);
-  }, []);
-
-  useEffect(() => {
     if (meLoading) return;
     const hash = window.location.hash.slice(1);
-    if (!hash || ["pipeline", "system", "cal"].includes(hash)) return;
+    if (!hash) return;
     const timer = window.setTimeout(() => scrollToHash(hash), 150);
     return () => window.clearTimeout(timer);
   }, [meLoading]);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash) scrollToHash(hash);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   function scrollToHash(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -819,13 +870,11 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authLoading && session?.access_token && me?.is_admin) {
-      void loadCalAutonomyStatus();
+      void loadOperatorDashboard();
       void loadSupplyAutonomyStatus();
-      void loadCalOpsMonitor();
-      void loadCalActivity();
       void loadCalStatus();
     }
-  }, [authLoading, loadCalActivity, loadCalAutonomyStatus, loadCalOpsMonitor, loadCalStatus, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
+  }, [authLoading, loadCalAutonomyStatus, loadCalStatus, loadOperatorDashboard, loadSupplyAutonomyStatus, me?.is_admin, session?.access_token]);
 
   async function importUrls(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -927,7 +976,7 @@ export default function Admin() {
       const data = await res.json().catch(() => ({})) as { drafted?: number; skipped?: number; errors?: unknown[] };
       if (!res.ok) throw new Error((data as { detail?: string }).detail || "Bulk draft failed.");
       setMessage(`Cal drafted ${data.drafted ?? 0} emails · ${data.skipped ?? 0} already had drafts · ${data.errors?.length ?? 0} errors.`);
-      await loadCalStatus();
+      await refreshOperatorView();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bulk draft failed.");
     } finally {
@@ -939,48 +988,51 @@ export default function Admin() {
     await runCalBulkDraft(false, [companyId]);
   }
 
-  const calManualApproval = calAutonomy?.manual_approval ?? false;
-
-  const isCalApproved = (stage?: string | null) =>
-    !calManualApproval || stage === "draft_approved" || stage === "approved";
-
-  const scrollToCalQueue = useCallback(() => {
-    setAdminTab("cal");
-    setCalFilter("drafted");
-    window.setTimeout(() => {
-      document.getElementById("cal-prospect-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-  }, [setAdminTab]);
-
-  async function runCalApproveOne(crmAccountId: string) {
+  async function runCalFixEmails() {
+    setMessage("");
     setError("");
-    setActionBusy("cal-approve");
+    setActionBusy("cleanup");
     try {
-      const res = await adminFetch(`/api/admin/cal/approve-one/${crmAccountId}`, { method: "POST" });
-      const data = await res.json().catch(() => ({})) as { detail?: string };
-      if (!res.ok) throw new Error(data.detail || "Approve failed.");
-      setMessage("Draft approved — ready to send in Step 3.");
-      await loadCalStatus();
+      const res = await adminFetch("/api/admin/cal/enrich-missing-emails?limit=80&dry_run=false", { method: "POST" });
+      const d = await res.json().catch(() => ({})) as {
+        resolved_emails?: number;
+        apollo_hits?: number;
+        inferred_hits?: number;
+        unresolved?: number;
+        detail?: string;
+      };
+      if (!res.ok) throw new Error(d.detail || "Fix emails failed.");
+      setMessage(
+        `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}).`,
+      );
+      void refreshOperatorView();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Approve failed.");
+      setError(err instanceof Error ? err.message : "Fix emails failed.");
     } finally {
       setActionBusy("");
     }
   }
 
-  async function runCalApproveAll() {
+  async function runCalDiagnostic() {
+    setMessage("");
     setError("");
-    setActionBusy("cal-approve");
     try {
-      const res = await adminFetch("/api/admin/cal/approve-all", { method: "POST" });
-      const data = await res.json().catch(() => ({})) as { approved?: number; detail?: string };
-      if (!res.ok) throw new Error(data.detail || "Approve all failed.");
-      setMessage(`Approved ${data.approved ?? 0} Cal drafts — proceed to Step 3 to send.`);
-      await loadCalStatus();
+      const res = await adminFetch("/api/admin/scout/diagnostic");
+      const d = await res.json().catch(() => ({})) as {
+        health?: string;
+        issues?: string[];
+        config?: { from_email?: string | null; api_key_set?: boolean };
+        detail?: string;
+      };
+      if (!res.ok) throw new Error(d.detail || "Diagnostic failed.");
+      const issues = d.issues ?? [];
+      if (issues.length) {
+        setError(`Cal delivery: ${d.health ?? "warn"} — ${issues.slice(0, 2).join(" · ")}`);
+      } else {
+        setMessage(`Cal delivery healthy — from ${d.config?.from_email ?? "?"}, API key ${d.config?.api_key_set ? "set" : "MISSING"}.`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Approve all failed.");
-    } finally {
-      setActionBusy("");
+      setError(err instanceof Error ? err.message : "Diagnostic failed.");
     }
   }
 
@@ -1004,7 +1056,7 @@ export default function Admin() {
         `Re-inferred ${data.updated ?? 0} contacts · ${data.unchanged ?? 0} already correct · `
         + `${data.skipped_sent ?? 0} skipped (sent) · ${(data.skipped_person ?? 0) + (data.skipped_kept ?? 0)} kept existing.`,
       );
-      await loadCalStatus();
+      await refreshOperatorView();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Re-infer contacts failed.");
     } finally {
@@ -1033,7 +1085,6 @@ export default function Admin() {
         });
         const data = await res.json().catch(() => ({})) as {
           sent?: number;
-          skipped_unverified?: number;
           errors?: Array<{ name?: string; error?: string }>;
           detail?: string;
         };
@@ -1045,8 +1096,7 @@ export default function Admin() {
         if (batchSent === 0) break;
         if (totalSent >= limit) break;
       }
-      await loadCalStatus();
-      void loadCalActivity();
+      await refreshOperatorView();
       if (totalSent === 0) {
         const sample = lastErrors.slice(0, 3).map((e) => `${e.name || "Lead"}: ${e.error || "unknown"}`).join(" · ");
         throw new Error(
@@ -1086,7 +1136,7 @@ export default function Admin() {
       const data = await res.json().catch(() => ({})) as { sent?: boolean; to?: string; detail?: string };
       if (!res.ok) throw new Error(data.detail || "Send failed.");
       setMessage(`Sent to ${data.to ?? toEmail}.`);
-      await loadCalStatus();
+      await refreshOperatorView();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Send failed.");
     } finally {
@@ -1173,6 +1223,57 @@ export default function Admin() {
     }
   }
 
+  const calMetrics = useMemo(() => {
+    const fromDashboard = operatorDashboard?.cal_queue ?? {};
+    const fromStatus = calStatus?.summary ?? {};
+    return { ...fromStatus, ...fromDashboard };
+  }, [operatorDashboard?.cal_queue, calStatus?.summary]);
+
+  const workflowCounts = useMemo(
+    () => operatorDashboard?.workflow?.counts ?? workflow?.counts,
+    [operatorDashboard?.workflow?.counts, workflow?.counts],
+  );
+
+  const calFilteredProspects = useMemo(() => {
+    const rows = calStatus?.prospects ?? [];
+    return rows.filter((p) => {
+      if (calFilter === "pending") return !p.has_draft;
+      if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
+      if (calFilter === "sent") return !!p.outreach_sent_at;
+      return true;
+    });
+  }, [calStatus?.prospects, calFilter]);
+
+  const calBuyerCount = calMetrics.buyers ?? operatorDashboard?.buyer_vendor?.buyers;
+  const calVendorCount = calMetrics.vendors ?? operatorDashboard?.buyer_vendor?.vendors;
+
+  const calSelectedProspect =
+    calSelectedIdx != null ? calFilteredProspects[calSelectedIdx] : calFilteredProspects[0] ?? null;
+
+  const scrollToCalQueue = useCallback(() => {
+    scrollToAdminSection("cal-outreach");
+  }, []);
+
+  useEffect(() => {
+    if (!me?.is_admin) return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) return;
+    const timer = window.setTimeout(() => scrollToAdminSection(hash), 350);
+    return () => window.clearTimeout(timer);
+  }, [me?.is_admin, calStatusLoading]);
+
+  useEffect(() => {
+    if (calFilteredProspects.length === 0) {
+      setCalSelectedIdx(null);
+      return;
+    }
+    if (calSelectedIdx == null || calSelectedIdx >= calFilteredProspects.length) {
+      setCalSelectedIdx(0);
+      const p = calFilteredProspects[0];
+      if (p?.crm_account_id && p.has_draft) void loadDraftBody(p.crm_account_id, p.draft_preview);
+    }
+  }, [calFilteredProspects, calSelectedIdx, loadDraftBody]);
+
   const hasCachedUi = !!(localSnapshot?.sections && Object.keys(localSnapshot.sections).length > 0);
 
   if ((authLoading || meLoading) && !hasCachedUi) {
@@ -1228,7 +1329,6 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-50">
       <Header />
       <main className="admin-workspace mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
-        <AdminNav />
 
         {syncingSection && !(syncingSection === "cal" && calStatus) ? (
           <p className="mb-4 rounded-xl border border-gray-200 px-4 py-2 text-xs text-gray-500" >
@@ -1236,133 +1336,64 @@ export default function Admin() {
           </p>
         ) : null}
 
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="inline-flex flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
-              {([
-                { id: "cal" as const, label: "Cal control", hint: "Preview & send emails" },
-                { id: "pipeline" as const, label: "Pipeline", hint: "Review HOT/WARM leads" },
-                { id: "system" as const, label: "System", hint: "Metrics & settings" },
-              ]).map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setAdminTab(tab.id)}
-                  className="rounded-lg px-4 py-2 text-left transition"
-                  style={{
-                    color: adminTab === tab.id ? "#111827" : "#4b5563",
-                    background: adminTab === tab.id ? "#FFB000" : "transparent",
-                  }}
-                >
-                  <span className="block text-xs font-bold">{tab.label}</span>
-                  <span className="block text-[10px] font-normal opacity-80">{tab.hint}</span>
-                </button>
-              ))}
-            </div>
-            <h1 className="mt-3 text-lg font-extrabold text-gray-900">
-              {adminTab === "cal" && "Cal oversight"}
-              {adminTab === "pipeline" && "Pipeline review"}
-              {adminTab === "system" && "System & metrics"}
-            </h1>
+
+        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-lg font-extrabold text-gray-900">Command center</h1>
             <p className="mt-0.5 text-[11px] text-gray-600">
-              {adminTab === "cal" && "Watch what Cal is doing — step in only when something needs you."}
-              {adminTab === "pipeline" && "Browse scored buyer leads before Cal emails them — same data Cal uses."}
-              {adminTab === "system" && "Site analytics, users, scrapers, agent queue, and autonomy settings."}
+              Daily brief → Cal queue (draft · fix emails · send) → agent queue below
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {adminTab === "system" ? (
-              <div className="flex rounded-xl border border-gray-200 p-1">
-                {TIME_RANGES.map((range) => (
-                  <button
-                    key={range.value}
-                    onClick={() => setTimeRange(range.value)}
-                    className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
-                    style={{
-                      color: timeRange === range.value ? "#111827" : "#4b5563",
-                      background: timeRange === range.value ? "#FFB000" : "transparent",
-                    }}
-                  >
-                    {range.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <button onClick={() => void loadAdmin()} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600">
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
-            </button>
-            <a href={`${api}/api/docs`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
-              <Database className="h-3.5 w-3.5" /> API
-            </a>
+            <div className="flex rounded-xl border border-gray-200 p-1">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.value}
+                  onClick={() => setTimeRange(range.value)}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-bold transition"
+                  style={{
+                    color: timeRange === range.value ? "#111827" : "#4b5563",
+                    background: timeRange === range.value ? "#FFB000" : "transparent",
+                  }}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+            <span className="text-sm text-gray-600">
+              <SupabaseInlineLink tone="gray" onClick={() => void loadAdmin()}>Refresh page</SupabaseInlineLink>
+              <span className="text-gray-400"> · </span>
+              <a href={`${api}/api/docs`} target="_blank" rel="noreferrer" className="font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900">
+                API docs
+              </a>
+            </span>
           </div>
         </div>
+
+        <DailyBriefPanel
+          data={dailyBrief}
+          loading={dailyBriefLoading}
+          calActions={{
+            pendingDraft: calMetrics.pending_draft,
+            sendable: calMetrics.sendable,
+            onOpenQueue: scrollToCalQueue,
+            onDraftAll: () => {
+              scrollToCalQueue();
+              void runCalBulkDraft(false);
+            },
+            onSendAll: () => {
+              scrollToCalQueue();
+              setSendConfirm("bulk");
+            },
+            draftBusy: actionBusy === "cal-draft",
+            sendBusy: actionBusy === "cal-send",
+          }}
+        />
 
         {message && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">{message}</div>}
         {error && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{error}</div>}
 
-        {adminTab === "cal" && (
-          <>
-            {sendConfirm === "bulk" ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                <div className="w-full max-w-md rounded-2xl border border-amber-300 bg-white p-5 shadow-xl">
-                  <p className="mb-1 text-base font-bold text-amber-950">Send all ready emails?</p>
-                  <p className="mb-3 text-sm text-amber-950/80">
-                    <strong>{calStatus?.summary?.sendable ?? 0} emails</strong> will go out via Resend (manual send — skips assembly review).
-                  </p>
-                  <label className="mb-4 flex items-start gap-2 text-xs text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={bulkSendSkipVerify}
-                      onChange={(e) => setBulkSendSkipVerify(e.target.checked)}
-                      className="mt-0.5"
-                    />
-                    Skip email verification (use if role inboxes are blocked by verify checks)
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => void runCalBulkSend("all", 1000, bulkSendSkipVerify)}
-                      disabled={!!actionBusy}
-                      className="rounded-xl border border-amber-500 bg-amber-100 px-4 py-2 text-sm font-bold text-amber-950 disabled:opacity-50"
-                    >
-                      {actionBusy === "cal-send" ? "Sending…" : "Yes — send all now"}
-                    </button>
-                    <button
-                      onClick={() => setSendConfirm(false)}
-                      className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <AdminCalOversightPanel
-              data={calActivity}
-              loading={calActivityLoading}
-              busy={!!actionBusy}
-              queueSummary={calStatus?.summary}
-              queueLoading={calStatusLoading}
-              queueError={calStatusError}
-              autopilotEnabled={calAutonomy?.enabled}
-              autopilotEnvEnabled={calAutonomy?.env_enabled}
-              autopilotToggleAvailable={calAutonomy?.runtime_toggle_available ?? false}
-              everyHours={calAutonomy?.every_hours ?? 3}
-              sendLimit={calAutonomy?.send_limit ?? 25}
-              onRefresh={() => {
-                void loadCalActivity();
-                void loadCalStatus();
-                void loadCalAutonomyStatus();
-                void loadCalOpsMonitor();
-              }}
-              onRunCal={() => void runCalAutonomy(false)}
-              onOpenQueue={scrollToCalQueue}
-              onDraftPending={() => void runCalBulkDraft(false)}
-              onSendAll={() => setSendConfirm("bulk")}
-              onToggleAutopilot={(enabled) => void toggleCalAutonomy(enabled)}
-            />
-
-        {/* ── Cal Outreach: draft status for HOT+WARM prospects ── */}
+        {/* ── Cal Outreach: primary operator workflow ── */}
         <section id="cal-outreach" className="mb-6 scroll-mt-28 rounded-2xl border border-gray-200 p-4" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.06), rgba(255,176,0,0.03))" }}>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 min-w-0">
@@ -1372,524 +1403,446 @@ export default function Admin() {
                   Cal outreach queue
                 </h2>
                 <p className="text-[11px] text-gray-500">
-                  Filter <strong>drafted</strong> to see what Cal will send · click a row to expand the full email
+                  HOT/WARM scored companies only — draft, edit, send (not the same as &quot;workflow&quot; or SIGNAL drafts)
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-xl border border-gray-200 p-1">
-                {(["all", "pending", "drafted", "sent"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setCalFilter(f)}
-                    className="rounded-lg px-2.5 py-1 text-[10px] font-bold capitalize transition"
-                    style={{
-                      color: calFilter === f ? "#111827" : "#6b7280",
-                      background: calFilter === f ? "#10b981" : "transparent",
-                    }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => void loadCalStatus()}
-                disabled={!!actionBusy}
-                className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
+              <span
+                className="rounded-full border px-2.5 py-1 text-[10px] font-bold"
+                style={{
+                  color: calAutonomy?.enabled ? "#047857" : "#b45309",
+                  borderColor: calAutonomy?.enabled ? "rgba(5,150,105,0.35)" : "rgba(245,158,11,0.45)",
+                  background: calAutonomy?.enabled ? "rgba(5,150,105,0.08)" : "rgba(255,176,0,0.1)",
+                }}
               >
-                Refresh
-              </button>
+                Autopilot {calAutonomy?.enabled ? "ON" : "OFF"}
+              </span>
+              {calAutonomy?.runtime_toggle_available ? (
+                <SupabaseInlineLink
+                  tone="gray"
+                  onClick={() => void toggleCalAutonomy(!calAutonomy?.enabled)}
+                >
+                  Turn autopilot {calAutonomy?.enabled ? "off" : "on"}
+                </SupabaseInlineLink>
+              ) : null}
+              <span className="text-xs text-gray-600">
+                Filter:{" "}
+                {(["all", "pending", "drafted", "sent"] as const).map((f, i) => (
+                  <span key={f}>
+                    {i > 0 ? <span className="text-gray-400"> · </span> : null}
+                    <SupabaseInlineLink
+                      tone={calFilter === f ? "emerald" : "gray"}
+                      onClick={() => setCalFilter(f)}
+                    >
+                      {f}
+                    </SupabaseInlineLink>
+                  </span>
+                ))}
+                <span className="text-gray-400"> · </span>
+                <SupabaseInlineLink tone="gray" onClick={() => void refreshOperatorView()} busy={calStatusLoading}>
+                  Refresh queue
+                </SupabaseInlineLink>
+              </span>
             </div>
           </div>
 
-          {calManualApproval && (calStatus?.summary?.needs_approval ?? 0) > 0 ? (
-            <div className="mb-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void runCalApproveAll()}
-                disabled={!!actionBusy}
-                className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-xs font-bold text-violet-900 disabled:opacity-40"
-              >
-                Approve all ({formatNumber(calStatus?.summary?.needs_approval)})
-              </button>
+          {calStatusError ? (
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+              {calStatusError}
             </div>
           ) : null}
 
-          <details className="mb-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-3">
-            <summary className="cursor-pointer text-[11px] font-bold text-gray-600">
-              Setup · generate missing drafts ({formatNumber(calStatus?.summary?.pending_draft)}) · fix emails ({formatNumber(calStatus?.summary?.no_email)})
-            </summary>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void runCalBulkDraft(false)}
-                disabled={!!actionBusy || (calStatus?.summary?.pending_draft ?? 0) === 0}
-                className="rounded-lg border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
-                style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
-              >
-                {actionBusy === "cal-draft" ? "Drafting…" : `Draft all pending (${formatNumber(calStatus?.summary?.pending_draft)})`}
-              </button>
-              <button type="button" onClick={() => void runCalBulkDraft(true)} disabled={!!actionBusy} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40">
-                Regenerate all
-              </button>
-              <button type="button" onClick={() => void runCalReinferContacts()} disabled={!!actionBusy} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40">
-                Re-infer contacts
-              </button>
-            </div>
-          </details>
+          {calStatusLoading && !calStatus?.summary ? (
+            <p className="mb-4 text-sm text-gray-500 flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 animate-spin" /> Loading Cal queue…
+            </p>
+          ) : null}
 
-          <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-6">
-            <AdminCard label="Total" value={formatNumber(calStatus?.summary?.total)} sub={`${formatNumber(calStatus?.summary?.hot)} hot · ${formatNumber(calStatus?.summary?.warm)} warm`} />
-            <AdminCard label="Drafted" value={formatNumber(calStatus?.summary?.drafted)} sub={`${formatNumber(calStatus?.summary?.approved)} approved · ${formatNumber(calStatus?.summary?.sendable)} sendable`} />
-            <AdminCard label="Pending" value={formatNumber(calStatus?.summary?.pending_draft)} sub="need draft" />
-            <AdminCard label="Sent" value={formatNumber(calStatus?.summary?.sent)} sub="delivered" />
-            <AdminCard label="Opened" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.opened)} sub="engagement" />
-            <AdminCard label="Replied" value={formatNumber((calStatus?.summary as Record<string, number> | undefined)?.replied)} sub="to Cal" />
+          <CalWorkflowPanel
+            metrics={calMetrics as CalWorkflowMetrics}
+            autopilotEnabled={calAutonomy?.enabled}
+            busy={actionBusy}
+            onDraftAll={() => void runCalBulkDraft(false)}
+            onRegenerate={() => void runCalBulkDraft(true)}
+            onFixEmails={() => void runCalFixEmails()}
+            onReinfer={() => void runCalReinferContacts()}
+            onReview={() => scrollToAdminSection("cal-queue-list")}
+            onSendAll={() => setSendConfirm("bulk")}
+            onRunCal={() => void runCalAutonomy(false)}
+            onOpenReplies={() => { window.location.href = "/inbox"; }}
+            onTestDelivery={() => void runCalDiagnostic()}
+          />
+
+          {/* ── Bulk-send confirm modal ── */}
+          {sendConfirm === "bulk" && (
+            <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <p className="mb-1 text-sm font-bold text-amber-900">Confirm bulk send</p>
+              <p className="mb-3 text-xs text-amber-950/80">
+                <strong>{calMetrics.sendable ?? 0} emails will go out</strong> via Resend
+                {(calMetrics.no_email ?? 0) > 0 && (
+                  <span className="text-amber-800"> · {calMetrics.no_email} contacts skipped (no email address on file)</span>
+                )}
+                {(calMetrics.sent ?? 0) > 0 && <span className="text-amber-700"> · {calMetrics.sent} already sent (no duplicates)</span>}
+                {". "}Cannot be undone.
+              </p>
+              <label className="mb-3 flex items-center gap-2 text-xs text-amber-950">
+                <input
+                  type="checkbox"
+                  checked={bulkSendSkipVerify}
+                  onChange={(e) => setBulkSendSkipVerify(e.target.checked)}
+                />
+                Skip email verification (use if role inboxes block sends)
+              </label>
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <SupabaseInlineLink
+                  tone="amber"
+                  onClick={() => void runCalBulkSend("all", 1000, bulkSendSkipVerify)}
+                  busy={actionBusy === "cal-send"}
+                >
+                  Yes — send all now
+                </SupabaseInlineLink>
+                <SupabaseInlineLink tone="gray" onClick={() => setSendConfirm(false)}>
+                  Cancel
+                </SupabaseInlineLink>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-4 grid grid-cols-3 gap-2 md:grid-cols-8">
+            <AdminCard label="Total" value={formatNumber(calMetrics.total)} sub={`${formatNumber(calMetrics.hot)} hot · ${formatNumber(calMetrics.warm)} warm`} />
+            <AdminCard label="Buyers" value={formatNumber(calBuyerCount)} sub="HOT/WARM" />
+            <AdminCard label="Vendors" value={formatNumber(calVendorCount)} sub="HOT/WARM" />
+            <AdminCard label="Drafted" value={formatNumber(calMetrics.drafted)} sub={`${formatNumber(calMetrics.unsent_drafted)} unsent`} />
+            <AdminCard label="Pending" value={formatNumber(calMetrics.pending_draft)} sub="need draft" />
+            <AdminCard label="Sent" value={formatNumber(calMetrics.sent)} sub="delivered" />
+            <AdminCard label="Opened" value={formatNumber(calMetrics.opened)} sub="engagement" />
+            <AdminCard label="Replied" value={formatNumber(calMetrics.replied)} sub="to Cal" />
           </div>
 
-          {/* Prospect table */}
-          <div id="cal-prospect-table" className="max-h-[600px] overflow-y-auto pr-1 scroll-mt-28">
+          <p className="mb-3 text-[11px] text-gray-500">
+            Template v{calAutonomy?.template_version ?? "2"} — global voice in code; select a lead on the left to edit its draft on the right.
+          </p>
+
+          {/* Queue list + CRM sample panel */}
+          <div id="cal-queue-list" className="grid scroll-mt-28 gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="max-h-[560px] overflow-y-auto rounded-xl border border-gray-200 bg-white/80 pr-1">
             {!calStatus ? (
               <p className="py-6 text-center text-xs text-gray-400">
                 {syncingSection === "cal" ? "Loading prospect draft status…" : "No Cal outreach data yet."}
               </p>
-            ) : (calStatus.prospects ?? []).filter((p) => {
-              if (calFilter === "pending") return !p.has_draft;
-              if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
-              if (calFilter === "sent") return !!p.outreach_sent_at;
-              return true;
-            }).length === 0 ? (
-              <p className="py-6 text-center text-xs text-gray-400">No prospects match this filter.</p>
+            ) : calFilteredProspects.length === 0 ? (
+              <p className="py-6 text-center text-xs text-gray-500">
+                {calStatusLoading
+                  ? "Loading lead list…"
+                  : calFilter !== "all" && (calMetrics.drafted ?? 0) > 0
+                    ? `No rows on "${calFilter}" filter — try All (${formatNumber(calMetrics.total)} leads) or Refresh.`
+                    : "No prospects match this filter."}
+              </p>
             ) : (
-              <div className="space-y-1.5">
-                {/* Column headers */}
-                <div className="admin-table-head grid grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3">
+              <div className="space-y-1 p-2">
+                <div className="admin-table-head grid grid-cols-[2fr_1fr_1fr] gap-2 px-2">
                   <span>Company</span>
-                  <span>Tier / Score</span>
-                  <span>Contact</span>
+                  <span>Tier</span>
                   <span>Stage</span>
-                  <span>Draft</span>
-                  <span>Delivery</span>
                 </div>
-                {(calStatus.prospects ?? [])
-                  .filter((p) => {
-                    if (calFilter === "pending") return !p.has_draft;
-                    if (calFilter === "drafted") return p.has_draft && !p.outreach_sent_at;
-                    if (calFilter === "sent") return !!p.outreach_sent_at;
-                    return true;
-                  })
-                  .map((prospect, idx) => {
-                    const isOpen = calExpanded === idx;
-                    const tierColor = prospect.tier === "HOT" ? "#b45309" : prospect.tier === "WARM" ? "#047857" : "#6b7280";
-                    return (
-                      <div key={`${prospect.company_id}-${idx}`} className="admin-table-row">
-                        <button
-                          className="grid w-full grid-cols-[2fr_1fr_1.5fr_1fr_0.8fr_0.8fr] gap-3 px-4 py-3 text-left"
-                          onClick={() => {
-                            const next = isOpen ? null : idx;
-                            setCalExpanded(next);
-                            if (!isOpen && prospect.crm_account_id && prospect.has_draft) {
-                              void loadDraftBody(prospect.crm_account_id);
-                            }
-                          }}
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-gray-800">{prospect.company_name || "—"}</p>
-                            <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[10px] text-gray-400">{prospect.industry}</span>
-                              <button
-                                type="button"
-                                title="Toggle buyer / vendor"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!prospect.crm_account_id) return;
-                                  const next = prospect.account_type === "vendor" ? "buyer" : "vendor";
-                                  void adminFetch(`/api/crm/accounts/${prospect.crm_account_id}`, {
-                                    method: "PATCH",
-                                    body: JSON.stringify({ account_type: next }),
-                                  }).then(() => void loadCalStatus());
-                                }}
-                                className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors"
-                                style={
-                                  prospect.account_type === "vendor"
-                                    ? { background: "rgba(167,139,250,0.12)", borderColor: "rgba(167,139,250,0.3)", color: "#10b981" }
-                                    : { background: "rgba(52,211,153,0.08)", borderColor: "rgba(52,211,153,0.2)", color: "#047857" }
-                                }
-                              >
-                                {prospect.account_type === "vendor" ? "vendor" : "buyer"}
-                              </button>
-                              {prospect.outreach_pipeline === "stagegate" && (
-                                <span
-                                  className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border"
-                                  style={{ background: "rgba(3,218,197,0.1)", borderColor: "rgba(3,218,197,0.35)", color: "#059669" }}
-                                  title={prospect.semantic_summary || "StageGate show-ops prospect"}
-                                >
-                                  stagegate
-                                </span>
-                              )}
-                            </div>
-                            {prospect.semantic_summary && (
-                              <p className="mt-1 truncate text-[10px] text-gray-500" title={prospect.semantic_summary}>
-                                {prospect.semantic_summary}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
-                              {prospect.tier}
-                            </span>
-                            <p className="mt-1 font-mono text-[10px] text-gray-400">{prospect.score?.toFixed(0)}</p>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate font-mono text-[11px] text-gray-500">
-                              {prospect.contact_email || <span className="text-gray-400 not-italic">no contact</span>}
-                              {prospect.contact_email_source === "inferred" && (
-                                <span className="ml-1.5 text-[9px] font-normal text-emerald-600/65">inferred</span>
-                              )}
-                            </p>
-                            {prospect.outreach_domain && !prospect.website && (
-                              <p className="truncate font-mono text-[10px] text-gray-500">@{prospect.outreach_domain}</p>
-                            )}
-                            {prospect.default_cc && <p className="truncate font-mono text-[10px] text-gray-500">cc: {prospect.default_cc}</p>}
-                          </div>
-                          <div>
-                            <span className="text-[11px] text-gray-500">
-                              {prospect.outreach_sent_at ? "sent" : isCalApproved(prospect.outreach_stage) ? "approved" : prospect.outreach_stage?.replace(/_/g, " ") || "needs review"}
-                            </span>
-                            {prospect.outreach_sent_at && <p className="mt-0.5 text-[10px] text-gray-500">{formatDate(prospect.outreach_sent_at)}</p>}
-                          </div>
-                          <div className="flex items-center">
-                            {prospect.has_draft ? (
-                              <CheckCircle2 className="h-4 w-4" style={{ color: "#34d399" }} />
-                            ) : (
-                              <Clock3 className="h-4 w-4 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex items-center">
-                            {(prospect as Record<string, unknown>).email_delivery_status === "opened" || (prospect as Record<string, unknown>).email_delivery_status === "clicked" ? (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>
-                                {String((prospect as Record<string, unknown>).email_delivery_status)}
-                              </span>
-                            ) : (prospect as Record<string, unknown>).email_delivery_status === "bounced" ? (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(248,113,113,0.12)", color: "#f87171" }}>bounced</span>
-                            ) : (prospect as Record<string, unknown>).email_delivery_status === "sent" || (prospect as Record<string, unknown>).email_delivery_status === "delivered" ? (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(96,165,250,0.1)", color: "#93c5fd" }}>sent</span>
-                            ) : (
-                              <span className="text-[9px] text-gray-400">—</span>
-                            )}
-                          </div>
-                        </button>
-                        {isOpen && (
-                          <div className="border-t border-gray-200 px-4 pb-4 pt-3">
-                            {prospect.has_draft ? (
-                              <>
-                                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-500">Email preview — editable</p>
-                                {prospect.crm_account_id && (
-                                  <label className="mb-3 block">
-                                    <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Contact email</span>
-                                    <input
-                                      value={
-                                        draftContactEmails[prospect.crm_account_id]
-                                        ?? prospect.contact_email
-                                        ?? ""
-                                      }
-                                      onChange={(e) => {
-                                        const id = prospect.crm_account_id!;
-                                        setDraftContactEmails((prev) => ({ ...prev, [id]: e.target.value }));
-                                      }}
-                                      placeholder="name@company.com"
-                                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-[11px] text-gray-800 outline-none focus:border-emerald-400/60"
-                                    />
-                                  </label>
-                                )}
-                                <textarea
-                                  value={
-                                    prospect.crm_account_id && draftBodies[prospect.crm_account_id]
-                                      ? draftBodies[prospect.crm_account_id]
-                                      : draftBodyLoading === prospect.crm_account_id
-                                        ? "Loading draft…"
-                                        : (prospect.draft_preview || prospect.draft_full || "")
-                                  }
-                                  onChange={(e) => {
-                                    if (!prospect.crm_account_id) return;
-                                    setDraftBodies((prev) => ({
-                                      ...prev,
-                                      [prospect.crm_account_id!]: e.target.value,
-                                    }));
-                                  }}
-                                  rows={12}
-                                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-[11px] leading-relaxed text-gray-700 outline-none focus:border-emerald-400/60"
-                                />
-                                <div className="mt-3 flex flex-wrap items-center gap-3">
-                                  {prospect.crm_account_id && (
-                                    <button
-                                      type="button"
-                                      disabled={!!actionBusy || draftBodyLoading === prospect.crm_account_id}
-                                      onClick={() => void saveCalDraft(prospect.crm_account_id!)}
-                                      className="rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
-                                      style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
-                                    >
-                                      {actionBusy === "cal-save" ? "Saving…" : "Save edits"}
-                                    </button>
-                                  )}
-                                  {calManualApproval && prospect.crm_account_id && !prospect.outreach_sent_at && !isCalApproved(prospect.outreach_stage) && (
-                                    <button
-                                      type="button"
-                                      disabled={!!actionBusy}
-                                      onClick={() => void runCalApproveOne(prospect.crm_account_id!)}
-                                      className="rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
-                                      style={{ color: "#6d28d9", borderColor: "rgba(109,40,217,0.35)", background: "rgba(109,40,217,0.08)" }}
-                                    >
-                                      {actionBusy === "cal-approve" ? "Approving…" : "Approve this draft"}
-                                    </button>
-                                  )}
-                                  {calManualApproval && prospect.crm_account_id && isCalApproved(prospect.outreach_stage) && !prospect.outreach_sent_at && (
-                                    <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-medium text-violet-800">
-                                      <CheckCircle2 className="h-3 w-3" /> Approved
-                                    </span>
-                                  )}
-                                  {prospect.contact_email && (
-                                    <div className="flex flex-wrap gap-2 text-[10px] text-gray-600">
-                                      <span>TO: <span className="font-mono text-gray-500">{draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email}</span></span>
-                                      {prospect.default_cc && <span>CC: <span className="font-mono text-gray-500">{prospect.default_cc}</span></span>}
-                                    </div>
-                                  )}
-                                  <div className="ml-auto flex gap-2">
-                                    {prospect.outreach_sent_at ? (
-                                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-800">
-                                        <CheckCircle2 className="h-3 w-3" /> Sent {formatDate(prospect.outreach_sent_at)}
-                                      </span>
-                                    ) : sendConfirm === prospect.crm_account_id ? (
-                                      <>
-                                        <span className="text-[10px] text-amber-800">
-                                          Send to {draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email}?
-                                        </span>
-                                        <button
-                                          onClick={() => {
-                                            if (!prospect.crm_account_id) return;
-                                            const to = (draftContactEmails[prospect.crm_account_id] ?? prospect.contact_email)?.trim();
-                                            const draft = draftBodies[prospect.crm_account_id] ?? prospect.draft_full ?? prospect.draft_preview ?? "";
-                                            if (to) void runCalSendOne(prospect.crm_account_id, to, draft);
-                                          }}
-                                          disabled={!!actionBusy}
-                                          className="rounded-xl border border-amber-400 bg-amber-100 px-3 py-1.5 text-[10px] font-bold text-amber-950 disabled:opacity-40"
-                                        >
-                                          {actionBusy === "cal-send-one" ? "Sending…" : "Yes, send"}
-                                        </button>
-                                        <button onClick={() => setSendConfirm(false)} className="rounded-xl border border-gray-200 px-3 py-1.5 text-[10px] text-gray-500">Cancel</button>
-                                      </>
-                                    ) : (
-                                      <button
-                                        onClick={() => setSendConfirm(prospect.crm_account_id ?? false)}
-                                        disabled={
-                                          !!actionBusy
-                                          || (calManualApproval && !isCalApproved(prospect.outreach_stage))
-                                          || !(draftContactEmails[prospect.crm_account_id!] ?? prospect.contact_email)?.trim()
-                                        }
-                                        className="inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-[10px] font-bold disabled:opacity-40"
-                                        style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.40)" }}
-                                        title={calManualApproval && !isCalApproved(prospect.outreach_stage) ? "Approve draft first" : undefined}
-                                      >
-                                        <Mail className="h-3 w-3" /> Send this email
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </>
-                            ) : (
-                              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p className="text-xs text-gray-600">No draft yet for this lead.</p>
-                                <button
-                                  type="button"
-                                  disabled={!!actionBusy}
-                                  onClick={() => void runCalDraftOne(prospect.company_id)}
-                                  className="rounded-xl border px-4 py-2 text-xs font-bold disabled:opacity-40"
-                                  style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
-                                >
-                                  {actionBusy === "cal-draft" ? "Drafting…" : "Generate draft for this lead"}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                {calFilteredProspects.map((prospect, idx) => {
+                  const selected = (calSelectedIdx ?? 0) === idx;
+                  const tierColor = prospect.tier === "HOT" ? "#b45309" : prospect.tier === "WARM" ? "#047857" : "#6b7280";
+                  return (
+                    <button
+                      key={`${prospect.company_id}-${idx}`}
+                      type="button"
+                      className={`admin-table-row grid w-full grid-cols-[2fr_1fr_1fr] gap-2 px-3 py-2.5 text-left ${selected ? "ring-2 ring-emerald-400/50" : ""}`}
+                      onClick={() => {
+                        setCalSelectedIdx(idx);
+                        if (prospect.crm_account_id && prospect.has_draft) void loadDraftBody(prospect.crm_account_id, prospect.draft_preview);
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-800">{prospect.company_name || "—"}</p>
+                        <p className="text-[10px] text-gray-400">{prospect.account_type === "vendor" ? "vendor" : "buyer"} · {prospect.industry}</p>
                       </div>
-                    );
-                  })}
+                      <span className="text-[10px] font-bold" style={{ color: tierColor }}>{prospect.tier}</span>
+                      <span className="text-[10px] text-gray-500 truncate">
+                        {prospect.outreach_sent_at ? "sent" : prospect.has_draft ? "drafted" : "pending"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </div>
-        </section>
-          </>
-        )}
+            </div>
 
-        {adminTab === "pipeline" && (
-          <section id="pipeline" className="scroll-mt-28">
-            <AdminPipelinePanel
-              hot={calStatus?.summary?.hot}
-              warm={calStatus?.summary?.warm}
-              totalCompanies={stats?.totals?.companies}
-              totalSignals={stats?.totals?.signals}
-            />
-          </section>
-        )}
-
-        {adminTab === "system" && (
-          <>
-            <DailyBriefPanel data={dailyBrief} loading={dailyBriefLoading} />
-
-            <details className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3 group">
-              <summary className="cursor-pointer list-none text-[11px] font-bold text-gray-500 marker:content-none">
-                Reply notification email
-                <span className="ml-2 font-normal text-gray-400">optional · forwards Cal replies</span>
-              </summary>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input
-                  type="email"
-                  value={replyForwardEmail}
-                  onChange={(e) => setReplyForwardEmail(e.target.value)}
-                  placeholder="ugobe07@gmail.com"
-                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-400/60"
-                />
-                <button
-                  type="button"
-                  disabled={replySettingBusy}
-                  onClick={() => void saveReplySettings()}
-                  className="shrink-0 rounded-xl border px-4 py-2 text-sm font-bold transition-all disabled:opacity-50"
-                  style={
-                    replySettingSaved
-                      ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#047857" }
-                      : { background: "rgba(5,150,105,0.12)", borderColor: "rgba(5,150,105,0.35)", color: "#047857" }
-                  }
-                >
-                  {replySettingBusy ? "Saving…" : replySettingSaved ? "✓ Saved" : "Save"}
-                </button>
-              </div>
-            </details>
-
-            <details className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/40 px-4 py-3 group">
-              <summary className="cursor-pointer list-none text-[11px] font-bold text-emerald-900 marker:content-none">
-                Cal autonomy
-                <span className="ml-2 font-normal text-emerald-800/70">worker schedule · dry run</span>
-              </summary>
-              <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
-                <p>
-                  Cal drafts HOT+WARM leads, sends up to <strong>{calAutonomy?.send_limit ?? 25}</strong> intro emails
-                  and <strong>{calAutonomy?.followup_limit ?? 25}</strong> follow-ups per run, every{" "}
-                  <strong>{calAutonomy?.every_hours ?? 3}h</strong> on the worker.
-                </p>
-                <p>
-                  Status:{" "}
-                  <span className="font-bold" style={{ color: calAutonomy?.enabled ? "#047857" : "#b45309" }}>
-                    {calAutonomy?.enabled ? "enabled" : "disabled"}
-                  </span>
-                  {calAutonomy?.review_email ? (
-                    <> · review inbox: <span className="font-mono">{calAutonomy.review_email}</span></>
-                  ) : null}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={!!actionBusy}
-                    onClick={() => void runCalAutonomy(true)}
-                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                  >
-                    Dry run
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!!actionBusy}
-                    onClick={() => void runCalAutonomy(false)}
-                    className="rounded-xl border px-3 py-2 text-[10px] font-bold disabled:opacity-50"
-                    style={{ color: "#047857", borderColor: "rgba(5,150,105,0.35)", background: "rgba(5,150,105,0.08)" }}
-                  >
-                    Run Cal now
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            <details className="mb-4 rounded-xl border border-sky-200 bg-sky-50/40 px-4 py-3 group">
-              <summary className="cursor-pointer list-none text-[11px] font-bold text-sky-900 marker:content-none">
-                Supply autonomy
-                <span className="ml-2 font-normal text-sky-800/70">vendor signup outreach</span>
-              </summary>
-              <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
-                <p>
-                  Vendor signup emails to robot companies (score ≥ {supplyAutonomy?.min_score ?? 60}) — up to{" "}
-                  <strong>{supplyAutonomy?.send_limit ?? 6}</strong> per {supplyAutonomy?.every_hours ?? 6}h cycle.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Link href="/supply-pipeline" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700">
-                    Supply pipeline
-                  </Link>
-                  <button
-                    type="button"
-                    disabled={!!actionBusy}
-                    onClick={() => void runSupplyAutonomy(true)}
-                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                  >
-                    Dry run
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!!actionBusy}
-                    onClick={() => void runSupplyAutonomy(false)}
-                    className="rounded-xl border px-3 py-2 text-[10px] font-bold disabled:opacity-50"
-                    style={{ color: "#0369a1", borderColor: "rgba(14,165,233,0.35)", background: "rgba(14,165,233,0.08)" }}
-                  >
-                    Run supply now
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            <div className="mb-6 rounded-xl border border-violet-200/80 bg-white/90 p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-violet-800">Cal judgment monitor</p>
-                  <p className="text-xs text-gray-700">Assembly rejections and supply signup funnel — diagnostics only.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void loadCalOpsMonitor()}
-                  disabled={!!actionBusy}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-[10px] font-bold text-gray-500 disabled:opacity-40"
-                >
-                  Refresh
-                </button>
-              </div>
-              <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
-                <AdminCard
-                  label="Assembly"
-                  value={calOpsMonitor?.assembly?.assembly_required ? "On" : "Off"}
-                  sub={calOpsMonitor?.assembly?.llm_review_enabled ? "LLM review" : "Rules only"}
-                />
-                <AdminCard label="Rejected" value={formatNumber(calOpsMonitor?.assembly_rejections?.length)} sub="recent blocks" />
-                <AdminCard label="Signup clicks" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_signup_landing)} sub="landing visits" />
-                <AdminCard label="Signups" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_signup_complete)} sub="completed" />
-                <AdminCard label="Email clicks" value={formatNumber(calOpsMonitor?.conversion_counts?.supply_email_clicked)} sub="from Resend" />
-              </div>
-              {(calOpsMonitor?.assembly_rejections?.length ?? 0) > 0 ? (
-                <div className="mb-4 max-h-48 overflow-y-auto rounded-lg border border-red-100 bg-red-50/40">
-                  {(calOpsMonitor?.assembly_rejections ?? []).slice(0, 8).map((row) => (
-                    <div key={row.id} className="border-b border-red-100 px-3 py-2 text-[11px] last:border-b-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold uppercase text-red-800">
-                          {row.channel || "unknown"}
-                        </span>
-                        <span className="font-semibold text-gray-900">{row.vendor_name || row.note || "Rejected send"}</span>
-                        {row.created_at ? (
-                          <span className="text-gray-400">{new Date(row.created_at).toLocaleString()}</span>
+            <div className="lg:sticky lg:top-24 max-h-[560px] overflow-y-auto rounded-xl border border-emerald-200 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800">CRM sample · Cal draft</p>
+              {!calSelectedProspect ? (
+                <p className="mt-6 text-sm text-gray-500">Select a lead from the queue to preview and edit Cal&apos;s email.</p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <p className="text-base font-bold text-gray-900">{calSelectedProspect.company_name}</p>
+                    <p className="text-xs text-gray-500">{calSelectedProspect.tier} · score {calSelectedProspect.score?.toFixed(0)} · {calSelectedProspect.account_type === "vendor" ? "vendor" : "buyer (RFR)"}</p>
+                    {calSelectedProspect.semantic_summary ? (
+                      <p className="mt-2 text-xs text-gray-600 leading-relaxed">{calSelectedProspect.semantic_summary}</p>
+                    ) : null}
+                  </div>
+                  {calSelectedProspect.has_draft ? (
+                    <>
+                      {calSelectedProspect.crm_account_id && (
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] uppercase tracking-widest text-gray-400">Contact email</span>
+                          <input
+                            value={draftContactEmails[calSelectedProspect.crm_account_id] ?? calSelectedProspect.contact_email ?? ""}
+                            onChange={(e) => {
+                              const id = calSelectedProspect.crm_account_id!;
+                              setDraftContactEmails((prev) => ({ ...prev, [id]: e.target.value }));
+                            }}
+                            placeholder="name@company.com"
+                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-[11px] text-gray-800"
+                          />
+                        </label>
+                      )}
+                      {calSelectedProspect.crm_account_id && draftLoadErrors[calSelectedProspect.crm_account_id] ? (
+                        <div className="text-xs text-amber-800">
+                          {draftLoadErrors[calSelectedProspect.crm_account_id]}{" "}
+                          <SupabaseInlineLink
+                            tone="amber"
+                            onClick={() => void loadDraftBody(
+                              calSelectedProspect.crm_account_id!,
+                              calSelectedProspect.draft_preview,
+                            )}
+                            busy={draftBodyLoading === calSelectedProspect.crm_account_id}
+                          >
+                            Retry full draft
+                          </SupabaseInlineLink>
+                        </div>
+                      ) : null}
+                      <textarea
+                        value={
+                          calSelectedProspect.crm_account_id && draftBodies[calSelectedProspect.crm_account_id]
+                            ? draftBodies[calSelectedProspect.crm_account_id]
+                            : draftBodyLoading === calSelectedProspect.crm_account_id
+                              ? (calSelectedProspect.draft_preview || "Loading full draft…")
+                              : calSelectedProspect.draft_preview || calSelectedProspect.has_draft
+                                ? (calSelectedProspect.draft_preview || "Select Retry to load draft")
+                                : ""
+                        }
+                        onChange={(e) => {
+                          if (!calSelectedProspect.crm_account_id) return;
+                          if (draftBodyLoading === calSelectedProspect.crm_account_id) return;
+                          setDraftBodies((prev) => ({ ...prev, [calSelectedProspect.crm_account_id!]: e.target.value }));
+                        }}
+                        rows={14}
+                        className="w-full rounded-xl border border-gray-200 bg-slate-50 px-3 py-3 font-mono text-[11px] leading-relaxed text-gray-800"
+                      />
+                      <div className="text-sm">
+                        {calSelectedProspect.crm_account_id ? (
+                          <>
+                            <SupabaseInlineLink
+                              onClick={() => void saveCalDraft(calSelectedProspect.crm_account_id!)}
+                              disabled={
+                                actionBusy === "cal-save"
+                                || draftBodyLoading === calSelectedProspect.crm_account_id
+                                || !draftBodies[calSelectedProspect.crm_account_id]?.trim()
+                              }
+                              busy={actionBusy === "cal-save"}
+                            >
+                              Save draft
+                            </SupabaseInlineLink>
+                            {!calSelectedProspect.outreach_sent_at ? (
+                              <>
+                                <span className="text-gray-400"> · </span>
+                                <SupabaseInlineLink
+                                  tone="amber"
+                                  onClick={() => setSendConfirm(calSelectedProspect.crm_account_id!)}
+                                  disabled={
+                                    actionBusy === "cal-send-one"
+                                    || actionBusy === "cal-send"
+                                    || !(draftContactEmails[calSelectedProspect.crm_account_id] ?? calSelectedProspect.contact_email)?.trim()
+                                  }
+                                >
+                                  Send this lead
+                                </SupabaseInlineLink>
+                              </>
+                            ) : null}
+                          </>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-gray-700">{(row.issues || []).slice(0, 3).join(" · ") || row.note}</p>
+                      <CalEmailPreview
+                        companyName={calSelectedProspect.company_name}
+                        bodyText={
+                          calSelectedProspect.crm_account_id && draftBodies[calSelectedProspect.crm_account_id]
+                            ? draftBodies[calSelectedProspect.crm_account_id]
+                            : calSelectedProspect.draft_preview || ""
+                        }
+                      />
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">No draft yet —</p>
+                      <SupabaseInlineLink
+                        onClick={() => calSelectedProspect.company_id && void runCalDraftOne(calSelectedProspect.company_id)}
+                        disabled={actionBusy === "cal-draft" || !calSelectedProspect.company_id}
+                        busy={actionBusy === "cal-draft"}
+                      >
+                        Draft this lead
+                      </SupabaseInlineLink>
                     </div>
-                  ))}
+                  )}
                 </div>
-              ) : (
-                <p className="text-[11px] text-gray-500">No assembly rejections logged yet.</p>
               )}
             </div>
+          </div>
+        </section>
+
+        <details id="workflow" className="mb-4 scroll-mt-28 rounded-xl border border-gray-200 bg-white px-4 py-3">
+          <summary className="cursor-pointer list-none text-sm font-bold text-gray-900 marker:content-none">
+            Other agent work
+            <span className="ml-2 text-xs font-normal text-gray-500">
+              {formatNumber(workflowCounts?.total)} tasks · {formatNumber(workflowCounts?.queued)} queued · not Cal email queue
+            </span>
+          </summary>
+          <p className="mt-3 text-xs text-gray-600">
+            <strong>Workflow ({formatNumber(workflowCounts?.total)})</strong> = sales agent actions, research updates, SIGNAL drafts, supply outreach — separate from Cal&apos;s HOT/WARM queue ({formatNumber(calMetrics.total)}).
+            <strong> Sales opps ({formatNumber(operatorDashboard?.sales_opportunities?.total ?? salesOppTotal ?? 0)})</strong> = buyer reply threads in Sales Console, not drafts.
+            <strong> Need approve ({formatNumber(workflowCounts?.needs_approval)})</strong> = items waiting for you in those other queues (Cal uses autopilot; pending draft ≠ approval).
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            <Link href="/sales-console" className="font-medium text-emerald-700 underline underline-offset-2">Sales console</Link>
+            <span className="text-gray-400">·</span>
+            <Link href="/pipeline" className="font-medium text-emerald-700 underline underline-offset-2">Research pipeline</Link>
+            <span className="text-gray-400">·</span>
+            <Link href="/crm" className="font-medium text-emerald-700 underline underline-offset-2">CRM editor</Link>
+          </div>
+          <div className="mt-3 max-h-[240px] space-y-2 overflow-y-auto">
+            {(workflow?.items?.length ? workflow.items : []).slice(0, 15).map((item) => {
+              const style = stateStyle(item.state);
+              return (
+                <div key={`${item.source}-${item.id}`} className="rounded-lg border border-gray-100 px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border px-2 py-0.5 text-[10px] capitalize" style={style}>{stateLabel(item.state)}</span>
+                    <span className="text-[10px] capitalize text-gray-500">{sourceLabel(item.source)}</span>
+                    <span className="text-sm font-medium text-gray-900">{item.title}</span>
+                    {item.next_action_url ? (
+                      <Link href={item.next_action_url} className="text-xs font-medium text-emerald-700 underline underline-offset-2">
+                        {item.next_action_label || "Open"}
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </details>
+
+        <details className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/40 px-4 py-3 group">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-emerald-900 marker:content-none">
+            Cal autonomy
+            <span className="ml-2 font-normal text-emerald-800/70">scheduled worker cycles · daily digest to ADMIN_EMAIL</span>
+          </summary>
+          <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
+            <p>
+              Worker runs every {calAutonomy?.every_hours ?? 3}h — drafts, refreshes stale copy, sends up to{" "}
+              <strong>{calAutonomy?.send_limit ?? 25}</strong> verified emails per cycle when autopilot is ON.
+            </p>
+            <p>
+              Status:{" "}
+              <span className="font-bold" style={{ color: calAutonomy?.enabled ? "#047857" : "#b45309" }}>
+                {calAutonomy?.enabled ? "ON" : "OFF"}
+              </span>
+              {calAutonomy?.review_email ? (
+                <> · ops inbox: <span className="font-mono">{calAutonomy.review_email}</span></>
+              ) : null}
+            </p>
+            <div className="text-sm text-gray-700">
+              {calAutonomy?.runtime_toggle_available ? (
+                <>
+                  <SupabaseInlineLink
+                    tone="gray"
+                    onClick={() => void toggleCalAutonomy(!calAutonomy?.enabled)}
+                  >
+                    Autopilot {calAutonomy?.enabled ? "off" : "on"}
+                  </SupabaseInlineLink>
+                  <span className="text-gray-400"> · </span>
+                </>
+              ) : null}
+              <SupabaseInlineLink
+                tone="gray"
+                onClick={() => void runCalAutonomy(true)}
+                busy={actionBusy === "cal-run"}
+              >
+                Dry run
+              </SupabaseInlineLink>
+              <span className="text-gray-400"> · </span>
+              <SupabaseInlineLink
+                onClick={() => void runCalAutonomy(false)}
+                busy={actionBusy === "cal-run"}
+              >
+                Run Cal now
+              </SupabaseInlineLink>
+            </div>
+          </div>
+        </details>
+
+        <details className="mb-4 rounded-xl border border-sky-200 bg-sky-50/40 px-4 py-3 group">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-sky-900 marker:content-none">
+            Supply autonomy
+            <span className="ml-2 font-normal text-sky-800/70">vendor signup outreach</span>
+          </summary>
+          <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-gray-700">
+            <p>
+              Vendor signup emails (score ≥ {supplyAutonomy?.min_score ?? 60}) — up to{" "}
+              <strong>{supplyAutonomy?.send_limit ?? 6}</strong> per {supplyAutonomy?.every_hours ?? 6}h cycle.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/supply-pipeline" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700">
+                Supply pipeline
+              </Link>
+              <button type="button" disabled={!!actionBusy} onClick={() => void runSupplyAutonomy(true)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[10px] font-bold text-gray-700 disabled:opacity-50">
+                Dry run
+              </button>
+              <button type="button" disabled={!!actionBusy} onClick={() => void runSupplyAutonomy(false)} className="rounded-xl border px-3 py-2 text-[10px] font-bold disabled:opacity-50" style={{ color: "#0369a1", borderColor: "rgba(14,165,233,0.35)", background: "rgba(14,165,233,0.08)" }}>
+                Run supply now
+              </button>
+            </div>
+          </div>
+        </details>
+
+        <details className="mb-8 rounded-xl border border-gray-200 bg-white px-4 py-3 group">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-gray-500 marker:content-none">
+            Reply notification email
+            <span className="ml-2 font-normal text-gray-400">optional · forwards Cal replies</span>
+          </summary>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="email"
+              value={replyForwardEmail}
+              onChange={(e) => setReplyForwardEmail(e.target.value)}
+              placeholder="ugobe07@gmail.com"
+              className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-400/60"
+            />
+            <button
+              type="button"
+              disabled={replySettingBusy}
+              onClick={() => void saveReplySettings()}
+              className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold border transition-all disabled:opacity-50"
+              style={
+                replySettingSaved
+                  ? { background: "rgba(52,211,153,0.12)", borderColor: "rgba(52,211,153,0.35)", color: "#047857" }
+                  : { background: "rgba(5,150,105,0.12)", borderColor: "rgba(5,150,105,0.35)", color: "#047857" }
+              }
+            >
+              {replySettingSaved ? "✓ Saved" : "Save"}
+            </button>
+          </div>
+        </details>
+
+        <details className="mt-10 mb-6 rounded-xl border border-gray-200 bg-white px-4 py-3">
+          <summary className="cursor-pointer text-sm font-bold text-gray-600">
+            Advanced system settings
+          </summary>
+          <div className="mt-4 space-y-6">
 
         <section className="mb-8">
           <div className="mb-3 flex items-center gap-2">
@@ -1925,6 +1878,11 @@ export default function Admin() {
             hotCount: analytics?.hot_count,
             warmCount: analytics?.warm_count,
             totalSignals: analytics?.total_signals ?? stats?.totals?.signals,
+            signupStart: analytics?.signup_funnel?.signup_start,
+            signupComplete: analytics?.signup_funnel?.signup_complete,
+            firstSave: analytics?.signup_funnel?.first_save,
+            startToCompleteRate: analytics?.signup_funnel?.start_to_complete_rate,
+            completeToSaveRate: analytics?.signup_funnel?.complete_to_save_rate,
           }}
         />
 
@@ -2099,7 +2057,7 @@ export default function Admin() {
               <input type="checkbox" checked={scrapeNow} onChange={(e) => setScrapeNow(e.target.checked)} className="accent-violet-500" />
               Scrape now
             </label>
-            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-50" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
+            <button type="submit" disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold disabled:opacity-50" style={{ color: "#FFB000", borderColor: "#FFB000" }}>
               {actionBusy === "urls" ? "Importing..." : "Import URLs"}
             </button>
           </form>
@@ -2108,7 +2066,7 @@ export default function Admin() {
             <DownloadCloud className="mb-4 h-5 w-5" style={{ color: "#10b981" }} />
             <p className="text-sm font-bold text-gray-900">Import Companies</p>
             <textarea value={companyJson} onChange={(e) => setCompanyJson(e.target.value)} className="sb-input mt-3 min-h-40 font-mono text-[11px]" />
-            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-emerald-700 disabled:opacity-50">
+            <button type="submit" disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-300/45 px-4 py-2.5 text-xs font-bold text-emerald-700 disabled:opacity-50">
               {actionBusy === "companies" ? "Importing..." : "Import Companies"}
             </button>
           </form>
@@ -2122,87 +2080,10 @@ export default function Admin() {
             <select value={triggerIndustry} onChange={(e) => setTriggerIndustry(e.target.value)} className="sb-input mt-2 text-xs">
               {INDUSTRIES.map((item) => <option key={item} value={item}>{item || "All industries"}</option>)}
             </select>
-            <button disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-600 bg-teal-50 px-4 py-2.5 text-xs font-bold text-teal-900 disabled:opacity-50">
+            <button type="submit" disabled={!!actionBusy} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-teal-600 bg-teal-50 px-4 py-2.5 text-xs font-bold text-teal-900 disabled:opacity-50">
               {actionBusy === "scraper" ? "Queueing..." : "Queue Scraper"}
             </button>
           </form>
-        </section>
-
-        <section id="workflow" className="mb-8 scroll-mt-28 rounded-2xl border border-gray-200 p-5" style={{ background: "linear-gradient(135deg, rgba(255,176,0,0.07), rgba(3,218,197,0.035))" }}>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Bot className="h-4 w-4" style={{ color: "#059669" }} />
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900">AI workflow command center</p>
-              </div>
-              <h2 className="text-2xl font-extrabold text-gray-900">Agent actions and operating queue</h2>
-              <p className="mt-2 max-w-3xl text-xs leading-relaxed text-gray-500">
-                One view for Cal/Max sales actions, buyer outreach, supply outreach, lead research, and user notifications.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/sales-console" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#FFB000", borderColor: "rgba(255,176,0,0.45)" }}>
-                Sales Console <ExternalLink className="h-3 w-3" />
-              </Link>
-              <Link href="/supply-pipeline" className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold" style={{ color: "#059669", borderColor: "rgba(3,218,197,0.45)" }}>
-                Supply Pipeline <ExternalLink className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-6">
-            <AdminCard label="Total" value={formatNumber(workflow?.counts?.total)} sub="tracked actions" />
-            <AdminCard label="Approve" value={formatNumber(workflow?.counts?.needs_approval)} sub="waiting on you" />
-            <AdminCard label="Queued" value={formatNumber(workflow?.counts?.queued)} sub="ready to run" />
-            <AdminCard label="Running" value={formatNumber(workflow?.counts?.in_process)} sub="in process" />
-            <AdminCard label="Review" value={formatNumber(workflow?.counts?.needs_review)} sub="new intelligence" />
-            <AdminCard label="Failed" value={formatNumber(workflow?.counts?.failed)} sub="needs attention" />
-          </div>
-
-          {workflow?.errors?.length ? (
-            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-xs font-medium text-red-900">
-              Some workflow sources could not load: {workflow.errors.map((item) => sourceLabel(item.source)).join(", ")}
-            </div>
-          ) : null}
-
-          <div className="mb-4 flex flex-wrap gap-2">
-            {Object.entries(workflow?.by_source || {}).map(([source, count]) => (
-              <span key={source} className="rounded-full border border-gray-200 px-2.5 py-1 text-[10px] capitalize text-gray-500">
-                {sourceLabel(source)}: {formatNumber(count)}
-              </span>
-            ))}
-          </div>
-
-          <div className="max-h-[520px] space-y-2 overflow-y-auto pr-1">
-            {(workflow?.items?.length ? workflow.items : [{ id: "empty", title: "No agent work is currently queued", description: "Cal, Max, outreach, and research activity will appear here as work is created.", state: "completed" }]).slice(0, 60).map((item) => {
-              const style = stateStyle(item.state);
-              return (
-                <div key={`${item.source}-${item.id}`} className="admin-panel">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] capitalize" style={style}>
-                          {item.state === "completed" ? <CheckCircle2 className="h-3 w-3" /> : <Clock3 className="h-3 w-3" />}
-                          {stateLabel(item.state)}
-                        </span>
-                        <span className="rounded-full border border-gray-200 px-2 py-0.5 text-[10px] capitalize text-gray-600">{sourceLabel(item.source)}</span>
-                        {item.requires_approval && <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-900">approval required</span>}
-                        {item.priority === "high" && <span className="rounded-full border border-red-400 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-900">high priority</span>}
-                      </div>
-                      <p className="truncate text-sm font-bold text-gray-900">{item.title || "Untitled workflow action"}</p>
-                      <p className="mt-1 text-xs text-gray-600">{item.entity || "ReadyForRobots"} · {formatDate(item.updated_at || item.created_at)}</p>
-                      {item.description && <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.description}</p>}
-                    </div>
-                    {item.next_action_url && (
-                      <Link href={item.next_action_url} className="shrink-0 rounded-xl border border-gray-200 px-3 py-2 text-center text-xs font-bold text-gray-600">
-                        {item.next_action_label || "Open"}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </section>
 
 
@@ -2239,8 +2120,8 @@ export default function Admin() {
             </div>
           </div>
         </section>
-          </>
-        )}
+          </div>
+        </details>
       </main>
     </div>
   );

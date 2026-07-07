@@ -36,6 +36,12 @@ export type SiteMetricsPanelData = {
   hotCount?: number;
   warmCount?: number;
   totalSignals?: number;
+  // Signup funnel (conversion board #20)
+  signupStart?: number;
+  signupComplete?: number;
+  firstSave?: number;
+  startToCompleteRate?: number;
+  completeToSaveRate?: number;
 };
 
 type CardSpec = {
@@ -150,6 +156,78 @@ export default function SiteMetricsPanel({ data, timeRangeLabel, loading }: Prop
           {formatCount(data.totalSignals)} total signals in database
         </span>
       </div>
+
+      <SignupFunnelStrip data={data} timeRangeLabel={timeRangeLabel} />
     </section>
+  );
+}
+
+function formatRate(value?: number) {
+  if (value == null) return "—";
+  return `${value}%`;
+}
+
+function SignupFunnelStrip({
+  data,
+  timeRangeLabel,
+}: {
+  data: SiteMetricsPanelData;
+  timeRangeLabel: string;
+}) {
+  const start = data.signupStart ?? 0;
+  const complete = data.signupComplete ?? 0;
+  const save = data.firstSave ?? 0;
+  const hasData = start + complete + save > 0;
+
+  const steps = [
+    { label: "Signup start", sub: "reached /signup", value: start },
+    { label: "Signup complete", sub: "account created", value: complete, rate: data.startToCompleteRate },
+    { label: "First save", sub: "activated", value: save, rate: data.completeToSaveRate },
+  ];
+
+  // Flag the weaker conversion step so the operator knows where to focus.
+  const s2c = data.startToCompleteRate ?? 0;
+  const c2s = data.completeToSaveRate ?? 0;
+  let hint = "";
+  if (hasData && complete > 0) {
+    hint =
+      c2s <= s2c
+        ? "Activation is the weaker step — improve the first-save guide and pipeline onboarding."
+        : "Signup friction is the weaker step — simplify the /signup flow.";
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800">
+          Signup funnel · {timeRangeLabel}
+        </p>
+        {!hasData ? (
+          <span className="text-[11px] font-medium text-gray-500">Collecting funnel events…</span>
+        ) : null}
+      </div>
+      <div className="flex items-stretch gap-2">
+        {steps.map((step, i) => (
+          <div key={step.label} className="flex flex-1 items-center gap-2">
+            <div className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-center">
+              <p className="font-mono text-xl font-bold tabular-nums text-gray-900">
+                {formatCount(step.value)}
+              </p>
+              <p className="mt-0.5 text-xs font-semibold text-gray-700">{step.label}</p>
+              <p className="text-[10px] text-gray-500">{step.sub}</p>
+            </div>
+            {i < steps.length - 1 ? (
+              <div className="flex shrink-0 flex-col items-center text-gray-400">
+                <span className="text-lg leading-none">→</span>
+                <span className="text-[10px] font-bold text-emerald-700">
+                  {formatRate(steps[i + 1].rate)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      {hint ? <p className="mt-3 text-xs text-gray-600">{hint}</p> : null}
+    </div>
   );
 }
