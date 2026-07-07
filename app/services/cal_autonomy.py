@@ -666,7 +666,15 @@ def run_cal_autonomy_cycle(
 def get_cal_autonomy_status() -> dict[str, Any]:
     from app.services.cal_assembly_agent import get_cal_assembly_status
 
+    try:
+        from app.services.cal_watchdog import watchdog_status
+
+        heartbeat = watchdog_status()
+    except Exception:
+        heartbeat = None
+
     return {
+        "heartbeat": heartbeat,
         "enabled": cal_autonomy_enabled(),
         "env_enabled": _cal_autonomy_env_default(),
         "runtime_override": get_cal_autonomy_runtime_override(),

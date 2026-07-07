@@ -199,6 +199,37 @@ def _run_web_startup() -> None:
 
     threading.Thread(target=_hydrate_l1_only, daemon=True, name="public-surface-hydrate").start()
 
+    _start_cal_watchdog()
+
+
+def _cal_watchdog_loop() -> None:
+    from app.services.cal_watchdog import check_and_alert
+
+    first_delay = float(os.getenv("CAL_WATCHDOG_FIRST_DELAY_MINUTES", "12") or "12")
+    time.sleep(max(60, first_delay * 60))
+    interval = float(os.getenv("CAL_WATCHDOG_INTERVAL_MINUTES", "10") or "10")
+    while True:
+        try:
+            check_and_alert()
+        except Exception as exc:
+            logger.warning("[cal-watchdog] check failed: %s", exc)
+        time.sleep(max(120, int(interval * 60)))
+
+
+def _start_cal_watchdog() -> None:
+    """Web (always-on) watches the worker's Cal heartbeat and emails on outage."""
+    from app.runtime_role import is_web_process
+    from app.services.cal_watchdog import watchdog_enabled
+
+    if not is_web_process():
+        return
+    if not watchdog_enabled():
+        logger.info("Cal watchdog disabled (CAL_WATCHDOG_ENABLED=0)")
+        return
+    threading.Thread(target=_cal_watchdog_loop, daemon=True, name="cal-watchdog").start()
+    print("[cal-watchdog] thread started", flush=True)
+    logger.info("Cal watchdog thread started (web process)")
+
 
 def _run_worker_startup() -> None:
     """Worker machine: schedulers, cache refresh loops, and warm-ups."""
@@ -680,19 +711,40 @@ def _start_scheduled_data_quality():
     )
 
 
+def _cal_heartbeat_sleep(total_seconds: float, status: str = "alive") -> None:
+    """Sleep in short chunks, refreshing the Cal heartbeat each chunk so the
+    web-side watchdog can detect a dead worker within minutes (not hours)."""
+    from app.services.cal_watchdog import record_cal_heartbeat
+
+    remaining = max(0.0, float(total_seconds))
+    chunk = 300.0  # 5 min
+    while remaining > 0:
+        record_cal_heartbeat(status)
+        nap = min(chunk, remaining)
+        time.sleep(nap)
+        remaining -= nap
+
+
 def _scheduled_cal_autonomy_loop():
     from app.database import SessionLocal
     from app.services.cal_autonomy import cal_autonomy_enabled, run_cal_autonomy_cycle
+    from app.services.cal_watchdog import record_cal_heartbeat
 
+    record_cal_heartbeat("starting")
     delay_min = float(os.getenv("CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
-    time.sleep(max(60, delay_min * 60))
+    _cal_heartbeat_sleep(max(60, delay_min * 60), status="warming_up")
     while True:
+        record_cal_heartbeat("tick")
         if not cal_autonomy_enabled():
-            time.sleep(3600)
+            _cal_heartbeat_sleep(3600, status="disabled")
             continue
         try:
             with SessionLocal() as db:
                 result = run_cal_autonomy_cycle(db)
+            record_cal_heartbeat(
+                "cycle_ok",
+                {"sent": result.get("sent"), "drafted": result.get("drafted")},
+            )
             logger.info(
                 "Cal autonomy cycle: status=%s drafted=%s sent=%s format_notified=%s",
                 result.get("status"),
@@ -701,9 +753,10 @@ def _scheduled_cal_autonomy_loop():
                 result.get("format_review_notified"),
             )
         except Exception as exc:
+            record_cal_heartbeat("cycle_error")
             logger.exception("Cal autonomy cycle failed: %s", exc)
         interval_hours = float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6")
-        time.sleep(max(1800, int(interval_hours * 3600)))
+        _cal_heartbeat_sleep(max(1800, int(interval_hours * 3600)))
 
 
 def _start_scheduled_cal_autonomy():
