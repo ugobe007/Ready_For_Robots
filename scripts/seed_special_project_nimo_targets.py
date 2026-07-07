@@ -102,8 +102,9 @@ def main() -> None:
             key = company.strip().lower()
             target = existing.get(key)
             if target is None:
-                target = SpecialProjectTarget(project_id=project.id, company=company)
-                db.add(target)
+                target = SpecialProjectTarget(company=company)
+                # Append to the loaded collection so recompute counts it.
+                project.targets.append(target)
                 created += 1
             else:
                 refreshed += 1

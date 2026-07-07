@@ -169,6 +169,9 @@ def test_create_target_autogenerates_draft(client):
     # Has an email guessed flag off since none was provided.
     assert t["contact_status"] == "none"
     assert t["can_send"] is False
+    # Creating a target immediately rolls the funnel forward.
+    listing = client.get(f"/api/admin/special-projects/{proj['id']}/targets").json()
+    assert listing["pipeline"]["targeted"] == 1
 
 
 def test_send_requires_approval_and_email(client):

@@ -254,7 +254,6 @@ def create_target(project_id: str, payload: TargetCreate, db: Session = Depends(
         raise HTTPException(status_code=400, detail="company is required")
     max_order = max((t.sort_order for t in (p.targets or [])), default=0)
     t = SpecialProjectTarget(
-        project_id=p.id,
         company=payload.company.strip(),
         website=payload.website,
         segment=payload.segment,
@@ -272,7 +271,8 @@ def create_target(project_id: str, payload: TargetCreate, db: Session = Depends(
     )
     subject, body = build_target_draft(p, t)
     t.draft_subject, t.draft_body = subject, body
-    db.add(t)
+    # Append to the loaded collection so the rollup below counts the new row.
+    p.targets.append(t)
     db.flush()
     recompute_project_rollup(p)
     db.commit()
