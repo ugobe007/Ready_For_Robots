@@ -71,5 +71,42 @@ bounced/never-delivered accounts so Cal re-contacts at verified Hunter emails,
 throttled by `CAL_AUTONOMY_SEND_LIMIT`. Recommend a controlled ramp given prior
 bounce-reputation damage.
 
-### Diagnostics added
-`scripts/cal_contact_audit.py`, `scripts/cal_contact_live_sample.py`.
+### Controlled ramp — proof of deliverability (6 curated buyers)
+Sent via the REAL send path to 6 hand-picked clean ICP buyers (verified
+`hunter_domain` emails at real domains):
+
+| Result | Count | Examples |
+|--------|-------|----------|
+| **delivered** | 4 | remichel.com, princemanufacturing.com, kleen-ritecorp.com, aboitiz.com |
+| bounced | 2 | choctawcasinos.com, core-mark.com (Hunter person stale; no ZeroBounce to catch pre-send) |
+
+67% delivered vs. ~45% in the guessed-mailbox era — and **zero** guessed-mailbox
+sends. Bounces now dead-end instead of looping.
+
+### Third fix — closed a gate bypass
+The ramp exposed that `_handle_crm_delivery_problem` (webhook bounce handler)
+auto-resent to **guessed role inboxes** (`operations@`, `info@`, …) on bounce,
+bypassing the hardened gate (a `hunter_domain` bounce was followed 8s later by a
+guessed `operations@` send). Removed the guessed-resend; Cal now records the
+bounce and notifies to add a verified contact. Supply channel left unchanged.
+
+### Findings for follow-up missions
+1. **HOT/WARM pool contamination (north-star names):** the eligible pool contains
+   robot vendors (Daifuku, Keenon), headline-fragment names, and media-domain junk
+   ("Miami logistics company" → miami.com, "2021 Women" → women.com). Hunter
+   "verifies" a real person at these wrong domains. Clean names/events upstream
+   before widening Cal's send window.
+2. **Cycle window is burned:** `run_cal_autonomy_cycle` only looks at the top ~100
+   HOT/WARM (`_hot_warm_companies(limit=max(draft_limit,100))`), all already-sent
+   from the bounce era, so Cal reaches no new runway. Prefer unsent/verified when
+   building the window (after pool cleanup).
+3. **No ZeroBounce key:** `verify_email_deliverable` is DNS-only, so stale Hunter
+   people (2/6) still bounced. Adding `ZERO_BOUNCE_API_KEY` would catch these
+   pre-send.
+4. **Supply bounce path** still guesses role inboxes (`_role_inbox_alternates`) —
+   apply the same hardening if desired.
+
+### Diagnostics/tools added
+`scripts/cal_contact_audit.py`, `scripts/cal_contact_live_sample.py`,
+`scripts/cal_send_curated.py`, `scripts/cal_recent_sends.py`, and
+`--verified-retry` mode in `scripts/cal_bounce_recovery.py`.
