@@ -33,11 +33,10 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
     label: "Admin",
     links: [
-                { label: "Cal control", href: "/admin#cal-outreach", shortLabel: "Cal oversight", adminOnly: true },
-      { label: "Pipeline review", href: "/admin#pipeline", shortLabel: "HOT/WARM leads", adminOnly: true },
-      { label: "System & metrics", href: "/admin#system", shortLabel: "Settings & analytics", adminOnly: true },
+      { label: "Command center", href: "/admin", shortLabel: "Daily brief · Cal queue", adminOnly: true },
       { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
       { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
+      { label: "Special projects", href: "/admin/special-projects", shortLabel: "Bespoke client GTM (NIMO)", adminOnly: true },
     ],
   },
   {
@@ -73,14 +72,12 @@ export function isAdminNavActive(currentPath: string, href: string): boolean {
   const hash = typeof window !== "undefined" ? window.location.hash : "";
 
   if (target === "/sales-workflow") return path === "/sales-workflow";
-  if (href.includes("#cal-step-") || href.includes("#cal-outreach") || href === "/admin#cal-outreach") {
-    return path === "/admin" && (hash.startsWith("#cal-step-") || hash === "#cal-outreach" || hash === "" || hash === "#cal");
+  if (href.includes("#cal-outreach") || href === "/admin#cal-outreach") {
+    return path === "/admin" && (hash === "#cal-outreach" || hash === "" || hash === "#cal");
   }
-  if (href.includes("#pipeline")) return path === "/admin" && hash === "#pipeline";
-  if (href.includes("#system")) return path === "/admin" && hash === "#system";
-  if (href.includes("#workflow")) return path === "/admin" && (hash === "#workflow" || hash === "#system");
+  if (href.includes("#workflow")) return path === "/admin" && hash === "#workflow";
   if (target === "/admin") {
-    return path === "/admin" && !hash;
+    return path === "/admin" && (!hash || hash === "#cal-outreach" || hash === "#cal");
   }
   if (target === "/admin/prospects") return path === "/admin/prospects";
   if (target === "/pipeline") return path === "/pipeline" || path === "/admin/prospects";
@@ -129,7 +126,6 @@ export function openWorkspaceHref(href: string, setLocation: (path: string) => v
 }
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
-  { label: "Cal control", href: "/admin#cal-outreach", shortLabel: "Preview & send" },
-  { label: "Pipeline review", href: "/admin#pipeline", shortLabel: "Review leads" },
-  { label: "System", href: "/admin#system", shortLabel: "Metrics & settings" },
+  { label: "Command center", href: "/admin", shortLabel: "Cal queue" },
+  { label: "Agent queue", href: "/admin#workflow", shortLabel: "Review actions" },
 ];

@@ -46,11 +46,14 @@ from app.api.admin_purge import router as admin_purge_router
 from app.api.admin_lead_ops import router as admin_lead_ops_router
 from app.api.admin_humanoid_ops import router as admin_humanoid_ops_router
 from app.api.admin_partners import router as admin_partners_router
+from app.api.special_projects import admin_router as special_projects_admin_router
+from app.api.special_projects import public_router as special_projects_public_router
 from app.api.social_posts import router as social_posts_router
 from app.api.linkedin import router as linkedin_router
 from app.api.integrations import router as integrations_router
 from app.api.integrations_hubspot import router as integrations_hubspot_router
 from app.api.integrations_google_calendar import router as integrations_google_calendar_router
+from app.api.vendor_design import router as vendor_design_router
 from app.database import get_db
 import app.models
 import app.models.shared_calculation
@@ -208,6 +211,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_secondary_pipeline()
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
+    _start_scheduled_cal_daily_digest()
     _start_scheduled_supply_autonomy()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
@@ -388,6 +392,8 @@ app.include_router(admin_purge_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_lead_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_humanoid_ops_router, prefix="/api/admin", tags=["admin"])
 app.include_router(admin_partners_router, prefix="/api/admin", tags=["admin-partners"])
+app.include_router(special_projects_admin_router, prefix="/api/admin", tags=["special-projects"])
+app.include_router(special_projects_public_router, prefix="/api", tags=["special-projects"])
 app.include_router(social_posts_router, prefix="/api/social", tags=["social"])
 app.include_router(linkedin_router, prefix="/api/linkedin", tags=["linkedin"])
 app.include_router(agent_router, prefix="/api/agent", tags=["agent"])
@@ -415,6 +421,7 @@ app.include_router(integrations_router, prefix="/api", tags=["integrations"])
 app.include_router(integrations_hubspot_router, prefix="/api", tags=["integrations"])
 app.include_router(integrations_google_calendar_router, prefix="/api", tags=["integrations"])
 app.include_router(robot_buyer_leads_router, prefix="/api/robot-buyer-leads", tags=["robot-buyer-leads"])
+app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["vendor-design"])
 
 if _mcp_asgi is not None:
     app.mount("/mcp", _mcp_asgi, name="mcp")
@@ -752,6 +759,72 @@ def _scheduled_supply_autonomy_loop():
             logger.exception("Supply autonomy cycle failed: %s", exc)
         interval_hours = float(os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6") or "6")
         time.sleep(max(1800, int(interval_hours * 3600)))
+
+
+def _scheduled_cal_daily_digest_loop():
+    from datetime import datetime, timezone
+
+    from app.database import SessionLocal
+    from app.services.cal_daily_digest import (
+        cal_daily_digest_enabled,
+        next_digest_run_utc,
+        send_cal_daily_digest,
+    )
+
+    hour = int(os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15") or "15")
+    minute = int(os.getenv("CAL_DAILY_DIGEST_MINUTE_UTC", "0") or "0")
+    first = next_digest_run_utc(hour=hour, minute=minute)
+    delay = max(60, int((first - datetime.now(timezone.utc)).total_seconds()))
+    time.sleep(delay)
+    while True:
+        if not cal_daily_digest_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = send_cal_daily_digest(db)
+            logger.info(
+                "Cal daily digest: sent=%s recipients=%s reason=%s",
+                result.get("sent"),
+                result.get("recipients"),
+                result.get("reason"),
+            )
+        except Exception as exc:
+            logger.exception("Cal daily digest failed: %s", exc)
+        next_run = next_digest_run_utc(hour=hour, minute=minute)
+        sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
+        time.sleep(sleep_sec)
+
+
+def _start_scheduled_cal_daily_digest():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app Cal daily digest skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_CAL_DAILY_DIGEST", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app Cal daily digest disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_CAL_DAILY_DIGEST", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_cal_daily_digest_loop,
+        daemon=True,
+        name="cal-daily-digest",
+    )
+    t.start()
+    print("[cal-daily-digest] scheduler thread started", flush=True)
+    logger.info(
+        "In-app Cal daily digest thread started (daily at %s:%02d UTC)",
+        os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15"),
+        int(os.getenv("CAL_DAILY_DIGEST_MINUTE_UTC", "0") or "0"),
+    )
 
 
 def _start_scheduled_supply_autonomy():

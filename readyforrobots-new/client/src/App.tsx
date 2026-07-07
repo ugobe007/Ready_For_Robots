@@ -32,8 +32,14 @@ import Robots from "./pages/Robots";
 import HumanoidComparisonReport from "./pages/HumanoidComparisonReport";
 import FindRobots from "./pages/FindRobots";
 import Admin from "./pages/Admin";
+import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
+import ProjectPortal from "./pages/ProjectPortal";
 import Social from "./pages/Social";
 import ExperimentIdeas from "./pages/ExperimentIdeas";
+import Preview from "./pages/Preview";
+import Privacy from "./pages/Privacy";
+import VendorDesignBuilder from "./pages/VendorDesignBuilder";
+import DesignShare from "./pages/DesignShare";
 import { AuthProvider } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
@@ -50,6 +56,10 @@ function Router() {
       <Route path="/intelligence" component={Intelligence} />
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/preview" component={Preview} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/vendor/design" component={VendorDesignBuilder} />
+      <Route path="/design/:shareId" component={DesignShare} />
       <Route path="/benchmark" component={Benchmark} />
       <Route path="/robots/report" component={HumanoidComparisonReport} />
       <Route path="/robots" component={Robots} />
@@ -72,8 +82,11 @@ function Router() {
       <Route path="/integrations" component={Integrations} />
       <Route path="/integrations/hubspot" component={HubSpotConnect} />
       <Route path="/admin/prospects" component={Pipeline} />
+      <Route path="/admin/special-projects" component={SpecialProjectsAdmin} />
       <Route path="/admin" component={Admin} />
+      <Route path="/p/:token" component={ProjectPortal} />
       <Route path="/readyforrobots/admin/prospects" component={Pipeline} />
+      <Route path="/readyforrobots/admin/special-projects" component={SpecialProjectsAdmin} />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />
       <Route path="/readyforrobots/inbox" component={Inbox} />
