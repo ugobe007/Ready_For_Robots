@@ -11,6 +11,7 @@ from app.services.cal_autonomy import (
     format_cal_draft_storage,
     get_cal_review_email,
     outreach_template_fingerprint,
+    prioritize_unsent,
 )
 
 
@@ -65,6 +66,44 @@ def test_cal_buyer_eligible_in_icp_override_beats_mislabeled_industry():
         _StubCompany("Amazon Fulfillment", "Hospitality", website="https://amazon.com")
     )
     assert ok is True
+
+
+class _StubAcct:
+    def __init__(self, sent_at=None):
+        self.outreach_sent_at = sent_at
+
+
+def _entry(cid, score):
+    return (type("Co", (), {"id": cid, "name": f"Co{cid}"})(), score, "HOT")
+
+
+def test_prioritize_unsent_moves_never_sent_to_front():
+    # score order: c1 (sent), c2 (unsent), c3 (sent), c4 (unsent)
+    companies = [_entry(1, 90), _entry(2, 80), _entry(3, 70), _entry(4, 60)]
+    accts = {
+        1: _StubAcct(sent_at="2026-07-01T00:00:00Z"),
+        2: _StubAcct(sent_at=None),
+        3: _StubAcct(sent_at="2026-07-02T00:00:00Z"),
+        4: _StubAcct(sent_at=None),
+    }
+    ordered = prioritize_unsent(companies, accts)
+    ids = [c.id for c, _, _ in ordered]
+    # Unsent (2, 4) first in score order, then already-sent (1, 3) in score order.
+    assert ids == [2, 4, 1, 3]
+
+
+def test_prioritize_unsent_treats_missing_account_as_unsent():
+    companies = [_entry(1, 90), _entry(2, 80)]
+    accts = {1: _StubAcct(sent_at="2026-07-01T00:00:00Z")}  # c2 has no account yet
+    ordered = prioritize_unsent(companies, accts)
+    assert [c.id for c, _, _ in ordered] == [2, 1]
+
+
+def test_prioritize_unsent_stable_when_all_unsent():
+    companies = [_entry(1, 90), _entry(2, 80), _entry(3, 70)]
+    accts = {1: _StubAcct(), 2: _StubAcct(), 3: _StubAcct()}
+    ordered = prioritize_unsent(companies, accts)
+    assert [c.id for c, _, _ in ordered] == [1, 2, 3]
 
 
 def test_get_cal_review_email_prefers_admin_email(monkeypatch):

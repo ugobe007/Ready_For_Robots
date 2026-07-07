@@ -379,6 +379,22 @@ def _cal_buyer_eligible(company: Any, acct: Any = None) -> tuple[bool, str]:
     return True, "ok"
 
 
+def prioritize_unsent(companies: list, accounts_by_company_id: dict) -> list:
+    """Move never-contacted buyers to the front of the HOT/WARM window.
+
+    ``companies`` is a list of ``(company, score, tier)`` tuples in score order.
+    ``accounts_by_company_id`` maps company id -> CrmAccount. Accounts that have
+    already been sent (``outreach_sent_at`` set) fall to the back so the draft
+    batch and send loop reach actionable/reset runway first. Sort is stable, so
+    score order is preserved within the unsent and already-sent groups.
+    """
+    def _already_contacted(entry) -> int:
+        acct = accounts_by_company_id.get(entry[0].id)
+        return 1 if (acct is not None and getattr(acct, "outreach_sent_at", None)) else 0
+
+    return sorted(companies, key=_already_contacted)
+
+
 def run_cal_autonomy_cycle(
     db: Session,
     *,
@@ -418,10 +434,14 @@ def run_cal_autonomy_cycle(
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
     followup_limit = int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25")
+    # Pool window is decoupled from the draft batch so Cal can look past the
+    # bounce-era top ranks and reach freshly-unsent (or reset) buyers deeper in
+    # the HOT/WARM list. Sends stay throttled by send_limit and the verified gate.
+    pool_limit = int(os.getenv("CAL_AUTONOMY_POOL", "400") or "400")
     stale_days = int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7")
     stale_before = datetime.now(timezone.utc) - timedelta(days=max(stale_days, 1))
 
-    companies = _hot_warm_companies(db, limit=max(draft_limit, 100))
+    companies = _hot_warm_companies(db, limit=max(pool_limit, draft_limit, 100))
     company_ids = [c.id for c, _, _ in companies]
     existing: dict[int, CrmAccount] = {}
     if company_ids:
@@ -431,6 +451,10 @@ def run_cal_autonomy_cycle(
         ).all():
             if acct.company_id:
                 existing[acct.company_id] = acct
+
+    # Prioritise never-sent buyers so the draft batch and send loop reach
+    # actionable runway first (incl. accounts reset after a bounce-era send).
+    companies = prioritize_unsent(companies, existing)
 
     drafted = 0
     refreshed = 0
@@ -656,6 +680,7 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "send_limit": int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25"),
         "followup_limit": int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25"),
         "draft_batch": int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100"),
+        "pool_window": int(os.getenv("CAL_AUTONOMY_POOL", "400") or "400"),
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
         "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "3") or "3"),
         "manual_approval": (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"),
