@@ -230,6 +230,46 @@ def test_decision_maker_confidence_in_range():
 # CRMDescriptors computed properties
 # ─────────────────────────────────────────────────────────────────────────────
 
+def test_inferred_robot_fit_not_stored_as_requirement():
+    """A humanoid-trial story names no concrete requirement — the inferred robot-fit menu
+    must go to inferred_robot_fit, never automation_requirements (which drives matching)."""
+    from app.models.company import Company
+    from app.models.signal import Signal
+    from app.services.crm_extractor import extract, build_crm_metadata_dict
+
+    company = Company(name="Test Air", industry="Airports & Aviation")
+    signals = [
+        Signal(
+            signal_text="Test Air trials humanoid robots at the airport for passenger assistance.",
+            source_url="",
+        )
+    ]
+    d = extract(company, signals, db=None)
+    assert d.automation_requirements == []
+    meta = build_crm_metadata_dict(d)
+    assert meta["automation_requirements"] == []
+    assert "inferred_robot_fit" in meta
+
+
+def test_grounded_requirement_still_extracted():
+    from app.models.company import Company
+    from app.models.signal import Signal
+    from app.services.crm_extractor import extract
+
+    company = Company(name="Acme DC", industry="Logistics")
+    signals = [
+        Signal(
+            signal_text="Acme DC needs palletizing and material handling automation for its warehouse.",
+            source_url="",
+        )
+    ]
+    d = extract(company, signals, db=None)
+    assert d.automation_requirements
+    assert d.inferred_robot_fit == []
+    joined = " ".join(d.automation_requirements).lower()
+    assert "material handling" in joined or "palletiz" in joined
+
+
 def test_crm_descriptors_has_budget_false_when_empty():
     d = CRMDescriptors()
     assert d.has_budget is False
