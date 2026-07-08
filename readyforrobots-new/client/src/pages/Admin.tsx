@@ -5,6 +5,7 @@ import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPan
 import CalEmailPreview from "@/components/admin/CalEmailPreview";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import CalWorkflowPanel, { type CalWorkflowMetrics } from "@/components/admin/CalWorkflowPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1329,6 +1330,7 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-50">
       <Header />
       <main className="admin-workspace mx-auto max-w-[1500px] px-4 pb-20 pt-20 lg:px-6">
+        <AdminNav />
 
         {syncingSection && !(syncingSection === "cal" && calStatus) ? (
           <p className="mb-4 rounded-xl border border-gray-200 px-4 py-2 text-xs text-gray-500" >

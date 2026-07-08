@@ -17,6 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Header from "@/components/Header";
+import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase } from "@/lib/apiBase";
 import { authHeader, getFreshAccessToken } from "@/lib/supabase";
@@ -468,7 +469,8 @@ export default function SpecialProjectsAdmin() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="admin-workspace mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <AdminNav />
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">

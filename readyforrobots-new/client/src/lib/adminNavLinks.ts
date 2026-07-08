@@ -15,7 +15,7 @@ export type AdminNavSection = {
 /** Canonical workspace navigation — keep AdminNav and Header dropdown in sync. */
 export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
   {
-    label: "Pipeline",
+    label: "Sell",
     links: [
       { label: "Live pipeline", href: "/pipeline", shortLabel: "Pick leads · draft · send" },
       { label: "Activity feed", href: "/sales-workflow", shortLabel: "What happened while you were away" },
@@ -23,7 +23,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
-    label: "Tools",
+    label: "Outreach",
     links: [
       { label: "Outreach editor", href: "/crm", shortLabel: "Advanced approve/send UI" },
       { label: "Calendar", href: "/calendar" },
@@ -31,16 +31,15 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
-    label: "Admin",
+    label: "Command",
     links: [
       { label: "Command center", href: "/admin", shortLabel: "Daily brief · Cal queue", adminOnly: true },
       { label: "Agent queue", href: "/admin#workflow", shortLabel: "Agent actions", adminOnly: true },
-      { label: "Prospects", href: "/admin/prospects", shortLabel: "Admin prospects", adminOnly: true },
       { label: "Special projects", href: "/admin/special-projects", shortLabel: "Bespoke client GTM (NIMO)", adminOnly: true },
     ],
   },
   {
-    label: "Growth",
+    label: "Supply & growth",
     links: [
       { label: "Supply Pipeline", href: "/supply-pipeline" },
       { label: "Marketplace", href: "/marketplace" },
