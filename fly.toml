@@ -122,7 +122,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 
 [[vm]]
   processes = ["worker"]
-  memory = "1024mb"
+  # 2GB: the daily newsletter/content full rebuild peaks ~450MB RSS on top of the
+  # running app (~600MB). At 1GB the OOM-killer killed every rebuild, freezing the
+  # newsletter for weeks. 2GB gives the rebuild headroom to complete and persist.
+  memory = "2048mb"
   cpu_kind = "shared"
   cpus = 2
 
