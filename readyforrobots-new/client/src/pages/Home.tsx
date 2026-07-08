@@ -22,6 +22,7 @@ import {
   MarketingPricing,
   MarketingReportSection,
   MarketingTestimonials,
+  MarketingVsGenericAI,
   MarketingWhatSignalDoes,
 } from "@/components/marketing/MarketingSections";
 import HeroUrlScan from "@/components/marketing/HeroUrlScan";
@@ -196,6 +197,7 @@ export default function Home() {
       <MarketingHowItWorks />
       <MarketingLivePipelineSection hotCount={hot} totalCount={total} />
       <MarketingBeforeAfter />
+      <MarketingVsGenericAI />
       <MarketingCaseStudies />
       <MarketingTestimonials />
 

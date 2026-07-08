@@ -296,6 +296,100 @@ export function MarketingBeforeAfter() {
   );
 }
 
+export function MarketingVsGenericAI() {
+  const rows = [
+    {
+      dumb: "Search 100M+ companies — no idea who's buying robots now",
+      rfr: "Curated robot-buyer intent, ranked HOT / WARM / COLD by real events",
+    },
+    {
+      dumb: '"CTO at a logistics company" — you guess the pitch',
+      rfr: "robot_types_needed + the exact SKU to pitch on every lead",
+    },
+    {
+      dumb: "Export a CSV, then go build your own stack",
+      rfr: "Pipeline, Cal outreach drafts, and HubSpot sync — done for you",
+    },
+    {
+      dumb: "Static lists that go stale the day you download them",
+      rfr: "Live signals refreshed daily — contact in the buying window",
+    },
+  ];
+
+  return (
+    <section className="relative overflow-hidden bg-slate-950 py-16 lg:py-24">
+      <div
+        className="absolute inset-0 opacity-[0.4] pointer-events-none"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 15% 20%, rgba(16,185,129,0.12) 0%, transparent 45%), radial-gradient(circle at 85% 80%, rgba(5,150,105,0.1) 0%, transparent 40%)",
+        }}
+      />
+      <div className="container relative">
+        <div className="mb-10 max-w-2xl">
+          <p className="section-eyebrow section-eyebrow-on-dark mb-3">Why not just use a generic AI tool?</p>
+          <h2 className="section-headline font-bold text-white">
+            Generic AI guesses.{" "}
+            <span className="text-emerald-400">SIGNAL knows who&apos;s buying robots.</span>
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+            Horizontal &ldquo;AI&rdquo; search and data tools hand you a list. ReadyForRobots hands you a moving
+            pipeline built for robot companies — verified buyer intent, the right SKU, and deals advancing in CRM.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 lg:gap-5">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+              <XCircle size={15} className="text-red-400" aria-hidden />
+              Generic AI &amp; data tools
+            </p>
+            <ul className="space-y-3">
+              {rows.map((row) => (
+                <li key={row.dumb} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-400">
+                  <XCircle size={15} className="mt-0.5 flex-shrink-0 text-red-400/70" aria-hidden />
+                  {row.dumb}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.06] p-5 shadow-[0_0_40px_-12px_rgba(16,185,129,0.4)]">
+            <p className="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300">
+              <CheckCircle size={15} className="text-emerald-400" aria-hidden />
+              ReadyForRobots SIGNAL
+            </p>
+            <ul className="space-y-3">
+              {rows.map((row) => (
+                <li key={row.rfr} className="flex items-start gap-2.5 text-sm font-medium leading-relaxed text-emerald-50">
+                  <CheckCircle size={15} className="mt-0.5 flex-shrink-0 text-emerald-400" aria-hidden />
+                  {row.rfr}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+          <Link
+            href="/compare"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-slate-950 transition-all hover:bg-emerald-400"
+          >
+            See the full comparison
+            <ArrowRight size={14} />
+          </Link>
+          <Link
+            href="/pipeline"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition-all hover:bg-white/5"
+          >
+            Browse the live pipeline free
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function MarketingCaseStudies() {
   const cases = [
     {
