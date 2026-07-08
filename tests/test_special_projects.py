@@ -162,8 +162,10 @@ def test_create_target_autogenerates_draft(client):
     t = _add_target(client, proj["id"], contact_name="Alex Rivera", signal="a new automation push")
     assert t["stage"] == "targeted"
     assert t["approved"] is False
-    # Draft is composed from the sequence template with merge fields.
-    assert "CloudKitchens" in t["draft_subject"]
+    # Draft is composed from the sequence template with merge fields:
+    # task personalizes the subject, company personalizes the body.
+    assert "bowl assembly" in t["draft_subject"].lower()
+    assert "CloudKitchens" in t["draft_body"]
     assert t["draft_body"].startswith("Hi Alex,")
     assert "no-cost validation pilot" in t["draft_body"]
     # Has an email guessed flag off since none was provided.

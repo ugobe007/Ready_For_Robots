@@ -210,41 +210,46 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
     seq = (t.sequence or "A").strip().upper()
 
     if seq == "B":
-        subject = f"Co-developing the robot that does {task_l}"
+        # Innovation / co-development angle.
+        subject = f"Help shape the robot that does {task_l}"
         body = (
             f"Hi {first},\n\n"
-            "Most kitchen \"robots\" are single-task rigs. Ours is a tactile foundation model — one "
-            "backbone that transfers across cutting, portioning, and assembly, fine-tuned per task in "
-            "days, and it feels contact force so it handles delicate and irregular items.\n\n"
-            f"With {signal}, {company} is exactly who should help shape it. We're inviting a small group "
-            f"of innovation partners to host a no-cost validation pilot on one workflow ({task_l}).\n\n"
+            f"Quick idea for {company}. Most kitchen \"robots\" are single-task rigs bolted to one "
+            "station. Ours is one tactile platform that transfers across cutting, portioning, and "
+            "assembly — retrained per task in days — and because it senses contact force, it handles "
+            "the delicate, irregular items camera-only rigs drop.\n\n"
+            f"With {signal}, you're exactly the kind of operator we want shaping it. We're inviting a "
+            f"small group of partners to co-develop through a no-cost pilot on one workflow ({task_l}) "
+            "— your input steers the roadmap.\n\n"
             f"Could I show you the robot doing {task_l} on a 20-minute call?\n\n"
             f"— {NIMO_SENDER}"
         )
     elif seq == "C":
+        # ROI / labor-math angle.
         subject = f"The labor math on {task_l}"
         body = (
             f"Hi {first},\n\n"
-            f"{task} is repetitive, contact-heavy, and hard to staff — exactly where turnover and "
-            "inconsistency cost you. We built a tactile humanoid that does it by feel, and we've proven "
-            "7+ kitchen tasks on real hardware.\n\n"
-            f"Given {signal}, I'd like to offer {company} a no-cost validation pilot: we install the "
+            f"{task} is the kind of job that's repetitive, contact-heavy, and never fully staffed — so "
+            "turnover and inconsistency quietly eat margin. We built a tactile humanoid that does it by "
+            "feel, with 7+ kitchen tasks proven on real hardware (not simulation).\n\n"
+            f"Given {signal}, here's the offer for {company}: a no-cost validation pilot. We install the "
             "robot and support it, you pick one site and one workflow, and we measure labor-hours "
-            "displaced, throughput, and consistency together.\n\n"
+            "displaced, throughput, and consistency together — real numbers, your floor.\n\n"
             "20 minutes to see if it's worth testing?\n\n"
             f"— {NIMO_SENDER}"
         )
-    else:  # Sequence A (default)
-        subject = f"{task} at {company}, done by feel"
+    else:  # Sequence A (default) — problem-first, tactile differentiator.
+        subject = f"A robot that can actually do {task_l}"
         body = (
             f"Hi {first},\n\n"
-            "We built a humanoid that feels what it's handling — distributed touch sensors, sub-Newton "
-            f"force control — so it does the contact-rich back-of-house work vision-only robots can't: "
-            f"{task_l}, portioning by feel, multi-step assembly.\n\n"
-            "We've demonstrated 7+ kitchen tasks on real hardware (not sim). Given "
-            f"{signal}, {company}'s controlled kitchens are an ideal place to validate it.\n\n"
-            "We're selecting a few beta sites to host a no-cost validation pilot — we bring the robot "
-            "and engineering, you bring one real workflow. Worth a 20-minute call to see if it fits?\n\n"
+            "Most back-of-house robots run on cameras alone, so they fumble anything contact-rich. "
+            "Ours feels what it's handling — distributed touch sensors and sub-Newton force control — "
+            f"so it does the work they can't: {task_l}, portioning by feel, multi-step assembly. We've "
+            "run 7+ kitchen tasks on real hardware, not sim.\n\n"
+            f"Given {signal}, {company} stood out as a place this could earn its keep. We're placing a "
+            "few robots in no-cost validation pilots — we bring the hardware and the engineers, you "
+            "pick one workflow, and we measure labor-hours saved and consistency side by side.\n\n"
+            f"Open to a 20-minute demo? I'll show it doing {task_l} live.\n\n"
             f"— {NIMO_SENDER}"
         )
     return subject, body
