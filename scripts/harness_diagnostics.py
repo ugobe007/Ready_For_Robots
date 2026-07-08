@@ -382,12 +382,14 @@ def check_code_conventions() -> dict[str, Any]:
     }
 
 
-def _parse_open_conversion_challenges() -> list[dict[str, Any]]:
-    path = _root / "docs" / "conversion_agent_challenges.md"
-    if not path.is_file():
-        return []
+def _parse_open_conversion_challenges(markdown: str | None = None) -> list[dict[str, Any]]:
+    if markdown is None:
+        path = _root / "docs" / "conversion_agent_challenges.md"
+        if not path.is_file():
+            return []
+        markdown = path.read_text(encoding="utf-8")
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in markdown.splitlines():
         if "| Open |" not in line and "| open |" not in line.lower():
             continue
         parts = [p.strip() for p in line.split("|") if p.strip()]

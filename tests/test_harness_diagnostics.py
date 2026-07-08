@@ -16,11 +16,24 @@ from scripts.harness_diagnostics import (
 
 
 def test_parse_open_conversion_challenges_finds_open_row():
-    rows = _parse_open_conversion_challenges()
+    # Parser mechanics: Open rows are returned, ✅ Done rows are excluded.
+    markdown = (
+        "| Rank | Challenge | Agent | Acceptance test |\n"
+        "|------|-----------|-------|-----------------|\n"
+        "| 7 | **Done thing** — already shipped | ProductSurface | ✅ Done 2026-07-08 |\n"
+        "| 8 | **Open thing** — needs building | ProductSurface | Open |\n"
+    )
+    rows = _parse_open_conversion_challenges(markdown)
     ranks = [r["rank"] for r in rows]
-    assert 20 in ranks
-    row20 = next(r for r in rows if r["rank"] == 20)
-    assert "instrumentation" in row20["title"].lower()
+    assert ranks == [8]
+    assert "open thing" in rows[0]["title"].lower()
+
+
+def test_parse_open_conversion_challenges_live_board_parses():
+    # The live board must parse without error; may legitimately be fully cleared.
+    rows = _parse_open_conversion_challenges()
+    assert isinstance(rows, list)
+    assert all(isinstance(r.get("rank"), int) for r in rows)
 
 
 def test_scan_flags_getapibase_without_public_read(tmp_path: Path):

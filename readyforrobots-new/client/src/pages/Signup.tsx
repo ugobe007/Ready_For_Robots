@@ -244,7 +244,7 @@ export default function Signup() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold text-emerald-700">✓</span>
-                  10 live pipeline leads · pitch actions · robot categories
+                  Live pipeline leads · pitch actions · robot categories
                 </li>
               </ul>
             )}
@@ -272,6 +272,18 @@ export default function Signup() {
                     ? "Continue in one tap with Google — or use a magic link below."
                     : "Create an account with Google, GitHub, or a magic link."}
               </p>
+              {liveProof && (liveProof.hot || liveProof.companies) && (
+                <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-900">
+                  <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  <span>
+                    {liveProof.hot ? `${liveProof.hot.toLocaleString()} HOT buyers live now` : "Live buyer signals scored"}
+                    {liveProof.companies ? ` · ${liveProof.companies.toLocaleString()} companies tracked` : ""}
+                  </span>
+                </div>
+              )}
               {hubspotIntent && (
                 <input
                   type="text"
