@@ -206,7 +206,27 @@ def main() -> int:
                         encoding="utf-8",
                     )
             else:
-                return rc
+                # The mission ran but didn't finish cleanly (e.g. reached max
+                # turns). Degrade gracefully: record a partial outcome and STILL
+                # notify. A red mission must never silence the whole loop — the
+                # operator should always get the daily report, and any partial
+                # work should still be pushed.
+                print(
+                    f"Mission did not finish cleanly (rc={rc}) — recording partial "
+                    "outcome and continuing to notify.",
+                    flush=True,
+                )
+                stub = mission_dir / "outcome.md"
+                if not stub.is_file():
+                    stub.write_text(
+                        f"# Outcome: {mission_dir.name}\n\n"
+                        f"**Result:** partial\n"
+                        f"**Note:** Mission agent stopped with exit code {rc} at "
+                        f"{datetime.now(timezone.utc).isoformat()} "
+                        f"(commonly: reached max turns or budget). Review the run "
+                        f"log and re-run with `--force` after narrowing scope.\n",
+                        encoding="utf-8",
+                    )
     elif not outcome.is_file() and not args.dry_run:
         stub = mission_dir / "outcome.md"
         stub.write_text(
