@@ -244,6 +244,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_cal_autonomy()
     _start_scheduled_cal_daily_digest()
     _start_scheduled_supply_autonomy()
+    _start_scheduled_newsletter_publish()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
@@ -877,6 +878,111 @@ def _start_scheduled_cal_daily_digest():
         "In-app Cal daily digest thread started (daily at %s:%02d UTC)",
         os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15"),
         int(os.getenv("CAL_DAILY_DIGEST_MINUTE_UTC", "0") or "0"),
+    )
+
+
+def _newsletter_publish_hour_utc() -> int:
+    """6:00 America/Los_Angeles ≈ 13:00 UTC (PDT). Full rebuild is idempotent."""
+    try:
+        return int(os.getenv("NEWSLETTER_PUBLISH_HOUR_UTC", "13") or "13")
+    except ValueError:
+        return 13
+
+
+def _newsletter_snapshot_age_hours():
+    """Age (hours) of the published edition, or None if unknown/absent."""
+    from datetime import datetime, timezone
+
+    try:
+        from app.services.newsletter_snapshot import get_newsletter_mem_cache
+
+        edition = get_newsletter_mem_cache() or {}
+        saved = (edition.get("_meta") or {}).get("saved_at")
+        if not saved:
+            return None
+        dt = datetime.fromisoformat(saved)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+    except Exception:
+        return None
+
+
+def _run_newsletter_publish(reason: str) -> None:
+    """Full public-surface rebuild (fresh stories + brief) and re-hydrate L1."""
+    from app.database import SessionLocal
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_all_public_surface_caches,
+    )
+
+    db = SessionLocal()
+    try:
+        stats = refresh_all_public_surface_caches(db)
+        hydrate_public_surface_caches()
+        logger.info("Newsletter daily publish done (%s): %s", reason, stats)
+    finally:
+        db.close()
+
+
+def _scheduled_newsletter_publish_loop():
+    from datetime import datetime, timedelta, timezone
+
+    hour = _newsletter_publish_hour_utc()
+
+    # Self-heal on boot: the daily publish used to live only in Celery Beat, which
+    # does not run on Fly (SKIP_CELERY). If the edition is stale, rebuild now so a
+    # dead scheduler can never leave /newsletter stale for days again.
+    time.sleep(150)  # let L1 hydration finish first
+    try:
+        age = _newsletter_snapshot_age_hours()
+        stale_after = float(os.getenv("NEWSLETTER_STALE_REBUILD_HOURS", "20") or "20")
+        if age is None or age >= stale_after:
+            _run_newsletter_publish(reason=f"boot_stale(age_h={age})")
+        else:
+            logger.info("Newsletter fresh at boot (age_h=%.1f) — no rebuild", age)
+    except Exception as exc:
+        logger.exception("Newsletter boot self-heal failed: %s", exc)
+
+    while True:
+        now = datetime.now(timezone.utc)
+        target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
+        if target <= now:
+            target += timedelta(days=1)
+        time.sleep(max(300, int((target - now).total_seconds())))
+        try:
+            _run_newsletter_publish(reason="daily")
+        except Exception as exc:
+            logger.exception("Newsletter daily publish failed: %s", exc)
+
+
+def _start_scheduled_newsletter_publish():
+    from app.runtime_role import is_worker_process
+
+    if not is_worker_process():
+        logger.info("In-app newsletter publish skipped on web process")
+        return
+    if os.getenv("ENABLE_SCHEDULED_NEWSLETTER_PUBLISH", "1").strip().lower() in (
+        "0", "false", "no"
+    ):
+        logger.info("In-app newsletter publish disabled")
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_NEWSLETTER_PUBLISH", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_newsletter_publish_loop,
+        daemon=True,
+        name="newsletter-publish",
+    )
+    t.start()
+    print("[newsletter-publish] scheduler thread started", flush=True)
+    logger.info(
+        "In-app newsletter publish thread started (daily at %02d:00 UTC + boot self-heal)",
+        _newsletter_publish_hour_utc(),
     )
 
 
