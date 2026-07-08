@@ -88,6 +88,7 @@ jobs:
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
           HARNESS_ADMIN_BEARER: ${{ secrets.HARNESS_ADMIN_BEARER }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
           SKIP_AGENT="${{ github.event.inputs.skip_agent }}"
           ARGS=()
