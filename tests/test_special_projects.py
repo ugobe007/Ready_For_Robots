@@ -167,7 +167,11 @@ def test_create_target_autogenerates_draft(client):
     assert "bowl assembly" in t["draft_subject"].lower()
     assert "CloudKitchens" in t["draft_body"]
     assert t["draft_body"].startswith("Hi Alex,")
-    assert "no-cost validation pilot" in t["draft_body"]
+    assert "no-cost pilot" in t["draft_body"]
+    # Plain-language guardrails: no jargon, no "humanoid", no weak "Hi there,".
+    assert "humanoid" not in t["draft_body"].lower()
+    assert "not sim" not in t["draft_body"].lower()
+    assert "Hi there" not in t["draft_body"]
     # Has an email guessed flag off since none was provided.
     assert t["contact_status"] == "none"
     assert t["can_send"] is False

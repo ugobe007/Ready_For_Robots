@@ -379,14 +379,21 @@ def regenerate_drafts(project_id: str, db: Session = Depends(get_db)) -> dict[st
     """Rebuild drafts for every target that hasn't been sent yet (review-first)."""
     p = _get_or_404(db, project_id)
     regenerated = 0
+    unapproved = 0
     for t in p.targets or []:
         if t.sent_at is not None:
             continue
         subject, body = build_target_draft(p, t)
+        changed = (t.draft_subject != subject) or (t.draft_body != body)
         t.draft_subject, t.draft_body = subject, body
         regenerated += 1
+        # Review-first: new copy invalidates a prior approval — a human must re-approve
+        # the changed draft before it can ever be sent.
+        if changed and (t.approved or "").strip().lower() == "yes":
+            t.approved = "no"
+            unapproved += 1
     db.commit()
-    return {"status": "ok", "regenerated": regenerated}
+    return {"status": "ok", "regenerated": regenerated, "reset_to_unapproved": unapproved}
 
 
 @admin_router.post("/{project_id}/targets/enrich")

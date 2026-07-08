@@ -193,17 +193,20 @@ def recompute_project_rollup(project: SpecialProject) -> None:
 NIMO_SENDER = "Bob Christopher, NIMO Technology"
 
 
-def _first_name(contact_name: str | None) -> str:
+def _nimo_greeting(contact_name: str | None, company: str) -> str:
+    """A greeting that never opens with the weak, impersonal 'Hi there,'."""
     name = (contact_name or "").strip()
-    if not name:
-        return "there"
-    return name.split()[0]
+    if name:
+        return f"Hi {name.split()[0]},"
+    if company and company != "your team":
+        return f"Hi {company} team,"
+    return "Hello,"
 
 
 def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
     """Return (subject, body) for a NIMO T1 draft based on the target's sequence."""
-    first = _first_name(t.contact_name)
     company = (t.company or "your team").strip()
+    greeting = _nimo_greeting(t.contact_name, company)
     task = (t.best_fit_task or "your signature workflow").strip()
     task_l = task[0].lower() + task[1:] if task else task
     signal = (t.signal or "your segment's labor and consistency pressure").strip().rstrip(".")
@@ -213,14 +216,14 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
         # Innovation / co-development angle.
         subject = f"Help shape the robot that does {task_l}"
         body = (
-            f"Hi {first},\n\n"
+            f"{greeting}\n\n"
             f"Quick idea for {company}. Most kitchen \"robots\" are single-task rigs bolted to one "
-            "station. Ours is one tactile platform that transfers across cutting, portioning, and "
-            "assembly — retrained per task in days — and because it senses contact force, it handles "
-            "the delicate, irregular items camera-only rigs drop.\n\n"
+            "station. Ours is one robot that moves across cutting, portioning, and assembly — retrained "
+            "for a new task in days — and because it senses touch and pressure, it handles the "
+            "delicate, irregular items camera-only machines drop.\n\n"
             f"With {signal}, you're exactly the kind of operator we want shaping it. We're inviting a "
-            f"small group of partners to co-develop through a no-cost pilot on one workflow ({task_l}) "
-            "— your input steers the roadmap.\n\n"
+            f"few partners to help build it through a no-cost pilot on one workflow ({task_l}) — your "
+            "input steers what we build next.\n\n"
             f"Could I show you the robot doing {task_l} on a 20-minute call?\n\n"
             f"— {NIMO_SENDER}"
         )
@@ -228,27 +231,27 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
         # ROI / labor-math angle.
         subject = f"The labor math on {task_l}"
         body = (
-            f"Hi {first},\n\n"
-            f"{task} is the kind of job that's repetitive, contact-heavy, and never fully staffed — so "
-            "turnover and inconsistency quietly eat margin. We built a tactile humanoid that does it by "
-            "feel, with 7+ kitchen tasks proven on real hardware (not simulation).\n\n"
-            f"Given {signal}, here's the offer for {company}: a no-cost validation pilot. We install the "
-            "robot and support it, you pick one site and one workflow, and we measure labor-hours "
-            "displaced, throughput, and consistency together — real numbers, your floor.\n\n"
-            "20 minutes to see if it's worth testing?\n\n"
+            f"{greeting}\n\n"
+            f"{task} is repetitive, hands-on, and hard to keep staffed — so turnover and inconsistency "
+            "quietly eat into margin. We built a robot that does it by feel, and it already handles "
+            "more than seven real kitchen jobs on working hardware today.\n\n"
+            f"Given {signal}, here's the offer for {company}: a no-cost pilot. We install the robot and "
+            "support it, you pick one site and one workflow, and we measure labor-hours saved, "
+            "throughput, and consistency together — real numbers, on your floor.\n\n"
+            "20 minutes to see if it's worth a test?\n\n"
             f"— {NIMO_SENDER}"
         )
     else:  # Sequence A (default) — problem-first, tactile differentiator.
         subject = f"A robot that can actually do {task_l}"
         body = (
-            f"Hi {first},\n\n"
-            "Most back-of-house robots run on cameras alone, so they fumble anything contact-rich. "
-            "Ours feels what it's handling — distributed touch sensors and sub-Newton force control — "
-            f"so it does the work they can't: {task_l}, portioning by feel, multi-step assembly. We've "
-            "run 7+ kitchen tasks on real hardware, not sim.\n\n"
+            f"{greeting}\n\n"
+            "Most back-of-house robots run on cameras alone, so they fumble anything they have to "
+            "touch. Ours feels what it's handling — touch sensors and fine pressure control — so it "
+            f"does the work they can't: {task_l}, portioning by feel, delicate multi-step handling. It "
+            "already does more than seven real kitchen jobs on working hardware today.\n\n"
             f"Given {signal}, {company} stood out as a place this could earn its keep. We're placing a "
-            "few robots in no-cost validation pilots — we bring the hardware and the engineers, you "
-            "pick one workflow, and we measure labor-hours saved and consistency side by side.\n\n"
+            "few robots in no-cost pilots — we bring the robot and the engineers, you pick one "
+            "workflow, and we measure labor-hours saved and consistency side by side.\n\n"
             f"Open to a 20-minute demo? I'll show it doing {task_l} live.\n\n"
             f"— {NIMO_SENDER}"
         )
