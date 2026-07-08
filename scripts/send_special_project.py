@@ -1,7 +1,10 @@
 """Bulk-send approved special-project outreach drafts (review-first, opt-in).
 
-Mirrors the /targets/{id}/send endpoint but for a batch. Only sends to targets
-that have an email and haven't been sent. Scope controls verified-only vs all.
+Mirrors the /targets/{id}/send endpoint but for a batch. Review-first contract:
+a target is only eligible once a human has APPROVED it (t.approved == "yes"),
+it has an email, a draft, and hasn't been sent. This script never approves on
+your behalf — approval is a human action in /admin/special-projects. Scope
+further narrows approved targets to verified-only vs all.
 
 Env:
     SPECIAL_PROJECT_SLUG  default nimo-technology
@@ -36,14 +39,18 @@ FROM_NAME = (os.getenv("FROM_NAME") or "Cal · Ready For Robots").strip()
 DRY_RUN = (os.getenv("DRY_RUN") or "").strip() in ("1", "true", "yes")
 
 
-def _eligible(t) -> bool:
+def _eligible(t, scope: str = SCOPE) -> bool:
+    # Review-first: a human must have approved this target. The bulk sender
+    # NEVER approves on the operator's behalf — that gate lives in the admin UI.
+    if (t.approved or "").strip().lower() != "yes":
+        return False
     if t.sent_at is not None:
         return False
     if not (t.contact_email or "").strip():
         return False
     if not (t.draft_subject or "").strip() or not (t.draft_body or "").strip():
         return False
-    if SCOPE == "verified" and t.contact_status != "verified":
+    if scope == "verified" and t.contact_status != "verified":
         return False
     return True
 
@@ -83,7 +90,6 @@ def main() -> None:
                 print(f"  FAILED → {t.company}: {exc}")
                 continue
             now = datetime.now(timezone.utc)
-            t.approved = "yes"
             t.sent_at = now
             t.last_activity_at = now
             if t.stage == "targeted":

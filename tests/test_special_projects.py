@@ -243,3 +243,36 @@ def test_invalid_stage_rejected(client):
         json={"stage": "bogus"},
     )
     assert res.status_code == 400
+
+
+# ── Bulk sender review-first guarantee ──────────────────────────────────────────
+# Regression guard: the batch sender must honor the SAME approval gate as the
+# per-target /send endpoint. It must never send — nor auto-approve — a target
+# that a human has not explicitly approved. (This is the gap that let a terse
+# "ok" turn into 40 unapproved sends.)
+
+class _FakeTarget:
+    def __init__(self, approved, contact_email="ops@x.com", draft_subject="s",
+                 draft_body="b", contact_status="verified", sent_at=None):
+        self.approved = approved
+        self.contact_email = contact_email
+        self.draft_subject = draft_subject
+        self.draft_body = draft_body
+        self.contact_status = contact_status
+        self.sent_at = sent_at
+
+
+def test_bulk_sender_skips_unapproved_targets():
+    from scripts.send_special_project import _eligible
+
+    # Fully drafted + verified + has email, but NOT human-approved → ineligible.
+    assert _eligible(_FakeTarget(approved="no"), scope="all") is False
+    assert _eligible(_FakeTarget(approved=""), scope="all") is False
+    assert _eligible(_FakeTarget(approved=None), scope="all") is False
+    # Only an explicit human "yes" makes it eligible.
+    assert _eligible(_FakeTarget(approved="yes"), scope="all") is True
+    # Approved but already sent → not resent.
+    assert _eligible(_FakeTarget(approved="yes", sent_at="2026-07-07"), scope="all") is False
+    # Verified scope still filters guessed contacts even when approved.
+    assert _eligible(_FakeTarget(approved="yes", contact_status="guessed"), scope="verified") is False
+    assert _eligible(_FakeTarget(approved="yes", contact_status="guessed"), scope="all") is True
