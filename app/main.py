@@ -942,16 +942,21 @@ def _newsletter_snapshot_age_hours():
 
 
 def _run_newsletter_publish(reason: str) -> None:
-    """Full public-surface rebuild (fresh stories + brief) and re-hydrate L1."""
+    """Rebuild the newsletter edition (fresh stories + brief) and re-hydrate L1.
+
+    Scoped to the newsletter surface on purpose — a full all-surfaces rebuild
+    peaks too high and can OOM the worker. Pipeline/robots surfaces have their
+    own refresh loops.
+    """
     from app.database import SessionLocal
     from app.services.public_surface_cache import (
         hydrate_public_surface_caches,
-        refresh_all_public_surface_caches,
+        refresh_newsletter_surface_cache,
     )
 
     db = SessionLocal()
     try:
-        stats = refresh_all_public_surface_caches(db)
+        stats = refresh_newsletter_surface_cache(db, force=True)
         hydrate_public_surface_caches()
         logger.info("Newsletter daily publish done (%s): %s", reason, stats)
     finally:
