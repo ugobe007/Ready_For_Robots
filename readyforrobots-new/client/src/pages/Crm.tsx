@@ -435,20 +435,10 @@ export default function Crm() {
                   >
                     Cal queue — bulk send
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => openWorkspaceHref("/admin#workflow", setLocation)}
-                    className="sb-btn border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                  >
-                    Agent queue
-                  </button>
                 </>
               )}
               <Link href="/integrations" className="sb-btn sb-btn-ghost border-white/10 bg-white/5 text-emerald-300 hover:bg-white/10">
                 Connect HubSpot / GitHub
-              </Link>
-              <Link href="/sales-console" className="sb-btn border-white/10 bg-white/5 text-slate-200 hover:bg-white/10">
-                Open Sales Console
               </Link>
             </div>
           </div>

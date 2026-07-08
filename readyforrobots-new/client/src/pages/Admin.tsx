@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity, AlertTriangle, Bot, CheckCircle2, Clock3, Database, DownloadCloud, ExternalLink, Mail, Play, RefreshCw, Shield, UploadCloud, Users } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import DailyBriefPanel, { type DailyBriefData } from "@/components/DailyBriefPanel";
 import CalEmailPreview from "@/components/admin/CalEmailPreview";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
@@ -353,6 +353,7 @@ function sourceLabel(source?: string) {
 
 export default function Admin() {
   const api = getApiBase();
+  const [, setLocation] = useLocation();
   const { session, loading: authLoading } = useAuth();
   const [localSnapshot] = useState(() => readLocalAdminSnapshot());
   const initialApplied = useMemo(() => snapshotToApplied(localSnapshot), [localSnapshot]);
@@ -1494,7 +1495,7 @@ export default function Admin() {
             onReview={() => scrollToAdminSection("cal-queue-list")}
             onSendAll={() => setSendConfirm("bulk")}
             onRunCal={() => void runCalAutonomy(false)}
-            onOpenReplies={() => { window.location.href = "/inbox"; }}
+            onOpenReplies={() => setLocation("/inbox")}
             onTestDelivery={() => void runCalDiagnostic()}
           />
 
@@ -2012,36 +2013,6 @@ export default function Admin() {
           </div>
 
 
-          <div className="rounded-2xl border border-gray-200 p-5" >
-            <p className="mb-2 text-[10px] font-normal uppercase tracking-[0.18em]" style={{ color: "#059669" }}>Operational shortcuts</p>
-            <p className="mb-4 text-xs leading-relaxed text-gray-600">
-              Admin remains the single ops home. Use these links for the dedicated work consoles.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/crm" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
-                Buyer CRM
-              </Link>
-              <Link href="/admin/prospects" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
-                Prospects
-              </Link>
-              <Link href="/sales-console" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
-                Sales Console
-              </Link>
-              <Link href="/supply-pipeline" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
-                Supply Pipeline
-              </Link>
-              <Link href="/marketplace" className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-bold text-gray-600">
-                Marketplace
-              </Link>
-              <Link
-                href="/admin/special-projects"
-                className="rounded-xl border px-4 py-2 text-xs font-bold text-white"
-                style={{ backgroundColor: "#4f46e5", borderColor: "#4f46e5" }}
-              >
-                Special Projects (NIMO)
-              </Link>
-            </div>
-          </div>
         </section>
 
         <section className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-4">

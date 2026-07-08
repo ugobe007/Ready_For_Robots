@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -81,11 +81,15 @@ function Router() {
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/integrations" component={Integrations} />
       <Route path="/integrations/hubspot" component={HubSpotConnect} />
-      <Route path="/admin/prospects" component={Pipeline} />
+      <Route path="/admin/prospects">
+        <Redirect to="/pipeline" />
+      </Route>
       <Route path="/admin/special-projects" component={SpecialProjectsAdmin} />
       <Route path="/admin" component={Admin} />
       <Route path="/p/:token" component={ProjectPortal} />
-      <Route path="/readyforrobots/admin/prospects" component={Pipeline} />
+      <Route path="/readyforrobots/admin/prospects">
+        <Redirect to="/pipeline" />
+      </Route>
       <Route path="/readyforrobots/admin/special-projects" component={SpecialProjectsAdmin} />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />

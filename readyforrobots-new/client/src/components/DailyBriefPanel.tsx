@@ -70,7 +70,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
       return;
     }
 
-    setLocation(href);
+    setLocation(path || current);
     if (hash) {
       window.setTimeout(() => scrollToAdminSection(hash), 400);
     }

@@ -399,15 +399,6 @@ export default function SupplyPipeline() {
           <div className="mt-5 flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3">
             <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{approvedCount} approved</span>
             <span className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-500">{sentCount} sent</span>
-            <a href="/admin" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
-              Open Admin
-            </a>
-            <a href="/crm" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
-              Open Buyer CRM
-            </a>
-            <a href="/sales-console" className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-gray-600">
-              Open Sales Console
-            </a>
             <button
               type="button"
               onClick={approveAll}

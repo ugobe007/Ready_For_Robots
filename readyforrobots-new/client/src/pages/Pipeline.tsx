@@ -16,7 +16,8 @@ import AdminNav from "@/components/AdminNav";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import ScoutActionBar from "@/components/ScoutActionBar";
 import ProposalPdfModal, { type ProposalData } from "@/components/ProposalPdfModal";
-import { Link, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
+import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -759,6 +760,7 @@ function PipelineRobotPriorityPanel({ deal }: { deal: Deal }) {
 
 export default function Pipeline() {
   const { session } = useAuth();
+  const [, setLocation] = useLocation();
   const search = useSearch();
   const deepLinkLeadId = useMemo(() => resolvePipelineLeadId(search), [search]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -2549,9 +2551,9 @@ export default function Pipeline() {
                 autopilotEnabled
                 everyHours={3}
                 sendLimit={25}
-                onRunNow={() => { window.location.href = "/admin#cal-outreach"; }}
-                onViewQueue={() => { window.location.href = "/admin#cal-outreach"; }}
-                onViewReplies={() => { window.location.href = "/sales-workflow"; }}
+                onRunNow={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                onViewQueue={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
+                onViewReplies={() => setLocation("/sales-workflow")}
               />
               )}
 
@@ -2855,12 +2857,13 @@ export default function Pipeline() {
                         </p>
                       </div>
                       {isAdmin && (
-                        <Link
-                          href="/admin#cal-outreach"
+                        <button
+                          type="button"
+                          onClick={() => openWorkspaceHref("/admin#cal-outreach", setLocation)}
                           className="text-[10px] font-semibold text-emerald-700 underline-offset-2 hover:underline"
                         >
                           Cal bulk queue
-                        </Link>
+                        </button>
                       )}
                       <div className="flex items-center gap-1.5">
                         <button
