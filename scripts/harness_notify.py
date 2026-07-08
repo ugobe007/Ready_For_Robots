@@ -166,6 +166,11 @@ def main() -> int:
     parser.add_argument("--mission", help="Mission folder path")
     parser.add_argument("--no-email", action="store_true", help="Write report file only")
     parser.add_argument(
+        "--strict-email",
+        action="store_true",
+        help="Exit non-zero if email delivery fails (default: warn only)",
+    )
+    parser.add_argument(
         "--test-email",
         action="store_true",
         help="Send a short test message (no mission folder required)",
@@ -206,11 +211,16 @@ def main() -> int:
     email_result = _send_email(subject=subject, body=body)
     print("Email:", email_result)
     if not email_result.get("sent"):
+        # Email is best-effort: the report artifact above is the durable
+        # deliverable and the mission work is already committed. A delivery
+        # failure must NOT fail the daily loop (which skips the push step and
+        # goes red), so we warn and exit 0. Use --strict-email to opt back in.
         print(
-            "WARNING: Daily harness email not delivered — check RESEND_API_KEY on GitHub Actions.",
+            f"WARNING: Daily harness email not delivered ({email_result.get('reason')}) — "
+            "report written to reports/; check RESEND_API_KEY / RESEND_FROM_EMAIL.",
             file=sys.stderr,
         )
-        return 1
+        return 1 if args.strict_email else 0
     return 0
 
 
