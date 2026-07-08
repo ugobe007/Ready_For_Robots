@@ -199,7 +199,40 @@ def _run_web_startup() -> None:
 
     threading.Thread(target=_hydrate_l1_only, daemon=True, name="public-surface-hydrate").start()
 
+    _start_web_cache_rehydrate()
     _start_cal_watchdog()
+
+
+def _web_cache_rehydrate_loop() -> None:
+    """Re-read durable caches into web L1 so worker rebuilds (newsletter, pipeline)
+    actually reach users. Read-only — never rebuilds from DB, so it's safe on web."""
+    from app.services.public_surface_cache import hydrate_public_surface_caches
+
+    interval_min = float(os.getenv("WEB_CACHE_REHYDRATE_MINUTES", "15") or "15")
+    if interval_min <= 0:
+        return
+    while True:
+        time.sleep(max(120, int(interval_min * 60)))
+        try:
+            hydrate_public_surface_caches()
+            logger.info("Web L1 re-hydrated from durable cache")
+        except Exception as exc:
+            logger.warning("Web L1 re-hydrate failed: %s", exc)
+
+
+def _start_web_cache_rehydrate() -> None:
+    from app.runtime_role import is_web_process
+
+    if not is_web_process():
+        return
+    if os.getenv("ENABLE_WEB_CACHE_REHYDRATE", "1").strip().lower() in ("0", "false", "no"):
+        logger.info("Web L1 re-hydrate loop disabled")
+        return
+    threading.Thread(target=_web_cache_rehydrate_loop, daemon=True, name="web-cache-rehydrate").start()
+    logger.info(
+        "Web L1 re-hydrate thread started (every %s min)",
+        os.getenv("WEB_CACHE_REHYDRATE_MINUTES", "15"),
+    )
 
 
 def _cal_watchdog_loop() -> None:
