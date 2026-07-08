@@ -18,6 +18,44 @@ def stripe_enabled() -> bool:
     return bool((os.getenv("STRIPE_SECRET_KEY") or "").strip())
 
 
+def stripe_key_mode() -> str:
+    """'live', 'test', or 'unknown' — inferred from the secret key prefix (never the value)."""
+    key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
+    if key.startswith(("sk_live", "rk_live")):
+        return "live"
+    if key.startswith(("sk_test", "rk_test")):
+        return "test"
+    return "unknown"
+
+
+def is_test_key_on_production() -> bool:
+    """True when a test-mode Stripe key is running on the real public domain.
+
+    This is the silent revenue killer: checkout 'works' (returns a Stripe URL) but
+    real cards can never be charged, so paid subscriptions stay at zero. Surface it.
+    """
+    if stripe_key_mode() != "test":
+        return False
+    site = _site_url().lower()
+    return "readyforrobots.com" in site and "localhost" not in site
+
+
+_TEST_KEY_WARNED = False
+
+
+def _warn_if_test_key_on_production() -> None:
+    global _TEST_KEY_WARNED
+    if _TEST_KEY_WARNED or not is_test_key_on_production():
+        return
+    _TEST_KEY_WARNED = True
+    logger.error(
+        "STRIPE IN TEST MODE ON PRODUCTION (%s): checkout returns a valid URL but real "
+        "cards cannot be charged — paid subscriptions will stay at zero. Set live "
+        "STRIPE_SECRET_KEY, STRIPE_PRICE_PRO/PREMIUM, and STRIPE_WEBHOOK_SECRET.",
+        _site_url(),
+    )
+
+
 def _site_url() -> str:
     raw = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").strip().strip("'\"")
     # Secrets pasted from shell commands sometimes include trailing garbage.
@@ -110,12 +148,16 @@ def billing_config_payload() -> dict[str, Any]:
     pro_price = price_id_for_tier("pro")
     premium_price = price_id_for_tier("premium")
     enabled = stripe_enabled() and bool(pro_price or premium_price)
+    _warn_if_test_key_on_production()
     return {
         "enabled": enabled,
         "pro_available": bool(pro_price),
         "premium_available": bool(premium_price),
         "display_prices": {"pro": 49, "premium": 129},
         "checkout_tiers": [t for t, pid in (("pro", pro_price), ("premium", premium_price)) if pid],
+        # Ops guardrail: 'test' here on the live domain means no real revenue can be collected.
+        "mode": stripe_key_mode(),
+        "test_mode_on_production": is_test_key_on_production(),
     }
 
 

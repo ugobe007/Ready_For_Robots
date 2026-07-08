@@ -117,6 +117,10 @@ def _fetch_probe_once(url: str, *, timeout: float = 15.0) -> dict[str, Any]:
                     out["leads_count"] = len(leads)
                 if data.get("enabled") is not None:
                     out["billing_enabled"] = data.get("enabled")
+                if data.get("mode") is not None:
+                    out["billing_mode"] = data.get("mode")
+                if data.get("test_mode_on_production") is not None:
+                    out["test_mode_on_production"] = data.get("test_mode_on_production")
             return out
     except Exception as exc:
         return {
@@ -190,6 +194,16 @@ def check_site_health(*, api_base: str = FLY_API) -> dict[str, Any]:
     if billing.get("ok") and not billing.get("billing_enabled"):
         alerts.append("Stripe billing disabled — upgrades cannot convert to revenue")
         recommendations.append("Enable STRIPE_SECRET_KEY + price IDs on Fly for Pro checkout.")
+
+    if billing.get("ok") and billing.get("test_mode_on_production"):
+        alerts.append(
+            "Stripe in TEST mode on production — checkout 'works' but real cards cannot be "
+            "charged, so paid subscriptions stay at zero"
+        )
+        recommendations.append(
+            "Swap Fly secrets to LIVE: STRIPE_SECRET_KEY (sk_live_…), live STRIPE_PRICE_PRO/"
+            "STRIPE_PRICE_PREMIUM, and a live STRIPE_WEBHOOK_SECRET."
+        )
 
     if billing.get("ok") and billing.get("billing_enabled") and not checkout_auth.get("ok"):
         alerts.append(
@@ -552,7 +566,11 @@ def _prioritize_for_fundability(
     if site.get("alerts"):
         for a in site["alerts"][:2]:
             actions.append(f"P0: Site — {a}")
-    if not conversion.get("active_subscriptions") and conversion.get("signups_total", 0) > 5:
+    if (site.get("billing") or {}).get("test_mode_on_production"):
+        actions.append(
+            "P0: Revenue — Stripe is in TEST mode on production; swap to LIVE keys/prices to collect real payments"
+        )
+    elif not conversion.get("active_subscriptions") and conversion.get("signups_total", 0) > 5:
         actions.append("P1: Revenue — fix Pro checkout (/pricing?upgrade=pro → Stripe)")
     if code.get("violation_count"):
         actions.append(f"P1: Performance — fix {code['violation_count']} getPublicReadApiBase violation(s)")
@@ -636,7 +654,13 @@ def render_daily_report_markdown(
         + (" (pending rebuild)" if pipe.get("cache_pending") else "")
     )
     billing = site.get("billing") or {}
-    lines.append(f"- **Stripe billing:** {'enabled' if billing.get('billing_enabled') else 'disabled or unknown'}")
+    _bmode = billing.get("billing_mode")
+    _bmode_note = f" [{_bmode} mode]" if _bmode else ""
+    if billing.get("test_mode_on_production"):
+        _bmode_note = " [TEST MODE — no real revenue]"
+    lines.append(
+        f"- **Stripe billing:** {'enabled' if billing.get('billing_enabled') else 'disabled or unknown'}{_bmode_note}"
+    )
     for pname, probe in (site.get("pages") or {}).items():
         status = "OK" if probe.get("ok") else "FAIL"
         lines.append(f"- **Page /{pname}:** {status} ({probe.get('latency_ms', '?')}ms)")
