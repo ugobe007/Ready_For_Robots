@@ -10,6 +10,10 @@ Secondary logic — five-pillar second pass (decoupled from primary scrapers).
 from __future__ import annotations
 
 import logging
+import os
+import signal
+import threading
+from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from sqlalchemy.orm import Session
@@ -42,6 +46,46 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_SECONDARY_LIMIT = 120
 MAX_SECONDARY_LIMIT = 300
+
+
+class LeadBudgetExceeded(Exception):
+    """A single lead's rescue passes exceeded the per-lead wall-clock budget."""
+
+
+def _lead_budget_seconds() -> int:
+    """Per-lead wall-clock cap. 0 disables. Default 45s (env SECONDARY_LEAD_BUDGET_SEC)."""
+    try:
+        return max(0, int(float(os.getenv("SECONDARY_LEAD_BUDGET_SEC", "45") or "45")))
+    except (TypeError, ValueError):
+        return 45
+
+
+@contextmanager
+def _lead_time_budget(seconds: int):
+    """Hard wall-clock cap for one lead's enrichment.
+
+    Uses SIGALRM so it can interrupt blocking network calls even if an
+    underlying client's own timeout misbehaves — this is what keeps a single
+    slow lead from stalling the whole batch (the bug that hung the secondary
+    pass with zero DB writes). SIGALRM is main-thread only, so in worker
+    threads (API-triggered runs) this is a no-op and we rely on the per-request
+    HTTP timeouts already present in the enrichment clients.
+    """
+    on_main = threading.current_thread() is threading.main_thread()
+    if seconds <= 0 or not on_main or not hasattr(signal, "SIGALRM"):
+        yield
+        return
+
+    def _raise(_signum, _frame):
+        raise LeadBudgetExceeded(f"lead exceeded {seconds}s budget")
+
+    prev = signal.signal(signal.SIGALRM, _raise)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, prev)
 
 # Full pillar sweep for brand-new scraper leads (before nightly gap batch).
 ONBOARDING_PASSES = [
@@ -391,14 +435,20 @@ def run_secondary_pass_for_company_ids(
         report = audit_company_gaps(company, signals, contacts, overall_score=overall)
         report = _merge_onboarding_passes(report, onboarding=onboarding)
         try:
-            row = run_rescue_passes_for_company(
-                db,
-                report,
-                use_llm=use_llm,
-                cooldown_hours=cooldown_hours,
-            )
+            with _lead_time_budget(_lead_budget_seconds()):
+                row = run_rescue_passes_for_company(
+                    db,
+                    report,
+                    use_llm=use_llm,
+                    cooldown_hours=cooldown_hours,
+                )
             results.append(row)
             filled_total += len(row.get("fields_filled") or [])
+        except LeadBudgetExceeded as exc:
+            errors += 1
+            db.rollback()
+            logger.warning("Secondary onboarding company %s over budget: %s", cid, exc)
+            results.append({"company_id": cid, "error": "budget_exceeded"})
         except Exception as exc:
             errors += 1
             db.rollback()
@@ -468,17 +518,24 @@ def run_secondary_pass_batch(
                 flush=True,
             )
         try:
-            row = run_rescue_passes_for_company(
-                db,
-                report,
-                use_llm=use_llm,
-                use_apollo=use_apollo,
-                signal_backfill=signal_backfill,
-                signal_backfill_queries=signal_backfill_queries,
-                cooldown_hours=cooldown_hours,
-            )
+            with _lead_time_budget(_lead_budget_seconds()):
+                row = run_rescue_passes_for_company(
+                    db,
+                    report,
+                    use_llm=use_llm,
+                    use_apollo=use_apollo,
+                    signal_backfill=signal_backfill,
+                    signal_backfill_queries=signal_backfill_queries,
+                    cooldown_hours=cooldown_hours,
+                )
             results.append(row)
             filled_total += len(row.get("fields_filled") or [])
+        except LeadBudgetExceeded as exc:
+            errors += 1
+            db.rollback()
+            logger.warning("Secondary batch company %s over budget: %s", report.company_id, exc)
+            if len(results) < 30:
+                results.append({"company_id": report.company_id, "error": "budget_exceeded"})
         except Exception as exc:
             errors += 1
             db.rollback()

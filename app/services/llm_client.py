@@ -45,7 +45,16 @@ def active_provider() -> str | None:
 
 # ── OpenAI-style client (for services that use the openai SDK directly) ───────
 
-def get_llm_client(timeout: float = 20.0):
+def _llm_max_retries(default: int = 1) -> int:
+    """SDK auto-retries multiply wall-clock time (timeout × (1+retries) + backoff).
+    Keep it low so bulk enrichment can't stall. Override with LLM_MAX_RETRIES."""
+    try:
+        return max(0, int(os.getenv("LLM_MAX_RETRIES", str(default))))
+    except (TypeError, ValueError):
+        return default
+
+
+def get_llm_client(timeout: float = 20.0, max_retries: int | None = None):
     """
     Returns an OpenAI-SDK client.
     Raises RuntimeError if neither OpenAI nor Anthropic key is set.
@@ -65,7 +74,8 @@ def get_llm_client(timeout: float = 20.0):
             "No LLM API key found. Set OPENAI_API_KEY (or OPEN_API_KEY) "
             "or ANTHROPIC_API_KEY."
         )
-    return OpenAI(api_key=key, timeout=timeout)
+    retries = _llm_max_retries() if max_retries is None else max_retries
+    return OpenAI(api_key=key, timeout=timeout, max_retries=retries)
 
 
 def get_llm_model(default: str = "gpt-4o-mini") -> str:
@@ -90,7 +100,7 @@ def get_anthropic_client(timeout: float = 20.0):
     key = _anthropic_key()
     if not key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set.")
-    return anthropic.Anthropic(api_key=key, timeout=timeout)
+    return anthropic.Anthropic(api_key=key, timeout=timeout, max_retries=_llm_max_retries())
 
 
 def get_anthropic_model(default: str = "claude-3-5-haiku-20241022") -> str:
@@ -117,7 +127,7 @@ def llm_json_completion(
 
     if provider == "anthropic":
         try:
-            client = get_anthropic_client(timeout=timeout)
+            client = get_anthropic_client(timeout=timeout)  # bounded retries
             model = get_anthropic_model()
             resp = client.messages.create(
                 model=model,
@@ -134,7 +144,7 @@ def llm_json_completion(
     if provider == "openai" or _openai_key():
         try:
             from openai import OpenAI
-            client = OpenAI(api_key=_openai_key(), timeout=timeout)
+            client = OpenAI(api_key=_openai_key(), timeout=timeout, max_retries=_llm_max_retries())
             model = get_llm_model()
             resp = client.chat.completions.create(
                 model=model,
