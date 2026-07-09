@@ -67,6 +67,25 @@ def test_price_id_for_tier(monkeypatch):
     assert tier_for_price_id("price_pro_test") == "pro"
 
 
+def test_tier_mapping_distinguishes_pro_and_premium(monkeypatch):
+    # Premium ($129) must never be mis-mapped to pro when both prices are set.
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_live")
+    monkeypatch.setenv("STRIPE_PRICE_PREMIUM", "price_premium_live")
+    assert tier_for_price_id("price_premium_live") == "premium"
+    assert tier_for_price_id("price_pro_live") == "pro"
+    assert tier_for_price_id("price_unknown") is None
+
+
+def test_create_checkout_session_rejects_free_and_unknown(monkeypatch):
+    from app.services.stripe_billing import create_checkout_session
+
+    # Free is the default tier — there is no Stripe subscription for it, so
+    # checkout must reject it before any Stripe call.
+    for bad in ("free", "", "enterprise"):
+        with pytest.raises(ValueError):
+            create_checkout_session(user_id="u1", email="u1@example.com", tier=bad)
+
+
 def test_billing_config_disabled_without_keys(monkeypatch):
     monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
     monkeypatch.delenv("STRIPE_PRICE_PRO", raising=False)
