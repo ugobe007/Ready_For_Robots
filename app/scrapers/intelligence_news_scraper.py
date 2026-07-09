@@ -525,6 +525,62 @@ DISCOVERY_QUERIES = [
     "UK logistics automation investment 2026",
     "Canada distribution center expansion",
     "US manufacturing automation 2026",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🍳 NIMO ICP — institutional / contract / scaled commercial kitchens
+    #    (fresh angles: these operators run central kitchens with heavy,
+    #     hard-to-staff back-of-house labor — NIMO's tactile-robot buyers)
+    # ═══════════════════════════════════════════════════════════════════════
+    "contract food service company commissary kitchen expansion",
+    "institutional dining operator central kitchen labor shortage",
+    "corporate cafeteria food service provider staffing shortage",
+    "university dining services kitchen labor shortage",
+    "hospital foodservice central production kitchen expansion",
+    "senior living dining services kitchen labor shortage",
+    "K-12 school nutrition central kitchen expansion",
+    "airline catering kitchen labor shortage expansion",
+    "stadium arena concessions food service labor shortage",
+    "commissary kitchen operator expansion funding round",
+    "prepared meals manufacturer commissary kitchen labor",
+    "meal kit fulfillment kitchen labor shortage",
+    "catering company scaling central kitchen labor",
+    "food hall operator kitchen staffing expansion",
+    "grocery prepared foods commissary kitchen expansion",
+    "convenience store foodservice commissary kitchen expansion",
+    "ghost kitchen operator new facility expansion funding",
+    "central kitchen production facility opening hiring",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 📣 "WHY-NOW" BUSINESS EVENTS (surface new operator names, not vendors)
+    #    Openings, capex, RFPs, wage pressure, contract wins — not "deploy 2026"
+    # ═══════════════════════════════════════════════════════════════════════
+    "restaurant chain new unit openings expansion plans",
+    "food service company capital expenditure expansion plans",
+    "distribution center opening new facility hundreds of jobs",
+    "company announces new fulfillment center hiring",
+    "minimum wage increase restaurant labor cost pressure",
+    "union organizing warehouse workers staffing pressure",
+    "3PL wins new contract facility expansion",
+    "manufacturer breaks ground new plant capacity",
+    "operator issues RFP automation robotics proposal",
+    "private equity acquires restaurant chain operations",
+    "grocery chain opens automated distribution center",
+    "hotel group opening new properties staffing plan",
+    "cold storage operator new facility expansion",
+    "e-commerce brand opens new warehouse fulfillment",
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🗓️ FORWARD RECENCY (2027) — catch fresh news the 2026 queries miss
+    # ═══════════════════════════════════════════════════════════════════════
+    "warehouse automation investment 2027",
+    "commercial kitchen automation labor shortage 2027",
+    "restaurant kitchen automation plans 2027",
+    "food service labor shortage automation 2027",
+    "distribution center expansion 2027",
+    "hotel automation staffing investment 2027",
+    "hospital automation investment 2027",
+    "manufacturing automation capex 2027",
+    "contract catering central kitchen automation 2027",
 ]
 
 # ── Company Entity Extraction Patterns ────────────────────────────────────────
