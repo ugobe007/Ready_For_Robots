@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import {
   Bot,
@@ -307,6 +307,16 @@ export default function SpecialProjectsAdmin() {
     if (!authLoading) void loadProjects();
   }, [authLoading, loadProjects]);
 
+  // Preload the current project on arrival so the page opens on real work
+  // (status, action items, next steps) instead of an empty "pick one" state.
+  // Runs once; picks the first project returned (list is newest/most-recent first).
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current || loading || selected || projects.length === 0) return;
+    autoSelectedRef.current = true;
+    void openProject(projects[0].id);
+  }, [loading, selected, projects, openProject]);
+
   const createProject = useCallback(async () => {
     if (!newName.trim()) return;
     setBusy(true);
@@ -449,6 +459,76 @@ export default function SpecialProjectsAdmin() {
     void navigator.clipboard?.writeText(portalUrl);
     setNotice("Portal link copied");
   }, [portalUrl]);
+
+  const stageIndex = useCallback((s: string) => {
+    const i = PIPELINE_STAGES.indexOf(s as (typeof PIPELINE_STAGES)[number]);
+    return i < 0 ? 0 : i;
+  }, []);
+
+  // Live snapshot derived from the target queue — the source of truth for
+  // "where does this project stand and what needs doing next".
+  const snapshot = useMemo(() => {
+    const hasEmail = (t: Target) => !!(t.contact_email && t.contact_email.trim());
+    const hasDraft = (t: Target) => !!(t.draft_subject && t.draft_body);
+    const repliedIdx = PIPELINE_STAGES.indexOf("replied");
+    const sent = targets.filter((t) => !!t.sent_at);
+    const missingEmail = targets.filter((t) => !t.sent_at && !hasEmail(t));
+    const verified = targets.filter((t) => t.contact_status === "verified");
+    const awaitingApproval = targets.filter((t) => !t.sent_at && hasDraft(t) && !t.approved);
+    const readyToSend = targets.filter((t) => !t.sent_at && t.approved && t.can_send);
+    const contactedNoReply = targets.filter((t) => !!t.sent_at && stageIndex(t.stage) < repliedIdx);
+    const replied = targets.filter((t) => stageIndex(t.stage) >= repliedIdx);
+    return {
+      total: targets.length,
+      sent: sent.length,
+      missingEmail: missingEmail.length,
+      verified: verified.length,
+      awaitingApproval: awaitingApproval.length,
+      readyToSend: readyToSend.length,
+      contactedNoReply: contactedNoReply.length,
+      replied: replied.length,
+    };
+  }, [targets, stageIndex]);
+
+  const nextSteps = useMemo(() => {
+    const steps: { text: string; tone: "action" | "info" }[] = [];
+    const plural = (n: number) => (n === 1 ? "" : "s");
+    if (snapshot.total === 0) {
+      steps.push({ text: "Seed target accounts to start Cal's outreach (queue below).", tone: "info" });
+      return steps;
+    }
+    if (snapshot.missingEmail > 0)
+      steps.push({
+        text: `Enrich ${snapshot.missingEmail} account${plural(snapshot.missingEmail)} missing a contact email so their drafts become sendable.`,
+        tone: "action",
+      });
+    if (snapshot.awaitingApproval > 0)
+      steps.push({
+        text: `Review & approve ${snapshot.awaitingApproval} draft${plural(snapshot.awaitingApproval)} in the queue below — review-first: Cal never sends without your approval.`,
+        tone: "action",
+      });
+    if (snapshot.readyToSend > 0)
+      steps.push({
+        text: `Send ${snapshot.readyToSend} approved draft${plural(snapshot.readyToSend)} that are ready to go.`,
+        tone: "action",
+      });
+    if (snapshot.contactedNoReply > 0)
+      steps.push({
+        text: `Follow up with ${snapshot.contactedNoReply} contacted account${plural(snapshot.contactedNoReply)} that haven't replied yet.`,
+        tone: "info",
+      });
+    if (snapshot.replied > 0)
+      steps.push({
+        text: `Advance ${snapshot.replied} replied account${plural(snapshot.replied)} toward discovery / demo.`,
+        tone: "info",
+      });
+    if (steps.length === 0)
+      steps.push({
+        text: `All caught up — ${snapshot.sent} contacted, ${snapshot.replied} replied. Keep advancing the funnel.`,
+        tone: "info",
+      });
+    return steps;
+  }, [snapshot]);
 
   if (forbidden) {
     return (
@@ -658,8 +738,89 @@ export default function SpecialProjectsAdmin() {
                   </div>
                 </div>
 
-                {/* Cal outreach queue (review-first) */}
+                {/* Status · action items · next steps (auto-computed from the queue) */}
                 <div className="rounded-lg border border-slate-200 bg-white p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <Sparkles className="h-4 w-4 text-indigo-600" /> Status &amp; next steps
+                    </h3>
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
+                      {selected.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                    {[
+                      { label: "Accounts", value: snapshot.total, hot: false },
+                      { label: "Verified email", value: snapshot.verified, hot: false },
+                      { label: "Awaiting approval", value: snapshot.awaitingApproval, hot: snapshot.awaitingApproval > 0 },
+                      { label: "Ready to send", value: snapshot.readyToSend, hot: snapshot.readyToSend > 0 },
+                      { label: "Contacted", value: snapshot.sent, hot: false },
+                      { label: "Replied", value: snapshot.replied, hot: false },
+                    ].map((s) => (
+                      <div
+                        key={s.label}
+                        className={`rounded-md border px-3 py-2 ${s.hot ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"}`}
+                      >
+                        <div className="text-lg font-bold text-slate-900">{targetsLoading ? "…" : s.value}</div>
+                        <div className="text-[11px] font-medium text-slate-500">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {(snapshot.missingEmail > 0 || snapshot.awaitingApproval > 0 || snapshot.readyToSend > 0) && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {snapshot.missingEmail > 0 && (
+                        <button
+                          onClick={() => void enrichTargets()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+                        >
+                          <Mail className="h-3.5 w-3.5" /> Enrich {snapshot.missingEmail} missing email
+                          {snapshot.missingEmail === 1 ? "" : "s"}
+                        </button>
+                      )}
+                      {snapshot.awaitingApproval > 0 && (
+                        <a
+                          href="#cal-queue"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                        >
+                          <Check className="h-3.5 w-3.5" /> Review {snapshot.awaitingApproval} draft
+                          {snapshot.awaitingApproval === 1 ? "" : "s"}
+                        </a>
+                      )}
+                      {snapshot.readyToSend > 0 && (
+                        <a
+                          href="#cal-queue"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                        >
+                          <Send className="h-3.5 w-3.5" /> Send {snapshot.readyToSend} approved
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Next steps</div>
+                    <ol className="mt-2 space-y-1.5">
+                      {nextSteps.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                          <span
+                            className={`mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full text-[11px] font-bold ${
+                              s.tone === "action" ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {i + 1}
+                          </span>
+                          <span>{s.text}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </div>
+
+                {/* Cal outreach queue (review-first) */}
+                <div id="cal-queue" className="rounded-lg border border-slate-200 bg-white p-5">
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                       <Bot className="h-4 w-4 text-indigo-600" /> Cal outreach queue
