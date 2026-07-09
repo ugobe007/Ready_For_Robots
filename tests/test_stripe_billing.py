@@ -6,7 +6,57 @@ import os
 import pytest
 
 from app.services.plan_entitlements import PLAN_PAID, resolve_billing_tier_slug, resolve_plan_tier
-from app.services.stripe_billing import billing_config_payload, price_id_for_tier, tier_for_price_id
+from app.services.stripe_billing import (
+    _as_dict,
+    billing_config_payload,
+    price_id_for_tier,
+    tier_for_price_id,
+)
+
+
+class _FakeStripeObj:
+    """Mimics stripe-python's StripeObject: data lives in ``_data`` and
+    ``.get()`` / ``dict()`` blow up (the exact bug that broke checkout sync)."""
+
+    def __init__(self, data):
+        self._data = {
+            k: _FakeStripeObj(v) if isinstance(v, dict) else v for k, v in data.items()
+        }
+
+    def __getattr__(self, name):
+        try:
+            return self._data[name]
+        except KeyError as exc:  # matches real lib: .get raises AttributeError
+            raise AttributeError(name) from exc
+
+    def __iter__(self):
+        raise KeyError(0)  # dict(obj) explodes, like the deployed lib
+
+
+def test_as_dict_recursively_flattens_stripe_object():
+    session = _FakeStripeObj(
+        {
+            "id": "cs_live_x",
+            "payment_status": "paid",
+            "metadata": {"plan_tier": "pro", "user_id": "u1"},
+            "subscription": {
+                "id": "sub_1",
+                "status": "active",
+                "items": {"data": [{"price": {"id": "price_pro"}}]},
+            },
+        }
+    )
+    d = _as_dict(session)
+    assert d["payment_status"] == "paid"
+    assert d["metadata"]["plan_tier"] == "pro"
+    sub = d["subscription"]
+    assert sub["status"] == "active"
+    assert sub["items"]["data"][0]["price"]["id"] == "price_pro"
+
+
+def test_as_dict_handles_none_and_plain_dict():
+    assert _as_dict(None) == {}
+    assert _as_dict({"a": 1}) == {"a": 1}
 
 
 def test_price_id_for_tier(monkeypatch):

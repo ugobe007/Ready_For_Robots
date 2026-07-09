@@ -14,6 +14,48 @@ VALID_TIERS = frozenset({"pro", "premium"})
 _price_cache: dict[str, str] = {}
 
 
+def _deep(value: Any) -> Any:
+    """Recursively convert Stripe objects/lists into plain dicts/lists.
+
+    Reads the StripeObject's private ``_data`` store directly. The installed
+    stripe-python version raises on ``.get()``, ``dict(obj)`` and even
+    ``to_dict_recursive()`` (KeyError: 0), so ``_data`` is the only reliable
+    path. Falls back to ``to_dict``/``dict`` if the internals ever change.
+    """
+    store = getattr(value, "_data", None)
+    if isinstance(store, dict):
+        return {k: _deep(v) for k, v in store.items()}
+    if isinstance(value, dict):
+        return {k: _deep(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_deep(v) for v in value]
+    return value
+
+
+def _as_dict(obj: Any) -> dict:
+    """Coerce a Stripe object (or dict/None) into a plain, recursive dict.
+
+    Newer stripe-python versions raise on ``.get()`` for StripeObjects, which
+    silently broke checkout→tier sync. Convert at the boundary so all
+    downstream reads use ordinary dict access.
+    """
+    if not obj:
+        return {}
+    out = _deep(obj)
+    if isinstance(out, dict):
+        return out
+    for method in ("to_dict_recursive", "to_dict"):
+        fn = getattr(obj, method, None)
+        if callable(fn):
+            try:
+                res = fn()
+                if isinstance(res, dict):
+                    return res
+            except Exception:
+                continue
+    return {}
+
+
 def stripe_enabled() -> bool:
     return bool((os.getenv("STRIPE_SECRET_KEY") or "").strip())
 
@@ -100,14 +142,14 @@ def _default_price_for_product(product_id: str) -> Optional[str]:
         return None
     try:
         stripe = _stripe_client()
-        product = stripe.Product.retrieve(pid, expand=["default_price"])
+        product = _as_dict(stripe.Product.retrieve(pid, expand=["default_price"]))
         default_price = product.get("default_price")
         if isinstance(default_price, str):
             price_id = default_price
         elif isinstance(default_price, dict):
             price_id = default_price.get("id")
         else:
-            prices = stripe.Price.list(product=pid, active=True, limit=1)
+            prices = _as_dict(stripe.Price.list(product=pid, active=True, limit=1))
             data = prices.get("data") or []
             price_id = data[0]["id"] if data else None
         if price_id:
@@ -274,25 +316,28 @@ def create_portal_session(*, stripe_customer_id: str) -> dict[str, Any]:
 
 def sync_checkout_session(db: Session, *, user_id: str, email: str, session_id: str) -> dict[str, Any]:
     stripe = _stripe_client()
-    session = stripe.checkout.Session.retrieve(session_id, expand=["subscription"])
-    if session.client_reference_id and str(session.client_reference_id) != str(user_id):
+    session = _as_dict(stripe.checkout.Session.retrieve(session_id, expand=["subscription"]))
+    ref = session.get("client_reference_id")
+    if ref and str(ref) != str(user_id):
         raise PermissionError("Checkout session does not belong to this user")
-    if session.payment_status != "paid" and session.status != "complete":
-        return {"status": "pending", "payment_status": session.payment_status}
+    if session.get("payment_status") != "paid" and session.get("status") != "complete":
+        return {"status": "pending", "payment_status": session.get("payment_status")}
 
-    tier = (session.metadata or {}).get("plan_tier") or "pro"
-    customer_id = str(session.customer or "")
-    subscription = session.subscription
-    subscription_id = subscription.id if hasattr(subscription, "id") else str(subscription or "")
-    status = subscription.status if hasattr(subscription, "status") else "active"
-
-    if subscription and hasattr(subscription, "items"):
-        items = subscription.items.data if hasattr(subscription.items, "data") else []
+    tier = (session.get("metadata") or {}).get("plan_tier") or "pro"
+    customer_id = str(session.get("customer") or "")
+    subscription = session.get("subscription")
+    if isinstance(subscription, dict):
+        subscription_id = str(subscription.get("id") or "")
+        status = subscription.get("status") or "active"
+        items = (subscription.get("items") or {}).get("data") or []
         if items:
-            price_id = items[0].price.id if items[0].price else None
+            price_id = ((items[0] or {}).get("price") or {}).get("id")
             mapped = tier_for_price_id(price_id or "")
             if mapped:
                 tier = mapped
+    else:
+        subscription_id = str(subscription or "")
+        status = "active"
 
     result = apply_billing_to_user(
         db,
@@ -318,7 +363,7 @@ def handle_stripe_webhook(db: Session, payload: bytes, sig_header: str) -> dict[
         raise ValueError(str(exc)) from exc
 
     event_type = event["type"]
-    data = event["data"]["object"]
+    data = _as_dict(event["data"]["object"])
 
     if event_type == "checkout.session.completed":
         return _handle_checkout_completed(db, data)
