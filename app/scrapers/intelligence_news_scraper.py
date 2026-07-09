@@ -879,16 +879,38 @@ class IntelligenceNewsScraper:
             queries = DISCOVERY_QUERIES
         logger.info(f"Running {len(queries)} queries (max_articles_per_query={max_articles_per_query})")
 
+        # Per-article wall-clock budget: a single junk name (e.g. a news
+        # subject like "Indian steelmakers") can send enrichment into slow /
+        # erroring Hunter/Apollo/URL-resolve calls and stall the whole run.
+        # Cap each article so discovery always makes forward progress.
+        from app.services.lead_secondary_pass import (
+            LeadBudgetExceeded,
+            _lead_time_budget,
+        )
+
+        try:
+            article_budget = max(0, int(float(os.getenv("DISCOVERY_ARTICLE_BUDGET_SEC", "30") or "30")))
+        except (TypeError, ValueError):
+            article_budget = 30
+
         for query in queries:
             self.stats["queries_run"] += 1
             logger.info(f"Query {self.stats['queries_run']}/{len(queries)}: {query}")
             
             articles = self._fetch_google_news(query)
             for article in articles[:max_articles_per_query]:
+                ref = (article.get("url") or article.get("title") or "?")[:160]
                 try:
-                    self._process_article(article, query)
+                    with _lead_time_budget(article_budget):
+                        self._process_article(article, query)
+                except LeadBudgetExceeded as e:
+                    self._record_phase_failure("article_budget", e, ref)
+                    logger.warning("Article over %ss budget (skipped): %s", article_budget, ref)
+                    try:
+                        self.db.rollback()
+                    except Exception:
+                        pass
                 except Exception as e:
-                    ref = (article.get("url") or article.get("title") or "?")[:160]
                     self._record_phase_failure("article_fatal", e, ref)
                     logger.exception("Article pipeline fatal (skipped article): %s", ref)
             
