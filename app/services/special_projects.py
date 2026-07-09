@@ -209,7 +209,12 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
     greeting = _nimo_greeting(t.contact_name, company)
     task = (t.best_fit_task or "your signature workflow").strip()
     task_l = task[0].lower() + task[1:] if task else task
-    signal = (t.signal or "your segment's labor and consistency pressure").strip().rstrip(".")
+    task_cap = task[0].upper() + task[1:] if task else task
+    signal = (t.signal or "your labor and consistency pressure").strip().rstrip(".")
+    # Signal is a description of the account (e.g. "Largest contract caterer…"),
+    # so weave it as an appositive ("{company} — {signal} — …") instead of the
+    # clumsy "Given {Signal}," which reads with a stray capital mid-sentence.
+    signal_l = signal[0].lower() + signal[1:] if signal else signal
     seq = (t.sequence or "A").strip().upper()
 
     if seq == "B":
@@ -221,9 +226,9 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
             "station. Ours is one robot that moves across cutting, portioning, and assembly — retrained "
             "for a new task in days — and because it senses touch and pressure, it handles the "
             "delicate, irregular items camera-only machines drop.\n\n"
-            f"With {signal}, you're exactly the kind of operator we want shaping it. We're inviting a "
-            f"few partners to help build it through a no-cost pilot on one workflow ({task_l}) — your "
-            "input steers what we build next.\n\n"
+            f"{company} stood out to us — {signal_l} — as exactly the kind of operator we want shaping "
+            f"it. We're inviting a few partners to help build it through a no-cost pilot on one workflow "
+            f"({task_l}) — your input steers what we build next.\n\n"
             f"Could I show you the robot doing {task_l} on a 20-minute call?\n\n"
             f"— {NIMO_SENDER}"
         )
@@ -232,10 +237,10 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
         subject = f"The labor math on {task_l}"
         body = (
             f"{greeting}\n\n"
-            f"{task} is repetitive, hands-on, and hard to keep staffed — so turnover and inconsistency "
-            "quietly eat into margin. We built a robot that does it by feel, and it already handles "
+            f"{task_cap} is repetitive, hands-on, and hard to keep staffed — so turnover and inconsistency "
+            "quietly eat into margin. We built a robot that does it by feel, and it already runs "
             "more than seven real kitchen jobs on working hardware today.\n\n"
-            f"Given {signal}, here's the offer for {company}: a no-cost pilot. We install the robot and "
+            f"For {company} — {signal_l} — here's the offer: a no-cost pilot. We install the robot and "
             "support it, you pick one site and one workflow, and we measure labor-hours saved, "
             "throughput, and consistency together — real numbers, on your floor.\n\n"
             "20 minutes to see if it's worth a test?\n\n"
@@ -248,9 +253,9 @@ def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:
             "Most back-of-house robots run on cameras alone, so they fumble anything they have to "
             "touch. Ours feels what it's handling — touch sensors and fine pressure control — so it "
             f"does the work they can't: {task_l}, portioning by feel, delicate multi-step handling. It "
-            "already does more than seven real kitchen jobs on working hardware today.\n\n"
-            f"Given {signal}, {company} stood out as a place this could earn its keep. We're placing a "
-            "few robots in no-cost pilots — we bring the robot and the engineers, you pick one "
+            "already runs more than seven real kitchen jobs on working hardware today.\n\n"
+            f"{company} stood out to us — {signal_l} — as a place this could earn its keep. We're "
+            "placing a few robots in no-cost pilots: we bring the robot and the engineers, you pick one "
             "workflow, and we measure labor-hours saved and consistency side by side.\n\n"
             f"Open to a 20-minute demo? I'll show it doing {task_l} live.\n\n"
             f"— {NIMO_SENDER}"
