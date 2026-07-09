@@ -13,11 +13,11 @@
 **T1 — Subject: A robot that can actually do {{Task}}**
 > Hi {{FirstName}},
 >
-> Most back-of-house robots run on cameras alone, so they fumble anything they have to touch. Ours feels what it's handling — touch sensors and fine pressure control — so it does the work they can't: {{Task}}, portioning by feel, delicate multi-step handling. It already runs more than seven real kitchen jobs on working hardware today.
+> Nice to meet you. I work with restaurant owners and operators to improve their workflows through automation. For most restaurants, that has meant robots that run on cameras alone, so they fumble anything they have to touch. Our robot is uniquely different in important ways. It feels what it's handling — touch sensors and fine pressure control — so it does the work labor can't or won't: {{Task}}, portioning by feel, delicate multi-step handling. It already runs more than seven real kitchen jobs on working hardware today.
 >
-> {{Company}} stood out to us — {{Signal}} — as a place this could earn its keep. We're placing a few robots in no-cost pilots: we bring the robot and the engineers, you pick one workflow, and we measure labor-hours saved and consistency side by side.
+> {{Company}} stood out to me — {{Signal}} — as a place the robot could learn and earn its keep. We're placing select robots in no-cost pilots: we bring the robot and the engineers, you pick one workflow, and we measure labor-hours saved and consistency of product side by side.
 >
-> Open to a 20-minute demo? I'll show it doing {{Task}} live.
+> Would you be open to a 20-minute demo? I'll show it doing {{Task}} live.
 >
 > — {{Sender}}, NIMO Technology
 
