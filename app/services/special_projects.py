@@ -190,7 +190,7 @@ def recompute_project_rollup(project: SpecialProject) -> None:
 
 # ── NIMO outreach draft templates (T1 of each sequence in 03_cal_outreach_sequences.md) ──
 
-NIMO_SENDER = "Bob Christopher, NIMO Technology"
+NIMO_SENDER = "Cal, NIMO Technology"
 
 
 def _nimo_greeting(contact_name: str | None, company: str) -> str:
