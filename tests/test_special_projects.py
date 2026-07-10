@@ -314,6 +314,33 @@ def test_send_all_approved_only_sends_approved(client, monkeypatch):
     assert res2.json()["sent"] == 0
 
 
+def test_approve_all_then_bulk_send(client, monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "app.services.cal_email_send.send_cal_email_via_resend",
+        lambda **kw: calls.append(kw) or {"id": "r"},
+    )
+    proj = _create(client)
+    _add_target(client, proj["id"], company="A Co", contact_email="a@x.com")
+    _add_target(client, proj["id"], company="B Co", contact_email="b@x.com")
+    _add_target(client, proj["id"], company="No Email Co")  # drafted but no email
+
+    # Bulk approve marks all three drafts approved (approval != sendable).
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/approve-all")
+    assert res.status_code == 200, res.text
+    assert res.json()["approved"] == 3
+
+    listing = client.get(f"/api/admin/special-projects/{proj['id']}/targets").json()
+    assert all(t["approved"] for t in listing["targets"])
+    # Only the two with an email are actually sendable.
+    assert sum(1 for t in listing["targets"] if t["can_send"]) == 2
+
+    # Bulk send then delivers exactly those two.
+    res = client.post(f"/api/admin/special-projects/{proj['id']}/targets/send-approved")
+    assert res.json()["sent"] == 2
+    assert len(calls) == 2
+
+
 # ── Follow-up (T2) — review-first second touch ──────────────────────────────────
 
 def _send_first(client, project_id, monkeypatch, **kw):

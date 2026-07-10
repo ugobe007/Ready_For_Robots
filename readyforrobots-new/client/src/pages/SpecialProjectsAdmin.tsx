@@ -308,6 +308,49 @@ export default function SpecialProjectsAdmin() {
     }
   }, [adminFetch, selected, loadTargets]);
 
+  // Bulk-approve every drafted, unsent target so a batch can be sent without
+  // clicking Approve 34 times. Approving only marks drafts ready — sending is
+  // still a separate explicit click.
+  const approveAll = useCallback(async () => {
+    if (!selected) return;
+    if (!window.confirm("Approve all drafted emails? They'll be marked ready — you still click Send to send them.")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/approve-all`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Approve failed (${res.status})`);
+      await loadTargets(selected.id);
+      setNotice(`Approved ${data?.approved ?? 0} draft${data?.approved === 1 ? "" : "s"} — now click “Send all approved”`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approve all failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets]);
+
+  const approveAllFollowups = useCallback(async () => {
+    if (!selected) return;
+    if (!window.confirm("Approve all drafted follow-ups? They'll be marked ready — you still click Send to send them.")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await adminFetch(`/api/admin/special-projects/${selected.id}/targets/approve-all-followups`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.detail || `Approve failed (${res.status})`);
+      await loadTargets(selected.id);
+      setNotice(`Approved ${data?.approved ?? 0} follow-up${data?.approved === 1 ? "" : "s"} — now click “Send all follow-ups”`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Approve all failed");
+    } finally {
+      setBusy(false);
+    }
+  }, [adminFetch, selected, loadTargets]);
+
   // Bulk-send every approved, sendable first-touch draft. Review-first: the
   // backend only sends targets a human already approved, so this never sends a
   // draft you haven't OK'd.
@@ -893,6 +936,15 @@ export default function SpecialProjectsAdmin() {
                           {snapshot.awaitingApproval === 1 ? "" : "s"}
                         </a>
                       )}
+                      {snapshot.awaitingApproval > 0 && (
+                        <button
+                          onClick={() => void approveAll()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          <Check className="h-3.5 w-3.5" /> Approve all {snapshot.awaitingApproval}
+                        </button>
+                      )}
                       {snapshot.readyToSend > 0 && (
                         <button
                           onClick={() => void sendAllApproved()}
@@ -920,6 +972,15 @@ export default function SpecialProjectsAdmin() {
                           <Check className="h-3.5 w-3.5" /> Review {snapshot.followupAwaiting} follow-up
                           {snapshot.followupAwaiting === 1 ? "" : "s"}
                         </a>
+                      )}
+                      {snapshot.followupAwaiting > 0 && (
+                        <button
+                          onClick={() => void approveAllFollowups()}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          <Check className="h-3.5 w-3.5" /> Approve all {snapshot.followupAwaiting}
+                        </button>
                       )}
                       {snapshot.followupReady > 0 && (
                         <button

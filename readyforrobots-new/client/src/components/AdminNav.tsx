@@ -21,11 +21,13 @@ export default function AdminNav({ variant = "light" }: Props) {
   const sections = visibleAdminNavSections(isAdmin);
   const dark = variant === "dark";
 
-  // Collapsible so the multi-row nav doesn't block the page. Preference persists.
-  const [collapsed, setCollapsed] = useState(false);
+  // Collapsible so the multi-row nav doesn't block the page. Defaults to
+  // collapsed on first load; an explicit choice persists across pages.
+  const [collapsed, setCollapsed] = useState(true);
   useEffect(() => {
     try {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored != null) setCollapsed(stored === "1");
     } catch {
       /* ignore storage errors */
     }

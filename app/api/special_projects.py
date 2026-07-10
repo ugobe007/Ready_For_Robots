@@ -398,6 +398,47 @@ def regenerate_drafts(project_id: str, db: Session = Depends(get_db)) -> dict[st
     return {"status": "ok", "regenerated": regenerated, "reset_to_unapproved": unapproved}
 
 
+@admin_router.post("/{project_id}/targets/approve-all")
+def approve_all(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Approve every unsent target that has a complete draft (bulk review-first).
+
+    The admin explicitly triggers this — it's a batch of the same per-draft
+    "Approve" action, so Cal still never approves or sends on its own. Approving
+    only marks a draft ready; sending is a separate, explicit step.
+    """
+    p = _get_or_404(db, project_id)
+    approved = 0
+    for t in p.targets or []:
+        if t.sent_at is not None:
+            continue
+        if not (t.draft_subject or "").strip() or not (t.draft_body or "").strip():
+            continue
+        if (t.approved or "").strip().lower() == "yes":
+            continue
+        t.approved = "yes"
+        approved += 1
+    db.commit()
+    return {"status": "ok", "approved": approved}
+
+
+@admin_router.post("/{project_id}/targets/approve-all-followups")
+def approve_all_followups(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Approve every drafted, not-yet-sent follow-up (bulk review-first)."""
+    p = _get_or_404(db, project_id)
+    approved = 0
+    for t in p.targets or []:
+        if t.sent_at is None or t.followup_sent_at is not None:
+            continue
+        if not (t.followup_subject or "").strip() or not (t.followup_body or "").strip():
+            continue
+        if (t.followup_approved or "").strip().lower() == "yes":
+            continue
+        t.followup_approved = "yes"
+        approved += 1
+    db.commit()
+    return {"status": "ok", "approved": approved}
+
+
 @admin_router.post("/{project_id}/targets/enrich")
 def enrich_targets(project_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     """Resolve verified contact emails for targets missing one (best-effort, Hunter)."""
