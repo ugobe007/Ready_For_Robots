@@ -50,6 +50,69 @@ def test_render_cal_daily_digest_text_includes_sections():
     assert "Book meeting: Acme demo" in text
 
 
+def test_render_explains_zero_intros_when_drafts_ready():
+    """0 intros next to N 'ready' drafts must not read as a broken pipeline."""
+    text = render_cal_daily_digest_text(
+        day_label="2026-07-10",
+        period_hours=24,
+        autopilot_on=True,
+        queue_summary={"hot": 298, "warm": 2, "sendable": 3},
+        activity={
+            "intro_sent": 0,
+            "followup_sent": 10,
+            "replies": 0,
+            "drafts_touched": 56,
+            "enroll_active": 214,
+            "enroll_due": 0,
+            "sendable": 3,
+            "unsent_drafted": 3,
+            "replied_total": 0,
+        },
+        intro_lines=[],
+        reply_lines=[],
+        needs_you=[],
+    )
+    assert "Follow-up emails sent: 10" in text
+    assert "Why 0 new intros" in text
+    assert "verified contacts" in text
+
+
+def test_render_no_zero_intro_note_when_intros_sent():
+    text = render_cal_daily_digest_text(
+        day_label="2026-07-10",
+        period_hours=24,
+        autopilot_on=True,
+        queue_summary={"hot": 10, "warm": 5, "sendable": 4},
+        activity={"intro_sent": 4, "followup_sent": 1, "sendable": 4},
+        intro_lines=["  • 14:00 UTC — Acme — Subject"],
+        reply_lines=[],
+        needs_you=[],
+    )
+    assert "Why 0 new intros" not in text
+
+
+def test_render_oem_rejections_are_fyi_not_needs_you():
+    """OEM/vendor auto-skips are Cal working correctly — FYI, not an action item."""
+    text = render_cal_daily_digest_text(
+        day_label="2026-07-10",
+        period_hours=24,
+        autopilot_on=True,
+        queue_summary={"hot": 298, "warm": 2, "sendable": 3},
+        activity={"intro_sent": 0, "followup_sent": 10, "sendable": 3},
+        intro_lines=[],
+        reply_lines=[],
+        needs_you=[],
+        auto_filtered=["  • Dobot Robotics: Zebra is an OEM/vendor, not a buyer"],
+    )
+    needs_you_idx = text.index("Needs you")
+    fyi_idx = text.index("Auto-filtered by Cal")
+    assert "no action needed" in text.lower()
+    assert "Dobot Robotics" in text
+    # The Zebra/OEM line must live under the FYI heading, not "Needs you".
+    assert fyi_idx > needs_you_idx
+    assert "Fix blocked draft" not in text
+
+
 def test_next_digest_run_utc_is_in_future():
     target = next_digest_run_utc(hour=15, minute=0)
     assert target > datetime.now(timezone.utc)

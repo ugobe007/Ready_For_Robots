@@ -40,8 +40,14 @@ def main() -> int:
             .order_by(OutreachMessage.sent_at.desc())
             .all()
         )
-        intro = [m for m in window if (m.send_identity or "") != "sequence"]
-        followup = [m for m in window if (m.send_identity or "") == "sequence"]
+        # Follow-ups carry a payload.sequence_enrollment_id marker (the sequence
+        # runner writes send_identity="scout"); intros do not. The old
+        # send_identity=="sequence" test matched nothing, so follow-ups read 0.
+        def _is_followup(m) -> bool:
+            return bool((m.payload or {}).get("sequence_enrollment_id"))
+
+        intro = [m for m in window if not _is_followup(m)]
+        followup = [m for m in window if _is_followup(m)]
         status_mix: Counter = Counter((m.status or "unknown") for m in window)
         identity_mix: Counter = Counter((m.send_identity or "unknown") for m in window)
 

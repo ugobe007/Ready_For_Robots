@@ -114,12 +114,18 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         .scalar()
         or 0
     )
+    # Follow-ups are recorded by the sequence runner with a
+    # ``payload.sequence_enrollment_id`` marker (send_identity defaults to
+    # "scout"). The old filter counted send_identity == "sequence" — a value no
+    # sender ever writes — so follow-ups always reported 0 even when they sent.
+    followup_marker = OutreachMessage.payload.op("->>")("sequence_enrollment_id").isnot(None)
     followup_sent = (
         db.query(func.count(OutreachMessage.id))
         .filter(
             OutreachMessage.sent_at.isnot(None),
             OutreachMessage.sent_at >= since,
-            OutreachMessage.send_identity == "sequence",
+            OutreachMessage.sent_at <= now,
+            followup_marker,
         )
         .scalar()
         or 0
@@ -228,11 +234,16 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
 
     from app.services.cal_ops_monitor import get_cal_ops_monitor
 
+    # Assembly rejections are Cal's buyer/eligibility guard working as intended —
+    # it auto-skips OEMs/vendors (e.g. Zebra) that are not real buyers. No send
+    # happened and no operator action is required, so these are FYI, not "Needs
+    # you" alarms. Surfacing them as tasks made the digest read as broken.
+    auto_filtered: list[str] = []
     ops = get_cal_ops_monitor(db, limit=5)
     for row in ops.get("assembly_rejections") or []:
         name = row.get("vendor_name") or "prospect"
-        issue = "; ".join((row.get("issues") or [])[:1]) or "Assembly blocked send"
-        needs_you.append(f"  • Fix blocked draft — {name}: {issue}")
+        issue = "; ".join((row.get("issues") or [])[:1]) or "not a buyer opportunity"
+        auto_filtered.append(f"  • {name}: {issue}")
 
     autopilot_on = bool(autopilot.get("enabled"))
     sendable = int(queue_summary.get("sendable") or 0)
@@ -258,6 +269,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
         intro_lines=intro_lines,
         reply_lines=reply_lines,
         needs_you=needs_you,
+        auto_filtered=auto_filtered,
     )
 
     return {
@@ -286,6 +298,7 @@ def render_cal_daily_digest_text(
     intro_lines: list[str],
     reply_lines: list[str],
     needs_you: list[str],
+    auto_filtered: list[str] | None = None,
 ) -> str:
     autopilot_line = "ON — Cal runs draft/send/follow-up cycles on the worker." if autopilot_on else (
         "OFF — scheduled cycles paused (manual Run cycle still works in admin)."
@@ -317,6 +330,19 @@ def render_cal_daily_digest_text(
         "",
     ]
 
+    # When nothing new went out but the queue still shows prospects, say why —
+    # otherwise "sent: 0" alongside "ready: N" reads as a broken pipeline when
+    # it is actually the verified-contact gate plus an already-contacted pool.
+    if int(activity.get("intro_sent") or 0) == 0 and (sendable > 0 or hot > 0):
+        lines.extend([
+            "Why 0 new intros",
+            "  • Cal only emails verified contacts. Ready drafts without a verified "
+            "email wait for enrichment; the rest of the HOT/WARM pool is already "
+            "contacted and is now in follow-up. New intros resume as fresh, verified "
+            "buyers land in the queue.",
+            "",
+        ])
+
     if intro_lines:
         lines.extend(["Recent intro sends", *intro_lines, ""])
     else:
@@ -331,6 +357,14 @@ def render_cal_daily_digest_text(
         lines.extend(["Needs you", *needs_you[:8], ""])
     else:
         lines.extend(["Needs you", "  • Nothing urgent — Cal is running.", ""])
+
+    if auto_filtered:
+        lines.extend([
+            "Auto-filtered by Cal (FYI — no action needed)",
+            "  These were skipped as OEMs/vendors, not buyers. Cal did not email them.",
+            *auto_filtered[:6],
+            "",
+        ])
 
     lines.extend([
         "Links",
