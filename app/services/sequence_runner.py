@@ -19,36 +19,69 @@ logger = logging.getLogger(__name__)
 DEFAULT_BUYER_SEQUENCE = {
     "name": "Cal buyer cadence",
     "slug": "cal_buyer_v1",
+    # Cal's voice: smooth, smart, lightly self-aware. Each touch adds a NEW idea
+    # (not "just bumping this"), keeps it short/mobile-friendly, and makes the ask
+    # a low-friction yes/no. Templates support {company_name} and {industry}.
     "steps": [
         {
             "step_number": 1,
             "delay_days": 0,
-            "subject_template": "Automation opportunity — {company_name}",
-            "body_template": "Hi — Cal from Ready For Robots.\n\nWe noticed automation intent at {company_name} and wanted to share a relevant deployment pattern.",
+            "subject_template": "A robot that earns its spot — {company_name}",
+            "body_template": (
+                "Hi — I'm Cal with Ready For Robots.\n\n"
+                "I help teams in {industry} find the spots where a robot actually pays for "
+                "itself — and, just as usefully, the spots where it doesn't. No hype, no "
+                "\"robots will change everything\" keynote.\n\n"
+                "Worth a quick look at what's working for operators like {company_name}?\n\n"
+                "— Cal\nReady For Robots"
+            ),
             "action_label": "Intro",
         },
         {
             "step_number": 2,
             "delay_days": 3,
-            "subject_template": "Following up — {company_name}",
+            "subject_template": "Following up (politely) — {company_name}",
             "body_template": (
-                "Hi — Cal again.\n\n"
-                "Quick follow-up on my note. Happy to share how peers in {industry} are running pilots "
-                "and what usually moves a PoC to deployment.\n\n"
-                "Worth a quick reply?\n\n— Cal\nReady For Robots"
+                "Hi again — Cal here.\n\n"
+                "I know \"just circling back\" is the junk food of your inbox, so I'll make this "
+                "worth the click: the teams getting real ROI in {industry} aren't the ones buying "
+                "the flashiest robot — they're the ones who pick one painful, repetitive task and "
+                "let a robot own it end to end.\n\n"
+                "I can send over the 2–3 tasks that tend to pay off first for a team like "
+                "{company_name}. Want them?\n\n"
+                "— Cal\nReady For Robots"
             ),
             "action_label": "Value follow-up",
         },
         {
             "step_number": 3,
-            "delay_days": 7,
-            "subject_template": "Should I close the loop? — {company_name}",
+            "delay_days": 6,
+            "subject_template": "The part everyone gets wrong about robot pilots — {company_name}",
             "body_template": (
-                "Hi — Cal from Ready For Robots.\n\n"
-                "I don't want to crowd your inbox. Should I close the loop on {company_name}, "
-                "or is timing still off?\n\n— Cal\nReady For Robots"
+                "Hi — Cal again.\n\n"
+                "Most robot pilots stall for the same unglamorous reason: nobody agreed up front on "
+                "what \"it worked\" means. The operators who win pick one workflow, one number to "
+                "move, and a 30-day window — then decide with data instead of vibes.\n\n"
+                "I can map that out for {company_name} in about 20 minutes. A plain \"yes\" or "
+                "\"not now\" is a perfectly good reply.\n\n"
+                "— Cal\nReady For Robots"
             ),
-            "action_label": "Breakup",
+            "action_label": "Proof / easy ask",
+        },
+        {
+            "step_number": 4,
+            "delay_days": 9,
+            "subject_template": "I'll stop emailing (promise) — {company_name}",
+            "body_template": (
+                "Hi — Cal, one last time.\n\n"
+                "I don't want to be the guy who keeps knocking after the lights are off, so I'll "
+                "leave it here. If robots-that-earn-their-keep aren't on the {company_name} roadmap "
+                "this quarter, no hard feelings.\n\n"
+                "If timing changes — a new site, a labor crunch, a task nobody wants to staff — just "
+                "reply \"Cal?\" and I'll pick up right where we left off.\n\n"
+                "— Cal\nReady For Robots"
+            ),
+            "action_label": "Graceful breakup",
         },
     ],
 }
@@ -85,6 +118,54 @@ def ensure_default_sequence(db: Session, *, team_id) -> OutreachSequence:
         )
     db.flush()
     return row
+
+
+def sync_default_sequence_steps(db: Session) -> dict[str, int]:
+    """Upsert DEFAULT_BUYER_SEQUENCE step copy onto the live sequence.
+
+    ``ensure_default_sequence`` only seeds steps when the sequence is first
+    created, so editing the templates in code does NOT reach the accounts already
+    enrolled. Call this to push new subject/body/delay copy to the existing
+    ``cal_buyer_v1`` steps (and add any new steps, e.g. a 4th touch) so in-flight
+    follow-ups send the current voice.
+    """
+    seq = (
+        db.query(OutreachSequence)
+        .filter(OutreachSequence.slug == DEFAULT_BUYER_SEQUENCE["slug"])
+        .first()
+    )
+    if not seq:
+        return {"updated": 0, "added": 0, "sequence": 0}
+    updated = added = 0
+    for step in DEFAULT_BUYER_SEQUENCE["steps"]:
+        row = (
+            db.query(OutreachSequenceStep)
+            .filter(
+                OutreachSequenceStep.sequence_id == seq.id,
+                OutreachSequenceStep.step_number == step["step_number"],
+            )
+            .first()
+        )
+        if row:
+            row.subject_template = step["subject_template"]
+            row.body_template = step["body_template"]
+            row.delay_days = step["delay_days"]
+            row.action_label = step["action_label"]
+            updated += 1
+        else:
+            db.add(
+                OutreachSequenceStep(
+                    sequence_id=seq.id,
+                    step_number=step["step_number"],
+                    delay_days=step["delay_days"],
+                    subject_template=step["subject_template"],
+                    body_template=step["body_template"],
+                    action_label=step["action_label"],
+                )
+            )
+            added += 1
+    db.commit()
+    return {"updated": updated, "added": added, "sequence": 1}
 
 
 def enroll_account(
@@ -184,10 +265,22 @@ def pause_enrollment_for_reply(db: Session, *, crm_account_id) -> int:
     return len(rows)
 
 
+_JUNK_INDUSTRIES = {"", "unknown", "other", "none", "n/a", "general robotics", "general"}
+
+
+def _clean_industry(industry: str | None) -> str:
+    """A phrase that reads naturally in 'teams in {industry}' — never a broken
+    'your industry teams' or a meaningless 'Unknown'."""
+    val = (industry or "").strip()
+    if val.lower() in _JUNK_INDUSTRIES:
+        return "your industry"
+    return val
+
+
 def _render_template(template: str, account: CrmAccount) -> str:
     return (
         template.replace("{company_name}", account.name or "your team")
-        .replace("{industry}", account.industry or "your industry")
+        .replace("{industry}", _clean_industry(account.industry))
     )
 
 
