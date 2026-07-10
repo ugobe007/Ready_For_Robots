@@ -73,6 +73,18 @@ function scoreOf(lead: LeadRow): number | string {
   return v != null ? Math.round(Number(v)) : "—";
 }
 
+/**
+ * Deep link a real, live lead into its value proof (pitch + outreach draft) on
+ * /pipeline. Fallback/demo rows (negative ids or preview mode) stay non-clickable
+ * so we never route a visitor to a lead the pipeline can't load. This is the
+ * value-first browse → proof step: the strongest evidence on home becomes the
+ * fastest path to the intent peak that gates signup.
+ */
+function leadHref(lead: LeadRow, live: boolean): string | null {
+  if (!live || !Number.isFinite(lead.id) || lead.id <= 0) return null;
+  return `/pipeline?lead=${lead.id}`;
+}
+
 type Props = {
   hotCount: number | null;
   totalCount: number | null;
@@ -136,13 +148,12 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
         {rows.map((lead, rowIndex) => {
           const Icon = iconForIndustry(lead.industry);
           const tier = (lead.priority_tier || "WARM").toUpperCase();
-          return (
-            <div
-              key={`${lead.id}-${rowIndex}`}
-              className={`pipeline-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
-                rowIndex === 2 ? "hidden sm:flex" : ""
-              }`}
-            >
+          const href = leadHref(lead, live);
+          const rowClass = `pipeline-panel-row flex items-start gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4 ${
+            rowIndex === 2 ? "hidden sm:flex" : ""
+          }`;
+          const body = (
+            <>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 shadow-sm mt-0.5">
                 <Icon size={16} className="text-emerald-300" />
               </div>
@@ -154,6 +165,11 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   <HeatBadge heat={tier} onDark />
                 </div>
                 <PipelineLeadActionMeta lead={lead} variant="dark" />
+                {href && (
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 opacity-0 transition-opacity group-hover:opacity-100">
+                    See the pitch + outreach draft <ArrowRight size={11} />
+                  </span>
+                )}
               </div>
               <div className="shrink-0 text-right">
                 <div className="score-number text-2xl leading-none">{scoreOf(lead)}</div>
@@ -161,7 +177,24 @@ export default function MarketingHeroPipeline({ hotCount, totalCount }: Props) {
                   {live ? "live" : "demo"}
                 </div>
               </div>
-            </div>
+            </>
+          );
+          if (!href) {
+            return (
+              <div key={`${lead.id}-${rowIndex}`} className={rowClass}>
+                {body}
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={`${lead.id}-${rowIndex}`}
+              href={href}
+              aria-label={`Open ${lead.company_name || "this lead"} — pitch action and outreach draft`}
+              className={`group cursor-pointer transition-colors hover:bg-white/[0.04] ${rowClass}`}
+            >
+              {body}
+            </Link>
           );
         })}
       </div>
