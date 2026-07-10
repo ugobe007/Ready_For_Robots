@@ -977,6 +977,15 @@
     @apply border-gray-200;
   }
 
+  /* Form controls stay high-contrast (dark text on white) so typed values and
+     dropdowns are always readable — never white-on-white. */
+  .admin-workspace :where(input, select, textarea) {
+    @apply bg-white text-gray-900;
+  }
+  .admin-workspace :where(input, select, textarea)::placeholder {
+    @apply text-gray-500;
+  }
+
   .admin-card {
     @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
   }
